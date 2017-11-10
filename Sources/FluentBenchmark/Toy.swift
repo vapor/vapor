@@ -2,7 +2,10 @@ import Async
 import Fluent
 import Foundation
 
-internal final class Toy: Model {
+internal final class Toy<D: Database>: Model {
+    /// See Model.Database
+    typealias Database = D
+
     /// See Model.ID
     typealias ID = UUID
 
@@ -12,13 +15,15 @@ internal final class Toy: Model {
     }
 
     /// See Model.idKey
-    static var idKey = \Toy.id
+    static var idKey: IDKey { return \.id }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name")
-    ]
+    static var keyFieldMap: KeyFieldMap {
+        return [
+            key(\.id): field("id"),
+            key(\.name): field("name")
+        ]
+    }
 
     /// Foo's identifier
     var id: ID?
@@ -35,9 +40,9 @@ internal final class Toy: Model {
 
 // MARK: Relations
 
-extension Toy {
+extension Toy where Database.Connection: JoinSupporting {
     /// A relation to this toy's pets.
-    var pets: Siblings<Toy, Pet, PetToy> {
+    var pets: Siblings<Toy, Pet<Database>, PetToy<Database>> {
         return siblings()
     }
 }
@@ -50,7 +55,7 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-        return connection.create(Toy.self) { builder in
+        return connection.create(Toy<Database>.self) { builder in
             try builder.id()
             try builder.field(for: \.name)
         }
@@ -58,7 +63,7 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
 
     /// See Migration.revert
     static func revert(on connection: Database.Connection) -> Future<Void> {
-        return connection.delete(Toy.self)
+        return connection.delete(Toy<Database>.self)
     }
 }
 

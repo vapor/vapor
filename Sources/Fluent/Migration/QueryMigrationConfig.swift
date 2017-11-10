@@ -31,7 +31,7 @@ internal struct QueryMigrationConfig<Database: Fluent.Database>: MigrationRunnab
     /// Migrates this configs migrations under the current batch.
     /// Migrations that have already been prepared will be skipped.
     internal func migrateBatch(on conn: Database.Connection) -> Future<Void> {
-        return MigrationLog.latestBatch(on: conn).then { lastBatch in
+        return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch in
             return self.migrations.map { migration in
                 return { migration.prepareIfNeeded(batch: lastBatch + 1, on: conn) }
             }.syncFlatten()

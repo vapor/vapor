@@ -19,7 +19,9 @@ public protocol QuerySupporting {
 ///
 /// Subsequent calls to this function will use the same connection.
 extension Connection {
-    public func query<Model>(_ type: Model.Type = Model.self) -> QueryBuilder<Model, Self> {
+    public func query<Model>(_ type: Model.Type = Model.self) -> QueryBuilder<Model>
+        where Model.Database.Connection == Self
+    {
         return QueryBuilder(on: self)
     }
 }

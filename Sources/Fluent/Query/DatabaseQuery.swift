@@ -9,9 +9,6 @@ public struct DatabaseQuery {
     /// Result stream will be filtered by these queries.
     public var filters: [QueryFilter]
 
-    /// Joined models.
-    public var joins: [QueryJoin]
-
     /// Sorts to be applied to the results.
     public var sorts: [QuerySort]
 
@@ -27,16 +24,19 @@ public struct DatabaseQuery {
     /// Limits and offsets the amount of results
     public var range: QueryRange?
 
+    /// Allows extensions to store properties.
+    public var extend: [String: Any]
+
     /// Create a new database query.
     public init(entity: String) {
         self.entity = entity
         self.action = .read
         self.filters = []
-        self.joins = []
         self.sorts = []
         self.aggregates = []
         self.isDistinct = false
         self.data = nil
         self.range = nil
+        self.extend = [:]
     }
 }

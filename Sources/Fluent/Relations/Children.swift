@@ -5,7 +5,9 @@
 /// models that contain a reference to the parent's identifier.
 ///
 /// The opposite side of this relation is called `Parent`.
-public struct Children<Parent: Model, Child: Model> {
+public struct Children<Parent: Model, Child: Model>
+    where Parent.Database == Child.Database
+{
     /// Reference to the parent's ID
     public var parent: Parent
 
@@ -22,7 +24,7 @@ public struct Children<Parent: Model, Child: Model> {
     }
 
     /// Create a query for all children.
-    public func query<C: Connection>(on connection: C) throws -> QueryBuilder<Child, C> {
+    public func query(on connection: Parent.Database.Connection) throws -> QueryBuilder<Child> {
         let builder = connection.query(Child.self)
         return try builder.filter(parentForeignIDKey.makeQueryField() == parent.requireID())
     }

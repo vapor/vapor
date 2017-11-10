@@ -92,7 +92,9 @@ extension String: ResponseRepresentable {
 }
 
 final class Message: Model {
-    static let keyFieldMap = [
+    typealias Database = SQLiteDatabase
+    
+    static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.text): field("text"),
         key(\.time): field("customtime"),

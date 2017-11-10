@@ -6,7 +6,7 @@ extension Benchmarker {
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
         // create
-        let tanner = User(name: "Tanner", age: 23)
+        let tanner = User<Database>(name: "Tanner", age: 23)
         if tanner.createdAt != nil || tanner.updatedAt != nil {
             fail("timestamps should have been nil")
         }
@@ -28,7 +28,7 @@ extension Benchmarker {
             fail("new updated at should be greater")
         }
 
-        guard let fetched = try test(conn.query(User.self).filter(\User.name == "Tanner").first()) else {
+        guard let fetched = try test(conn.query(User<Database>.self).filter(\User<Database>.name == "Tanner").first()) else {
             fail("could not fetch user")
             return
         }

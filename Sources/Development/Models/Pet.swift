@@ -6,9 +6,10 @@ import Routing
 import SQLite
 
 final class Pet: Model {
+    typealias Database = SQLiteDatabase
     typealias ID = UUID
 
-    static let keyFieldMap =  [
+    static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.name): field("name"),
         key(\.ownerID): field("ownerID")
@@ -60,5 +61,16 @@ extension Pet: Parameter {
 
 
 extension Pet: Migration {
-    typealias Database = SQLiteDatabase
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { schema in
+            try schema.id()
+            try schema.field(for: \.name)
+            try schema.field(for: \.ownerID)
+        }
+    }
+    
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
+    
 }

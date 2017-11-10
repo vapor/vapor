@@ -5,6 +5,7 @@ import SQLite
 import FluentSQLite
 
 final class PetToyPivot: ModifiablePivot {
+    typealias Database = SQLiteDatabase
     typealias Left = Pet
     typealias Right = Toy
 
@@ -12,7 +13,7 @@ final class PetToyPivot: ModifiablePivot {
     static let leftIDKey = \PetToyPivot.petID
     static var rightIDKey = \PetToyPivot.toyID
 
-    static let keyFieldMap = [
+    static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.petID): field("petID"),
         key(\.toyID): field("toyID")
@@ -29,5 +30,15 @@ final class PetToyPivot: ModifiablePivot {
 }
 
 extension PetToyPivot: Migration {
-    typealias Database = SQLiteDatabase
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { schema in
+            try schema.id()
+            try schema.field(for: \.petID)
+            try schema.field(for: \.toyID)
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
 }

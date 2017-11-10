@@ -29,7 +29,12 @@ import Async
 ///
 /// It is recommended that you use your own types conforming to `Pivot`
 /// for Siblings pivots as you cannot add additional fields to a `BasicPivot`.
-public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
+public struct Siblings<Base: Model, Related: Model, Through: Pivot>
+    where
+        Base.Database == Through.Database,
+        Related.Database == Through.Database,
+        Through.Database.Connection: JoinSupporting
+{
     /// The base model which all fetched models
     /// should be related to.
     public let base: Base
@@ -64,9 +69,7 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
     }
 
     /// Create a query for the parent.
-    public func query<Connection: Fluent.Connection>(
-        on executor: Connection
-    ) throws -> QueryBuilder<Related, Connection> {
+    public func query(on executor: Through.Database.Connection) throws -> QueryBuilder<Related> {
         return try executor.query(Related.self)
             .join(field: relatedPivotField)
             .filter(basePivotField == base.requireID())
@@ -78,9 +81,9 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot> {
 extension Siblings {
     /// Returns true if the supplied model is attached
     /// to this relationship.
-    public func isAttached<Connection: Fluent.Connection>(
+    public func isAttached(
         _ model: Related,
-        on connection: Connection
+        on connection: Through.Database.Connection
     ) throws -> Future<Bool> {
         return try connection.query(Through.self)
             .filter(basePivotField == base.requireID())
@@ -91,9 +94,9 @@ extension Siblings {
 
     /// Detaches the supplied model from this relationship
     /// if it was attached.
-    public func detach<Connection: Fluent.Connection>(
+    public func detach(
         _ model: Related,
-        on connection: Connection
+        on connection: Through.Database.Connection
     ) throws -> Future<Void> {
         return try connection.query(Through.self)
             .filter(basePivotField == base.requireID())
@@ -105,9 +108,9 @@ extension Siblings {
 /// Left-side
 extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through.Right == Related {
     /// Attaches the model to this relationship.
-    public func attach<Connection: Fluent.Connection>(
+    public func attach(
         _ model: Related,
-        on connection: Connection
+        on connection: Through.Database.Connection
     ) -> Future<Void> {
         do {
             let pivot = try Through(base, model)
@@ -121,9 +124,9 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through
 /// Right-side
 extension Siblings where Through: ModifiablePivot, Through.Left == Related, Through.Right == Base {
     /// Attaches the model to this relationship.
-    public func attach<Connection: Fluent.Connection>(
+    public func attach(
         _ model: Related,
-        on connection: Connection
+        on connection: Through.Database.Connection
     ) -> Future<Void> {
         do {
             let pivot = try Through(model, base)

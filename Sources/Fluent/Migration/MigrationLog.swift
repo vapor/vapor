@@ -2,24 +2,29 @@ import Async
 import Foundation
 
 /// Represents a migration that has succesfully ran.
-final class MigrationLog: Model, Timestampable {
+final class MigrationLog<D: Database>: Model, Timestampable {
+    /// See Model.Database
+    typealias Database = D
+
     /// See Model.ID
     typealias ID = UUID
 
     /// See Model.entity
-    static let entity = "fluent"
+    static var entity: String { return "fluent" }
 
     /// See Model.idKeyPath
-    static let idKey = \MigrationLog.id
+    static var idKey: IDKey { return \.id }
 
     /// See Model.keyPathMap
-    static let keyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.batch): field("batch"),
-        key(\.createdAt): field("createdAt"),
-        key(\.updatedAt): field("updatedAt"),
-    ]
+    static var keyFieldMap: KeyFieldMap {
+        return [
+            key(\.id): field("id"),
+            key(\.name): field("name"),
+            key(\.batch): field("batch"),
+            key(\.createdAt): field("createdAt"),
+            key(\.updatedAt): field("updatedAt"),
+        ]
+    }
 
     /// See Model.id
     var id: UUID?
@@ -52,7 +57,7 @@ final class MigrationLogMigration<
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-            return connection.create(MigrationLog.self) { builder in
+            return connection.create(MigrationLog<Database>.self) { builder in
                 try builder.field(for: \.id)
                 try builder.field(for: \.name)
                 try builder.field(for: \.batch)
@@ -63,7 +68,7 @@ final class MigrationLogMigration<
 
     /// See Migration.revert
     static func revert(on connection: Database.Connection) -> Future<Void> {
-        return connection.delete(MigrationLog.self)
+        return connection.delete(MigrationLog<Database>.self)
     }
 
 }
@@ -73,9 +78,7 @@ final class MigrationLogMigration<
 extension MigrationLog {
     /// Returns the latest batch number.
     /// note: returns 0 if no batches have run yet.
-    internal static func latestBatch<Connection: Fluent.Connection>(
-        on connection: Connection
-    ) -> Future<Int> {
+    internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
         return then {
             return try connection.query(MigrationLog.self)
                 .sort("batch", .descending)
@@ -94,7 +97,7 @@ extension MigrationLogMigration {
     internal static func prepareMetadata(on connection: Database.Connection) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        connection.query(MigrationLog.self).count().do { count in
+        connection.query(MigrationLog<Database>.self).count().do { count in
             promise.complete()
         }.catch { err in
             // table needs to be created

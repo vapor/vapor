@@ -62,7 +62,23 @@ public enum QueryJoinMethod {
     case outer
 }
 
-extension QueryBuilder {
+// MARK: Support
+
+public protocol JoinSupporting: Connection { }
+
+// MARK: Query
+
+extension DatabaseQuery {
+    /// Joined models.
+    public var joins: [QueryJoin] {
+        get { return extend["joins"] as? [QueryJoin] ?? [] }
+        set { extend["joins"] = newValue }
+    }
+}
+
+// MARK: Query Builder
+
+extension QueryBuilder where Model.Database.Connection: JoinSupporting {
     /// Join another model to this query builder.
     public func join<Joined: Fluent.Model>(
         field joinedKey: ReferenceWritableKeyPath<Joined, Model.ID>,

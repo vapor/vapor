@@ -2,13 +2,15 @@ import Async
 import Fluent
 import Foundation
 
-internal final class User: Model, Timestampable {
+internal final class User<D: Database>: Model, Timestampable {
+    /// See Model.Database
+    public typealias Database = D
 
     /// See Model.ID
     typealias ID = UUID
 
     /// See Model.idKey
-    static var idKey = \User.id
+    static var idKey: IDKey { return \.id }
 
     /// See Model.name
     static var entity: String {
@@ -16,13 +18,15 @@ internal final class User: Model, Timestampable {
     }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.age): field("age"),
-        key(\.createdAt): field("createdAt"),
-        key(\.updatedAt): field("updatedAt")
-    ]
+    static var keyFieldMap: KeyFieldMap {
+        return [
+            key(\.id): field("id"),
+            key(\.name): field("name"),
+            key(\.age): field("age"),
+            key(\.createdAt): field("createdAt"),
+            key(\.updatedAt): field("updatedAt")
+        ]
+    }
 
     /// Foo's identifier
     var id: UUID?
@@ -51,7 +55,7 @@ internal final class User: Model, Timestampable {
 
 extension User {
     /// A relation to this user's pets.
-    var pets: Children<User, Pet> {
+    var pets: Children<User, Pet<Database>> {
         return children(\.ownerID)
     }
 }
@@ -64,7 +68,7 @@ internal struct UserMigration<D: Database>: Migration where D.Connection: Schema
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-        return connection.create(User.self) { builder in
+        return connection.create(User<Database>.self) { builder in
             try builder.id()
             try builder.field(for: \.name)
             try builder.field(for: \.age)
@@ -75,6 +79,6 @@ internal struct UserMigration<D: Database>: Migration where D.Connection: Schema
 
     /// See Migration.revert
     static func revert(on connection: Database.Connection) -> Future<Void> {
-        return connection.delete(User.self)
+        return connection.delete(User<Database>.self)
     }
 }

@@ -2,14 +2,14 @@ import Async
 import Fluent
 import Foundation
 
-extension Benchmarker {
+extension Benchmarker where Database.Connection: JoinSupporting {
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
         // create
-        let tanner = User(name: "Tanner", age: 23)
+        let tanner = User<Database>(name: "Tanner", age: 23)
         try test(tanner.save(on: conn))
 
-        let ziz = try Pet(name: "Ziz", ownerID: tanner.requireID())
+        let ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
         try test(ziz.save(on: conn))
 
         // test pet attached
@@ -21,10 +21,10 @@ extension Benchmarker {
         }
 
         // create toys
-        let plasticBag = Toy(name: "Plastic Bag")
+        let plasticBag = Toy<Database>(name: "Plastic Bag")
         try test(plasticBag.save(on: conn))
 
-        let oldBologna = Toy(name: "Old Bologna")
+        let oldBologna = Toy<Database>(name: "Old Bologna")
         try test(oldBologna.save(on: conn))
 
         // attach toys
@@ -61,7 +61,7 @@ extension Benchmarker {
     }
 }
 
-extension Benchmarker where Database.Connection: SchemaSupporting {
+extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporting {
     /// Benchmark fluent relations.
     /// The schema will be prepared first.
     public func benchmarkRelations_withSchema() throws {

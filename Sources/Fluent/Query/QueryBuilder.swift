@@ -2,10 +2,7 @@ import Async
 import Foundation
 
 /// A Fluent database query builder.
-public final class QueryBuilder<
-    Model: Fluent.Model,
-    Connection: Fluent.Connection
-> {
+public final class QueryBuilder<Model: Fluent.Model> {
     /// The query we are building
     public var query: DatabaseQuery
 
@@ -15,7 +12,7 @@ public final class QueryBuilder<
     /// Create a new query.
     public init(
         _ model: Model.Type = Model.self,
-        on connection: Connection
+        on connection: Model.Database.Connection
     ) {
         query = DatabaseQuery(entity: Model.entity)
         self.connection = connection

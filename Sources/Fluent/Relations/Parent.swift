@@ -7,7 +7,9 @@ import Async
 /// model that the supplied child references.
 ///
 /// The opposite side of this relation is called `Children`.
-public struct Parent<Child: Model, Parent: Model> {
+public struct Parent<Child: Model, Parent: Model>
+    where Child.Database == Parent.Database
+{
     /// The child object with reference to parent
     public var child: Child
 
@@ -24,16 +26,16 @@ public struct Parent<Child: Model, Parent: Model> {
     }
 
     /// Create a query for the parent.
-    public func query<Connection: Fluent.Connection>(
-        on connection: Connection
-    ) throws -> QueryBuilder<Parent, Connection> {
+    public func query(
+        on connection: Child.Database.Connection
+    ) throws -> QueryBuilder<Parent> {
         let builder = connection.query(Parent.self)
         return try builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 
     /// Convenience for getting the parent.
-    public func get<Connection: Fluent.Connection>(
-        on connection: Connection
+    public func get(
+        on connection: Child.Database.Connection
     ) -> Future<Parent> {
         return then {
             try self.query(on: connection).first().map { first in

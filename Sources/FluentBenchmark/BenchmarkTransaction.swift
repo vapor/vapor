@@ -6,7 +6,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
         // create
-        let tanner = User(name: "Tanner", age: 23)
+        let tanner = User<Database>(name: "Tanner", age: 23)
         try test(tanner.save(on: conn))
 
         do {
@@ -15,13 +15,13 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
 
                 /// create 1,000 users
                 for i in 1...1_000 {
-                    let user = User(name: "User \(i)", age: i)
+                    let user = User<Database>(name: "User \(i)", age: i)
                     users.append(user.save(on: conn))
                 }
 
                 return users.flatten().then {
                     // count users
-                    return conn.query(User.self).count().then { count in
+                    return conn.query(User<Database>.self).count().then { count in
                         if count != 1_001 {
                             self.fail("count should be 1,001")
                         }
@@ -36,7 +36,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
             // good
         }
 
-        if try test(conn.query(User.self).count()) != 1 {
+        if try test(conn.query(User<Database>.self).count()) != 1 {
             fail("count should have restored to one")
         }
     }

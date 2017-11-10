@@ -31,9 +31,10 @@ struct TestSiblings: Migration {
 }
 
 final class User: Model, ResponseRepresentable {
+    typealias Database = SQLiteDatabase
     typealias ID = UUID
 
-    static let keyFieldMap = [
+    static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.name): field("name"),
         key(\.age): field("age"),
@@ -90,19 +91,17 @@ extension Array: ResponseRepresentable {
 }
 
 extension User: Migration {
-    typealias Database = SQLiteDatabase
+    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
+        return conn.create(User.self) { user in
+            try user.id()
+            try user.field(for: \.name)
+            try user.field(for: \.age)
+        }
+    }
 
-//    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
-//        return conn.create(User.self) { user in
-//            user.id()
-//            user.field(for: \.name)
-//            user.field(for: \.age)
-//        }
-//    }
-//
-//    static func revert(on conn: SQLiteConnection) -> Future<Void> {
-//        return conn.delete(User.self)
-//    }
+    static func revert(on conn: SQLiteConnection) -> Future<Void> {
+        return conn.delete(User.self)
+    }
 }
 
 struct AddUsers: Migration {

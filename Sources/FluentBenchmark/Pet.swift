@@ -2,7 +2,10 @@ import Async
 import Fluent
 import Foundation
 
-internal final class Pet: Model {
+internal final class Pet<D: Database>: Model {
+    /// See Model.Database
+    public typealias Database = D
+
     /// See Model.ID
     typealias ID = UUID
 
@@ -12,14 +15,16 @@ internal final class Pet: Model {
     }
 
     /// See Model.idKey
-    static var idKey = \Pet.id
+    static var idKey: IDKey { return \.id }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.ownerID): field("ownerID")
-    ]
+    static var keyFieldMap: KeyFieldMap {
+        return [
+            key(\.id): field("id"),
+            key(\.name): field("name"),
+            key(\.ownerID): field("ownerID")
+        ]
+    }
 
     /// Foo's identifier
     var id: ID?
@@ -28,10 +33,10 @@ internal final class Pet: Model {
     var name: String
 
     /// Age int
-    var ownerID: User.ID
+    var ownerID: User<Database>.ID
 
     /// Create a new foo
-    init(id: ID? = nil, name: String, ownerID: User.ID) {
+    init(id: ID? = nil, name: String, ownerID: User<Database>.ID) {
         self.id = id
         self.name = name
         self.ownerID = ownerID
@@ -42,12 +47,14 @@ internal final class Pet: Model {
 
 extension Pet {
     /// A relation to this pet's owner.
-    var owner: Parent<Pet, User> {
+    var owner: Parent<Pet, User<Database>> {
         return parent(\.ownerID)
     }
+}
 
+extension Pet where Database.Connection: JoinSupporting {
     /// A relation to this pet's toys.
-    var toys: Siblings<Pet, Toy, PetToy> {
+    var toys: Siblings<Pet, Toy<Database>, PetToy<Database>> {
         return siblings()
     }
 }
@@ -60,7 +67,7 @@ internal struct PetMigration<D: Database>: Migration where D.Connection: SchemaS
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-        return connection.create(Pet.self) { builder in
+        return connection.create(Pet<Database>.self) { builder in
             try builder.id()
             try builder.field(for: \.name)
             try builder.field(for: \.ownerID)
@@ -69,7 +76,7 @@ internal struct PetMigration<D: Database>: Migration where D.Connection: SchemaS
 
     /// See Migration.revert
     static func revert(on connection: Database.Connection) -> Future<Void> {
-        return connection.delete(Pet.self)
+        return connection.delete(Pet<Database>.self)
     }
 }
 

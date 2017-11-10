@@ -6,13 +6,13 @@ extension Benchmarker {
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
         for i in 1...2048 {
-            let user = User(name: "User \(i)", age: i)
+            let user = User<Database>(name: "User \(i)", age: i)
             try test(user.save(on: conn))
         }
 
 
-        var fetched64: [User] = []
-        try conn.query(User.self).chunk(max: 64) { chunk in
+        var fetched64: [User<Database>] = []
+        try conn.query(User<Database>.self).chunk(max: 64) { chunk in
             if chunk.count != 64 {
                 self.fail("bad chunk count")
             }
@@ -24,8 +24,8 @@ extension Benchmarker {
         }
 
 
-        var fetched2047: [User] = []
-        try conn.query(User.self).chunk(max: 2047) { chunk in
+        var fetched2047: [User<Database>] = []
+        try conn.query(User<Database>.self).chunk(max: 2047) { chunk in
             if chunk.count != 2047 && chunk.count != 1 {
                 self.fail("bad chunk count")
             }

@@ -4,9 +4,10 @@ import Foundation
 import SQLite
 
 final class Toy: Model {
+    typealias Database = SQLiteDatabase
     typealias ID = UUID
 
-    static let keyFieldMap = [
+    static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.name): field("name")
     ]
@@ -26,5 +27,15 @@ final class Toy: Model {
 }
 
 extension Toy: Migration {
-    typealias Database = SQLiteDatabase
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { schema in
+            try schema.id()
+            try schema.field(for: \.name)
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
+
 }
