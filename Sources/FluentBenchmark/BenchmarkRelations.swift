@@ -6,7 +6,7 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
     /// The actual benchmark.
     fileprivate func _benchmark(on conn: Database.Connection) throws {
         try test(conn.enableReferences())
-        
+
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         try test(tanner.save(on: conn))

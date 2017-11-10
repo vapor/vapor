@@ -4,26 +4,19 @@ public enum QueryGroupRelation {
 }
 
 extension QueryBuilder {
-    /// Subset `in` filter.
-    @discardableResult
-    public func filter<
-        Field: QueryFieldRepresentable
-    >(_ field: Field, in values: [Encodable?]) throws -> Self {
-        let filter = try QueryFilter(
-            entity: Model.entity,
-            method: .subset(field.makeQueryField(), .in, .array(values))
-        )
-        return addFilter(filter)
-    }
+    public typealias GroupClosure = (QueryBuilder<Model>) throws -> ()
 
-    /// Subset `notIn` filter.
+    /// Create a query group.
     @discardableResult
-    public func filter<
-        Field: QueryFieldRepresentable
-    >(_ field: Field, notIn values: [Encodable?]) throws -> Self {
-        let filter = try QueryFilter(
+    public func group(
+        _ relation: QueryGroupRelation,
+        closure: @escaping GroupClosure
+    ) throws -> Self {
+        let sub = copy()
+        try closure(sub)
+        let filter = QueryFilter(
             entity: Model.entity,
-            method: .subset(field.makeQueryField(), .notIn, .array(values))
+            method: .group(.or, sub.query.filters)
         )
         return addFilter(filter)
     }

@@ -2,35 +2,6 @@ import Async
 
 /// Execute the database query.
 extension QueryBuilder {
-    /// Begins executing the connection and sending
-    /// results to the output stream.
-    /// The resulting future will be completed when the
-    /// query is done or fails
-    public func run<T: Decodable>(
-        decoding type: T.Type = T.self,
-        into outputStream: @escaping BasicStream<T>.OutputHandler
-    ) -> Future<Void> {
-        let stream = BasicStream<T>()
-        let promise = Promise(Void.self)
-
-        // connect output
-        stream.outputStream = outputStream
-
-        // connect close
-        stream.onClose = {
-            promise.complete()
-        }
-
-        // connect error
-        stream.errorStream = { error in
-            promise.fail(error)
-        }
-
-        // execute
-        connection.execute(query: self.query, into: stream)
-        return promise.future
-    }
-
     /// Convenience run that defaults to outputting a
     /// stream of the QueryBuilder's model type.
     public func run(

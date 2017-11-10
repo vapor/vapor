@@ -1,26 +1,6 @@
 import Async
 import Foundation
 
-/// A Fluent database query builder.
-public final class QueryBuilder<Model: Fluent.Model> {
-    /// The query we are building
-    public var query: DatabaseQuery
-
-    /// The connection this query will be excuted on.
-    public let connection: Connection
-
-    /// Create a new query.
-    public init(
-        _ model: Model.Type = Model.self,
-        on connection: Model.Database.Connection
-    ) {
-        query = DatabaseQuery(entity: Model.entity)
-        self.connection = connection
-    }
-}
-
-// MARK: Save
-
 extension QueryBuilder {
     /// Saves the supplied model.
     /// Calls `create` if the ID is `nil`, and `update` if it exists.

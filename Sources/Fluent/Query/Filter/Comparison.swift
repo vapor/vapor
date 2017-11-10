@@ -6,13 +6,20 @@ public enum EqualityComparison {
     case notEquals
 }
 
+extension Encodable {
+    /// Null
+    public static var null: Optional<Self> {
+        return nil
+    }
+}
+
 /// MARK: .equals
 
 /// field == value
 public func == <
     Field: QueryFieldRepresentable,
     Value: Encodable & Equatable
->(lhs: Field, rhs: Value) throws -> QueryFilterMethod {
+>(lhs: Field, rhs: Value?) throws -> QueryFilterMethod {
     return try .compare(lhs.makeQueryField(), .equality(.equals), .value(rhs))
 }
 
