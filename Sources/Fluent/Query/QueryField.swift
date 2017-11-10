@@ -37,8 +37,7 @@ extension KeyPath: QueryFieldRepresentable {
             throw "`Can't create query field. \(Root.self)` does not conform to `Model`."
         }
 
-        let key = ModelKey(path: self, type: Value.self, isOptional: false)
-        guard let queryField = model.keyFieldMap[key] else {
+        guard let queryField = model.keyFieldMap[self] else {
             throw "No query field on model `\(Root.self)` for key path `\(self)`"
         }
 

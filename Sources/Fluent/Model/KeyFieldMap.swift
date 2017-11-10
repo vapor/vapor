@@ -26,6 +26,16 @@ public struct KeyFieldMap: ExpressibleByDictionaryLiteral {
     public subscript(_ key: ModelKey) -> QueryField? {
         return storage[key]
     }
+
+    /// Access a query field for a given model key.
+    public subscript(_ key: AnyKeyPath) -> QueryField? {
+        let modelKey = ModelKey(
+            path: key,
+            type: Any.self,
+            isOptional: false
+        )
+        return storage[modelKey]
+    }
 }
 
 /// A model property containing the

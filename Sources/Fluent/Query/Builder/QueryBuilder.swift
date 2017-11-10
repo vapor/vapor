@@ -35,11 +35,17 @@ public final class QueryBuilder<Model: Fluent.Model> {
 
             /// if the model is soft deletable, and soft deleted
             /// models were not requested, then exclude them
-            if Model.self is SoftDeletable, !self.query.withSoftDeleted {
-                // FIXME: DeletedAtKey
+            if
+                let type = Model.self as? (_SoftDeletable & KeyFieldMappable).Type,
+                !self.query.withSoftDeleted
+            {
+                guard let deletedAtField = type.keyFieldMap[type._deletedAtKey] else {
+                    throw "no deleted at field in key map"
+                }
+
                 try self.group(.or) { or in
-                    try or.filter("deletedAt" > Date())
-                    try or.filter("deletedAt" == Date.null)
+                    try or.filter(deletedAtField > Date())
+                    try or.filter(deletedAtField == Date.null)
                 }
             }
 
