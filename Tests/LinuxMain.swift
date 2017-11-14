@@ -1,10 +1,12 @@
 #if os(Linux)
 
 import XCTest
+import Testing
 @testable import CacheTests
 @testable import SessionsTests
 @testable import ConfigsTests
 @testable import VaporTests
+@testable import TestingTests
 
 XCTMain([
     // Cache
@@ -41,6 +43,9 @@ XCTMain([
     testCase(RoutingTests.allTests),
     testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
+
+    // Testing
+    testCase(ResponderTests.allTests),
 ])
 
 #endif
