@@ -5,7 +5,7 @@ import FluentSQLite
 import SQLite
 import XCTest
 
-final class SQLiteBencharkTests: XCTestCase {
+final class SQLiteBenchmarkTests: XCTestCase {
     var benchmarker: Benchmarker<SQLiteDatabase>!
 
     override func setUp() {
