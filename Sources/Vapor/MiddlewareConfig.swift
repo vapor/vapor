@@ -1,12 +1,34 @@
 import HTTP
 import Service
 
-/// Desired middleware configuration
+/// Configures application middleware.
+/// Middleware will be used in the order they are added.
 public struct MiddlewareConfig {
-    let desired: [Middleware.Type]
+    /// Lazily initializes a middleware using container.
+    typealias LazyMiddleware = (Container) throws -> Middleware
 
-    public init(_ desired: [Middleware.Type]) {
-        self.desired = desired
+    /// The configured middleware.
+    var storage: [LazyMiddleware]
+
+    /// Create a new middleware config.
+    public init() {
+        self.storage = []
+    }
+
+    /// Adds the supplied middleware type.
+    /// The service container will be asked to create this
+    /// middleware type upon application boot.
+    public mutating func use<M: Middleware>(_ type: M.Type) {
+        storage.append({ container in
+            return try container.make(Middleware.self, for: MiddlewareConfig.self)
+        })
+    }
+
+    /// Adds the supplied middleware.
+    public mutating func use<M: Middleware>(_ middleware: M) {
+        storage.append({ container in
+            return middleware
+        })
     }
 }
 
@@ -14,9 +36,9 @@ public struct MiddlewareConfig {
 
 extension MiddlewareConfig {
     /// Resolves the desired middleware for a given container
-    func resolve(for container: Container) throws -> [Middleware] {
-        return try desired.map { desired in
-            try container.unsafeMake(desired, for: MiddlewareConfig.self) as! Middleware
+    internal func resolve(for container: Container) throws -> [Middleware] {
+        return try storage.map { lazy in
+            return try lazy(container)
         }
     }
 }

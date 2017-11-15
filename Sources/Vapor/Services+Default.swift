@@ -19,10 +19,10 @@ extension Services {
         }
 
         // register middleware
-        services.register { container in
-            return MiddlewareConfig([
-                DateMiddleware.self
-            ])
+        services.register { container -> MiddlewareConfig in
+            var config = MiddlewareConfig()
+            config.use(DateMiddleware.self)
+            return config
         }
         
         services.register { container in
