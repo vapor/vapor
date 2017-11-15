@@ -116,9 +116,9 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt) throws {
         #if arch(x86_64) || arch(arm64)
-            try self.bind(numericCast(int) as UInt32)
-        #else
             try self.bind(numericCast(int) as UInt64)
+        #else
+            try self.bind(numericCast(int) as UInt32)
         #endif
     }
     
