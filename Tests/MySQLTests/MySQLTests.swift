@@ -7,7 +7,7 @@ import Core
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
-    let pool = ConnectionPool(hostname: "localhost", user: "root", password: nil, database: "vapor_test", queue: .global())
+    let pool = try! Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "vapor_test", queue: .global()).blockingAwait(timeout: .seconds(5))
     
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
@@ -53,9 +53,9 @@ class MySQLTests: XCTestCase {
     func testPopulateUsersSchema() throws {
         try testCreateUsersSchema()
      
-        try pool.query("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait(timeout: .seconds(3))
-        try pool.query("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
-        try pool.query("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
+        try pool.administrativeQuery("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait(timeout: .seconds(3))
+        try pool.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
+        try pool.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
     }
 
     
@@ -123,9 +123,9 @@ class MySQLTests: XCTestCase {
         do {
             try pool.createTable(table).blockingAwait(timeout: .seconds(3))
      
-            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
+            try pool.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
      
-            try pool.query("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
+            try pool.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
         } catch {
             debugPrint(error)
             XCTFail()
@@ -154,7 +154,7 @@ class MySQLTests: XCTestCase {
     }
     
     func testFailures() throws {
-        XCTAssertThrowsError(try pool.query("INSERT INTO users (username) VALUES ('Exampleuser')").blockingAwait(timeout: .seconds(3)))
+        XCTAssertThrowsError(try pool.administrativeQuery("INSERT INTO users (username) VALUES ('Exampleuser')").blockingAwait(timeout: .seconds(3)))
         XCTAssertThrowsError(try pool.all(User.self, in: "SELECT * FORM users").blockingAwait(timeout: .seconds(3)))
     }
 }

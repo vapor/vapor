@@ -106,16 +106,8 @@ public final class PreparationBinding {
     }
 }
 
-extension ConnectionPool {
+extension Connection {
     public func withPreparation<T>(statement: Query, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
-        return self.retain { connection, complete, fail in
-            connection.prepare(query: statement).then { statement in
-                do {
-                    try closure(statement).then(callback: complete).catch(callback: fail)
-                } catch {
-                    fail(error)
-                }
-            }.catch(callback: fail)
-        }
+        return self.prepare(query: statement).flatMap(closure)
     }
 }

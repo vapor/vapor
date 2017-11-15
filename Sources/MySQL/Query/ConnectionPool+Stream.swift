@@ -1,7 +1,7 @@
 import Async
 import Core
 
-extension ConnectionPool {
+extension Connection {
     /// Collects all resulting rows and returs them in the future
     ///
     /// - parameter query: The query to be executed to receive results from
@@ -9,28 +9,23 @@ extension ConnectionPool {
     /// - returns: A stream of all resulting rows
     internal func streamRows(in query: Query) -> RowStream {
         let stream = RowStream(mysql41: true)
+        let promise = Promise<Void>()
         
-        let future = retain { connection, complete, fail in
-            // Set up a parser
-            connection.receivePackets(into: stream.inputStream)
-            
-            stream.onClose = {
-                complete(())
-            }
-            
-            stream.errorStream = { error in
-                fail(error)
-            }
-            
-            // Send the query
-            do {
-                try connection.write(query: query.string)
-            } catch {
-                fail(error)
-            }
-        } as Future<Void>
-        
-        future.addAwaiter { result in
+        // Set up a parser
+        self.receivePackets(into: stream.inputStream)
+    
+        stream.errorStream = { error in
+            promise.fail(error)
+        }
+    
+        // Send the query
+        do {
+            try self.write(query: query.string)
+        } catch {
+            promise.fail(error)
+        }
+    
+        promise.future.addAwaiter { result in
             switch result {
             case .error(let error):
                 stream.errorStream?(error)
@@ -49,28 +44,27 @@ extension ConnectionPool {
     /// - returns: A stream of all decoded resulting
     public func stream<D: Decodable>(_ type: D.Type, in query: Query) -> ModelStream<D> {
         let stream = ModelStream<D>(mysql41: true)
+        let promise = Promise<Void>()
         
-        let future = retain { connection, complete, fail in
-            // Set up a parser
-            connection.receivePackets(into: stream.inputStream)
-            
-            stream.onClose = {
-                complete(())
-            }
-            
-            stream.errorStream = { error in
-                fail(error)
-            }
-            
-            // Send the query
-            do {
-                try connection.write(query: query.string)
-            } catch {
-                fail(error)
-            }
-        } as Future<Void>
+        // Set up a parser
+        self.receivePackets(into: stream.inputStream)
         
-        future.addAwaiter { result in
+        stream.onClose = {
+            promise.complete(())
+        }
+        
+        stream.errorStream = { error in
+            promise.fail(error)
+        }
+        
+        // Send the query
+        do {
+            try self.write(query: query.string)
+        } catch {
+            promise.fail(error)
+        }
+        
+        promise.future.addAwaiter { result in
             switch result {
             case .error(let error):
                 stream.errorStream?(error)

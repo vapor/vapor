@@ -30,27 +30,29 @@ extension Connection {
     }
 }
 
-extension ConnectionPool {
+extension Connection {
     /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
-    internal func query(_ query: Query) -> Future<Void> {
-        return retain { connection, complete, fail in
-            do {
-                connection.receivePackets { packet in
-                    // Expect an `OK` or `EOF` packet
-                    guard packet.payload.first == 0x00 else {
-                        // Otherwise, reutrn an error
-                        fail(MySQLError(packet: packet))
-                        return
-                    }
-                    
-                    complete(())
-                }
-                
-                try connection.write(query: query.string)
-            } catch {
-                fail(error)
+    public func administrativeQuery(_ query: Query) -> Future<Void> {
+        let promise = Promise<Void>()
+        
+        self.receivePackets { packet in
+            // Expect an `OK` or `EOF` packet
+            guard packet.payload.first == 0x00 else {
+                // Otherwise, reutrn an error
+                promise.fail(MySQLError(packet: packet))
+                return
             }
+            
+            promise.complete(())
         }
+        
+        do {
+            try self.write(query: query.string)
+        } catch {
+            return Future(error: error)
+        }
+        
+        return promise.future
     }
 }
