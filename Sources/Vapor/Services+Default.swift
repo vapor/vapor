@@ -42,8 +42,10 @@ extension Services {
     }
 }
 
+extension Request: HasContainer { }
+extension Response: HasContainer { }
 
-extension Request: HasContainer {
+extension Message {
     public var app: Application? {
         get { return extend["vapor:application"] as? Application }
         set { extend["vapor:application"] = newValue }
