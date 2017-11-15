@@ -37,9 +37,9 @@ extension Socket {
         self.address = Address(storage: info.pointee.ai_addr.pointee)
     }
     
-    /// Gets called when the connection becomes writable.
+    /// Gets called when the connection becomes readable.
     ///
-    /// This is a non-threadsafe operation and thus should only be used once at a time.
+    /// This operation *must* once at a time.
     public func readable(queue: DispatchQueue) -> Future<Void> {
         let promise = Promise<Void>()
         let read = self.readSource ?? DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
@@ -57,7 +57,7 @@ extension Socket {
     
     /// Gets called when the connection becomes writable.
     ///
-    /// This is a non-threadsafe operation and thus should only be used once at a time.
+    /// This operation *must* once at a time.
     public func writable(queue: DispatchQueue) -> Future<Void> {
         let promise = Promise<Void>()
         let write = self.writeSource ?? DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)

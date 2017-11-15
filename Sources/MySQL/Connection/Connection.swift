@@ -69,18 +69,22 @@ public final class Connection {
     }
     
     /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws -> Future<Connection> {
-        let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, queue: queue)
-        
-        return connection.authenticated.future.map { _ in
-            return connection
+    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<Connection> {
+        do {
+            let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
+            
+            return connection.authenticated.future.map { _ in
+                return connection
+            }
+        } catch {
+            return Future(error: error)
         }
     }
     
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws {
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) throws {
         let socket = try Socket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
@@ -91,14 +95,14 @@ public final class Connection {
         
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: queue
+            queue: worker.eventLoop.queue
         )
         
         self.source = source
         
         self.parser = parser
         self.socket = socket
-        self.queue = queue
+        self.queue = worker.eventLoop.queue
         self.buffer = buffer
         self.source = source
         self.username = user

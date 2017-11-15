@@ -1,6 +1,9 @@
 import Foundation
 import Bits
 
+/// RandomProtocol implementations can output random sets of data
+///
+/// http://localhost:8000/crypto/random/
 public protocol RandomProtocol {
     /// Get a random array of Data
     func data(count: Int) throws -> Data

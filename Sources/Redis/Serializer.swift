@@ -30,6 +30,23 @@ final class DataSerializer: Async.Stream {
     }
 }
 
+extension DataSerializer {
+    
+    /// Used for pipelining commands
+    /// Concatenates commands to RedisData for the outputStream
+    func inputStream(_ input: [RedisData]) {
+        var buffer = Data()
+        for item in input {
+            buffer.append(contentsOf: item.serialize())
+        }
+        buffer.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: buffer.count)
+            output(buffer)
+        }
+    }
+    
+}
+
 /// Static "fast" route for serializing `null` values
 fileprivate let nullData = Data("$-1\r\n".utf8)
 

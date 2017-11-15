@@ -19,9 +19,14 @@ extension Connection {
 }
 
 extension ConnectionPool {
+    /// Used to send queries that expect no concrete results
+    ///
+    /// http://localhost:8000/mysql/basics/#resultless-queries
+    ///
+    /// - returns: A future that is completed on query success or failure
     @discardableResult
-    public func query(_ query: Query) throws -> Future<Void> {
-        return try self.allRows(in: query).map { _ in
+    public func query(_ query: Query) -> Future<Void> {
+        return self.allRows(in: query).map { _ in
             return ()
         }
     }

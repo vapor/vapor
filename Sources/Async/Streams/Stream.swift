@@ -84,6 +84,8 @@ extension OutputStream {
 /// All streams are expected to reset themselves
 /// after reporting an error and be ready for
 /// additional incoming data.
+///
+/// http://localhost:8000/async/streams-introduction/#implementing-an-example-stream
 public protocol BaseStream: class {
     /// A closure that takes one error.
     typealias ErrorHandler = (Error) -> ()
@@ -98,7 +100,7 @@ public protocol BaseStream: class {
 extension OutputStream {
     /// Drains the output stream into a closure.
     ///
-    /// http://localhost:8000/async/streams-basics/#draining-streams
+    /// http://localhost:8000/async/streams-introduction/#draining-streams
     @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
@@ -107,7 +109,7 @@ extension OutputStream {
 
     /// Drains the output stream into a closure
     ///
-    /// http://localhost:8000/async/streams-basics/#catching-stream-errors
+    /// http://localhost:8000/async/streams-introduction/#catching-stream-errors
     @discardableResult
     public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
         self.errorStream = handler

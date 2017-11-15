@@ -35,6 +35,8 @@ extension FutureType {
     /// completion of this future.
     ///
     /// Will *not* be executed if an error occurrs
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#on-future-completion
     public func `do`(_ callback: @escaping ExpectationCallback) -> Self {
         addAwaiter { result in
             guard let ex = result.expectation else {
@@ -52,6 +54,8 @@ extension FutureType {
     ///
     /// Will *only* be executed if an error occurred.
     //// Successful results will not call this handler.
+    ///
+    /// http://localhost:8000/async/promise-future-introduction/#on-future-completion
     public func `catch`(_ callback: @escaping ErrorCallback) {
         addAwaiter { result in
             guard let er = result.error else {

@@ -5,6 +5,8 @@ import libc
 
 /// Uses the operating system's Random function
 /// uses `random` on Linux and `arc4random` on macOS.
+///
+/// http://localhost:8000/crypto/random/
 public final class OSRandom: DataGenerator, EmptyInitializable {
     /// Create a new OSRandom
     public init() {}

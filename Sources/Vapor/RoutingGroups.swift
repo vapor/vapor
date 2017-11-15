@@ -8,6 +8,8 @@ import Routing
 /// All path components will be inserted before the Route's path
 ///
 /// All middleware will be applied to the Responder
+///
+/// http://localhost:8000/vapor/route-group/
 public final class RouteGroup: Router {
     /// All routes registered to this group
     public private(set) var routes: [Route] = []
@@ -45,21 +47,29 @@ public final class RouteGroup: Router {
 
 extension Router {
     /// Creates a group with the provided path components and hands it to the closure
+    ///
+    /// http://localhost:8000/vapor/route-group/#path-components
     public func group(_ path: PathComponentRepresentable..., use: ((RouteGroup) -> ())) {
         use(RouteGroup(cascadingTo: self, components: path.makePathComponents()))
     }
     
     /// Creates a group with the provided path components
+    ///
+    /// http://localhost:8000/vapor/route-group/#path-components
     public func grouped(_ path: PathComponentRepresentable...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, components: path.makePathComponents())
     }
     
     /// Creates a group with the provided middleware and hands it to the closure
+    ///
+    /// http://localhost:8000/vapor/route-group/#middleware
     public func group(_ middleware: Middleware..., use: ((RouteGroup) -> ())) {
         use(RouteGroup(cascadingTo: self, middleware: middleware))
     }
     
     /// Creates a group with the provided middleware
+    ///
+    /// http://localhost:8000/vapor/route-group/#middleware
     public func grouped(_ middleware: Middleware...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }

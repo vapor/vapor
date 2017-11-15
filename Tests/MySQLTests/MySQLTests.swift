@@ -1,11 +1,12 @@
 import Dispatch
 import XCTest
+import Async
 import TCP
 @testable import MySQL
 import Core
 
 class MySQLTests: XCTestCase {
-    let pool = ConnectionPool(hostname: "127.0.0.1", user: "root", password: "", database: "test", queue: .global())
+    let pool = ConnectionPool(hostname: "127.0.0.1", user: "root", password: "", database: "test", worker: DispatchQueue.global())
 
     static let allTests = [
         ("testNothing", testNothing),

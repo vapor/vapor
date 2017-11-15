@@ -2,6 +2,8 @@ import Async
 import Bits
 
 /// A stream of incoming and outgoing binary  between 2 parties over WebSockets
+///
+/// http://localhost:8000/websocket/binary-stream/
 final class BinaryStream : Async.Stream {
     /// A stream of incoming binary data
     var outputStream: OutputHandler?
@@ -45,6 +47,8 @@ final class BinaryStream : Async.Stream {
 
 extension WebSocket {
     /// Sends a string to the server
+    ///
+    /// http://localhost:8000/websocket/binary-stream/
     public func send(_ buffer: ByteBuffer) {
         self.binaryStream.inputStream(buffer)
     }
@@ -52,6 +56,8 @@ extension WebSocket {
     /// Drains the TextStream into this closure.
     ///
     /// Any previously listening closures will be overridden
+    ///
+    /// http://localhost:8000/websocket/binary-stream/
     public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) {
         self.binaryStream.drain(closure).catch { error in
             // FIXME: @joannis

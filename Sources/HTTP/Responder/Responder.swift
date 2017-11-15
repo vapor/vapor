@@ -2,6 +2,8 @@ import Async
 import Dispatch
 
 /// Capable of responding to a request.
+///
+/// http://localhost:8000/http/responder/
 public protocol Responder {
     func respond(to req: Request) throws -> Future<Response>
 }
