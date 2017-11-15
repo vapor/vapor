@@ -85,19 +85,44 @@ extension QueryField: CodingKey {
     }
 }
 
-extension KeyedDecodingContainer where K == QueryField {
-    /// Decodes a value from a key path.
-    public func decode<T: Decodable, M: Model>(_ type: T.Type = T.self, forKey key: KeyPath<M, T>) throws -> T {
-        let field = try key.makeQueryField()
-        return try decode(T.self, forKey: field)
+extension Model {
+    /// Creates a query field decoding container for this model.
+    public static func decodingContainer(for decoder: Decoder) throws -> QueryFieldDecodingContainer<Self> {
+        let container = try decoder.container(keyedBy: QueryField.self)
+        return QueryFieldDecodingContainer(container: container)
+    }
+
+    /// Creates a query field encoding container for this model.
+    public func encodingContainer(for encoder: Encoder) -> QueryFieldEncodingContainer<Self> {
+        let container = encoder.container(keyedBy: QueryField.self)
+        return QueryFieldEncodingContainer(container: container, model: self)
     }
 }
 
-extension KeyedEncodingContainer where K == QueryField {
-    /// Encodes a value to a key path.
-    public mutating func encode<T: Encodable, M: Model>(_ value: T, forKey key: KeyPath<M, T>) throws {
+/// A container for decoding model key paths.
+public struct QueryFieldDecodingContainer<Model: Fluent.Model> {
+    /// The underlying container.
+    public var container: KeyedDecodingContainer<QueryField>
+    
+    /// Decodes a model key path to a type.
+    public func decode<T: Decodable>(key: KeyPath<Model, T>) throws -> T {
         let field = try key.makeQueryField()
-        try self.encode(value, forKey: field)
+        return try container.decode(T.self, forKey: field)
     }
 }
 
+/// A container for encoding model key paths.
+public struct QueryFieldEncodingContainer<Model: Fluent.Model> {
+    /// The underlying container.
+    public var container: KeyedEncodingContainer<QueryField>
+
+    /// The model being encoded.
+    public var model: Model
+
+    /// Encodes a model key path to the encoder.
+    public mutating func encode<T: Encodable>(key: KeyPath<Model, T>) throws {
+        let field = try key.makeQueryField()
+        let value: T = model[keyPath: key]
+        try container.encode(value, forKey: field)
+    }
+}

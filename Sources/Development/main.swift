@@ -106,17 +106,17 @@ final class Message: Model {
     }
 
     init(from decoder: Decoder) throws {
-        let container = try decoder.container(keyedBy: QueryField.self)
-        id = try container.decode(forKey: \Message.id)
-        text = try container.decode(forKey: \Message.text)
-        time = try container.decode(forKey: \Message.time)
+        let container = try Message.decodingContainer(for: decoder)
+        id = try container.decode(key: \Message.id)
+        text = try container.decode(key: \Message.text)
+        time = try container.decode(key: \Message.time)
     }
 
     func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: QueryField.self)
-        try container.encode(id, forKey: \Message.id)
-        try container.encode(text, forKey: \Message.text)
-        try container.encode(time, forKey: \Message.time)
+        var container = encodingContainer(for: encoder)
+        try container.encode(key: \Message.id)
+        try container.encode(key: \Message.text)
+        try container.encode(key: \Message.time)
     }
 }
 

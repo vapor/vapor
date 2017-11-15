@@ -36,6 +36,13 @@ public final class Toy<D: Database>: Model {
         self.id = id
         self.name = name
     }
+
+    /// See Encodable.encode
+    public func encode(to encoder: Encoder) throws {
+        var container = encodingContainer(for: encoder)
+        try container.encode(key: \Toy<Database>.id)
+        try container.encode(key: \Toy<Database>.name)
+    }
 }
 
 // MARK: Relations
@@ -72,6 +79,3 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
         return connection.delete(Toy<Database>.self)
     }
 }
-
-
-

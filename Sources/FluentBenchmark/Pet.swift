@@ -42,8 +42,12 @@ public final class Pet<D: Database>: Model {
         self.ownerID = ownerID
     }
 
-    public func encode(to: Encoder) throws {
-        fatalError("fixme")
+    /// See Encodable.encode
+    public func encode(to encoder: Encoder) throws {
+        var container = encodingContainer(for: encoder)
+        try container.encode(key: \Pet<Database>.id)
+        try container.encode(key: \Pet<Database>.name)
+        try container.encode(key: \Pet<Database>.ownerID)
     }
 }
 
