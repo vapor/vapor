@@ -22,14 +22,11 @@ public struct SchemaField {
     }
 }
 
-/// Supported database field types.
-public enum SchemaFieldType {
-    case string(Int?)
-    case int
-    case double
-    case data(Int)
-    case date
-    case custom(type: String)
+/// Capable of being a schema field type.
+public protocol SchemaFieldType {
+    /// Convert to a string representation of
+    /// the schema field type.
+    func schemaFieldTypeString() -> String
 }
 
 // MARK: Fields

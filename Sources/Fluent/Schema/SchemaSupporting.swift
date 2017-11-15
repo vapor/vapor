@@ -2,6 +2,9 @@ import Async
 
 /// Capable of executing a database schema query.
 public protocol SchemaSupporting: Connection {
+    /// See SchemaFieldType
+    associatedtype FieldType: SchemaFieldType
+
     /// Executes the supplied schema on the database connection.
     func execute(schema: DatabaseSchema) -> Future<Void>
 }
