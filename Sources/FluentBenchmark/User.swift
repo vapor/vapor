@@ -49,10 +49,6 @@ public final class User<D: Database>: Model, Timestampable {
         self.name = name
         self.age = age
     }
-
-    public func encode(to: Encoder) throws {
-        fatalError("fixme")
-    }
 }
 
 // MARK: Relations
