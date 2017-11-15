@@ -48,6 +48,10 @@ public final class PetToy<D: Database>: ModifiablePivot {
         petID = try pet.requireID()
         toyID = try toy.requireID()
     }
+
+    public func encode(to: Encoder) throws {
+        
+    }
 }
 
 internal struct PetToyMigration<D: Database>: Migration where D.Connection: SchemaSupporting {
