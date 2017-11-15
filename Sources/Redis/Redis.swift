@@ -32,8 +32,9 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     
     /// Runs a Value as a command
     ///
-    /// - returns: A future containing the server's response
-    /// - throws: On network error
+    /// http://localhost:8000/redis/custom-commands/#usage
+    ///
+    /// - returns: A future containing the server's response or the error
     public func run(command: String, arguments: [RedisData]? = nil) -> Future<RedisData> {
         if isSubscribed {
             return Future(error: RedisError(.cannotReuseSubscribedClients))

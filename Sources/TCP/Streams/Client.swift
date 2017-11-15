@@ -6,12 +6,14 @@ import Foundation
 import libc
 
 /// TCP client stream.
+///
+/// http://localhost:8000/sockets/tcp-client/
 public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
     
-    /// See `BaseStream.onClose`
+    /// See `BaseStream.onClose`ere
     public var onClose: CloseHandler?
     
     /// See `BaseStream.errorStream`
@@ -44,7 +46,9 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Keeps track of the writesource's active status so it's not resumed too often
     var writing = false
     
-    /// Creates a new Remote Client from the ServerSocket's details
+    /// Creates a new Remote Client from the a socket
+    ///
+    /// http://localhost:8000/sockets/tcp-client/#creating-and-connecting-a-socket
     public init(socket: Socket, worker: Worker) {
         self.socket = socket
         self.worker = worker
@@ -58,18 +62,24 @@ public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
     
     /// Handles normal stream input
+    ///
+    /// http://localhost:8000/sockets/tcp-client/#communicating
     public func inputStream(_ input: ByteBuffer) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
     }
     
     /// Handles DispatchData input
+    ///
+    /// http://localhost:8000/sockets/tcp-client/#communicating
     public func inputStream(_ input: DispatchData) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
     }
     
     /// Handles Data input
+    ///
+    /// http://localhost:8000/sockets/tcp-client/#communicating
     public func inputStream(_ input: Data) {
         inputBuffer.append(input)
         ensureWriteSourceResumed()
@@ -132,6 +142,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
     }
 
     /// Starts receiving data from the client
+    ///
+    /// http://localhost:8000/sockets/tcp-client/#communicating
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
@@ -195,6 +207,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
 
     /// Deallocated the pointer buffer
     deinit {
+        close()
         outputBuffer.baseAddress.unsafelyUnwrapped.deallocate(capacity: outputBuffer.count)
         outputBuffer.baseAddress.unsafelyUnwrapped.deinitialize()
     }
