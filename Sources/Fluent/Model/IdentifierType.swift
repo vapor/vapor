@@ -9,6 +9,7 @@ public enum IDType<ID: Fluent.ID> {
     /// autoincremented identifier based on previous
     /// identifiers that exist in the database.
     case autoincrementing(IdentifierAutoincrement)
+
     /// A closure that creates a new identifier.
     public typealias IdentifierFactory = () -> ID
     /// The identifier property on the model should
@@ -16,6 +17,7 @@ public enum IDType<ID: Fluent.ID> {
     /// The supplied `IdentifierFactory` will be used
     /// to generate a new identifier for new items.
     case generated(IdentifierFactory)
+
     /// The identifier property on the model should
     /// always be set when saving a new model.
     case supplied
