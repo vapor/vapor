@@ -18,7 +18,7 @@ import TLS
 
 #if Xcode
     private var workDir: String {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
         let path = "/\(parent)/"
         return path
     }
@@ -74,8 +74,9 @@ class SSLTests: XCTestCase {
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
 
+
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(worker: Worker(queue: clientQueue))
+            let client = try TLSClient(worker: EventLoop(queue: clientQueue))
 
             clients.append(client)
 

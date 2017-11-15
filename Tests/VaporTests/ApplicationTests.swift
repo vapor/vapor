@@ -8,7 +8,7 @@ import XCTest
 
 class ApplicationTests: XCTestCase {
     func testCORSMiddleware() throws {
-        let app = Application()
+        let app = try Application()
         let cors = CORSMiddleware()
         
         let router = try app.make(Router.self).grouped(cors)

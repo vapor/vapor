@@ -3,7 +3,7 @@ extension Promise {
     ///
     /// http://localhost:8000/async/futures-basics/#flat-mapping-results
     public func flatten(_ future: Future<T>) {
-        future.then(callback: self.complete).catch(callback: self.fail)
+        future.do(complete).catch(fail)
     }
 }
 

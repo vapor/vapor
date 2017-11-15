@@ -1,3 +1,4 @@
+import Async
 import Core
 import Dispatch
 import Leaf
@@ -6,11 +7,11 @@ import XCTest
 
 class LeafTests: XCTestCase {
     var renderer: Renderer!
-    var queue: DispatchQueue!
+    var queue: Worker!
 
     override func setUp() {
         self.renderer = Renderer.makeTestRenderer()
-        self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
+        self.queue = EventLoop(queue: DispatchQueue(label: "codes.vapor.leaf.test"))
     }
 
     func testRaw() throws {
@@ -20,7 +21,7 @@ class LeafTests: XCTestCase {
 
     func testPrint() throws {
         let template = "Hello, #(name)!"
-        let data = Context.dictionary(["name": .string("Tanner")])
+        let data = LeafData.dictionary(["name": .string("Tanner")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "Hello, Tanner!")
     }
 
@@ -33,7 +34,7 @@ class LeafTests: XCTestCase {
         let template = """
         <p>#("foo: #(foo)")</p>
         """
-        let data = Context.dictionary(["foo": .string("bar")])
+        let data = LeafData.dictionary(["foo": .string("bar")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>foo: bar</p>")
     }
 
@@ -41,15 +42,15 @@ class LeafTests: XCTestCase {
         let template = """
         <p>#(embed(foo))</p>
         """
-        let data = Context.dictionary(["foo": .string("bar")])
+        let data = LeafData.dictionary(["foo": .string("bar")])
         try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>Test file name: &quot;bar.leaf&quot;</p>")
     }
 
     func testExpression() throws {
         let template = "#(age > 99)"
 
-        let young = Context.dictionary(["age": .int(21)])
-        let old = Context.dictionary(["age": .int(150)])
+        let young = LeafData.dictionary(["age": .int(21)])
+        let old = LeafData.dictionary(["age": .int(150)])
         try XCTAssertEqual(renderer.render(template, context: young, on: queue).blockingAwait(), "false")
         try XCTAssertEqual(renderer.render(template, context: old, on: queue).blockingAwait(), "true")
     }
@@ -58,8 +59,8 @@ class LeafTests: XCTestCase {
         let template = """
         #if(show) {hi}
         """
-        let noShow = Context.dictionary(["show": .bool(false)])
-        let yesShow = Context.dictionary(["show": .bool(true)])
+        let noShow = LeafData.dictionary(["show": .bool(false)])
+        let yesShow = LeafData.dictionary(["show": .bool(true)])
         try XCTAssertEqual(renderer.render(template, context: noShow, on: queue).blockingAwait(), "")
         try XCTAssertEqual(renderer.render(template, context: yesShow, on: queue).blockingAwait(), "hi")
     }
@@ -102,7 +103,7 @@ class LeafTests: XCTestCase {
             print("\(error)")
         }
 
-        renderer.render(path: "##()", context: .null, on: queue).then { data in
+        renderer.render(path: "##()", context: .null, on: queue).do { data in
             print(data)
             // FIXME: check for error
         }.catch { error in
@@ -138,7 +139,7 @@ class LeafTests: XCTestCase {
         </p>
         """
 
-        let context = Context.dictionary([
+        let context = LeafData.dictionary([
             "names": .array([
                 .string("Vapor"), .string("Leaf"), .string("Bits")
             ])
@@ -204,7 +205,7 @@ class LeafTests: XCTestCase {
         """
 
         var didAccess = false
-        let context = Context.dictionary([
+        let context = LeafData.dictionary([
             "foo": .lazy({
                 didAccess = true
                 return .string("hi")
@@ -227,7 +228,7 @@ class LeafTests: XCTestCase {
         #if(user.isAdmin) {Hello, #(user.name)!}
         """
 
-        let context = Context.dictionary([
+        let context = LeafData.dictionary([
             "user": .dictionary([
                 "isAdmin": .bool(true),
                 "name": .string("Tanner")
@@ -241,7 +242,7 @@ class LeafTests: XCTestCase {
         #if(user.id == 42) {User 42!} #if(user.id != 42) {Shouldn't show up}
         """
 
-        let context = Context.dictionary([
+        let context = LeafData.dictionary([
             "user": .dictionary([
                 "id": .int(42),
                 "name": .string("Tanner")
@@ -302,7 +303,7 @@ class LeafTests: XCTestCase {
         </p>
         """
 
-        let context: Context = .dictionary([
+        let context: LeafData = .dictionary([
             "items": .array([.string("foo"), .string("bar"), .string("baz")])
         ])
 
@@ -337,7 +338,7 @@ class LeafTests: XCTestCase {
 
     func testService() throws {
         var services = Services()
-        try services.register(Leaf.Provider())
+        try services.register(LeafProvider())
 
         services.register { container in
             return LeafConfig(tags: defaultTags) { queue in

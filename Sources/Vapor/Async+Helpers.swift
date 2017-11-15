@@ -5,3 +5,7 @@ import HTTP
 extension Response: FutureType {
     public typealias Expectation = Response
 }
+
+extension String: FutureType {
+    public typealias Expectation = String
+}

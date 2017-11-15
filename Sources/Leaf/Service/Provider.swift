@@ -26,7 +26,7 @@ public struct LeafConfig {
     }
 }
 
-public final class Provider: Service.Provider {
+public final class LeafProvider: Provider {
     /// See Service.Provider.repositoryName
     public static let repositoryName = "leaf"
 
@@ -64,5 +64,5 @@ public struct View {
 
 
 public protocol ViewRenderer {
-    func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View>
+    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
 }

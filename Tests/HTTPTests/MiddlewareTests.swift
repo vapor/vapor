@@ -58,7 +58,7 @@ class MiddlewareTests : XCTestCase {
         let socket = try TCP.Socket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
-        let tcpClient = TCPClient.init(socket: socket, worker: Worker(queue: .global()))
+        let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
         let client = HTTPClient(tcp: tcpClient)
         tcpClient.start()
         
@@ -97,7 +97,7 @@ final class TestMiddleware: Middleware {
 
         let promise = Promise<Response>()
 
-        try next.respond(to: request).then { res in
+        try next.respond(to: request).do { res in
             res.headers["baz"] = "bar"
             promise.complete(res)
         }.catch { error in

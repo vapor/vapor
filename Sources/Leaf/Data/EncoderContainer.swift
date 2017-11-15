@@ -1,6 +1,6 @@
 import Async
 
-internal struct ContextContainer<K: CodingKey>:
+internal struct LeafDataContainer<K: CodingKey>:
     KeyedEncodingContainerProtocol,
     UnkeyedEncodingContainer,
     SingleValueEncodingContainer,
@@ -10,13 +10,13 @@ internal struct ContextContainer<K: CodingKey>:
 
     var count: Int
 
-    var encoder: ContextEncoder
+    var encoder: LeafDataEncoder
     var codingPath: [CodingKey] {
         get { return encoder.codingPath }
         set { encoder.codingPath = newValue }
     }
 
-    public init(encoder: ContextEncoder) {
+    public init(encoder: LeafDataEncoder) {
         self.encoder = encoder
         self.count = 0
     }
@@ -54,7 +54,8 @@ internal struct ContextContainer<K: CodingKey>:
     }
 
     mutating func superEncoder(forKey key: K) -> Encoder {
-        fatalError("unimplemented")
+        codingPath.append(key)
+        return encoder
     }
 
     mutating func encode(_ value: Bool) throws {
@@ -171,11 +172,11 @@ internal struct ContextContainer<K: CodingKey>:
 
 
     mutating func encode<E>(_ future: Future<E>) throws {
-        let promise = Promise(Context.self)
+        let promise = Promise(LeafData.self)
 
-        future.then { item in
+        future.do { item in
             if let encodable = item as? Encodable {
-                let encoder = ContextEncoder()
+                let encoder = LeafDataEncoder()
                 try! encodable.encode(to: encoder)
                 promise.complete(encoder.context)
             } else {
@@ -198,13 +199,13 @@ internal struct ContextContainer<K: CodingKey>:
         _ = codingPath.popLast()
     }
 
-    mutating func set(_ context: inout Context, to value: Context?, at path: [CodingKey]) {
-        var child: Context?
+    mutating func set(_ context: inout LeafData, to value: LeafData?, at path: [CodingKey]) {
+        var child: LeafData?
         switch path.count {
         case 1:
             child = value
         case 2...:
-            child = context.dictionary?[path[0].stringValue] ?? Context.dictionary([:])
+            child = context.dictionary?[path[0].stringValue] ?? LeafData.dictionary([:])
             set(&child!, to: value, at: Array(path[1...]))
         default: return
         }
@@ -220,7 +221,7 @@ internal struct ContextContainer<K: CodingKey>:
     }
 
     /// Returns the value, if one at from the given path.
-    public func get(_ context: Context, at path: [CodingKey]) -> Context? {
+    public func get(_ context: LeafData, at path: [CodingKey]) -> LeafData? {
         var child = context
 
         for seg in path {
@@ -233,11 +234,11 @@ internal struct ContextContainer<K: CodingKey>:
         return child
     }
 
-    mutating func set(_ value: Context) {
+    mutating func set(_ value: LeafData) {
         set(&encoder.context, to: value, at: encoder.codingPath)
     }
 
-    mutating func set(_ value: Context, forKey key: K) {
+    mutating func set(_ value: LeafData, forKey key: K) {
         set(&encoder.context, to: value, at: encoder.codingPath + [key])
     }
 }

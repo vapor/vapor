@@ -19,10 +19,10 @@ extension Services {
         }
 
         // register middleware
-        services.register { container in
-            return MiddlewareConfig([
-                DateMiddleware.self
-            ])
+        services.register { container -> MiddlewareConfig in
+            var config = MiddlewareConfig()
+            config.use(DateMiddleware.self)
+            return config
         }
         
         services.register { container in
@@ -38,6 +38,40 @@ extension Services {
             return TrieRouter()
         }
 
+        // register content coders
+        services.register { container in
+            return ContentConfig.default()
+        }
+
         return services
+    }
+}
+
+extension Request: HasContainer { }
+extension Response: HasContainer { }
+
+extension Message {
+    public var app: Application? {
+        get { return extend["vapor:application"] as? Application }
+        set { extend["vapor:application"] = newValue }
+    }
+
+    public var container: Container? {
+        return app
+    }
+}
+
+import Async
+
+internal class ApplicationMiddleware: Middleware {
+    let application: Application
+
+    init(application: Application) {
+        self.application = application
+    }
+
+    func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+        req.app = application
+        return try next.respond(to: req)
     }
 }

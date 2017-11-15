@@ -23,7 +23,7 @@ let package = Package(
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Fluent
-        // .library(name: "Fluent", targets: ["Fluent"]),
+         .library(name: "Fluent", targets: ["Fluent"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -71,8 +71,12 @@ let package = Package(
         // Bits
         .target(name: "Bits"),
 
-        // Core
-        .target(name: "Core", dependencies: ["libc", "Async", "Debugging"]),
+        // Boilerplate
+        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
+        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+
+        // 
+        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),
         
         // Crypto
@@ -83,9 +87,13 @@ let package = Package(
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
-        // Debugging
-//        .target(name: "Fluent", dependencies: ["SQLite"]),
-//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
+        // Fluent
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
+        .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
+        .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
+
+        .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -135,14 +143,18 @@ let package = Package(
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
-        
+
+        // SQL
+        .target(name: "SQL"),
+        .testTarget(name: "SQLTests", dependencies: ["SQL"]),
+
         // SQLite
         .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging", "Random"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
+        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
             "Core",
             "Debugging",

@@ -24,7 +24,7 @@ final class FrameSerializer : Async.Stream {
             input.unmask()
         }
         
-        outputStream?(ByteBuffer(start: input.buffer.baseAddress, count: input.buffer.count))
+        output(ByteBuffer(start: input.buffer.baseAddress, count: input.buffer.count))
     }
     
     /// If true, masks the messages before sending

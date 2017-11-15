@@ -4,9 +4,9 @@ import Foundation
 public protocol Tag {
     func render(
         parsed: ParsedTag,
-        context: inout Context,
+        context: inout LeafData,
         renderer: Renderer
-    ) throws -> Future<Context?>
+    ) throws -> Future<LeafData?>
 }
 
 // MARK: Global

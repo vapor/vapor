@@ -28,11 +28,16 @@ public final class Application: Container {
         config: Config = .default(),
         environment: Environment = .development,
         services: Services = .default()
-    ) {
+    ) throws {
         self.config = config
         self.environment = environment
         self.services = services
         self.extend = Extend()
+
+        // boot all service providers
+        for provider in services.providers {
+            try provider.boot(self)
+        }
     }
 
     /// Make an instance of the provided interface for this Application.
@@ -49,7 +54,7 @@ public final class Application: Container {
             router: make(Router.self)
         )
 
-        let middleware = try make(MiddlewareConfig.self).resolve(for: self)
+        let middleware = try defaultMiddleware() + make(MiddlewareConfig.self).resolve(for: self)
         let chained = middleware.makeResponder(chainedto: router)
         try server.start(with: chained)
 
@@ -57,5 +62,13 @@ public final class Application: Container {
         group.enter()
         group.wait()
         exit(0)
+    }
+
+    // MARK: Private
+
+    /// creates an array of default middleware the application
+    /// needs to work properly
+    func defaultMiddleware() -> [Middleware] {
+        return [ApplicationMiddleware(application: self)]
     }
 }

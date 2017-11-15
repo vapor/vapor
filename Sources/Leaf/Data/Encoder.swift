@@ -4,11 +4,11 @@ public protocol FutureEncoder {
     mutating func encode<E>(_ future: Future<E>) throws
 }
 
-public final class ContextEncoder: Encoder {
+public final class LeafDataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
 
-    public var context: Context
+    public var context: LeafData
 
     public init() {
         self.codingPath = []
@@ -18,7 +18,7 @@ public final class ContextEncoder: Encoder {
 
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        return KeyedEncodingContainer(ContextContainer(encoder: self))
+        return KeyedEncodingContainer(LeafDataContainer(encoder: self))
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
@@ -26,7 +26,7 @@ public final class ContextEncoder: Encoder {
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        return ContextContainer<NoKey>(encoder: self)
+        return LeafDataContainer<NoKey>(encoder: self)
     }
 }
 

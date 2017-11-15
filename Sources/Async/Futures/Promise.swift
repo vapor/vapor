@@ -30,3 +30,10 @@ public final class Promise<T> {
         future.complete(with: .expectation(expectation))
     }
 }
+
+extension Promise where T == Void {
+    /// Complete a void promise.
+    public func complete() {
+        complete(())
+    }
+}

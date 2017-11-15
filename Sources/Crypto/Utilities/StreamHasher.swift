@@ -47,7 +47,7 @@ public final class PassthroughByteStreamHasher<H: Hash> : ByteStreamHasher<H>, A
     /// See `InputStream` for details
     public override func inputStream(_ input: ByteBuffer) {
         super.inputStream(input)
-        self.outputStream?(input)
+        self.output(input)
     }
     
     /// The output is equal to the input

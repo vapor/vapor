@@ -57,6 +57,9 @@ extension WebSocket {
     ///
     /// http://localhost:8000/websocket/text-stream/
     public func onText(_ closure: @escaping ((String) -> ())) {
-        self.textStream.drain(closure)
+        self.textStream.drain(closure).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
 }

@@ -9,7 +9,7 @@ extension Connection {
     internal func allRows(in query: Query) -> Future<[Row]> {
         var rows = [Row]()
         let promise = Promise<[Row]>()
-        
+
         // Set up a parser
         let stream = RowStream(mysql41: self.mysql41)
         self.receivePackets(into: stream.inputStream)
@@ -45,7 +45,7 @@ extension Connection {
     public func all<D: Decodable>(_ type: D.Type, in query: Query) -> Future<[D]> {
         var results = [D]()
         let promise = Promise<[D]>()
-        
+
         // Set up a parser
         let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
         self.receivePackets(into: resultBuilder.inputStream)

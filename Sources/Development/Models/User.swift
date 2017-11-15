@@ -3,24 +3,69 @@ import Async
 import HTTP
 import Leaf
 import Vapor
+import Fluent
+import SQLite
 
-final class User: Codable, ResponseRepresentable {
+
+struct TestSiblings: Migration {
+    typealias Database = SQLiteDatabase
+
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        let owner = User(name: "Tanner", age: 23)
+        return owner.save(on: connection).then {
+            let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
+            let toy = Toy(name: "Rubber Band")
+
+            return [
+                pet.save(on: connection),
+                toy.save(on: connection)
+            ].flatten().then {
+                return pet.toys.attach(toy, on: connection)
+            }
+        }
+    }
+
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return Future(())
+    }
+}
+
+final class User: Model, ResponseRepresentable {
+    typealias Database = SQLiteDatabase
+    typealias ID = UUID
+
+    static let keyFieldMap: KeyFieldMap = [
+        key(\.id): field("id"),
+        key(\.name): field("name"),
+        key(\.age): field("age"),
+    ]
+
+    static var idKey: IDKey {
+        return \.id
+    }
+
+    var id: UUID?
     var name: String
-    var age: Int
-    var child: User?
-    var futureChild: Future<User>?
+    var age: Double
+//    var child: User?
+//    var futureChild: Future<User>?
     
     func makeResponse(for request: Request) throws -> Response {
-        let body = Body(try JSONEncoder().encode(self))
+        let body = try  Body(JSONEncoder().encode(self))
         
         return Response(body: body)
     }
 
-    init(name: String, age: Int) {
+    init(name: String, age: Double) {
         self.name = name
         self.age = age
     }
+
+    var pets: Children<User, Pet> {
+        return children(\.ownerID)
+    }
 }
+
 
 extension Future: Codable {
     public func encode(to encoder: Encoder) throws {
@@ -35,3 +80,47 @@ extension Future: Codable {
         fatalError("blah")
     }
 }
+
+extension Array: ResponseRepresentable {
+    public func makeResponse(for request: Request) throws -> Response {
+        let body = try Body(JSONEncoder().encode(self))
+        let res = Response(body: body)
+        res.mediaType = .json
+        return res
+    }
+}
+
+extension User: Migration {
+    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
+        return conn.create(User.self) { user in
+            try user.field(for: \.id)
+            try user.field(for: \.name)
+            try user.field(for: \.age)
+        }
+    }
+
+    static func revert(on conn: SQLiteConnection) -> Future<Void> {
+        return conn.delete(User.self)
+    }
+}
+
+struct AddUsers: Migration {
+    typealias Database = SQLiteDatabase
+    
+    static func prepare(on conn: SQLiteConnection) -> Future<Void> {
+        let bob = User(name: "Bob", age: 42)
+        let vapor = User(name: "Vapor", age: 3)
+
+        return [
+            bob.save(on: conn),
+            vapor.save(on: conn)
+        ].flatten()
+    }
+
+    static func revert(on conn: SQLiteConnection) -> Future<Void> {
+        return Future(())
+    }
+}
+
+
+

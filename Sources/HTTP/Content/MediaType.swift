@@ -129,7 +129,7 @@ public struct MediaType {
     /// media types in the collection.
     public func matches<C : Collection>(
         any mediaTypes: C
-        ) -> Bool where C.Iterator.Element == MediaType {
+    ) -> Bool where C.Iterator.Element == MediaType {
         for mediaType in mediaTypes {
             if matches(other: mediaType) {
                 return true

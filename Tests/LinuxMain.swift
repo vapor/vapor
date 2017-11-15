@@ -4,6 +4,7 @@ import XCTest
 @testable import AsyncTests
 @testable import CryptoTests
 @testable import DebuggingTests
+@testable import FluentTests
 @testable import HTTPTests
 @testable import JWTTests
 @testable import LeafTests
@@ -34,6 +35,9 @@ XCTMain([
     testCase(FooErrorTests.allTests),
     testCase(GeneralTests.allTests),
     testCase(TraceableTests.allTests),
+
+    // Fluent
+    testCase(SQLiteBenchmarkTests.allTests),
 
     // HTTP
     testCase(MiddlewareTests.allTests),

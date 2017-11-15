@@ -77,7 +77,7 @@ public final class FrameParser : Async.Stream {
             do {
                 let frame = try Frame(op: header.op, payload: ByteBuffer(start: pointer, count: Int(header.size)), mask: header.mask, isMasked: header.mask != nil, isFinal: true)
                 
-                self.outputStream?(frame)
+                self.output(frame)
                 return (true, frame.buffer.count)
             } catch {
                 errorStream?(error)
@@ -98,7 +98,7 @@ public final class FrameParser : Async.Stream {
                 do {
                     let frame = try Frame(op: header.op, payload: ByteBuffer(start: bufferBuilder, count: Int(header.size)), mask: header.mask, isMasked: header.mask != nil, isFinal: true)
                     
-                    self.outputStream?(frame)
+                    self.output(frame)
                 } catch {
                     errorStream?(error)
                 }

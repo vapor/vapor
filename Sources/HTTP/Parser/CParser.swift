@@ -13,7 +13,7 @@ enum HeaderState {
 
 
 /// Internal CHTTP parser protocol
-internal protocol CParser: class, Async.Stream {
+internal protocol CParser: Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
 }

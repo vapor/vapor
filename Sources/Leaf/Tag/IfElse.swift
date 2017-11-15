@@ -3,20 +3,20 @@ import Async
 public final class IfElse: Tag {
     public init() {}
 
-    public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
         try parsed.requireParameterCount(1)
         let body = try parsed.requireBody()
         let expr = parsed.parameters[0]
 
-        let promise = Promise(Context?.self)
+        let promise = Promise(LeafData?.self)
         if expr.bool != false {
             let serializer = Serializer(
                 ast: body,
                 renderer: renderer,
                 context: context,
-                queue: parsed.queue
+                worker: parsed.worker
             )
-            try serializer.serialize().then { bytes in
+            serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))
             }.catch { error in
                 promise.fail(error)

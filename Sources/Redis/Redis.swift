@@ -78,7 +78,7 @@ extension RedisClient where DuplexByteStream == TCPClient {
         let socket = try TCP.Socket()
         try socket.connect(hostname: hostname, port: port)
         
-        return socket.writable(queue: worker.queue).map { _ in
+        return socket.writable(queue: worker.eventLoop.queue).map { _ in
             let client = TCPClient(socket: socket, worker: worker)
             client.start()
             

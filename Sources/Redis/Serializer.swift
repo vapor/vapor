@@ -25,7 +25,7 @@ final class DataSerializer: Async.Stream {
             
         message.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: message.count)
-            outputStream?(buffer)
+            output(buffer)
         }
     }
 }
@@ -41,7 +41,7 @@ extension DataSerializer {
         }
         buffer.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: buffer.count)
-            outputStream?(buffer)
+            output(buffer)
         }
     }
     

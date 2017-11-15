@@ -41,6 +41,9 @@ public final class EngineServer: HTTPServer {
             debugPrint(error)
         }
 
+        /// FIXME: use console when we have it
+        print("Server starting on \(config.hostname):\(config.port)")
+
         // bind, listen, and start accepting
         try tcp.start(
             hostname: config.hostname,
@@ -70,7 +73,7 @@ public struct EngineServerConfig {
 
     /// Creates a new engine server config
     public init(
-        hostname: String = "0.0.0.0",
+        hostname: String = "localhost",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
         workerCount: Int = 8,

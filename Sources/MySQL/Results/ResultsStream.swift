@@ -87,7 +87,7 @@ extension ResultsStream {
                 throw error
         }
         
-        self.outputStream?(try parseRows(from: packet))
+        self.output(try parseRows(from: packet))
     }
     
     /// Parses the packet as a columm specification

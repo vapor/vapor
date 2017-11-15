@@ -30,8 +30,8 @@ public final class Server: Async.OutputStream, ClosableStream {
     // MARK: Internal
 
     let socket: Socket
-    let workers: [Worker]
-    var worker: LoopIterator<[Worker]>
+    let eventLoops: [EventLoop]
+    var eventLoopsIterator: LoopIterator<[EventLoop]>
     var readSource: DispatchSourceRead?
     
     /// A closure that can dictate if a client will be accepted
@@ -50,15 +50,15 @@ public final class Server: Async.OutputStream, ClosableStream {
     public init(socket: Socket, workerCount: Int) {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
-        var workers: [Worker] = []
+        var eventLoops: [EventLoop] = []
         /// important! this should be _less than_ the worker count
         /// to leave room for the accepting thread
         for i in 1..<workerCount {
-            let worker = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
-            workers.append(Worker(queue: worker))
+            let queue = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
+            eventLoops.append(EventLoop(queue: queue))
         }
-        worker = LoopIterator(collection: workers)
-        self.workers = workers
+        eventLoopsIterator = LoopIterator(collection: eventLoops)
+        self.eventLoops = eventLoops
     }
 
     /// Creates a new Server Socket
@@ -88,8 +88,7 @@ public final class Server: Async.OutputStream, ClosableStream {
                 return
             }
 
-            let worker = self.worker.next()!
-            
+            let worker = self.eventLoopsIterator.next()!
             let client = TCPClient(socket: socket, worker: worker)
             
             guard self.willAccept(client) else {
@@ -98,7 +97,7 @@ public final class Server: Async.OutputStream, ClosableStream {
             }
             
             client.errorStream = self.errorStream
-            self.outputStream?(client)
+            self.output(client)
         }
         
         source.resume()

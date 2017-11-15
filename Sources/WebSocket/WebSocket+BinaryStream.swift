@@ -6,7 +6,7 @@ import Bits
 /// http://localhost:8000/websocket/binary-stream/
 final class BinaryStream : Async.Stream {
     /// A stream of incoming binary data
-    var outputStream: ((ByteBuffer) -> ())?
+    var outputStream: OutputHandler?
     
     internal weak var frameStream: Connection?
     
@@ -59,6 +59,9 @@ extension WebSocket {
     ///
     /// http://localhost:8000/websocket/binary-stream/
     public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) {
-        self.binaryStream.drain(closure)
+        self.binaryStream.drain(closure).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
 }

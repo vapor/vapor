@@ -2,7 +2,7 @@ import Foundation
 import Async
 import Bits
 
-protocol Base64: class, Async.Stream, ClosableStream {
+protocol Base64: Async.Stream, ClosableStream {
     static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int)
     
     associatedtype Input = ByteBuffer
@@ -61,7 +61,7 @@ extension Base64 {
                 let writeBuffer: Output = ByteBuffer(start: pointer, count: capacity) as! Self.Output
                 
                 // Write the output buffer to the output stream
-                self.outputStream?(writeBuffer)
+                output(writeBuffer)
                 
                 // If processing is complete
                 guard complete else {
@@ -122,7 +122,7 @@ extension Base64 {
                     let writeBuffer: Output = ByteBuffer(start: self.pointer, count: capacity) as! Self.Output
                     
                     // Write the output buffer to the output stream
-                    self.outputStream?(writeBuffer)
+                    self.output(writeBuffer)
                 } catch {
                     self.errorStream?(error)
                 }

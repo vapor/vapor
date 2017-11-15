@@ -34,7 +34,7 @@ public final class EmitterStream<Out>: OutputStream {
 
     /// Emits an output.
     public func emit(_ output: Output) {
-        outputStream?(output)
+        self.output(output)
     }
 
     /// Emits an error.

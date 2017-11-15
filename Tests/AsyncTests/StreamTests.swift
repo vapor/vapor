@@ -24,9 +24,7 @@ final class StreamTests : XCTestCase {
         numberEmitter.report(CustomError())
 
         XCTAssertEqual(squares, [1, 4, 9])
-        
-        // TODO: This is not expected
-//        XCTAssert(reported)
+        XCTAssert(reported)
     }
 
     func testDelta() throws {

@@ -1,0 +1,59 @@
+import Async
+import Fluent
+
+final class KitchenSink<D: Database>: Model {
+    /// See Model.Database
+    typealias Database = D
+
+    /// See Model.ID
+    typealias ID = String
+
+    /// See Model.keyFieldMap
+    static var keyFieldMap: KeyFieldMap {
+        return [key(\.id): field("id")]
+    }
+
+    /// See Model.idKey
+    static var idKey: IDKey { return \.id }
+
+    /// KitchenSink's identifier
+    var id: String?
+}
+
+internal struct KitchenSinkSchema<
+    D: Database
+>: Migration where D.Connection: SchemaSupporting {
+    /// See Migration.Database
+    typealias Database = D
+
+    /// See Migration.prepare
+    static func prepare(on connection: D.Connection) -> Future<Void> {
+        return connection.create(KitchenSink<Database>.self) { builder in
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                name: "id"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                name: "string"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+                name: "int"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .double),
+                name: "double"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                name: "date"
+            )
+        }
+    }
+
+    /// See Migration.revert
+    static func revert(on connection: D.Connection) -> Future<Void> {
+        return connection.delete(KitchenSink<Database>.self)
+    }
+}

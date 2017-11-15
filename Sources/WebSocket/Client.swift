@@ -86,9 +86,11 @@ extension WebSocket {
                 // Complete using the new websocket
                 promise.complete(WebSocket(client: client, serverSide: false))
             }
+        }.catch { error in
+            promise.fail(error)
         }
         
-        return client.socket.writable(queue: worker.queue).flatMap {
+        return client.socket.writable(queue: worker.eventLoop.queue).flatMap {
             // Start reading in the client
             client.start()
             

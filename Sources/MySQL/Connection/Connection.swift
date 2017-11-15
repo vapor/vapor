@@ -97,14 +97,14 @@ public final class Connection {
         
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: worker.queue
+            queue: worker.eventLoop.queue
         )
         
         self.source = source
         
         self.parser = parser
         self.socket = socket
-        self.queue = worker.queue
+        self.queue = worker.eventLoop.queue
         self.buffer = buffer
         self.source = source
         self.username = user
@@ -127,7 +127,10 @@ public final class Connection {
         }
         source.resume()
         
-        self.parser.drain(self.handlePacket)
+        self.parser.drain(self.handlePacket).catch { error in
+            // FIXME: @joannis
+            fatalError("\(error)")
+        }
     }
     
     /// Sets the proided handler to capture packets

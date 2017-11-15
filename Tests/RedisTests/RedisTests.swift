@@ -17,13 +17,12 @@ class RedisTests: XCTestCase {
     func makeClient() throws -> RedisClient<TCPClient> {
         let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
         clientCount += 1
-        
-        return try RedisClient<TCPClient>.connect(hostname: "localhost", worker: Worker(queue: queue)).blockingAwait(timeout: .seconds(1))
+        return try RedisClient<TCPClient>.connect(hostname: "localhost", worker: EventLoop(queue: queue)).blockingAwait(timeout: .seconds(1))
     }
     
     func testCRUD() throws {
         let connection = try makeClient()
-        
+      
         _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
         
         let result = try connection.set("world", forKey: "hello").flatMap {

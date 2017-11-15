@@ -97,7 +97,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
         guard let source = writeSource else {
             let source = DispatchSource.makeWriteSource(
                 fileDescriptor: socket.descriptor,
-                queue: worker.queue
+                queue: worker.eventLoop.queue
             )
             
             source.setEventHandler {
@@ -147,7 +147,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: worker.queue
+            queue: worker.eventLoop.queue
         )
 
         source.setEventHandler {
@@ -176,7 +176,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.outputStream?(bufferView)
+            self.output(bufferView)
         }
 
         source.setCancelHandler {

@@ -94,6 +94,18 @@ public struct Body: Codable {
     public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
         return try self.storage.withUnsafeBytes(run)
     }
+
+    /// Get body data.
+    public var data: Data {
+        switch storage {
+        case .data(let data):
+            return data
+        case .dispatchData(let dispatch):
+            return Data(dispatch)
+        case .staticString(_):
+            fatalError("//FIXME: @joannis")
+        }
+    }
     
     /// The size of the data buffer
     public var count: Int {

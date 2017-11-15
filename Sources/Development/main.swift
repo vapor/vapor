@@ -1,69 +1,80 @@
 import Async
 import Core
 import Dispatch
+import Fluent
+import FluentSQLite
 import Foundation
 import HTTP
 import Leaf
 import Routing
 import Service
+import SQLite
 import Vapor
 
-extension View: ResponseRepresentable {
-    public func makeResponse(for request: Request) throws -> Response {
-        return Response(headers: [
-            .contentType: "text/html"
-        ], body: Body(self.data))
+extension DatabaseIdentifier {
+    static var beta: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("beta")
+    }
+
+    static var alpha: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("alpha")
     }
 }
 
-
 var services = Services.default()
-try services.register(Leaf.Provider())
 
-services.register { container in
-    MiddlewareConfig([
-        ErrorMiddleware.self
-    ])
-}
+services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
+try services.register(LeafProvider())
+try services.register(FluentProvider())
+try services.register(SQLiteProvider())
 
-let app = Application(services: services)
+var databaseConfig = DatabaseConfig()
+databaseConfig.add(database: SQLiteDatabase.self, as: .alpha)
+databaseConfig.add(
+    database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
+    as: .beta
+)
+databaseConfig.enableLogging(on: .beta)
+services.register(databaseConfig)
+
+
+var migrationConfig = MigrationConfig()
+migrationConfig.add(migration: User.self, database: .beta)
+migrationConfig.add(migration: AddUsers.self, database: .beta)
+migrationConfig.add(migration: Pet.self, database: .beta)
+migrationConfig.add(migration: Toy.self, database: .beta)
+migrationConfig.add(migration: PetToyPivot.self, database: .beta)
+migrationConfig.add(migration: TestSiblings.self, database: .beta)
+services.register(migrationConfig)
+
+var middlewareConfig = MiddlewareConfig()
+middlewareConfig.use(ErrorMiddleware.self)
+services.register(middlewareConfig)
+
+let app = try Application(services: services)
 
 let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
-
-router.get("hello") { req in
-    return Future<User>(user)
+router.get("hello") { req -> Response in
+    return try user.makeResponse(for: req)
 }
 
-extension Worker {
-    var response: Response {
-        if let response = self.extend["response"] as? Response {
-            return response
-        }
 
-        let response = try! Response(headers: [
-            .contentType: "text/plain; charset=utf-8"
-        ], body: "Hello, world!")
-
-        self.extend["response"] = response
-
-        return response
-    }
-}
-
+let helloRes = try! Response(headers: [
+    .contentType: "text/plain; charset=utf-8"
+], body: "Hello, world!")
 router.grouped(DateMiddleware()).get("plaintext") { req in
-    return try req.requireWorker().response
+    return helloRes
 }
 
 let view = try app.make(ViewRenderer.self)
 
 router.get("leaf") { req -> Future<View> in
-    user.child = User(name: "Leaf", age: 1)
     let promise = Promise(User.self)
-    user.futureChild = promise.future
+    // user.futureChild = promise.future
 
-    try req.requireWorker().queue.asyncAfter(deadline: .now() + 2) {
+    req.eventLoop.queue.asyncAfter(deadline: .now() + 2) {
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
@@ -71,54 +82,93 @@ router.get("leaf") { req -> Future<View> in
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
-extension String: ResponseRepresentable {
-    public func makeResponse(for req: Request) throws -> Response {
-        let data = self.data(using: .utf8)!
-        return Response(status: .ok, headers: [.contentType: "text/plain"], body: Body(data))
-    }
-}
-
-import SQLite
-
-extension Worker {
-    func connectionPool(for database: Database) -> ConnectionPool {
-        if let existing = extend["vapor:connection-pool"] as? ConnectionPool {
-            return existing
-        } else {
-            let new = database.makeConnectionPool(max: 2, on: queue)
-            extend["vapor:connection-pool"] = new
-            return new
-        }
-    }
-}
-
-let database = SQLite.Database(path: "/tmp/db.sqlite")
-
-router.get("sqlite") { req -> Future<String> in
-    let promise = Promise(String.self)
+final class Message: Model {
+    typealias Database = SQLiteDatabase
     
-    let pool = try req.requireWorker()
-        .connectionPool(for: database)
+    static let keyFieldMap: KeyFieldMap = [
+        key(\.id): field("id"),
+        key(\.text): field("text"),
+        key(\.time): field("customtime"),
+    ]
 
-    pool.requestConnection().then { connection in
-        do {
-            try connection.query("select sqlite_version();").all().then { row in
-                let version = row[0]["sqlite_version()"]?.text ?? "no version"
-                promise.complete(version)
-                pool.releaseConnection(connection)
-            }.catch { error in
-                promise.fail(error)
-                pool.releaseConnection(connection)
-            }
-        } catch {
-            promise.fail(error)
-            pool.releaseConnection(connection)
-        }
-    }.catch { error in
-        promise.fail(error)
+    static let idKey = \Message.id
+
+    var id: String?
+    var text: String
+    var time: Int
+
+    init(id: String? = nil, text: String, time: Int) {
+        self.id = id
+        self.text = text
+        self.time = time
     }
 
-    return promise.future
+    init(from decoder: Decoder) throws {
+        let container = try Message.decodingContainer(for: decoder)
+        id = try container.decode(key: \Message.id)
+        text = try container.decode(key: \Message.text)
+        time = try container.decode(key: \Message.time)
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encodingContainer(for: encoder)
+        try container.encode(key: \Message.id)
+        try container.encode(key: \Message.text)
+        try container.encode(key: \Message.time)
+    }
+}
+
+router.get("userview") { req -> Future<View> in
+    return req.database(.beta) { db in
+        let user = db.query(User.self).first()
+
+        return try view.make("/Users/tanner/Desktop/hello", context: [
+            "user": user
+        ], for: req)
+    }
+}
+
+router.post("users") { req -> Future<User> in
+    let user = try JSONDecoder().decode(User.self, from: req.body.data)
+    return req.database(.beta) { db in
+        return user.save(on: db).map { user }
+    }
+}
+
+router.get("builder") { req -> Future<[User]> in
+    return req.database(.beta) { db in
+        return try db.query(User.self).filter(\User.name == "Bob").all()
+    }
+}
+
+router.get("transaction") { req -> Future<String> in
+    return req.database(.beta) { db in
+        db.transaction { db in
+            let user = User(name: "NO SAVE", age: 500)
+            let message = Message(id: nil, text: "asdf", time: 42)
+
+            return [
+                user.save(on: db),
+                message.save(on: db)
+            ].flatten()
+        }.map {
+            return "Done"
+        }
+    }
+}
+
+router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
+    return req.parameters.next(Pet.self).then { pet in
+        return req.database(.beta) { db in
+            return try pet.toys.query(on: db).all()
+        }
+    }
+}
+
+router.get("users") { req in
+    return req.database(.beta) { db in
+        return db.query(User.self).all()
+    }
 }
 
 print("Starting server...")

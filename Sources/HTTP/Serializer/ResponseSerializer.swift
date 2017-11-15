@@ -26,7 +26,7 @@ public final class ResponseSerializer: Serializer {
     /// Handles incoming responses.
     public func inputStream(_ input: Response) {
         let message = serialize(input)
-        outputStream?(message)
+        output(message)
     }
 
     /// Efficiently serializes a response into Data.

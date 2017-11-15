@@ -55,7 +55,7 @@ public final class PeerValidator {
         
         // Cleans up be decreasing the counter
         client.socket.didClose = {
-            client.worker.queue.async {
+            client.worker.eventLoop.queue.async {
                 guard let currentRemote = currentRemote else {
                     return
                 }
