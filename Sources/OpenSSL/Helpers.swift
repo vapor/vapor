@@ -144,7 +144,7 @@ extension SSLStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.outputStream?(bufferView)
+            self.output(bufferView)
         }
         
         source.setCancelHandler {

@@ -41,7 +41,7 @@ public final class SQLiteConnection {
     }
 
     /// Returns an identifier for the last inserted row.
-    public var lastId: Int? {
+    public var lastAutoincrementID: Int? {
         let id = sqlite3_last_insert_rowid(raw)
         return Int(id)
     }

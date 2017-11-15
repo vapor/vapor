@@ -2,14 +2,6 @@ import Async
 
 /// Execute the database query.
 extension QueryBuilder {
-    /// Convenience run that defaults to outputting a
-    /// stream of the QueryBuilder's model type.
-    public func run(
-        outputStream: @escaping BasicStream<Model>.OutputHandler
-    ) -> Future<Void> {
-        return run(decoding: Model.self, into: outputStream)
-    }
-
     /// Executes the query, collecting the results
     /// into an array.
     /// The resulting array or an error will be resolved

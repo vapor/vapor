@@ -9,6 +9,9 @@ public protocol QuerySupporting {
         query: DatabaseQuery,
         into stream: I
     ) where I.Input == D
+
+    /// Returns the last auto-incremented ID.
+    var lastAutoincrementID: Int? { get }
 }
 
 /// Creates a database query using this executor.

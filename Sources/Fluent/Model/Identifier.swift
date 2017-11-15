@@ -13,7 +13,7 @@ public protocol ID: Codable, Equatable {
 extension Int: ID {
     /// See Identifier.identifierType
     public static var identifierType: IDType<Int> {
-        return .autoincrementing
+        return .autoincrementing { $0 }
     }
 }
 

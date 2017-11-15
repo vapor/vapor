@@ -26,7 +26,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
     /// The resulting future will be completed when the
     /// query is done or fails
     public func run<T: Decodable>(
-        decoding type: T.Type = T.self,
+        decoding type: T.Type,
         into outputStream: @escaping BasicStream<T>.OutputHandler
     ) -> Future<Void> {
         return then {
@@ -67,6 +67,27 @@ public final class QueryBuilder<Model: Fluent.Model> {
             self.connection.execute(query: self.query, into: stream)
 
             return promise.future
+        }
+    }
+
+    /// Convenience run that defaults to outputting a
+    /// stream of the QueryBuilder's model type.
+    /// Note: this also sets the model's ID if the ID
+    /// type is autoincrement.
+    public func run(
+        into outputStream: @escaping BasicStream<Model>.OutputHandler
+    ) -> Future<Void> {
+        return run(decoding: Model.self) { output in
+            switch Model.ID.identifierType {
+            case .autoincrementing(let convert):
+                guard let lastID = self.connection.lastAutoincrementID else {
+                    throw "connection did not have an auto incremented id"
+                }
+                output.fluentID = convert(lastID)
+            default: break
+            }
+
+            try outputStream(output)
         }
     }
 
