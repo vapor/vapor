@@ -1,14 +1,15 @@
 import Async
 import Dispatch
 import XCTest
+import Async
 import TCP
 @testable import MySQL
 import Core
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
-    let pool = try! Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "vapor_test", queue: .global()).blockingAwait(timeout: .seconds(5))
-    
+    let pool = try! Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "test", worker: Worker(queue: .global())).blockingAwait(timeout: .seconds(3))
+
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
         ("testCreateUsersSchema", testCreateUsersSchema),

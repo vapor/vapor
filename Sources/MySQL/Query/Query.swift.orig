@@ -1,4 +1,8 @@
+<<<<<<< HEAD
+/// Any query type
+=======
 /// http://localhost:8000/mysql/basics/#queries
+>>>>>>> 94165bfe45ef990a066b06af8dff2995ab3bf8b5
 public protocol Query {
     /// Returns this query represented as a String
     var string: String { get }

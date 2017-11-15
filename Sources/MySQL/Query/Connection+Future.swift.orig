@@ -7,8 +7,10 @@ extension Connection {
     /// - parameter query: The query to be executed to receive results from
     /// - returns: A future containing all results
     internal func allRows(in query: Query) -> Future<[Row]> {
-        var rows = [Row]()
+<<<<<<< HEAD
         let promise = Promise<[Row]>()
+        
+        var rows = [Row]()
         
         // Set up a parser
         let stream = RowStream(mysql41: self.mysql41)
@@ -16,6 +18,33 @@ extension Connection {
         
         stream.onClose = {
             promise.complete(rows)
+=======
+        var rows = [Row]()
+        
+        return retain { connection, complete, fail in
+            // Set up a parser
+            let stream = RowStream(mysql41: connection.mysql41)
+            connection.receivePackets(into: stream.inputStream)
+            
+            stream.onClose = {
+                complete(rows)
+            }
+            
+            stream.errorStream = { error in
+                fail(error)
+            }
+            
+            stream.drain { row in
+                rows.append(row)
+            }
+            
+            // Send the query
+            do {
+                try connection.write(query: query.string)
+            } catch {
+                fail(error)
+            }
+>>>>>>> 94165bfe45ef990a066b06af8dff2995ab3bf8b5
         }
         
         stream.errorStream = { error in
@@ -46,6 +75,7 @@ extension Connection {
         var results = [D]()
         let promise = Promise<[D]>()
         
+<<<<<<< HEAD
         // Set up a parser
         let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
         self.receivePackets(into: resultBuilder.inputStream)
@@ -67,13 +97,31 @@ extension Connection {
             try self.write(query: query.string)
         } catch {
             promise.fail(error)
-        }
-        
-        // Send the query
-        do {
-            try self.write(query: query.string)
-        } catch {
-            promise.fail(error)
+=======
+        return retain { connection, complete, fail in
+            // Set up a parser
+            let resultBuilder = ModelStream<D>(mysql41: connection.mysql41)
+            connection.receivePackets(into: resultBuilder.inputStream)
+            
+            resultBuilder.onClose = {
+                complete(results)
+            }
+            
+            resultBuilder.errorStream = { error in
+                fail(error)
+            }
+            
+            resultBuilder.drain { result in
+                results.append(result)
+            }
+            
+            // Send the query
+            do {
+                try connection.write(query: query.string)
+            } catch {
+                fail(error)
+            }
+>>>>>>> 94165bfe45ef990a066b06af8dff2995ab3bf8b5
         }
         
         return promise.future

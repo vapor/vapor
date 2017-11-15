@@ -30,6 +30,8 @@ public struct Form {
     public var parts: [Part]
     
     /// Gets the `String` associated with the `name`. Throws an error if there is no `String` encoded as UTF-8
+    ///
+    /// http://localhost:8000/http/multipart/#reading-forms
     public func getString(forName name: String) throws -> String {
         for part in parts where part.key == name {
             guard let string = String(bytes: part.data, encoding: .utf8) else {
@@ -43,6 +45,8 @@ public struct Form {
     }
     
     /// Gets the `File` associated with the `name`. Throws an error if there is no `File` encoded as UTF-8
+    ///
+    /// http://localhost:8000/http/multipart/#reading-forms
     public func getFile(forName name: String) throws -> Data {
         for part in parts where part.key == name {
             return part.data
@@ -52,6 +56,8 @@ public struct Form {
     }
     
     /// Gets all `File`s associated with the `name`.
+    ///
+    /// http://localhost:8000/http/multipart/#reading-forms
     public func getFiles(forName name: String) -> [Data] {
         return parts.flatMap { part in
             guard part.key == name else {

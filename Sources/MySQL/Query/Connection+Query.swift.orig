@@ -28,7 +28,10 @@ extension Connection {
         
         try self.write(packetFor: buffer)
     }
-    
+}
+
+<<<<<<< HEAD
+extension Connection {
     /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
     public func administrativeQuery(_ query: Query) -> Future<Void> {
@@ -43,6 +46,18 @@ extension Connection {
             }
             
             promise.complete(())
+=======
+extension ConnectionPool {
+    /// Used to send queries that expect no concrete results
+    ///
+    /// http://localhost:8000/mysql/basics/#resultless-queries
+    ///
+    /// - returns: A future that is completed on query success or failure
+    @discardableResult
+    public func query(_ query: Query) -> Future<Void> {
+        return self.allRows(in: query).map { _ in
+            return ()
+>>>>>>> 94165bfe45ef990a066b06af8dff2995ab3bf8b5
         }
         
         do {

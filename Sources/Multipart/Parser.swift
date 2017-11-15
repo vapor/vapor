@@ -212,6 +212,8 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart data using the provided boundary
     ///
+    /// http://localhost:8000/http/multipart/#parsing-a-multipart-form
+    ///
     /// - throws: If the multipart data is an invalid Multipart form
     public static func parse(from buffer: ByteBuffer, boundary: Data) throws -> Form {
         let parser = MultipartParser(data: buffer, boundary: boundary)
@@ -222,6 +224,8 @@ public final class MultipartParser {
     }
     
     /// Parses the input mulitpart body using the provided boundary
+    ///
+    /// http://localhost:8000/http/multipart/#parsing-a-multipart-form
     ///
     /// - throws: If the multipart data is an invalid Multipart form
     public static func parse(from body: Body, boundary: Data) throws -> Form {
