@@ -3,30 +3,30 @@ import Fluent
 import Foundation
 
 /// A pivot between pet and toy.
-final class PetToy<D: Database>: ModifiablePivot {
+public final class PetToy<D: Database>: ModifiablePivot {
     /// See Model.database
-    typealias Database = D
+    public typealias Database = D
 
     /// See Model.ID
-    typealias ID = UUID
+    public typealias ID = UUID
 
     /// See Pivot.Left
-    typealias Left = Pet<Database>
+    public typealias Left = Pet<Database>
 
     /// See Pivot.Right
-    typealias Right = Toy<Database>
+    public typealias Right = Toy<Database>
 
     /// See Model.idKey
-    static var idKey: IDKey { return \.id }
+    public static var idKey: IDKey { return \.id }
 
     /// See Pivot.leftIDKey
-    static var leftIDKey: LeftIDKey { return \.petID }
+    public static var leftIDKey: LeftIDKey { return \.petID }
 
     /// See Pivot.rightIDKey
-    static var rightIDKey: RightIDKey { return \.toyID }
+    public static var rightIDKey: RightIDKey { return \.toyID }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    public static var keyFieldMap: KeyFieldMap {
         return [
             key(\.id): field("id"),
             key(\.petID): field("petID"),
@@ -44,7 +44,7 @@ final class PetToy<D: Database>: ModifiablePivot {
     var toyID: UUID
 
     /// See ModifiablePivot.init
-    init(_ pet: Pet<Database>, _ toy: Toy<Database>) throws {
+    public init(_ pet: Pet<Database>, _ toy: Toy<Database>) throws {
         petID = try pet.requireID()
         toyID = try toy.requireID()
     }

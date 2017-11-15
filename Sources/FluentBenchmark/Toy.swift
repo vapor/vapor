@@ -2,23 +2,23 @@ import Async
 import Fluent
 import Foundation
 
-internal final class Toy<D: Database>: Model {
+public final class Toy<D: Database>: Model {
     /// See Model.Database
-    typealias Database = D
+    public typealias Database = D
 
     /// See Model.ID
-    typealias ID = UUID
+    public typealias ID = UUID
 
     /// See Model.name
-    static var name: String {
+    public static var name: String {
         return "toy"
     }
 
     /// See Model.idKey
-    static var idKey: IDKey { return \.id }
+    public static var idKey: IDKey { return \.id }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    public static var keyFieldMap: KeyFieldMap {
         return [
             key(\.id): field("id"),
             key(\.name): field("name")

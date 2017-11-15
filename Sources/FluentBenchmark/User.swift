@@ -2,23 +2,23 @@ import Async
 import Fluent
 import Foundation
 
-internal final class User<D: Database>: Model, Timestampable {
+public final class User<D: Database>: Model, Timestampable {
     /// See Model.Database
     public typealias Database = D
 
     /// See Model.ID
-    typealias ID = UUID
+    public typealias ID = UUID
 
     /// See Model.idKey
-    static var idKey: IDKey { return \.id }
+    public static var idKey: IDKey { return \.id }
 
     /// See Model.name
-    static var entity: String {
+    public static var entity: String {
         return "users"
     }
 
     /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    public static var keyFieldMap: KeyFieldMap {
         return [
             key(\.id): field("id"),
             key(\.name): field("name"),
@@ -38,10 +38,10 @@ internal final class User<D: Database>: Model, Timestampable {
     var age: Int
 
     /// Timestampable.createdAt
-    var createdAt: Date?
+    public var createdAt: Date?
 
     /// Timestampable.updatedAt
-    var updatedAt: Date?
+    public var updatedAt: Date?
 
     /// Create a new foo
     init(id: ID? = nil, name: String, age: Int) {
