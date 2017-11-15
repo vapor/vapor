@@ -69,13 +69,6 @@ extension Connection {
             promise.fail(error)
         }
         
-        // Send the query
-        do {
-            try self.write(query: query.string)
-        } catch {
-            promise.fail(error)
-        }
-        
         return promise.future
     }
 }
