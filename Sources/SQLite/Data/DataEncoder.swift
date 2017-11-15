@@ -1,3 +1,5 @@
+import Core
+
 public final class SQLiteDataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
@@ -15,7 +17,7 @@ public final class SQLiteDataEncoder: Encoder {
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        return UnsupportedEncodingContainer<NoKey>(encoder: self)
+        return UnsupportedEncodingContainer<StringKey>(encoder: self)
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {

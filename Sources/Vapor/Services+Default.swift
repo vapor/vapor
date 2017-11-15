@@ -38,6 +38,11 @@ extension Services {
             return TrieRouter()
         }
 
+        // register content coders
+        services.register { container in
+            return ContentConfig.default()
+        }
+
         return services
     }
 }

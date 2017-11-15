@@ -1,3 +1,5 @@
+import Core
+
 internal final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol
 {
     typealias Key = K
@@ -20,46 +22,6 @@ internal final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerP
 
     func encode(_ value: Int, forKey key: K) throws {
         encoder.row[key.stringValue] = .integer(value)
-    }
-
-    func encode(_ value: Int8, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: Int16, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: Int32, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: Int64, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: UInt, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: UInt8, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: UInt16, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: UInt32, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: UInt64, forKey key: K) throws {
-        try encode(Int(value), forKey: key)
-    }
-
-    func encode(_ value: Float, forKey key: K) throws {
-        try encode(Double(value), forKey: key)
     }
 
     func encode(_ value: Double, forKey key: K) throws {

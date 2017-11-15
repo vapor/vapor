@@ -55,8 +55,14 @@ public struct ContentConfig {
 extension ContentConfig {
     public static func `default`() -> ContentConfig {
         var config = ContentConfig()
+
+        // json
         config.use(encoder: JSONEncoder(), for: .json)
         config.use(decoder: JSONDecoder(), for: .json)
+
+        // html
+        config.use(encoder: HTMLEncoder(), for: .html)
+        
         return config
     }
 }
