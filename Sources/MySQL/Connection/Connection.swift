@@ -47,6 +47,8 @@ public final class Connection {
         
         readBuffer.deinitialize(count: Int(UInt16.max))
         readBuffer.deallocate(capacity: Int(UInt16.max))
+        
+        self.close()
     }
     
     /// The client's capabilities
@@ -128,11 +130,6 @@ public final class Connection {
         self.parser.drain(self.handlePacket)
     }
     
-    /// Closes the connection
-    func close() {
-        self.socket.close()
-    }
-    
     /// Sets the proided handler to capture packets
     ///
     /// - throws: The connection is reserved
@@ -191,7 +188,7 @@ public final class Connection {
                 UInt8((packetSize) & 0xff),
                 UInt8((packetSize >> 8) & 0xff),
                 UInt8((packetSize >> 16) & 0xff),
-                ]
+            ]
             
             defer {
                 offset = offset + dataSize
@@ -206,5 +203,13 @@ public final class Connection {
         }
         
         return
+    }
+    
+    /// Closes the connection
+    func close() {
+        // Write `close`
+        _ = try? self.write(packetFor: Data([0x01]))
+        
+        self.socket.close()
     }
 }

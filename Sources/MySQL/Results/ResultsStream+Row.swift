@@ -1,32 +1,44 @@
+/// A stream of decoded rows related to a query
+///
+/// This API is currently internal so we don't break the public API when finalizing the "raw" row API
 final class RowStream : ResultsStream {
+    /// For internal notification purposes only
     func close() {
         self.onClose?()
     }
     
     /// Parses a packet into a Row
     func parseRows(from packet: Packet) throws -> Row {
-        return try packet.makeRow(columns: columns)
+        return try packet.makeRow(columns: columns, binary: binary)
     }
     
-    init(mysql41: Bool) {
+    /// Creates a new RowStream using the specified protocol (from MySQL 4.0 or 4.1) and optionally the binary protocol instead of text
+    init(mysql41: Bool, binary: Bool = false) {
         self.mysql41 = mysql41
+        self.binary = binary
     }
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
     
-    /// The header is used to indicate the amount of returned columns
-    var header: UInt64?
+    /// Used to indicate the amount of returned columns
+    var columnCount: UInt64?
     
+    /// -
     typealias Output = Row
     
-    var outputStream: OutputHandler?
+    /// See `OutputStream.OutputHandler`
+    public var outputStream: OutputHandler?
     
-    var errorStream: ErrorHandler?
+    /// See `BaseStream.ErrorHandler`
+    public var errorStream: ErrorHandler?
     
+    /// If `true`, the server protocol version is for MySQL 4.1
     let mysql41: Bool
     
-    var onClose: CloseHandler?
+    /// If `true`, the results are using the binary protocols
+    var binary: Bool
     
-    typealias Input = Packet
+    /// Registers an onClose handler
+    public var onClose: CloseHandler?
 }
