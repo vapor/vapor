@@ -8,7 +8,7 @@ import Core
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
-    let pool = try! Connection.makeConnection(hostname: "localhost", user: "root", password: "", database: "test", worker: Worker(queue: .global())).blockingAwait(timeout: .seconds(3))
+    let pool = try! Connection.makeConnection(hostname: "localhost", user: "root", password: nil, database: "vapor_test", worker: Worker(queue: .global())).blockingAwait(timeout: .seconds(3))
 
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
