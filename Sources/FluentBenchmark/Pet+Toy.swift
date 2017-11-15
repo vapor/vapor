@@ -50,7 +50,7 @@ public final class PetToy<D: Database>: ModifiablePivot {
     }
 
     public func encode(to: Encoder) throws {
-        
+        fatalError("fixme")
     }
 }
 

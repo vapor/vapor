@@ -41,6 +41,10 @@ public final class Pet<D: Database>: Model {
         self.name = name
         self.ownerID = ownerID
     }
+
+    public func encode(to: Encoder) throws {
+        fatalError("fixme")
+    }
 }
 
 // MARK: Relations

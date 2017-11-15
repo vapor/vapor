@@ -36,6 +36,10 @@ public final class Toy<D: Database>: Model {
         self.id = id
         self.name = name
     }
+
+    public func encode(to: Encoder) throws {
+        fatalError("fixme")
+    }
 }
 
 // MARK: Relations
