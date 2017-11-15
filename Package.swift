@@ -72,7 +72,7 @@ let package = Package(
         .target(name: "Bits"),
 
         // Boilerplate
-        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Vapor"]),
+        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // 

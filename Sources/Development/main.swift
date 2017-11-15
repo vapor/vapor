@@ -84,13 +84,6 @@ router.get("leaf") { req -> Future<View> in
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
-extension String: ResponseRepresentable {
-    public func makeResponse(for req: Request) throws -> Response {
-        let data = self.data(using: .utf8)!
-        return Response(status: .ok, headers: [.contentType: "text/plain"], body: Body(data))
-    }
-}
-
 final class Message: Model {
     typealias Database = SQLiteDatabase
     

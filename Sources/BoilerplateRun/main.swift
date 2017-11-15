@@ -6,7 +6,7 @@ let config = Config.default()
 let env = Environment.detect()
 let services = Services.default()
 
-Boilerplate.configure(config, env, services)
+try Boilerplate.configure(config, env, services)
 
 let app = try Application(
     config: config,
@@ -14,7 +14,7 @@ let app = try Application(
     services: services
 )
 
-Boilerplate.boot(app)
+try Boilerplate.boot(app)
 
 try app.run()
 
