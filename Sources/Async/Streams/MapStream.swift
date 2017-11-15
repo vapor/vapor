@@ -69,7 +69,9 @@ extension OutputStream {
     public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
         let stream = MapStream(map: transform)
         self.drain(into: stream)
-        
+        self.errorStream = { error in
+            stream.errorStream?(error)
+        }
         return stream
     }
 }
