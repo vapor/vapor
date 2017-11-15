@@ -70,7 +70,7 @@ extension FutureType {
     /// The result returned within should be non-future type.
     ///
     /// http://localhost:8000/async/promise-future-introduction/#mapping-results
-    public func map<T>(_ callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
+    public func map<T>(to type: T.Type = T.self, callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
         self.do { expectation in
