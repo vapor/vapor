@@ -1,3 +1,4 @@
+import HTTP
 import Routing
 import Vapor
 
@@ -9,8 +10,9 @@ final class Routes: RouteCollection {
     }
 
     func boot(router: Router) throws {
+        let body = try "Hello, world!".makeBody()
         router.get("hello") { req in
-            return "Hello, world!"
+            return Response(status: .ok, body: body)
         }
     }
 }

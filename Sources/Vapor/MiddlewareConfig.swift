@@ -20,7 +20,7 @@ public struct MiddlewareConfig {
     /// middleware type upon application boot.
     public mutating func use<M: Middleware>(_ type: M.Type) {
         storage.append({ container in
-            return try container.make(Middleware.self, for: MiddlewareConfig.self)
+            return try container.make(M.self, for: MiddlewareConfig.self)
         })
     }
 

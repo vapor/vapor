@@ -47,11 +47,9 @@ migrationConfig.add(migration: PetToyPivot.self, database: .beta)
 migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 
-services.register(
-    MiddlewareConfig([
-        ErrorMiddleware.self
-    ])
-)
+var middlewareConfig = MiddlewareConfig()
+middlewareConfig.use(ErrorMiddleware.self)
+services.register(middlewareConfig)
 
 let app = try Application(services: services)
 
