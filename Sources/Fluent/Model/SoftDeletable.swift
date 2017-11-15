@@ -58,18 +58,10 @@ extension QueryBuilder where Model: SoftDeletable {
     }
 }
 
-// MARK: Schema
-
-extension SchemaBuilder where Model: SoftDeletable {
-    /// Adds the soft delete field to the schema.
-    public func softDelete() throws {
-        try field(for: Model.deletedAtKey)
-    }
-}
-
 // MARK: Hack
 
 /// Unfortunately we need this hack.
+/// note: do not rely on this exterally.
 public protocol _SoftDeletable {
     /// Pointer to type erased key path
     static var _deletedAtKey: AnyKeyPath { get }

@@ -78,6 +78,7 @@ extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporti
     public func benchmarkRelations_withSchema() throws {
         let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
         let conn = try test(database.makeConnection(on: worker))
+        try test(conn.enableReferences())
         try test(UserMigration<Database>.prepare(on: conn))
         try test(PetMigration<Database>.prepare(on: conn))
         try test(ToyMigration<Database>.prepare(on: conn))

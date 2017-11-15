@@ -12,7 +12,7 @@ extension SQLSerializer {
             let columns = columns.map { serialize(column: $0) }
                 + foreignKeys.map { serialize(foreignKey: $0) }
             statement.append("(" + columns.joined(separator: ", ") + ")")
-        case .alter(let columns, let deleteColumns):
+        case .alter(let columns, let deleteColumns, let deleteForeignKeys):
             statement.append("ALTER TABLE")
             statement.append(table)
 
@@ -24,6 +24,11 @@ extension SQLSerializer {
             let deletes = deleteColumns.map { "DROP " + makeEscapedString(from: $0) }
             if deletes.count > 0 {
                 statement.append(deletes.joined(separator: ", "))
+            }
+
+            let deleteFKs = deleteForeignKeys.map { "DROP FOREIGN KEY " + makeEscapedString(from: $0) }
+            if deleteFKs.count > 0 {
+                statement.append(deleteFKs.joined(separator: ", "))
             }
         case .drop:
             statement.append("DROP TABLE")

@@ -70,9 +70,23 @@ internal struct PetMigration<D: Database>: Migration
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(Pet<Database>.self) { builder in
-            try builder.id()
-            try builder.field(for: \.name)
-            try builder.field(for: \.ownerID, referencing: \User<Database>.id)
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \Pet<Database>.id
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                for: \Pet<Database>.name
+            )
+            let base = try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \Pet<Database>.ownerID
+            )
+            let reference = SchemaReference(
+                base: base,
+                referenced: QueryField(entity: "users", name: "id")
+            )
+            builder.schema.addReferences.append(reference)
         }
     }
 

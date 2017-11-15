@@ -48,9 +48,18 @@ internal struct FooMigration<D: Database>: Migration where D.Connection: SchemaS
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(Foo<Database>.self) { builder in
-            try builder.id()
-            try builder.field(for: \.bar)
-            try builder.field(for: \.baz)
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \Foo<Database>.id
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                for: \Foo<Database>.bar
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+                for: \Foo<Database>.baz
+            )
         }
     }
 

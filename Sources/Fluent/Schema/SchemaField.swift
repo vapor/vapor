@@ -5,7 +5,7 @@ public struct SchemaField {
     public var name: String
 
     /// The type of field.
-    public var type: SchemaFieldType
+    public var type: String
 
     /// True if the field supports nil.
     public var isOptional: Bool
@@ -14,7 +14,7 @@ public struct SchemaField {
     public var isIdentifier: Bool
 
     /// Create a new field.
-    public init(name: String, type: SchemaFieldType, isOptional: Bool = false, isIdentifier: Bool = false) {
+    public init(name: String, type: String, isOptional: Bool = false, isIdentifier: Bool = false) {
         self.name = name
         self.type = type
         self.isOptional = isOptional
@@ -22,86 +22,78 @@ public struct SchemaField {
     }
 }
 
-/// Capable of being a schema field type.
-public protocol SchemaFieldType {
-    /// Convert to a string representation of
-    /// the schema field type.
-    func schemaFieldTypeString() -> String
-}
-
 // MARK: Fields
 
 extension SchemaBuilder {
-    /// Adds an ID field for this model to the schema.
-    public func id() throws {
-        try field(for: Model.idKey)
+    /// Adds a field to the schema.
+    @discardableResult
+    public func field<T>(for key: KeyPath<Model, Optional<T>>) throws -> SchemaField
+        where T: SchemaFieldTypeRepresentable, T.FieldType == Connection.FieldType
+    {
+        return try field(
+            type: T.makeSchemaFieldType(),
+            for: key,
+            isOptional: true,
+            isIdentifier: key == Model.idKey
+        )
     }
 
     /// Adds a field to the schema.
     @discardableResult
-    public func field<
-        T: SchemaFieldTypeRepresentable
-    >(for key: KeyPath<Model, Optional<T>>) throws -> SchemaField {
-        return try field(T.makeSchemaFieldType(), key, isOptional: true, isIdentifier: key == Model.idKey)
+    public func field<T>(for key: KeyPath<Model, T>) throws -> SchemaField
+        where T: SchemaFieldTypeRepresentable, T.FieldType == Connection.FieldType
+    {
+        return try field(
+            type: T.makeSchemaFieldType(),
+            for: key,
+            isOptional: false,
+            isIdentifier: false
+        )
     }
 
     /// Adds a field to the schema.
     @discardableResult
-    public func field<
-        T: SchemaFieldTypeRepresentable
-    >(for key: KeyPath<Model, T>) throws -> SchemaField {
-        return try field(T.makeSchemaFieldType(), key, isOptional: false, isIdentifier: false)
-    }
-
-    /// Adds a field to the schema.
-    @discardableResult
-    public func field<Field: QueryFieldRepresentable>(
-        _ type: SchemaFieldType,
-        _ field: Field,
+    public func field<T>(
+        type: Connection.FieldType,
+        for field: KeyPath<Model, T>,
         isOptional: Bool = false,
         isIdentifier: Bool = false
     ) throws -> SchemaField {
         let field = SchemaField(
             name: try field.makeQueryField().name,
-            type: type,
+            type: type.makeSchemaFieldTypeString(),
             isOptional: isOptional,
             isIdentifier: isIdentifier
         )
         schema.addFields.append(field)
         return field
     }
-}
 
-public protocol SchemaFieldTypeRepresentable {
-    static func makeSchemaFieldType() -> SchemaFieldType
-}
-
-extension String: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SchemaFieldType {
-        return .string(nil)
+    /// Adds a field to the schema.
+    @discardableResult
+    public func addField(
+        type: Connection.FieldType,
+        name: String,
+        isOptional: Bool = false,
+        isIdentifier: Bool = false
+    ) -> SchemaField {
+        let field = SchemaField(
+            name: name,
+            type: type.makeSchemaFieldTypeString(),
+            isOptional: isOptional,
+            isIdentifier: isIdentifier
+        )
+        schema.addFields.append(field)
+        return field
     }
-}
 
-extension Int: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SchemaFieldType {
-        return .int
-    }
-}
-
-extension Date: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SchemaFieldType {
-        return .date
-    }
-}
-
-extension Double: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SchemaFieldType {
-        return .double
-    }
-}
-
-extension UUID: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SchemaFieldType {
-        return .data(16)
+    /// Adds a field to the schema.
+    public func removeField<Field>(
+        for field: Field
+    ) throws
+        where Field: QueryFieldRepresentable
+    {
+        let name = try field.makeQueryField().name
+        schema.removeFields.append(name)
     }
 }

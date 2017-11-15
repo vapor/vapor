@@ -57,9 +57,18 @@ internal struct PetToyMigration<D: Database>: Migration where D.Connection: Sche
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(PetToy<Database>.self) { builder in
-            try builder.id()
-            try builder.field(for: \.petID)
-            try builder.field(for: \.toyID)
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \PetToy<Database>.id
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \PetToy<Database>.petID
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \PetToy<Database>.toyID
+            )
         }
     }
 

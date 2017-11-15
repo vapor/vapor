@@ -52,7 +52,7 @@ public final class SQLiteConnection {
     }
 
     /// Convenience for creating a SQLite query.
-    public func makeQuery(_ string: String) -> SQLiteQuery {
+    public func query(string: String) -> SQLiteQuery {
         return SQLiteQuery(string: string, connection: self)
     }
 

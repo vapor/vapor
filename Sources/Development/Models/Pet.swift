@@ -63,7 +63,7 @@ extension Pet: Parameter {
 extension Pet: Migration {
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         return connection.create(self) { schema in
-            try schema.id()
+            try schema.field(for: \.id)
             try schema.field(for: \.name)
             try schema.field(for: \.ownerID)
         }

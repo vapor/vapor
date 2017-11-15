@@ -5,7 +5,8 @@ public enum SchemaStatement {
     )
     case alter(
         columns: [SchemaColumn],
-        deleteColumns: [String]
+        deleteColumns: [String],
+        deleteForeignKeys: [String]
     )
     case drop
 }

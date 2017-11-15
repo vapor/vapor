@@ -4,7 +4,7 @@ import CSQLite
 /// Note: The field type is not directly tied to the column type, and can vary between rows.
 public enum SQLiteFieldType {
     case integer
-    case float
+    case real
     case text
     case blob
     case null
@@ -15,7 +15,7 @@ public enum SQLiteFieldType {
         case SQLITE_INTEGER:
             self = .integer
         case SQLITE_FLOAT:
-            self = .float
+            self = .real
         case SQLITE_TEXT:
             self = .text
         case SQLITE_BLOB:

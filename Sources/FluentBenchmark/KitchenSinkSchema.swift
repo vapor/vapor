@@ -29,23 +29,26 @@ internal struct KitchenSinkSchema<
     /// See Migration.prepare
     static func prepare(on connection: D.Connection) -> Future<Void> {
         return connection.create(KitchenSink<Database>.self) { builder in
-            try builder.id()
-
-            try builder.field(.string(nil), "string")
-            try builder.field(.string(8), "stringEight")
-            try builder.field(.string(16), "optionalStringSixteen", isOptional: true)
-
-            try builder.field(.int, "int")
-            try builder.field(.int, "optionalInt", isOptional: true)
-
-            try builder.field(.double, "double")
-            try builder.field(.double, "optionalDouble", isOptional: true)
-
-            try builder.field(.data(8), "dataEight")
-            try builder.field(.data(16), "optionalSDataSixteen", isOptional: true)
-
-            try builder.field(.date, "date")
-            try builder.field(.date, "optionalDate", isOptional: true)
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                name: "id"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                name: "string"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+                name: "int"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .double),
+                name: "double"
+            )
+            builder.addField(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                name: "date"
+            )
         }
     }
 

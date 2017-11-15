@@ -93,7 +93,7 @@ extension Array: ResponseRepresentable {
 extension User: Migration {
     static func prepare(on conn: SQLiteConnection) -> Future<Void> {
         return conn.create(User.self) { user in
-            try user.id()
+            try user.field(for: \.id)
             try user.field(for: \.name)
             try user.field(for: \.age)
         }

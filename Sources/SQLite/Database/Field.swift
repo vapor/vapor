@@ -21,7 +21,7 @@ public struct SQLiteField {
             let val = sqlite3_column_int64(query, offset)
             let integer = Int(val)
             data = .integer(integer)
-        case .float:
+        case .real:
             let val = sqlite3_column_double(query, offset)
             let double = Double(val)
             data = .float(double)

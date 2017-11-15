@@ -28,7 +28,7 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
 
             /// create sqlite query from string
             let sqlString = SQLiteSQLSerializer().serialize(data: dataQuery)
-            let sqliteQuery = self.makeQuery(sqlString)
+            let sqliteQuery = self.query(string: sqlString)
 
             /// bind model data to sqlite query
             if query.data != nil {

@@ -1,5 +1,7 @@
 import Async
 
+// MARK: Protocols
+
 /// Capable of executing a database schema query.
 public protocol SchemaSupporting: Connection {
     /// See SchemaFieldType
@@ -7,6 +9,36 @@ public protocol SchemaSupporting: Connection {
 
     /// Executes the supplied schema on the database connection.
     func execute(schema: DatabaseSchema) -> Future<Void>
+}
+
+/// Capable of being a schema field type.
+public protocol SchemaFieldType {
+    /// Convert to a string representation of
+    /// the schema field type.
+    func makeSchemaFieldTypeString() -> String
+
+    /// Default schema field types Fluent must know
+    /// how to make for migrations and tests.
+    static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> Self
+}
+
+/// Fluent's basic schema field types.
+public enum BasicSchemaFieldType {
+    case uuid
+    case string
+    case int
+    case date
+    case double
+}
+
+/// A type that is capable of being represented by a SchemaFieldType.
+/// This is used to implement convenience methods on the SchemaBuilder.
+public protocol SchemaFieldTypeRepresentable {
+    /// The field type that can be represented by this type.
+    associatedtype FieldType: SchemaFieldType
+
+    /// Converts this type into a schema field type.
+    static func makeSchemaFieldType() -> FieldType
 }
 
 // MARK: Convenience

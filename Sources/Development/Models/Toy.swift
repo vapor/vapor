@@ -29,7 +29,7 @@ final class Toy: Model {
 extension Toy: Migration {
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         return connection.create(self) { schema in
-            try schema.id()
+            try schema.field(for: \.id)
             try schema.field(for: \.name)
         }
     }

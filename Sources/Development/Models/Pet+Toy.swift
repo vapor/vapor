@@ -32,7 +32,7 @@ final class PetToyPivot: ModifiablePivot {
 extension PetToyPivot: Migration {
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         return connection.create(self) { schema in
-            try schema.id()
+            try schema.field(for: \.id)
             try schema.field(for: \.petID)
             try schema.field(for: \.toyID)
         }

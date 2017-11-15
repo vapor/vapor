@@ -58,11 +58,26 @@ final class MigrationLogMigration<
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
             return connection.create(MigrationLog<Database>.self) { builder in
-                try builder.field(for: \.id)
-                try builder.field(for: \.name)
-                try builder.field(for: \.batch)
-                try builder.field(for: \.createdAt)
-                try builder.field(for: \.updatedAt)
+                try builder.field(
+                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                    for: \MigrationLog<D>.id
+                )
+                try builder.field(
+                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                    for: \MigrationLog<D>.name
+                )
+                try builder.field(
+                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+                    for: \MigrationLog<D>.batch
+                )
+                try builder.field(
+                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                    for: \MigrationLog<D>.createdAt
+                )
+                try builder.field(
+                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                    for: \MigrationLog<D>.updatedAt
+                )
             }
     }
 
@@ -81,7 +96,7 @@ extension MigrationLog {
     internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
         return then {
             return try connection.query(MigrationLog.self)
-                .sort("batch", .descending)
+                .sort(\MigrationLog.batch, .descending)
                 .first()
                 .map { log in
                     return log?.batch ?? 0

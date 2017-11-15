@@ -71,11 +71,27 @@ internal struct UserMigration<D: Database>: Migration
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(User<Database>.self) { builder in
-            try builder.id()
-            try builder.field(for: \.name)
-            try builder.field(for: \.age)
-            try builder.field(for: \.createdAt)
-            try builder.field(for: \.updatedAt)
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+                for: \User<Database>.id,
+                isIdentifier: true
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+                for: \User<Database>.name
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+                for: \User<Database>.age
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                for: \User<Database>.createdAt
+            )
+            try builder.field(
+                type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+                for: \User<Database>.updatedAt
+            )
         }
     }
 

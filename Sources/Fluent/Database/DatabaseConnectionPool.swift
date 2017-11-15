@@ -41,7 +41,7 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
             if self.active < self.max {
                 self.database.makeConnection(on: worker).do { connection in
                     self.active += 1
-                    if let references = connection as? ReferenceSupporting {
+                    if let references = connection as? _ReferenceSupporting {
                         references.enableReferences().do {
                             promise.complete(connection)
                         }.catch(promise.fail)

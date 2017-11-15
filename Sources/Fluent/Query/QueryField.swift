@@ -20,14 +20,6 @@ public protocol QueryFieldRepresentable {
     func makeQueryField() throws -> QueryField
 }
 
-/// Strings should be usable as query fields in builder.filter(...) calls.
-extension String: QueryFieldRepresentable {
-    /// See QueryFieldRepresentable.makeQueryField
-    public func makeQueryField() -> QueryField {
-        return QueryField(name: self)
-    }
-}
-
 /// Conform key path's where the root is a model.
 /// FIXME: conditional conformance
 extension KeyPath: QueryFieldRepresentable {
