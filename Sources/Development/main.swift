@@ -53,6 +53,11 @@ services.register(middlewareConfig)
 
 let app = try Application(services: services)
 
+let foo = try app.database(.alpha) { alpha in
+    return try alpha.query(string: "select sqlite_version();").all()
+}.blockingAwait()
+print(foo)
+
 let router = try app.make(Router.self)
 
 let user = User(name: "Vapor", age: 3);
@@ -166,8 +171,33 @@ router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
 }
 
 router.get("users") { req in
-    return req.database(.beta) { db in
-        return db.query(User.self).all()
+    return req.database(.alpha) { db -> Future<Response> in
+        let marie = User(name: "Marie Curie", age: 66)
+        let charles = User(name: "Charles Darwin", age: 73)
+        return [
+            marie.save(on: db),
+            charles.save(on: db)
+        ].map {
+            return Response(status: .created)
+        }
+    }
+}
+
+router.get("hello") { req in
+    return req.database(.alpha) { db in
+        return try db.query(User.self).filter(\User.age > 50).all()
+    }
+}
+
+router.get("first") { req in
+    return req.database(.alpha) { db -> Future<User> in
+        return try db.query(User.self).filter(\User.name == "Vapor").first().map { user in
+            guard let user = user else {
+                throw Abort(.notFound, reason: "Could not find user.")
+            }
+
+            return user
+        }
     }
 }
 

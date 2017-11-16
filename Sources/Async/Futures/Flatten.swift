@@ -70,7 +70,18 @@ extension Array where Element: FutureType {
     }
 }
 
+
 extension Array where Element: FutureType {
+    /// See FutureType.map
+    public func map<T>(_ callback: @escaping ([Element.Expectation]) throws -> T) -> Future<T> {
+        return flatten().map(callback)
+    }
+
+    /// See FutureType.then
+    public func then<T>(_ callback: @escaping ([Element.Expectation]) throws -> Future<T>) -> Future<T> {
+        return flatten().then(callback)
+    }
+
     /// Flattens an array of futures into a future with an array of results.
     /// note: the results will be in random order.
     ///
@@ -83,6 +94,20 @@ extension Array where Element: FutureType {
 
 
 extension Array where Element: FutureType, Element.Expectation == Void {
+    /// See FutureType.map
+    public func map<T>(_ callback: @escaping () throws -> T) -> Future<T> {
+        return flatten().map { _ in
+            return try callback()
+        }
+    }
+
+    /// See FutureType.then
+    public func then<T>(_ callback: @escaping () throws -> Future<T>) -> Future<T> {
+        return flatten().then { _ in
+            return try callback()
+        }
+    }
+
     /// Flattens an array of void futures into a single one.
     ///
     /// http://localhost:8000/async/advanced-futures/#combining-multiple-futures

@@ -3,7 +3,7 @@ import Foundation
 import libc
 
 /// Errors that can be thrown while working with Vapor.
-public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
+public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable {
     public static let readableName = "Vapor Error"
     public let identifier: String
     public var reason: String
@@ -27,7 +27,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = VaporError.makeStackTrace()
     }
     
     static func unknownMediaType(
@@ -35,8 +35,8 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) -> Error {
-        return Error(
+    ) -> Error {
+        return VaporError(
             identifier: "unknownMediaType",
             reason: "Unable to parse Message contents from media type.",
             file: file,
