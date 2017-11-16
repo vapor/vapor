@@ -184,7 +184,7 @@ let package = Package(
     )
 #else
     package.dependencies.append(
-        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
+        .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
     )
     
     package.targets.append(
