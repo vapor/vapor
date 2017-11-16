@@ -6,7 +6,7 @@ import HTTP
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
 ///
-/// http://localhost:8000/http/multipart/#parsing-a-multipart-form
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
 public final class MultipartParser {
     /// The boundary between all parts
     fileprivate let boundary: Data
@@ -212,7 +212,7 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart data using the provided boundary
     ///
-    /// http://localhost:8000/http/multipart/#parsing-a-multipart-form
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
     ///
     /// - throws: If the multipart data is an invalid Multipart form
     public static func parse(from buffer: ByteBuffer, boundary: Data) throws -> Form {
@@ -225,7 +225,7 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart body using the provided boundary
     ///
-    /// http://localhost:8000/http/multipart/#parsing-a-multipart-form
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
     ///
     /// - throws: If the multipart data is an invalid Multipart form
     public static func parse(from body: Body, boundary: Data) throws -> Form {

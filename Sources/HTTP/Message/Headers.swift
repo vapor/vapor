@@ -12,7 +12,7 @@ import Bits
 ///    let contentLength = headers[.contentLength]
 /// ```
 ///
-/// http://localhost:8000/http/headers/
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/headers/)
 public struct Headers: Codable {
     struct Index {
         var nameStartIndex: Int
@@ -51,7 +51,7 @@ public struct Headers: Codable {
 
     /// Accesses the (first) value associated with the `Name` if any
     ///
-    /// http://localhost:8000/http/headers/#accessing-headers
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/headers/#accessing-headers)
     public subscript(name: Name) -> String? {
         get {
             switch name {

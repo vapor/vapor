@@ -36,7 +36,7 @@ extension FutureType {
     ///
     /// Will *not* be executed if an error occurrs
     ///
-    /// http://localhost:8000/async/promise-future-introduction/#on-future-completion
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/promise-future-introduction/#on-future-completion)
     public func `do`(_ callback: @escaping ExpectationCallback) -> Self {
         addAwaiter { result in
             guard let ex = result.expectation else {
@@ -55,7 +55,7 @@ extension FutureType {
     /// Will *only* be executed if an error occurred.
     //// Successful results will not call this handler.
     ///
-    /// http://localhost:8000/async/promise-future-introduction/#on-future-completion
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/promise-future-introduction/#on-future-completion)
     public func `catch`(_ callback: @escaping ErrorCallback) {
         addAwaiter { result in
             guard let er = result.error else {
@@ -69,7 +69,7 @@ extension FutureType {
     /// Maps a future to a future of a different type.
     /// The result returned within should be non-future type.
     ///
-    /// http://localhost:8000/async/promise-future-introduction/#mapping-results
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/promise-future-introduction/#mapping-results)
     public func map<T>(to type: T.Type = T.self, callback: @escaping ExpectationMapCallback<T>) -> Future<T> {
         let promise = Promise(T.self)
 
@@ -111,7 +111,7 @@ extension FutureType {
     /// Will return the results when available unless the specified
     /// time has been reached, in which case it will timeout
     ///
-    /// http://localhost:8000/async/promise-future-introduction/#synchronous-apis
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/promise-future-introduction/#synchronous-apis)
     public func blockingAwait(deadline time: DispatchTime = .distantFuture) throws -> Expectation {
         let semaphore = DispatchSemaphore(value: 0)
         var awaitedResult: FutureResult<Expectation>?
@@ -145,7 +145,7 @@ extension FutureType {
     ///
     /// Will return the results when available unless the specified timeout has been reached, in which case it will timeout
     ///
-    /// http://localhost:8000/async/promise-future-introduction/#synchronous-apis
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/promise-future-introduction/#synchronous-apis)
     public func blockingAwait(timeout interval: DispatchTimeInterval) throws -> Expectation {
         return try blockingAwait(deadline: DispatchTime.now() + interval)
     }

@@ -4,7 +4,7 @@ import Foundation
 ///
 /// Used to provide information about the kind of action being requested
 ///
-/// http://localhost:8000/http/method/
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/method/)
 public struct Method : Equatable, Hashable, Codable, CustomDebugStringConvertible, ExpressibleByStringLiteral {
     /// Decodes a method from a String
     public init(from decoder: Decoder) throws {

@@ -4,7 +4,7 @@ import Foundation
 
 /// A Redis pipeline. Executes multiple commands in a single batch.
 ///
-/// http://localhost:8000/redis/pipeline/
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pipeline/)
 public final class Pipeline {
     var isSubscribed: () -> Bool
     var queuePromise: (Promise<RedisData>) -> ()
@@ -27,7 +27,7 @@ public final class Pipeline {
     
     /// Enqueues a commands.
     ///
-    /// http://localhost:8000/redis/pipeline/#enqueuing-commands
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pipeline/#enqueuing-commands)
     @discardableResult
     public func enqueue(command: String, arguments: [RedisData] = []) throws -> Pipeline {
         commands.append(RedisData.array([.bulkString(command)] + arguments))
@@ -36,7 +36,7 @@ public final class Pipeline {
     
     /// Executes a series of commands and returns a future for the responses
     ///
-    /// http://localhost:8000/redis/pipeline/#enqueuing-commands
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pipeline/#enqueuing-commands)
     @discardableResult
     public func execute() throws -> Future<[RedisData]> {
         defer {

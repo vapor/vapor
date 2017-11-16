@@ -2,7 +2,7 @@ import Foundation
 
 /// The HTTP response status
 ///
-/// http://localhost:8000/http/status/
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/status/)
 public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
     /// Checks of two Statuses are equal
     public static func ==(lhs: Status, rhs: Status) -> Bool {

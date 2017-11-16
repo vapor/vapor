@@ -9,7 +9,7 @@ import Service
 /// one of these per application.
 /// Acts as a service container and much more.
 ///
-/// http://localhost:8000/vapor/application/#creating-a-basic-application
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/vapor/application/#creating-a-basic-application)
 public final class Application: Container {
     /// Config preferences and requirements for available services.
     public let config: Config

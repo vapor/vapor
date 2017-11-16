@@ -6,7 +6,7 @@ import Async
 ///
 /// When done hashing the stream, call `complete` to receive the hash and reset the hash to it's original state
 ///
-/// http://localhost:8000/crypto/hash/#streaming-hashes-async
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#streaming-hashes-async)
 public class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// See `InputStream` for details
     public func inputStream(_ input: ByteBuffer) {
@@ -42,7 +42,7 @@ public class ByteStreamHasher<H: Hash> : Async.InputStream {
 ///
 /// Cascades the inputstream to the output stream without any changes.
 ///
-/// http://localhost:8000/crypto/hash/#using-streamhasher-as-a-transparent-component
+/// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#using-streamhasher-as-a-transparent-component)
 public final class PassthroughByteStreamHasher<H: Hash> : ByteStreamHasher<H>, Async.OutputStream {
     /// See `InputStream` for details
     public override func inputStream(_ input: ByteBuffer) {

@@ -14,7 +14,7 @@ import Dispatch
  / \ /                        \
  urn:example:animal:ferret:nose
  
- http://localhost:8000/http/uri/
+ [For more information, see the documentation](https://docs.vapor.codes/3.0/http/uri/)
  */
 public struct URI: Codable {
     // https://tools.ietf.org/html/rfc3986#section-3.1

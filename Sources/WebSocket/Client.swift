@@ -13,7 +13,7 @@ extension WebSocket {
     /// - parameter uri: The URI containing the remote host to connect to.
     /// - parameter worker: The Worker which this websocket will use for managing read and write operations
     ///
-    /// http://localhost:8000/websocket/client/#connecting-a-websocket-client
+    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/websocket/client/#connecting-a-websocket-client)
     public static func connect(
         to uri: URI,
         worker: Worker
