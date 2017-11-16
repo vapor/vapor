@@ -3,7 +3,7 @@ import HTTP
 
 /// Capable of being used as a route parameter.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/routing/parameters/#creating-custom-parameters)
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/#creating-custom-parameters)
 public protocol Parameter {
     /// the unique key to use as a slug in route building
     static var uniqueSlug: String { get }

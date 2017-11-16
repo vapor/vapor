@@ -3,7 +3,7 @@ import HTTP
 
 /// A bag for holding parameters resolved during router
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/routing/parameters/)
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
 public struct ParameterBag {
     /// The parameters, not yet resolved
     /// so that the `.next()` method can throw any errors.

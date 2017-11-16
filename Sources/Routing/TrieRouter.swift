@@ -5,7 +5,7 @@ import Bits
 
 /// A basic router that can route requests depending on the method and URI
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/routing/router/)
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/router/)
 public final class TrieRouter: Router {
     /// All routes registered to this router
     public private(set) var routes: [Route] = []

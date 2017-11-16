@@ -6,7 +6,7 @@ import TCP
 
 /// A websocket connection. Can be either the client or server side of the connection
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/websocket/websocket/)
+/// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
 public class WebSocket {
     /// A stream of incoming and outgoing strings between both parties
     let textStream = TextStream()

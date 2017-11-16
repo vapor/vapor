@@ -20,7 +20,7 @@ import Foundation
 ///
 ///     let req = Request(method: .post, body: "hello")
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/request/)
+/// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
 public final class Request: Message {
     /// HTTP requests have a method, like GET or POST
     public var method: Method

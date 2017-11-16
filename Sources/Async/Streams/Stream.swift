@@ -1,11 +1,11 @@
 /// A stream is both an InputStream and an OutputStream
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
 public typealias Stream = InputStream & OutputStream
 
 /// A type that accepts a stream of `Input`
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
 public protocol InputStream: BaseStream {
     /// The input type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -55,7 +55,7 @@ extension ClosableStream {
 
 /// A type that emits `Ouptut` asynchronously and at unspecified moments
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
 public protocol OutputStream: BaseStream {
     /// The output type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -85,7 +85,7 @@ extension OutputStream {
 /// after reporting an error and be ready for
 /// additional incoming data.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
 public protocol BaseStream: class {
     /// A closure that takes one error.
     typealias ErrorHandler = (Error) -> ()
@@ -100,7 +100,7 @@ public protocol BaseStream: class {
 extension OutputStream {
     /// Drains the output stream into a closure.
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#draining-streams)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#draining-streams)
     @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
@@ -109,7 +109,7 @@ extension OutputStream {
 
     /// Drains the output stream into a closure
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-introduction/#catching-stream-errors)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#catching-stream-errors)
     @discardableResult
     public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
         self.errorStream = handler
@@ -120,7 +120,7 @@ extension OutputStream {
     ///
     /// Also chains the errors to the other input/output stream
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-basics/#chaining-streams)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-basics/#chaining-streams)
     public func stream<S: Stream>(to stream: S) -> S where S.Input == Self.Output {
         stream.errorStream = self.errorStream
         self.outputStream = stream.inputStream
@@ -129,7 +129,7 @@ extension OutputStream {
 
     /// Drains the output stream into an input stream.
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/async/streams-basics/#draining-streams)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-basics/#draining-streams)
     public func drain<I: InputStream>(into input: I) where I.Input == Self.Output {
         input.errorStream = self.errorStream
         self.outputStream = input.inputStream

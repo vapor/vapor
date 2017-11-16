@@ -2,7 +2,7 @@ import Foundation
 
 /// A single Key-Value pair
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/cookies/#a-single-cookie)
+/// [Learn More →](https://docs.vapor.codes/3.0/http/cookies/#a-single-cookie)
 public struct Cookie {
     /// The cookie's `Key`/name
     public var name: String
@@ -32,7 +32,7 @@ public protocol CookieValueRepresentable {
 extension Cookie {
     /// The `Cookie` pair's `Value`
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/cookies/#values)
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/cookies/#values)
     public struct Value: CookieValueInitializable, CookieValueRepresentable, ExpressibleByStringLiteral {
         /// Initializes itself to itself
         public init(from value: Cookie.Value) throws {

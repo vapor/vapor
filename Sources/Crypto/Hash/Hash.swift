@@ -1,7 +1,7 @@
 import Bits
 import Foundation
 
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/)
+/// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/)
 public protocol Hash: class {
     /// The amount of processed bytes per chunk
     static var chunkSize: Int { get }
@@ -41,7 +41,7 @@ extension Hash {
     
     /// Processes the contents of this `Data` and returns the resulting hash
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#hashing-blobs-of-data)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#hashing-blobs-of-data)
     public static func hash(_ data: Data) -> Data {
         let h = Self()
         
@@ -53,7 +53,7 @@ extension Hash {
     
     /// Processes the contents of this ByteBuffer and returns the resulting hash
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#hashing-blobs-of-data)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#hashing-blobs-of-data)
     public static func hash(_ data: ByteBuffer) -> Data {
         let h = Self()
         
@@ -65,7 +65,7 @@ extension Hash {
     ///
     /// Doesn't finalize the hash and thus doesn't return any results
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
     public func finalize(_ data: Data) {
         Array(data).withUnsafeBufferPointer { buffer in
             self.finalize(buffer)
@@ -75,7 +75,7 @@ extension Hash {
     /// Finalizes the hash by appending a `0x80` and `0x00` until there are 64 bits left.
     /// Then appends a `UInt64` with little or big endian as defined in the protocol implementation
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
     public func finalize(_ buffer: ByteBuffer? = nil) {
         let totalRemaining = containedRemainder + (buffer?.count ?? 0) + 1
         totalLength = totalLength &+ (UInt64(buffer?.count ?? 0) &* 8)
@@ -133,7 +133,7 @@ extension Hash {
     ///
     /// Doesn't finalize the hash
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
     public func update(_ buffer: ByteBuffer) {
         totalLength = totalLength &+ (UInt64(buffer.count) &* 8)
         
@@ -187,7 +187,7 @@ extension Hash {
     ///
     /// Does not finalize the hash
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#incremental-hashes-manual)
     public func update<S: Sequence>(sequence: inout S) where S.Element == UInt8 {
         Array(sequence).withUnsafeBufferPointer { buffer in
             update(buffer)

@@ -3,7 +3,7 @@ import Bits
 
 /// A stream of incoming and outgoing binary  between 2 parties over WebSockets
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/websocket/binary-stream/)
+/// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
 final class BinaryStream : Async.Stream {
     /// A stream of incoming binary data
     var outputStream: OutputHandler?
@@ -48,7 +48,7 @@ final class BinaryStream : Async.Stream {
 extension WebSocket {
     /// Sends a string to the server
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/websocket/binary-stream/)
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
     public func send(_ buffer: ByteBuffer) {
         self.binaryStream.inputStream(buffer)
     }
@@ -57,7 +57,7 @@ extension WebSocket {
     ///
     /// Any previously listening closures will be overridden
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/websocket/binary-stream/)
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
     public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) {
         self.binaryStream.drain(closure).catch { error in
             // FIXME: @joannis

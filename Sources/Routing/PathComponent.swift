@@ -1,6 +1,6 @@
 /// Components of a router path.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/routing/parameters/)
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
 public enum PathComponent {
     /// A normal, constant path component.
     case constant(String)
@@ -11,7 +11,7 @@ public enum PathComponent {
 
 /// Capable of being represented by a path component.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/routing/parameters/)
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
 public protocol PathComponentRepresentable {
     /// Convert to path component.
     func makePathComponent() -> PathComponent

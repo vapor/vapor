@@ -2,7 +2,7 @@ import Async
 
 /// Capable of transforming requests and responses.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/middleware/)
+/// [Learn More →](https://docs.vapor.codes/3.0/http/middleware/)
 public protocol Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }

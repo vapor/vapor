@@ -3,14 +3,14 @@ import Async
 extension RedisClient {
     /// Subscribes to the given channel
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
     public func subscribe(to channel: String) -> SubscriptionStream {
         return self.subscribe(to: [channel])
     }
         
     /// Subscribes to the given list of channels
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
     public func subscribe(to channels: Set<String>) -> SubscriptionStream {
         let channels = channels.map { name in
             return RedisData(bulk: name)
@@ -29,7 +29,7 @@ extension RedisClient {
     
     /// Publishes the message to a channels
     ///
-    /// [For more information, see the documentation](https://docs.vapor.codes/3.0/redis/pub-sub/#publishing)
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#publishing)
     @discardableResult
     public func publish(_ message: RedisData, to channel: String) -> Future<Int> {
         return run(command: "PUBLISH", arguments: [.bulkString(channel), message]).map { reply in

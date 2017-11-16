@@ -4,7 +4,7 @@ import Dispatch
 
 /// An automatically managed pool of connections to a server.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
+/// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
 public class ConnectionPool {
     /// The queue on which connections will be created
     let worker: Worker

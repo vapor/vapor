@@ -1,6 +1,6 @@
 /// A `Cookie` Array
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/http/cookies/#multiple-cookies)
+/// [Learn More →](https://docs.vapor.codes/3.0/http/cookies/#multiple-cookies)
 public struct Cookies: ExpressibleByArrayLiteral, ExpressibleByDictionaryLiteral {
     /// All `Cookie`s contained
     public var cookies = [Cookie]()

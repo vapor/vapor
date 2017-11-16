@@ -6,7 +6,7 @@ import libc
 /// Uses the operating system's Random function
 /// uses `random` on Linux and `arc4random` on macOS.
 ///
-/// [For more information, see the documentation](https://docs.vapor.codes/3.0/crypto/random/)
+/// [Learn More →](https://docs.vapor.codes/3.0/crypto/random/)
 public final class OSRandom: DataGenerator, EmptyInitializable {
     /// Create a new OSRandom
     public init() {}
