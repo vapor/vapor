@@ -7,7 +7,7 @@ import libc
 
 /// TCP client stream.
 ///
-/// http://localhost:8000/sockets/tcp-client/
+/// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/)
 public final class TCPClient: Async.Stream, ClosableStream {
     // MARK: Stream
     public typealias Input = ByteBuffer
@@ -48,7 +48,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     
     /// Creates a new Remote Client from the a socket
     ///
-    /// http://localhost:8000/sockets/tcp-client/#creating-and-connecting-a-socket
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#creating-and-connecting-a-socket)
     public init(socket: Socket, worker: Worker) {
         self.socket = socket
         self.worker = worker
@@ -63,7 +63,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     
     /// Handles normal stream input
     ///
-    /// http://localhost:8000/sockets/tcp-client/#communicating
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func inputStream(_ input: ByteBuffer) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
@@ -71,7 +71,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     
     /// Handles DispatchData input
     ///
-    /// http://localhost:8000/sockets/tcp-client/#communicating
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func inputStream(_ input: DispatchData) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
@@ -79,7 +79,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     
     /// Handles Data input
     ///
-    /// http://localhost:8000/sockets/tcp-client/#communicating
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func inputStream(_ input: Data) {
         inputBuffer.append(input)
         ensureWriteSourceResumed()
@@ -143,7 +143,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
 
     /// Starts receiving data from the client
     ///
-    /// http://localhost:8000/sockets/tcp-client/#communicating
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,

@@ -26,7 +26,7 @@ protocol Base64: Async.Stream, ClosableStream {
 extension Base64 {
     /// Transforms a binary until stream depending on the Base64 mode (encoding/decoding) to the en/decoded variant.
     ///
-    /// http://localhost:8000/crypto/base64/#transforming-binary-streams
+    /// [Learn More →](https://docs.vapor.codes/3.0/crypto/base64/#transforming-binary-streams)
     public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Output == ByteBuffer {
         let stream = Self.init(bufferCapacity: 65_507)
         

@@ -1,7 +1,7 @@
 extension Future {
     /// Reduces a nested future into a one-dimensional future, preventing code pyramids
     ///
-    /// http://localhost:8000/async/advanced-futures/#flat-mapping-results
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#flat-mapping-results)
     public func flatMap<B>(_ closure: @escaping ((T) throws -> (Future<B>))) -> Future<B> {
         let promise = Promise<B>()
         

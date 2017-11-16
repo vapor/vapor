@@ -24,7 +24,7 @@ public struct RouterResponder: Responder {
 extension Router {
     /// Creates an Async `Route` at the provided path using the `GET` method.
     ///
-    /// http://localhost:8000/getting-started/routing/
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func get<F: FutureType>(
         _ path: PathComponentRepresentable...,
@@ -35,7 +35,7 @@ extension Router {
     
     /// Creates  Async `Route` at the provided path using the `PUT` method.
     ///
-    /// http://localhost:8000/getting-started/routing/
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func put<F: FutureType>(
         _ path: PathComponentRepresentable...,
@@ -46,7 +46,7 @@ extension Router {
     
     /// Creates  Async `Route` at the provided path using the `POST` method.
     ///
-    /// http://localhost:8000/getting-started/routing/
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func post<F: FutureType>(
         _ path: PathComponentRepresentable...,
@@ -57,7 +57,7 @@ extension Router {
     
     /// Creates  Async `Route` at the provided path using the `DELETE` method.
     ///
-    /// http://localhost:8000/getting-started/routing/
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func delete<F: FutureType>(
         _ path: PathComponentRepresentable...,
@@ -68,7 +68,7 @@ extension Router {
     
     /// Creates  Async `Route` at the provided path using the `PATCH` method.
     ///
-    /// http://localhost:8000/getting-started/routing/
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func patch<F: FutureType>(
         _ path: PathComponentRepresentable...,

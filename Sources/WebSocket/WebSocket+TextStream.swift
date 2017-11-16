@@ -3,7 +3,7 @@ import Bits
 
 /// A stream of incoming and outgoing strings between 2 parties over WebSockets
 ///
-/// http://localhost:8000/websocket/text-stream/
+/// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
 final class TextStream : Async.Stream {
     /// A stream of strings received from the other party
     var outputStream: OutputHandler?
@@ -46,7 +46,7 @@ final class TextStream : Async.Stream {
 extension WebSocket {
     /// Sends a string to the server
     ///
-    /// http://localhost:8000/websocket/text-stream/
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
     public func send(_ string: String) {
         self.textStream.inputStream(string)
     }
@@ -55,7 +55,7 @@ extension WebSocket {
     ///
     /// Any previously listening closures will be overridden
     ///
-    /// http://localhost:8000/websocket/text-stream/
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
     public func onText(_ closure: @escaping ((String) -> ())) {
         self.textStream.drain(closure).catch { error in
             // FIXME: @joannis

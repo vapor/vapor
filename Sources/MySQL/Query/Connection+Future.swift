@@ -38,7 +38,7 @@ extension Connection {
     
     /// Collects all decoded results and returs them in the future
     ///
-    /// http://localhost:8000/mysql/basics/#futures
+    /// [Learn More →](https://docs.vapor.codes/3.0/mysql/basics/#futures)
     ///
     /// - parameter query: The query to be executed to receive results from
     /// - returns: A future containing all results
