@@ -23,7 +23,8 @@ let package = Package(
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Fluent
-         .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -49,6 +50,9 @@ let package = Package(
 
         // Service
         .library(name: "Service", targets: ["Service"]),
+
+        // SQL
+        .library(name: "SQL", targets: ["SQL"]),
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
