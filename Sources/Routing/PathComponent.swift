@@ -12,32 +12,35 @@ public enum PathComponent {
 /// Capable of being represented by a path component.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
-public protocol PathComponentRepresentable {
+public protocol PathComponentsRepresentable {
     /// Convert to path component.
-    func makePathComponent() -> PathComponent
+    func makePathComponents() -> [PathComponent]
 }
 
-extension PathComponent: PathComponentRepresentable {
+extension PathComponent: PathComponentsRepresentable {
     /// See PathComponentRepresentable.makePathComponent()
-    public func makePathComponent() -> PathComponent {
-        return self
+    public func makePathComponents() -> [PathComponent] {
+        return [self]
     }
 }
 
 // MARK: Array
 
-extension Array where Element == PathComponentRepresentable {
+extension Array where Element == PathComponentsRepresentable {
     /// Convert to array of path components.
     public func makePathComponents() -> [PathComponent] {
-        return map { $0.makePathComponent() }
+        return map { $0.makePathComponents() }.reduce([], +)
     }
 }
 
 /// Strings are constant path components.
-extension String: PathComponentRepresentable {
+extension String: PathComponentsRepresentable {
     /// Convert string to constant path component.
     /// See PathComponentRepresentable.makePathComponent()
-    public func makePathComponent() -> PathComponent {
-        return .constant(self) // TODO: .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed))
+    public func makePathComponents() -> [PathComponent] {
+        return self.split(separator: "/").map { component in
+            return .constant(String(component))
+            // TODO: component.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
+        }
     }
 }
