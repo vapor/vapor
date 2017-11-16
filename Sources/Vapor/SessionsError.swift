@@ -44,7 +44,7 @@ public struct SessionsError: Traceable, Helpable, Debuggable, Swift.Error, Encod
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = SessionsError.makeStackTrace()
     }
     
     static func cookieNotFound<T>(

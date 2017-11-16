@@ -30,7 +30,7 @@ extension Services {
         }
         
         services.register { container in
-            return ErrorMiddleware()
+            return ErrorMiddleware(environment: container.environment)
         }
 
         // register router
@@ -44,6 +44,16 @@ extension Services {
         }
 
         return services
+    }
+}
+
+extension Application: Worker, HasContainer {
+    public var container: Container? {
+        return self
+    }
+
+    public var eventLoop: EventLoop {
+        return EventLoop.default
     }
 }
 

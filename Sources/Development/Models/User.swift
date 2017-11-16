@@ -6,6 +6,52 @@ import Vapor
 import Fluent
 import SQLite
 
+import Foundation
+
+final class TestUser: Codable {
+    var id: UUID?
+    var name: String
+    var age: Int
+}
+
+extension TestUser: Model {
+    /// See Model.Database
+    typealias Database = SQLiteDatabase
+
+    /// See Model.ID
+    typealias ID = UUID
+
+    /// See Model.idKey
+    static var idKey: IDKey {
+        return \.id
+    }
+
+    /// See Model.keyFieldMap
+    static var keyFieldMap: KeyFieldMap {
+        return [
+            key(\.id): field("id"),
+            key(\.name): field("name"),
+            key(\.age): field("age"),
+        ]
+    }
+}
+
+extension TestUser: Migration {
+    /// See Migration.prepare
+    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.create(self) { builder in
+            try builder.field(for: \.id)
+            try builder.field(for: \.name)
+            try builder.field(for: \.age)
+        }
+    }
+
+    /// See Migration.revert
+    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+        return connection.delete(self)
+    }
+}
+
 
 struct TestSiblings: Migration {
     typealias Database = SQLiteDatabase
