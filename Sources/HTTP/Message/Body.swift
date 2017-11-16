@@ -6,7 +6,7 @@ import Bits
 ///
 /// This can contain any data and should match the Message's "Content-Type" header.
 ///
-/// http://localhost:8000/http/body/
+/// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
 public struct Body: Codable {
     /// The internal storage medium.
     ///
@@ -115,7 +115,7 @@ public struct Body: Codable {
 
 /// Can be converted to an HTTP body.
 ///
-/// http://localhost:8000/http/body/#bodyrepresentable
+/// [Learn More →](https://docs.vapor.codes/3.0/http/body/#bodyrepresentable)
 public protocol BodyRepresentable {
     /// Convert to an HTTP body.
     func makeBody() throws -> Body

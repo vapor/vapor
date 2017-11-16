@@ -38,7 +38,7 @@ extension ConnectionPool {
     
     /// Loops over all rows resulting from the query
     ///
-    /// http://localhost:8000/mysql/basics/#foreach
+    /// [Learn More →](https://docs.vapor.codes/3.0/mysql/basics/#foreach)
     ///
     /// - parameter type: Deserializes all rows to the provided `Decodable` `D`
     /// - parameter query: Fetches results using this query

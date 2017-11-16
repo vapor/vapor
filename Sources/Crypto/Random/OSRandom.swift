@@ -5,7 +5,7 @@ import libc
 /// Uses the operating system's Random function
 /// uses `random` on Linux and `arc4random` on macOS.
 ///
-/// http://localhost:8000/crypto/random/
+/// [Learn More →](https://docs.vapor.codes/3.0/crypto/random/)
 public final class OSRandom: RandomProtocol {
     /// SystemRandom
     public init() {}

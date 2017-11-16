@@ -7,7 +7,7 @@ import TCP
 ///
 /// Multiple requests at the same time are subject to unknown behaviour
 ///
-/// http://localhost:8000/http/client/
+/// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
 public final class HTTPClient {
     /// The underlying TCP Client
     public let tcp: TCPClient
