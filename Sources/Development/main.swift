@@ -87,6 +87,17 @@ router.get("leaf") { req -> Future<View> in
     return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
 }
 
+final class FooController {
+    func foo(_ req: Request) -> Future<Response> {
+        return req.database(.alpha) { db in
+            return Response(status: .ok)
+        }
+    }
+}
+
+let controller = FooController()
+router.post("login", use: controller.foo)
+
 final class Message: Model {
     typealias Database = SQLiteDatabase
     
@@ -124,7 +135,7 @@ final class Message: Model {
 }
 
 router.get("userview") { req -> Future<View> in
-    return req.database(.beta) { db in
+    return req.database(.beta) { db -> Future<View> in
         let user = db.query(User.self).first()
 
         return try view.make("/Users/tanner/Desktop/hello", context: [
