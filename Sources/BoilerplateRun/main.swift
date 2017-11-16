@@ -1,5 +1,4 @@
 import Boilerplate
-import Service
 import Vapor
 
 let config = Config.default()
