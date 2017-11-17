@@ -16,6 +16,10 @@ let package = Package(
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
+        // Console
+        .library(name: "Console", targets: ["Console"]),
+        .library(name: "Command", targets: ["Command"]),
+
         // Crypto
         .library(name: "Crypto", targets: ["Crypto"]),
 
@@ -79,10 +83,18 @@ let package = Package(
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
-        // 
+        // Core
         .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),
         
+
+        // Console
+        .target(name: "Console", dependencies: ["Async", "Core"]),
+        .target(name: "Command", dependencies: ["Console"]),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
+        .testTarget(name: "CommandTests", dependencies: ["Command"]),
+        .target(name: "ConsoleExample", dependencies: ["Console"]),
+
         // Crypto
         .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),

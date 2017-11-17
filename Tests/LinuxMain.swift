@@ -2,6 +2,8 @@
 
 import XCTest
 @testable import AsyncTests
+@testable import CommandTests
+@testable import ConsoleTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import FluentTests
@@ -23,6 +25,10 @@ XCTMain([
     // Core
     testCase(FutureTests.allTests),
     testCase(StreamTests.allTests),
+
+    /// Console & Commands
+    testCase(ConsoleTests.allTests),
+    testCase(CommandTests.allTests),
 
     // Crypto
     testCase(Base64Tests.allTests),
