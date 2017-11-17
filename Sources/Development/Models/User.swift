@@ -76,15 +76,7 @@ struct TestSiblings: Migration {
     }
 }
 
-extension ResponseRepresentable where Self: Content {
-    func makeResponse(for request: Request) throws -> Response {
-        let res = Response(status: .ok)
-        try res.content(self)
-        return res
-    }
-}
-
-final class User: Model, ResponseRepresentable, Content {
+final class User: Model, Content {
     static let defaultMediaType: MediaType = .json
 
     typealias Database = SQLiteDatabase
@@ -128,15 +120,6 @@ extension Future: Codable {
 
     public convenience init(from decoder: Decoder) throws {
         fatalError("blah")
-    }
-}
-
-extension Array: ResponseRepresentable {
-    public func makeResponse(for request: Request) throws -> Response {
-        let body = try Body(JSONEncoder().encode(self))
-        let res = Response(body: body)
-        res.mediaType = .json
-        return res
     }
 }
 

@@ -15,7 +15,7 @@ public final class TrieRouter: Router {
     
     /// If a route cannot be found, this is the fallback responder that will be used instead
     public var fallbackResponder: Responder? = BasicResponder { _ in
-        return Future(Response(status: .notFound))
+        return Response(status: .notFound)
     }
 
     public init() {

@@ -60,11 +60,16 @@ print(foo)
 
 let router = try app.make(Router.self)
 
-let user = User(name: "Vapor", age: 3);
-router.get("hello") { req -> Response in
-    return try user.makeResponse(for: req)
+router.get("hello") { req -> [User] in
+    let user = User(name: "Vapor", age: 3);
+    return [user]
 }
 
+
+struct LoginRequest: Content {
+    var email: String
+    var password: String
+}
 
 let helloRes = try! Response(headers: [
     .contentType: "text/plain; charset=utf-8"
@@ -75,6 +80,16 @@ router.grouped(DateMiddleware()).get("plaintext") { req in
 
 let view = try app.make(ViewRenderer.self)
 
+
+router.post("login") { req -> Response in
+    let loginRequest = try req.content(LoginRequest.self)
+
+    print(loginRequest.email) // user@vapor.codes
+    print(loginRequest.password) // don't look!
+
+    return Response(status: .ok)
+}
+
 router.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
     // user.futureChild = promise.future
@@ -83,8 +98,9 @@ router.get("leaf") { req -> Future<View> in
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
-    
-    return try view.make("/Users/tanner/Desktop/hello", context: user, for: req)
+
+    let user = User(name: "Vapor", age: 3);
+    return try view.make("/Users/tanner/Desktop/hello", context: user, on: req)
 }
 
 final class FooController {
@@ -140,7 +156,7 @@ router.get("userview") { req -> Future<View> in
 
         return try view.make("/Users/tanner/Desktop/hello", context: [
             "user": user
-        ], for: req)
+        ], on: req)
     }
 }
 
@@ -151,11 +167,15 @@ router.post("users") { req -> Future<User> in
     }
 }
 
+
+
+
 router.get("builder") { req -> Future<[User]> in
     return req.database(.beta) { db in
         return try db.query(User.self).filter(\User.name == "Bob").all()
     }
 }
+
 
 router.get("transaction") { req -> Future<String> in
     return req.database(.beta) { db in
