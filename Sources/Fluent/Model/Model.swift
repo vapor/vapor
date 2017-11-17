@@ -30,21 +30,21 @@ public protocol Model: class, Codable, KeyFieldMappable {
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
-    func willCreate()  throws -> Future<Void>
+    func willCreate(on connection: Database.Connection)  throws -> Future<Void>
     /// Called after the model is created when saving.
-    func didCreate() throws -> Future<Void>
+    func didCreate(on connection: Database.Connection) throws -> Future<Void>
 
     /// Called before a model is updated when saving.
     /// Throwing will cancel the save.
-    func willUpdate() throws -> Future<Void>
+    func willUpdate(on connection: Database.Connection) throws -> Future<Void>
     /// Called after the model is updated when saving.
-    func didUpdate() throws -> Future<Void>
+    func didUpdate(on connection: Database.Connection) throws -> Future<Void>
 
     /// Called before a model is deleted.
     /// Throwing will cancel the deletion.
-    func willDelete() throws -> Future<Void>
+    func willDelete(on connection: Database.Connection) throws -> Future<Void>
     /// Called after the model is deleted.
-    func didDelete() throws -> Future<Void>
+    func didDelete(on connection: Database.Connection) throws -> Future<Void>
 }
 
 extension Model {
@@ -68,19 +68,19 @@ extension Model {
     }
 
     /// Seee Model.willCreate()
-    public func willCreate() throws -> Future<Void> { return .done }
+    public func willCreate(on connection: Database.Connection) throws -> Future<Void> { return .done }
     /// See Model.didCreate()
-    public func didCreate() throws -> Future<Void> { return .done }
+    public func didCreate(on connection: Database.Connection) throws -> Future<Void> { return .done }
 
     /// See Model.willUpdate()
-    public func willUpdate() throws -> Future<Void> { return .done }
+    public func willUpdate(on connection: Database.Connection) throws -> Future<Void> { return .done }
     /// See Model.didUpdate()
-    public func didUpdate() throws -> Future<Void> { return .done }
+    public func didUpdate(on connection: Database.Connection) throws -> Future<Void> { return .done }
 
     /// See Model.willDelete()
-    public func willDelete() throws -> Future<Void> { return .done }
+    public func willDelete(on connection: Database.Connection) throws -> Future<Void> { return .done }
     /// See Model.didDelete()
-    public func didDelete() throws -> Future<Void> { return .done }
+    public func didDelete(on connection: Database.Connection) throws -> Future<Void> { return .done }
 }
 
 /// MARK: Convenience

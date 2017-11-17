@@ -35,7 +35,7 @@ public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-    ) -> Error {
+    ) -> VaporError {
         return VaporError(
             identifier: "unknownMediaType",
             reason: "Unable to parse Message contents from media type.",

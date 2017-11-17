@@ -29,7 +29,7 @@ extension Router {
     public func get<F: FutureType>(
         _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         return self.on(.get, to: path.makePathComponents(), use: closure)
     }
     
@@ -40,7 +40,7 @@ extension Router {
     public func put<F: FutureType>(
         _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         return self.on(.put, to: path.makePathComponents(), use: closure)
     }
     
@@ -51,7 +51,7 @@ extension Router {
     public func post<F: FutureType>(
         _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         return self.on(.post, to: path.makePathComponents(), use: closure)
     }
     
@@ -62,7 +62,7 @@ extension Router {
     public func delete<F: FutureType>(
         _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         return self.on(.delete, to: path.makePathComponents(), use: closure)
     }
     
@@ -73,7 +73,7 @@ extension Router {
     public func patch<F: FutureType>(
         _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         return self.on(.patch, to: path.makePathComponents(), use: closure)
     }
 }

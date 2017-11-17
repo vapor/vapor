@@ -9,7 +9,7 @@ extension Router {
         _ method: Method,
         to path: [PathComponent],
         use closure: @escaping BasicResponder<F>.Closure
-    ) -> Route where F.Expectation: ResponseRepresentable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         let responder = BasicResponder(closure: closure)
         let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
@@ -19,7 +19,9 @@ extension Router {
 }
 
 /// A basic, closure-based responder.
-public struct BasicResponder<F: FutureType>: Responder where F.Expectation: ResponseRepresentable {
+public struct BasicResponder<F: FutureType>: Responder
+    where F.Expectation: ResponseEncodable
+{
     /// Responder closure
     public typealias Closure = (Request) throws -> F
 
@@ -33,8 +35,11 @@ public struct BasicResponder<F: FutureType>: Responder where F.Expectation: Resp
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try closure(req).map { rep in
-            return try rep.makeResponse(for: req)
+        return try closure(req).then { rep in
+            var res = Response()
+            return try rep.encode(to: &res, for: req).map {
+                return res
+            }
         }
     }
 }

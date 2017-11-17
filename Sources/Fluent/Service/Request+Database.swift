@@ -7,10 +7,10 @@ extension Worker where Self: HasContainer {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func database<Database, T>(
+    public func database<Database, F, T>(
         _ database: DatabaseIdentifier<Database>,
-        closure: @escaping (Database.Connection) throws -> Future<T>
-    ) -> Future<T> {
+        closure: @escaping (Database.Connection) throws -> F
+    ) -> Future<T> where F: FutureType, T == F.Expectation  {
         return then {
             let pool: DatabaseConnectionPool<Database>
 

@@ -27,7 +27,7 @@ public final class HTTPClient {
     /// Sends a single `Request` and returns a future that can be completed with a `Response`
     ///
     /// The `Client` *must* not be used during the Future's completion.
-    public func send(request: RequestRepresentable) throws -> Future<Response> {
+    public func send(request encodable: RequestEncodable) throws -> Future<Response> {
         let promise = Promise<Response>()
         
         tcp.stream(to: parser)
@@ -37,9 +37,12 @@ public final class HTTPClient {
         tcp.errorStream = { error in
             promise.fail(error)
         }
-        
-        let data = serializer.serialize(try request.makeRequest())
-        tcp.inputStream(data)
+
+        var req = Request()
+        try encodable.encode(to: &req).do {
+            let data = self.serializer.serialize(req)
+            self.tcp.inputStream(data)
+        }.catch(promise.fail)
         
         return promise.future
     }
