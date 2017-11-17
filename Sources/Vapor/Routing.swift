@@ -27,7 +27,7 @@ extension Router {
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func get<F: FutureType>(
-        _ path: PathComponentRepresentable...,
+        _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.get, to: path.makePathComponents(), use: closure)
@@ -38,7 +38,7 @@ extension Router {
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func put<F: FutureType>(
-        _ path: PathComponentRepresentable...,
+        _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.put, to: path.makePathComponents(), use: closure)
@@ -49,7 +49,7 @@ extension Router {
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func post<F: FutureType>(
-        _ path: PathComponentRepresentable...,
+        _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.post, to: path.makePathComponents(), use: closure)
@@ -60,7 +60,7 @@ extension Router {
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func delete<F: FutureType>(
-        _ path: PathComponentRepresentable...,
+        _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.delete, to: path.makePathComponents(), use: closure)
@@ -71,7 +71,7 @@ extension Router {
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func patch<F: FutureType>(
-        _ path: PathComponentRepresentable...,
+        _ path: PathComponentsRepresentable...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseRepresentable {
         return self.on(.patch, to: path.makePathComponents(), use: closure)
