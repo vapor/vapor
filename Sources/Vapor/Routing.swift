@@ -10,7 +10,7 @@ extension Router {
         _ method: Method,
         to path: [PathComponent],
         use closure: @escaping RouteResponder<F>.Closure
-        ) -> Route where F.Expectation: ResponseEncodable {
+    ) -> Route where F.Expectation: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
         let route = Route(method: method, path: path, responder: responder)
         self.register(route: route)
