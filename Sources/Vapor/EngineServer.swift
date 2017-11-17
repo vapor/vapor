@@ -10,23 +10,26 @@ public final class EngineServer: HTTPServer {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
-    /// Console for outputting server messages.
-    public let console: Console
+    /// Container for setting on event loops.
+    public let container: Container
 
     /// Create a new EngineServer using config struct.
     public init(
         config: EngineServerConfig,
-        console: Console
+        container: Container
     ) {
         self.config = config
-        self.console = console
+        self.container = container
     }
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        
+
+        // set container on each event loop
+        tcp.eventLoops.forEach { $0.container = self.container }
+
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
         let server = HTTP.Server(clientStream: tcp)
@@ -50,6 +53,7 @@ public final class EngineServer: HTTPServer {
             debugPrint(error)
         }
 
+        let console = try container.make(Console.self, for: EngineServer.self)
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
         console.output(":" + config.port.description, style: .custom(.cyan))

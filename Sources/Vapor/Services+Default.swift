@@ -1,3 +1,4 @@
+import Async
 import Console
 import HTTP
 import Foundation
@@ -13,7 +14,7 @@ extension Services {
         services.register(HTTPServer.self) { container in
             return try EngineServer(
                 config: container.make(for: EngineServer.self),
-                console: container.make(for: EngineServer.self)
+                container: container
             )
         }
         services.register { container in
@@ -56,10 +57,7 @@ extension Services {
                 router: container.make(for: ServeCommand.self)
             )
 
-            var middleware: [Middleware] = [
-                ContainerMiddleware(container: container)
-            ]
-            middleware += try container
+            let middleware = try container
                 .make(MiddlewareConfig.self, for: ServeCommand.self)
                 .resolve(for: container)
 
@@ -100,24 +98,5 @@ extension EventLoop: HasContainer {
     public var container: Container? {
         get { return extend["vapor:container"] as? Container }
         set { extend["vapor:container"] = newValue }
-    }
-}
-
-import Async
-
-// FIXME: set event loop container on init?
-internal class ContainerMiddleware: Middleware {
-    let container: Container
-
-    init(container: Container) {
-        self.container = container
-    }
-
-    func respond(
-        to req: Request,
-        chainingTo next: Responder
-    ) throws -> Future<Response> {
-        req.eventLoop.container = self.container
-        return try next.respond(to: req)
     }
 }
