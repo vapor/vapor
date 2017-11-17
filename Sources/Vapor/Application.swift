@@ -47,17 +47,13 @@ public final class Application: Container {
         return try make(T.self, for: Application.self)
     }
 
-    /// Runs the Application's server.
+    /// Runs the Application's commands.
     public func run() throws -> Never {
         let command = try make(CommandConfig.self)
             .makeCommandGroup(for: self)
 
         let console = try make(Console.self)
         try console.run(command, arguments: CommandLine.arguments)
-
-        let group = DispatchGroup()
-        group.enter()
-        group.wait()
         exit(0)
     }
 }

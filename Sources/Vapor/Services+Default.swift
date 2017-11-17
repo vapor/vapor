@@ -12,7 +12,8 @@ extension Services {
         // register engine server and default config settings
         services.register(HTTPServer.self) { container in
             return try EngineServer(
-                config: container.make(for: EngineServer.self)
+                config: container.make(for: EngineServer.self),
+                console: container.make(for: EngineServer.self)
             )
         }
         services.register { container in

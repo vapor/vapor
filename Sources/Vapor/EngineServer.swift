@@ -1,4 +1,6 @@
 import Async
+import Console
+import Dispatch
 import HTTP
 import ServerSecurity
 import TCP
@@ -8,9 +10,16 @@ public final class EngineServer: HTTPServer {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
+    /// Console for outputting server messages.
+    public let console: Console
+
     /// Create a new EngineServer using config struct.
-    public init(config: EngineServerConfig) {
+    public init(
+        config: EngineServerConfig,
+        console: Console
+    ) {
         self.config = config
+        self.console = console
     }
 
     /// Start the server. Server protocol requirement.
@@ -41,8 +50,9 @@ public final class EngineServer: HTTPServer {
             debugPrint(error)
         }
 
-        /// FIXME: use console when we have it
-        print("Server starting on \(config.hostname):\(config.port)")
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
+        console.output(":" + config.port.description, style: .custom(.cyan))
 
         // bind, listen, and start accepting
         try tcp.start(
@@ -50,6 +60,10 @@ public final class EngineServer: HTTPServer {
             port: config.port,
             backlog: config.backlog
         )
+
+        let group = DispatchGroup()
+        group.enter()
+        group.wait()
     }
 }
 
