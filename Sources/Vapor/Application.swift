@@ -1,4 +1,6 @@
 import Async
+import Command
+import Console
 import Dispatch
 import Foundation
 import HTTP
@@ -47,28 +49,15 @@ public final class Application: Container {
 
     /// Runs the Application's server.
     public func run() throws -> Never {
-        // TODO: run console / commands here.
-        let server = try make(HTTPServer.self)
+        let command = try make(CommandConfig.self)
+            .makeCommandGroup(for: self)
 
-        let router = try RouterResponder(
-            router: make(Router.self)
-        )
-
-        let middleware = try defaultMiddleware() + make(MiddlewareConfig.self).resolve(for: self)
-        let chained = middleware.makeResponder(chainedto: router)
-        try server.start(with: chained)
+        let console = try make(Console.self)
+        try console.run(command, arguments: CommandLine.arguments)
 
         let group = DispatchGroup()
         group.enter()
         group.wait()
         exit(0)
-    }
-
-    // MARK: Private
-
-    /// creates an array of default middleware the application
-    /// needs to work properly
-    func defaultMiddleware() -> [Middleware] {
-        return [ApplicationMiddleware(application: self)]
     }
 }

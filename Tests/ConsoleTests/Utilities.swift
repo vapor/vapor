@@ -1,36 +1,38 @@
 import Async
 import Console
 
-final class TestConsole: Console {
+final class TestConsole: FullConsole {
     var output: String
     var input: String
     var error: String
-    var lastAction: ConsoleAction?
     var extend: Extend
 
     init() {
         self.output = ""
         self.input = ""
         self.error = ""
-        self.lastAction = nil
         self.extend = Extend()
     }
 
-    func action(_ action: ConsoleAction) throws -> String? {
-        switch action {
-        case .input(_):
-            let t = input
-            input = ""
-            return t
-        case .output(let output, _, let newLine):
-            self.output += output + (newLine ? "\n" : "")
-        case .error(let error, let newLine):
-            self.error += error + (newLine ? "\n" : "")
-        default:
-            break
-        }
-        lastAction = action
-        return nil
+    func clear(_ type: ConsoleClear) {
+
+    }
+
+    func execute(program: String, arguments: [String], input: ExecuteStream?, output: ExecuteStream?, error: ExecuteStream?) throws {
+    }
+
+    func input(isSecure: Bool) -> String {
+        let t = input
+        input = ""
+        return t
+    }
+
+    func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
+        self.output += output + (newLine ? "\n" : "")
+    }
+
+    func report(error: String, newLine: Bool) {
+        self.error += error + (newLine ? "\n" : "")
     }
 
     var size: (width: Int, height: Int) {

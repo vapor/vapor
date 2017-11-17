@@ -1,3 +1,4 @@
+import Console
 import HTTP
 import Foundation
 import Routing
@@ -44,6 +45,33 @@ extension Services {
             return ContentConfig.default()
         }
 
+        // register terminal console
+        services.register(Console.self) { container in
+            return Terminal()
+        }
+
+        services.register { container -> ServeCommand in
+            let router = try RouterResponder(
+                router: container.make(for: ServeCommand.self)
+            )
+
+            var middleware: [Middleware] = [
+                ContainerMiddleware(container: container)
+            ]
+            middleware += try container
+                .make(MiddlewareConfig.self, for: ServeCommand.self)
+                .resolve(for: container)
+
+            return try ServeCommand(
+                server: container.make(for: ServeCommand.self),
+                responder: middleware.makeResponder(chainedto: router)
+            )
+        }
+
+        services.register { container -> CommandConfig in
+            return CommandConfig.default()
+        }
+
         return services
     }
 }
@@ -62,27 +90,33 @@ extension Request: HasContainer { }
 extension Response: HasContainer { }
 
 extension Message {
-    public var app: Application? {
-        get { return extend["vapor:application"] as? Application }
-        set { extend["vapor:application"] = newValue }
-    }
-
     public var container: Container? {
-        return app
+        return eventLoop.container
+    }
+}
+
+extension EventLoop: HasContainer {
+    public var container: Container? {
+        get { return extend["vapor:container"] as? Container }
+        set { extend["vapor:container"] = newValue }
     }
 }
 
 import Async
 
-internal class ApplicationMiddleware: Middleware {
-    let application: Application
+// FIXME: set event loop container on init?
+internal class ContainerMiddleware: Middleware {
+    let container: Container
 
-    init(application: Application) {
-        self.application = application
+    init(container: Container) {
+        self.container = container
     }
 
-    func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        req.app = application
+    func respond(
+        to req: Request,
+        chainingTo next: Responder
+    ) throws -> Future<Response> {
+        req.eventLoop.container = self.container
         return try next.respond(to: req)
     }
 }

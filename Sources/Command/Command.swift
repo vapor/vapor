@@ -1,11 +1,27 @@
 import Console
 
 /// A command that can be run through a console.
-public protocol Command {
-    /// This command's support arguments and options.
-    /// See CommandSignature.
-    var signature: CommandSignature { get }
+public protocol Command: Runnable {
+    /// The required arguments.
+    var arguments: [Argument] { get }
+}
+
+/// A command that can be run through a console.
+public protocol Group: Runnable {
+    /// A dictionary of runnable commands.
+    typealias Commands = [String: Runnable]
+
+    /// This group's subcommands.
+    var commands: Commands { get }
+}
+
+public protocol Runnable {
+    /// The supported options.
+    var options: [Option] { get }
+
+    /// Text that will be displayed when `--help` is passed.
+    var help: [String] { get }
 
     /// Runs the command against the supplied input.
-    func run(using console: Console, with input: CommandInput) throws
+    func run(using console: Console, with input: Input) throws
 }

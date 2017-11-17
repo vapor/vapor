@@ -11,12 +11,12 @@
 public class ProgressBar: Bar {
     public var progress: Double = 0 {
         didSet {
-            if animated { try? update() }
+            if animated { update() }
         }
     }
 
-    override func update() throws {
-        try super.update()
+    override func update() {
+        super.update()
     }
 
     override var bar: String {

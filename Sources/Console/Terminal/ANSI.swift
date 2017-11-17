@@ -8,8 +8,8 @@ enum ANSICommand {
 }
 
 extension Terminal {
-    func command(_ command: ANSICommand) throws {
-        try action(.output(command.ansi, .plain, newLine: false))
+    func command(_ command: ANSICommand) {
+        Swift.print(command.ansi, terminator: "")
     }
 }
 

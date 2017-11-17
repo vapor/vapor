@@ -172,6 +172,8 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
+            "Command",
+            "Console",
             "Core",
             "Debugging",
             "HTTP",

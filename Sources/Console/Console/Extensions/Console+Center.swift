@@ -1,4 +1,4 @@
-extension Console {
+extension OutputConsole {
     public func center(_ string: String, paddingCharacter: Character = " ") -> String {
         // Split the string into lines
         let lines = string.split(separator: Character("\n")).map(String.init)

@@ -1,4 +1,4 @@
-extension Console {
+extension OutputConsole where Self: ClearableConsole {
     /// Creates a progress bar using the console.
     public func progressBar(
         title: String = "",

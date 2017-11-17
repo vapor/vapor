@@ -1,110 +1,38 @@
 import Console
 
-public struct ConsoleInput {
-    public var executable: String
-    public var arguments: [String]
-    public var options: [String: String]
+/// Parsed input to a command.
+public struct Input {
+    /// The name of the executable.
+    public let executable: String
 
-    public init(raw: [String]) throws {
-        guard raw.count > 0 else {
+    /// All arguments stored by name.
+    /// note: use `argument` method instead.
+    internal let arguments: [String: String]
+
+    /// All options stored by name.
+    public let options: [String: String]
+
+    /// Retrieve the argument with the given name or throws an error.
+    public func argument(_ name: String) throws -> String {
+        guard let arg = arguments[name] else {
             throw ConsoleError(
-                identifier: "executableRequired",
-                reason: "At least one argument is required."
+                identifier: "missingArgument",
+                reason: "No argument named `\(name)` exists in the command signature."
             )
         }
-        executable = raw[0]
 
-        let raw = Array(raw.dropFirst())
-        arguments = ConsoleInput.parseArguments(from: raw)
-        options = try ConsoleInput.parseOptions(from: raw)
+        return arg
     }
 
-    public static func parseArguments(from raw: [String]) -> [String] {
-        return raw.flatMap { arg in
-            guard !arg.hasPrefix("--") else {
-                return nil
-            }
-            return arg
-        }
-    }
-
-    public static func parseOptions(from raw: [String]) throws -> [String: String] {
-        var options: [String: String] = [:]
-
-        for arg in raw {
-            guard arg.hasPrefix("--") else {
-                continue
-            }
-
-            let val: String
-
-            let parts = arg.dropFirst(2).split(separator: "=", maxSplits: 1).map(String.init)
-            switch parts.count {
-            case 1:
-                val = "true"
-            case 2:
-                val = parts[1]
-            default:
-                throw ConsoleError(identifier: "invalidOption", reason: "Option \(arg) is incorrectly formatted.")
-            }
-
-            options[parts[0]] = val
+    /// Retrieves the option with the supplied name or throws an error.
+    public func requireOption(_ name: String) throws -> String {
+        guard let option = options[name] else {
+            throw ConsoleError(
+                identifier: "missingOption",
+                reason: "Option `\(name)` is required and was not supplied."
+            )
         }
 
-        return options
-    }
-
-
-}
-
-extension ConsoleInput {
-    mutating func validate(using signature: CommandSignature) throws -> CommandInput {
-        var validatedArguments: [String: String] = [:]
-
-        switch signature.arguments {
-        case .array(let arguments):
-            guard arguments.count <= arguments.count else {
-                throw ConsoleError(identifier: "unexpectedArguments", reason: "Too many arguments supplied.")
-            }
-            for arg in arguments {
-                guard let argument = self.arguments.popFirst() else {
-                    throw ConsoleError(identifier: "insufficientArguments", reason: "Insufficient arguments supplied.")
-                }
-                validatedArguments[arg.name] = argument
-            }
-        case .group: break
-        }
-
-        var validatedOptions: [String: String] = [:]
-
-        // ensure we don't have any unexpected options
-        for key in options.keys {
-            guard signature.options.contains(where: { $0.name == key }) else {
-                throw ConsoleError(identifier: "unexpectedOptions", reason: "Unexpected option `\(key)`.")
-            }
-        }
-
-        // set all options to value or default
-        for opt in signature.options {
-            validatedOptions[opt.name] = options[opt.name] ?? opt.default
-        }
-
-        return .init(
-            executable: executable,
-            arguments: validatedArguments,
-            options: validatedOptions
-        )
-    }
-}
-
-// MARK: Convenience
-
-extension String {
-    public var bool: Bool? {
-        switch self {
-        case "1", "true", "yes": return true
-        case "0", "false", "no": return false
-        default: return nil
-        }
+        return option
     }
 }

@@ -2,69 +2,43 @@ import Async
 import Console
 import Command
 
-final class TestConsole: Console {
-    var output: String
-    var input: String
-    var error: String
-    var lastAction: ConsoleAction?
-    var extend = Extend()
+extension String: Error {}
 
-    init() {
-        self.output = ""
-        self.input = ""
-        self.error = ""
-        self.lastAction = nil
-    }
-
-    func action(_ action: ConsoleAction) throws -> String? {
-        switch action {
-        case .input(_):
-            let t = input
-            input = ""
-            return t
-        case .output(let output, _, let newLine):
-            self.output += output + (newLine ? "\n" : "")
-        case .error(let error, let newLine):
-            self.error += error + (newLine ? "\n" : "")
-        default:
-            break
-        }
-        lastAction = action
-        return nil
-    }
-
-    var size: (width: Int, height: Int) {
-        return (640, 320)
-    }
-}
-
-final class TestGroup: Command {
-    let signature = CommandSignature(group: [
+final class TestGroup: Group {
+    let commands: Commands = [
         "test": TestCommand(),
         "sub": SubGroup()
-    ], options: [
-        CommandOption(name: "version", help: ["Prints the version"])
-    ], help: ["This is a test grouping!"])
+    ]
 
-    func run(using console: Console, with input: CommandInput) throws {
+    let options = [
+        Option(name: "version", help: ["Prints the version"])
+    ]
+
+    let help = ["This is a test grouping!"]
+
+    func run(using console: OutputConsole, with input: Input) throws {
         if input.options["version"]?.bool == true {
-            try console.print("v2.0")
+            console.print("v2.0")
         } else {
             throw "unknown"
         }
     }
 }
 
-final class SubGroup: Command {
-    let signature = CommandSignature(group: [
+final class SubGroup: Group {
+    let commands: Commands = [
         "test": TestCommand()
-    ], options: [
-        CommandOption(name: "version", help: ["Prints the version"])
-    ], help: ["This is a test sub grouping!"])
+    ]
 
-    func run(using console: Console, with input: CommandInput) throws {
+    let options = [
+        Option(name: "version", help: ["Prints the version"])
+    ]
+
+    let help = ["This is a test sub grouping!"]
+
+    func run(using console: OutputConsole, with input: Input) throws {
         if input.options["version"]?.bool == true {
-            try console.print("v2.0")
+            console.print("v2.0")
         } else {
             throw "unknown"
         }
@@ -72,13 +46,23 @@ final class SubGroup: Command {
 }
 
 final class TestCommand: Command {
-    let signature = CommandSignature(arguments: [
-        CommandArgument(name: "foo", help: ["A foo is required", "An error will occur if none exists"])
-    ], options: [
-        CommandOption(name: "bar", help: ["Add a bar if you so desire", "Try passing it"])
-    ], help: ["This is a test command"])
+    let arguments = [
+        Argument(
+            name: "foo",
+            help: ["A foo is required", "An error will occur if none exists"]
+        )
+    ]
 
-    func run(using console: Console, with input: CommandInput) throws {
+    let options = [
+        Option(
+            name: "bar",
+            help: ["Add a bar if you so desire", "Try passing it"]
+        )
+    ]
+
+    let help = ["This is a test command"]
+
+    func run(using console: OutputConsole, with input: Input) throws {
         let foo = try input.argument("foo")
         let bar = try input.requireOption("bar")
         try console.info("Foo: \(foo) Bar: \(bar)")

@@ -1,4 +1,4 @@
-extension Console {
+extension ClearableConsole {
     public func pushEphemeral() {
         depth += 1
         // Swift.print("PUSH \(depth)\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
@@ -15,7 +15,7 @@ extension Console {
         }
 
         for _ in 0..<lines {
-            try clear(.line)
+            clear(.line)
         }
 
         // remember to reset depth after or else

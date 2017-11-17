@@ -189,7 +189,7 @@ extension Array: Content {
 extension Request {
     public func makeResponse() -> Response {
         let res = Response(status: .ok)
-        res.app = app
+        res.eventLoop = self.eventLoop
         return res
     }
 }
@@ -197,7 +197,7 @@ extension Request {
 extension Response {
     public func makeRequest() -> Request {
         let req = Request()
-        req.app = app
+        req.eventLoop = self.eventLoop
         return req
     }
 }
