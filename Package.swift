@@ -167,6 +167,7 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
+            "TLS",
             "ServerSecurity",
             "WebSocket",
         ]),
