@@ -1,11 +1,11 @@
 import Boilerplate
 import Vapor
 
-let config = Config.default()
-let env = Environment.detect()
-let services = Services.default()
+var config = Config.default()
+var env = Environment.detect()
+var services = Services.default()
 
-try Boilerplate.configure(config, env, services)
+try Boilerplate.configure(&config, &env, &services)
 
 let app = try Application(
     config: config,
