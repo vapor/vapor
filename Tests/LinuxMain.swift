@@ -25,6 +25,7 @@ XCTMain([
     // Vapor
     testCase(ConfigIntegrationTests.allTests),
     testCase(VaporTests.ConfigTests.allTests),
+    testCase(CodableTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CORSMiddlewareTests.allTests),
