@@ -111,7 +111,7 @@ public final class RequestParser: CParser {
                 let pointer = http_method_str(http_method(parser.method)),
                 let string = String(validatingUTF8: pointer)
             else {
-                throw Error.invalidMessage()
+                throw HTTPError.invalidMessage()
             }
             method = Method(string)
         }
@@ -126,7 +126,7 @@ public final class RequestParser: CParser {
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
 
         let body = Body(results.body)

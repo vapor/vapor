@@ -29,7 +29,7 @@ extension SSLStream {
             // If it's not blocking and not a success, it's an error
             guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
                 readSource.cancel()
-                promise.fail(Error(.sslError(result)))
+                promise.fail(AppleSSLError(.sslError(result)))
                 return
             }
             
@@ -62,7 +62,7 @@ extension SSLStream {
     /// https://www.sslshopper.com/article-most-common-openssl-commands.html
     public func setCertificate(to certificate: Data, for context: SSLContext) throws {
         guard let certificate = SecCertificateCreateWithData(nil, certificate as CFData) else {
-            throw Error(.invalidCertificate)
+            throw AppleSSLError(.invalidCertificate)
         }
         
         var ref: SecIdentity?
@@ -70,13 +70,13 @@ extension SSLStream {
         var error = SecIdentityCreateWithCertificate(nil, certificate, &ref)
         
         guard error == errSecSuccess else {
-            throw Error(.invalidCertificate)
+            throw AppleSSLError(.invalidCertificate)
         }
         
         error = SSLSetCertificate(context, [ref as Any, certificate] as CFArray)
         
         guard error == errSecSuccess else {
-            throw Error(.invalidCertificate)
+            throw AppleSSLError(.invalidCertificate)
         }
     }
     

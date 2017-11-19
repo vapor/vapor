@@ -33,7 +33,7 @@ extension CParser {
         // if the parsed count does not equal the bytes passed
         // to the parser, it is signaling an error
         guard parsedCount == max else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
     }
 

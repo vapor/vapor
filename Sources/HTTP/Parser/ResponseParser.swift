@@ -91,7 +91,7 @@ public final class ResponseParser: CParser, Async.Stream {
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
         
         let body = Body(results.body)

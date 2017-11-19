@@ -6,7 +6,7 @@ import Crypto
 extension WebSocket {
     /// Returns true if this request should upgrade to websocket protocol
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#determining-an-upgrade)
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#determining-an-upgrade)	§
     public static func shouldUpgrade(for req: Request) -> Bool {
         return req.headers[.connection] == "Upgrade" && req.headers[.secWebSocketKey] != nil && req.headers[.secWebSocketVersion] != nil
     }
@@ -21,7 +21,7 @@ extension WebSocket {
             let secWebsocketVersion = req.headers[.secWebSocketVersion],
             let version = Int(secWebsocketVersion)
             else {
-                throw Error(.invalidRequest)
+                throw WebSocketError(.invalidRequest)
         }
         
         let headers: Headers

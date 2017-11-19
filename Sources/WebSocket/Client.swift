@@ -24,7 +24,7 @@ extension WebSocket {
             let hostname = uri.hostname,
             let port = uri.port ?? uri.defaultPort
         else {
-            throw Error(.invalidURI)
+            throw WebSocketError(.invalidURI)
         }
         
         // A promise that will be completed with a websocket if it doesn't fail
@@ -104,7 +104,7 @@ extension WebSocket {
                 response.headers["Connection"] == "Upgrade",
                 response.headers["Upgrade"] == "websocket"
                 else {
-                    promise.fail(Error(.notUpgraded))
+                    promise.fail(WebSocketError(.notUpgraded))
                     return
             }
             
@@ -115,7 +115,7 @@ extension WebSocket {
             } else {
                 // Fail if the handshake didn't return the expected accept-key
                 guard response.headers["Sec-WebSocket-Accept"] == expectedKeyString else {
-                    promise.fail(Error(.notUpgraded))
+                    promise.fail(WebSocketError(.notUpgraded))
                     return
                 }
                 
