@@ -4,6 +4,16 @@ import TCP
 import TLS
 
 extension HTTPClient {
+    /// Connects with HTTP/1.1 to a remote server.
+    ///
+    ///     // Future<HTTPClient>
+    ///     let client = try HTTPClient.connect(
+    ///        to: "example.com",
+    ///        ssl: true,
+    ///        worker: request
+    ///     )
+    ///
+    /// [Learn More →](http://localhost:8000/http/client/)
     public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, worker: Worker) throws -> Future<HTTPClient> {
         let port = port ?? (ssl ? 443 : 80)
         

@@ -1,11 +1,11 @@
 /// A stream is both an InputStream and an OutputStream
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#implementing-an-example-stream)
 public typealias Stream = InputStream & OutputStream
 
 /// A type that accepts a stream of `Input`
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#implementing-an-example-stream)
 public protocol InputStream: BaseStream {
     /// The input type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -55,7 +55,7 @@ extension ClosableStream {
 
 /// A type that emits `Ouptut` asynchronously and at unspecified moments
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#implementing-an-example-stream)
 public protocol OutputStream: BaseStream {
     /// The output type for this stream.
     /// For example: Request, ByteBuffer, Client
@@ -85,7 +85,7 @@ extension OutputStream {
 /// after reporting an error and be ready for
 /// additional incoming data.
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#implementing-an-example-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#implementing-an-example-stream)
 public protocol BaseStream: class {
     /// A closure that takes one error.
     typealias ErrorHandler = (Error) -> ()
@@ -100,7 +100,7 @@ public protocol BaseStream: class {
 extension OutputStream {
     /// Drains the output stream into a closure.
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#draining-streams)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#draining-streams)
     @discardableResult
     public func drain(_ handler: @escaping OutputHandler) -> Self {
         self.outputStream = handler
@@ -109,7 +109,7 @@ extension OutputStream {
 
     /// Drains the output stream into a closure
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#catching-stream-errors)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#catching-stream-errors)
     @discardableResult
     public func `catch`(_ handler: @escaping ErrorHandler) -> Self {
         self.errorStream = handler

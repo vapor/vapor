@@ -20,7 +20,7 @@
 ///
 ///     print(squares) // [1, 4, 9]
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#transforming-streams-without-an-intermediary-stream)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#transforming-streams-without-an-intermediary-stream)
 public final class MapStream<In, Out>: Stream {
     /// See `InputStream.Input`
     public typealias Input = In
@@ -65,7 +65,7 @@ extension OutputStream {
     ///         return integer.description
     ///     }
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams-introduction/#transforming-streams-without-an-intermediary-stream)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/streams/#transforming-streams-without-an-intermediary-stream)
     public func map<T>(_ transform: @escaping ((Output) throws -> (T))) -> MapStream<Output, T> {
         let stream = MapStream(map: transform)
         self.drain(into: stream)

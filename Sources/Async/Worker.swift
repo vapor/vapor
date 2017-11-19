@@ -2,6 +2,8 @@ import Dispatch
 
 /// A worker is any type that contains a reference
 /// to an Event Loop.
+///
+/// http://docs.vapor.codes/3.0/async/worker/
 public protocol Worker {
     /// The event loop to execute this
     /// worker's tasks on.

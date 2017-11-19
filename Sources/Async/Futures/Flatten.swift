@@ -7,7 +7,7 @@ extension Array where Element == LazyFuture<Void> {
     /// note: each subsequent future will wait for the previous to
     /// complete before starting.
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#combining-multiple-futures)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#combining-multiple-futures)
     public func syncFlatten() -> Future<Void> {
         let promise = Promise<Void>()
 
@@ -39,7 +39,7 @@ extension Array where Element: FutureType {
     /// note: the order of the results will match the order of the
     /// futures in the input array.
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#combining-multiple-futures)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#combining-multiple-futures)
     public func orderedFlatten() -> Future<[Element.Expectation]> {
         let promise = Promise<[Element.Expectation]>()
 
@@ -85,7 +85,7 @@ extension Array where Element: FutureType {
     /// Flattens an array of futures into a future with an array of results.
     /// note: the results will be in random order.
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#combining-multiple-futures)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#combining-multiple-futures)
     public func flatten() -> Future<[Element.Expectation]> {
         let many = ManyFutures(self)
         return many.promise.future
@@ -110,7 +110,7 @@ extension Array where Element: FutureType, Element.Expectation == Void {
 
     /// Flattens an array of void futures into a single one.
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#combining-multiple-futures)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#combining-multiple-futures)
     public func flatten() -> Future<Void> {
         let many = ManyFutures(self)
         let promise = Promise(Void.self)

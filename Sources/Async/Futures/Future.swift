@@ -7,7 +7,7 @@ import Dispatch
 ///
 /// A future can also contain an error, rather than a result.
 ///
-/// [Learn More →](https://docs.vapor.codes/3.0/async/promise-future-introduction/)
+/// [Learn More →](https://docs.vapor.codes/3.0/async/futures/)
 public final class Future<T>: FutureType {
     /// Future expectation type
     public typealias Expectation = T
@@ -35,7 +35,7 @@ public final class Future<T>: FutureType {
 
     /// Pre-filled promise future
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/promise-future-introduction/#futures-without-promise)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#futures-without-promise)
     public convenience init(_ result: T) {
         self.init()
         self.result = .expectation(result)
@@ -43,7 +43,7 @@ public final class Future<T>: FutureType {
 
     /// Pre-filled failed promise
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/promise-future-introduction/#futures-without-promise)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#futures-without-promise)
     public convenience init(error: Error) {
         self.init()
         self.result = .error(error)
@@ -68,7 +68,7 @@ public final class Future<T>: FutureType {
 
     /// Locked method for adding an awaiter
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/async/advanced-futures/#adding-awaiters-to-all-results)
+    /// [Learn More →](https://docs.vapor.codes/3.0/async/futures/#adding-awaiters-to-all-results)
     public func addAwaiter(callback: @escaping ResultCallback) {
         if let result = self.result {
             callback(result)

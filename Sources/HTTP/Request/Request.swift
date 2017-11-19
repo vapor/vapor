@@ -23,19 +23,27 @@ import Foundation
 /// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
 public final class Request: Message {
     /// HTTP requests have a method, like GET or POST
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
     public var method: Method
 
     /// This is usually just a path like `/foo` but
     /// may be a full URI in the case of a proxy
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/uri/)
     public var uri: URI
 
     /// See `Message.version`
     public var version: Version
 
     /// See `Message.headers`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
     public var headers: Headers
 
     /// See `Message.body`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
     public var body: Body
     
     /// See `Extendable.extend`
