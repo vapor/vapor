@@ -9,13 +9,11 @@ class CodableTests: XCTestCase {
         let foo: String
         let baz: Int
         let opt: String?
-        let bomb: Int64?
 
-        init(foo: String, baz: Int, opt: String? = nil, bomb: Int64? = nil) {
+        init(foo: String, baz: Int, opt: String? = nil) {
             self.foo = foo
             self.baz = baz
             self.opt = opt
-            self.bomb = bomb
         }
     }
 
@@ -53,24 +51,6 @@ class CodableTests: XCTestCase {
         }
     }
 
-    func testInt64OverflowThrowsNotCrashes() throws {
-        let request = Request(method: .post, path: "/")
-        let rawJSON = """
-            {
-                "foo": "abc",
-                "baz": 123,
-                "bomb": 10000000000000000000000000000000000000
-            }
-            """.makeBytes()
-        request.body = Body.data(rawJSON)
-
-        do {
-            let _: TestModel = try request.decodeJSONBody()
-            XCTFail("Parsing should have failed as 'bomb' overflows Int64")
-        } catch {
-        }
-    }
-
     func testEncodeJSONBodyInterop() throws {
         let model = TestModel(foo: "bar", baz: 321)
         let request = Request(method: .post, path: "/")
@@ -87,7 +67,7 @@ class CodableTests: XCTestCase {
     }
 
     func testMakeResponse() throws {
-        let model = TestModel(foo: "fedcba", baz: 33123, opt: "test", bomb: 123456787654321)
+        let model = TestModel(foo: "fedcba", baz: 33123, opt: "test")
         let response = try model.makeResponse()
         XCTAssertEqual(response.status, .ok)
 
@@ -99,14 +79,12 @@ class CodableTests: XCTestCase {
         XCTAssertEqual("fedcba", try json.get("foo"))
         XCTAssertEqual(33123, try json.get("baz"))
         XCTAssertEqual("test", try json.get("opt"))
-        XCTAssertEqual(123456787654321, try json.get("bomb"))
     }
 
     static let allTests: [(String, (CodableTests) -> () throws -> ())] = [
         ("testDecodeJSONBodyRaw", testDecodeJSONBodyRaw),
         ("testDecodeJSONBodyInterop", testDecodeJSONBodyInterop),
         ("testDecodeFailsWithMissingField", testDecodeFailsWithMissingField),
-        ("testInt64OverflowThrowsNotCrashes", testInt64OverflowThrowsNotCrashes),
         ("testEncodeJSONBodyInterop", testEncodeJSONBodyInterop),
         ("testMakeResponse", testMakeResponse),
     ]
