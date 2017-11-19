@@ -7,10 +7,9 @@ public final class QueryBuilder<Model: Fluent.Model> {
     public var query: DatabaseQuery
 
     /// The connection this query will be excuted on.
-    /// note: this must be private to ensure we have one
-    /// place where queries can be executed so we can apply
-    /// filters like soft deletable.
-    private let connection: Model.Database.Connection
+    /// note: don't call execute manually or fluent's
+    /// hooks will not run properly.
+    public let connection: Model.Database.Connection
 
     /// Create a new query.
     public init(

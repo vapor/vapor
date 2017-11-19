@@ -82,23 +82,31 @@ extension Request {
 }
 
 /// Can be converted from a request.
-public protocol RequestInitializable {
-    init(request: Request) throws
+public protocol RequestDecodable {
+    static func decode(from req: Request) throws -> Future<Self>
 }
 
 /// Can be converted to a request
-public protocol RequestRepresentable {
-    func makeRequest() throws -> Request
+public protocol RequestEncodable {
+    func encode(to req: inout Request) throws -> Future<Void>
 }
 
 /// Can be converted from and to a request
-public typealias RequestConvertible = RequestInitializable & RequestRepresentable
+public typealias RequestCodable = RequestDecodable & RequestEncodable
 
 // MARK: Request Conformance
 
-extension Request: RequestRepresentable {
-    public func makeRequest() throws -> Request {
-        return self
+extension Request: RequestEncodable {
+    public func encode(to req: inout Request) throws -> Future<Void> {
+        req = self
+        return .done
+    }
+}
+
+extension Request: RequestDecodable {
+    /// See RequestInitializable.decode
+    public static func decode(from request: Request) throws -> Future<Request> {
+        return Future(request)
     }
 }
 
