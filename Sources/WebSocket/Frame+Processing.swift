@@ -9,7 +9,7 @@ extension WebSocket {
         func processString() {
             // If this is an UTF-8 invalid string
             guard let string = frame.payload.string() else {
-                self.connection.client.close()
+                self.connection.close()
                 return
             }
             
@@ -38,7 +38,7 @@ extension WebSocket {
         case .continuation:
             processBinary()
         case .close:
-            self.connection.client.close()
+            self.connection.close()
         case .pong:
             return
         }

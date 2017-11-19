@@ -174,7 +174,7 @@ let package = Package(
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "TLS", "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )

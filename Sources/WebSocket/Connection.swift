@@ -12,7 +12,7 @@ internal final class Connection: Async.Stream, ClosableStream {
             let frame = try Frame(op: .close, payload: ByteBuffer(start: nil, count: 0), mask: serverSide ? nil : randomMask(), isFinal: true)
             
             self.inputStream(frame)
-            self.client.close()
+            self.clientClose()
         } catch {
             errorStream?(error)
         }
@@ -33,14 +33,7 @@ internal final class Connection: Async.Stream, ClosableStream {
     var errorStream: ErrorHandler?
     
     /// Called when the connection closes
-    var onClose: CloseHandler? {
-        get {
-            return self.client.onClose
-        }
-        set {
-            self.client.onClose = newValue
-        }
-    }
+    var onClose: CloseHandler?
     
     /// Serializes data into frames
     let serializer: FrameSerializer
@@ -51,13 +44,13 @@ internal final class Connection: Async.Stream, ClosableStream {
     let serverSide: Bool
 
     /// The underlying TCP connection
-    let client: TCPClient
+    let clientClose: (()->())
     
     /// Creates a new WebSocket Connection manager for a TCP.Client
     ///
     /// `serverSide` is used to determine if sent frames need to be masked
-    init(client: TCPClient, serverSide: Bool = true) {
-        self.client = client
+    init<DuplexByteStream: Async.Stream>(client: DuplexByteStream, serverSide: Bool = true) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
+        self.clientClose = client.close
         self.serverSide = serverSide
         
         let parser = FrameParser()
@@ -72,10 +65,7 @@ internal final class Connection: Async.Stream, ClosableStream {
         }
         
         // Streams outgoing data to the serializer, which sends it over the socket
-        serializer.drain { buffer in
-            let buffer = UnsafeRawBufferPointer(buffer)
-            client.inputStream(DispatchData(bytes: buffer))
-        }.catch { error in
+        serializer.drain(client.inputStream).catch { error in
             // FIXME: @joannis
             fatalError("\(error)")
         }

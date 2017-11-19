@@ -59,7 +59,7 @@ class MiddlewareTests : XCTestCase {
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
-        let client = HTTPClient(tcp: tcpClient)
+        let client = HTTPClient(stream: tcpClient)
         tcpClient.start()
         
         let response = try client.send(request: Request()).blockingAwait()
