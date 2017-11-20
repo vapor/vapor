@@ -11,7 +11,6 @@ let package = Package(
     name: "Vapor",
     products: [
         // Core
-        .library(name: "Async", targets: ["Async"]),
         .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
@@ -70,12 +69,11 @@ let package = Package(
         // WebSockets
         .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
-    dependencies: [],
+    dependencies: [
+        // Swift Promises, Futures, and Streams.
+        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.1")),
+    ],
     targets: [
-        // Async
-        .target(name: "Async"),
-        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
-
         // Bits
         .target(name: "Bits"),
 
