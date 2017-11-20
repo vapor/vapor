@@ -30,7 +30,7 @@ public final class Server: Async.OutputStream, ClosableStream {
     // MARK: Internal
 
     let socket: Socket
-    let eventLoops: [EventLoop]
+    public let eventLoops: [EventLoop]
     var eventLoopsIterator: LoopIterator<[EventLoop]>
     var readSource: DispatchSourceRead?
     

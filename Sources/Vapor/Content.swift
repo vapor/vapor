@@ -119,9 +119,7 @@ extension Message {
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
     public func content<C: Content>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws {
-        guard let container = self.container else {
-            throw "container required"
-        }
+        let container = try self.requireContainer()
         let coders = try container.make(ContentConfig.self, for: Self.self)
         let encoder = try coders.requireEncoder(for: mediaType)
         body = try encoder.encode(content)
@@ -132,9 +130,7 @@ extension Message {
 extension Message {
     /// Parses the supplied content from the mesage.
     public func content<C: Content>(_ content: C.Type) throws -> C {
-        guard let container = self.container else {
-            throw "container required"
-        }
+        let container = try self.requireContainer()
         let coders = try container.make(ContentConfig.self, for: Self.self)
         guard let mediaType = self.mediaType else {
             throw "no media type"
@@ -189,7 +185,7 @@ extension Array: Content {
 extension Request {
     public func makeResponse() -> Response {
         let res = Response(status: .ok)
-        res.app = app
+        res.eventLoop = self.eventLoop
         return res
     }
 }
@@ -197,7 +193,7 @@ extension Request {
 extension Response {
     public func makeRequest() -> Request {
         let req = Request()
-        req.app = app
+        req.eventLoop = self.eventLoop
         return req
     }
 }
