@@ -1,7 +1,6 @@
 #if os(Linux)
 
 import XCTest
-@testable import AsyncTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import FluentTests
@@ -20,10 +19,6 @@ import XCTest
 @testable import WebSocketTests
 
 XCTMain([
-    // Core
-    testCase(FutureTests.allTests),
-    testCase(StreamTests.allTests),
-
     // Crypto
     testCase(Base64Tests.allTests),
     testCase(MD5Tests.allTests),
