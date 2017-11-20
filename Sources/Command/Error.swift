@@ -1,7 +1,7 @@
 import Debugging
 
-/// Consoles should only throw these errors
-public struct ConsoleError: Error, Debuggable, Traceable {
+/// Commands should only throw these errors
+public struct CommandError: Error, Debuggable, Traceable {
     public let identifier: String
     public let reason: String
     public var file: String
@@ -17,7 +17,8 @@ public struct ConsoleError: Error, Debuggable, Traceable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = ConsoleError.makeStackTrace()
+        self.stackTrace = CommandError.makeStackTrace()
     }
 }
+
 

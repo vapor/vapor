@@ -16,7 +16,7 @@ final class TestGroup: Group {
 
     let help = ["This is a test grouping!"]
 
-    func run(using console: OutputConsole, with input: Input) throws {
+    func run(using console: Console, with input: Input) throws {
         if input.options["version"]?.bool == true {
             console.print("v2.0")
         } else {
@@ -36,7 +36,7 @@ final class SubGroup: Group {
 
     let help = ["This is a test sub grouping!"]
 
-    func run(using console: OutputConsole, with input: Input) throws {
+    func run(using console: Console, with input: Input) throws {
         if input.options["version"]?.bool == true {
             console.print("v2.0")
         } else {
@@ -62,9 +62,9 @@ final class TestCommand: Command {
 
     let help = ["This is a test command"]
 
-    func run(using console: OutputConsole, with input: Input) throws {
+    func run(using console: Console, with input: Input) throws {
         let foo = try input.argument("foo")
         let bar = try input.requireOption("bar")
-        try console.info("Foo: \(foo) Bar: \(bar)")
+        console.info("Foo: \(foo) Bar: \(bar)")
     }
 }

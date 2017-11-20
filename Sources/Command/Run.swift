@@ -14,7 +14,7 @@ extension Console {
         if let group = runnable as? Group {
             if let name = input.arguments.popFirst() {
                 guard let chosen = group.commands[name] else {
-                    throw ConsoleError(
+                    throw CommandError(
                         identifier: "unknownRunnable",
                         reason: "Unknown argument `\(name)`."
                     )

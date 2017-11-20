@@ -15,6 +15,9 @@ public protocol Group: Runnable {
     var commands: Commands { get }
 }
 
+/// Capable of being run on a console.
+/// Note: this base protocol should not be used directly.
+/// Conform to Command or Group instead. 
 public protocol Runnable {
     /// The supported options.
     var options: [Option] { get }

@@ -1,7 +1,7 @@
 import Async
 import Console
 
-final class TestConsole: FullConsole {
+final class TestConsole: Console {
     var output: String
     var input: String
     var error: String

@@ -15,7 +15,7 @@ public struct Input {
     /// Retrieve the argument with the given name or throws an error.
     public func argument(_ name: String) throws -> String {
         guard let arg = arguments[name] else {
-            throw ConsoleError(
+            throw CommandError(
                 identifier: "missingArgument",
                 reason: "No argument named `\(name)` exists in the command signature."
             )
@@ -27,7 +27,7 @@ public struct Input {
     /// Retrieves the option with the supplied name or throws an error.
     public func requireOption(_ name: String) throws -> String {
         guard let option = options[name] else {
-            throw ConsoleError(
+            throw CommandError(
                 identifier: "missingOption",
                 reason: "Option `\(name)` is required and was not supplied."
             )

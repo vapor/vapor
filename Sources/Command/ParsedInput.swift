@@ -14,7 +14,7 @@ internal struct ParsedInput {
     /// Parses raw array of strings into arguments and options.
     static func parse(from raw: [String]) throws -> ParsedInput {
         guard raw.count > 0 else {
-            throw ConsoleError(
+            throw CommandError(
                 identifier: "executableRequired",
                 reason: "At least one argument is required."
             )
@@ -56,7 +56,7 @@ internal struct ParsedInput {
             case 2:
                 val = parts[1]
             default:
-                throw ConsoleError(identifier: "invalidOption", reason: "Option \(arg) is incorrectly formatted.")
+                throw CommandError(identifier: "invalidOption", reason: "Option \(arg) is incorrectly formatted.")
             }
 
             options[parts[0]] = val
@@ -64,8 +64,6 @@ internal struct ParsedInput {
 
         return options
     }
-
-
 }
 
 extension ParsedInput {
@@ -75,11 +73,11 @@ extension ParsedInput {
         var validatedArguments: [String: String] = [:]
 
         guard arguments.count <= arguments.count else {
-            throw ConsoleError(identifier: "unexpectedArguments", reason: "Too many arguments supplied.")
+            throw CommandError(identifier: "unexpectedArguments", reason: "Too many arguments supplied.")
         }
         for arg in arguments {
             guard let argument = self.arguments.popFirst() else {
-                throw ConsoleError(identifier: "insufficientArguments", reason: "Insufficient arguments supplied.")
+                throw CommandError(identifier: "insufficientArguments", reason: "Insufficient arguments supplied.")
             }
             validatedArguments[arg.name] = argument
         }
@@ -89,7 +87,7 @@ extension ParsedInput {
         // ensure we don't have any unexpected options
         for key in self.options.keys {
             guard options.contains(where: { $0.name == key }) else {
-                throw ConsoleError(identifier: "unexpectedOptions", reason: "Unexpected option `\(key)`.")
+                throw CommandError(identifier: "unexpectedOptions", reason: "Unexpected option `\(key)`.")
             }
         }
 
@@ -98,7 +96,7 @@ extension ParsedInput {
             validatedOptions[opt.name] = self.options[opt.name] ?? opt.default
         }
 
-        return .init(
+        return Input(
             executable: executable,
             arguments: validatedArguments,
             options: validatedOptions
