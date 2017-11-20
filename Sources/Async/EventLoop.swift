@@ -2,7 +2,7 @@ import Dispatch
 
 /// An event loop with context.
 ///
-/// [Learn More →](http://docs.vapor.codes/3.0/concepts/async/)
+/// [Learn More →](https://docs.vapor.codes/3.0/concepts/async/)
 public final class EventLoop: Extendable {
     /// This worker's event loop
     public let queue: DispatchQueue

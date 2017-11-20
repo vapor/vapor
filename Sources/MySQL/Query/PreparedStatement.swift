@@ -3,6 +3,8 @@ import Bits
 import Foundation
 
 /// A single prepared statement that can be binded, executed, reset and closed
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
 public final class PreparedStatement {
     /// The internal statement ID
     let statementID: UInt32
@@ -23,11 +25,15 @@ public final class PreparedStatement {
     var parameters = [Field]()
     
     /// Closes/cleans up this statement
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
     public func close() {
         connection.closeStatement(self)
     }
     
     /// Resets this prepared statement to it's prepared state (rather than fetching/executed)
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
     public func reset() -> Future<Void> {
         return connection.resetPreparedStatement(self)
     }
@@ -35,6 +41,8 @@ public final class PreparedStatement {
     /// Executes the `closure` with the preparation binding statement
     ///
     /// The closure will be able to bind statements that ends up being bound and returned
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
     public func bind(run closure: @escaping ((PreparationBinding) throws -> ())) rethrows -> BoundStatement {
         let binding = PreparationBinding(forStatement: self)
         
@@ -56,6 +64,9 @@ public final class PreparedStatement {
     }
 }
 
+/// A binding context that is used to bind
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
 public final class PreparationBinding {
     let boundStatement: BoundStatement
     
@@ -107,6 +118,9 @@ public final class PreparationBinding {
 }
 
 extension Connection {
+    /// Prepares a query and calls the captured closure with the prepared statement
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
     public func withPreparation<T>(statement: Query, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
         return self.prepare(query: statement).flatMap(closure)
     }

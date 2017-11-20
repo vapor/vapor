@@ -13,7 +13,7 @@ extension HTTPClient {
     ///        worker: request
     ///     )
     ///
-    /// [Learn More →](http://localhost:8000/http/client/)
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
     public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, worker: Worker) throws -> Future<HTTPClient> {
         let port = port ?? (ssl ? 443 : 80)
         
