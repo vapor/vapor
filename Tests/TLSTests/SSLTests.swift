@@ -29,7 +29,7 @@ import TLS
 class SSLTests: XCTestCase {
     func testSSL() throws {
         // FIXME: @joannis, this is failing on macOS
-        return;
+        /*
         let server = try TCP.Server()
         
         var peers = [SSLStream<TCPClient>]()
@@ -95,6 +95,7 @@ class SSLTests: XCTestCase {
         XCTAssertEqual(count, 1)
         XCTAssertEqual(peers.count, 1)
         XCTAssertEqual(clients.count, 1)
+        */
     }
 
     static let allTests = [

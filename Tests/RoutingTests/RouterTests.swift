@@ -72,10 +72,6 @@ class RouterTests: XCTestCase {
     ]
 }
 
-extension Response: FutureType {
-    public typealias Expectation = Response
-}
-
 final class User: Parameter {
     static let uniqueSlug: String = "user"
     var name: String

@@ -75,7 +75,7 @@ final class HTTPTestServer {
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
         // TODO: Failing on Linux
-        return;
+        /*
         let app = WebSocketApplication()
         let server = HTTPTestServer()
         
@@ -139,6 +139,7 @@ class WebSocketTests : XCTestCase {
             XCTFail("Error connecting to \(uri)")
             throw error
         }
+        */
     }
     
     static let allTests = [
