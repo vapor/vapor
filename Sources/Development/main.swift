@@ -167,9 +167,6 @@ router.post("users") { req -> Future<User> in
     }
 }
 
-
-
-
 router.get("builder") { req -> Future<[User]> in
     return req.database(.beta) { db in
         return try db.query(User.self).filter(\User.name == "Bob").all()
@@ -194,11 +191,15 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
-    return req.parameters.next(Pet.self).then { pet in
+    return try req.parameters.next(Pet.self).then { pet in
         return req.database(.beta) { db in
             return try pet.toys.query(on: db).all()
         }
     }
+}
+
+router.get("string", String.parameter) { req -> String in
+    return try req.parameters.next(String.self)
 }
 
 router.get("users") { req in

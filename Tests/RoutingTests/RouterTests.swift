@@ -12,16 +12,38 @@ class RouterTests: XCTestCase {
             return try Response(body: "hello")
         }
 
-        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req -> Response in
-            return try Response(body: "foo")
+        let a = BasicResponder { req in
+            return try Future(Response(body: "hello"))
         }
+        let ra = Route(
+            method: .get,
+            path: ["hello", "world"].makePathComponents(),
+            responder: a
+        )
+        router.register(route: ra)
 
-        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req -> Future<Response> in
-            return req.parameters.next(User.self).map { bob in
+        let b = BasicResponder { req in
+            return try Future(Response(body: "foo"))
+        }
+        let rb = Route(
+            method: .get,
+            path: ["foo", "bar", "baz"].makePathComponents(),
+            responder: b
+        )
+        router.register(route: rb)
+
+        let c = BasicResponder { req in
+            return try req.parameters.next(User.self).map { bob in
                 XCTAssertEqual(bob.name, "bob")
                 return try Response(body: "users!")
             }
         }
+        let rc = Route(
+            method: .get,
+            path: ["users", User.parameter, "comments"].makePathComponents(),
+            responder: c
+        )
+        router.register(route: rc)
 
         do {
             let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))

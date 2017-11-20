@@ -27,31 +27,24 @@ public struct ParameterBag {
     ///     let post = try parameters.next(Post.self)
     ///     let comment = try parameters.next(Comment.self)
     ///
-    public mutating func next<P: Parameter>(_ parameter: P.Type = P.self) -> Future<P> {
-        let promise = Promise(P.self)
-
-        if parameters.count > 0 {
-            let current = parameters[0]
-
-            if current.slug == P.uniqueSlug {
-                do {
-                    let item = try P.make(for: current.value, in: request)
-                    parameters = Array(parameters.dropFirst())
-                    item.chain(to: promise)
-                } catch {
-                    promise.fail(error)
-                }
-            } else {
-                promise.fail(RoutingError(.invalidParameterType(
-                    actual: current.slug,
-                    expected: P.uniqueSlug
-                )))
-            }
-        } else {
-            promise.fail(RoutingError(.insufficientParameters))
+    public mutating func next<P>(_ parameter: P.Type = P.self) throws -> P.ResolvedParameter
+        where P: Parameter
+    {
+        guard parameters.count > 0 else {
+            throw RoutingError(.insufficientParameters)
         }
 
-        return promise.future
+        let current = parameters[0]
+        guard current.slug == P.uniqueSlug else {
+            throw RoutingError(.invalidParameterType(
+                actual: current.slug,
+                expected: P.uniqueSlug
+            ))
+        }
+
+        let item = try P.make(for: current.value, in: request)
+        parameters = Array(parameters.dropFirst())
+        return item
     }
 }
 
