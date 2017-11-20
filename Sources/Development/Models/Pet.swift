@@ -3,24 +3,20 @@ import Foundation
 import Vapor
 
 final class Pet: Model {
-
-    typealias Database = SQLiteDatabase
-    typealias ID = UUID
-
     static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.name): field("name"),
         key(\.ownerID): field("ownerID")
     ]
 
-    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
     static let idKey = \Pet.id
 
     var id: UUID?
     var name: String
     var ownerID: User.ID
 
-    init(id: ID? = nil, name: String, ownerID: User.ID) {
+    init(id: UUID? = nil, name: String, ownerID: User.ID) {
         self.id = id
         self.name = name
         self.ownerID = ownerID

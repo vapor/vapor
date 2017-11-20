@@ -7,7 +7,7 @@ final class MigrationLog<D: Database>: Model, Timestampable {
     typealias Database = D
 
     /// See Model.dbID
-    static var dbID: DatabaseIdentifier<D> {
+    static var database: DatabaseIdentifier<D> {
         return .init("migration")
     }
 
@@ -98,9 +98,9 @@ final class MigrationLogMigration<
 extension MigrationLog {
     /// Returns the latest batch number.
     /// note: returns 0 if no batches have run yet.
-    internal static func latestBatch(on connection: Database.Connection) -> Future<Int> {
+    internal static func latestBatch(on conn: Database.Connection) -> Future<Int> {
         return then {
-            return try QueryBuilder(MigrationLog<Database>.self, on: Future(connection))
+            return try conn.query(MigrationLog<Database>.self)
                 .sort(\MigrationLog.batch, .descending)
                 .first()
                 .map { log in
@@ -114,14 +114,14 @@ extension MigrationLogMigration {
     /// Prepares the connection for storing migration logs.
     /// note: this is unlike other migrations since we are checking
     /// for an error instead of asking if the migration has already prepared.
-    internal static func prepareMetadata(on connection: Database.Connection) -> Future<Void> {
+    internal static func prepareMetadata(on conn: Database.Connection) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        QueryBuilder(MigrationLog<Database>.self, on: Future(connection)).count().do { count in
+        conn.query(MigrationLog<Database>.self).count().do { count in
             promise.complete()
         }.catch { err in
             // table needs to be created
-            prepare(on: connection).chain(to: promise)
+            prepare(on: conn).chain(to: promise)
         }
 
         return promise.future

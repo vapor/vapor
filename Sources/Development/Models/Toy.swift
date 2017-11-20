@@ -4,9 +4,7 @@ import Foundation
 import SQLite
 
 final class Toy: Model {
-    typealias Database = SQLiteDatabase
-    typealias ID = UUID
-    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
 
     static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),

@@ -23,7 +23,7 @@ public protocol Model: class, Codable, KeyFieldMappable {
     typealias IDKey = ReferenceWritableKeyPath<Self, ID?>
 
     /// This model's database
-    static var dbID: DatabaseIdentifier<Database> { get }
+    static var database: DatabaseIdentifier<Database> { get }
 
     /// This model's id key.
     /// note: If this is not `id`, you
@@ -53,12 +53,12 @@ public protocol Model: class, Codable, KeyFieldMappable {
 extension Model {
     /// Creates a query for this model on the supplied connection.
     public func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(Self.dbID))
+        return .init(on: conn.makeConnection(Self.database))
     }
 
     /// Creates a query for this model on the supplied connection.
     public static func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(dbID))
+        return .init(on: conn.makeConnection(database))
     }
 }
 

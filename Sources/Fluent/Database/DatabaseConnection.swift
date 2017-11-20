@@ -10,3 +10,12 @@ public protocol ConnectionRepresentable {
     /// Create a database connection for the supplied dbid.
     func makeConnection<D>(_ database: DatabaseIdentifier<D>) -> Future<D.Connection>
 }
+
+extension Connection {
+    /// Create a query for the specified model using this connection.
+    public func query<M>(_ model: M.Type) -> QueryBuilder<M>
+        where M.Database.Connection == Self
+    {
+        return QueryBuilder(M.self, on: Future(self))
+    }
+}

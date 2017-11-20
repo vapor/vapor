@@ -123,15 +123,13 @@ let controller = FooController()
 router.post("login", use: controller.foo)
 
 final class Message: Model {
-    typealias Database = SQLiteDatabase
-    
     static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
         key(\.text): field("text"),
         key(\.time): field("customtime"),
     ]
 
-    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
     static let idKey = \Message.id
 
     var id: String?
