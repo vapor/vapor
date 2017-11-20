@@ -104,13 +104,13 @@ extension ContentConfig {
 /// Encodes encodable types to an HTTP body.
 public protocol BodyEncoder {
     /// Serializes an encodable type to the data in an HTTP body.
-    func encode<T: Encodable>(_ encodable: T) throws -> Body
+    func encodeBody<T: Encodable>(_ encodable: T) throws -> Body
 }
 
 /// Decodes decodable types from an HTTP body.
 public protocol BodyDecoder {
     /// Parses a decodable type from the data in the HTTP body.
-    func decode<T: Decodable>(_ decodable: T.Type, from body: Body) throws -> T
+    func decode<T: Decodable>(_ decodable: T.Type, body: Body) throws -> T
 }
 
 // MARK: Message
@@ -122,7 +122,7 @@ extension Message {
         let container = try self.requireContainer()
         let coders = try container.make(ContentConfig.self, for: Self.self)
         let encoder = try coders.requireEncoder(for: mediaType)
-        body = try encoder.encode(content)
+        body = try encoder.encodeBody(content)
         self.mediaType = mediaType
     }
 }
@@ -136,7 +136,7 @@ extension Message {
             throw "no media type"
         }
         let encoder = try coders.requireDecoder(for: mediaType)
-        return try encoder.decode(content, from: body)
+        return try encoder.decode(C.self, body: body)
     }
 }
 
@@ -144,7 +144,7 @@ extension Message {
 
 extension JSONEncoder: BodyEncoder {
     /// See BodyEncoder.encode
-    public func encode<T>(_ encodable: T) throws -> Body
+    public func encodeBody<T>(_ encodable: T) throws -> Body
         where T: Encodable
     {
         let data: Data = try encode(encodable)
@@ -154,7 +154,7 @@ extension JSONEncoder: BodyEncoder {
 
 extension JSONDecoder: BodyDecoder {
     /// See BodyDecoder.decode
-    public func decode<T>(_ decodable: T.Type, from body: Body) throws -> T
+    public func decode<T>(_ decodable: T.Type, body: Body) throws -> T
         where T: Decodable
     {
         return try decode(T.self, from: body.data)
