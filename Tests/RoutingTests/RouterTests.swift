@@ -8,10 +8,6 @@ class RouterTests: XCTestCase {
     func testRouter() throws {
         let router = TrieRouter()
         
-        router.on(.get, to: ["hello", "world"].makePathComponents()) { req -> Response in
-            return try Response(body: "hello")
-        }
-
         let a = BasicResponder { req in
             return try Future(Response(body: "hello"))
         }
