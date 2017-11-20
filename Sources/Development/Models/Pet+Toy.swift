@@ -12,6 +12,7 @@ final class PetToyPivot: ModifiablePivot {
     static let idKey = \PetToyPivot.id
     static let leftIDKey = \PetToyPivot.petID
     static var rightIDKey = \PetToyPivot.toyID
+    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
 
     static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),

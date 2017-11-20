@@ -13,14 +13,6 @@ import Vapor
 
 let beta: DatabaseIdentifier<SQLiteDatabase> = .init("beta")
 
-extension Request {
-    func beta<T>(_ callback: @escaping (SQLiteDatabase.Connection) throws -> (T)) -> Future<T.Expectation>
-        where T: FutureType
-    {
-        return self.database(.beta, closure: callback)
-    }
-}
-
 extension DatabaseIdentifier {
     static var beta: DatabaseIdentifier<SQLiteDatabase> {
         return .init("beta")
@@ -31,7 +23,12 @@ extension DatabaseIdentifier {
     }
 }
 
+
+
+
 var services = Services.default()
+
+services.register(FluentMiddleware())
 
 services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
 try services.register(LeafProvider())
@@ -58,12 +55,13 @@ migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 
 var middlewareConfig = MiddlewareConfig()
+// middlewareConfig.use(FluentMiddleware.self)
 middlewareConfig.use(ErrorMiddleware.self)
 services.register(middlewareConfig)
 
 let app = try Application(services: services)
 
-let foo = try app.database(.alpha) { alpha in
+let foo = try app.withDatabase(.alpha) { alpha in
     return try alpha.query(string: "select sqlite_version();").all()
 }.blockingAwait()
 print(foo)
@@ -115,7 +113,7 @@ router.get("leaf") { req -> Future<View> in
 
 final class FooController {
     func foo(_ req: Request) -> Future<Response> {
-        return req.database(.alpha) { db in
+        return req.withDatabase(.alpha) { db in
             return Response(status: .ok)
         }
     }
@@ -133,6 +131,7 @@ final class Message: Model {
         key(\.time): field("customtime"),
     ]
 
+    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
     static let idKey = \Message.id
 
     var id: String?
@@ -161,31 +160,25 @@ final class Message: Model {
 }
 
 router.get("userview") { req -> Future<View> in
-    return req.database(.beta) { db -> Future<View> in
-        let user = db.query(User.self).first()
+    let user = User.query(on: req).first()
 
-        return try view.make("/Users/tanner/Desktop/hello", context: [
-            "user": user
-        ], on: req)
-    }
+    return try view.make("/Users/tanner/Desktop/hello", context: [
+        "user": user
+    ], on: req)
 }
 
 router.post("users") { req -> Future<User> in
     let user = try JSONDecoder().decode(User.self, from: req.body.data)
-    return req.database(.beta) { db in
-        return user.save(on: db).map { user }
-    }
+    return user.save(on: req).map { user }
 }
 
 router.get("builder") { req -> Future<[User]> in
-    return req.database(.beta) { db in
-        return try db.query(User.self).filter(\User.name == "Bob").all()
-    }
+    return try User.query(on: req).filter(\User.name == "Bob").all()
 }
 
 
 router.get("transaction") { req -> Future<String> in
-    return req.database(.beta) { db in
+    return req.withDatabase(.beta) { db in
         db.transaction { db in
             let user = User(name: "NO SAVE", age: 500)
             let message = Message(id: nil, text: "asdf", time: 42)
@@ -200,11 +193,9 @@ router.get("transaction") { req -> Future<String> in
     }
 }
 
-router.get("pets", Pet.parameter, "toys") { req -> Future<[Toy]> in
+router.get("pets", Pet.parameter, "toys") { req in
     return try req.parameters.next(Pet.self).then { pet in
-        return req.database(.beta) { db in
-            return try pet.toys.query(on: db).all()
-        }
+        return try pet.toys.query(on: req).all()
     }
 }
 
@@ -212,120 +203,40 @@ router.get("string", String.parameter) { req -> String in
     return try req.parameters.next(String.self)
 }
 
-router.get("users") { req in
-    return req.database(.alpha) { db -> Future<Response> in
-        let marie = User(name: "Marie Curie", age: 66)
-        let charles = User(name: "Charles Darwin", age: 73)
-        return [
-            marie.save(on: db),
-            charles.save(on: db)
-        ].map {
-            return Response(status: .created)
-        }
+router.get("users") { req -> Future<Response> in
+    let marie = User(name: "Marie Curie", age: 66)
+    let charles = User(name: "Charles Darwin", age: 73)
+
+    return [
+        marie.save(on: req),
+        charles.save(on: req)
+    ].map {
+        return Response(status: .created)
     }
 }
 
 router.get("hello") { req in
-    return req.database(.alpha) { db in
-        return try db.query(User.self).filter(\User.age > 50).all()
+    return try User.query(on: req).filter(\User.age > 50).all()
+}
+
+router.get("first") { req -> Future<User> in
+    return try User.query(on: req).filter(\User.name == "Vapor").first().map { user in
+        guard let user = user else {
+            throw Abort(.notFound, reason: "Could not find user.")
+        }
+
+        return user
     }
 }
 
-router.get("first") { req in
-    return req.database(.alpha) { db -> Future<User> in
-        return try db.query(User.self).filter(\User.name == "Vapor").first().map { user in
-            guard let user = user else {
-                throw Abort(.notFound, reason: "Could not find user.")
-            }
-
+router.get("asyncusers") { req -> Future<User> in
+    let user = User(name: "Bob", age: 1)
+    return req.withDatabase(.beta) { db -> Future<User> in
+        return user.save(on: db).map {
             return user
         }
     }
 }
-
-
-extension UUID: Parameter {
-    public static var uniqueSlug: String {
-        return "uuid"
-    }
-
-    public static func make(for parameter: String, in request: Request) throws -> UUID {
-        guard let uuid = UUID(uuidString: parameter) else {
-            throw "unable to convert string to uuid"
-        }
-
-        return uuid
-    }
-
-    public typealias ResolvedParameter = UUID
-
-
-}
-
-public func map<A, B, T>(
-    _ futureA: A, _ futureB: B, _ callback: @escaping (A.Expectation, B.Expectation) throws -> (T)
-) -> Future<T>
-    where A: FutureType, B: FutureType
-{
-    return futureA.then { a -> Future<T> in
-        return futureB.map { b -> T in
-            return try callback(a, b)
-        }
-    }
-}
-
-public func then<A, B, T>(
-    _ futureA: A, _ futureB: B, _ callback: @escaping (A.Expectation, B.Expectation) throws -> (T)
-) -> Future<T.Expectation>
-    where A: FutureType, B: FutureType, T: FutureType
-{
-    return futureA.then { a -> Future<T.Expectation> in
-        return futureB.then { b -> Future<T.Expectation> in
-            return try callback(a, b).map { $0 }
-        }
-    }
-}
-
-extension Router {
-    @discardableResult
-    public func get<F, D>(
-        _ path: PathComponent...,
-        database dbid: DatabaseIdentifier<D>,
-        use closure: @escaping (Request, D.Connection) throws -> F
-    ) -> Route where F: FutureType, F.Expectation: ResponseEncodable {
-        return self.on(.get, to: path, use: { req in
-            return req.database(dbid) { conn in
-                return try closure(req, conn)
-            }
-        })
-    }
-}
-
-final class TestController {
-    func userPosts(_ req: Request, _ db: SQLiteDatabase.Connection) throws -> Future<String> {
-        let user = try User.find(req.parameters.next(), on: db)
-        let post = try User.find(req.parameters.next(), on: db)
-        return then(user, post) { user, post in
-            return "User \(user!.id!) post \(post!.id!)"
-        }
-    }
-}
-let testController = TestController()
-router.get(
-    "users", UUID.parameter, "posts", UUID.parameter,
-    database: .beta,
-    use: testController.userPosts
-)
-
-//router.get("users", UUID.parameter, "posts", UUID.parameter) { req in
-//    let user = try User.find(req.parameters.next(), on: req)
-//    let post = try User.find(req.parameters.next(), on: req)
-//    return then(user, post) { user, post in
-//        return "User \(user!.id!) post \(post!.id!)"
-//    }
-//}
-
-
 
 print("Starting server...")
 try app.run()

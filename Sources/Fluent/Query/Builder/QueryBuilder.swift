@@ -9,12 +9,12 @@ public final class QueryBuilder<Model: Fluent.Model> {
     /// The connection this query will be excuted on.
     /// note: don't call execute manually or fluent's
     /// hooks will not run properly.
-    public let connection: Model.Database.Connection
+    public let connection: Future<Model.Database.Connection>
 
     /// Create a new query.
     public init(
         _ model: Model.Type = Model.self,
-        on connection: Model.Database.Connection
+        on connection: Future<Model.Database.Connection>
     ) {
         query = DatabaseQuery(entity: Model.entity)
         self.connection = connection
@@ -28,7 +28,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
         decoding type: T.Type,
         into outputStream: @escaping BasicStream<T>.OutputHandler
     ) -> Future<Void> {
-        return then {
+        return connection.then { conn in
             let promise = Promise(Void.self)
             let stream = BasicStream<T>()
 
@@ -63,7 +63,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
 
             // execute
             // note: this must be in this file to access connection!
-            self.connection.execute(query: self.query, into: stream)
+            conn.execute(query: self.query, into: stream)
 
             return promise.future
         }
@@ -76,22 +76,44 @@ public final class QueryBuilder<Model: Fluent.Model> {
     public func run(
         into outputStream: @escaping BasicStream<Model>.OutputHandler
     ) -> Future<Void> {
-        return run(decoding: Model.self) { output in
-            switch Model.ID.identifierType {
-            case .autoincrementing(let convert):
-                guard let lastID = self.connection.lastAutoincrementID else {
-                    throw "connection did not have an auto incremented id"
+        return connection.then { conn in
+            return self.run(decoding: Model.self) { output in
+                switch self.query.action {
+                case .create:
+                    if output.fluentID == nil {
+                        switch Model.ID.identifierType {
+                        case .autoincrementing(let convert):
+                            guard let lastID = conn.lastAutoincrementID else {
+                                throw "connection did not have an auto incremented id"
+                            }
+                            output.fluentID = convert(lastID)
+                        default: break
+                        }
+                    }
+                default: break
                 }
-                output.fluentID = convert(lastID)
-            default: break
+                try outputStream(output)
             }
-
-            try outputStream(output)
         }
     }
 
     // Create a new query build w/ same connection.
     internal func copy() -> QueryBuilder<Model> {
         return QueryBuilder(on: connection)
+    }
+}
+
+extension Model {
+    internal func parseID(from conn: Database.Connection) throws {
+        if fluentID == nil {
+            switch ID.identifierType {
+            case .autoincrementing(let convert):
+                guard let lastID = conn.lastAutoincrementID else {
+                    throw "connection did not have an auto incremented id"
+                }
+                fluentID = convert(lastID)
+            default: break
+            }
+        }
     }
 }

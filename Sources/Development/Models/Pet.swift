@@ -1,11 +1,9 @@
-import Async
-import HTTP
-import Fluent
+import FluentSQLite
 import Foundation
-import Routing
-import SQLite
+import Vapor
 
 final class Pet: Model {
+
     typealias Database = SQLiteDatabase
     typealias ID = UUID
 
@@ -15,13 +13,14 @@ final class Pet: Model {
         key(\.ownerID): field("ownerID")
     ]
 
+    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
     static let idKey = \Pet.id
 
     var id: UUID?
     var name: String
-    var ownerID: UUID
+    var ownerID: User.ID
 
-    init(id: ID? = nil, name: String, ownerID: UUID) {
+    init(id: ID? = nil, name: String, ownerID: User.ID) {
         self.id = id
         self.name = name
         self.ownerID = ownerID
@@ -36,29 +35,7 @@ final class Pet: Model {
     }
 }
 
-// FIXME: find way to include this in fluent
-extension Pet: Parameter {
-    static var uniqueSlug: String {
-        return "pet"
-    }
-
-    static func make(for parameter: String, in req: Request) throws -> Future<Pet> {
-        guard let uuid = UUID(uuidString: parameter) else {
-            throw "not a uuid"
-        }
-
-        return req.database(.beta) { conn in
-            return Pet.find(uuid, on: conn).map { pet in
-                guard let pet = pet else {
-                    throw "no pet w/ that id was found"
-                }
-
-                return pet
-            }
-        }
-    }
-}
-
+extension Pet: Parameter {}
 
 extension Pet: Migration {
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {

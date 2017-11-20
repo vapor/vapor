@@ -22,6 +22,9 @@ public protocol Model: class, Codable, KeyFieldMappable {
     /// Key path to identifier
     typealias IDKey = ReferenceWritableKeyPath<Self, ID?>
 
+    /// This model's database
+    static var dbID: DatabaseIdentifier<Database> { get }
+
     /// This model's id key.
     /// note: If this is not `id`, you
     /// will still need to implement `var id`
@@ -45,6 +48,18 @@ public protocol Model: class, Codable, KeyFieldMappable {
     func willDelete(on connection: Database.Connection) throws -> Future<Void>
     /// Called after the model is deleted.
     func didDelete(on connection: Database.Connection) throws -> Future<Void>
+}
+
+extension Model {
+    /// Creates a query for this model on the supplied connection.
+    public func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
+        return .init(on: conn.makeConnection(Self.dbID))
+    }
+
+    /// Creates a query for this model on the supplied connection.
+    public static func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
+        return .init(on: conn.makeConnection(dbID))
+    }
 }
 
 extension Model {
@@ -104,34 +119,34 @@ extension Model {
     /// Calls `create` if the ID is `nil`, and `update` if it exists.
     /// If you need to create a model with a pre-existing ID,
     /// call `create` instead.
-    public func save(on connection: Database.Connection) -> Future<Void> {
-        return connection.query(Self.self).save(self)
+    public func save(on conn: ConnectionRepresentable) -> Future<Void> {
+        return query(on: conn).save(self)
     }
 
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
-    public func create(on connection: Database.Connection) -> Future<Void> {
-        return connection.query(Self.self).create(self)
+    public func create(on conn: ConnectionRepresentable) -> Future<Void> {
+        return query(on: conn).create(self)
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
-    public func update(on connection: Database.Connection) -> Future<Void> {
-        return connection.query(Self.self).update(self)
+    public func update(on conn: ConnectionRepresentable) -> Future<Void> {
+        return query(on: conn).update(self)
     }
 
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func delete(on connection: Database.Connection) -> Future<Void> {
-        return connection.query(Self.self).delete(self)
+    public func delete(on conn: ConnectionRepresentable) -> Future<Void> {
+        return query(on: conn).delete(self)
     }
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.ID, on connection: Database.Connection) -> Future<Self?> {
+    public static func find(_ id: Self.ID, on conn: ConnectionRepresentable) -> Future<Self?> {
         return then {
-            return try connection.query(Self.self)
+            return try query(on: conn)
                 .filter(idKey == id)
                 .first()
         }

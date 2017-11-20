@@ -15,11 +15,11 @@ final class TestUser: Codable {
 }
 
 extension TestUser: Model {
-    /// See Model.Database
-    typealias Database = SQLiteDatabase
-
     /// See Model.ID
     typealias ID = UUID
+
+    /// Database ID
+    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
 
     /// See Model.idKey
     static var idKey: IDKey {
@@ -80,7 +80,8 @@ final class User: Model, Content {
     static let defaultMediaType: MediaType = .json
 
     typealias Database = SQLiteDatabase
-    typealias ID = UUID
+    typealias ID = Int
+    static let dbID: DatabaseIdentifier<SQLiteDatabase> = .beta
 
     static let keyFieldMap: KeyFieldMap = [
         key(\.id): field("id"),
@@ -92,7 +93,7 @@ final class User: Model, Content {
         return \.id
     }
 
-    var id: UUID?
+    var id: ID?
     var name: String
     var age: Double
 //    var child: User?
