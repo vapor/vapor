@@ -47,18 +47,12 @@ public final class HTTPClient {
         
         self.promise = promise
       
-        tcp.stream(to: parser)
-            .drain(promise.complete)
-            .catch(promise.fail)
+        parser.drain(promise.complete).catch(promise.fail)
+        serializer.catch(promise.fail)
         
-        tcp.errorStream = { error in
-            promise.fail(error)
-        }
-
         var req = Request()
         try encodable.encode(to: &req).do {
-            let data = self.serializer.serialize(req)
-            self.tcp.inputStream(data)
+            self.serializer.inputStream(req)
         }.catch(promise.fail)
         
         return promise.future
