@@ -22,58 +22,58 @@ public struct RouterResponder: Responder {
 }
 
 extension Router {
-    /// Creates an Async `Route` at the provided path using the `GET` method.
+    /// Creates a `Route` at the provided path using the `GET` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func get<F: FutureType>(
-        _ path: PathComponentsRepresentable...,
+        _ path: PathComponent...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseEncodable {
-        return self.on(.get, to: path.makePathComponents(), use: closure)
+        return self.on(.get, to: path, use: closure)
     }
     
-    /// Creates  Async `Route` at the provided path using the `PUT` method.
+    /// Creates a `Route` at the provided path using the `PUT` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func put<F: FutureType>(
-        _ path: PathComponentsRepresentable...,
+        _ path: PathComponent...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseEncodable {
-        return self.on(.put, to: path.makePathComponents(), use: closure)
+        return self.on(.put, to: path, use: closure)
     }
     
-    /// Creates  Async `Route` at the provided path using the `POST` method.
+    /// Creates a `Route` at the provided path using the `POST` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func post<F: FutureType>(
-        _ path: PathComponentsRepresentable...,
+        _ path: PathComponent...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseEncodable {
-        return self.on(.post, to: path.makePathComponents(), use: closure)
+        return self.on(.post, to: path, use: closure)
     }
     
-    /// Creates  Async `Route` at the provided path using the `DELETE` method.
+    /// Creates a `Route` at the provided path using the `DELETE` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func delete<F: FutureType>(
-        _ path: PathComponentsRepresentable...,
+        _ path: PathComponent...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseEncodable {
-        return self.on(.delete, to: path.makePathComponents(), use: closure)
+        return self.on(.delete, to: path, use: closure)
     }
     
-    /// Creates  Async `Route` at the provided path using the `PATCH` method.
+    /// Creates a `Route` at the provided path using the `PATCH` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
     public func patch<F: FutureType>(
-        _ path: PathComponentsRepresentable...,
+        _ path: PathComponent...,
         use closure: @escaping BasicResponder<F>.Closure
     ) -> Route where F.Expectation: ResponseEncodable {
-        return self.on(.patch, to: path.makePathComponents(), use: closure)
+        return self.on(.patch, to: path, use: closure)
     }
 }

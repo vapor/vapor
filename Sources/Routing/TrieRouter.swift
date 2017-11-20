@@ -29,22 +29,24 @@ public final class TrieRouter: Router {
         // always start at the root node
         var current: TrieRouterNode = root
 
-        let path = [.constant(route.method.string)] + route.path
+        let path = [.constants([route.method.string])] + route.path
         
         // traverse the path components supplied
         var iterator = path.makeIterator()
         while let path = iterator.next() {
             switch path {
-            case .constant(let s):
-                // find the child node matching this constant
-                if let node = current.findConstantNode(at: Data(s.utf8)) {
-                    current = node
-                } else {
-                    // if no child node matches this constant,
-                    // we must create a new one
-                    let new = ConstantNode(constant: s)
-                    current.constantChildren.append(new)
-                    current = new
+            case .constants(let consants):
+                for s in consants {
+                    // find the child node matching this constant
+                    if let node = current.findConstantNode(at: Data(s.utf8)) {
+                        current = node
+                    } else {
+                        // if no child node matches this constant,
+                        // we must create a new one
+                        let new = ConstantNode(constant: s)
+                        current.constantChildren.append(new)
+                        current = new
+                    }
                 }
             case .parameter(let p):
                 if let node = current.parameterChild {
