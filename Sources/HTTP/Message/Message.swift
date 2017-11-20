@@ -1,5 +1,6 @@
 import Async
 import Dispatch
+import Service
 
 /// An HTTP message.
 /// This is the basis of HTTP request and response,
@@ -28,13 +29,21 @@ import Dispatch
 /// to add your own stored properties to requests and responses
 /// that can be accessed simply by importing the module that
 /// adds them. This is how much of Vapor's functionality is created.
-public protocol Message: Codable, CustomDebugStringConvertible, Worker, Extendable {
+public protocol Message: Codable, CustomDebugStringConvertible, Worker, Extendable, HasContainer {
     /// The HTTP version of this message.
     var version: Version { get set }
     /// The HTTP headers.
     var headers: Headers { get set }
     /// The message body.
     var body: Body { get set }
+}
+
+/// MARK: Container
+extension Message {
+    /// See HasContainer.container
+    public var container: Container? {
+        return eventLoop.container
+    }
 }
 
 // MARK: Queue

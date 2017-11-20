@@ -28,7 +28,7 @@ final class TestConsole: Console {
     }
 
     func output(_ string: String, style: ConsoleStyle, newLine: Bool) {
-        self.output += output + (newLine ? "\n" : "")
+        self.output += string + (newLine ? "\n" : "")
     }
 
     func report(error: String, newLine: Bool) {

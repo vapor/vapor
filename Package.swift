@@ -133,7 +133,7 @@ let package = Package(
 
         // Net
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),

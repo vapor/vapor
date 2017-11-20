@@ -85,18 +85,4 @@ extension Application: Worker, HasContainer {
     }
 }
 
-extension Request: HasContainer { }
-extension Response: HasContainer { }
 
-extension Message {
-    public var container: Container? {
-        return eventLoop.container
-    }
-}
-
-extension EventLoop: HasContainer {
-    public var container: Container? {
-        get { return extend["vapor:container"] as? Container }
-        set { extend["vapor:container"] = newValue }
-    }
-}

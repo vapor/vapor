@@ -10,7 +10,7 @@ class ConsoleTests: XCTestCase {
 
         console.input = name
 
-        let response = try console.ask(question)
+        let response = console.ask(question)
 
         XCTAssertEqual(response, name)
         XCTAssertEqual(console.output, question + "\n> ")
