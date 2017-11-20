@@ -46,6 +46,13 @@ public struct ParameterBag {
         parameters = Array(parameters.dropFirst())
         return item
     }
+
+    /// Infer requested type where the resolved parameter is the parameter type.
+    public mutating func next<P>() throws -> P
+        where P: Parameter, P.ResolvedParameter == P
+    {
+        return try self.next(P.self)
+    }
 }
 
 /// A parameter and its resolved value.
