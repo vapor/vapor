@@ -104,7 +104,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     public func read(into buffer: MutableByteBuffer) throws -> Int {
         guard let context = self.context else {
             close()
-            throw Error(.noSSLContext)
+            throw AppleSSLError(.noSSLContext)
         }
         
         var processed = 0

@@ -2,6 +2,12 @@ import Foundation
 
 /// The HTTP response status
 ///
+/// They can be created from a premade code or using an integer literal
+///
+///     let status = Status.ok
+///
+///     let statusLiteral: Status = 200
+///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
 public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
     /// Checks of two Statuses are equal

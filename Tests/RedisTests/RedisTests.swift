@@ -14,10 +14,10 @@ class RedisTests: XCTestCase {
     
     var clientCount = 0
     
-    func makeClient() throws -> RedisClient<TCPClient> {
+    func makeClient() throws -> RedisClient {
         let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
         clientCount += 1
-        return try RedisClient<TCPClient>.connect(hostname: "localhost", worker: EventLoop(queue: queue)).blockingAwait(timeout: .seconds(1))
+        return try RedisClient.connect(hostname: "localhost", worker: EventLoop(queue: queue)).blockingAwait(timeout: .seconds(1))
     }
     
     func testCRUD() throws {
@@ -55,7 +55,7 @@ class RedisTests: XCTestCase {
         XCTAssertEqual(result.string, "hello")
         
         // Prevent deallocation
-        XCTAssert(listener.socket.socket.isConnected)
+        _ = listener
     }
     
     func testPipeline() throws {

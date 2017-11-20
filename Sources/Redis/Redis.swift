@@ -7,9 +7,14 @@ import TCP
 /// A Redis client
 ///
 /// Wraps around the provided Connection/Closable Binary Stream
-public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
-    /// The closable binary stream that this client runs on
-    let socket: DuplexByteStream
+public final class RedisClient: ClosableStream {
+    public var errorStream: BaseStream.ErrorHandler?
+    public var onClose: ClosableStream.CloseHandler?
+    fileprivate let socketClose: ()->()
+    
+    public func close() {
+        socketClose()
+    }
     
     /// Parses redis data from binary
     let dataParser = DataParser()
@@ -58,11 +63,12 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     }
     
     /// Creates a new Redis client on the provided connection
-    public init(socket: DuplexByteStream) {
-        self.socket = socket
+    public init<DuplexByteStream: Async.Stream>(socket: DuplexByteStream) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
+        socketClose = socket.close
         
-        socket.errorStream = { _ in
-            socket.close()
+        socket.catch { error in
+            self.errorStream?(error)
+            self.socketClose()
         }
         
         dataSerializer.drain(into: socket)
@@ -70,11 +76,11 @@ public final class RedisClient<DuplexByteStream: Async.Stream> where DuplexByteS
     }
 }
 
-extension RedisClient where DuplexByteStream == TCPClient {
+extension RedisClient {
     /// Connects to `Redis` using on a TCP socket to the provided hostname and port
     ///
     /// Listens to the socket using the provided `DispatchQueue`
-    public static func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient<TCPClient>> {
+    public static func connect(hostname: String = "localhost", port: UInt16 = 6379, worker: Worker) throws -> Future<RedisClient> {
         let socket = try TCP.Socket()
         try socket.connect(hostname: hostname, port: port)
         
@@ -82,7 +88,7 @@ extension RedisClient where DuplexByteStream == TCPClient {
             let client = TCPClient(socket: socket, worker: worker)
             client.start()
             
-            return RedisClient<TCPClient>(socket: client)
+            return RedisClient(socket: client)
         }
     }
 }

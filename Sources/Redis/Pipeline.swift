@@ -13,7 +13,7 @@ public final class Pipeline {
     
     private var commands = [RedisData]()
     
-    init<AnyStream>(_ client: RedisClient<AnyStream>) {
+    init(_ client: RedisClient) {
         self.serializer = client.dataSerializer
         
         isSubscribed = {

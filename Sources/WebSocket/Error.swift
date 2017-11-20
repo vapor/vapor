@@ -1,7 +1,7 @@
 import Debugging
 
 /// A WebSocket error, when creating or using a WebSocket
-public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
+public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
     public var possibleCauses: [String] {
         switch problem {
         case .invalidURI:
@@ -100,7 +100,7 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
          line: UInt = #line,
          column: UInt = #column
     ) {
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = WebSocketError.makeStackTrace()
         self.file = file
         self.function = function
         self.line = line

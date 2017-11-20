@@ -49,15 +49,15 @@ extension Router {
     /// Creates a group with the provided path components and hands it to the closure
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
-    public func group(_ path: PathComponentsRepresentable..., use: ((RouteGroup) -> ())) {
-        use(RouteGroup(cascadingTo: self, components: path.makePathComponents()))
+    public func group(_ path: PathComponent..., use: ((RouteGroup) -> ())) {
+        use(RouteGroup(cascadingTo: self, components: path))
     }
     
     /// Creates a group with the provided path components
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
-    public func grouped(_ path: PathComponentsRepresentable...) -> RouteGroup {
-        return RouteGroup(cascadingTo: self, components: path.makePathComponents())
+    public func grouped(_ path: PathComponent...) -> RouteGroup {
+        return RouteGroup(cascadingTo: self, components: path)
     }
     
     /// Creates a group with the provided middleware and hands it to the closure

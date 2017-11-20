@@ -5,7 +5,7 @@ import Bits
 /// Headers are subscriptable using case-insensitive comparison or provide `Name` constants. eg.
 ///
 /// ```swift
-///    let contentLength = headers["content-length"]
+///    let contentLength = headers["Content-Length"]
 /// ```
 /// or
 /// ```swift

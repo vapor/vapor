@@ -1,4 +1,5 @@
 import Async
+import Bits
 import TCP
 
 /// An HTTP client wrapped around TCP client
@@ -9,19 +10,33 @@ import TCP
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
 public final class HTTPClient {
-    /// The underlying TCP Client
-    public let tcp: TCPClient
-    
     /// Serializes the inputted `Request`s
     let serializer = RequestSerializer()
     
     /// Parses the received `Response`s
     let parser: ResponseParser
     
+    var promise: Promise<Response>?
+    
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init(tcp: TCPClient, maxBodySize: Int = 10_000_000) {
-        self.tcp = tcp
+    public init<DuplexByteStream: Async.Stream>(stream: DuplexByteStream, maxBodySize: Int = 10_000_000) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
         self.parser = ResponseParser(maxBodySize: maxBodySize)
+        
+        self.serializer.drain { data in
+            try data.withByteBuffer(stream.inputStream)
+        }
+        
+        stream.drain(into: parser)
+        
+        parser.drain { response in
+            self.promise?.complete(response)
+        }.catch { error in
+            self.promise?.fail(error)
+        }
+        
+        stream.catch { error in
+            self.promise?.fail(error)
+        }
     }
     
     /// Sends a single `Request` and returns a future that can be completed with a `Response`
@@ -30,18 +45,14 @@ public final class HTTPClient {
     public func send(request encodable: RequestEncodable) throws -> Future<Response> {
         let promise = Promise<Response>()
         
-        tcp.stream(to: parser)
-            .drain(promise.complete)
-            .catch(promise.fail)
+        self.promise = promise
+      
+        parser.drain(promise.complete).catch(promise.fail)
+        serializer.catch(promise.fail)
         
-        tcp.errorStream = { error in
-            promise.fail(error)
-        }
-
         var req = Request()
         try encodable.encode(to: &req).do {
-            let data = self.serializer.serialize(req)
-            self.tcp.inputStream(data)
+            self.serializer.inputStream(req)
         }.catch(promise.fail)
         
         return promise.future

@@ -1,9 +1,13 @@
 /// Components of a router path.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
-public enum PathComponent {
+public enum PathComponent: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .constants(value.split(separator: "/").map(String.init))
+    }
+    
     /// A normal, constant path component.
-    case constant(String)
+    case constants([String])
 
     /// A dynamic parameter component.
     case parameter(String)
@@ -12,35 +16,32 @@ public enum PathComponent {
 /// Capable of being represented by a path component.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
-public protocol PathComponentsRepresentable {
+public protocol PathComponentRepresentable {
     /// Convert to path component.
-    func makePathComponents() -> [PathComponent]
+    func makePathComponent() -> PathComponent
 }
 
-extension PathComponent: PathComponentsRepresentable {
+extension PathComponent: PathComponentRepresentable {
     /// See PathComponentRepresentable.makePathComponent()
-    public func makePathComponents() -> [PathComponent] {
-        return [self]
+    public func makePathComponent() -> PathComponent {
+        return self
     }
 }
 
 // MARK: Array
 
-extension Array where Element == PathComponentsRepresentable {
+extension Array where Element == PathComponentRepresentable {
     /// Convert to array of path components.
     public func makePathComponents() -> [PathComponent] {
-        return map { $0.makePathComponents() }.reduce([], +)
+        return map { $0.makePathComponent() }
     }
 }
 
 /// Strings are constant path components.
-extension String: PathComponentsRepresentable {
+extension String: PathComponentRepresentable {
     /// Convert string to constant path component.
     /// See PathComponentRepresentable.makePathComponent()
-    public func makePathComponents() -> [PathComponent] {
-        return self.split(separator: "/").map { component in
-            return .constant(String(component))
-            // TODO: component.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)
-        }
+    public func makePathComponent() -> PathComponent {
+        return .constants(self.split(separator: "/").map(String.init))
     }
 }

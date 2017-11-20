@@ -1,6 +1,8 @@
 import Async
 
 /// Outputs all notifications for a listening client's channels
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
 public final class SubscriptionStream: Async.OutputStream {
     /// See `OutputStream.Output`
     public typealias Output = ChannelMessage

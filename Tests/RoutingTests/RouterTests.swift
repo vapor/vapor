@@ -8,9 +8,6 @@ class RouterTests: XCTestCase {
     func testRouter() throws {
         let router = TrieRouter()
         
-        XCTAssertEqual(["path", "to", "hello/world"].makePathComponents().count, 4)
-
-
         let a = BasicResponder { req in
             return try Future(Response(body: "hello"))
         }

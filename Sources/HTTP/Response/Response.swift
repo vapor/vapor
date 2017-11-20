@@ -26,12 +26,18 @@ public final class Response: Message {
     public var version: Version
 
     /// HTTP response status code.
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
     public var status: Status
 
     /// See Message.headers
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
     public var headers: Headers
 
     /// See Message.body
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
     public var body: Body
 
     /// See Extendable.extend

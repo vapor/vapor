@@ -1,3 +1,4 @@
+import Async
 import Foundation
 import Bits
 import HTTP
@@ -23,7 +24,7 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init(client: TCPClient, serverSide: Bool = true) {
+    public init<DuplexByteStream: Async.Stream>(client: DuplexByteStream, serverSide: Bool = true) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
         self.connection = Connection(client: client, serverSide: serverSide)
         
         self.textStream.frameStream = self.connection
