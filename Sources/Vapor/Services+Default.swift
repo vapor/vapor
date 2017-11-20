@@ -22,6 +22,7 @@ extension Services {
         services.register { container -> MiddlewareConfig in
             var config = MiddlewareConfig()
             config.use(DateMiddleware.self)
+            config.use(ErrorMiddleware.self)
             return config
         }
         

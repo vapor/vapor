@@ -1,5 +1,3 @@
-import HTTP
-import Routing
 import Vapor
 
 final class Routes: RouteCollection {

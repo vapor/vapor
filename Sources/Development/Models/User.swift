@@ -76,7 +76,9 @@ struct TestSiblings: Migration {
     }
 }
 
-final class User: Model, ResponseRepresentable {
+final class User: Model, Content {
+    static let defaultMediaType: MediaType = .json
+
     typealias Database = SQLiteDatabase
     typealias ID = UUID
 
@@ -95,12 +97,6 @@ final class User: Model, ResponseRepresentable {
     var age: Double
 //    var child: User?
 //    var futureChild: Future<User>?
-    
-    func makeResponse(for request: Request) throws -> Response {
-        let body = try  Body(JSONEncoder().encode(self))
-        
-        return Response(body: body)
-    }
 
     init(name: String, age: Double) {
         self.name = name
@@ -124,15 +120,6 @@ extension Future: Codable {
 
     public convenience init(from decoder: Decoder) throws {
         fatalError("blah")
-    }
-}
-
-extension Array: ResponseRepresentable {
-    public func makeResponse(for request: Request) throws -> Response {
-        let body = try Body(JSONEncoder().encode(self))
-        let res = Response(body: body)
-        res.mediaType = .json
-        return res
     }
 }
 

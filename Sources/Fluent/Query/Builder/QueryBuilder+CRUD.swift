@@ -38,9 +38,9 @@ extension QueryBuilder {
                 timestampable.createdAt = now
             }
 
-            return try model.willCreate()
+            return try model.willCreate(on: self.connection)
                 .then(self.run)
-                .then(model.didCreate)
+                .then { try model.didCreate(on: self.connection) }
         }
     }
 
@@ -64,9 +64,9 @@ extension QueryBuilder {
             }
 
 
-            return try model.willUpdate()
+            return try model.willUpdate(on: self.connection)
                 .then(self.run)
-                .then(model.didUpdate)
+                .then { try model.didUpdate(on: self.connection) }
         }
     }
 
@@ -90,14 +90,14 @@ extension QueryBuilder {
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
         return then {
-            return try model.willDelete().then {
+            return try model.willDelete(on: self.connection).then {
                 guard let id = model.fluentID else {
                     throw "model does not have an id"
                 }
 
                 try self.filter(Model.idKey == id)
                 self.query.action = .delete
-                return self.run().then(model.didDelete)
+                return self.run().then { try model.didDelete(on: self.connection) }
             }
         }
     }
