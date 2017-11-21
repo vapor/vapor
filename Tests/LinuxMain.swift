@@ -1,6 +1,7 @@
 #if os(Linux)
 
 import XCTest
+@testable import CodeTests
 @testable import CommandTests
 @testable import ConsoleTests
 @testable import CryptoTests
@@ -15,12 +16,15 @@ import XCTest
 @testable import RedisTests
 @testable import RoutingTests
 @testable import ServiceTests
+@testable import SourceKitTests
 @testable import TLSTests
 @testable import TCPTests
 @testable import VaporTests
 @testable import WebSocketTests
 
 XCTMain([
+    testCase(CodeTests.allTests),
+    
     /// Console & Commands
     testCase(ConsoleTests.allTests),
     testCase(CommandTests.allTests),
@@ -69,6 +73,9 @@ XCTMain([
     // Service
     testCase(ConfigTests.allTests),
     testCase(ServiceTests.allTests),
+
+
+    testCase(SourceKitTests.allTests),
 
     // TLS
     testCase(TLSTests.SSLTests.allTests),
