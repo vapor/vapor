@@ -2,7 +2,7 @@ import Core
 import Foundation
 
 /// Decodes into an entity Rows into entities, and columns into variables
-class RowDecoder : DecoderHelper {
+final class RowDecoder : DecoderHelper {
     /// Sets up a decoder for a row/struct/class
     required init(keyed: Row, lossyIntegers: Bool, lossyStrings: Bool) throws {
         self.either = .keyed(keyed)

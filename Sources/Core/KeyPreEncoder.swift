@@ -1,8 +1,10 @@
-//
-//  KeyPreEncoder.swift
-//  Core
-//
-//  Created by Joannis Orlandos on 21/11/2017.
-//
+public final class KeyPreEncoder {
+    public init() {}
+    
+    public func keys(for encodable: Encodable) throws -> [String] {
+        return []
+    }
+}
 
-import Foundation
+//fileprivate final class
+

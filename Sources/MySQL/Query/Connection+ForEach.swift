@@ -27,7 +27,7 @@ extension MySQLConnection {
         
         // Send the query
         do {
-            try self.write(query: query.string)
+            try self.write(query: query.queryString)
         } catch {
             promise.fail(error)
         }
@@ -62,7 +62,7 @@ extension MySQLConnection {
         
         // Send the query
         do {
-            try self.write(query: query.string)
+            try self.write(query: query.queryString)
         } catch {
             promise.fail(error)
         }

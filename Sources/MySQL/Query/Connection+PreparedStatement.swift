@@ -59,7 +59,7 @@ extension MySQLConnection {
         }
         
         do {
-            try self.prepare(query: query.string)
+            try self.prepare(query: query.queryString)
             return promise.future
         } catch {
             return Future(error: error)

@@ -26,11 +26,41 @@ fileprivate final class MySQLBindingEncoder: Encoder {
     }
     
     fileprivate func singleValueContainer() -> SingleValueEncodingContainer {
-        fatalError("Nested structs are not supported for MySQL")
+        return SingleContainer(codingPath: codingPath, encoder: self)
     }
 }
 
-fileprivate final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol
+fileprivate struct SingleContainer: SingleValueEncodingContainer {
+    func encode(_ value: Int) throws {
+        try encoder.context.bind(value)
+    }
+    
+    func encode(_ value: Double) throws {
+        try encoder.context.bind(value)
+    }
+    
+    func encode(_ value: String) throws {
+        try encoder.context.bind(value)
+    }
+    
+    func encode<T: Encodable>(_ value: T) throws {
+        try value.encode(to: encoder)
+    }
+    
+    mutating func encode(_ value: Bool) throws {
+        fatalError()
+        //        try encoder.context.bind(true)
+    }
+    
+    var codingPath = [CodingKey]()
+    var encoder: MySQLBindingEncoder
+    
+    mutating func encodeNil() throws {
+        try encoder.context.bindNull()
+    }
+}
+
+fileprivate struct RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol
 {
     typealias Key = K
     
@@ -64,7 +94,7 @@ fileprivate final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContain
     }
     
     func encode<T: Encodable>(_ value: T, forKey key: K) throws {
-        throw UnsupportedNestedEncoding()
+        try value.encode(to: encoder)
     }
     
     func encodeNil(forKey key: K) throws {

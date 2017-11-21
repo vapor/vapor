@@ -2,7 +2,7 @@ import Foundation
 import Bits
 
 /// A helper class that helps with parsing a packet
-class Parser {
+final class Parser {
     /// Keeps track of the current parser position
     var position: Int
     

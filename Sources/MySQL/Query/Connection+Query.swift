@@ -46,7 +46,7 @@ extension MySQLConnection {
         }
         
         do {
-            try self.write(query: query.string)
+            try self.write(query: query.queryString)
         } catch {
             return Future(error: error)
         }
