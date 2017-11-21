@@ -48,6 +48,9 @@ let package = Package(
         // Random
         .library(name: "Random", targets: ["Random"]),
 
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
+
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
