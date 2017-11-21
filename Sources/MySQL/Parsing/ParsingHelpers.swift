@@ -141,10 +141,11 @@ final class Parser {
     func parseLenEncString() throws -> String {
         let length = try skipLenEnc()
         
-        let buffer = UnsafeMutablePointer<UInt8>.allocate(capacity: length)
-        memcpy(buffer, self.payload.baseAddress!.advanced(by: position &- length), length)
+        guard length > 0 else {
+            return ""
+        }
         
-        let result = String.init(bytesNoCopy: buffer, length: length, encoding: .utf8, freeWhenDone: true)
+        let result = String.init(bytes: self.payload[position &- length ..< position], encoding: .utf8)
         
         return result ?? ""
     }

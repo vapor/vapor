@@ -7,13 +7,13 @@ import MySQL
 
 extension DatabaseConnection : SchemaSupporting, TransactionSupporting {
     public func execute(transaction: DatabaseTransaction<DatabaseConnection>) -> Future<Void> {
-        return connection.administrativeQuery("BEGIN TRANSACTION").flatMap {
+        return connection.administrativeQuery("START TRANSACTION").flatMap {
             let promise = Promise<Void>()
             
             transaction.run(on: self).do {
                 self.connection.administrativeQuery("COMMIT TRANSACTION").chain(to: promise)
             }.catch { error in
-                self.connection.administrativeQuery("ROLLBACK TRANSACTION").do {
+                self.connection.administrativeQuery("ROLLBACK").do {
                     // still fail even tho rollback succeeded
                     promise.fail(error)
                 }.catch { error in
