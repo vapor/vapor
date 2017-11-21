@@ -12,12 +12,11 @@ public final class SQLiteDataEncoder: Encoder {
     }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        let encoder = UnsupportedEncodingContainer<Key>(encoder: self)
-        return KeyedEncodingContainer(encoder)
+        fatalError("SQLite rows do not support nested dictionaries")
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        return UnsupportedEncodingContainer<StringKey>(encoder: self)
+        fatalError("SQLite rows do not support nested arrays")
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {

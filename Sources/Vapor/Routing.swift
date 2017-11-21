@@ -36,7 +36,7 @@ public struct RouteResponder<F: FutureType>: Responder
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try closure(req).then { rep in
+        return try closure(req).then { rep -> Future<Response> in
             var res = req.makeResponse()
             return try rep.encode(to: &res, for: req).map {
                 return res

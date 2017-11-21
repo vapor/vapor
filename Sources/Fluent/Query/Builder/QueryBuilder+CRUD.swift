@@ -90,7 +90,7 @@ extension QueryBuilder {
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
         return then {
-            return try model.willDelete(on: self.connection).then {
+            return try model.willDelete(on: self.connection).then { _ -> Future<Void> in 
                 guard let id = model.fluentID else {
                     throw "model does not have an id"
                 }
