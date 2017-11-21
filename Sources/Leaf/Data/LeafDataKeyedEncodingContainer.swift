@@ -18,6 +18,7 @@ internal final class LeafDataKeyedEncoder<K>: KeyedEncodingContainerProtocol
 
     func encodeNil(forKey key: K) throws {
         print("encode nil at \(codingPath)")
+        partialData.set(to: .null, at: codingPath)
     }
 
     func nestedContainer<NestedKey>(
@@ -40,24 +41,30 @@ internal final class LeafDataKeyedEncoder<K>: KeyedEncodingContainerProtocol
 
     func encode(_ value: Bool, forKey key: K) throws {
         print("encode \(value) key \(key) at \(codingPath)")
+        partialData.set(to: .bool(value), at: codingPath + [key])
     }
 
     func encode(_ value: Double, forKey key: K) throws {
         print("encode \(value) key \(key) at \(codingPath)")
+        partialData.set(to: .double(value), at: codingPath + [key])
     }
 
     func encode(_ value: Int, forKey key: K) throws {
         print("encode \(value) key \(key) at \(codingPath)")
+        partialData.set(to: .int(value), at: codingPath + [key])
     }
 
     func encode(_ value: String, forKey key: K) throws {
         print("encode \(value) key \(key) at \(codingPath)")
+        partialData.set(to: .string(value), at: codingPath + [key])
     }
 
     func encode<T>(_ value: T, forKey key: K) throws
         where T: Encodable
     {
         print("encode \(value) key \(key) at \(codingPath)")
+        let encoder = LeafDataEncoder(partialData: partialData, codingPath: codingPath + [key])
+        try value.encode(to: encoder)
     }
 }
 

@@ -5,15 +5,6 @@ import Leaf
 import Bits
 
 class CodeTests: XCTestCase {
-    func testContext() throws {
-        let data = ["hi": "hello"]
-
-        let encoder = LeafDataEncoder()
-        try! data.encode(to: encoder)
-
-        print("Context: \(encoder.context)")
-    }
-
     func testExample() throws {
         let parser = Code.Parser()
         let file = """
@@ -133,11 +124,12 @@ class CodeTests: XCTestCase {
         print(context)
         try context.encode(to: encoder)
 
-        let json = JSONEncoder()
-        json.outputFormatting = .prettyPrinted
-        let string = try String(data: json.encode(context), encoding: .utf8)!
-        print(string)
+//        let json = JSONEncoder()
+//        json.outputFormatting = .prettyPrinted
+//        let string = try String(data: json.encode(context), encoding: .utf8)!
+//        print(string)
 
+        print(encoder.context)
         print(encoder.context)
         let view = try! renderer.render(template, context: encoder.context, on: DispatchQueue.global()).blockingAwait()
         print(types)

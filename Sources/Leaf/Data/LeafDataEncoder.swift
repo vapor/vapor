@@ -1,9 +1,5 @@
 import Async
 
-public protocol FutureEncoder {
-    mutating func encodeFuture<E>(_ future: Future<E>) throws
-}
-
 public final class LeafDataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
@@ -60,6 +56,10 @@ public final class LeafDataEncoder: Encoder {
         partialData.context = .dictionary([:])
         return context
     }
+}
+
+public protocol FutureEncoder {
+    mutating func encodeFuture<E>(_ future: Future<E>) throws
 }
 
 extension LeafDataEncoder: FutureEncoder {
