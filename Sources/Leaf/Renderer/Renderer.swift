@@ -6,7 +6,7 @@ import Foundation
 /// Renders Leaf templates using the Leaf parser and serializer.
 public final class LeafRenderer {
     /// The tags available to this renderer.
-    public let tags: [String: Tag]
+    public let tags: [String: LeafTag]
 
     /// The renderer will use this to read files for
     /// tags that require it (such as #embed)
@@ -21,7 +21,7 @@ public final class LeafRenderer {
 
     /// Create a new Leaf renderer.
     public init(
-        tags: [String: Tag] = defaultTags,
+        tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
         fileFactory: @escaping FileFactory = File.init
     ) {

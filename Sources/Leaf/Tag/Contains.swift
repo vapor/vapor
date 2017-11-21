@@ -1,6 +1,6 @@
 import Async
 
-public final class Contains: Leaf.Tag {
+public final class Contains: Leaf.LeafTag {
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         let promise = Promise(LeafData?.self)
 

@@ -6,12 +6,12 @@ import Service
 
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
-    let tags: [String: Tag]
+    let tags: [String: LeafTag]
     let viewsDir: String
     let fileFactory: LeafRenderer.FileFactory
 
     public init(
-        tags: [String: Tag] = defaultTags,
+        tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
         fileFactory: @escaping LeafRenderer.FileFactory = File.init
     ) {

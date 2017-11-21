@@ -1,6 +1,6 @@
 import Async
 
-public final class Count: Leaf.Tag {
+public final class Count: Leaf.LeafTag {
     init() {}
     
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {

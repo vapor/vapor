@@ -1,6 +1,6 @@
 import Async
 
-public final class Var: Tag {
+public final class Var: LeafTag {
     public init() {}
 
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
