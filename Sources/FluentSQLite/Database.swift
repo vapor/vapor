@@ -5,7 +5,7 @@ import SQLite
 extension SQLiteDatabase: Database { }
 
 extension SQLiteConnection: Connection {
-    public func makeConnection<D>(_ database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+    public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         return then {
             guard let sqlite = self as? D.Connection else {
                 throw "invalid connection type"

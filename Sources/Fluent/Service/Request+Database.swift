@@ -7,8 +7,8 @@ extension Worker where Self: HasContainer {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func withDatabase<Database, F>(
-        _ database: DatabaseIdentifier<Database>,
+    public func withConnection<Database, F>(
+        to database: DatabaseIdentifier<Database>,
         closure: @escaping (Database.Connection) throws -> F
     ) -> Future<F.Expectation> where F: FutureType {
         return then {
@@ -19,14 +19,11 @@ extension Worker where Self: HasContainer {
             if let existing = self.eventLoop.getConnectionPool(database: database) {
                 pool = existing
             } else {
-                if let container = self.container {
-                    pool = try self.eventLoop.makeConnectionPool(
-                        database: database,
-                        using: container.make(Databases.self, for: Self.self)
-                    )
-                } else {
-                    throw "no container to create databases for connection pools"
-                }
+                let container = try self.requireContainer()
+                pool = try self.eventLoop.makeConnectionPool(
+                    database: database,
+                    using: container.make(Databases.self, for: Self.self)
+                )
             }
 
             /// request a connection from the pool
@@ -42,9 +39,8 @@ extension Worker where Self: HasContainer {
     /// Requests a connection to the database.
     /// important: you must be sure to call `.releaseConnection`
     public func requestConnection<Database>(
-        _ database: DatabaseIdentifier<Database>
+        to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        print("REQUEST \(database)")
         return then {
             let pool: DatabaseConnectionPool<Database>
 
@@ -53,14 +49,11 @@ extension Worker where Self: HasContainer {
             if let existing = self.eventLoop.getConnectionPool(database: database) {
                 pool = existing
             } else {
-                if let container = self.container {
-                    pool = try self.eventLoop.makeConnectionPool(
-                        database: database,
-                        using: container.make(Databases.self, for: Self.self)
-                    )
-                } else {
-                    throw "no container to create databases for connection pools"
-                }
+                let container = try self.requireContainer()
+                pool = try self.eventLoop.makeConnectionPool(
+                    database: database,
+                    using: container.make(Databases.self, for: Self.self)
+                )
             }
 
             /// request a connection from the pool
@@ -72,14 +65,16 @@ extension Worker where Self: HasContainer {
     /// important: make sure to return connections called by `requestConnection`
     /// to this function.
     public func releaseConnection<Database>(
-        _ database: DatabaseIdentifier<Database>,
-        _ conn: Database.Connection
+        _ conn: Database.Connection,
+        to database: DatabaseIdentifier<Database>
     ) throws {
-        print("RELEASE \(database)")
         /// this is the first attempt to connect to this
         /// db for this request
         guard let pool = self.eventLoop.getConnectionPool(database: database) else {
-            throw "no existing pool to release connection"
+            throw FluentError(
+                identifier: "noReleasePool",
+                reason: "No connection pool was found while attempting to release a connection."
+            )
         }
         pool.releaseConnection(conn)
     }
@@ -90,14 +85,14 @@ extension Worker where Self: HasContainer {
 extension Extendable where Self: HasContainer, Self: Worker {
     /// See ConnectionRepresentable.makeConnection
     /// important: make sure to release this connection later.
-    public func makeConnection<D>(_ database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+    public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         if let active = connections[database.uid]?.connection as? Future<D.Connection> {
             return active
         }
 
-        return requestConnection(database).map { conn in
+        return requestConnection(to: database).map { conn in
             self.connections[database.uid] = ActiveConnection(connection: conn) {
-                try self.releaseConnection(database, conn)
+                try self.releaseConnection(conn, to: database)
             }
 
             return conn

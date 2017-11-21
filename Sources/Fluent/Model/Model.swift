@@ -53,12 +53,12 @@ public protocol Model: class, Codable, KeyFieldMappable {
 extension Model {
     /// Creates a query for this model on the supplied connection.
     public func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(Self.database))
+        return .init(on: conn.makeConnection(to: Self.database))
     }
 
     /// Creates a query for this model on the supplied connection.
     public static func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(database))
+        return .init(on: conn.makeConnection(to: database))
     }
 }
 

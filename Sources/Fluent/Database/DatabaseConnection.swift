@@ -8,7 +8,7 @@ public protocol Connection: QuerySupporting, ConnectionRepresentable {}
 /// for the supplied identifier.
 public protocol ConnectionRepresentable {
     /// Create a database connection for the supplied dbid.
-    func makeConnection<D>(_ database: DatabaseIdentifier<D>) -> Future<D.Connection>
+    func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection>
 }
 
 extension Connection {

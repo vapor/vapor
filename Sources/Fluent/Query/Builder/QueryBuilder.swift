@@ -80,16 +80,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
             return self.run(decoding: Model.self) { output in
                 switch self.query.action {
                 case .create:
-                    if output.fluentID == nil {
-                        switch Model.ID.identifierType {
-                        case .autoincrementing(let convert):
-                            guard let lastID = conn.lastAutoincrementID else {
-                                throw "connection did not have an auto incremented id"
-                            }
-                            output.fluentID = convert(lastID)
-                        default: break
-                        }
-                    }
+                    try output.parseID(from: conn)
                 default: break
                 }
                 try outputStream(output)
@@ -109,7 +100,10 @@ extension Model {
             switch ID.identifierType {
             case .autoincrementing(let convert):
                 guard let lastID = conn.lastAutoincrementID else {
-                    throw "connection did not have an auto incremented id"
+                    throw FluentError(
+                        identifier: "noAutoincrementID",
+                        reason: "No auto increment ID was returned by the database when decoding \(Self.name) models"
+                    )
                 }
                 fluentID = convert(lastID)
             default: break

@@ -61,7 +61,7 @@ services.register(middlewareConfig)
 
 let app = try Application(services: services)
 
-let foo = try app.withDatabase(.alpha) { alpha in
+let foo = try app.withConnection(to: .alpha) { alpha in
     return try alpha.query(string: "select sqlite_version();").all()
 }.blockingAwait()
 print(foo)
@@ -113,7 +113,7 @@ router.get("leaf") { req -> Future<View> in
 
 final class FooController {
     func foo(_ req: Request) -> Future<Response> {
-        return req.withDatabase(.alpha) { db in
+        return req.withConnection(to: .alpha) { db in
             return Response(status: .ok)
         }
     }
@@ -176,7 +176,7 @@ router.get("builder") { req -> Future<[User]> in
 
 
 router.get("transaction") { req -> Future<String> in
-    return req.withDatabase(.beta) { db in
+    return req.withConnection(to: .beta) { db in
         db.transaction { db in
             let user = User(name: "NO SAVE", age: 500)
             let message = Message(id: nil, text: "asdf", time: 42)
@@ -229,10 +229,8 @@ router.get("first") { req -> Future<User> in
 
 router.get("asyncusers") { req -> Future<User> in
     let user = User(name: "Bob", age: 1)
-    return req.withDatabase(.beta) { db -> Future<User> in
-        return user.save(on: db).map {
-            return user
-        }
+    return user.save(on: req).map {
+        return user
     }
 }
 
