@@ -1,9 +1,10 @@
 import Core
 
 extension PreparationBinding {
-    public func bind(model: Encodable) throws {
+    public func withEncoder<T>(_ closure: (Encoder) throws -> T) rethrows -> T {
         let encoder = MySQLBindingEncoder(binding: self)
-        try model.encode(to: encoder)
+        
+        return try closure(encoder)
     }
 }
 

@@ -10,7 +10,7 @@ import Core
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
     
-    let pool = ConnectionPool(
+    let pool = MySQLConnectionPool(
         hostname: "localhost",
         user: "root",
         password: nil,
@@ -18,7 +18,7 @@ class MySQLTests: XCTestCase {
         worker: MySQLTests.poolQueue
     )
     
-    let connection = try! Connection.makeConnection(
+    let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
         user: "root",
         password: nil,
