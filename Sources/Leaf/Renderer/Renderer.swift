@@ -4,7 +4,7 @@ import Dispatch
 import Foundation
 
 /// Renders Leaf templates using the Leaf parser and serializer.
-public final class Renderer {
+public final class LeafRenderer {
     /// The tags available to this renderer.
     public let tags: [String: Tag]
 
@@ -16,11 +16,19 @@ public final class Renderer {
     public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
     private let fileFactory: FileFactory
 
+    /// Views base directory.
+    public let viewsDir: String
+
     /// Create a new Leaf renderer.
-    public init(tags: [String: Tag], fileFactory: @escaping FileFactory) {
+    public init(
+        tags: [String: Tag] = defaultTags,
+        viewsDir: String = "/",
+        fileFactory: @escaping FileFactory = File.init
+    ) {
         self.tags = tags
         self._files = [:]
         self.fileFactory = fileFactory
+        self.viewsDir = viewsDir.finished(with: "/")
     }
 
     // ASTs only need to be parsed once
@@ -76,12 +84,14 @@ public final class Renderer {
 
 // MARK: View
 
-extension Renderer: ViewRenderer {
+extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
     public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
-        let encoder = LeafDataEncoder()
-        try context.encode(to: encoder)
-        return render(path: path, context: encoder.context, on: worker).map { data in
+        return try render(
+            path: path,
+            context: LeafEncoder().encode(context),
+            on: worker
+        ).map { data in
             return View(data: data)
         }
     }
@@ -89,10 +99,17 @@ extension Renderer: ViewRenderer {
 
 // MARK: Convenience
 
-extension Renderer {
+extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
     public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
+        let fullPath: String
+        if path.hasSuffix("/") {
+            fullPath = path
+        } else {
+            fullPath = viewsDir + path
+        }
+
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
@@ -103,7 +120,7 @@ extension Renderer {
             _files[worker.eventLoop.queue.label.hashValue] = file
         }
 
-        file.cachedRead(at: path).do { view in
+        file.cachedRead(at: fullPath).do { view in
             self.render(template: view, context: context, on: worker).do { data in
                 promise.complete(data)
             }.catch { error in

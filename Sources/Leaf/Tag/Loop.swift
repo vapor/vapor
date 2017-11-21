@@ -3,7 +3,7 @@ import Foundation
 
 public final class Loop: Tag {
     public init() {}
-    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         let promise = Promise(LeafData?.self)
 
         if case .dictionary(var dict) = context {

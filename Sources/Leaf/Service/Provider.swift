@@ -7,22 +7,17 @@ import Service
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
     let tags: [String: Tag]
-    let fileFactory: Renderer.FileFactory
+    let viewsDir: String
+    let fileFactory: LeafRenderer.FileFactory
 
     public init(
-        tags: [String: Tag],
-        fileFactory: @escaping Renderer.FileFactory
+        tags: [String: Tag] = defaultTags,
+        viewsDir: String = "/",
+        fileFactory: @escaping LeafRenderer.FileFactory = File.init
     ) {
         self.tags = tags
+        self.viewsDir = viewsDir
         self.fileFactory = fileFactory
-    }
-
-    public static func `default`() -> LeafConfig {
-        return LeafConfig(
-            tags: defaultTags
-        ) { queue in
-            return File(queue: queue)
-        }
     }
 }
 
@@ -34,16 +29,18 @@ public final class LeafProvider: Provider {
 
     /// See Service.Provider.Register
     public func register(_ services: inout Services) throws {
-        services.register(ViewRenderer.self) { container -> Leaf.Renderer in
-            let config = try container.make(LeafConfig.self, for: Renderer.self)
-            return Leaf.Renderer(
+        services.register(ViewRenderer.self) { container -> LeafRenderer in
+            let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
+            return LeafRenderer(
                 tags: config.tags,
+                viewsDir: config.viewsDir,
                 fileFactory: config.fileFactory
             )
         }
 
-        services.register { container in
-            return LeafConfig.default()
+        services.register { container -> LeafConfig in
+            let dir = try container.make(DirectoryConfig.self, for: LeafRenderer.self)
+            return LeafConfig(viewsDir: dir.workDir + "Resources/Views")
         }
     }
 

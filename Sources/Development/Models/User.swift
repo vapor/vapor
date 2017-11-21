@@ -108,21 +108,6 @@ final class User: Model, Content {
     }
 }
 
-
-extension Future: Codable {
-    public func encode(to encoder: Encoder) throws {
-        guard var single = encoder.singleValueContainer() as? FutureEncoder else {
-            throw "need a future encoder"
-        }
-
-        try single.encode(self)
-    }
-
-    public convenience init(from decoder: Decoder) throws {
-        fatalError("blah")
-    }
-}
-
 extension User: Migration {
     static func prepare(on conn: SQLiteConnection) -> Future<Void> {
         return conn.create(User.self) { user in
