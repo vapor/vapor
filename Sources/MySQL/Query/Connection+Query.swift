@@ -2,7 +2,7 @@ import Async
 import Foundation
 import Core
 
-extension Connection {
+extension MySQLConnection {
     /// Writes a query to the connection
     ///
     /// Doesn't handle anything else

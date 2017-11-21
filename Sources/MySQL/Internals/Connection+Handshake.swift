@@ -4,7 +4,7 @@ import Crypto
 import Core
 import Foundation
 
-extension Connection {
+extension MySQLConnection {
     /// Respond to the server's incoming handshake
     func doHandshake(for packet: Packet) {
         do {

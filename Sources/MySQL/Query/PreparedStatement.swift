@@ -10,7 +10,7 @@ public final class PreparedStatement {
     let statementID: UInt32
     
     /// The connection this statment is bound to
-    let connection: Connection
+    let connection: MySQLConnection
     
     /// The amount of columns to be returned
     let columnCount: UInt16
@@ -52,7 +52,7 @@ public final class PreparedStatement {
     }
     
     /// Creates a new prepared statement from parsed data
-    init(statementID: UInt32, columnCount: UInt16, connection: Connection, parameterCount: UInt16) {
+    init(statementID: UInt32, columnCount: UInt16, connection: MySQLConnection, parameterCount: UInt16) {
         self.statementID = statementID
         self.columnCount = columnCount
         self.connection = connection
@@ -117,7 +117,7 @@ public final class PreparationBinding {
     }
 }
 
-extension Connection {
+extension MySQLConnection {
     /// Prepares a query and calls the captured closure with the prepared statement
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)

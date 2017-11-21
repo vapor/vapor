@@ -162,6 +162,11 @@ extension PreparationBinding {
         )
     }
     
+    /// Binds to a `Double`
+    public func bind(_ double: Double) throws {
+        try self.bind(.double, unsigned: false, data: double.makeData(size: 8))
+    }
+    
     /// Binds to a `Blob`, doesn't require specifying the type of blob
     public func bind(_ data: Data) throws {
         try self.bind(.blob, unsigned: false, data: data.makeLenEnc())

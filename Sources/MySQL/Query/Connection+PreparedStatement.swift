@@ -2,7 +2,7 @@ import Async
 import Bits
 import Foundation
 
-extension Connection {
+extension MySQLConnection {
     /// https://mariadb.com/kb/en/library/com_stmt_prepare/
     ///
     /// Prepares a query and returns a prepared statement that can be used for binding and execution

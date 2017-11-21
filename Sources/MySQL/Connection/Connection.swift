@@ -5,7 +5,7 @@ import TCP
 import Dispatch
 
 /// A connectio to a MySQL database servers
-public final class Connection {
+public final class MySQLConnection {
     /// The TCP socket it's connected on
     let socket: Socket
     
@@ -71,9 +71,9 @@ public final class Connection {
     }
     
     /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<Connection> {
+    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<MySQLConnection> {
         do {
-            let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
+            let connection = try MySQLConnection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
             
             return connection.authenticated.future.map { _ in
                 return connection

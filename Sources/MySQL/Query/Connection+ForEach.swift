@@ -1,7 +1,7 @@
 import Async
 import Core
 
-extension Connection {
+extension MySQLConnection {
     /// Loops over all rows resulting from the query
     ///
     /// - parameter query: Fetches results using this query

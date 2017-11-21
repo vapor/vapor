@@ -5,7 +5,7 @@ import Dispatch
 /// An automatically managed pool of connections to a server.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
-public class ConnectionPool {
+public class MySQLConnectionPool {
     /// The queue on which connections will be created
     let worker: Worker
     
@@ -35,10 +35,10 @@ public class ConnectionPool {
     public var maxConnections = 10
     
     class ConnectionPair {
-        let connection: Connection
+        let connection: MySQLConnection
         var reserved = false
         
-        init(connection: Connection) {
+        init(connection: MySQLConnection) {
             self.connection = connection
         }
     }
@@ -72,7 +72,7 @@ public class ConnectionPool {
     /// Retained connections can only be used for a single query at a time
     ///
     ///
-    public func retain<T>(_ handler: @escaping ((Connection) -> Future<T>)) -> Future<T> {
+    public func retain<T>(_ handler: @escaping ((MySQLConnection) -> Future<T>)) -> Future<T> {
         let promise = Promise<ConnectionPair>()
         
         let future = promise.future.flatMap { pair -> Future<T> in
@@ -107,7 +107,7 @@ public class ConnectionPool {
             return future
         }
         
-        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, worker: worker).do { connection in
+        MySQLConnection.makeConnection(hostname: hostname, user: user, password: password, database: database, worker: worker).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             
