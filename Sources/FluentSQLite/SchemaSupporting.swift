@@ -23,13 +23,9 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
             return self.query(string: string).execute()
         }
     }
-
-    /// See SchemaSupporting.SchemaFieldType
-    public typealias SchemaFieldType = SQLiteFieldType
-
+    
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        print("enabled")
         return query(string: "PRAGMA foreign_keys = ON;").execute()
     }
 

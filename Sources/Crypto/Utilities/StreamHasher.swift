@@ -7,7 +7,7 @@ import Async
 /// When done hashing the stream, call `complete` to receive the hash and reset the hash to it's original state
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#streaming-hashes-async)
-public class ByteStreamHasher<H: Hash> : Async.InputStream {
+public final class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// See `InputStream` for details
     public func inputStream(_ input: ByteBuffer) {
         context.update(input)

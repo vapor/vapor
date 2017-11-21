@@ -82,9 +82,9 @@ extension ResultsStream {
         if packet.payload.count > 0,
             let pointer = packet.payload.baseAddress,
             pointer[0] == 0xff,
-            let error = try packet.parseResponse(mysql41: self.mysql41).error {
-            print(error)
-                throw error
+            let error = try packet.parseResponse(mysql41: self.mysql41).error
+        {
+            throw error
         }
         
         self.output(try parseRows(from: packet))
