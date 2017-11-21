@@ -16,7 +16,7 @@ extension MySQLConnection {
         self.receivePackets(into: stream.inputStream)
         
         stream.onClose = {
-            promise.complete(())
+            promise.complete()
         }
         
         stream.errorStream = { error in
@@ -51,7 +51,7 @@ extension MySQLConnection {
         self.receivePackets(into: resultBuilder.inputStream)
         
         resultBuilder.onClose = {
-            promise.complete(())
+            promise.complete()
         }
         
         resultBuilder.errorStream = { error in

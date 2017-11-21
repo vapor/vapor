@@ -14,7 +14,7 @@ public final class BoundStatement {
     var header = Data([
         0x17, // Header
         0,0,0,0, // statementId
-        0, // flags
+        4, // flags
         1, 0, 0, 0 // iteration count (always 1)
     ])
     
@@ -50,7 +50,7 @@ public final class BoundStatement {
     ///     1    read only
     ///     2    cursor for update
     ///     4    scrollable cursor
-    func execute() throws {
+    func send() throws {
         guard boundParameters == statement.parameters.count else {
             throw MySQLError(.notEnoughParametersBound)
         }
@@ -96,11 +96,30 @@ public final class BoundStatement {
         
         // Send the query
         do {
-            try execute()
+            try send()
             try getMore(count: UInt32.max)
         } catch {
             return Future(error: error)
         }
+        
+        return promise.future
+    }
+    
+    public func execute() throws -> Future<Void> {
+        let promise = Promise<Void>()
+        
+        // Set up a parser
+        statement.connection.receivePackets { packet in
+            guard packet.payload.count > 0, packet.payload.first == 0 else {
+                promise.fail(MySQLError(packet: packet))
+                return
+            }
+            
+            promise.complete()
+        }
+        
+        // Send the query
+        try send()
         
         return promise.future
     }
@@ -113,7 +132,7 @@ public final class BoundStatement {
         statement.connection.receivePackets(into: stream.inputStream)
         
         // Send the query
-        try execute()
+        try send()
         try getMore(count: UInt32.max)
         
         return stream

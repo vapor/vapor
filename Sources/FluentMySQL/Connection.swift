@@ -23,7 +23,21 @@ public final class DatabaseConnection: Connection, JoinSupporting {
         var (dataQuery, binds) = query.makeDataQuery()
         
         if let model = query.data {
-            dataQuery.columns += KeyPreEncoder().keys(for: model)
+            let encoder = CodingPathKeyPreEncoder()
+            
+            do {
+                dataQuery.columns += try encoder.keys(for: model).flatMap { keys in
+                    guard let key = keys.first else {
+                        return nil
+                    }
+                    
+                    return DataColumn(name: key)
+                }
+            } catch {
+                stream.errorStream?(error)
+                stream.close()
+                return
+            }
         }
         
         /// create sqlite query from string
@@ -31,7 +45,7 @@ public final class DatabaseConnection: Connection, JoinSupporting {
         
         _ = self.logger?.log(query: sqlString)
         
-        _ = connection.withPreparation(statement: sqlString) { context -> Future<Void> in
+        connection.withPreparation(statement: sqlString) { context -> Future<Void> in
             do {
                 let bound = try context.bind { binding in
                     try binding.withEncoder { encoder in
@@ -45,13 +59,24 @@ public final class DatabaseConnection: Connection, JoinSupporting {
                     }
                 }
                 
-                try bound.stream(D.self).drain(into: stream)
-                return Future<Void>(())
+                let future = try bound.execute()
+                    
+                future.do {
+                    stream.close()
+                }.catch { error in
+                    stream.errorStream?(error)
+                    stream.close()
+                }
+                
+                return future
             } catch {
                 stream.errorStream?(error)
                 stream.close()
                 return Future(error: error)
             }
+        }.catch { error in
+            stream.errorStream?(error)
+            stream.close()
         }
     }
     

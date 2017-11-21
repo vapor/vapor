@@ -58,6 +58,8 @@ extension MySQLConnection {
             }
         }
         
+        self.parser.catch(promise.fail)
+        
         do {
             try self.prepare(query: query.queryString)
             return promise.future
@@ -89,7 +91,7 @@ extension MySQLConnection {
                     return
                 }
                 
-                promise.complete(())
+                promise.complete()
             }
             
             try self.write(packetFor: data)

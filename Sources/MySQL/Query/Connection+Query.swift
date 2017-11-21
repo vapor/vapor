@@ -42,7 +42,7 @@ extension MySQLConnection {
                 return
             }
             
-            promise.complete(())
+            promise.complete()
         }
         
         do {

@@ -32,7 +32,23 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int8) throws {
-        try self.bind(.int, unsigned: false, data: Data([numericCast(int)]))
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
+        try self.bind(
+            type,
+            unsigned: false,
+            data: Data([numericCast(int)])
+        )
     }
     
     /// Binds an UInt8
@@ -41,7 +57,23 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt8) throws {
-        try self.bind(.int, unsigned: true, data: Data([int]))
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
+        try self.bind(
+            type,
+            unsigned: true,
+            data: Data([int])
+        )
     }
     
     /// Binds an Int16
@@ -50,8 +82,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int16) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: false,
             data: int.makeData()
         )
@@ -63,8 +107,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt16) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: false,
             data: int.makeData()
         )
@@ -76,8 +132,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int32) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: false,
             data: int.makeData()
         )
@@ -89,8 +157,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt32) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: true,
             data: int.makeData()
         )
@@ -103,9 +183,29 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int) throws {
         #if arch(x86_64) || arch(arm64)
-            try self.bind(numericCast(int) as Int32)
-        #else
+            if try PseudoType.int.supports(expecting: .longlong) == .text {
+                try self.bind(
+                    .string,
+                    unsigned: false,
+                    data: int.description.makeData()
+                )
+                
+                return
+            }
+            
             try self.bind(numericCast(int) as Int64)
+        #else
+            if try PseudoType.int.supports(expecting: .long) == .text {
+                try self.bind(
+                    .string,
+                    unsigned: true,
+                    data: int.description.makeData()
+                )
+                
+                return
+            }
+            
+            try self.bind(numericCast(int) as Int32)
         #endif
     }
     
@@ -116,8 +216,28 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt) throws {
         #if arch(x86_64) || arch(arm64)
+            if try PseudoType.int.supports(expecting: .longlong) == .text {
+                try self.bind(
+                    .string,
+                    unsigned: false,
+                    data: int.description.makeData()
+                )
+                
+                return
+            }
+            
             try self.bind(numericCast(int) as UInt64)
         #else
+            if try PseudoType.int.supports(expecting: .long) == .text {
+                try self.bind(
+                    .string,
+                    unsigned: true,
+                    data: int.description.makeData()
+                )
+                
+                return
+            }
+            
             try self.bind(numericCast(int) as UInt32)
         #endif
     }
@@ -128,8 +248,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int64) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: false,
             data: int.makeData()
         )
@@ -141,8 +273,20 @@ extension PreparationBinding {
     ///
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt64) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.int.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: int.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
-            .int,
+            type,
             unsigned: true,
             data: int.makeData()
         )
@@ -155,6 +299,18 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     /// - TODO: Float/Float64? MariaDB doesn't support those directly
     public func bind(_ float: Float32) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.double.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: float.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(
             .float,
             unsigned: true,
@@ -162,8 +318,88 @@ extension PreparationBinding {
         )
     }
     
+    public func bind(date: Date) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.double.supports(expecting: type) == .text {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+            
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: formatter.string(from: date).makeData()
+            )
+            
+            return
+        }
+        
+        switch type {
+        case .datetime:
+            let calendar = Calendar(identifier: .gregorian)
+            
+            let components = calendar.dateComponents(
+                [
+                    .year,
+                    .month,
+                    .day,
+                    .hour,
+                    .minute,
+                    .second
+                ],
+                from: date
+            )
+            
+            guard
+                let year = components.year,
+                let month = components.month,
+                let day = components.day,
+                let hour = components.hour,
+                let minute = components.minute,
+                let second = components.second,
+                year < Int16.max,
+                year > Int16.min
+            else {
+                throw MySQLError(
+                    .invalidBinding(for: type)
+                )
+            }
+            
+            let yearInt16: Int16 = numericCast(year)
+            
+            let data = Data([
+                numericCast(yearInt16.bigEndian >> 8),
+                numericCast(yearInt16.bigEndian & 0xff),
+                numericCast(month),
+                numericCast(month),
+                numericCast(day),
+                numericCast(hour),
+                numericCast(minute),
+                numericCast(second),
+            ])
+            
+            try bind(type, unsigned: false, data: data)
+        default:
+            throw MySQLError(
+                .invalidBinding(for: type)
+            )
+        }
+    }
+    
     /// Binds to a `Double`
     public func bind(_ double: Double) throws {
+        let type = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
+        
+        if try PseudoType.double.supports(expecting: type) == .text {
+            try self.bind(
+                .string,
+                unsigned: false,
+                data: double.description.makeData()
+            )
+            
+            return
+        }
+        
         try self.bind(.double, unsigned: false, data: double.makeData(size: 8))
     }
     
@@ -186,22 +422,50 @@ enum PseudoType {
     case blob
     case string
     
-    func supports(_ type: Field.FieldType) -> Bool {
+    func supports(expecting expectation: Field.FieldType) throws -> MySQLEncoding {
+        if expectation == .varString {
+            return .text
+        }
+        
         switch self {
         case .decimal:
-            return type == .decimal || type == .newdecimal
+            if expectation == .decimal || expectation == .newdecimal {
+                return .binary
+            }
         case .int:
-            return type == .int24 || type == .tiny || type == .long || type == .short || type == .longlong
+            if expectation == .int24 || expectation == .tiny || expectation == .long || expectation == .short || expectation == .longlong {
+                return .binary
+            }
         case .double:
-            return type == .double
+            if expectation == .double {
+                return .binary
+            }
         case .float:
-            return type == .float
+            if expectation == .float {
+                return .binary
+            }
         case .blob:
-            return type == .blob || type == .longBlob || type == .tinyBlob || type == .mediumBlob
+            if expectation == .blob || expectation == .longBlob || expectation == .tinyBlob || expectation == .mediumBlob {
+                return .binary
+            }
         case .string:
-            return type == .varString || type == .varString || type == .string
+            if expectation == .varchar || expectation == .varString || expectation == .string {
+                return .binary
+            }
         }
+        
+        throw MySQLError(
+            .invalidTypeBound(
+                got: self,
+                expected: expectation
+            )
+        )
     }
+}
+
+enum MySQLEncoding {
+    case text
+    case binary
 }
 
 extension FloatingPoint {

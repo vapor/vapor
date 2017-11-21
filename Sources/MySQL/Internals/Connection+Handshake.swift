@@ -112,7 +112,7 @@ extension MySQLConnection {
                 self.socket.close()
                 return
             default:
-                completing.complete(())
+                completing.complete()
                 return
             }
         } catch {

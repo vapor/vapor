@@ -84,6 +84,7 @@ extension ResultsStream {
             pointer[0] == 0xff,
             let error = try packet.parseResponse(mysql41: self.mysql41).error
         {
+            print(error)
             throw error
         }
         

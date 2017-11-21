@@ -16,7 +16,7 @@ class FluentMySQLTests: XCTestCase {
         benchmarker = Benchmarker(database, onFail: XCTFail)
         
         try! benchmarker.database.makeConnection(on: DispatchQueue(label: "temp")).then { conn in
-            return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `users`, `foo`")
+            return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `users`, `foo`, `foos`")
         }.blockingAwait(timeout: .seconds(3))
     }
     

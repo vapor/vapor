@@ -35,24 +35,3 @@ public final class ByteStreamHasher<H: Hash> : Async.InputStream {
     /// The hash context
     let context = H()
 }
-
-/// Hashes the contents of a byte stream
-///
-/// When done hashing the stream, call `complete` to receive the hash and reset the hash to it's original state
-///
-/// Cascades the inputstream to the output stream without any changes.
-///
-/// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#using-streamhasher-as-a-transparent-component)
-public final class PassthroughByteStreamHasher<H: Hash> : ByteStreamHasher<H>, Async.OutputStream {
-    /// See `InputStream` for details
-    public override func inputStream(_ input: ByteBuffer) {
-        super.inputStream(input)
-        self.output(input)
-    }
-    
-    /// The output is equal to the input
-    public typealias Output = ByteBuffer
-    
-    /// This handler will receive the hash's raw input
-    public var outputStream: OutputHandler?
-}

@@ -91,24 +91,12 @@ public final class PreparationBinding {
         boundStatement.boundParameters += 1
     }
     
-    func bind(_ pseudoType: PseudoType, unsigned: Bool, data: Data) throws {
+    func bind(_ type: Field.FieldType, unsigned: Bool, data: Data) throws {
         guard boundStatement.boundParameters < boundStatement.statement.parameterCount else {
             throw MySQLError(.tooManyParametersBound)
         }
         
-        let associatedFieldType = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
-        
-        // TODO: Lossy binding (UInt8 -> Int16)?
-        guard pseudoType.supports(associatedFieldType) else {
-            throw MySQLError(
-                .invalidTypeBound(
-                    got: pseudoType,
-                    expected: boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
-                )
-            )
-        }
-        
-        boundStatement.header.append(associatedFieldType.rawValue)
+        boundStatement.header.append(type.rawValue)
         boundStatement.header.append(unsigned ? 128 : 0)
         
         boundStatement.parameterData.append(contentsOf: data)

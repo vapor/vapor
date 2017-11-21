@@ -46,7 +46,7 @@ extension Column.ColumnType : SchemaFieldType {
         case .double: return .double()
         case .int: return .int64()
         case .string: return .varChar(length: 256)
-        case .uuid: return .varChar(length: 16, binary: true)
+        case .uuid: return .varChar(length: 64, binary: true)
         }
     }
 }

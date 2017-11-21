@@ -1,3 +1,4 @@
+import Foundation
 import Core
 
 extension PreparationBinding {
@@ -44,7 +45,11 @@ fileprivate struct SingleContainer: SingleValueEncodingContainer {
     }
     
     func encode<T: Encodable>(_ value: T) throws {
-        try value.encode(to: encoder)
+        if let date = value as? Date {
+            try encoder.context.bind(date: date)
+        } else {
+            try value.encode(to: encoder)
+        }
     }
     
     mutating func encode(_ value: Bool) throws {
@@ -94,7 +99,11 @@ fileprivate struct RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerPro
     }
     
     func encode<T: Encodable>(_ value: T, forKey key: K) throws {
-        try value.encode(to: encoder)
+        if let date = value as? Date {
+            try encoder.context.bind(date: date)
+        } else {
+            try value.encode(to: encoder)
+        }
     }
     
     func encodeNil(forKey key: K) throws {
