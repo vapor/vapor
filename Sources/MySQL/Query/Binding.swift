@@ -183,28 +183,8 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: Int) throws {
         #if arch(x86_64) || arch(arm64)
-            if try PseudoType.int.supports(expecting: .longlong) == .text {
-                try self.bind(
-                    .string,
-                    unsigned: false,
-                    data: int.description.makeData()
-                )
-                
-                return
-            }
-            
             try self.bind(numericCast(int) as Int64)
         #else
-            if try PseudoType.int.supports(expecting: .long) == .text {
-                try self.bind(
-                    .string,
-                    unsigned: true,
-                    data: int.description.makeData()
-                )
-                
-                return
-            }
-            
             try self.bind(numericCast(int) as Int32)
         #endif
     }
@@ -216,28 +196,8 @@ extension PreparationBinding {
     /// - throws: If the next unbound parameter is of a different type or if there are no more unbound parameters
     public func bind(_ int: UInt) throws {
         #if arch(x86_64) || arch(arm64)
-            if try PseudoType.int.supports(expecting: .longlong) == .text {
-                try self.bind(
-                    .string,
-                    unsigned: false,
-                    data: int.description.makeData()
-                )
-                
-                return
-            }
-            
             try self.bind(numericCast(int) as UInt64)
         #else
-            if try PseudoType.int.supports(expecting: .long) == .text {
-                try self.bind(
-                    .string,
-                    unsigned: true,
-                    data: int.description.makeData()
-                )
-                
-                return
-            }
-            
             try self.bind(numericCast(int) as UInt32)
         #endif
     }

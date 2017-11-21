@@ -15,8 +15,6 @@ internal final class PacketParser : Async.Stream {
     init() {}
     
     func inputStream(_ input: MutableByteBuffer) {
-        var input = input
-        
         // If there's no input pointer, throw an error
         guard var pointer = input.baseAddress else {
             errorStream?(MySQLError(.invalidPacket))
@@ -54,7 +52,8 @@ internal final class PacketParser : Async.Stream {
                     return false
                 }
                 
-                input = MutableByteBuffer(start: pointer.advanced(by: needing), count: length &- needing)
+                pointer = pointer.advanced(by: needing)
+                length = length &- needing
                 return true
                 // If we have exactly enough or too little
             } else {
@@ -77,22 +76,26 @@ internal final class PacketParser : Async.Stream {
         }
         
         var bufferSize: Int
+        var containing: Int
         var sequenceId: UInt8
         var buffer: MutableByteBuffer
         
         repeat {
+            containing = 0
+            
             // If an existing packet it building
             if let (_buffer, _containing, _sequenceId) = self.buffer {
                 // Continue parsing from the start
                 
                 buffer = _buffer
-                bufferSize = _containing
+                bufferSize = buffer.count
+                containing = _containing
                 sequenceId = _sequenceId
             } else {
                 // at least 4 packet bytes for new packets
                 // TODO: internal 3-byte buffer like MongoKitten's for this odd scenario
-                guard input.count > 3 else {
-                    if input.count == 0 {
+                guard length > 3 else {
+                    if length == 0 {
                         return
                     }
                     
@@ -101,9 +104,9 @@ internal final class PacketParser : Async.Stream {
                 }
                 
                 // take the first 3 bytes
-                let byte0 = UInt32(input[0]).littleEndian
-                let byte1 = UInt32(input[1]).littleEndian << 8
-                let byte2 = UInt32(input[2]).littleEndian << 16
+                let byte0 = (numericCast(pointer[0]) as UInt32).littleEndian
+                let byte1 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
+                let byte2 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
                 
                 // Parse buffer size
                 bufferSize = Int(byte0 | byte1 | byte2)
@@ -120,7 +123,7 @@ internal final class PacketParser : Async.Stream {
                 length = length &- 4
             }
             // Parse the packet contents
-        } while parseInput(into: buffer, alreadyContaining: 0, sequenceId: sequenceId)
+        } while parseInput(into: buffer, alreadyContaining: containing, sequenceId: sequenceId)
     }
 }
 

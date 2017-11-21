@@ -105,17 +105,18 @@ public final class BoundStatement {
         return promise.future
     }
     
-    public func execute() throws -> Future<Void> {
-        let promise = Promise<Void>()
+    public func execute() throws -> Future<UInt64> {
+        let promise = Promise<UInt64>()
         
         // Set up a parser
         statement.connection.receivePackets { packet in
-            guard packet.payload.count > 0, packet.payload.first == 0 else {
-                promise.fail(MySQLError(packet: packet))
-                return
+            do {
+                let int = try Parser(packet: packet).parseLenEnc()
+                
+                promise.complete(int)
+            } catch {
+                promise.fail(error)
             }
-            
-            promise.complete()
         }
         
         // Send the query

@@ -99,7 +99,8 @@ extension Parser {
             case .int24: throw MySQLError(.unsupported)
             case .date: throw MySQLError(.unsupported)
             case .time: throw MySQLError(.unsupported)
-            case .datetime: throw MySQLError(.unsupported)
+            case .datetime:
+                fatalError()
             case .year: throw MySQLError(.unsupported)
             case .newdate: throw MySQLError(.unsupported)
             case .varchar:

@@ -51,24 +51,30 @@ public final class DatabaseConnection: Connection, JoinSupporting {
                     try binding.withEncoder { encoder in
                         if let model = query.data {
                             try model.encode(to: encoder)
-                        } else {
-                            for bind in binds {
-                                try bind.encodable.encode(to: encoder)
-                            }
+                        }
+                        
+                        for bind in binds {
+                            try bind.encodable.encode(to: encoder)
                         }
                     }
                 }
                 
-                let future = try bound.execute()
+                switch query.action {
+                case .read:
+                    try bound.stream(D.self).drain(into: stream)
+                    return Future(())
+                default:
+                    let future = try bound.execute().map { _ in }
                     
-                future.do {
-                    stream.close()
-                }.catch { error in
-                    stream.errorStream?(error)
-                    stream.close()
+                    future.do {
+                        stream.close()
+                    }.catch { error in
+                        stream.errorStream?(error)
+                        stream.close()
+                    }
+                    
+                    return future
                 }
-                
-                return future
             } catch {
                 stream.errorStream?(error)
                 stream.close()
