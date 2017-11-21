@@ -12,3 +12,14 @@ public enum Type: Encodable {
         }
     }
 }
+
+extension Type: CustomStringConvertible {
+    /// See CustomStringConvertible.description
+    public var description: String {
+        switch self {
+        case .`class`(let c): return c.description
+        default: return "type"
+        }
+    }
+}
+

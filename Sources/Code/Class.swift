@@ -19,3 +19,10 @@ public class Class: Encodable {
         self.comment = comment
     }
 }
+
+extension Class: CustomStringConvertible {
+    /// See CustomStringConvertible.description
+    public var description: String {
+        return "class \(name) { }"
+    }
+}

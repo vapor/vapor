@@ -4,7 +4,7 @@ import Dispatch
 import Foundation
 
 /// Renders Leaf templates using the Leaf parser and serializer.
-public final class Renderer {
+public final class LeafRenderer {
     /// The tags available to this renderer.
     public let tags: [String: Tag]
 
@@ -76,7 +76,7 @@ public final class Renderer {
 
 // MARK: View
 
-extension Renderer: ViewRenderer {
+extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
     public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
         let encoder = LeafDataEncoder()
@@ -89,7 +89,7 @@ extension Renderer: ViewRenderer {
 
 // MARK: Convenience
 
-extension Renderer {
+extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
     public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"

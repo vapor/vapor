@@ -5,7 +5,7 @@ public protocol Tag {
     func render(
         parsed: ParsedTag,
         context: inout LeafData,
-        renderer: Renderer
+        renderer: LeafRenderer
     ) throws -> Future<LeafData?>
 }
 

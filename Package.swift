@@ -92,6 +92,7 @@ let package = Package(
 
         // Code
         .target(name: "Code", dependencies: ["Bits", "Console", "Leaf", "SourceKit"]),
+        .target(name: "CodeRun", dependencies: ["Code", "Command", "Console", "Core", "Leaf"]),
         .testTarget(name: "CodeTests", dependencies: ["Code"]),
 
         // Core

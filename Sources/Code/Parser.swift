@@ -1,8 +1,8 @@
 import Foundation
 import SourceKit
 
-internal final class Parser {
-    init() {}
+public final class CodeParser {
+    public init() {}
 
     public func parse(files: [Data]) throws -> [Type] {
         var types: [String: Type] = [:]

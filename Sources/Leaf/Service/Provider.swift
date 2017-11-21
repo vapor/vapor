@@ -7,11 +7,11 @@ import Service
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
     let tags: [String: Tag]
-    let fileFactory: Renderer.FileFactory
+    let fileFactory: LeafRenderer.FileFactory
 
     public init(
         tags: [String: Tag],
-        fileFactory: @escaping Renderer.FileFactory
+        fileFactory: @escaping LeafRenderer.FileFactory
     ) {
         self.tags = tags
         self.fileFactory = fileFactory
@@ -34,9 +34,9 @@ public final class LeafProvider: Provider {
 
     /// See Service.Provider.Register
     public func register(_ services: inout Services) throws {
-        services.register(ViewRenderer.self) { container -> Leaf.Renderer in
-            let config = try container.make(LeafConfig.self, for: Renderer.self)
-            return Leaf.Renderer(
+        services.register(ViewRenderer.self) { container -> LeafRenderer in
+            let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
+            return LeafRenderer(
                 tags: config.tags,
                 fileFactory: config.fileFactory
             )
