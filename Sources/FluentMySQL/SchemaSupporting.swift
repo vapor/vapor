@@ -8,13 +8,13 @@ import MySQL
 extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
     /// Runs a transaction on the MySQL connection
     public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Future<Void> {
-        return connection.administrativeQuery("START TRANSACTION").flatMap {
+        return connection.administrativeQuery("SET autocommit = 0; START TRANSACTION").flatMap {
             let promise = Promise<Void>()
             
             transaction.run(on: self).do {
                 self.connection.administrativeQuery("COMMIT TRANSACTION").chain(to: promise)
             }.catch { error in
-                self.connection.administrativeQuery("ROLLBACK").do {
+                self.connection.administrativeQuery("ROLLBACK TRANSACTION").do {
                     // still fail even though rollback succeeded
                     promise.fail(error)
                 }.catch { error in
