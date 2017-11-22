@@ -21,7 +21,7 @@ extension Benchmarker {
         }.blockingAwait()
 
         if fetched64.count != 2048 {
-            fail("did not fetch all")
+            fail("did not fetch all - only \(fetched64.count) out of 2048")
         }
 
 
@@ -34,7 +34,7 @@ extension Benchmarker {
         }.blockingAwait()
 
         if fetched2047.count != 2048 {
-            fail("did not fetch all")
+            fail("did not fetch all - only \(fetched2047.count) out of 2048")
         }
     }
 

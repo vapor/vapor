@@ -10,6 +10,9 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     /// Registers an onClose handler
     public var onClose: CloseHandler?
     
+    /// Registers an onClose handler
+    var onEOF: ((UInt16) throws -> ())?
+    
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
     
@@ -41,7 +44,7 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     func parseRows(from packet: Packet) throws -> D {
         let row = try packet.makeRow(columns: columns, binary: binary)
         
-        let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+        let decoder = try makeRowDecoder(row: row, lossyIntegers: true, lossyStrings: true)
         return try D(from: decoder)
     }
 }

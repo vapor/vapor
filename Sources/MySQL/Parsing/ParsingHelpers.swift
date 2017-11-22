@@ -22,7 +22,7 @@ final class Parser {
     
     /// Requires `n` amount of bytes or throws an error
     func require(_ n: Int) throws {
-        guard position &+ n < packet.payload.count else {
+        guard position &+ n <= packet.payload.count else {
             throw MySQLError(.invalidPacket)
         }
     }

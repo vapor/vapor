@@ -2,6 +2,12 @@
 ///
 /// This API is currently internal so we don't break the public API when finalizing the "raw" row API
 final class RowStream : ResultsStream {
+    var onEOF: ((UInt16) throws -> ())? {
+        return { _ in
+            self.close()
+        }
+    }
+    
     /// For internal notification purposes only
     func close() {
         self.onClose?()

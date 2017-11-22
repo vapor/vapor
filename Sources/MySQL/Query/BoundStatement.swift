@@ -14,7 +14,7 @@ public final class BoundStatement {
     var header = Data([
         0x17, // Header
         0,0,0,0, // statementId
-        4, // flags
+        0, // flags
         1, 0, 0, 0 // iteration count (always 1)
     ])
     
@@ -105,18 +105,18 @@ public final class BoundStatement {
         return promise.future
     }
     
-    public func execute() throws -> Future<UInt64> {
-        let promise = Promise<UInt64>()
+    public func execute() throws -> Future<Void> {
+        let promise = Promise<Void>()
         
         // Set up a parser
         statement.connection.receivePackets { packet in
-            do {
-                let int = try Parser(packet: packet).parseLenEnc()
+//            do {
+//                let int = try Parser(packet: packet).parseLenEnc()
                 
-                promise.complete(int)
-            } catch {
-                promise.fail(error)
-            }
+                promise.complete()
+//            } catch {
+//                promise.fail(error)
+//            }
         }
         
         // Send the query
@@ -134,7 +134,10 @@ public final class BoundStatement {
         
         // Send the query
         try send()
-        try getMore(count: UInt32.max)
+        
+        stream.onEOF = { flags in
+            try self.getMore(count: UInt32.max)
+        }
         
         return stream
     }

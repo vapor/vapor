@@ -12,6 +12,8 @@ protocol ResultsStream : OutputStream, ClosableStream {
     /// Keeps track of the server's protocol version for reading
     var mysql41: Bool { get }
     
+    var onEOF: ((UInt16) throws -> ())? { get }
+    
     func parseRows(from packet: Packet) throws -> Output
 }
 
@@ -33,6 +35,7 @@ extension ResultsStream {
                 guard let columnCount = try? parser.parseLenEnc() else {
                     if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
                         self.errorStream?(error)
+                        self.close()
                     } else {
                         self.close()
                     }
@@ -70,11 +73,17 @@ extension ResultsStream {
             parser.position = 1
             let flags = try parser.parseUInt16()
             
-            if flags & serverMoreResultsExists != 0 {
+            if flags & serverMoreResultsExists == 0 {
+                self.close()
                 return
             }
             
-            close()
+            do {
+                try onEOF?(flags)
+            } catch {
+                self.errorStream?(error)
+                self.close()
+            }
             return
         }
         

@@ -100,7 +100,30 @@ extension Parser {
             case .date: throw MySQLError(.unsupported)
             case .time: throw MySQLError(.unsupported)
             case .datetime:
-                fatalError()
+                let year = try parseUInt16()
+                let month = try byte()
+                let day = try byte()
+                let hour = try byte()
+                let minute = try byte()
+                let second = try byte()
+                
+                let calendar = Calendar(identifier: .gregorian)
+                
+                guard let date = calendar.date(from:
+                    DateComponents(
+                        calendar: calendar,
+                        year: numericCast(year),
+                        month: numericCast(month),
+                        day: numericCast(day),
+                        hour: numericCast(hour),
+                        minute: numericCast(minute),
+                        second: numericCast(second)
+                    )
+                ) else {
+                    throw MySQLError(.invalidPacket)
+                }
+                
+                return .datetime(date)
             case .year: throw MySQLError(.unsupported)
             case .newdate: throw MySQLError(.unsupported)
             case .varchar:

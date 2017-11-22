@@ -13,6 +13,7 @@ enum Column {
     case uint8(UInt8)
     case int8(Int8)
     case double(Double)
+    case datetime(Date)
     case float(Float)
     case null
     case tinyBlob(Data)

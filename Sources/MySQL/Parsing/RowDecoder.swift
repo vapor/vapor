@@ -1,8 +1,12 @@
 import Core
 import Foundation
 
+func makeRowDecoder(row: Row, lossyIntegers: Bool, lossyStrings: Bool) throws -> Decoder {
+    return try RowDecoder(keyed: row, lossyIntegers: lossyIntegers, lossyStrings: lossyStrings)
+}
+
 /// Decodes into an entity Rows into entities, and columns into variables
-final class RowDecoder : DecoderHelper {
+fileprivate final class RowDecoder : DecoderHelper {
     /// Sets up a decoder for a row/struct/class
     required init(keyed: Row, lossyIntegers: Bool, lossyStrings: Bool) throws {
         self.either = .keyed(keyed)
@@ -41,6 +45,7 @@ final class RowDecoder : DecoderHelper {
         case .uint8(let num): return .uint8(num)
         case .int8(let num): return .int8(num)
         case .double(let num): return .double(num)
+        // TODO: Date to epoch?
         case .float(let num): return .float(num)
         default: return nil
         }
@@ -79,6 +84,16 @@ final class RowDecoder : DecoderHelper {
         } else {
             throw DecodingError.incorrectValue
         }
+    }
+    
+    func decode<D>(_ type: D.Type, from value: Column) throws -> D where D : Decodable {
+        if D.self == Date.self, case .datetime(let date) = value {
+            return date as! D
+        }
+        
+        let newDecoder = try RowDecoder(any: value, lossyIntegers: self.lossyIntegers, lossyStrings: self.lossyStrings)
+        
+        return try D(from: newDecoder)
     }
     
     /// Columns contain values
@@ -125,7 +140,7 @@ extension Row : KeyedDecodingHelper {
 }
 
 /// Used for decoding a row's values
-struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
+fileprivate struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
     /// The coding path being accessed
     var codingPath: [CodingKey]
     
@@ -170,7 +185,7 @@ struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
 }
 
 /// Decodes a column's value
-struct ColumnContainer: SingleValueDecodingContainerHelper {
+fileprivate struct ColumnContainer: SingleValueDecodingContainerHelper {
     /// The coding path being accessed
     var codingPath: [CodingKey]
     
