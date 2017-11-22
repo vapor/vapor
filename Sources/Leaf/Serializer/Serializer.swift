@@ -56,7 +56,7 @@ public final class Serializer {
         
         let promise = Promise(Data.self)
 
-        parts.orderedFlatten().do { data in
+        parts.flatten().do { data in
             let serialized = Data(data.joined())
             promise.complete(serialized)
         }.catch { error in
@@ -95,7 +95,7 @@ public final class Serializer {
             inputFutures.append(inputPromise.future)
         }
 
-        inputFutures.orderedFlatten().do { inputs in
+        inputFutures.flatten().do { inputs in
             do {
                 let parsed = ParsedTag(
                     name: name,

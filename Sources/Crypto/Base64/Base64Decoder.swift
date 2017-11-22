@@ -24,20 +24,8 @@ fileprivate let decodeTable: [UInt8] = [
 ]
 
 public final class Base64Decoder: Base64 {
-    /// Accepts Base64 encoded byte streams
-    public typealias Input = ByteBuffer
-    
-    /// Outputs  byte streams
-    public typealias Output = ByteBuffer
-    
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
-    /// See `BaseStream.Errorhandler`
-    public var errorStream: ErrorHandler?
+    /// See Closeable.onClose
+    public var onClose: OnClose?
     
     /// The capacity currently used in the pointer
     var currentCapacity = 0
@@ -50,6 +38,9 @@ public final class Base64Decoder: Base64 {
     
     /// The bytes that couldn't be parsed from the previous buffer
     var remainder = Data()
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new Base64 encoder
     ///
@@ -58,11 +49,6 @@ public final class Base64Decoder: Base64 {
         self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
-    }
-    
-    deinit {
-        self.pointer.deinitialize(count: self.allocatedCapacity)
-        self.pointer.deallocate(capacity: self.allocatedCapacity)
     }
     
     /// Decodes the contents of the buffer into the pointer until the provided capacity has been reached
@@ -211,6 +197,11 @@ public final class Base64Decoder: Base64 {
         }
         
         return try handle(MutableByteBuffer(start: pointer, count: result.filled))
+    }
+
+    deinit {
+        self.pointer.deinitialize(count: self.allocatedCapacity)
+        self.pointer.deallocate(capacity: self.allocatedCapacity)
     }
 }
 

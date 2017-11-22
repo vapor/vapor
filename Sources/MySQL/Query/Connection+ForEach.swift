@@ -13,17 +13,15 @@ extension Connection {
         let promise = Promise<Void>()
         
         let stream = RowStream(mysql41: self.mysql41)
-        self.receivePackets(into: stream.inputStream)
+        self.packetStream.stream(to: stream)
         
-        stream.onClose = {
-            promise.complete(())
-        }
-        
-        stream.errorStream = { error in
+        stream.drain { row in
+            handler(row)
+        }.catch { error in
             promise.fail(error)
+        }.finally {
+            promise.complete()
         }
-        
-        stream.drain(handler)
         
         // Send the query
         do {
@@ -48,17 +46,15 @@ extension Connection {
         
         // Set up a parser
         let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
-        self.receivePackets(into: resultBuilder.inputStream)
-        
-        resultBuilder.onClose = {
-            promise.complete(())
-        }
-        
-        resultBuilder.errorStream = { error in
+        self.packetStream.stream(to: resultBuilder)
+
+        resultBuilder.drain { row in
+            handler(row)
+        }.catch { error in
             promise.fail(error)
+        }.finally {
+            promise.complete()
         }
-        
-        resultBuilder.drain(handler)
         
         // Send the query
         do {

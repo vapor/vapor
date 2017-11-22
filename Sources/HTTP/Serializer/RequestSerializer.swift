@@ -10,19 +10,28 @@ public final class RequestSerializer: Serializer {
     /// See OutputStream.Output
     public typealias Output = Data
 
-    /// See OutputStream.outputStream
-    public var outputStream: OutputHandler?
-
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
 
     /// Create a new RequestSerializer
-    public init() {}
+    public init() {
+        outputStream = .init()
+    }
 
-    /// Handles incoming requests.
-    public func inputStream(_ input: Request) {
+    /// See InputStream.onInput
+    public func onInput(_ input: Request) {
         let message = serialize(input)
-        output(message)
+        outputStream.onInput(message)
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
     }
 
     /// Serializes a request into DispatchData.

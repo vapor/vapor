@@ -28,7 +28,7 @@ final class HTTPTestServer {
         port: UInt16 = 8282,
         backlog: Int32 = 4096,
         workerCount: Int = 8
-        ) {
+    ) {
         self.hostname = hostname
         self.port = port
         self.workerCount = workerCount
@@ -38,13 +38,13 @@ final class HTTPTestServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let socket = try Socket(isNonBlocking: false)
-        let tcp = TCP.Server(socket: socket, workerCount: workerCount)
-        let server = HTTP.Server(clientStream: tcp)
+        let socket = try TCPSocket(isNonBlocking: false)
+        let tcp = TCPServer(socket: socket, eventLoopCount: workerCount)
+        let server = HTTPServer(socket: tcp)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker, maxBodySize: 100_000)
+            let parser = HTTP.RequestParser(on: client.tcp.worker, maxBodySize: 100_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
@@ -52,19 +52,15 @@ final class HTTPTestServer {
                 .stream(to: responderStream)
                 .stream(to: serializer)
                 .drain { data in
-                    client.inputStream(data)
+                    client.onInput(data)
                     serializer.upgradeHandler?(client.tcp)
-            }
+                }.catch { XCTFail("\($0)") }
             
             client.tcp.start()
-        }
-        
-        server.errorStream = { error in
-            debugPrint(error)
-        }
+        }.catch { XCTFail("\($0)") }
         
         // bind, listen, and start accepting
-        try server.clientStream.start(
+        try tcp.start(
             hostname: hostname,
             port: port,
             backlog: backlog
@@ -154,14 +150,14 @@ struct WebSocketApplication: Responder {
         if WebSocket.shouldUpgrade(for: req) {
             let res = try WebSocket.upgradeResponse(for: req)
             res.onUpgrade = { client in
-                let websocket = WebSocket(client: client)
+                let websocket = WebSocket(socket: client)
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
-                }
+                }.catch(onError: promise.fail)
                 websocket.onBinary { buffer in
                     websocket.send(buffer)
-                }
+                }.catch(onError: promise.fail)
             }
             promise.complete(res)
         } else {

@@ -5,31 +5,23 @@ import Foundation
 /// A Redis pipeline. Executes multiple commands in a single batch.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/redis/pipeline/)
-public final class Pipeline {
-    var isSubscribed: () -> Bool
-    var queuePromise: (Promise<RedisData>) -> ()
-    
-    let serializer: DataSerializer
-    
+public final class RedisPipeline {
+    /// The enqueued commands.
     private var commands = [RedisData]()
-    
-    init(_ client: RedisClient) {
-        self.serializer = client.dataSerializer
-        
-        isSubscribed = {
-            return client.isSubscribed
-        }
-        
-        queuePromise = { promise in
-            client.dataParser.responseQueue.append(promise)
-        }
+
+    /// The client we are pipelining to.
+    private var client: RedisClient
+
+    /// Creates a redis pipeline.
+    internal init(_ client: RedisClient) {
+        self.client = client
     }
     
     /// Enqueues a commands.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pipeline/#enqueuing-commands)
     @discardableResult
-    public func enqueue(command: String, arguments: [RedisData] = []) throws -> Pipeline {
+    public func enqueue(command: String, arguments: [RedisData] = []) throws -> RedisPipeline {
         commands.append(RedisData.array([.bulkString(command)] + arguments))
         return self
     }
@@ -39,31 +31,31 @@ public final class Pipeline {
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pipeline/#enqueuing-commands)
     @discardableResult
     public func execute() throws -> Future<[RedisData]> {
-        defer {
-            commands = []
+        return then {
+            defer {
+                self.commands = []
+            }
+
+            guard !self.client.isSubscribed else {
+                throw RedisError(.cannotReuseSubscribedClients)
+            }
+
+            guard self.commands.count > 0 else {
+                throw RedisError(.pipelineCommandsRequired)
+            }
+
+            var promises = [Promise<RedisData>]()
+
+            for _ in 0 ..< self.commands.count {
+                let promise = Promise<RedisData>()
+                self.client.responseQueue.append(promise)
+                promises.append(promise)
+            }
+
+            self.client.dataSerializer.onInput(self.commands)
+
+            return promises.map { $0.future }
+                .flatten()
         }
-        
-        guard !isSubscribed() else {
-             return Future(error: RedisError(.cannotReuseSubscribedClients))
-        }
-        
-        guard commands.count > 0 else {
-            return Future(error: RedisError(.pipelineCommandsRequired))
-        }
-        
-        var promises = [Promise<RedisData>]()
-        
-        for _ in 0..<commands.count {
-            let promise = Promise<RedisData>()
-            
-            queuePromise(promise)
-            promises.append(promise)
-        }
-        
-        serializer.inputStream(commands)
-        
-        return promises
-            .map { $0.future }
-            .flatten()
     }
 }

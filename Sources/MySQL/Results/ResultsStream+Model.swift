@@ -2,13 +2,16 @@ import Async
 
 /// A stream of decoded models related to a query
 public final class ModelStream<D: Decodable> : ResultsStream {
+    /// -
+    public typealias Output = D
+
     /// For internal notification purposes only
     public func close() {
-        self.onClose?()
+        notifyClosed()
     }
     
     /// Registers an onClose handler
-    public var onClose: CloseHandler?
+    public var onClose: OnClose?
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -21,15 +24,9 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     
     /// If `true`, the results are using the binary protocols
     var binary: Bool
-    
-    /// -
-    public typealias Output = D
-    
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
-    
-    /// See `BaseStream.ErrorHandler`
-    public var errorStream: ErrorHandler?
+
+    /// Use a basic stream to easily implement our output stream.
+    internal var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new ModelStream using the specified protocol (from MySQL 4.0 or 4.1) and optionally the binary protocol instead of text
     init(mysql41: Bool, binary: Bool = false) {
@@ -43,5 +40,15 @@ public final class ModelStream<D: Decodable> : ResultsStream {
         
         let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
         return try D(from: decoder)
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: InputStream, D == I.Input {
+        outputStream.onOutput(input)
     }
 }

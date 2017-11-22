@@ -2,7 +2,7 @@ import Async
 import libc
 
 /// A type that can parse streaming query results
-protocol ResultsStream : OutputStream, ClosableStream {
+protocol ResultsStream : Async.Stream, ClosableStream {
     /// Keeps track of all columns associated with the results
     var columns: [Field] { get set }
     
@@ -13,6 +13,9 @@ protocol ResultsStream : OutputStream, ClosableStream {
     var mysql41: Bool { get }
     
     func parseRows(from packet: Packet) throws -> Output
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<Output> { get }
 }
 
 /// The "moreResultsExists" flag
@@ -21,45 +24,52 @@ protocol ResultsStream : OutputStream, ClosableStream {
 fileprivate let serverMoreResultsExists: UInt16 = 0x0008
 
 extension ResultsStream {
+    /// See InputStream.Input
+    public typealias Input = Packet
+
     /// Parses an incoming packet as part of the results
-    func inputStream(_ input: Packet) {
+    public func onInput(_ input: Packet) {
         do {
-            // If the header (column count) is not yet set
-            guard let columnCount = self.columnCount else {
-                // Parse the column count
-                let parser = Parser(packet: input)
-                
-                // Tries to parse the header count
-                guard let columnCount = try? parser.parseLenEnc() else {
-                    if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
-                        self.errorStream?(error)
-                    } else {
-                        self.close()
-                    }
-                    return
-                }
-                
-                // No columns means an empty stream
-                if columnCount == 0 {
+            try parse(packet: input)
+        } catch {
+            onError(error)
+        }
+    }
+
+    func parse(packet: Packet) throws {
+        // If the header (column count) is not yet set
+        guard let columnCount = self.columnCount else {
+            // Parse the column count
+            let parser = Parser(packet: packet)
+
+            // Tries to parse the header count
+            guard let columnCount = try? parser.parseLenEnc() else {
+                if case .error(let error) = try packet.parseResponse(mysql41: mysql41) {
+                    throw error
+                } else {
                     self.close()
                 }
-                
-                self.columnCount = columnCount
                 return
             }
-            
-            // if the column count isn't met yet
-            if columns.count != columnCount {
-                // Parse the next column
-                parseColumns(from: input)
-                return
+
+            // No columns means an empty stream
+            if columnCount == 0 {
+                self.close()
             }
-            
-            // Otherwise, parse the next row
-            try preParseRows(from: input)
-        } catch {
-            errorStream?(error)
+
+            self.columnCount = columnCount
+            return
         }
+
+        // if the column count isn't met yet
+        if columns.count != columnCount {
+            // Parse the next column
+            try parseColumns(from: packet)
+            return
+        }
+
+        // Otherwise, parse the next row
+        try preParseRows(from: packet)
     }
     
     /// Parses a row from this packet, checks
@@ -87,19 +97,18 @@ extension ResultsStream {
                 throw error
         }
         
-        self.output(try parseRows(from: packet))
+        try outputStream.onInput(parseRows(from: packet))
     }
     
     /// Parses the packet as a columm specification
-    func parseColumns(from packet: Packet) {
+    func parseColumns(from packet: Packet) throws {
         // Normal responses indicate an end of columns or an error
         if packet.isTextProtocolResponse {
             do {
                 switch try packet.parseResponse(mysql41: mysql41) {
                 case .error(let error):
                     // Errors are thrown into the stream
-                    self.errorStream?(error)
-                    return
+                    throw error
                 case .ok(_):
                     fallthrough
                 case .eof(_):
@@ -107,8 +116,7 @@ extension ResultsStream {
                     return
                 }
             } catch {
-                self.errorStream?(MySQLError(.invalidPacket))
-                return
+                throw MySQLError(.invalidPacket)
             }
         }
         
@@ -118,8 +126,7 @@ extension ResultsStream {
             
             self.columns.append(field)
         } catch {
-            self.errorStream?(MySQLError(.invalidPacket))
-            return
+            throw MySQLError(.invalidPacket)
         }
     }
 }

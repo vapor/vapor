@@ -2,7 +2,7 @@ import Bits
 import Foundation
 import libc
 
-extension Socket {
+extension TCPSocket {
     /// Writes all data from the pointer's position with the length specified to this socket.
     public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
         guard let pointer = buffer.baseAddress else {

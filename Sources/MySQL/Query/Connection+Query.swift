@@ -34,7 +34,7 @@ extension Connection {
     public func administrativeQuery(_ query: Query) -> Future<Void> {
         let promise = Promise<Void>()
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
             // Expect an `OK` or `EOF` packet
             guard packet.payload.first == 0x00 else {
                 // Otherwise, reutrn an error
@@ -43,7 +43,7 @@ extension Connection {
             }
             
             promise.complete(())
-        }
+        }.catch(onError: promise.fail)
         
         do {
             try self.write(query: query.string)

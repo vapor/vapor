@@ -12,7 +12,7 @@ extension Connection {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
             if let statement = statement {
                 do {
                     if statement.columns.count < statement.columnCount {
@@ -56,7 +56,7 @@ extension Connection {
                     promise.fail(error)
                 }
             }
-        }
+        }.catch(onError: promise.fail)
         
         do {
             try self.prepare(query: query.string)
@@ -83,14 +83,14 @@ extension Connection {
         do {
             let promise = Promise<Void>()
             
-            self.receivePackets { packet in
+            self.packetStream.drain { packet in
                 guard packet.payload.first == 0x00 else {
                     promise.fail(MySQLError(packet: packet))
                     return
                 }
                 
                 promise.complete(())
-            }
+            }.catch(onError: promise.fail)
             
             try self.write(packetFor: data)
             

@@ -15,7 +15,7 @@ extension FileReader where Self: FileCache {
     /// Checks the cache for the file path or reads
     /// it from the reader.
     public func cachedRead(at path: String) -> Future<Data> {
-        return getFile(hash: path).then { data in
+        return getFile(hash: path).then { data -> Future<Data> in
             if let data = data {
                 return Future(data)
             } else {

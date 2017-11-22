@@ -7,7 +7,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class Connection {
     /// The TCP socket it's connected on
-    let socket: Socket
+    let socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -82,12 +82,15 @@ public final class Connection {
             return Future(error: error)
         }
     }
+
+    /// This connection's subscribable packet stream
+    var packetStream: BasicStream<Packet> = .init()
     
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
     init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) throws {
-        let socket = try Socket()
+        let socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
@@ -115,29 +118,28 @@ public final class Connection {
         
         source.setEventHandler {
             do {
-                let usedBufferSize = try socket.read(max: numericCast(UInt16.max), into: self.readBuffer)
+                let usedBufferSize = try socket.read(
+                    max: numericCast(UInt16.max),
+                    into: self.readBuffer
+                )
                 
                 // Reuse existing pointer to data
-                let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
-                
-                parser.inputStream(newBuffer)
+                let newBuffer = MutableByteBuffer(
+                    start: self.readBuffer,
+                    count: usedBufferSize
+                )
+                parser.onInput(newBuffer)
             } catch {
                 socket.close()
             }
         }
         source.resume()
-        
-        self.parser.drain(self.handlePacket).catch { error in
+
+        self.packetStream.drain(onInput: self.handlePacket).catch { error in
             // FIXME: @joannis
             fatalError("\(error)")
         }
-    }
-    
-    /// Sets the proided handler to capture packets
-    ///
-    /// - throws: The connection is reserved
-    internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
-        self.parser.outputStream = handler
+        self.parser.stream(to: packetStream)
     }
     
     /// Handles the incoming packet with the default handler

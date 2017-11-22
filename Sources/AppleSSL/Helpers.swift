@@ -94,7 +94,7 @@ extension SSLStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 // so send them to stream error catcher.
-                self.errorStream?(error)
+                self.onError(error)
                 return
             }
             
@@ -110,7 +110,7 @@ extension SSLStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.output(bufferView)
+            self.outputStream.onInput(bufferView)
         }
         
         source.setCancelHandler {

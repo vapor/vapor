@@ -1,12 +1,13 @@
 import Async
 import Console
+import Debugging
 import Dispatch
 import HTTP
 import ServerSecurity
 import TCP
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: HTTPServer {
+public final class EngineServer: Server {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
@@ -25,18 +26,19 @@ public final class EngineServer: HTTPServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: config.workerCount)
+        let tcp = try TCPServer(eventLoopCount: config.workerCount)
 
         // set container on each event loop
         tcp.eventLoops.forEach { $0.container = self.container }
 
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-        
-        let server = HTTP.Server(clientStream: tcp)
+        let server = HTTPServer(socket: tcp)
+
+        let console = try container.make(Console.self, for: EngineServer.self)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker, maxBodySize: 10_000_000)
+            let parser = HTTP.RequestParser(on: client.tcp.worker, maxBodySize: 10_000_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
@@ -44,16 +46,20 @@ public final class EngineServer: HTTPServer {
                 .stream(to: responderStream)
                 .stream(to: serializer)
                 .drain { data in
-                    client.inputStream(data)
+                    client.onInput(data)
                     serializer.upgradeHandler?(client.tcp)
+                }.catch { err in
+                    /// FIXME: use log protocol?
+                    console.reportError(err, as: "Uncaught error")
+                    client.close()
                 }
 
             client.tcp.start()
-        }.catch { error in
-            debugPrint(error)
+        }.catch { err in
+            console.reportError(err, as: "Server error")
+            debugPrint(err)
         }
 
-        let console = try container.make(Console.self, for: EngineServer.self)
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
         console.output(":" + config.port.description, style: .custom(.cyan))
@@ -68,6 +74,18 @@ public final class EngineServer: HTTPServer {
         let group = DispatchGroup()
         group.enter()
         group.wait()
+    }
+}
+
+extension Console {
+    fileprivate func reportError(_ error: Error, as label: String) {
+        self.error("\(label): ", newLine: false)
+        if let debuggable = error as? Debuggable {
+            self.print(debuggable.fullIdentifier)
+            self.print(debuggable.debuggableHelp(format: .short))
+        } else {
+            self.print("\(error)")
+        }
     }
 }
 

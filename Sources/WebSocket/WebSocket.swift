@@ -24,15 +24,21 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init<DuplexByteStream: Async.Stream>(client: DuplexByteStream, serverSide: Bool = true) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
-        self.connection = Connection(client: client, serverSide: serverSide)
+    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
+        where ByteStream: Async.Stream,
+            ByteStream.Input == ByteBuffer,
+            ByteStream.Output == ByteBuffer,
+            ByteStream: ClosableStream
+    {
+        self.connection = Connection(socket: socket, serverSide: serverSide)
         
         self.textStream.frameStream = self.connection
         self.binaryStream.frameStream = self.connection
-        
-        self.connection.drain(self.processFrame).catch { error in
-            // FIXME: @joannis
-            fatalError("\(error)")
+
+        /// FIXME: use a stream splitter here? this api seems a bit odd
+        self.connection.drain(onInput: self.processFrame).catch { error in
+            self.textStream.onError(error)
+            self.binaryStream.onError(error)
         }
     }
     

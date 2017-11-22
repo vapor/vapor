@@ -6,34 +6,14 @@ import TCP
 
 /// Manages frames to and from a TCP connection
 internal final class Connection: Async.Stream, ClosableStream {
-    /// Sends the closing frame and closes the connection
-    func close() {
-        do {
-            let frame = try Frame(op: .close, payload: ByteBuffer(start: nil, count: 0), mask: serverSide ? nil : randomMask(), isFinal: true)
-            
-            self.inputStream(frame)
-            self.clientClose()
-        } catch {
-            errorStream?(error)
-        }
-    }
-    
-    /// See `InputStream.Input`
+    /// See InputStream.Input
     typealias Input = Frame
     
-    /// See `OutputStream.Output`
+    /// See OutputStream.Output
     typealias Output = Frame
 
-    /// The incoming frames handler
-    ///
-    /// See `OutputStream.outputStream`
-    var outputStream: OutputHandler?
-    
-    /// See `BaseStream.erorStream`
-    var errorStream: ErrorHandler?
-    
-    /// Called when the connection closes
-    var onClose: CloseHandler?
+    /// See ClosableStream.onClose
+    var onClose: ClosableStream.OnClose?
     
     /// Serializes data into frames
     let serializer: FrameSerializer
@@ -44,34 +24,60 @@ internal final class Connection: Async.Stream, ClosableStream {
     let serverSide: Bool
 
     /// The underlying TCP connection
-    let clientClose: (()->())
+    let socket: ClosableStream
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new WebSocket Connection manager for a TCP.Client
     ///
     /// `serverSide` is used to determine if sent frames need to be masked
-    init<DuplexByteStream: Async.Stream>(client: DuplexByteStream, serverSide: Bool = true) where DuplexByteStream.Input == ByteBuffer, DuplexByteStream.Output == ByteBuffer, DuplexByteStream: ClosableStream {
-        self.clientClose = client.close
+    init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
+        where ByteStream: Async.Stream,
+            ByteStream.Input == ByteBuffer,
+            ByteStream.Output == ByteBuffer,
+            ByteStream: ClosableStream
+    {
+        self.socket = socket
         self.serverSide = serverSide
         
         let parser = FrameParser()
         serializer = FrameSerializer(masking: !serverSide)
         
         // Streams incoming data into the parser which sends it to this frame's handler
-        client.stream(to: parser).drain { frame in
-            self.output(frame)
-        }.catch { error in
-            // FIXME: @joannis
-            fatalError("\(error)")
-        }
-        
+        socket.stream(to: parser).stream(to: outputStream)
         // Streams outgoing data to the serializer, which sends it over the socket
-        serializer.drain(client.inputStream).catch { error in
-            // FIXME: @joannis
-            fatalError("\(error)")
-        }
+        serializer.stream(to: socket)
     }
 
-    func inputStream(_ input: Frame) {
-        serializer.inputStream(input)
+    /// See OutputStream.onInput
+    func onInput(_ input: Frame) {
+        serializer.onInput(input)
+    }
+
+    /// See OutputStream.onError
+    func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    func onOutput<I>(_ input: I) where I : InputStream, Connection.Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// Sends the closing frame and closes the connection
+    func close() {
+        do {
+            let frame = try Frame(
+                op: .close,
+                payload: ByteBuffer(start: nil, count: 0),
+                mask: serverSide ? nil : randomMask(),
+                isFinal: true
+            )
+            self.onInput(frame)
+            self.socket.close()
+        } catch {
+            onError(error)
+        }
     }
 }

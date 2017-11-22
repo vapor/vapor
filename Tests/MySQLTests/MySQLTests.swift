@@ -138,7 +138,7 @@ class MySQLTests: XCTestCase {
             if count == 3 {
                 promise.complete(3)
             }
-        }
+        }.catch { XCTFail("\($0)") }
             
         XCTAssertEqual(3, try promise.future.blockingAwait(timeout: .seconds(30)))
     }

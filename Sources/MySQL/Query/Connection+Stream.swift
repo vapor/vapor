@@ -12,12 +12,8 @@ extension Connection {
         let promise = Promise<Void>()
         
         // Set up a parser
-        self.receivePackets(into: stream.inputStream)
-    
-        stream.errorStream = { error in
-            promise.fail(error)
-        }
-    
+        self.packetStream.stream(to: stream)
+
         // Send the query
         do {
             try self.write(query: query.string)
@@ -28,7 +24,7 @@ extension Connection {
         promise.future.addAwaiter { result in
             switch result {
             case .error(let error):
-                stream.errorStream?(error)
+                stream.onError(error)
             case .expectation(_):
                 stream.close()
             }
@@ -47,14 +43,9 @@ extension Connection {
         let promise = Promise<Void>()
         
         // Set up a parser
-        self.receivePackets(into: stream.inputStream)
-        
-        stream.onClose = {
-            promise.complete(())
-        }
-        
-        stream.errorStream = { error in
-            promise.fail(error)
+        self.packetStream.stream(to: stream)
+        stream.finally {
+            promise.complete()
         }
         
         // Send the query
@@ -67,7 +58,7 @@ extension Connection {
         promise.future.addAwaiter { result in
             switch result {
             case .error(let error):
-                stream.errorStream?(error)
+                stream.onError(error)
                 stream.close()
             case .expectation(_):
                 stream.close()

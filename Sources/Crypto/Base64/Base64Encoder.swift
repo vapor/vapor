@@ -24,6 +24,9 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
 public final class Base64Encoder: Base64 {
+    /// See Closeable.onClose
+    public var onClose: OnClose?
+    
     /// The capacity currently used in the pointer
     var currentCapacity = 0
     
@@ -35,21 +38,9 @@ public final class Base64Encoder: Base64 {
     
     /// The bytes that couldn't be parsed from the previous buffer
     var remainder = Data()
-    
-    /// Accepts byte streams
-    public typealias Input = ByteBuffer
-    
-    /// Outputs Base64Encoded byte streams
-    public typealias Output = ByteBuffer
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<Output> = .init()
     
     /// Encodes the contents of the buffer into the pointer until the provided capacity has been reached
     ///

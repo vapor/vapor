@@ -24,34 +24,39 @@ public final class ResponderStream: Async.Stream {
     /// See OutputStream.Output
     public typealias Output = Response
 
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
+    /// The base responder
+    private let responder: Responder
 
-    // See BaseStream.outputStream
-    public var outputStream: OutputHandler?
-
-    /// The responder
-    let responder: Responder
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
 
     /// Create a new response stream.
     /// The responses will be awaited on the supplied queue.
     public init(responder: Responder) {
         self.responder = responder
+        self.outputStream = .init()
     }
 
-    /// Handle incoming requests.
-    public func inputStream(_ input: Request) {
+    /// See InputStream.onInput
+    public func onInput(_ input: Request) {
         do {
             // dispatches the incoming request to the responder.
             // the response is awaited on the responder stream's queue.
-            try responder.respond(to: input).do { res in
-                self.output(res)
-            }.catch { error in
-                self.errorStream?(error)
-            }
+            try responder.respond(to: input)
+                .stream(to: outputStream)
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
         }
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
     }
 }
 
