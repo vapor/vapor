@@ -53,21 +53,21 @@ struct TestSiblings: Migration {
 
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         let owner = User(name: "Tanner", age: 23)
-        return owner.save(on: connection).then {
+        return owner.save(on: connection).then { () -> Future<Void> in
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
             let toy = Toy(name: "Rubber Band")
 
             return [
                 pet.save(on: connection),
                 toy.save(on: connection)
-            ].flatten().then {
+            ].then {
                 return pet.toys.attach(toy, on: connection)
             }
         }
     }
 
     static func revert(on connection: SQLiteConnection) -> Future<Void> {
-        return Future(())
+        return .done
     }
 }
 
@@ -93,21 +93,6 @@ final class User: Model, Content {
 
     var pets: Children<User, Pet> {
         return children(\.ownerID)
-    }
-}
-
-
-extension Future: Codable {
-    public func encode(to encoder: Encoder) throws {
-        guard var single = encoder.singleValueContainer() as? FutureEncoder else {
-            throw "need a future encoder"
-        }
-
-        try single.encode(self)
-    }
-
-    public convenience init(from decoder: Decoder) throws {
-        fatalError("blah")
     }
 }
 

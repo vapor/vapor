@@ -50,6 +50,7 @@ XCTMain([
 
     // Leaf
     testCase(LeafTests.allTests),
+    testCase(LeafEncoderTests.allTests),
 
     // Multipart
     testCase(MultipartTests.allTests),

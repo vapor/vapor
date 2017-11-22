@@ -6,11 +6,11 @@ import Foundation
 public final class Serializer {
     let ast: [Syntax]
     var context: LeafData
-    let renderer: Renderer
+    let renderer: LeafRenderer
     let worker: Worker
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: Renderer,  context: LeafData, worker: Worker) {
+    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, worker: Worker) {
         self.ast = ast
         self.context = context
         self.renderer = renderer
@@ -56,7 +56,7 @@ public final class Serializer {
         
         let promise = Promise(Data.self)
 
-        parts.orderedFlatten().do { data in
+        parts.flatten().do { data in
             let serialized = Data(data.joined())
             promise.complete(serialized)
         }.catch { error in
@@ -95,7 +95,7 @@ public final class Serializer {
             inputFutures.append(inputPromise.future)
         }
 
-        inputFutures.orderedFlatten().do { inputs in
+        inputFutures.flatten().do { inputs in
             do {
                 let parsed = ParsedTag(
                     name: name,

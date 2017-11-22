@@ -45,11 +45,11 @@ internal final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerP
     func nestedContainer<NestedKey: CodingKey>(
         keyedBy keyType: NestedKey.Type, forKey key: K
     ) -> KeyedEncodingContainer<NestedKey> {
-        return KeyedEncodingContainer(UnsupportedEncodingContainer(encoder: encoder))
+        fatalError("SQLite rows do not support nested dictionaries")
     }
 
     func nestedUnkeyedContainer(forKey key: K) -> UnkeyedEncodingContainer {
-        return UnsupportedEncodingContainer<K>(encoder: encoder)
+        fatalError("SQLite rows do not support nested arrays")
     }
 
     func superEncoder() -> Encoder {

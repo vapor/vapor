@@ -1,9 +1,9 @@
 import Async
 
-public final class Print: Tag {
+public final class Print: LeafTag {
     public init() { }
 
-    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         try parsed.requireNoBody()
         try parsed.requireParameterCount(1)
         let string = parsed.parameters[0].string ?? ""

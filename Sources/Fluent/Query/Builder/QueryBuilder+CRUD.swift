@@ -93,8 +93,8 @@ extension QueryBuilder {
     /// Throws an error if the mdoel did not have an id.
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
-        return connection.then { conn in
-            return try model.willDelete(on: conn).then {
+        return connection.then { conn -> Future<Void> in
+            return try model.willDelete(on: conn).then { _ -> Future<Void> in 
                 guard let id = model.fluentID else {
                     throw "model does not have an id"
                 }

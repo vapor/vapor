@@ -1,10 +1,11 @@
 import Core
+import Foundation
 import HTTP
 
 public final class HTMLEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
-    public var html: String?
+    public var html: Data?
 
     public init() {
         self.codingPath = []
@@ -13,12 +14,11 @@ public final class HTMLEncoder: Encoder {
     }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        let encoder = UnsupportedEncodingContainer<Key>(encoder: self)
-        return KeyedEncodingContainer(encoder)
+        fatalError("HTML encoding does not support nested dictionaries")
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        return UnsupportedEncodingContainer<StringKey>(encoder: self)
+        fatalError("HTML encoding does not support nested arrays")
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
@@ -43,23 +43,27 @@ internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
     }
 
     func encode(_ value: Bool) throws {
-        encoder.html = value.description
+        encoder.html = value.description.data(using: .utf8)
     }
 
     func encode(_ value: Int) throws {
-        encoder.html = value.description
+        encoder.html = value.description.data(using: .utf8)
     }
 
     func encode(_ value: Double) throws {
-        encoder.html = value.description
+        encoder.html = value.description.data(using: .utf8)
     }
 
     func encode(_ value: String) throws {
-        encoder.html = value.description
+        encoder.html = value.description.data(using: .utf8)
     }
 
     func encode<T: Encodable>(_ value: T) throws {
-        try value.encode(to: encoder)
+        if let data = value as? Data {
+            encoder.html = data
+        } else {
+            try value.encode(to: encoder)
+        }
     }
 }
 
@@ -72,6 +76,6 @@ extension HTMLEncoder: BodyEncoder {
         guard let html = self.html else {
             throw "no html encoded"
         }
-        return Body(string: html)
+        return Body(html)
     }
 }
