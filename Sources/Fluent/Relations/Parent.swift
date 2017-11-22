@@ -27,18 +27,18 @@ public struct Parent<Child: Model, Parent: Model>
 
     /// Create a query for the parent.
     public func query(
-        on connection: Child.Database.Connection
+        on conn: ConnectionRepresentable
     ) throws -> QueryBuilder<Parent> {
-        let builder = connection.query(Parent.self)
-        return try builder.filter(Parent.idKey == child[keyPath: parentForeignIDKey])
+        return try Parent.query(on: conn)
+            .filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 
     /// Convenience for getting the parent.
     public func get(
-        on connection: Child.Database.Connection
+        on conn: ConnectionRepresentable
     ) -> Future<Parent> {
         return then {
-            try self.query(on: connection).first().map { first in
+            try self.query(on: conn).first().map { first in
                 guard let parent = first else {
                     throw "Parent not found"
                 }

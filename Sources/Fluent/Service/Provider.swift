@@ -44,5 +44,8 @@ public final class FluentProvider: Provider {
         }.syncFlatten().blockingAwait()
 
         print("Migrations complete")
+
+        // verify middleware
+        // let middleware = MiddlewareConfig()
     }
 }
