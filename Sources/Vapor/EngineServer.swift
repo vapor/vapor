@@ -1,4 +1,6 @@
 import Async
+import Console
+import Dispatch
 import HTTP
 import ServerSecurity
 import TCP
@@ -8,16 +10,26 @@ public final class EngineServer: HTTPServer {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
+    /// Container for setting on event loops.
+    public let container: Container
+
     /// Create a new EngineServer using config struct.
-    public init(config: EngineServerConfig) {
+    public init(
+        config: EngineServerConfig,
+        container: Container
+    ) {
         self.config = config
+        self.container = container
     }
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
         let tcp = try TCP.Server(workerCount: config.workerCount)
-        
+
+        // set container on each event loop
+        tcp.eventLoops.forEach { $0.container = self.container }
+
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
         let server = HTTP.Server(clientStream: tcp)
@@ -41,8 +53,10 @@ public final class EngineServer: HTTPServer {
             debugPrint(error)
         }
 
-        /// FIXME: use console when we have it
-        print("Server starting on \(config.hostname):\(config.port)")
+        let console = try container.make(Console.self, for: EngineServer.self)
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
+        console.output(":" + config.port.description, style: .custom(.cyan))
 
         // bind, listen, and start accepting
         try tcp.start(
@@ -50,6 +64,10 @@ public final class EngineServer: HTTPServer {
             port: config.port,
             backlog: config.backlog
         )
+
+        let group = DispatchGroup()
+        group.enter()
+        group.wait()
     }
 }
 

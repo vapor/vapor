@@ -30,3 +30,32 @@ extension String: ID {
         return .supplied
     }
 }
+
+/// MARK: String
+
+/// Capable of being decoded from a string.
+public protocol StringDecodable {
+    /// Decode self from a string.
+    static func decode(from string: String) -> Self?
+}
+
+extension Int: StringDecodable {
+    /// See StringDecodable.decode
+    public static func decode(from string: String) -> Int? {
+        return Int(string)
+    }
+}
+
+extension UUID: StringDecodable {
+    /// See StringDecodable.decode
+    public static func decode(from string: String) -> UUID? {
+        return UUID(uuidString: string)
+    }
+}
+
+extension String: StringDecodable {
+    /// See StringDecodable.decode
+    public static func decode(from string: String) -> String? {
+        return string
+    }
+}

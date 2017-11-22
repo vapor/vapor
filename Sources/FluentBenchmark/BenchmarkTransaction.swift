@@ -25,7 +25,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
 
                 return future.then {
                     // count users
-                    return conn.query(User<Database>.self).count().then { count in
+                    return conn.query(User<Database>.self).count().then { count -> Future<Void> in
                         if count != 1_001 {
                             self.fail("count should be 1,001")
                         }

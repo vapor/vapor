@@ -22,4 +22,3 @@ extension Database {
         return DatabaseConnectionPool(max: max, database: self, worker: worker)
     }
 }
-

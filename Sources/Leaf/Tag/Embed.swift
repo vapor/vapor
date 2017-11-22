@@ -1,8 +1,8 @@
 import Async
 
-public final class Embed: Tag {
+public final class Embed: LeafTag {
     public init() {}
-    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         try parsed.requireParameterCount(1)
         let name = parsed.parameters[0].string ?? ""
         let copy = context

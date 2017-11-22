@@ -31,14 +31,15 @@ internal struct MigrationContainer<D: Database> {
         batch: Int,
         on connection: Database.Connection
     ) -> Future<Void> {
-        return hasPrepared(on: connection).then { hasPrepared in
+        return hasPrepared(on: connection).then { hasPrepared -> Future<Void> in
             if hasPrepared {
                 return .done
             } else {
-                return self.prepare(connection).then {
+                return self.prepare(connection).then { _ -> Future<Void> in
                     // create the migration log
                     let log = MigrationLog<Database>(name: self.name, batch: batch)
-                    return log.save(on: connection)
+                    return QueryBuilder(MigrationLog<Database>.self, on: Future(connection))
+                        .save(log)
                 }
             }
         }
@@ -47,11 +48,11 @@ internal struct MigrationContainer<D: Database> {
     /// reverts this migration only if it hasn't previous run.
     /// if reverted, the migration log is deleted.
     internal func revertIfNeeded(on connection: Database.Connection) -> Future<Void> {
-        return hasPrepared(on: connection).then { hasPrepared in
+        return hasPrepared(on: connection).then { hasPrepared -> Future<Void> in
             if hasPrepared {
                 return self.revert(connection).then {
                     // delete the migration log
-                    return try connection.query(MigrationLog<Database>.self)
+                    return try QueryBuilder(MigrationLog<Database>.self, on: Future(connection))
                         .filter(\MigrationLog<Database>.name == self.name)
                         .delete()
                 }
@@ -64,7 +65,7 @@ internal struct MigrationContainer<D: Database> {
     /// returns true if the migration has already been prepared.
     internal func hasPrepared(on connection: Database.Connection) -> Future<Bool> {
         return then {
-            return try connection.query(MigrationLog<Database>.self)
+            return try QueryBuilder(MigrationLog<Database>.self, on: Future(connection))
                 .filter(\MigrationLog<Database>.name == self.name)
                 .first()
                 .map { $0 != nil }

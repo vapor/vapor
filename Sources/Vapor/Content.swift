@@ -104,13 +104,13 @@ extension ContentConfig {
 /// Encodes encodable types to an HTTP body.
 public protocol BodyEncoder {
     /// Serializes an encodable type to the data in an HTTP body.
-    func encode<T: Encodable>(_ encodable: T) throws -> Body
+    func encodeBody<T: Encodable>(_ encodable: T) throws -> Body
 }
 
 /// Decodes decodable types from an HTTP body.
 public protocol BodyDecoder {
     /// Parses a decodable type from the data in the HTTP body.
-    func decode<T: Decodable>(_ decodable: T.Type, from body: Body) throws -> T
+    func decode<T: Decodable>(_ decodable: T.Type, body: Body) throws -> T
 }
 
 // MARK: Message
@@ -119,12 +119,10 @@ extension Message {
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
     public func content<C: Content>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws {
-        guard let container = self.container else {
-            throw "container required"
-        }
+        let container = try self.requireContainer()
         let coders = try container.make(ContentConfig.self, for: Self.self)
         let encoder = try coders.requireEncoder(for: mediaType)
-        body = try encoder.encode(content)
+        body = try encoder.encodeBody(content)
         self.mediaType = mediaType
     }
 }
@@ -132,15 +130,13 @@ extension Message {
 extension Message {
     /// Parses the supplied content from the mesage.
     public func content<C: Content>(_ content: C.Type) throws -> C {
-        guard let container = self.container else {
-            throw "container required"
-        }
+        let container = try self.requireContainer()
         let coders = try container.make(ContentConfig.self, for: Self.self)
         guard let mediaType = self.mediaType else {
             throw "no media type"
         }
         let encoder = try coders.requireDecoder(for: mediaType)
-        return try encoder.decode(content, from: body)
+        return try encoder.decode(C.self, body: body)
     }
 }
 
@@ -148,7 +144,7 @@ extension Message {
 
 extension JSONEncoder: BodyEncoder {
     /// See BodyEncoder.encode
-    public func encode<T>(_ encodable: T) throws -> Body
+    public func encodeBody<T>(_ encodable: T) throws -> Body
         where T: Encodable
     {
         let data: Data = try encode(encodable)
@@ -158,7 +154,7 @@ extension JSONEncoder: BodyEncoder {
 
 extension JSONDecoder: BodyDecoder {
     /// See BodyDecoder.decode
-    public func decode<T>(_ decodable: T.Type, from body: Body) throws -> T
+    public func decode<T>(_ decodable: T.Type, body: Body) throws -> T
         where T: Decodable
     {
         return try decode(T.self, from: body.data)
@@ -189,7 +185,7 @@ extension Array: Content {
 extension Request {
     public func makeResponse() -> Response {
         let res = Response(status: .ok)
-        res.app = app
+        res.eventLoop = self.eventLoop
         return res
     }
 }
@@ -197,7 +193,7 @@ extension Request {
 extension Response {
     public func makeRequest() -> Request {
         let req = Request()
-        req.app = app
+        req.eventLoop = self.eventLoop
         return req
     }
 }

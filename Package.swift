@@ -15,6 +15,10 @@ let package = Package(
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
+        // Console
+        .library(name: "Console", targets: ["Console"]),
+        .library(name: "Command", targets: ["Command"]),
+
         // Crypto
         .library(name: "Crypto", targets: ["Crypto"]),
 
@@ -44,6 +48,9 @@ let package = Package(
         // Random
         .library(name: "Random", targets: ["Random"]),
 
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
+
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
@@ -67,7 +74,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.1")),
+        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.2")),
     ],
     targets: [
         // Bits
@@ -77,10 +84,18 @@ let package = Package(
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
-        // 
+        // Core
         .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),
         
+
+        // Console
+        .target(name: "Console", dependencies: ["Async", "Core"]),
+        .target(name: "Command", dependencies: ["Console"]),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
+        .testTarget(name: "CommandTests", dependencies: ["Command"]),
+        .target(name: "ConsoleExample", dependencies: ["Console"]),
+
         // Crypto
         .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
@@ -90,7 +105,8 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        // FIXME: FluentRouting and FluentHTTP packages?
+        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "Routing", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
@@ -121,7 +137,7 @@ let package = Package(
 
         // Net
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
@@ -160,6 +176,8 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
+            "Command",
+            "Console",
             "Core",
             "Debugging",
             "HTTP",

@@ -21,10 +21,11 @@ public protocol QuerySupporting {
 /// connection pool and cached to the request.
 ///
 /// Subsequent calls to this function will use the same connection.
-extension Connection {
-    public func query<Model>(_ type: Model.Type = Model.self) -> QueryBuilder<Model>
-        where Model.Database.Connection == Self
-    {
-        return QueryBuilder(on: self)
-    }
-}
+//extension Connection {
+//    public func query<Model>(_ type: Model.Type = Model.self) -> QueryBuilder<Model>
+//        where Model.Database.Connection == Self
+//    {
+//        return QueryBuilder(on: self)
+//    }
+//}
+

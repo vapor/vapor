@@ -1,9 +1,9 @@
 import Async
 
-public final class Var: Tag {
+public final class Var: LeafTag {
     public init() {}
 
-    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         let promise = Promise(LeafData?.self)
 
         func updateContext(with c: LeafData) {

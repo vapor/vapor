@@ -14,3 +14,23 @@ public protocol Container: Extendable {
 public protocol HasContainer {
     var container: Container? { get }
 }
+
+extension HasContainer {
+    /// Returns a container or throws an error if none exists.
+    public func requireContainer() throws -> Container {
+        guard let container = self.container else {
+            throw "container required"
+        }
+        return container
+    }
+}
+
+// MARK: Async
+
+extension EventLoop: HasContainer {
+    /// See HasContainer.container
+    public var container: Container? {
+        get { return extend["vapor:container"] as? Container }
+        set { extend["vapor:container"] = newValue }
+    }
+}

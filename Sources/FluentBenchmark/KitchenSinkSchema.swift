@@ -2,9 +2,6 @@ import Async
 import Fluent
 
 final class KitchenSink<D: Database>: Model {
-    /// See Model.Database
-    typealias Database = D
-
     /// See Model.ID
     typealias ID = String
 
@@ -15,6 +12,9 @@ final class KitchenSink<D: Database>: Model {
 
     /// See Model.idKey
     static var idKey: IDKey { return \.id }
+
+    /// See Model.database
+    static var database: DatabaseIdentifier<D> { return .init("kitchenSink") }
 
     /// KitchenSink's identifier
     var id: String?

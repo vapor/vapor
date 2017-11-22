@@ -47,11 +47,7 @@ extension Container {
         return try result.resolve()
     }
 
-    /// Returns or creates a service for the given type.
-    ///
-    /// This method accepts and returns Any.
-    ///
-    /// Use .make() for the safe method.
+    /// Makes the interface for the client. Does not consult the service cache.
     fileprivate func uncachedUnsafeMake(
         _ interface: Any.Type,
         for client: Any.Type
@@ -89,34 +85,26 @@ extension Container {
 
         // lazy loading
         // create an instance of this service type.
-        let item = try makeServiceConsultingSingletonCache(chosen, ofType: interface)
+        var item: Any?
 
-        return item!
-    }
-
-    fileprivate func makeServiceConsultingSingletonCache(
-        _ serviceFactory: ServiceFactory, ofType type: Any.Type
-    ) throws -> Any? {
-        let key = "\(serviceFactory.serviceType)"
-
-        if serviceFactory.serviceIsSingleton {
-            if let cached = singletonCache[key] {
-                return cached
+        let key = "\(chosen.serviceType)"
+        if chosen.serviceIsSingleton, let cached = singletonCache[key] {
+            item = cached
+        } else {
+            item = try chosen.makeService(for: self)
+            if chosen.serviceIsSingleton {
+                singletonCache[key] = item
             }
         }
 
-        guard let new = try serviceFactory.makeService(for: self) else {
+        guard let ret = item else {
             throw ServiceError.incorrectType(
-                type: serviceFactory.serviceType,
-                desired: type
+                type: chosen.serviceType,
+                desired: interface
             )
         }
 
-        if serviceFactory.serviceIsSingleton {
-            singletonCache[key] = new
-        }
-
-        return new
+        return ret
     }
 
     fileprivate var serviceCache: [String: ResolvedService] {

@@ -1,6 +1,8 @@
 #if os(Linux)
 
 import XCTest
+@testable import CommandTests
+@testable import ConsoleTests
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import FluentTests
@@ -20,6 +22,10 @@ import XCTest
 @testable import WebSocketTests
 
 XCTMain([
+    /// Console & Commands
+    testCase(ConsoleTests.allTests),
+    testCase(CommandTests.allTests),
+  
     // Crypto
     testCase(Base64Tests.allTests),
     testCase(MD5Tests.allTests),
@@ -46,6 +52,7 @@ XCTMain([
 
     // Leaf
     testCase(LeafTests.allTests),
+    testCase(LeafEncoderTests.allTests),
 
     // Multipart
     testCase(MultipartTests.allTests),
