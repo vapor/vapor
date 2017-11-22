@@ -36,7 +36,7 @@ public final class MySQLDatabase : LogSupporting {
 }
 
 extension MySQLDatabase : Database {
-    public func makeConnection(on worker: Worker) -> Future<DatabaseConnection> {
+    public func makeConnection(on worker: Worker) -> Future<FluentMySQLConnection> {
         return MySQLConnection.makeConnection(
             hostname: hostname,
             port: port,
@@ -45,7 +45,7 @@ extension MySQLDatabase : Database {
             database: database,
             worker: worker
         ).map { connection in
-            return DatabaseConnection(connection: connection, logger: self.logger)
+            return FluentMySQLConnection(connection: connection, logger: self.logger)
         }
     }
 }

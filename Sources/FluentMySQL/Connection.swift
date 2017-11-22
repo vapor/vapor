@@ -9,7 +9,7 @@ public final class MySQLSerializer: SQLSerializer {
     public init () {}
 }
 
-public final class DatabaseConnection: Connection, JoinSupporting {
+public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceSupporting {
     let logger: MySQLLogger?
     public let connection: MySQLConnection
     
@@ -88,15 +88,15 @@ public final class DatabaseConnection: Connection, JoinSupporting {
         }
     }
     
-//    /// ReferenceSupporting.enableReferences
-//    public func enableReferences() -> Future<Void> {
-//        return self.administrativeQuery("PRAGMA foreign_keys = ON;")
-//    }
-//
-//    /// ReferenceSupporting.disableReferences
-//    public func disableReferences() -> Future<Void> {
-//        return self.administrativeQuery("PRAGMA foreign_keys = OFF;")
-//    }
+    /// ReferenceSupporting.enableReferences
+    public func enableReferences() -> Future<Void> {
+        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=0;")
+    }
+
+    /// ReferenceSupporting.disableReferences
+    public func disableReferences() -> Future<Void> {
+        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=1;")
+    }
     
     public var lastAutoincrementID: Int? {
         return nil

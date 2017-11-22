@@ -5,8 +5,8 @@ import Fluent
 import FluentSQL
 import MySQL
 
-extension DatabaseConnection : SchemaSupporting, TransactionSupporting {
-    public func execute(transaction: DatabaseTransaction<DatabaseConnection>) -> Future<Void> {
+extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
+    public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Future<Void> {
         return connection.administrativeQuery("START TRANSACTION").flatMap {
             let promise = Promise<Void>()
             
@@ -25,7 +25,7 @@ extension DatabaseConnection : SchemaSupporting, TransactionSupporting {
         }
     }
     
-    public typealias FieldType = Column.ColumnType
+    public typealias FieldType = ColumnType
     
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let query = schema.makeSchemaQuery()
@@ -35,18 +35,23 @@ extension DatabaseConnection : SchemaSupporting, TransactionSupporting {
     }
 }
 
-extension Column.ColumnType : SchemaFieldType {
+extension ColumnType : SchemaFieldType {
     public func makeSchemaFieldTypeString() -> String {
         return self.name + self.lengthName
     }
     
-    public static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> Column.ColumnType {
+    public static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> ColumnType {
         switch basicFieldType {
         case .date: return .datetime()
         case .double: return .double()
-        case .int: return .int64()
-        case .string: return .varChar(length: 256)
+        case .string: return .varChar(length: 255)
         case .uuid: return .varChar(length: 64, binary: true)
+        case .int:
+            #if arch(x86_64) || arch(arm64)
+                return .int64()
+            #else
+                return .int32()
+            #endif
         }
     }
 }
@@ -59,14 +64,14 @@ extension SchemaQuery: MySQL.Query {
 
 extension String: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
-        return .varChar(length: 256)
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .varChar(length: 255)
     }
 }
 
 extension Int: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
+    public static func makeSchemaFieldType() -> ColumnType {
         #if arch(x86_64) || arch(arm64)
             return .int64()
         #else
@@ -77,7 +82,7 @@ extension Int: SchemaFieldTypeRepresentable {
 
 extension UInt: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
+    public static func makeSchemaFieldType() -> ColumnType {
         #if arch(x86_64) || arch(arm64)
             return .uint64()
         #else
@@ -86,23 +91,79 @@ extension UInt: SchemaFieldTypeRepresentable {
     }
 }
 
+extension Int8: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .int8()
+    }
+}
+
+extension UInt8: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .uint8()
+    }
+}
+
+extension Bool: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .uint8()
+    }
+}
+
+extension Int16: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .int16()
+    }
+}
+
+extension UInt16: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .uint16()
+    }
+}
+
+extension Int32: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .int32()
+    }
+}
+
+extension UInt32: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .uint32()
+    }
+}
+
 extension Date: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
+    public static func makeSchemaFieldType() -> ColumnType {
         return .datetime()
     }
 }
 
 extension Double: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
+    public static func makeSchemaFieldType() -> ColumnType {
         return .double()
+    }
+}
+
+extension Float32: SchemaFieldTypeRepresentable {
+    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    public static func makeSchemaFieldType() -> ColumnType {
+        return .float()
     }
 }
 
 extension UUID: SchemaFieldTypeRepresentable {
     /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
-    public static func makeSchemaFieldType() -> Column.ColumnType {
+    public static func makeSchemaFieldType() -> ColumnType {
         return .varChar(length: 16, binary: true)
     }
 }

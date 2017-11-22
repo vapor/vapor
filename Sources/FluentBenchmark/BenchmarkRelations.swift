@@ -83,7 +83,7 @@ extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporti
         try test(UserMigration<Database>.prepare(on: conn))
         try test(PetMigration<Database>.prepare(on: conn))
         try test(ToyMigration<Database>.prepare(on: conn))
-        try test(PetToyMigration<Database>.prepare(on: conn))
+        try test(PetToyMigration<Database>.prepare(on: conn))	
         try _benchmark(on: conn)
     }
 }
