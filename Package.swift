@@ -74,7 +74,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.2")),
+        .package(url: "https://github.com/vapor/async", .branch("error-chaining")),
     ],
     targets: [
         // Bits

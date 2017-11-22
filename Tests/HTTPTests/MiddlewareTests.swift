@@ -26,7 +26,7 @@ class MiddlewareTests : XCTestCase {
         server.stream(to: responder).drain { res in
             XCTAssertEqual(res.headers["baz"], "bar")
             group.leave()
-        }
+        }.catch { XCTFail("\($0)") }
 
         let req = Request()
         server.emit(req)
@@ -36,11 +36,10 @@ class MiddlewareTests : XCTestCase {
     func testClientServer() throws {
         let responder = HelloWorldResponder()
         
-        let serverSocket = try TCP.Server()
-        
-        let server = HTTP.Server(clientStream: serverSocket)
+        let serverSocket = try TCPServer()
+        let server = HTTPServer(socket: serverSocket)
         server.drain { peer in
-            let parser = HTTP.RequestParser(worker: peer.tcp.worker, maxBodySize: 100_000)
+            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxBodySize: 100_000)
             
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
@@ -48,18 +47,18 @@ class MiddlewareTests : XCTestCase {
             peer.stream(to: parser)
                 .stream(to: responderStream)
                 .stream(to: serializer)
-                .drain(into: peer)
+                .stream(to: peer)
             
             peer.tcp.start()
-        }
+        }.catch { XCTFail("\($0)") }
         
         try serverSocket.start(port: 1234)
         
-        let socket = try TCP.Socket()
+        let socket = try TCPSocket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
-        let client = HTTPClient(stream: tcpClient)
+        let client = HTTPClient(socket: tcpClient)
         tcpClient.start()
         
         let response = try client.send(request: Request()).blockingAwait()

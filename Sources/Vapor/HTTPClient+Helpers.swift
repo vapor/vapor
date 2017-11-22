@@ -18,13 +18,13 @@ extension HTTPClient {
         let port = port ?? (ssl ? 443 : 80)
         
         if ssl {
-            let client = try TLSClient(worker: worker)
+            let client = try TLSClient(on: worker)
             
             return try client.connect(hostname: hostname, port: port).map {_ in
-                return HTTPClient(stream: client)
+                return HTTPClient(socket: client)
             }
         } else {
-            let socket = try Socket()
+            let socket = try TCPSocket()
             try socket.connect(hostname: hostname, port: port)
             
             return socket.writable(queue: worker.eventLoop.queue).map {
@@ -32,7 +32,7 @@ extension HTTPClient {
                 
                 client.start()
                 
-                return HTTPClient(stream: client)
+                return HTTPClient(socket: client)
             }
         }
     }

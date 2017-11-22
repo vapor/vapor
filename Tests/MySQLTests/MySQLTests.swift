@@ -23,7 +23,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        worker: DispatchQueue(label: "single")
+        on: DispatchQueue(label: "single")
     ).blockingAwait(timeout: .seconds(3))
 
     static let allTests = [
@@ -138,7 +138,7 @@ class MySQLTests: XCTestCase {
             if count == 3 {
                 promise.complete(3)
             }
-        }
+        }.catch { XCTFail("\($0)") }
             
         XCTAssertEqual(3, try promise.future.blockingAwait(timeout: .seconds(30)))
     }

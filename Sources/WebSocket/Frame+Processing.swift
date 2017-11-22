@@ -14,12 +14,12 @@ extension WebSocket {
             }
             
             // Stream to the textStream's listener
-            self.textStream.output(string)
+            self.textStream.onInput(string)
         }
         
         func processBinary() {
             // Stream to the binaryStream's listener
-            self.binaryStream.output(frame.payload)
+            self.binaryStream.onInput(frame.payload)
         }
         
         switch frame.opCode {
@@ -31,9 +31,9 @@ extension WebSocket {
             do {
                 // reply the input
                 let pongFrame = try Frame(op: .pong , payload: frame.payload, mask: frame.maskBytes, isMasked: self.connection.serverSide)
-                self.connection.inputStream(pongFrame)
+                self.connection.onInput(pongFrame)
             } catch {
-                self.connection.errorStream?(error)
+                self.connection.onError(error)
             }
         case .continuation:
             processBinary()

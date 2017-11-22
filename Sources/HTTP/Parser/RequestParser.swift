@@ -6,11 +6,11 @@ import Foundation
 
 /// Parses requests from a readable stream.
 public final class RequestParser: CParser {
-    // MARK: Stream
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
+
+    /// See OutputStream.Output
     public typealias Output = Request
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
 
     // Internal variables to conform
     // to the C HTTP parser protocol.
@@ -20,30 +20,47 @@ public final class RequestParser: CParser {
 
     /// Queue to be set on messages created by this parser.
     private let worker: Worker
-    
-    let maxBodySize: Int
+
+    /// The maxiumum possible body size
+    /// larger sizes will result in an error
+    private let maxBodySize: Int
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
 
     /// Creates a new Request parser.
-    public init(worker: Worker, maxBodySize: Int) {
+    public init(on worker: Worker, maxBodySize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
         self.worker = worker
         self.maxBodySize = maxBodySize
+        self.outputStream = .init()
         reset(HTTP_REQUEST)
     }
 
     /// Handles incoming stream data
-    public func inputStream(_ input: ByteBuffer) {
+    /// See InputStream.onInput
+    public func onInput(_ input: ByteBuffer) {
         do {
             guard let request = try parse(from: input) else {
                 return
             }
-            output(request)
+            self.outputStream.onInput(request)
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
             reset(HTTP_REQUEST)
         }
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
     }
 
     /// Parses request Data. If the data does not contain

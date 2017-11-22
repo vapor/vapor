@@ -10,23 +10,32 @@ public final class ResponseSerializer: Serializer {
 
     /// See OutputStream.Output
     public typealias Output = Data
-
-    /// See OutputStream.outputStream
-    public var outputStream: OutputHandler?
-
-    /// See BaseStream.errorStream
-    public var errorStream: ErrorHandler?
     
     /// When an upgrade request is in progress, this is set
     public private(set) var upgradeHandler: OnUpgrade?
 
-    /// Create a new ResponseSerializer.
-    public init() {}
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
 
-    /// Handles incoming responses.
-    public func inputStream(_ input: Response) {
+    /// Create a new ResponseSerializer
+    public init() {
+        outputStream = .init()
+    }
+
+    /// See InputStream.onInput
+    public func onInput(_ input: Response) {
         let message = serialize(input)
-        output(message)
+        outputStream.onInput(message)
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
     }
 
     /// Efficiently serializes a response into Data.

@@ -7,7 +7,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class Connection {
     /// The TCP socket it's connected on
-    let socket: Socket
+    let socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -71,23 +71,38 @@ public final class Connection {
     }
     
     /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<Connection> {
-        do {
-            let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
-            
+    public static func makeConnection(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String?,
+        on worker: Worker
+    ) -> Future<Connection> {
+        return then {
+            let connection = try Connection(
+                hostname: hostname,
+                port: port,
+                user: user,
+                password: password,
+                database: database,
+                on: worker
+            )
+
             return connection.authenticated.future.map { _ in
                 return connection
             }
-        } catch {
-            return Future(error: error)
         }
     }
+
+    /// This connection's subscribable packet stream
+    var packetStream: BasicStream<Packet> = .init()
     
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) throws {
-        let socket = try Socket()
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
+        let socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
@@ -115,29 +130,27 @@ public final class Connection {
         
         source.setEventHandler {
             do {
-                let usedBufferSize = try socket.read(max: numericCast(UInt16.max), into: self.readBuffer)
+                let usedBufferSize = try socket.read(
+                    max: numericCast(UInt16.max),
+                    into: self.readBuffer
+                )
                 
                 // Reuse existing pointer to data
-                let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
-                
-                parser.inputStream(newBuffer)
+                let newBuffer = MutableByteBuffer(
+                    start: self.readBuffer,
+                    count: usedBufferSize
+                )
+                parser.onInput(newBuffer)
             } catch {
                 socket.close()
             }
         }
         source.resume()
-        
-        self.parser.drain(self.handlePacket).catch { error in
+
+        parser.drain(onInput: self.handlePacket).catch { error in
             // FIXME: @joannis
-            fatalError("\(error)")
+            print(error)
         }
-    }
-    
-    /// Sets the proided handler to capture packets
-    ///
-    /// - throws: The connection is reserved
-    internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
-        self.parser.outputStream = handler
     }
     
     /// Handles the incoming packet with the default handler
@@ -151,6 +164,8 @@ public final class Connection {
         
         guard authenticated.future.isCompleted else {
             finishAuthentication(for: packet, completing: authenticated)
+            /// start streaming to packet stream now
+            parser.stream(to: packetStream)
             return
         }
         
@@ -214,5 +229,6 @@ public final class Connection {
         _ = try? self.write(packetFor: Data([0x01]))
         
         self.socket.close()
+        self.packetStream.close()
     }
 }

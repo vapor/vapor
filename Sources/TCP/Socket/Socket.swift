@@ -1,10 +1,9 @@
-import Bits
 import Async
 import Dispatch
 import libc
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public final class Socket {
+public final class TCPSocket {
     /// The file descriptor related to this socket
     public let descriptor: Int32
 

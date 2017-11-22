@@ -79,19 +79,14 @@ public final class BoundStatement {
         
         // Set up a parser
         let resultBuilder = ModelStream<D>(mysql41: statement.connection.mysql41, binary: true)
-        
-        statement.connection.receivePackets(into: resultBuilder.inputStream)
-        
-        resultBuilder.onClose = {
-            promise.complete(results)
-        }
-        
-        resultBuilder.errorStream = { error in
-            promise.fail(error)
-        }
-        
+        statement.connection.packetStream.stream(to: resultBuilder)
+
         resultBuilder.drain { result in
             results.append(result)
+        }.catch { error in
+            promise.fail(error)
+        }.finally {
+            promise.complete(results)
         }
         
         // Send the query
@@ -110,7 +105,7 @@ public final class BoundStatement {
         let stream = ModelStream<D>(mysql41: true, binary: true)
         
         // Set up a parser
-        statement.connection.receivePackets(into: stream.inputStream)
+        statement.connection.packetStream.stream(to: stream)
         
         // Send the query
         try execute()
