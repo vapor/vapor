@@ -4,14 +4,6 @@ import Async
 public final class ModelStream<D: Decodable> : ResultsStream {
     /// -
     public typealias Output = D
-
-    /// For internal notification purposes only
-    public func close() {
-        notifyClosed()
-    }
-    
-    /// Registers an onClose handler
-    public var onClose: OnClose?
     
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -50,5 +42,15 @@ public final class ModelStream<D: Decodable> : ResultsStream {
     /// See OutputStream.onOutput
     public func onOutput<I>(_ input: I) where I: InputStream, D == I.Input {
         outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
+    /// For internal notification purposes only
+    public func close() {
+        outputStream.close()
     }
 }

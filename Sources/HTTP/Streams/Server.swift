@@ -6,9 +6,6 @@ public final class HTTPServer: Async.OutputStream, ClosableStream {
     /// See OutputStream.Output
     public typealias Output = HTTPPeer
 
-    /// See ClosableStream.onClose
-    public var onClose: OnClose?
-
     /// The wrapped Client Stream
     private let socket: ClosableStream
 
@@ -31,9 +28,14 @@ public final class HTTPServer: Async.OutputStream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// See ClosableStream.close
     public func close() {
         socket.close()
-        notifyClosed()
+        outputStream.close()
     }
 }

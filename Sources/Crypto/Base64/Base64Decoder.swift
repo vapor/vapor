@@ -24,9 +24,6 @@ fileprivate let decodeTable: [UInt8] = [
 ]
 
 public final class Base64Decoder: Base64 {
-    /// See Closeable.onClose
-    public var onClose: OnClose?
-    
     /// The capacity currently used in the pointer
     var currentCapacity = 0
     

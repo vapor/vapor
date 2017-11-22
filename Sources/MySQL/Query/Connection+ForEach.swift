@@ -48,11 +48,6 @@ extension Connection {
         let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
         self.packetStream.stream(to: resultBuilder)
 
-        /// FIXME: close should propogate
-        resultBuilder.finally {
-            promise.complete()
-        }
-
         resultBuilder.drain { row in
             handler(row)
         }.catch { error in

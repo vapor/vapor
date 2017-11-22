@@ -28,9 +28,6 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
         return true
     }
 
-    /// See CloseableStream.onClose
-    public var onClose: OnClose?
-
     /// This server's TCP socket.
     private let socket: TCPSocket
 
@@ -105,10 +102,15 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// See CloseableStream.close
     public func close() {
         socket.close()
-        notifyClosed()
+        outputStream.close()
         /// reinit output stream to clear any ref cycles
         outputStream = .init()
     }

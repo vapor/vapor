@@ -28,7 +28,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
         decoding type: T.Type,
         into outputStream: @escaping BasicStream<T>.OnInput
     ) -> Future<Void> {
-        return connection.then { conn in
+        return connection.then { conn -> Future<Void> in
             let promise = Promise(Void.self)
             let stream = BasicStream<T>()
 
@@ -47,18 +47,14 @@ public final class QueryBuilder<Model: Fluent.Model> {
                     try or.filter(deletedAtField == Date.null)
                 }
             }
-
-            /// FIXME: close needs to chain
-            stream
-                .finally(onClose: { promise.complete() })
-
+            
             // wire up the stream
             stream.drain(onInput: outputStream)
                 .catch(onError: promise.fail)
+                .finally(onClose: { promise.complete() })
 
             // execute
             // note: this must be in this file to access connection!
-            self.connection.execute(query: self.query, into: stream)
             conn.execute(query: self.query, into: stream)
             return promise.future
         }

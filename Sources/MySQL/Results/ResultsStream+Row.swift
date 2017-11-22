@@ -4,12 +4,8 @@ import Async
 ///
 /// This API is currently internal so we don't break the public API when finalizing the "raw" row API
 final class RowStream : ResultsStream {
-
     /// -
     typealias Output = Row
-
-    /// Registers an onClose handler
-    var onClose: OnClose?
 
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -47,8 +43,13 @@ final class RowStream : ResultsStream {
         return try packet.makeRow(columns: columns, binary: binary)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// For internal notification purposes only
     func close() {
-        notifyClosed()
+        outputStream.close()
     }
 }

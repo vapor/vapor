@@ -24,9 +24,6 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
 public final class Base64Encoder: Base64 {
-    /// See Closeable.onClose
-    public var onClose: OnClose?
-    
     /// The capacity currently used in the pointer
     var currentCapacity = 0
     

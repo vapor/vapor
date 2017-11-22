@@ -205,7 +205,7 @@ router.get("error") { req -> String in
     throw "foo"
 }
 
-router.get("users") { req in
+router.get("users") { req -> Future<Response> in
     let marie = User(name: "Marie Curie", age: 66)
     let charles = User(name: "Charles Darwin", age: 73)
 

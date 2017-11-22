@@ -12,8 +12,6 @@ import TCP
 
 /// A Client (used for connecting to servers) that uses the platform specific SSL library.
 public final class TLSClient: Async.Stream, ClosableStream {
-    public var onClose: ClosableStream.OnClose?
-
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
@@ -68,6 +66,11 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// See OutputStream.onOutput
     public func onOutput<I>(_ input: I) where I: Async.InputStream, TLSClient.Output == I.Input {
         ssl.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        ssl.onClose(onClose)
     }
 
     /// See CloseableStream.close

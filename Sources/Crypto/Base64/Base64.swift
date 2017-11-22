@@ -44,9 +44,7 @@ extension Base64 {
         let stream = Self.init(bufferCapacity: 65_507)
         
         if let input = input as? ClosableStream {
-            input.onClose = {
-                stream.close()
-            }
+            input.onClose(stream)
         }
 
         return input.stream(to: stream)
@@ -132,6 +130,11 @@ extension Base64 {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Completes the stream, flushing all remaining bytes by encoding them
     ///
     /// Any data after this will reopen the stream
@@ -155,6 +158,6 @@ extension Base64 {
             }
         }
         
-        self.notifyClosed()
+        outputStream.close()
     }
 }

@@ -17,9 +17,6 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     /// See OutputStream.Output
     public typealias Output = Response
 
-    /// See ClosableStream.onClose
-    public var onClose: OnClose?
-
     /// Parses the received `Response`s
     private let parser: ResponseParser
 
@@ -111,9 +108,14 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// See ClosableStream.close
     public func close() {
         socket.close()
-        notifyClosed()
+        outputStream.close()
     }
 }

@@ -11,9 +11,6 @@ internal final class Connection: Async.Stream, ClosableStream {
     
     /// See OutputStream.Output
     typealias Output = Frame
-
-    /// See ClosableStream.onClose
-    var onClose: ClosableStream.OnClose?
     
     /// Serializes data into frames
     let serializer: FrameSerializer
@@ -65,6 +62,11 @@ internal final class Connection: Async.Stream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Sends the closing frame and closes the connection
     func close() {
         do {
@@ -76,6 +78,7 @@ internal final class Connection: Async.Stream, ClosableStream {
             )
             self.onInput(frame)
             self.socket.close()
+            outputStream.close()
         } catch {
             onError(error)
         }

@@ -13,9 +13,6 @@ public final class RedisClient: Async.Stream, ClosableStream {
 
     /// See OutputStream.RedisData
     public typealias Output = RedisData
-
-    /// See CloseableStream.onClose
-    public var onClose: OnClose?
     
     /// Parses redis data from binary
     internal let dataParser = DataParser()
@@ -105,6 +102,11 @@ public final class RedisClient: Async.Stream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Creates a pipeline and returns it.
     public func makePipeline() -> RedisPipeline {
         return RedisPipeline(self)
@@ -112,9 +114,9 @@ public final class RedisClient: Async.Stream, ClosableStream {
 
     /// See CloseableStream.close
     public func close() {
+        outputStream.close()
         outputStream = .init()
         socket.close()
-        notifyClosed()
     }
 }
 

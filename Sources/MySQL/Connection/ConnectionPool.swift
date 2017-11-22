@@ -107,7 +107,7 @@ public class ConnectionPool {
             return future
         }
         
-        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, worker: worker).do { connection in
+        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, on: worker).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             

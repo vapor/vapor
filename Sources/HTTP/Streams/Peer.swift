@@ -11,9 +11,6 @@ public final class HTTPPeer: Async.Stream, ClosableStream {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
 
-    // See CloseableStream.onClose
-    public var onClose: OnClose?
-
     /// The underlying TCP Client
     public let tcp: TCPClient
 
@@ -42,8 +39,14 @@ public final class HTTPPeer: Async.Stream, ClosableStream {
         outputStream.onOutput(input)
     }
 
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// See Closable.close
     public func close() {
         tcp.close()
+        outputStream.close()
     }
 }

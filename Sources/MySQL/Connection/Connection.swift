@@ -71,15 +71,27 @@ public final class Connection {
     }
     
     /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<Connection> {
-        do {
-            let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
-            
+    public static func makeConnection(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String?,
+        on worker: Worker
+    ) -> Future<Connection> {
+        return then {
+            let connection = try Connection(
+                hostname: hostname,
+                port: port,
+                user: user,
+                password: password,
+                database: database,
+                on: worker
+            )
+
             return connection.authenticated.future.map { _ in
                 return connection
             }
-        } catch {
-            return Future(error: error)
         }
     }
 
@@ -89,7 +101,7 @@ public final class Connection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) throws {
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
         let socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
@@ -135,11 +147,10 @@ public final class Connection {
         }
         source.resume()
 
-        self.packetStream.drain(onInput: self.handlePacket).catch { error in
+        parser.drain(onInput: self.handlePacket).catch { error in
             // FIXME: @joannis
-            fatalError("\(error)")
+            print(error)
         }
-        self.parser.stream(to: packetStream)
     }
     
     /// Handles the incoming packet with the default handler
@@ -153,6 +164,8 @@ public final class Connection {
         
         guard authenticated.future.isCompleted else {
             finishAuthentication(for: packet, completing: authenticated)
+            /// start streaming to packet stream now
+            parser.stream(to: packetStream)
             return
         }
         
@@ -216,5 +229,6 @@ public final class Connection {
         _ = try? self.write(packetFor: Data([0x01]))
         
         self.socket.close()
+        self.packetStream.close()
     }
 }

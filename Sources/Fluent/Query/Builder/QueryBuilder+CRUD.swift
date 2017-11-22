@@ -17,7 +17,7 @@ extension QueryBuilder {
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
     public func create(_ model: Model) -> Future<Void> {
-        return connection.then { conn in
+        return connection.then { conn -> Future<Void> in
             self.query.data = model
             self.query.action = .create
 
@@ -51,7 +51,7 @@ extension QueryBuilder {
     /// Updates the model. This requires that
     /// the model has its ID set.
     public func update(_ model: Model) -> Future<Void> {
-        return connection.then { conn in
+        return connection.then { conn -> Future<Void> in
             self.query.data = model
 
             guard let id = model.fluentID else {

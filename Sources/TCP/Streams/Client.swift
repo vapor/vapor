@@ -9,8 +9,6 @@ import libc
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/)
 public final class TCPClient: Async.Stream, ClosableStream {
-    public var onClose: ClosableStream.OnClose?
-
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
@@ -72,6 +70,11 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// See OutputStream.onOutput
     public func onOutput<I>(_ input: I) where I: Async.InputStream, TCPClient.Output == I.Input {
         outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
     
     /// Handles DispatchData input
@@ -208,8 +211,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
         // we need to make sure to break that reference cycle
         // FIXME: more performant way to do this?
         // possible make the reference weak?
+        outputStream.close()
         outputStream = .init()
-        notifyClosed()
     }
 
     /// Deallocated the pointer buffer

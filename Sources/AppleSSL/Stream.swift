@@ -27,9 +27,6 @@ public final class SSLStream<DuplexByteStream>: Async.Stream, ClosableStream
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
-    /// See CloseableStream.onClose
-    public var onClose: OnClose?
-
     /// Used to give reference/pointer access to the descriptor to SSL
     internal var descriptor: Int32
 
@@ -112,6 +109,11 @@ public final class SSLStream<DuplexByteStream>: Async.Stream, ClosableStream
     public func onOutput<I>(_ input: I) where I: Async.InputStream, SSLStream.Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
     
     /// Writes the buffer to this SSL socket
     @discardableResult
@@ -144,7 +146,7 @@ public final class SSLStream<DuplexByteStream>: Async.Stream, ClosableStream
         if writeQueue.count > 0 {
             writeSource.cancel()
         }
-        notifyClosed()
+        outputStream.close()
     }
 
     deinit {
