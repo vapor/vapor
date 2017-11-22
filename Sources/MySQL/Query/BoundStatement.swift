@@ -110,13 +110,23 @@ public final class BoundStatement {
         
         // Set up a parser
         statement.connection.receivePackets { packet in
-//            do {
-//                let int = try Parser(packet: packet).parseLenEnc()
+            let parser = Parser(packet: packet)
+            
+            do {
+                let byte = try parser.byte()
                 
-                promise.complete()
-//            } catch {
-//                promise.fail(error)
-//            }
+                if byte == 0x00 {
+                    self.statement.connection.affectedRows = try parser.parseLenEnc()
+                    self.statement.connection.lastInsertID = try parser.parseLenEnc()
+                    promise.complete()
+                } else if byte == 0xfe {
+                    promise.complete()
+                } else {
+                    promise.fail(MySQLError(packet: packet))
+                }
+            } catch {
+                promise.fail(error)
+            }
         }
         
         // Send the query

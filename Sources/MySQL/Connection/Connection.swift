@@ -41,6 +41,12 @@ public final class MySQLConnection {
     
     let readBuffer = UnsafeMutablePointer<UInt8>.allocate(capacity: Int(UInt16.max))
     
+    /// The inserted ID from the last successful query
+    public var lastInsertID: UInt64?
+    
+    /// Amount of affected rows in the last successful query
+    public var affectedRows: UInt64?
+    
     deinit {
         writeBuffer.deinitialize(count: Packet.maxPayloadSize &+ 4)
         writeBuffer.deallocate(capacity: Packet.maxPayloadSize &+ 4)

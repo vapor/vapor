@@ -118,16 +118,20 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
     
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=0;")
+        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=1;")
     }
 
     /// ReferenceSupporting.disableReferences
     public func disableReferences() -> Future<Void> {
-        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=1;")
+        return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=0;")
     }
     
     // FIXME: exposure from the MySQL driver
     public var lastAutoincrementID: Int? {
+        if let id = connection.lastInsertID, id < numericCast(Int.max) {
+            return numericCast(id)
+        }
+        
         return nil
     }
 }
