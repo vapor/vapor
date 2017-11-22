@@ -52,11 +52,11 @@ extension SSLStream {
     /// A helper that initializes SSL as either the client or server side
     func initialize(side: Side, method: Method) throws -> UnsafeMutablePointer<SSL> {
         guard SSLSettings.initialized else {
-            throw Error(.notInitialized)
+            throw OpenSSLError(.notInitialized)
         }
         
         guard context == nil else {
-            throw Error(.contextAlreadyCreated)
+            throw OpenSSLError(.contextAlreadyCreated)
         }
         
         let method: UnsafePointer<SSL_METHOD>
@@ -69,11 +69,11 @@ extension SSLStream {
         }
         
         guard let context = SSL_CTX_new(method) else {
-            throw Error(.cannotCreateContext)
+            throw OpenSSLError(.cannotCreateContext)
         }
         
         guard SSL_CTX_set_cipher_list(context, "DEFAULT") == 1 else {
-            throw Error(.cannotCreateContext)
+            throw OpenSSLError(.cannotCreateContext)
         }
         
         self.context = context
@@ -83,13 +83,13 @@ extension SSLStream {
         }
         
         guard let ssl = SSL_new(context) else {
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let status = SSL_set_fd(ssl, self.descriptor)
         
         guard status > 0 else {
-            throw Error(.sslError(status))
+            throw OpenSSLError(.sslError(status))
         }
         
         self.ssl = ssl

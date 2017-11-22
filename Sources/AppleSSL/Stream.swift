@@ -15,11 +15,11 @@ import Security
 /// The TCP socket will also be read and deciphered into plaintext and outputted.
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
-public final class SSLStream<DuplexByteStream>: Async.Stream, ClosableStream
-    where DuplexByteStream: Async.Stream,
-        DuplexByteStream.Output == ByteBuffer,
-        DuplexByteStream.Input == ByteBuffer,
-        DuplexByteStream: ClosableStream
+public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
+    where ByteStream: Async.Stream,
+        ByteStream.Output == ByteBuffer,
+        ByteStream.Input == ByteBuffer,
+        ByteStream: ClosableStream
 {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
@@ -55,10 +55,10 @@ public final class SSLStream<DuplexByteStream>: Async.Stream, ClosableStream
     internal var outputStream: BasicStream<Output> = .init()
 
     /// The underlying TCP socket
-    private let socket: DuplexByteStream
+    private let socket: ByteStream
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: DuplexByteStream, descriptor: Int32, queue: DispatchQueue) throws {
+    public init(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws {
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue

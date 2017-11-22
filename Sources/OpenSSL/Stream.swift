@@ -16,21 +16,17 @@ enum SSLSettings {
     }()
 }
 
-public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, ClosableStream where DuplexByteStream.Output == ByteBuffer, DuplexByteStream.Input == ByteBuffer, DuplexByteStream: ClosableStream {
-    /// See `OutputStream.Output`
+public final class SSLStream<ByteStream>: Async.Stream, ClosableStream 
+    where ByteStream: Async.Stream, 
+        ByteStream.Output == ByteBuffer, 
+        ByteStream.Input == ByteBuffer, 
+        ByteStream: ClosableStream 
+{
+    /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
-    /// See `InputStream.Input`
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
-    
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
-    /// See `Stream.errorStream`
-    public var errorStream: ErrorHandler?
     
     /// The `SSL` context that manages this stream
     var ssl: UnsafeMutablePointer<SSL>?
@@ -42,7 +38,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     var descriptor: Int32
     
     /// The underlying TCP socket
-    let socket: DuplexByteStream
+    let socket: ByteStream
     
     /// The queue to read on
     let queue: DispatchQueue
@@ -59,12 +55,15 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     /// A buffer storing all deciphered data received from the remote
     let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
     
+    /// Use a basic output stream to implement server output stream.
+    internal var outputStream: BasicStream<Output> = .init()
+
     deinit {
         outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
     }
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: DuplexByteStream, descriptor: Int32, queue: DispatchQueue) throws {
+    public init(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws {
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue
@@ -86,7 +85,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
                     try self.write(from: buffer)
                     _ = self.writeQueue.removeFirst()
                 } catch {
-                    self.errorStream?(error)
+                    self.onError(error)
                 }
             }
             
@@ -102,7 +101,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     public func write(from buffer: ByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
@@ -112,7 +111,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
                 self.close()
                 return 0
             } else {
-                throw Error(.sslError(SSL_get_error(ssl, written)))
+                throw OpenSSLError(.sslError(SSL_get_error(ssl, written)))
             }
         }
         
@@ -124,7 +123,7 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
     public func read(into buffer: MutableByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let read = SSL_read(ssl, buffer.baseAddress!, Int32(buffer.count))
@@ -133,20 +132,35 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
             self.close()
             return 0
         } else if read < 0 {
-            throw Error(.sslError(SSL_get_error(ssl, read)))
+            throw OpenSSLError(.sslError(SSL_get_error(ssl, read)))
         }
         
         return numericCast(read)
     }
-    
-    /// Accepts a `ByteBuffer` as plain data that will be send as ciphertext using SSL.
-    public func inputStream(_ input: ByteBuffer) {
+
+    /// See InputStream.onInput
+    public func onInput(_ input: ByteBuffer) {
         do {
             try self.write(from: input)
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
             self.close()
         }
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, SSLStream.Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
     
     public func close() {
@@ -156,5 +170,6 @@ public final class SSLStream<DuplexByteStream: Async.Stream>: Async.Stream, Clos
         }
         
         readSource.cancel()
+        outputStream.close()
     }
 }
