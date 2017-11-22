@@ -92,7 +92,11 @@ internal final class DecodingContainer<K: CodingKey>:
     }
 
     func decode(_ type: Double.Type, forKey key: K) throws -> Double {
-        fatalError("unimplemented")
+        guard let double = decoder.row[key.stringValue]?.fuzzyDouble else {
+            throw "No double found at key `\(key.stringValue)`"
+        }
+
+        return double
     }
 
     func decode(_ type: String.Type, forKey key: K) throws -> String {

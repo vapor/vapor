@@ -25,6 +25,11 @@ public final class Toy<D: Database>: Model {
         ]
     }
 
+    /// See Model.database
+    public static var database: DatabaseIdentifier<D> {
+        return .init("test")
+    }
+
     /// Foo's identifier
     var id: ID?
 

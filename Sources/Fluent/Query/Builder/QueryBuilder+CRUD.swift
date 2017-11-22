@@ -17,7 +17,7 @@ extension QueryBuilder {
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
     public func create(_ model: Model) -> Future<Void> {
-        return then {
+        return connection.then { conn in
             self.query.data = model
             self.query.action = .create
 
@@ -38,16 +38,20 @@ extension QueryBuilder {
                 timestampable.createdAt = now
             }
 
-            return try model.willCreate(on: self.connection)
-                .then(self.run)
-                .then { try model.didCreate(on: self.connection) }
+            return try model.willCreate(on: conn)
+                .then {
+                    return self.run().map {
+                        try model.parseID(from: conn)
+                    }
+                }
+                .then { try model.didCreate(on: conn) }
         }
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
     public func update(_ model: Model) -> Future<Void> {
-        return then {
+        return connection.then { conn in
             self.query.data = model
 
             guard let id = model.fluentID else {
@@ -64,9 +68,9 @@ extension QueryBuilder {
             }
 
 
-            return try model.willUpdate(on: self.connection)
+            return try model.willUpdate(on: conn)
                 .then(self.run)
-                .then { try model.didUpdate(on: self.connection) }
+                .then { try model.didUpdate(on: conn) }
         }
     }
 
@@ -89,15 +93,15 @@ extension QueryBuilder {
     /// Throws an error if the mdoel did not have an id.
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
-        return then {
-            return try model.willDelete(on: self.connection).then { _ -> Future<Void> in 
+        return connection.then { conn -> Future<Void> in
+            return try model.willDelete(on: conn).then { _ -> Future<Void> in 
                 guard let id = model.fluentID else {
                     throw "model does not have an id"
                 }
 
                 try self.filter(Model.idKey == id)
                 self.query.action = .delete
-                return self.run().then { try model.didDelete(on: self.connection) }
+                return self.run().then { try model.didDelete(on: conn) }
             }
         }
     }

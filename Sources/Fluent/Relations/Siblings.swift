@@ -69,8 +69,8 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot>
     }
 
     /// Create a query for the parent.
-    public func query(on executor: Through.Database.Connection) throws -> QueryBuilder<Related> {
-        return try executor.query(Related.self)
+    public func query(on conn: ConnectionRepresentable) throws -> QueryBuilder<Related> {
+        return try Related.query(on: conn)
             .join(field: relatedPivotField)
             .filter(basePivotField == base.requireID())
     }
@@ -83,9 +83,9 @@ extension Siblings {
     /// to this relationship.
     public func isAttached(
         _ model: Related,
-        on connection: Through.Database.Connection
+        on conn: ConnectionRepresentable
     ) throws -> Future<Bool> {
-        return try connection.query(Through.self)
+        return try Through.query(on: conn)
             .filter(basePivotField == base.requireID())
             .filter(relatedPivotField == model.requireID())
             .first()
@@ -96,9 +96,9 @@ extension Siblings {
     /// if it was attached.
     public func detach(
         _ model: Related,
-        on connection: Through.Database.Connection
+        on conn: ConnectionRepresentable
     ) throws -> Future<Void> {
-        return try connection.query(Through.self)
+        return try Through.query(on: conn)
             .filter(basePivotField == base.requireID())
             .filter(relatedPivotField == model.requireID())
             .delete()
@@ -110,11 +110,11 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through
     /// Attaches the model to this relationship.
     public func attach(
         _ model: Related,
-        on connection: Through.Database.Connection
+        on conn: ConnectionRepresentable
     ) -> Future<Void> {
         do {
             let pivot = try Through(base, model)
-            return pivot.save(on: connection)
+            return pivot.save(on: conn)
         } catch {
             return Future(error: error)
         }
@@ -126,11 +126,11 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Related, Thro
     /// Attaches the model to this relationship.
     public func attach(
         _ model: Related,
-        on connection: Through.Database.Connection
+        on conn: ConnectionRepresentable
     ) -> Future<Void> {
         do {
             let pivot = try Through(model, base)
-            return pivot.save(on: connection)
+            return pivot.save(on: conn)
         } catch {
             return Future(error: error)
         }

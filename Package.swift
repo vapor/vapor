@@ -48,6 +48,9 @@ let package = Package(
         // Random
         .library(name: "Random", targets: ["Random"]),
 
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
+
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
@@ -102,7 +105,8 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        // FIXME: FluentRouting and FluentHTTP packages?
+        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "Routing", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),

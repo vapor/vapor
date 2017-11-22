@@ -28,6 +28,11 @@ public final class User<D: Database>: Model, Timestampable {
         ]
     }
 
+    /// See Model.database
+    public static var database: DatabaseIdentifier<D> {
+        return .init("test")
+    }
+
     /// Foo's identifier
     var id: UUID?
 
