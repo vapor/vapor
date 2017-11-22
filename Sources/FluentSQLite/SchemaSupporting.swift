@@ -60,35 +60,30 @@ extension SQLiteFieldType: SchemaFieldType {
 }
 
 extension String: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .text
     }
 }
 
 extension Int: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .integer
     }
 }
 
 extension Date: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .real
     }
 }
 
 extension Double: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .real
     }
 }
 
 extension UUID: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .blob
     }

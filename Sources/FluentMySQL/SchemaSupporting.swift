@@ -6,6 +6,7 @@ import FluentSQL
 import MySQL
 
 extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
+    /// Runs a transaction on the MySQL connection
     public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Future<Void> {
         return connection.administrativeQuery("START TRANSACTION").flatMap {
             let promise = Promise<Void>()
@@ -14,7 +15,7 @@ extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
                 self.connection.administrativeQuery("COMMIT TRANSACTION").chain(to: promise)
             }.catch { error in
                 self.connection.administrativeQuery("ROLLBACK").do {
-                    // still fail even tho rollback succeeded
+                    // still fail even though rollback succeeded
                     promise.fail(error)
                 }.catch { error in
                     promise.fail(error)
@@ -27,6 +28,7 @@ extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
     
     public typealias FieldType = ColumnType
     
+    /// Executes the schema query
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         let query = schema.makeSchemaQuery()
         _ = self.logger?.log(query: query)
@@ -36,10 +38,12 @@ extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
 }
 
 extension ColumnType : SchemaFieldType {
+    /// Encodes the schema field into an SQL string
     public func makeSchemaFieldTypeString() -> String {
         return self.name + self.lengthName
     }
     
+    /// Return the MySQL types used by default for the primary types
     public static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> ColumnType {
         switch basicFieldType {
         case .date: return .datetime()
@@ -57,20 +61,21 @@ extension ColumnType : SchemaFieldType {
 }
 
 extension SchemaQuery: MySQL.Query {
+    /// Serializes the Schema query into a MySQL query string
     public var queryString: String {
         return MySQLSerializer().serialize(schema: self)
     }
 }
 
 extension String: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .varChar(length: 255)
     }
 }
 
 extension Int: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         #if arch(x86_64) || arch(arm64)
             return .int64()
@@ -81,7 +86,7 @@ extension Int: SchemaFieldTypeRepresentable {
 }
 
 extension UInt: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         #if arch(x86_64) || arch(arm64)
             return .uint64()
@@ -92,77 +97,77 @@ extension UInt: SchemaFieldTypeRepresentable {
 }
 
 extension Int8: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .int8()
     }
 }
 
 extension UInt8: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .uint8()
     }
 }
 
 extension Bool: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .uint8()
     }
 }
 
 extension Int16: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .int16()
     }
 }
 
 extension UInt16: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .uint16()
     }
 }
 
 extension Int32: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .int32()
     }
 }
 
 extension UInt32: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .uint32()
     }
 }
 
 extension Date: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .datetime()
     }
 }
 
 extension Double: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .double()
     }
 }
 
 extension Float32: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .float()
     }
 }
 
 extension UUID: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
+    /// Returns the ColumnType for this Swift type
     public static func makeSchemaFieldType() -> ColumnType {
         return .varChar(length: 16, binary: true)
     }
