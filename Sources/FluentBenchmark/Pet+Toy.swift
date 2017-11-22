@@ -34,6 +34,11 @@ public final class PetToy<D: Database>: ModifiablePivot {
         ]
     }
 
+    /// See Model.database
+    public static var database: DatabaseIdentifier<D> {
+        return .init("test")
+    }
+
     /// PetToy's identifier
     var id: UUID?
 
