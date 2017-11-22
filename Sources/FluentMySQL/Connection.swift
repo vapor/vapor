@@ -9,7 +9,17 @@ public final class MySQLSerializer: SQLSerializer {
     public init () {}
 }
 
+struct InvalidConnectionType: Error{}
+
 public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceSupporting {
+    public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+        guard let mysql = self as? D.Connection else {
+            return Future(error: InvalidConnectionType())
+        }
+        
+        return Future(mysql)
+    }
+    
     let logger: MySQLLogger?
     public let connection: MySQLConnection
     

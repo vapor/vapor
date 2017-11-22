@@ -28,7 +28,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
         decoding type: T.Type,
         into outputStream: @escaping BasicStream<T>.OutputHandler
     ) -> Future<Void> {
-        return connection.then { conn in
+        return connection.then { conn -> Future<Void> in
             let promise = Promise(Void.self)
             let stream = BasicStream<T>()
 
