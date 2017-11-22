@@ -81,7 +81,7 @@ extension SSLStream {
     
     func setCertificate(certificatePath: String) throws {
         guard let context = context else {
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         SSL_CTX_load_verify_locations(context, certificatePath, nil)
@@ -96,7 +96,7 @@ extension SSLStream {
     /// https://www.sslshopper.com/article-most-common-openssl-commands.html
     func setServerCertificates(certificatePath: String, keyPath: String) throws {
         guard let context = context else {
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
@@ -104,13 +104,13 @@ extension SSLStream {
         var error = SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            throw Error(.sslError(error))
+            throw OpenSSLError(.sslError(error))
         }
         
         error = SSL_CTX_use_PrivateKey_file(context, keyPath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            throw Error(.sslError(error))
+            throw OpenSSLError(.sslError(error))
         }
     }
     
@@ -128,7 +128,7 @@ extension SSLStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 // so send them to stream error catcher.
-                self.errorStream?(error)
+                self.onError(error)
                 return
             }
             

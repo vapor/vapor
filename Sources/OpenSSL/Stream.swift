@@ -101,7 +101,7 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     public func write(from buffer: ByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
@@ -111,7 +111,7 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
                 self.close()
                 return 0
             } else {
-                throw Error(.sslError(SSL_get_error(ssl, written)))
+                throw OpenSSLError(.sslError(SSL_get_error(ssl, written)))
             }
         }
         
@@ -123,7 +123,7 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     public func read(into buffer: MutableByteBuffer) throws -> Int {
         guard let ssl = ssl else {
             close()
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let read = SSL_read(ssl, buffer.baseAddress!, Int32(buffer.count))
@@ -132,7 +132,7 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
             self.close()
             return 0
         } else if read < 0 {
-            throw Error(.sslError(SSL_get_error(ssl, read)))
+            throw OpenSSLError(.sslError(SSL_get_error(ssl, read)))
         }
         
         return numericCast(read)
