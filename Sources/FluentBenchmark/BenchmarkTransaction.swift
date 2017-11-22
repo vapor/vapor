@@ -14,34 +14,34 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
             try conn.transaction { conn in
                 var future = Future<Void>(())
                 
-                /// create 1,000 users
-                for i in 1...1_000 {
+                /// create 100 users
+                for i in 1...100 {
                     let user = User<Database>(name: "User \(i)", age: i)
                     
                     future = future.then {
                         user.save(on: conn)
                     }
                 }
-
+                
                 return future.then {
                     // count users
                     return conn.query(User<Database>.self).count().then { count -> Future<Void> in
-                        if count != 1_001 {
-                            self.fail("count should be 1,001")
+                        if count != 101 {
+                            self.fail("count should be 101")
                         }
-
+                        
                         throw "rollback"
                     }
                 }
             }.blockingAwait()
 
-            fail("transaction should have failed")
+            fail("transaction must fail")
         } catch {
             // good
         }
 
         if try test(conn.query(User<Database>.self).count()) != 1 {
-            fail("count should have restored to one")
+            fail("count must have been restored to one")
         }
     }
 

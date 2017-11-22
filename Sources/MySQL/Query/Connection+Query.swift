@@ -36,7 +36,7 @@ extension MySQLConnection {
         
         self.receivePackets { packet in
             // Expect an `OK` or `EOF` packet
-            guard packet.payload.first == 0x00 else {
+            if packet.payload.first == 0xff {
                 // Otherwise, reutrn an error
                 promise.fail(MySQLError(packet: packet))
                 return
