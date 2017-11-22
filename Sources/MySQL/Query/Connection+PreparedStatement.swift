@@ -11,7 +11,7 @@ extension Connection {
     func prepare(query: Query) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
-        
+
         self.packetStream.drain { packet in
             if let statement = statement {
                 do {

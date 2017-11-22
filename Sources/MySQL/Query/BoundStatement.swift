@@ -81,6 +81,11 @@ public final class BoundStatement {
         let resultBuilder = ModelStream<D>(mysql41: statement.connection.mysql41, binary: true)
         statement.connection.packetStream.stream(to: resultBuilder)
 
+        /// FIXME: close should propogate
+        resultBuilder.finally {
+            promise.complete(results)
+        }
+
         resultBuilder.drain { result in
             results.append(result)
         }.catch { error in

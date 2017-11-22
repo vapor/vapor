@@ -46,13 +46,16 @@ extension Connection {
         // Set up a parser
         let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
         self.packetStream.stream(to: resultBuilder)
-        
+
+        /// FIXME: close should propogate
+        resultBuilder.finally {
+            promise.complete(results)
+        }
+
         resultBuilder.drain { result in
             results.append(result)
         }.catch { error in
             promise.fail(error)
-        }.finally {
-            promise.complete(results)
         }
         
         // Send the query
