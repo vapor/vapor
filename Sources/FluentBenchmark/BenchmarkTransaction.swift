@@ -12,15 +12,18 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
 
         do {
             try conn.transaction { conn in
-                var users: [Future<Void>] = []
-
+                var future = Future<Void>(())
+                
                 /// create 1,000 users
                 for i in 1...1_000 {
                     let user = User<Database>(name: "User \(i)", age: i)
-                    users.append(user.save(on: conn))
+                    
+                    future = future.then {
+                        user.save(on: conn)
+                    }
                 }
 
-                return users.flatten().then {
+                return future.then {
                     // count users
                     return conn.query(User<Database>.self).count().then { count in
                         if count != 1_001 {

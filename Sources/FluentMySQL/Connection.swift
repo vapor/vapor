@@ -45,12 +45,6 @@ public final class DatabaseConnection: Connection, JoinSupporting {
         
         _ = self.logger?.log(query: sqlString)
         
-        if case .create = query.action {
-            
-        } else {
-            print(sqlString)
-        }
-        
         connection.withPreparation(statement: sqlString) { context -> Future<Void> in
             do {
                 let bound = try context.bind { binding in
@@ -68,19 +62,12 @@ public final class DatabaseConnection: Connection, JoinSupporting {
                 switch query.action {
                 case .read:
                     let outputStream = try bound.stream(D.self)
-                    var i = 0
-                    outputStream.drain { a in
-                        i += 1
-                        stream.input(a)
-                    }
-                    outputStream.onClose = {
-                        print("nope \(i) ")
-                        stream.close()
-                    }
+                    outputStream.drain(into: stream)
+                    outputStream.onClose = stream.close
                     
                     return Future(())
                 default:
-                    let future = try bound.execute().map { _ in }
+                    let future = try bound.execute()
                     
                     future.do {
                         stream.close()
@@ -88,7 +75,6 @@ public final class DatabaseConnection: Connection, JoinSupporting {
                         stream.errorStream?(error)
                         stream.close()
                     }
-                    
                     return future
                 }
             } catch {

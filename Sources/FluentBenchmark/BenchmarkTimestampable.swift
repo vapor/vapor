@@ -34,8 +34,10 @@ extension Benchmarker {
             return
         }
 
-        if fetched.createdAt != tanner.createdAt || fetched.updatedAt != tanner.updatedAt {
+        // microsecond roudning
+        guard fetched.createdAt!.isWithin(seconds: 2, of: tanner.createdAt!) || fetched.updatedAt!.isWithin(seconds: 2, of: tanner.updatedAt!) else {
             fail("fetched timestamps are different")
+            return
         }
     }
 
