@@ -6,11 +6,11 @@ import Foundation
 public final class Serializer {
     let ast: [Syntax]
     var context: LeafData
-    let renderer: Renderer
+    let renderer: LeafRenderer
     let worker: Worker
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: Renderer,  context: LeafData, worker: Worker) {
+    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, worker: Worker) {
         self.ast = ast
         self.context = context
         self.renderer = renderer

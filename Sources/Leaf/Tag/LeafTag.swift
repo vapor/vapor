@@ -1,17 +1,17 @@
 import Async
 import Foundation
 
-public protocol Tag {
+public protocol LeafTag {
     func render(
         parsed: ParsedTag,
         context: inout LeafData,
-        renderer: Renderer
+        renderer: LeafRenderer
     ) throws -> Future<LeafData?>
 }
 
 // MARK: Global
 
-public var defaultTags: [String: Tag] {
+public var defaultTags: [String: LeafTag] {
     return [
         "": Print(),
         "ifElse": IfElse(),

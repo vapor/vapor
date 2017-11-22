@@ -6,11 +6,11 @@ import Service
 import XCTest
 
 class LeafTests: XCTestCase {
-    var renderer: Renderer!
+    var renderer: LeafRenderer!
     var queue: Worker!
 
     override func setUp() {
-        self.renderer = Renderer.makeTestRenderer()
+        self.renderer = LeafRenderer.makeTestRenderer()
         self.queue = EventLoop(queue: DispatchQueue(label: "codes.vapor.leaf.test"))
     }
 
@@ -43,7 +43,7 @@ class LeafTests: XCTestCase {
         <p>#(embed(foo))</p>
         """
         let data = LeafData.dictionary(["foo": .string("bar")])
-        try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>Test file name: &quot;bar.leaf&quot;</p>")
+        try XCTAssertEqual(renderer.render(template, context: data, on: queue).blockingAwait(), "<p>Test file name: &quot;/bar.leaf&quot;</p>")
     }
 
     func testExpression() throws {
@@ -313,11 +313,11 @@ class LeafTests: XCTestCase {
     func testAsyncExport() throws {
         let preloaded = PreloadedFiles()
 
-        preloaded.files["template.leaf"] = """
+        preloaded.files["/template.leaf"] = """
         Content: #raw(content)
         """.data(using: .utf8)!
 
-        preloaded.files["nested.leaf"] = """
+        preloaded.files["/nested.leaf"] = """
         Nested!
         """.data(using: .utf8)!
 
@@ -330,7 +330,7 @@ class LeafTests: XCTestCase {
         Content: <p>Nested!</p>
         """
 
-        let renderer = Renderer(tags: defaultTags) { queue in
+        let renderer = LeafRenderer(tags: defaultTags) { queue in
             return preloaded
         }
         try XCTAssertEqual(renderer.render(template, context: .dictionary([:]), on: queue).blockingAwait(), expected)
@@ -341,7 +341,7 @@ class LeafTests: XCTestCase {
         try services.register(LeafProvider())
 
         services.register { container in
-            return LeafConfig(tags: defaultTags) { queue in
+            return LeafConfig(tags: defaultTags, viewsDir: "/") { queue in
                 TestFiles()
             }
         }
@@ -356,10 +356,10 @@ class LeafTests: XCTestCase {
         let rendered = try view.make(
             "foo", context: TestContext(),
             on: queue
-            ).blockingAwait()
+        ).blockingAwait()
 
         let expected = """
-        Test file name: "foo.leaf"
+        Test file name: "/foo.leaf"
         """
 
         XCTAssertEqual(String(data: rendered.data, encoding: .utf8), expected)

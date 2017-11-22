@@ -1,9 +1,9 @@
 import Async
 
-public final class IfElse: Tag {
+public final class IfElse: LeafTag {
     public init() {}
 
-    public func render(parsed: ParsedTag, context: inout LeafData, renderer: Renderer) throws -> Future<LeafData?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         try parsed.requireParameterCount(1)
         let body = try parsed.requireBody()
         let expr = parsed.parameters[0]
