@@ -2,6 +2,9 @@ import Async
 import Core
 
 extension MySQLConnection {
+    /// A simple callback closure
+    public typealias Callback<T> = (T) throws -> ()
+
     /// Loops over all rows resulting from the query
     ///
     /// - parameter query: Fetches results using this query
@@ -9,21 +12,14 @@ extension MySQLConnection {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    internal func forEachRow(in query: Query, _ handler: @escaping ((Row) -> ())) -> Future<Void> {
-        let promise = Promise<Void>()
-        
-        let stream = RowStream(mysql41: self.mysql41)
-        self.receivePackets(into: stream.inputStream)
-        
-        stream.onClose = {
-            promise.complete()
-        }
-        
-        stream.errorStream = { error in
-            promise.fail(error)
-        }
-        
-        stream.drain(handler)
+    internal func forEachRow(in query: MySQLQuery, _ handler: @escaping Callback<Row>) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        let rowStream = RowStream(mysql41: self.mysql41)
+        packetStream.stream(to: rowStream)
+            .drain(onInput: handler)
+            .catch(onError: promise.fail)
+            .finally(onClose: { promise.complete() })
         
         // Send the query
         do {
@@ -43,30 +39,12 @@ extension MySQLConnection {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    public func forEach<D: Decodable>(_ type: D.Type, in query: Query, _ handler: @escaping ((D) -> ())) -> Future<Void> {
-        let promise = Promise<Void>()
-        
-        // Set up a parser
-        let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
-        self.receivePackets(into: resultBuilder.inputStream)
-        
-        resultBuilder.onClose = {
-            promise.complete()
+    public func forEach<D>(_ type: D.Type, in query: MySQLQuery, _ handler: @escaping Callback<D>) -> Future<Void>
+        where D: Decodable
+    {
+        return forEachRow(in: query) { row in
+            let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+            try handler(D(from: decoder))
         }
-        
-        resultBuilder.errorStream = { error in
-            promise.fail(error)
-        }
-        
-        resultBuilder.drain(handler)
-        
-        // Send the query
-        do {
-            try self.write(query: query.queryString)
-        } catch {
-            promise.fail(error)
-        }
-        
-        return promise.future
     }
 }

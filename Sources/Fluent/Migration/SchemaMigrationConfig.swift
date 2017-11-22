@@ -34,7 +34,7 @@ internal struct SchemaMigrationConfig<
     /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
         return MigrationLogMigration<Database>.prepareMetadata(on: conn).then { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch in
+            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch -> Future<Void> in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }
@@ -51,7 +51,7 @@ internal struct SchemaMigrationConfig<
     /// Adds a migration to the config.
     internal mutating func add<M: Migration> (
         migration: M.Type
-        ) where M.Database == Database {
+    ) where M.Database == Database {
         let container = MigrationContainer(migration)
         migrations.append(container)
     }

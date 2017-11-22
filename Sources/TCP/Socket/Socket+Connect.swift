@@ -2,7 +2,7 @@ import Async
 import Dispatch
 import libc
 
-extension Socket {
+extension TCPSocket {
     /// connect - initiate a connection on a socket
     /// http://man7.org/linux/man-pages/man2/connect.2.html
     public func connect(hostname: String, port: UInt16) throws {

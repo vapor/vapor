@@ -8,11 +8,11 @@ extension MySQLConnection {
     /// Prepares a query and returns a prepared statement that can be used for binding and execution
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    func prepare(query: Query) -> Future<PreparedStatement> {
+    func prepare(query: MySQLQuery) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
             if let statement = statement {
                 do {
                     if statement.columns.count < statement.columnCount {
@@ -56,9 +56,7 @@ extension MySQLConnection {
                     promise.fail(error)
                 }
             }
-        }
-        
-        self.parser.catch(promise.fail)
+        }.catch(onError: promise.fail)
         
         do {
             try self.prepare(query: query.queryString)
@@ -85,14 +83,14 @@ extension MySQLConnection {
         do {
             let promise = Promise<Void>()
             
-            self.receivePackets { packet in
+            self.packetStream.drain { packet in
                 guard packet.payload.first == 0x00 else {
                     promise.fail(MySQLError(packet: packet))
                     return
                 }
                 
                 promise.complete()
-            }
+            }.catch(onError: promise.fail)
             
             try self.write(packetFor: data)
             

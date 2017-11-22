@@ -26,7 +26,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
     /// query is done or fails
     public func run<T: Decodable>(
         decoding type: T.Type,
-        into outputStream: @escaping BasicStream<T>.OutputHandler
+        into outputStream: @escaping BasicStream<T>.OnInput
     ) -> Future<Void> {
         return connection.then { conn -> Future<Void> in
             let promise = Promise(Void.self)
@@ -47,24 +47,15 @@ public final class QueryBuilder<Model: Fluent.Model> {
                     try or.filter(deletedAtField == Date.null)
                 }
             }
-
-            // connect output
-            stream.outputStream = outputStream
-
-            // connect close
-            stream.onClose = {
-                promise.complete()
-            }
-
-            // connect error
-            stream.errorStream = { error in
-                promise.fail(error)
-            }
+            
+            // wire up the stream
+            stream.drain(onInput: outputStream)
+                .catch(onError: promise.fail)
+                .finally(onClose: { promise.complete() })
 
             // execute
             // note: this must be in this file to access connection!
             conn.execute(query: self.query, into: stream)
-
             return promise.future
         }
     }
@@ -74,7 +65,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
     /// Note: this also sets the model's ID if the ID
     /// type is autoincrement.
     public func run(
-        into outputStream: @escaping BasicStream<Model>.OutputHandler
+        into outputStream: @escaping BasicStream<Model>.OnInput
     ) -> Future<Void> {
         return connection.then { conn in
             return self.run(decoding: Model.self) { output in

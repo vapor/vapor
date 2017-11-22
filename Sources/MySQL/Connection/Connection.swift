@@ -7,7 +7,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
     /// The TCP socket it's connected on
-    let socket: Socket
+    let socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -46,16 +46,9 @@ public final class MySQLConnection {
     
     /// Amount of affected rows in the last successful query
     public var affectedRows: UInt64?
-    
-    deinit {
-        writeBuffer.deinitialize(count: Packet.maxPayloadSize &+ 4)
-        writeBuffer.deallocate(capacity: Packet.maxPayloadSize &+ 4)
-        
-        readBuffer.deinitialize(count: Int(UInt16.max))
-        readBuffer.deallocate(capacity: Int(UInt16.max))
-        
-        self.close()
-    }
+
+    /// Basic stream to easily implement async stream.
+    var packetStream: BasicStream<Packet>
     
     /// The client's capabilities
     var capabilities: Capabilities {
@@ -76,24 +69,11 @@ public final class MySQLConnection {
         return handshake?.isGreaterThan4 == true && self.capabilities.contains(.protocol41) && handshake?.capabilities.contains(.protocol41) == true
     }
     
-    /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) -> Future<MySQLConnection> {
-        do {
-            let connection = try MySQLConnection(hostname: hostname, port: port, user: user, password: password, database: database, worker: worker)
-            
-            return connection.authenticated.future.map { _ in
-                return connection
-            }
-        } catch {
-            return Future(error: error)
-        }
-    }
-    
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) throws {
-        let socket = try Socket()
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
+        let socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
@@ -116,6 +96,7 @@ public final class MySQLConnection {
         self.username = user
         self.password = password
         self.database = database
+        self.packetStream = .init()
         
         self.authenticated = Promise<Void>()
         
@@ -126,24 +107,18 @@ public final class MySQLConnection {
                 // Reuse existing pointer to data
                 let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
                 
-                parser.inputStream(newBuffer)
+                parser.onInput(newBuffer)
             } catch {
                 socket.close()
             }
         }
         source.resume()
         
-        self.parser.drain(self.handlePacket).catch { error in
-            // FIXME: @joannis
-            fatalError("\(error)")
+        self.parser.drain(onInput: self.handlePacket).catch { error in
+            /// close the packet stream
+            self.packetStream.onError(error)
+            self.close()
         }
-    }
-    
-    /// Sets the proided handler to capture packets
-    ///
-    /// - throws: The connection is reserved
-    internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
-        self.parser.outputStream = handler
     }
     
     /// Handles the incoming packet with the default handler
@@ -159,7 +134,7 @@ public final class MySQLConnection {
             finishAuthentication(for: packet, completing: authenticated)
             return
         }
-        
+
         // We're expecting nothing
     }
     
@@ -213,12 +188,51 @@ public final class MySQLConnection {
         
         return
     }
+
+    deinit {
+        writeBuffer.deinitialize(count: Packet.maxPayloadSize &+ 4)
+        writeBuffer.deallocate(capacity: Packet.maxPayloadSize &+ 4)
+
+        readBuffer.deinitialize(count: Int(UInt16.max))
+        readBuffer.deallocate(capacity: Int(UInt16.max))
+
+        self.close()
+    }
     
     /// Closes the connection
     func close() {
         // Write `close`
         _ = try? self.write(packetFor: Data([0x01]))
-        
         self.socket.close()
+        self.packetStream.close()
+    }
+}
+
+/// MARK: Static
+
+extension MySQLConnection {
+    /// Creates a new connection and completes the handshake
+    public static func makeConnection(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String?,
+        on worker: Worker
+    ) -> Future<MySQLConnection> {
+        return then {
+            let connection = try MySQLConnection(
+                hostname: hostname,
+                port: port,
+                user: user,
+                password: password,
+                database: database,
+                on: worker
+            )
+
+            return connection.authenticated.future.map { _ in
+                return connection
+            }
+        }
     }
 }

@@ -60,7 +60,7 @@ extension ColumnType : SchemaFieldType {
     }
 }
 
-extension SchemaQuery: MySQL.Query {
+extension SchemaQuery: MySQLQuery {
     /// Serializes the Schema query into a MySQL query string
     public var queryString: String {
         return MySQLSerializer().serialize(schema: self)

@@ -5,15 +5,7 @@ import Bits
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
 final class BinaryStream : Async.Stream {
-    /// A stream of incoming binary data
-    var outputStream: OutputHandler?
-    
     internal weak var frameStream: Connection?
-    
-    /// A stream of errors
-    ///
-    /// Will only be called if there's a problem creating a frame for output
-    var errorStream: ErrorHandler?
     
     typealias Input = ByteBuffer
     typealias Output = ByteBuffer
@@ -22,12 +14,15 @@ final class BinaryStream : Async.Stream {
     var masking: Bool {
         return frameStream?.serverSide == false
     }
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new BinaryStream that has yet to be linked up with other streams
     init() { }
     
     /// Sends this binary data to the other party
-    func inputStream(_ input: ByteBuffer) {
+    func onInput(_ input: ByteBuffer) {
         do {
             let mask = self.masking ? randomMask() : nil
             
@@ -37,10 +32,18 @@ final class BinaryStream : Async.Stream {
                 frame.mask()
             }
             
-            frameStream?.inputStream(frame)
+            frameStream?.onInput(frame)
         } catch {
-            self.errorStream?(error)
+            onError(error)
         }
+    }
+
+    func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
+        outputStream.onOutput(input)
     }
 }
 
@@ -50,7 +53,7 @@ extension WebSocket {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
     public func send(_ buffer: ByteBuffer) {
-        self.binaryStream.inputStream(buffer)
+        self.binaryStream.onInput(buffer)
     }
     
     /// Drains the TextStream into this closure.
@@ -58,10 +61,7 @@ extension WebSocket {
     /// Any previously listening closures will be overridden
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
-    public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) {
-        self.binaryStream.drain(closure).catch { error in
-            // FIXME: @joannis
-            fatalError("\(error)")
-        }
+    public func onBinary(_ closure: @escaping ((ByteBuffer) -> ())) -> BasicStream<ByteBuffer> {
+        return self.binaryStream.drain(onInput: closure)
     }
 }

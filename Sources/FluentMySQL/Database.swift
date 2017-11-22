@@ -44,7 +44,7 @@ extension MySQLDatabase : Database {
             user: user,
             password: password,
             database: database,
-            worker: worker
+            on: worker
         ).map { connection in
             return FluentMySQLConnection(connection: connection, logger: self.logger)
         }

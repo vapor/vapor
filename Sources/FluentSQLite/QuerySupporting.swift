@@ -48,13 +48,13 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
                 let decoder = SQLiteRowDecoder(row: row)
                 do {
                     let model = try D(from: decoder)
-                    stream.input(model)
+                    stream.onInput(model)
                 } catch {
-                    stream.errorStream?(error)
+                    stream.onError(error)
                     stream.close()
                 }
             }.catch { err in
-                stream.errorStream?(err)
+                stream.onError(err)
                 stream.close()
             }
 
@@ -62,11 +62,11 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
             sqliteQuery.execute().do {
                 stream.close()
             }.catch { err in
-                stream.errorStream?(err)
+                stream.onError(err)
                 stream.close()
             }
         } catch {
-            stream.errorStream?(error)
+            stream.onError(error)
             stream.close()
         }
     }

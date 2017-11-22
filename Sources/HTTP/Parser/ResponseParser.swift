@@ -5,19 +5,25 @@ import Foundation
 
 /// Parses requests from a readable stream.
 public final class ResponseParser: CParser, Async.Stream {
-    // MARK: Stream
+
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
+
+    /// See OutputStream.Output
     public typealias Output = Response
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
     
     // Internal variables to conform
     // to the C HTTP parser protocol.
     var parser: http_parser
     var settings: http_parser_settings
     var state:  CHTTPParserState
-    
+
+    /// The maxiumum possible body size
+    /// larger sizes will result in an error
     let maxBodySize: Int
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
     
     /// Creates a new Request parser.
     public init(maxBodySize: Int) {
@@ -25,6 +31,7 @@ public final class ResponseParser: CParser, Async.Stream {
         self.settings = http_parser_settings()
         self.state = .ready
         self.maxBodySize = maxBodySize
+        self.outputStream = .init()
         reset(HTTP_RESPONSE)
     }
 
@@ -36,18 +43,30 @@ public final class ResponseParser: CParser, Async.Stream {
     }
     
     /// Handles incoming stream data
-    public func inputStream(_ input: ByteBuffer) {
+    public func onInput(_ input: ByteBuffer) {
         do {
             guard let request = try parse(from: input) else {
                 return
             }
-            output(request)
+            outputStream.onInput(request)
         } catch {
-            self.errorStream?(error)
+            onError(error)
             reset(HTTP_RESPONSE)
         }
     }
-    
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// Parses the supplied data into a response or throws an error.
+    /// If the data is incomplete, a nil response will be returned.
+    /// Contiguous data may be supplied as multiple calls.
     public func parse(from data: Data) throws -> Response? {
         return try data.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: data.count)

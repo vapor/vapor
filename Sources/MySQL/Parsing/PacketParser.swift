@@ -3,77 +3,52 @@ import Bits
 import libc
 
 /// Parses buffers into packets
-internal final class PacketParser : Async.Stream {
-    var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
+internal final class PacketParser: Async.Stream {
+    /// See InputStream.Input
+    typealias Input = MutableByteBuffer
+
+    /// See OutputStream.Output
+    typealias Output = Packet
+
+    /// Basic stream to easily implement async stream.
+    private var outputStream: BasicStream<Output>
+
+    /// Internal buffer
+    private var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
+
+    /// Create a new packet parser
+    init() {
+        self.outputStream = .init()
+    }
+
+    /// See InputStream.onInput
+    func onInput(_ input: MutableByteBuffer) {
+        do {
+            try parse(input)
+        } catch {
+            onError(error)
+        }
+    }
+
+    /// See InputStream.onError
+    func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutuptStream.onOutput
+    func onOutput<I>(_ input: I) where I: InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
     
-    var outputStream: OutputHandler?
-    var errorStream: BaseStream.ErrorHandler?
-    
-    public typealias Input = MutableByteBuffer
-    public typealias Output = Packet
-    
-    init() {}
-    
-    func inputStream(_ input: MutableByteBuffer) {
+    func parse(_ input: MutableByteBuffer) throws {
         // If there's no input pointer, throw an error
         guard var pointer = input.baseAddress else {
-            errorStream?(MySQLError(.invalidPacket))
-            return
+            throw MySQLError(.invalidPacket)
         }
         
         // Capture the pointer's contentlength
         var length = input.count
-        
-        // Parses the buffer
-        //
-        // returns true if parsing needs to continue
-        func parseInput(into buffer: MutableByteBuffer, alreadyContaining containing: Int, sequenceId: UInt8) -> Bool {
-            // If there's no input pointer, throw an error
-            guard let destination = buffer.baseAddress?.advanced(by: containing) else {
-                errorStream?(MySQLError(.invalidPacket))
-                return false
-            }
-            
-            // The rest of the packet
-            let needing = buffer.count &- containing
-            
-            // If there's too much data
-            if length > needing {
-                // copy only the necessary
-                memcpy(destination, pointer, needing)
-                
-                // Packet is complete, send it up
-                let packet = Packet(sequenceId: sequenceId, payload: buffer)
-                output(packet)
-                
-                self.buffer = nil
-                
-                guard length &- needing > 0 else {
-                    return false
-                }
-                
-                pointer = pointer.advanced(by: needing)
-                length = length &- needing
-                return true
-                // If we have exactly enough or too little
-            } else {
-                memcpy(destination, pointer, length)
-                
-                // If the packet is not complete yet
-                guard containing &+ length == buffer.count else {
-                    // update the partial packet
-                    self.buffer = (buffer, containing &+ length, sequenceId)
-                    return false
-                }
-                
-                // Packet is complete, send it up
-                let packet = Packet(sequenceId: sequenceId, payload: buffer)
-                output(packet)
-                
-                self.buffer = nil
-                return false
-            }
-        }
         
         var bufferSize: Int
         var containing: Int
@@ -99,8 +74,7 @@ internal final class PacketParser : Async.Stream {
                         return
                     }
                     
-                    errorStream?(MySQLError(.invalidPacket))
-                    return
+                    throw MySQLError(.invalidPacket)
                 }
                 
                 // take the first 3 bytes
@@ -123,7 +97,69 @@ internal final class PacketParser : Async.Stream {
                 length = length &- 4
             }
             // Parse the packet contents
-        } while parseInput(into: buffer, alreadyContaining: containing, sequenceId: sequenceId)
+        } while try parseInput(
+            pointer: &pointer,
+            into: buffer,
+            length: &length,
+            alreadyContaining: containing,
+            sequenceId: sequenceId
+        )
+    }
+
+    // Parses the buffer
+    //
+    // returns true if parsing needs to continue
+    private func parseInput(
+        pointer: inout UnsafeMutablePointer<Byte>,
+        into buffer: MutableByteBuffer,
+        length: inout Int,
+        alreadyContaining containing: Int,
+        sequenceId: UInt8
+    ) throws -> Bool {
+        // If there's no input pointer, throw an error
+        guard let destination = buffer.baseAddress?.advanced(by: containing) else {
+            throw MySQLError(.invalidPacket)
+        }
+
+        // The rest of the packet
+        let needing = buffer.count &- containing
+
+        // If there's too much data
+        if length > needing {
+            // copy only the necessary
+            memcpy(destination, pointer, needing)
+
+            // Packet is complete, send it up
+            let packet = Packet(sequenceId: sequenceId, payload: buffer)
+            outputStream.onInput(packet)
+
+            self.buffer = nil
+
+            guard length &- needing > 0 else {
+                return false
+            }
+
+            pointer = pointer.advanced(by: needing)
+            length = length &- needing
+            return true
+            // If we have exactly enough or too little
+        } else {
+            memcpy(destination, pointer, length)
+
+            // If the packet is not complete yet
+            guard containing &+ length == buffer.count else {
+                // update the partial packet
+                self.buffer = (buffer, containing &+ length, sequenceId)
+                return false
+            }
+
+            // Packet is complete, send it up
+            let packet = Packet(sequenceId: sequenceId, payload: buffer)
+            outputStream.onInput(packet)
+
+            self.buffer = nil
+            return false
+        }
     }
 }
 

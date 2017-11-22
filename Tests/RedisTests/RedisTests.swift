@@ -17,7 +17,10 @@ class RedisTests: XCTestCase {
     func makeClient() throws -> RedisClient {
         let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
         clientCount += 1
-        return try RedisClient.connect(hostname: "localhost", worker: EventLoop(queue: queue)).blockingAwait(timeout: .seconds(1))
+        return try RedisClient.connect(
+            hostname: "localhost",
+            on: queue
+        ).blockingAwait(timeout: .seconds(1))
     }
     
     func testCRUD() throws {
@@ -43,7 +46,7 @@ class RedisTests: XCTestCase {
         
         listener.subscribe(to: ["test", "test2"]).drain { data in
             promise.complete(data.message)
-        }
+        }.catch(onError: promise.fail)
         
         let publisher = try makeClient()
         let listeners = try publisher.publish("hello", to: "test").blockingAwait(timeout: .seconds(1))

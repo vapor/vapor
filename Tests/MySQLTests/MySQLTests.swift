@@ -15,7 +15,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        worker: MySQLTests.poolQueue
+        on: MySQLTests.poolQueue
     )
     
     let connection = try! MySQLConnection.makeConnection(
@@ -23,7 +23,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        worker: DispatchQueue(label: "single")
+        on: DispatchQueue(label: "single")
     ).blockingAwait(timeout: .seconds(3))
 
     static let allTests = [
@@ -116,7 +116,6 @@ class MySQLTests: XCTestCase {
         var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
      
         let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(3))
-     
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
         }
@@ -131,14 +130,14 @@ class MySQLTests: XCTestCase {
         var count = 0
         let promise = Promise<Int>()
      
-        connection.stream(User.self, in: "SELECT * FROM users").drain { user in
+        connection.forEach(User.self, in: "SELECT * FROM users") { user in
             XCTAssertEqual(user.username, iterator.next())
             count += 1
             
             if count == 3 {
                 promise.complete(3)
             }
-        }
+        }.catch { XCTFail("\($0)") }
             
         XCTAssertEqual(3, try promise.future.blockingAwait(timeout: .seconds(30)))
     }

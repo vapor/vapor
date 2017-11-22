@@ -79,11 +79,11 @@ public struct ServeCommand: Command {
     public let help: [String] = ["Begins serving the app over HTTP"]
 
     /// The server to boot.
-    public let server: HTTPServer
+    public let server: Server
     public let responder: Responder
 
     /// Create a new serve command.
-    public init(server: HTTPServer, responder: Responder) {
+    public init(server: Server, responder: Responder) {
         self.server = server
         self.responder = responder
     }

@@ -48,7 +48,7 @@ public final class MySQLConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) {
+    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) {
         self.worker = worker
         self.hostname = hostname
         self.port = port
@@ -107,7 +107,13 @@ public final class MySQLConnectionPool {
             return future
         }
         
-        MySQLConnection.makeConnection(hostname: hostname, user: user, password: password, database: database, worker: worker).do { connection in
+        MySQLConnection.makeConnection(
+            hostname: hostname,
+            user: user,
+            password: password,
+            database: database,
+            on: worker
+        ).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             

@@ -46,26 +46,24 @@ extension WebSocket {
             "Sec-WebSocket-Version": "13"
         ])
         
-        // Any errors in the handshake will cause the promise to fail
-        serializer.errorStream = promise.fail
-        
         if uri.scheme == "wss" {
-            let client = try TLSClient(worker: worker)
+            let client = try TLSClient(on: worker)
             
             parser = client.stream(to: ResponseParser(maxBodySize: 50_000))
             
             try client.connect(hostname: hostname, port: port).do {
                 // Send the initial request
                 let data = serializer.serialize(request)
-                data.withByteBuffer(client.inputStream)
+                let bytes = data.withByteBuffer { $0 }
+                client.onInput(bytes)
             }.catch(promise.fail)
             
-            let websocket = WebSocket(client: client, serverSide: false)
+            let websocket = WebSocket(socket: client, serverSide: false)
             
             WebSocket.complete(to: promise, with: parser, id: id, websocket: websocket)
         } else {
             // Create a new socket to the host
-            let socket = try TCP.Socket()
+            let socket = try TCPSocket()
             try socket.connect(hostname: hostname, port: port)
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
@@ -79,10 +77,11 @@ extension WebSocket {
                 
                 // Send the initial request
                 let data = serializer.serialize(request)
-                data.withByteBuffer(client.inputStream)
+                let bytes = data.withByteBuffer { $0 }
+                client.onInput(bytes)
             }.catch(promise.fail)
             
-            let websocket = WebSocket(client: client, serverSide: false)
+            let websocket = WebSocket(socket: client, serverSide: false)
             
             WebSocket.complete(to: promise, with: parser, id: id, websocket: websocket)
         }

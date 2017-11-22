@@ -55,7 +55,7 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
                 }
             } catch {
                 // Close the stream with an error
-                stream.errorStream?(error)
+                stream.onError(error)
                 stream.close()
                 return
             }
@@ -85,11 +85,20 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
                 switch query.action {
                 case .read:
                     // Streams all results into the parameter-provided stream
-                    let outputStream = try bound.stream(D.self)
-                    outputStream.drain(into: stream)
-                    outputStream.onClose = stream.close
-                    
-                    return Future(())
+                    let future = bound.forEach(D.self) { decodable in
+                        stream.onInput(decodable)
+                    }
+
+                    future.do {
+                        // On success, close the stream
+                        stream.close()
+                    }.catch { error in
+                        // Close the stream with an error
+                        stream.onError(error)
+                        stream.close()
+                    }
+
+                    return future
                 default:
                     let future = try bound.execute()
                     
@@ -98,20 +107,20 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
                         stream.close()
                     }.catch { error in
                         // Close the stream with an error
-                        stream.errorStream?(error)
+                        stream.onError(error)
                         stream.close()
                     }
                     return future
                 }
             } catch {
                 // Close the stream with an error
-                stream.errorStream?(error)
+                stream.onError(error)
                 stream.close()
                 return Future(error: error)
             }
         }.catch { error in
             // Close the stream with an error
-            stream.errorStream?(error)
+            stream.onError(error)
             stream.close()
         }
     }

@@ -1,3 +1,4 @@
+import Async
 import XCTest
 import FluentBenchmark
 import Dispatch
@@ -16,11 +17,11 @@ class FluentMySQLTests: XCTestCase {
         
         benchmarker = Benchmarker(database, onFail: XCTFail)
         
-        try! benchmarker.database.makeConnection(on: DispatchQueue(label: "temp")).then { conn in
-            return conn.disableReferences().then {
+        try! benchmarker.database.makeConnection(on: DispatchQueue(label: "temp")).then { conn -> Future<Void> in
+            return conn.disableReferences().then { _ -> Future<Void> in
                 return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `pet+toy`, `pets`, `toys`, `users`, `foos`")
-            }.then {
-                conn.enableReferences()
+            }.then { _ -> Future<Void> in
+                return conn.enableReferences()
             }
         }.blockingAwait(timeout: .seconds(3))
     }
@@ -56,5 +57,5 @@ class FluentMySQLTests: XCTestCase {
         ("testTimestampable", testTimestampable),
         ("testTransactions", testTransactions),
         ("testChunking", testChunking),
-        ]
+    ]
 }

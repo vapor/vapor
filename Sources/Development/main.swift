@@ -55,8 +55,8 @@ migrationConfig.add(migration: TestSiblings.self, database: .beta)
 services.register(migrationConfig)
 
 var middlewareConfig = MiddlewareConfig()
+//middlewareConfig.use(ErrorMiddleware.self)
 // middlewareConfig.use(FluentMiddleware.self)
-middlewareConfig.use(ErrorMiddleware.self)
 services.register(middlewareConfig)
 
 let app = try Application(services: services)
@@ -199,6 +199,10 @@ router.get("pets", Pet.parameter, "toys") { req in
 
 router.get("string", String.parameter) { req -> String in
     return try req.parameters.next(String.self)
+}
+
+router.get("error") { req -> String in
+    throw "foo"
 }
 
 router.get("users") { req -> Future<Response> in

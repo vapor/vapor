@@ -1,5 +1,5 @@
 /// An SSL Error related to Apple's Security libraries
-public struct Error: Swift.Error {
+public struct OpenSSLError: Swift.Error {
     /// The reason for this error
     let reason: Reason
     

@@ -112,6 +112,8 @@ extension MySQLConnection {
                 self.socket.close()
                 return
             default:
+                // auth is finished, have the parser stream to the packet stream now
+                parser.stream(to: packetStream)
                 completing.complete()
                 return
             }

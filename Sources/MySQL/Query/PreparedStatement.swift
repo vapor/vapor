@@ -109,7 +109,7 @@ extension MySQLConnection {
     /// Prepares a query and calls the captured closure with the prepared statement
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    public func withPreparation<T>(statement: Query, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
+    public func withPreparation<T>(statement: MySQLQuery, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
         return self.prepare(query: statement).flatMap(closure)
     }
 }

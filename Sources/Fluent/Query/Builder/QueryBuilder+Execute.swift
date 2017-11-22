@@ -64,7 +64,7 @@ extension QueryBuilder {
                 try closure(partial)
                 partial = []
             }
-        }.then { _ -> Future<Void> in
+        }.then { _ -> Future<Void> in 
             if partial.count > 0 {
                 try closure(partial)
             }

@@ -31,10 +31,10 @@ extension MySQLConnection {
     
     /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
-    public func administrativeQuery(_ query: Query) -> Future<Void> {
+    public func administrativeQuery(_ query: MySQLQuery) -> Future<Void> {
         let promise = Promise<Void>()
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
             // Expect an `OK` or `EOF` packet
             if packet.payload.first == 0xff {
                 // Otherwise, reutrn an error
@@ -43,7 +43,8 @@ extension MySQLConnection {
             }
             
             promise.complete()
-        }
+        }.catch(onError: promise.fail)
+        .finally(onClose:  { promise.complete() })
         
         do {
             try self.write(query: query.queryString)
