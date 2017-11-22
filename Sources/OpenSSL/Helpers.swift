@@ -47,7 +47,7 @@ extension SSLStream {
             // If it's not blocking and not a success, it's an error
             guard result > 0 else {
                 readSource.cancel()
-                promise.fail(Error(.sslError(result)))
+                promise.fail(OpenSSLError(.sslError(result)))
                 return
             }
             
