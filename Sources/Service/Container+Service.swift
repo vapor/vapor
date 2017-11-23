@@ -195,7 +195,7 @@ extension EventLoop {
     }
 }
 
-internal enum ResolvedService {
+fileprivate enum ResolvedService {
     case service(Any)
     case error(Error)
 

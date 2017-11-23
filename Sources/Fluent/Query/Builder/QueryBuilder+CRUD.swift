@@ -65,6 +65,7 @@ extension QueryBuilder {
     /// the model has its ID set.
     public func update(_ model: Model) -> Future<Void> {
         return connection.then { conn -> Future<Void> in
+            /// FIXME: must not capture self here
             self.query.data = model
 
             guard let id = model.fluentID else {
@@ -107,6 +108,7 @@ extension QueryBuilder {
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
         return connection.then { conn in
+            /// FIXME: must not capture self here
             return try model.willDelete(on: conn).then { _ -> Future<Void> in
                 guard let id = model.fluentID else {
                     throw "model does not have an id"

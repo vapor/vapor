@@ -95,5 +95,3 @@ extension Application: Worker, HasContainer {
         return EventLoop.default
     }
 }
-
-
