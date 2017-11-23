@@ -62,6 +62,16 @@ public final class RequestParser: CParser {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+    
+    /// See ClosableStream.close
+    public func close() {
+        self.outputStream.close()
+    }
+    
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        self.outputStream.onClose(onClose)
+    }
 
     /// Parses request Data. If the data does not contain
     /// an entire HTTP request, nil will be returned and
