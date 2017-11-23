@@ -58,6 +58,16 @@ public final class ResponderStream: Async.Stream {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
 }
 
 

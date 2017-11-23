@@ -2,7 +2,7 @@ import Foundation
 import Async
 import Bits
 
-protocol Base64: Async.Stream, ClosableStream {
+protocol Base64: Async.Stream {
     static func process(
         _ buffer: ByteBuffer,
         toPointer pointer: MutableBytesPointer,
@@ -42,11 +42,6 @@ extension Base64 {
         where ByteStream: Async.OutputStream, ByteStream.Output == Input
     {
         let stream = Self.init(bufferCapacity: 65_507)
-        
-        if let input = input as? ClosableStream {
-            input.onClose(stream)
-        }
-
         return input.stream(to: stream)
     }
     

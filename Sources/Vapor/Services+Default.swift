@@ -38,7 +38,7 @@ extension Services {
         }
 
         // register router
-        services.register([Router.self]) { container in
+        services.register([Router.self], isSingleton: true) { container in
             return TrieRouter()
         }
 
@@ -51,7 +51,6 @@ extension Services {
         services.register(Console.self) { container in
             return Terminal()
         }
-
         services.register { container -> ServeCommand in
             let router = try RouterResponder(
                 router: container.make(for: ServeCommand.self)
@@ -66,9 +65,21 @@ extension Services {
                 responder: middleware.makeResponder(chainedto: router)
             )
         }
-
         services.register { container -> CommandConfig in
             return CommandConfig.default()
+        }
+
+        // worker
+        services.register { container -> EphemeralWorkerConfig in
+            let config = EphemeralWorkerConfig()
+            config.add(Request.self)
+            config.add(Response.self)
+            return config
+        }
+
+        // directory
+        services.register { container -> DirectoryConfig in
+            return DirectoryConfig.default()
         }
 
         return services
@@ -84,5 +95,3 @@ extension Application: Worker, HasContainer {
         return EventLoop.default
     }
 }
-
-

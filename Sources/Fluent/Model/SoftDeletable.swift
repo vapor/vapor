@@ -2,7 +2,7 @@ import Async
 import Foundation
 
 /// Has create and update timestamps.
-public protocol SoftDeletable: Model, _SoftDeletable {
+public protocol SoftDeletable: Model, AnySoftDeletable {
     /// Key referencing deleted at property.
     typealias DeletedAtKey = ReferenceWritableKeyPath<Self, Date?>
 
@@ -62,13 +62,13 @@ extension QueryBuilder where Model: SoftDeletable {
 
 /// Unfortunately we need this hack.
 /// note: do not rely on this exterally.
-public protocol _SoftDeletable {
+public protocol AnySoftDeletable: AnyModel {
     /// Pointer to type erased key path
-    static var _deletedAtKey: AnyKeyPath { get }
+    static var anyDeletedAtKey: AnyKeyPath { get }
 }
 
 extension SoftDeletable {
-    public static var _deletedAtKey: AnyKeyPath {
+    public static var anyDeletedAtKey: AnyKeyPath {
         return deletedAtKey
     }
 }

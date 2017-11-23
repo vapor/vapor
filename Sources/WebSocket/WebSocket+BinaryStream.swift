@@ -45,6 +45,16 @@ final class BinaryStream : Async.Stream {
     func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
 }
 
 

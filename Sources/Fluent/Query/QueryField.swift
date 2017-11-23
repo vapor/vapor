@@ -25,15 +25,12 @@ public protocol QueryFieldRepresentable {
 extension KeyPath: QueryFieldRepresentable {
     /// See QueryFieldRepresentable.makeQueryField()
     public func makeQueryField() throws -> QueryField {
-        guard let model = Root.self as? KeyFieldMappable.Type else {
-            throw "`Can't create query field. \(Root.self)` does not conform to `Model`."
+        guard let model = Root.self as? AnyModel.Type else {
+            throw "`Can't create query field. \(Root.self)` does not conform to `AnyModel`."
         }
 
-        guard let queryField = model.keyFieldMap[self] else {
-            throw "No query field on model `\(Root.self)` for key path `\(self)`"
-        }
-
-        return queryField
+        let key = try model.keyStringMap.requireString(for: self)
+        return QueryField(entity: model.entity, name: key)
     }
 }
 

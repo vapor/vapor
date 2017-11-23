@@ -1,5 +1,6 @@
 import Async
 import HTTP
+import Service
 
 /// Capable of being used as a route parameter.
 ///
@@ -19,5 +20,19 @@ extension Parameter {
     /// The path component for this route parameter
     public static var parameter: PathComponent {
         return .parameter(uniqueSlug)
+    }
+}
+
+extension Parameter {
+    /// See Parameter.uniqueSlug
+    public static var uniqueSlug: String {
+        return "\(Self.self)"
+    }
+}
+
+extension Parameter where Self: EphemeralWorkerFindable {
+    /// See Parameter.make
+    public static func make(for parameter: String, in request: Request) throws -> EphemeralWorkerFindableResult {
+        return try find(identifier: parameter, for: request)
     }
 }

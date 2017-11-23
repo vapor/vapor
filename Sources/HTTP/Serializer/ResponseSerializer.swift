@@ -38,6 +38,16 @@ public final class ResponseSerializer: Serializer {
         outputStream.onOutput(input)
     }
 
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Efficiently serializes a response into Data.
     public func serialize(_ response: Response) -> Data {
         self.upgradeHandler = response.onUpgrade

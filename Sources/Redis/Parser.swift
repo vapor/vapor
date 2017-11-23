@@ -46,6 +46,16 @@ final class DataParser: Async.Stream {
     func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
     
     /// Parses a basic String (no \r\n's) `String` starting at the current position
     fileprivate func simpleString(from position: inout Int) -> String? {

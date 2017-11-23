@@ -34,6 +34,16 @@ public final class RequestSerializer: Serializer {
         outputStream.onOutput(input)
     }
 
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Serializes a request into DispatchData.
     public func serialize(_ request: Request) -> Data {
         var serialized = request.method.data

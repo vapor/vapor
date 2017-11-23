@@ -52,6 +52,8 @@ public final class EngineServer: Server {
                     /// FIXME: use log protocol?
                     console.reportError(err, as: "Uncaught error")
                     client.close()
+                }.finally {
+                    // client closed
                 }
 
             client.tcp.start()

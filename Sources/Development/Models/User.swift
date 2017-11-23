@@ -1,5 +1,6 @@
-import Foundation
 import Async
+import Core
+import Foundation
 import HTTP
 import Leaf
 import Vapor
@@ -22,11 +23,11 @@ extension TestUser: Model {
     static var idKey = \TestUser.id
 
     /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.name): field("name"),
-            key(\.age): field("age"),
+            key(\.id): "id",
+            key(\.name): "name",
+            key(\.age): "age",
         ]
     }
 }
@@ -73,14 +74,14 @@ struct TestSiblings: Migration {
 
 final class User: Model, Content {
     static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.age): field("age"),
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.name): "name",
+        key(\.age): "age",
     ]
     static var idKey = \User.id
 
-    var id: Int?
+    var id: UUID?
     var name: String
     var age: Double
 //    var child: User?

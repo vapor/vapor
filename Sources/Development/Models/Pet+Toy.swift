@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 import SQLite
@@ -13,10 +14,10 @@ final class PetToyPivot: ModifiablePivot {
     static var rightIDKey = \PetToyPivot.toyID
     static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
 
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.petID): field("petID"),
-        key(\.toyID): field("toyID")
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.petID): "petID",
+        key(\.toyID): "toyID"
     ]
 
     var id: UUID?

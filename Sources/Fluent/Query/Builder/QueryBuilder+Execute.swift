@@ -58,7 +58,7 @@ extension QueryBuilder {
         var partial: [T] = []
         partial.reserveCapacity(max)
 
-        return self.run(decoding: T.self) { model in
+        return _run(decoding: T.self) { model, conn in
             partial.append(model)
             if partial.count >= max {
                 try closure(partial)
