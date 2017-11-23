@@ -104,7 +104,6 @@ public final class Serializer {
                     source: source,
                     worker: self.worker
                 )
-                print("render tag")
                 try tag.render(
                     parsed: parsed,
                     context: &self.context,
