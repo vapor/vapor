@@ -9,15 +9,18 @@ public struct LeafConfig {
     let tags: [String: LeafTag]
     let viewsDir: String
     let fileFactory: LeafRenderer.FileFactory
+    let cache: Bool
 
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        fileFactory: @escaping LeafRenderer.FileFactory = File.init
+        fileFactory: @escaping LeafRenderer.FileFactory = File.init,
+        cache: Bool = true
     ) {
         self.tags = tags
         self.viewsDir = viewsDir
         self.fileFactory = fileFactory
+        self.cache = cache
     }
 }
 
@@ -34,7 +37,8 @@ public final class LeafProvider: Provider {
             return LeafRenderer(
                 tags: config.tags,
                 viewsDir: config.viewsDir,
-                fileFactory: config.fileFactory
+                fileFactory: config.fileFactory,
+                cache: config.cache
             )
         }
 
@@ -74,6 +78,6 @@ public struct View: Codable {
 }
 
 public protocol ViewRenderer {
-    func make(_ path: String, subject: Encodable, on worker: Worker) throws -> Future<View>
+    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
     func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View>
 }

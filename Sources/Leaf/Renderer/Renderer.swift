@@ -18,17 +18,21 @@ public final class LeafRenderer {
 
     /// Views base directory.
     public let viewsDir: String
+    
+    var mustCache: Bool
 
     /// Create a new Leaf renderer.
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        fileFactory: @escaping FileFactory = File.init
+        fileFactory: @escaping FileFactory = File.init,
+        cache: Bool = true
     ) {
         self.tags = tags
         self._files = [:]
         self.fileFactory = fileFactory
         self.viewsDir = viewsDir.finished(with: "/")
+        self.mustCache = cache
     }
 
     // ASTs only need to be parsed once
@@ -86,10 +90,10 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, subject: Encodable, on worker: Worker) throws -> Future<View> {
+    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
         return try render(
             path: path,
-            context: LeafEncoder().encode(subject),
+            context: LeafEncoder().encode(context),
             on: worker
         ).map { data in
             return View(data: data)
@@ -98,7 +102,7 @@ extension LeafRenderer: ViewRenderer {
     
     /// See ViewRenderer.make
     public func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View> {
-        return try make(path, subject: context, on: worker)
+        return try make(path, context: context, on: worker)
     }
 }
 
@@ -124,8 +128,16 @@ extension LeafRenderer {
             file = fileFactory(worker.eventLoop.queue)
             _files[worker.eventLoop.queue.label.hashValue] = file
         }
+        
+        let data: Future<Data>
 
-        file.cachedRead(at: fullPath).do { view in
+        if self.mustCache {
+            data = file.cachedRead(at: fullPath)
+        } else {
+            data = file.read(at: fullPath)
+        }
+            
+        data.do { view in
             self.render(template: view, context: context, on: worker).do { data in
                 promise.complete(data)
             }.catch { error in
