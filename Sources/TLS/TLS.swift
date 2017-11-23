@@ -19,7 +19,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
     public typealias Input = ByteBuffer
     
     /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream
-    let ssl: SSLStream<TCPClient>
+    let ssl: SSLStream
     
     /// The TCP that is used in the SSL Stream
     let client: TCPClient

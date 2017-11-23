@@ -15,11 +15,7 @@ import Security
 /// The TCP socket will also be read and deciphered into plaintext and outputted.
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
-public final class SSLStream<ByteStream>: Async.Stream
-    where ByteStream: Async.Stream,
-        ByteStream.Output == ByteBuffer,
-        ByteStream.Input == ByteBuffer
-{
+public final class SSLStream: Async.Stream {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
@@ -54,10 +50,15 @@ public final class SSLStream<ByteStream>: Async.Stream
     internal var outputStream: BasicStream<Output> = .init()
 
     /// The underlying TCP socket
-    private let socket: ByteStream
+    private let socket: ClosableStream
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws {
+    public init<ByteStream>(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws
+        where ByteStream: Async.Stream,
+        ByteStream.Output == ByteBuffer,
+        ByteStream.Input == ByteBuffer,
+        ByteStream: ClosableStream
+    {
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue
