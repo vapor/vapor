@@ -25,8 +25,8 @@ public final class LeafRenderer {
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        fileFactory: @escaping FileFactory = File.init,
-        cache: Bool = true
+        cache: Bool = true,
+        fileFactory: @escaping FileFactory = File.init
     ) {
         self.tags = tags
         self._files = [:]

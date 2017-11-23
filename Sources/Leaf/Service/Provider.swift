@@ -14,8 +14,8 @@ public struct LeafConfig {
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        fileFactory: @escaping LeafRenderer.FileFactory = File.init,
-        cache: Bool = true
+        cache: Bool = true,
+        fileFactory: @escaping LeafRenderer.FileFactory = File.init
     ) {
         self.tags = tags
         self.viewsDir = viewsDir
@@ -37,8 +37,8 @@ public final class LeafProvider: Provider {
             return LeafRenderer(
                 tags: config.tags,
                 viewsDir: config.viewsDir,
-                fileFactory: config.fileFactory,
-                cache: config.cache
+                cache: config.cache,
+                fileFactory: config.fileFactory
             )
         }
 
