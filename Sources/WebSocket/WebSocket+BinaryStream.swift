@@ -16,7 +16,7 @@ final class BinaryStream : Async.Stream {
     }
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new BinaryStream that has yet to be linked up with other streams
     init() { }
@@ -56,7 +56,6 @@ final class BinaryStream : Async.Stream {
         outputStream.onClose(onClose)
     }
 }
-
 
 extension WebSocket {
     /// Sends a string to the server

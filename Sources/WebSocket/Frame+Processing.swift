@@ -14,12 +14,12 @@ extension WebSocket {
             }
             
             // Stream to the textStream's listener
-            self.textStream.onInput(string)
+            self.textStream.outputStream.onInput(string)
         }
         
         func processBinary() {
             // Stream to the binaryStream's listener
-            self.binaryStream.onInput(frame.payload)
+            self.binaryStream.outputStream.onInput(frame.payload)
         }
         
         switch frame.opCode {

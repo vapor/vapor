@@ -96,11 +96,13 @@ class WebSocketTests : XCTestCase {
                 var count = 0
                 
                 socket.onText { string in
-                    XCTAssert(reversedResponses.contains(string))
+                    XCTAssert(reversedResponses.contains(string), "\(string) does not exist in reversed expectations")
                     count += 1
                     
                     if count == 3 {
                         promise0.complete()
+                    } else if count > 3 {
+                        XCTFail()
                     }
                 }.catch { error in
                     XCTFail("\(error)")
