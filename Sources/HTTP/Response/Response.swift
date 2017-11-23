@@ -22,6 +22,12 @@ import Foundation
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/)
 public final class Response: Message {
+    /// See EphemeralWorker.onInit
+    public static var onInit: LifecycleHook?
+
+    /// See EphemeralWorker.onDeinit
+    public static var onDeinit: LifecycleHook?
+
     /// See Message.version
     public var version: Version
 
@@ -55,6 +61,12 @@ public final class Response: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
+        Response.onInit?(self)
+    }
+
+    /// Called when request is deinitializing
+    deinit {
+        Response.onDeinit?(self)
     }
 }
 

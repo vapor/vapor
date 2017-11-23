@@ -1,13 +1,14 @@
 import Async
+import Core
 import Fluent
 
 final class KitchenSink<D: Database>: Model {
     /// See Model.ID
     typealias ID = String
 
-    /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
-        return [key(\.id): field("id")]
+    /// See Model.keyStringMap
+    static var keyStringMap: KeyStringMap {
+        return [key(\.id): "id"]
     }
 
     /// See Model.idKey

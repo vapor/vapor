@@ -51,7 +51,7 @@ extension Services {
     public mutating func register<S>(
         _ supports: [Any.Type] = [],
         tag: String? = nil,
-        isSingleton: Bool = true,
+        isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
     ) {
         let factory = BasicServiceFactory(

@@ -42,6 +42,16 @@ public final class FrameParser: Async.Stream {
         outputStream.onError(error)
     }
 
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// See OutputStream.onInput
     public func onInput(_ input: ByteBuffer) {
         guard let pointer = input.baseAddress, input.count > 0 else {

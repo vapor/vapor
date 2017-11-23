@@ -1,4 +1,5 @@
 import Async
+import Core
 import Foundation
 
 /// Represents a migration that has succesfully ran.
@@ -21,13 +22,13 @@ final class MigrationLog<D: Database>: Model, Timestampable {
     static var idKey: IDKey { return \.id }
 
     /// See Model.keyPathMap
-    static var keyFieldMap: KeyFieldMap {
+    static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.name): field("name"),
-            key(\.batch): field("batch"),
-            key(\.createdAt): field("createdAt"),
-            key(\.updatedAt): field("updatedAt"),
+            key(\.id): "id",
+            key(\.name): "name",
+            key(\.batch): "batch",
+            key(\.createdAt): "createdAt",
+            key(\.updatedAt): "updatedAt",
         ]
     }
 

@@ -29,7 +29,6 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
 
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        print("enabled")
         return query(string: "PRAGMA foreign_keys = ON;").execute()
     }
 

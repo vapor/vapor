@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 
@@ -15,12 +16,12 @@ internal final class Foo<D: Database>: Model {
     /// See Model.idKey
     static var idKey: IDKey { return \.id }
 
-    /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    /// See Model.keyStringMap
+    static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.bar): field("bar"),
-            key(\.baz): field("baz")
+            key(\.id): "id",
+            key(\.bar): "bar",
+            key(\.baz): "baz"
         ]
     }
 

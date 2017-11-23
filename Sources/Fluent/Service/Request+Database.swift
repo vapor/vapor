@@ -19,10 +19,9 @@ extension Worker where Self: HasContainer {
             if let existing = self.eventLoop.getConnectionPool(database: database) {
                 pool = existing
             } else {
-                let container = try self.requireContainer()
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: container.make(Databases.self, for: Self.self)
+                    using: self.workerMake(Databases.self, for: Self.self)
                 )
             }
 
@@ -49,10 +48,9 @@ extension Worker where Self: HasContainer {
             if let existing = self.eventLoop.getConnectionPool(database: database) {
                 pool = existing
             } else {
-                let container = try self.requireContainer()
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: container.make(Databases.self, for: Self.self)
+                    using: self.workerMake(Databases.self, for: Self.self)
                 )
             }
 
@@ -70,41 +68,63 @@ extension Worker where Self: HasContainer {
     ) throws {
         /// this is the first attempt to connect to this
         /// db for this request
+        try requireConnectionPool(to: database).releaseConnection(conn)
+    }
+
+    /// Require a connection, throwing an error if none is found.
+    internal func requireConnectionPool<Database>(
+        to database: DatabaseIdentifier<Database>
+    ) throws -> DatabaseConnectionPool<Database> {
         guard let pool = self.eventLoop.getConnectionPool(database: database) else {
             throw FluentError(
                 identifier: "noReleasePool",
                 reason: "No connection pool was found while attempting to release a connection."
             )
         }
-        pool.releaseConnection(conn)
+
+        return pool
     }
 }
 
-/// MARK:  ConnectionRepresentable
+/// MARK: EphemeralWorker
 
-extension Extendable where Self: HasContainer, Self: Worker {
+extension EphemeralWorker {
     /// See ConnectionRepresentable.makeConnection
     /// important: make sure to release this connection later.
     public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        if let active = connections[database.uid]?.connection as? Future<D.Connection> {
-            return active
+        if let current = connections[database.uid]?.connection as? Future<D.Connection> {
+            return current
         }
 
-        return requestConnection(to: database).map { conn in
-            self.connections[database.uid] = ActiveConnection(connection: conn) {
-                try self.releaseConnection(conn, to: database)
-            }
+        /// create an active connection, since we don't have to worry about threading
+        /// we can be sure that .connection will be set before this is called again
+        let active = ActiveConnection()
+        connections[database.uid] = active
 
+        let conn = requestConnection(to: database).map { conn -> D.Connection in
+            /// first get a pointer to the pool
+            let pool = try self.requireConnectionPool(to: database)
+
+            /// then create an active connection that knows how to
+            /// release itself
+            active.release = {
+                pool.releaseConnection(conn)
+            }
             return conn
         }
+
+        /// set the active connection so it is returned next time
+        active.connection = active
+
+        return conn
     }
 
     /// Releases all active connections.
-    public func releaseConnections() throws {
+    public func releaseConnections() {
         let conns = connections
         connections = [:]
         for (_, conn) in conns {
-            try conn.release()
+            conn.release!()
         }
     }
 
@@ -116,7 +136,10 @@ extension Extendable where Self: HasContainer, Self: Worker {
 }
 
 /// Represents an active connection.
-fileprivate struct ActiveConnection {
-    var connection: Any
-    var release: () throws -> ()
+fileprivate final class ActiveConnection {
+    typealias OnRelease = () -> ()
+    var connection: Any?
+    var release: OnRelease?
+
+    init() {}
 }

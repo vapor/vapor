@@ -28,8 +28,6 @@ extension DatabaseIdentifier {
 
 var services = Services.default()
 
-services.register(FluentMiddleware())
-
 services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
 try services.register(LeafProvider())
 try services.register(FluentProvider())
@@ -123,10 +121,10 @@ let controller = FooController()
 router.post("login", use: controller.foo)
 
 final class Message: Model {
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.text): field("text"),
-        key(\.time): field("customtime"),
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.text): "text",
+        key(\.time): "customtime",
     ]
 
     static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
@@ -156,6 +154,8 @@ final class Message: Model {
         try container.encode(key: \Message.time)
     }
 }
+
+extension Request: ConnectionRepresentable {}
 
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
@@ -217,17 +217,33 @@ router.get("users") { req -> Future<Response> in
     }
 }
 
+router.get("fast") { req in
+    return try Response(body: "123")
+}
+
+router.get("123") { req in
+    return "123"
+}
+
 router.get("hello") { req in
     return try User.query(on: req).filter(\User.age > 50).all()
 }
 
-router.get("first") { req -> Future<User> in
-    return try User.query(on: req).filter(\User.name == "Vapor").first().map { user in
-        guard let user = user else {
-            throw Abort(.notFound, reason: "Could not find user.")
-        }
+router.get("run") { req -> Future<String> in
+    return User.query(on: req).run(into: { _ in }).then { _ -> String in
+        return "done"
+    }
+}
 
-        return user
+router.get("all") { req -> Future<String> in
+    return try User.query(on: req).filter(\User.name == "Vapor").all().then { _ -> String in
+        return "done"
+    }
+}
+
+router.get("first") { req -> Future<String> in
+    return try User.query(on: req).filter(\User.name == "Vapor").first().then { _ -> String in
+        return "done"
     }
 }
 

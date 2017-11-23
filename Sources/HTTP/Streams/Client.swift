@@ -37,8 +37,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     public init<ByteStream>(socket: ByteStream, maxBodySize: Int = 10_000_000)
         where ByteStream: Async.Stream,
             ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer,
-            ByteStream: ClosableStream
+            ByteStream.Output == ByteBuffer
     {
         self.parser = ResponseParser(maxBodySize: maxBodySize)
         self.serializer = RequestSerializer()

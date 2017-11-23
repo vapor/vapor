@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 
@@ -17,14 +18,14 @@ public final class User<D: Database>: Model, Timestampable {
         return "users"
     }
 
-    /// See Model.keyFieldMap
-    public static var keyFieldMap: KeyFieldMap {
+    /// See Model.keyStringMap
+    public static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.name): field("name"),
-            key(\.age): field("age"),
-            key(\.createdAt): field("createdAt"),
-            key(\.updatedAt): field("updatedAt")
+            key(\.id): "id",
+            key(\.name): "name",
+            key(\.age): "age",
+            key(\.createdAt): "createdAt",
+            key(\.updatedAt): "updatedAt"
         ]
     }
 

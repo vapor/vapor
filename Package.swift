@@ -106,7 +106,7 @@ let package = Package(
 
         // Fluent
         // FIXME: FluentRouting and FluentHTTP packages?
-        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "Routing", "Service"]),
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),

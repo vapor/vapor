@@ -32,8 +32,7 @@ internal final class Connection: Async.Stream, ClosableStream {
     init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
         where ByteStream: Async.Stream,
             ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer,
-            ByteStream: ClosableStream
+            ByteStream.Output == ByteBuffer
     {
         self.socket = socket
         self.serverSide = serverSide

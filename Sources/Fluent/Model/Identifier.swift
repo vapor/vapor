@@ -1,3 +1,4 @@
+import Core
 import Foundation
 
 /// Types conforming to this protocol may be used
@@ -32,12 +33,6 @@ extension String: ID {
 }
 
 /// MARK: String
-
-/// Capable of being decoded from a string.
-public protocol StringDecodable {
-    /// Decode self from a string.
-    static func decode(from string: String) -> Self?
-}
 
 extension Int: StringDecodable {
     /// See StringDecodable.decode

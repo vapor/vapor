@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 import SQLite
@@ -6,9 +7,9 @@ import SQLite
 final class Toy: Model {
     static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
 
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name")
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.name): "name"
     ]
 
     static let idKey = \Toy.id
