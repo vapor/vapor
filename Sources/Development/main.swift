@@ -98,15 +98,13 @@ router.post("login") { req -> Response in
 
 router.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
-    // user.futureChild = promise.future
 
     req.eventLoop.queue.asyncAfter(deadline: .now() + 2) {
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
 
-    let user = User(name: "Vapor", age: 3);
-    return try view.make("/Users/tanner/Desktop/hello", context: user, on: req)
+    return try view.make("hello", context: promise.future, on: req)
 }
 
 final class FooController {
@@ -160,7 +158,7 @@ extension Request: ConnectionRepresentable {}
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
 
-    return try view.make("/Users/tanner/Desktop/hello", context: [
+    return try view.make("hello", context: [
         "user": user
     ], on: req)
 }
