@@ -86,14 +86,19 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
+    public func make(_ path: String, subject: Encodable, on worker: Worker) throws -> Future<View> {
         return try render(
             path: path,
-            context: LeafEncoder().encode(context),
+            context: LeafEncoder().encode(subject),
             on: worker
         ).map { data in
             return View(data: data)
         }
+    }
+    
+    /// See ViewRenderer.make
+    public func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View> {
+        return try make(path, subject: context, on: worker)
     }
 }
 

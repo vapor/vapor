@@ -73,7 +73,7 @@ public struct View: Codable {
     }
 }
 
-
 public protocol ViewRenderer {
-    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
+    func make(_ path: String, subject: Encodable, on worker: Worker) throws -> Future<View>
+    func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View>
 }

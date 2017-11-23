@@ -104,7 +104,7 @@ router.get("leaf") { req -> Future<View> in
         promise.complete(user)
     }
 
-    return try view.make("hello", context: promise.future, on: req)
+    return try view.make("hello", subject: promise.future, on: req)
 }
 
 final class FooController {
@@ -158,7 +158,7 @@ extension Request: ConnectionRepresentable {}
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
 
-    return try view.make("hello", context: [
+    return try view.make("hello", [
         "user": user
     ], on: req)
 }
