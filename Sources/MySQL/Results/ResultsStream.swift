@@ -2,7 +2,7 @@ import Async
 import libc
 
 /// A type that can parse streaming query results
-protocol ResultsStream: Stream {
+protocol ResultsStream: Stream, ClosableStream {
     /// Keeps track of all columns associated with the results
     var columns: [Field] { get set }
     
@@ -84,7 +84,7 @@ extension ResultsStream {
                 return
             }
             
-            close()
+            self.close()
             return
         }
         

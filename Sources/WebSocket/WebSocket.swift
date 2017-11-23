@@ -24,10 +24,11 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
-        where ByteStream: Async.Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer
+    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
+        ByteStream: Async.Stream,
+        ByteStream.Input == ByteBuffer,
+        ByteStream.Output == ByteBuffer,
+        ByteStream: ClosableStream
     {
         self.connection = Connection(socket: socket, serverSide: serverSide)
         
