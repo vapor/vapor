@@ -27,7 +27,7 @@ final class HTTPTestServer {
         hostname: String = "0.0.0.0",
         port: UInt16 = 8282,
         backlog: Int32 = 4096,
-        workerCount: Int = 8
+        workerCount: Int = 2
     ) {
         self.hostname = hostname
         self.port = port
@@ -68,27 +68,26 @@ final class HTTPTestServer {
     }
 }
 
+struct MyError: Error {}
+
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
         // TODO: Failing on Linux
-        /*
         let app = WebSocketApplication()
         let server = HTTPTestServer()
         
         try server.start(with: app)
-        
         sleep(1)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
         
         let queue = DispatchQueue(label: "test.client")
-        let worker = EventLoop(queue: queue)
         
         let uri = URI(stringLiteral: "ws://localhost:8282/")
         
         do {
-            _ = try WebSocket.connect(to: uri, worker: worker).do { socket in
+            _ = try WebSocket.connect(to: uri, worker: queue).do { socket in
                 let responses = ["test", "cat", "banana"]
                 let reversedResponses = responses.map {
                     String($0.reversed())
@@ -101,17 +100,21 @@ class WebSocketTests : XCTestCase {
                     count += 1
                     
                     if count == 3 {
-                        promise0.complete(())
+                        promise0.complete()
                     }
+                }.catch { error in
+                    XCTFail("\(error)")
                 }
                 
                 socket.onBinary { blob in
-                    defer { promise1.complete(()) }
+                    defer { promise1.complete() }
                     
                     guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
                         XCTFail()
                         return
                     }
+                }.catch { error in
+                    XCTFail("\(error)")
                 }
                 
                 for response in responses {
@@ -120,22 +123,19 @@ class WebSocketTests : XCTestCase {
                 
                 Data([
                     0x00, 0x01, 0x00, 0x02
-                    ]).withUnsafeBytes { (pointer: BytesPointer) in
-                        let buffer = ByteBuffer(start: pointer, count: 4)
-                        
-                        socket.send(buffer)
+                ]).withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: 4)
+                    
+                    socket.send(buffer)
                 }
-                
-                promise0.complete(())
-                }.blockingAwait(timeout: .seconds(10))
+            }.blockingAwait(timeout: .seconds(10))
             
             try promise0.future.blockingAwait(timeout: .seconds(10))
             try promise1.future.blockingAwait(timeout: .seconds(10))
         } catch {
-            XCTFail("Error connecting to \(uri)")
+            XCTFail("Error \(error) connecting to \(uri)")
             throw error
         }
-        */
     }
     
     static let allTests = [
@@ -143,7 +143,9 @@ class WebSocketTests : XCTestCase {
     ]
 }
 
-struct WebSocketApplication: Responder {
+final class WebSocketApplication: Responder {
+    var sockets = [UUID: WebSocket]()
+    
     func respond(to req: Request) throws -> Future<Response> {
         let promise = Promise<Response>()
         
@@ -151,13 +153,22 @@ struct WebSocketApplication: Responder {
             let res = try WebSocket.upgradeResponse(for: req)
             res.onUpgrade = { client in
                 let websocket = WebSocket(socket: client)
+                let id = UUID()
+                
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
                 }.catch(onError: promise.fail)
+                
                 websocket.onBinary { buffer in
                     websocket.send(buffer)
                 }.catch(onError: promise.fail)
+                
+                self.sockets[id] = websocket
+                
+                websocket.finally {
+                    self.sockets[id] = nil
+                }
             }
             promise.complete(res)
         } else {

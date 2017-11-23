@@ -1,7 +1,7 @@
 import Async
 import Bits
 
-public final class FrameParser: Async.Stream {
+public final class FrameParser: Async.Stream, ClosableStream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
     
@@ -40,6 +40,16 @@ public final class FrameParser: Async.Stream {
     /// See OutputStream.onError
     public func onError(_ error: Error) {
         outputStream.onError(error)
+    }
+    
+    /// See ClosableStream.close
+    public func close() {
+        self.outputStream.close()
+    }
+    
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        self.outputStream.onClose(onClose)
     }
 
     /// See CloseableStream.close
@@ -163,8 +173,9 @@ public final class FrameParser: Async.Stream {
     static func decodeFrameHeader(from base: UnsafePointer<UInt8>, length: Int) throws -> Frame.Header {
         guard
             length > 3,
-            let code = Frame.OpCode(rawValue: base[0] & 0b00001111) else {
-                throw WebSocketError(.invalidFrame)
+            let code = Frame.OpCode(rawValue: base[0] & 0b00001111)
+        else {
+            throw WebSocketError(.invalidFrame)
         }
         
         // If the FIN bit is set
@@ -178,7 +189,7 @@ public final class FrameParser: Async.Stream {
         
         // Binary and continuation frames don't need to be final
         if !final {
-            guard code == .continuation || code == .binary else {
+            guard code == .continuation || code == .binary || code == .close else {
                 throw WebSocketError(.invalidFrameParameters)
             }
         }

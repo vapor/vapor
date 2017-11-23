@@ -62,7 +62,7 @@ internal final class Connection: Async.Stream, ClosableStream {
     }
 
     /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
+    func onClose(_ onClose: ClosableStream) {
         outputStream.onClose(onClose)
     }
 
