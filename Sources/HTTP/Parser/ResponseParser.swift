@@ -74,16 +74,6 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         outputStream.onOutput(input)
     }
 
-    /// See CloseableStream.close
-    public func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
-    }
-
     /// Parses the supplied data into a response or throws an error.
     /// If the data is incomplete, a nil response will be returned.
     /// Contiguous data may be supplied as multiple calls.
