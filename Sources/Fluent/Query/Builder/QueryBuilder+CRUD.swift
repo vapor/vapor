@@ -17,9 +17,8 @@ extension QueryBuilder {
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
     public func create(_ model: Model) -> Future<Void> {
-        self.query.data = model
-        self.query.action = .create
-        let query = self.query
+        query.data = model
+        query.action = .create
         return connection.then { conn -> Future<Void> in
             if model.fluentID == nil {
                 // generate an id
@@ -38,26 +37,13 @@ extension QueryBuilder {
                 timestampable.createdAt = now
             }
 
-            let promise = Promise(Void.self)
-
-            let stream = BasicStream<Model>()
-            stream.drain { model in
-                try model.parseID(from: conn)
-            }.catch { err in
-                promise.fail(err)
-            }.finally {
-                do {
-                    try model.didCreate(on: conn)
-                        .chain(to: promise)
-                } catch {
-                    promise.fail(error)
+            return try model.willCreate(on: conn)
+                .then {
+                    self.run { model in
+                        try model.parseID(from: conn)
+                    }
                 }
-            }
-
-            return try model.willCreate(on: conn).then { _ -> Future<Void> in
-                conn.execute(query: query, into: stream)
-                return promise.future
-            }
+                .then { try model.didCreate(on: conn) }
         }
     }
 
@@ -65,7 +51,6 @@ extension QueryBuilder {
     /// the model has its ID set.
     public func update(_ model: Model) -> Future<Void> {
         return connection.then { conn -> Future<Void> in
-            /// FIXME: must not capture self here
             self.query.data = model
 
             guard let id = model.fluentID else {
@@ -108,7 +93,6 @@ extension QueryBuilder {
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
         return connection.then { conn in
-            /// FIXME: must not capture self here
             return try model.willDelete(on: conn).then { _ -> Future<Void> in
                 guard let id = model.fluentID else {
                     throw "model does not have an id"

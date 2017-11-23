@@ -6,11 +6,13 @@ final class TestContainer: Container {
     let environment: Environment
     let services: Services
     var extend: Extend
+    var serviceCache: ServiceCache
 
     init(environment: Environment = .development, config: Config, services: Services) {
         self.config = config
         self.environment = environment
         self.services = services
+        self.serviceCache = .init()
         self.extend = [:]
     }
 }

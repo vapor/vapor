@@ -7,7 +7,7 @@ public protocol Database {
     /// This database's connection type.
     /// The connection should also know which
     /// type of database it belongs to.
-    associatedtype Connection: Fluent.Connection
+    associatedtype Connection: Fluent.DatabaseConnection
 
     /// Creates a new database connection that will
     /// execute callbacks on the supplied dispatch queue.

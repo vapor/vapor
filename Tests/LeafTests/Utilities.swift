@@ -70,11 +70,13 @@ final class BasicContainer: Container {
     var environment: Environment
     var services: Services
     var extend: Extend
+    var serviceCache: ServiceCache
 
     init(services: Services) {
         self.config = Config()
         self.environment = .development
         self.services = services
+        self.serviceCache = .init()
         self.extend = Extend()
     }
 }

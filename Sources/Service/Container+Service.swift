@@ -1,8 +1,9 @@
 import Async
 import Foundation
 
-private let serviceCacheKey = "service:service-cache"
+
 private let singletonCacheKey = "service:singleton-cache"
+private let lockKey = "service:lock"
 
 extension Container {
     /// Returns or creates a service for the given type.
@@ -13,7 +14,21 @@ extension Container {
         _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
-        return try unsafeMake(Interface.self, for: Client.self) as! Interface
+        // check if we've previously resolved this service
+        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+            return service
+        }
+
+        do {
+            // resolve the service and cache it
+            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
+            serviceCache.set(service, for: Client.self)
+            return service
+        } catch {
+            // cache the error
+            serviceCache.set(error: error, Interface.self, for: Client.self)
+            throw error
+        }
     }
 
     /// Returns or creates a service for the given type.
@@ -23,29 +38,11 @@ extension Container {
     /// This method accepts and returns Any.
     ///
     /// Use .make() for the safe method.
-    fileprivate func unsafeMake(
+    internal func unsafeMake(
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
-        let key = "\(interface):\(client)"
-
-        // check if we've previously resolved this service
-        if let service = serviceCache[key] {
-            return try service.resolve()
-        }
-
-        // resolve the service and cache it
-        let result: ResolvedService
-        do {
-            let service = try uncachedUnsafeMake(interface, for: client)
-            result = .service(service)
-        } catch {
-            result = .error(error)
-        }
-        serviceCache[key] = result
-
-        // return the newly cached service
-        return try result.resolve()
+        return try uncachedUnsafeMake(interface, for: client)
     }
 
     /// Makes the interface for the client. Does not consult the service cache.
@@ -108,14 +105,18 @@ extension Container {
         return ret
     }
 
-    fileprivate var serviceCache: [String: ResolvedService] {
-        get { return extend[serviceCacheKey] as? [String: ResolvedService] ?? [:] }
-        set { extend[serviceCacheKey] = newValue }
-    }
-
     fileprivate var singletonCache: [String: Any] {
         get { return extend[singletonCacheKey] as? [String: Any] ?? [:] }
         set { extend[singletonCacheKey] = newValue }
+    }
+
+    internal var lock: NSLock {
+        if let existing = extend[lockKey] as? NSLock {
+            return existing
+        }
+        let new = NSLock()
+        extend[lockKey] = new
+        return new
     }
 }
 
@@ -125,84 +126,6 @@ extension Services {
     internal func factories(supporting interface: Any.Type) -> [ServiceFactory] {
         return factories.filter { factory in
             return factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface })
-        }
-    }
-}
-
-extension Worker where Self: HasContainer {
-    /// Returns or creates a service for the given type.
-    ///
-    /// If a protocol is supplied, a service conforming
-    /// to the protocol will be returned.
-    public func workerMake<Interface, Client>(
-        _ interface: Interface.Type = Interface.self,
-        for client: Client.Type
-    ) throws -> Interface {
-        return try unsafeWorkerMake(Interface.self, for: Client.self) as! Interface
-    }
-
-    /// Returns or creates a service for the given type.
-    /// If the service has already been requested once,
-    /// the previous result for the interface and client is returned.
-    ///
-    /// This method accepts and returns Any.
-    ///
-    /// Use .make() for the safe method.
-    fileprivate func unsafeWorkerMake(
-        _ interface: Any.Type,
-        for client: Any.Type
-    ) throws -> Any {
-        let key = "\(interface):\(client)"
-        // check if we've previously resolved this service
-        if let service = eventLoop.serviceCache[key] {
-            return try service.resolve()
-        }
-
-        /// require the worker's container
-        let container = try requireContainer()
-
-        /// locking is required here so that we don't
-        /// run into threading issues with the shared container.
-        /// however, the lock will only be hit on the first request,
-        /// so it should't be a huge issue.
-        _containerLock.lock()
-        defer {
-            _containerLock.unlock()
-        }
-
-        // resolve the service and cache it
-        let result: ResolvedService
-        do {
-            let service = try container.uncachedUnsafeMake(interface, for: client)
-            result = .service(service)
-        } catch {
-            result = .error(error)
-        }
-
-        eventLoop.serviceCache[key] = result
-
-        // return the newly cached service
-        return try result.resolve()
-    }
-}
-
-let _containerLock = NSLock()
-
-extension EventLoop {
-    fileprivate var serviceCache: [String: ResolvedService] {
-        get { return extend[serviceCacheKey] as? [String: ResolvedService] ?? [:] }
-        set { extend[serviceCacheKey] = newValue }
-    }
-}
-
-fileprivate enum ResolvedService {
-    case service(Any)
-    case error(Error)
-
-    func resolve() throws -> Any {
-        switch self {
-        case .error(let error): throw error
-        case .service(let service): return service
         }
     }
 }

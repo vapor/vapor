@@ -1,7 +1,44 @@
 import Async
 import Service
 
-extension Worker where Self: HasContainer {
+/// Create non-pooled connections that can be closed when done.
+extension Worker where Self: Container {
+    /// Returns a future database connection for the
+    /// supplied database identifier if one can be fetched.
+    /// The database connection will be cached on this worker.
+    /// The same database connection will always be returned for
+    /// a given worker.
+    public func withConnection<Database, F>(
+        to database: DatabaseIdentifier<Database>,
+        closure: @escaping (Database.Connection) throws -> F
+    ) -> Future<F.Expectation> where F: FutureType {
+        return makeConnection(to: database).then { conn in
+            return try closure(conn).map { e in
+                conn.close()
+                return e
+            }
+        }
+    }
+
+    /// Requests a connection to the database.
+    /// Call `.close` on the connection when you are finished.
+    public func makeConnection<Database>(
+        to database: DatabaseIdentifier<Database>
+    ) -> Future<Database.Connection> {
+        return then {
+            let databases = try self.make(Databases.self, for: Self.self)
+
+            guard let db = databases.storage[database.uid] as? Database else {
+                throw "no database with id '\(database)' configured"
+            }
+
+            return db.makeConnection(on: self)
+        }
+    }
+}
+
+/// Ephemeral workers use connection pooling.
+extension EphemeralWorker {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
@@ -21,7 +58,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 
@@ -50,7 +87,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 
@@ -86,12 +123,10 @@ extension Worker where Self: HasContainer {
     }
 }
 
-/// MARK: EphemeralWorker
-
+/// Automatic connection releasing when the ephemeral worker deinits.
 extension EphemeralWorker {
-    /// See ConnectionRepresentable.makeConnection
-    /// important: make sure to release this connection later.
-    public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+    /// See DatabaseConnectable.connect
+    public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         if let current = connections[database.uid]?.connection as? Future<D.Connection> {
             return current
         }

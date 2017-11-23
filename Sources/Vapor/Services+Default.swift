@@ -86,11 +86,7 @@ extension Services {
     }
 }
 
-extension Application: Worker, HasContainer {
-    public var container: Container? {
-        return self
-    }
-
+extension Application: Worker {
     public var eventLoop: EventLoop {
         return EventLoop.default
     }

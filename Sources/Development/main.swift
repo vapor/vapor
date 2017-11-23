@@ -11,20 +11,8 @@ import Service
 import SQLite
 import Vapor
 
-let beta: DatabaseIdentifier<SQLiteDatabase> = .init("beta")
-
-extension DatabaseIdentifier {
-    static var beta: DatabaseIdentifier<SQLiteDatabase> {
-        return .init("beta")
-    }
-
-    static var alpha: DatabaseIdentifier<SQLiteDatabase> {
-        return .init("alpha")
-    }
-}
-
-
-
+let beta = DatabaseIdentifier<SQLiteDatabase>("beta")
+let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
 
 var services = Services.default()
 
@@ -34,22 +22,22 @@ try services.register(FluentProvider())
 try services.register(SQLiteProvider())
 
 var databaseConfig = DatabaseConfig()
-databaseConfig.add(database: SQLiteDatabase.self, as: .alpha)
+databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
 databaseConfig.add(
     database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
-    as: .beta
+    as: beta
 )
-databaseConfig.enableLogging(on: .beta)
+databaseConfig.enableLogging(on: beta)
 services.register(databaseConfig)
 
 
 var migrationConfig = MigrationConfig()
-migrationConfig.add(migration: User.self, database: .beta)
-migrationConfig.add(migration: AddUsers.self, database: .beta)
-migrationConfig.add(migration: Pet.self, database: .beta)
-migrationConfig.add(migration: Toy.self, database: .beta)
-migrationConfig.add(migration: PetToyPivot.self, database: .beta)
-migrationConfig.add(migration: TestSiblings.self, database: .beta)
+migrationConfig.add(migration: User.self, database: beta)
+migrationConfig.add(migration: AddUsers.self, database: beta)
+migrationConfig.add(migration: Pet.self, database: beta)
+migrationConfig.add(migration: Toy.self, database: beta)
+migrationConfig.add(migration: PetToyPivot.self, database: beta)
+migrationConfig.add(migration: TestSiblings.self, database: beta)
 services.register(migrationConfig)
 
 var middlewareConfig = MiddlewareConfig()
@@ -59,7 +47,7 @@ services.register(middlewareConfig)
 
 let app = try Application(services: services)
 
-let foo = try app.withConnection(to: .alpha) { alpha in
+let foo = try app.withConnection(to: alpha) { alpha in
     return try alpha.query(string: "select sqlite_version();").all()
 }.blockingAwait()
 print(foo)
@@ -111,7 +99,7 @@ router.get("leaf") { req -> Future<View> in
 
 final class FooController {
     func foo(_ req: Request) -> Future<Response> {
-        return req.withConnection(to: .alpha) { db in
+        return req.withConnection(to: alpha) { db in
             return Response(status: .ok)
         }
     }
@@ -127,7 +115,7 @@ final class Message: Model {
         key(\.time): "customtime",
     ]
 
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
     static let idKey = \Message.id
 
     var id: String?
@@ -155,7 +143,7 @@ final class Message: Model {
     }
 }
 
-extension Request: ConnectionRepresentable {}
+extension Request: DatabaseConnectable {}
 
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
@@ -176,7 +164,7 @@ router.get("builder") { req -> Future<[User]> in
 
 
 router.get("transaction") { req -> Future<String> in
-    return req.withConnection(to: .beta) { db in
+    return req.withConnection(to: beta) { db in
         db.transaction { db in
             let user = User(name: "NO SAVE", age: 500)
             let message = Message(id: nil, text: "asdf", time: 42)

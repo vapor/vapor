@@ -44,17 +44,19 @@ final class FormURLEncodedParser {
                 key = try parseKey(data: token[0])
                 data = "true"
             } else {
-                throw "invalid form-urlencoded data \(pair)"
+                throw FormURLError(
+                    identifier: "malformedData",
+                    reason: "Malformed form-urlencoded data encountered"
+                )
             }
 
             let resolved: FormURLEncodedData
 
-            switch key.type {
-            case .complex(let subKeys):
+            if !key.subKeys.isEmpty {
                 var current = encoded[key.string] ?? .dictionary([:])
-                self.set(&current, to: data, at: subKeys)
+                self.set(&current, to: data, at: key.subKeys)
                 resolved = current
-            case .normal:
+            } else {
                 resolved = data
             }
 
@@ -66,7 +68,7 @@ final class FormURLEncodedParser {
 
     private func parseKey(data: Data) throws -> FormURLEncodedKey {
         let stringData: Data
-        let keyType: FormURLEncodedKeyType
+        let subKeys: [FormURLEncodedSubKey]
 
         // check if the key has `key[]` or `key[5]`
         if data.contains(.rightSquareBracket) && data.contains(.leftSquareBracket) {
@@ -75,30 +77,31 @@ final class FormURLEncodedParser {
             let slices = data.split(separator: .leftSquareBracket)
 
             guard slices.count > 0 else {
-                throw "invalid form url encoded key"
+                throw FormURLError(
+                    identifier: "malformedKey",
+                    reason: "Malformed form-urlencoded key encountered."
+                )
             }
             stringData = Data(slices[0])
-            let subKeys = try slices[1...].map(Data.init).map { data -> FormURLEncodedSubKey in
+            subKeys = try slices[1...].map(Data.init).map { data -> FormURLEncodedSubKey in
                 if data[0] == .rightSquareBracket {
                     return .array
                 } else {
                     return try .dictionary(data.dropLast().percentDecodedString())
                 }
             }
-
-            keyType = .complex(subKeys)
         } else {
             stringData = data
-            keyType = .normal
+            subKeys = []
         }
 
         return try FormURLEncodedKey(
             string: stringData.percentDecodedString(),
-            type: keyType
+            subKeys: subKeys
         )
     }
 
-    /// Sets mutable leaf input to a value at the given path.
+    /// Sets mutable form-urlencoded input to a value at the given path.
     private func set(
         _ base: inout FormURLEncodedData,
         to data: FormURLEncodedData,
@@ -152,12 +155,7 @@ final class FormURLEncodedParser {
 
 fileprivate struct FormURLEncodedKey {
     let string: String
-    let type: FormURLEncodedKeyType
-}
-
-fileprivate enum FormURLEncodedKeyType {
-    case normal
-    case complex([FormURLEncodedSubKey])
+    let subKeys: [FormURLEncodedSubKey]
 }
 
 fileprivate enum FormURLEncodedSubKey {
@@ -170,11 +168,17 @@ fileprivate enum FormURLEncodedSubKey {
 extension Data {
     fileprivate func percentDecodedString() throws -> String {
         guard let string = String(data: self, encoding: .utf8) else {
-            throw "could not utf8 decode string"
+            throw FormURLError(
+                identifier: "utf8Decoding",
+                reason: "Failed to utf8 decode string: \(self)"
+            )
         }
 
         guard let decoded = string.replacingOccurrences(of: "+", with: " ").removingPercentEncoding else {
-            throw "could not percent decode string"
+            throw FormURLError(
+                identifier: "percentDecoding",
+                reason: "Failed to percent decode string: \(self)"
+            )
         }
 
         return decoded

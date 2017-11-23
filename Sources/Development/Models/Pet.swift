@@ -10,7 +10,7 @@ final class Pet: Model {
         key(\.ownerID): "ownerID"
     ]
 
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
     static let idKey = \Pet.id
 
     var id: UUID?

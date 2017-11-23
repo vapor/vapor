@@ -62,11 +62,17 @@ extension Array where Element == Data {
 extension String {
     fileprivate func formURLEncoded() throws -> Data {
         guard let string = self.addingPercentEncoding(withAllowedCharacters: _allowedCharacters) else {
-            throw "could not percent encode string"
+            throw FormURLError(
+                identifier: "percentEncoding",
+                reason: "Failed to percent encode string: \(self)"
+            )
         }
 
         guard let encoded = string.data(using: .utf8) else {
-            throw "could not utf8 encode string"
+            throw FormURLError(
+                identifier: "utf8Encoding",
+                reason: "Failed to utf8 encode string: \(self)"
+            )
         }
 
         return encoded
