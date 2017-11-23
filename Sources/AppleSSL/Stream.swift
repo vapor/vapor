@@ -56,8 +56,7 @@ public final class SSLStream: Async.Stream {
     public init<ByteStream>(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws
         where ByteStream: Async.Stream,
         ByteStream.Output == ByteBuffer,
-        ByteStream.Input == ByteBuffer,
-        ByteStream: ClosableStream
+        ByteStream.Input == ByteBuffer
     {
         self.socket = socket
         self.descriptor = descriptor

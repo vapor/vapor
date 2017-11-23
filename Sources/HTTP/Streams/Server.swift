@@ -15,8 +15,7 @@ public final class HTTPServer: Async.OutputStream, ClosableStream {
     /// Creates a new HTTP Server from a Client stream
     public init<TCPClientStream>(socket: TCPClientStream)
         where TCPClientStream: OutputStream,
-        TCPClientStream.Output == TCPClient,
-        TCPClientStream: ClosableStream
+        TCPClientStream.Output == TCPClient
     {
         self.socket = socket
         let map = MapStream<TCPClient, HTTPPeer>(map: HTTPPeer.init)

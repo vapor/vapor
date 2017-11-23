@@ -53,14 +53,12 @@ extension WebSocket {
             
             try client.connect(hostname: hostname, port: port).do {
                 // Send the initial request
-                let data = serializer.serialize(request)
-                let bytes = data.withByteBuffer { $0 }
-                client.onInput(bytes)
+                serializer.serialize(request).withByteBuffer(client.onInput)
             }.catch(promise.fail)
             
-            let websocket = WebSocket(socket: client, serverSide: false)
-            
-            WebSocket.complete(to: promise, with: parser, id: id, websocket: websocket)
+            WebSocket.complete(to: promise, with: parser, id: id) {
+                return WebSocket(socket: client, serverSide: false)
+            }
         } else {
             // Create a new socket to the host
             let socket = try TCPSocket()
@@ -76,20 +74,18 @@ extension WebSocket {
                 client.start()
                 
                 // Send the initial request
-                let data = serializer.serialize(request)
-                let bytes = data.withByteBuffer { $0 }
-                client.onInput(bytes)
+                serializer.serialize(request).withByteBuffer(client.onInput)
             }.catch(promise.fail)
             
-            let websocket = WebSocket(socket: client, serverSide: false)
-            
-            WebSocket.complete(to: promise, with: parser, id: id, websocket: websocket)
+            WebSocket.complete(to: promise, with: parser, id: id) {
+                return WebSocket(socket: client, serverSide: false)
+            }
         }
         
         return promise.future
     }
     
-    fileprivate static func complete(to promise: Promise<WebSocket>, with parser: ResponseParser, id: String, websocket: WebSocket) {
+    fileprivate static func complete(to promise: Promise<WebSocket>, with parser: ResponseParser, id: String, factory: @escaping (() -> WebSocket)) {
         // Calculates the expected key
         let expectatedKey = Base64Encoder.encode(data: SHA1.hash(id + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
         
@@ -102,15 +98,15 @@ extension WebSocket {
                 response.status == .upgrade,
                 response.headers["Connection"] == "Upgrade",
                 response.headers["Upgrade"] == "websocket"
-                else {
-                    promise.fail(WebSocketError(.notUpgraded))
-                    return
+            else {
+                promise.fail(WebSocketError(.notUpgraded))
+                return
             }
             
             // Protocol version 13 uses `-Key` instead of `Accept`
             if response.headers["Sec-WebSocket-Version"] == "13",
                 response.headers["Sec-WebSocket-Key"] == expectedKeyString {
-                promise.complete(websocket)
+                promise.complete(factory())
             } else {
                 // Fail if the handshake didn't return the expected accept-key
                 guard response.headers["Sec-WebSocket-Accept"] == expectedKeyString else {
@@ -119,7 +115,7 @@ extension WebSocket {
                 }
                 
                 // Complete using the new websocket
-                promise.complete(websocket)
+                promise.complete(factory())
             }
         }.catch { error in
             promise.fail(error)

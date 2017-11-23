@@ -16,12 +16,7 @@ enum SSLSettings {
     }()
 }
 
-public final class SSLStream<ByteStream>: Async.Stream, ClosableStream 
-    where ByteStream: Async.Stream, 
-        ByteStream.Output == ByteBuffer, 
-        ByteStream.Input == ByteBuffer, 
-        ByteStream: ClosableStream 
-{
+public final class SSLStream: Async.Stream, ClosableStream {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
@@ -38,7 +33,7 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     var descriptor: Int32
     
     /// The underlying TCP socket
-    let socket: ByteStream
+    let socket: ClosableStream
     
     /// The queue to read on
     let queue: DispatchQueue
@@ -63,7 +58,11 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     }
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws {
+    public init<ByteStream>(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws where
+        ByteStream: Async.Stream,
+        ByteStream.Output == ByteBuffer,
+        ByteStream.Input == ByteBuffer
+    {
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue

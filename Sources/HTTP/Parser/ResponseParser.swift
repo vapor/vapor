@@ -4,8 +4,7 @@ import Bits
 import Foundation
 
 /// Parses requests from a readable stream.
-public final class ResponseParser: CParser, Async.Stream {
-
+public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
@@ -54,6 +53,17 @@ public final class ResponseParser: CParser, Async.Stream {
             reset(HTTP_RESPONSE)
         }
     }
+    
+    /// See ClosableStream.close
+    public func close() {
+        self.outputStream.close()
+    }
+    
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        self.outputStream.onClose(onClose)
+    }
+    
     /// See InputStream.onError
     public func onError(_ error: Error) {
         outputStream.onError(error)
@@ -62,16 +72,6 @@ public final class ResponseParser: CParser, Async.Stream {
     /// See OutputStream.onOutput
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    public func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
     }
 
     /// Parses the supplied data into a response or throws an error.

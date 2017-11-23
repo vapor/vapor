@@ -62,15 +62,15 @@ public final class RequestParser: CParser {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
-
-    /// See CloseableStream.close
+    
+    /// See ClosableStream.close
     public func close() {
-        outputStream.close()
+        self.outputStream.close()
     }
-
-    /// See CloseableStream.onClose
+    
+    /// See ClosableStream.onClose
     public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+        self.outputStream.onClose(onClose)
     }
 
     /// Parses request Data. If the data does not contain

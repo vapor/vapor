@@ -36,8 +36,7 @@ public final class RedisClient: Async.Stream {
     public init<ByteStream>(socket: ByteStream) where
         ByteStream: Async.Stream,
         ByteStream.Input == ByteBuffer,
-        ByteStream.Output == ByteBuffer,
-        ByteStream: ClosableStream
+        ByteStream.Output == ByteBuffer
     {
         self.socket = socket
 
