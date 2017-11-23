@@ -56,7 +56,15 @@ extension QueryBuilder {
 
             return try model.willCreate(on: conn).then { _ -> Future<Void> in
                 conn.execute(query: query, into: stream)
-                return promise.future
+                
+                return promise.future.do {
+                    if  model.fluentID == nil,
+                        case .autoincrementing(let factory) = Model.ID.identifierType,
+                        let id = conn.lastAutoincrementID
+                    {
+                        model.fluentID = factory(id)
+                    }
+                }
             }
         }
     }
