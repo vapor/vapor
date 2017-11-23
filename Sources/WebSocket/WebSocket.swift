@@ -27,8 +27,7 @@ public class WebSocket {
     public init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
         ByteStream: Async.Stream,
         ByteStream.Input == ByteBuffer,
-        ByteStream.Output == ByteBuffer,
-        ByteStream: ClosableStream
+        ByteStream.Output == ByteBuffer
     {
         self.connection = Connection(socket: socket, serverSide: serverSide)
         
