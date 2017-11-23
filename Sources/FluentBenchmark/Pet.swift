@@ -47,6 +47,14 @@ public final class Pet<D: Database>: Model {
         self.name = name
         self.ownerID = ownerID
     }
+
+    /// See Encodable.encode
+    public func encode(to encoder: Encoder) throws {
+        var container = encodingContainer(for: encoder)
+        try container.encode(key: \Pet<Database>.id)
+        try container.encode(key: \Pet<Database>.name)
+        try container.encode(key: \Pet<Database>.ownerID)
+    }
 }
 
 // MARK: Relations
