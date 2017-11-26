@@ -5,19 +5,23 @@ import Crypto
 
 extension WebSocket {
     /// Returns true if this request should upgrade to websocket protocol
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#determining-an-upgrade)	§
     public static func shouldUpgrade(for req: Request) -> Bool {
-        return req.headers[.connection] == "Upgrade" && req.headers[.upgrade] == "websocket"
+        return req.headers[.connection] == "Upgrade" && req.headers[.secWebSocketKey] != nil && req.headers[.secWebSocketVersion] != nil
     }
     
     /// Creates a websocket upgrade response for the upgrade request
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#upgrading-the-connection)
     public static func upgradeResponse(for req: Request) throws -> Response {
         guard
             req.method == .get,
-            let key = req.headers["Sec-WebSocket-Key"],
-            let secWebsocketVersion = req.headers["Sec-WebSocket-Version"],
+            let key = req.headers[.secWebSocketKey],
+            let secWebsocketVersion = req.headers[.secWebSocketVersion],
             let version = Int(secWebsocketVersion)
             else {
-                throw Error(.invalidRequest)
+                throw WebSocketError(.invalidRequest)
         }
         
         let headers: Headers
@@ -27,16 +31,16 @@ extension WebSocket {
         
         if version > 13 {
             headers = [
-                "Upgrade": "websocket",
-                "Connection": "Upgrade",
-                "Sec-WebSocket-Version": "13",
-                "Sec-WebSocket-Key": hash
+                .upgrade: "websocket",
+                .connection: "Upgrade",
+                .secWebSocketVersion: "13",
+                .secWebSocketKey: hash
             ]
         } else {
             headers = [
-                "Upgrade": "websocket",
-                "Connection": "Upgrade",
-                "Sec-WebSocket-Accept": hash
+                .upgrade: "websocket",
+                .connection: "Upgrade",
+                .secWebSocketAccept: hash
             ]
         }
         

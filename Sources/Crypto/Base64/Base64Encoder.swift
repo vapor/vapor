@@ -24,20 +24,20 @@ fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqr
 ///     encoder.finishStream()
 ///     // after finishing the stream, the encoder will return to the start and will be reuable for the next incoming data
 public final class Base64Encoder: Base64 {
-    /// Accepts byte streams
-    public typealias Input = ByteBuffer
+    /// The capacity currently used in the pointer
+    var currentCapacity = 0
     
-    /// Outputs Base64Encoded byte streams
-    public typealias Output = ByteBuffer
+    /// The total capacity of the pointer
+    let allocatedCapacity: Int
     
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
+    /// The pointer for containing the base64 encoded data
+    let pointer: MutableBytesPointer
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
+    /// The bytes that couldn't be parsed from the previous buffer
+    var remainder = Data()
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<Output> = .init()
     
     /// Encodes the contents of the buffer into the pointer until the provided capacity has been reached
     ///
@@ -136,18 +136,6 @@ public final class Base64Encoder: Base64 {
         return (inputPosition == buffer.count, outputPosition, inputPosition)
     }
     
-    /// The capacity currently used in the pointer
-    var currentCapacity = 0
-    
-    /// The total capacity of the pointer
-    let allocatedCapacity: Int
-    
-    /// The pointer for containing the base64 encoded data
-    let pointer: MutableBytesPointer
-    
-    /// The bytes that couldn't be parsed from the previous buffer
-    var remainder = [UInt8]()
-    
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
@@ -155,6 +143,7 @@ public final class Base64Encoder: Base64 {
         self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
+        self.remainder.reserveCapacity(4)
     }
     
     deinit {

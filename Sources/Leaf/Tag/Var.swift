@@ -1,12 +1,12 @@
 import Async
 
-public final class Var: Tag {
+public final class Var: LeafTag {
     public init() {}
 
-    public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {
-        let promise = Promise(Context?.self)
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
+        let promise = Promise(LeafData?.self)
 
-        func updateContext(with c: Context) {
+        func updateContext(with c: LeafData) {
             context = c
         }
 
@@ -22,9 +22,9 @@ public final class Var: Tag {
                     ast: body,
                     renderer: renderer,
                     context: context,
-                    queue: parsed.queue
+                    worker: parsed.worker
                 )
-                try serializer.serialize().then { rendered in
+                serializer.serialize().do { rendered in
                     dict[key] = .data(rendered)
                     updateContext(with: .dictionary(dict))
                     promise.complete(nil)

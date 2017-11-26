@@ -11,8 +11,8 @@ public struct SerializerError: Error {
         return SerializerError(source: source, reason: "Unknown tag `\(name)`.")
     }
 
-    static func invalidNumber(_ data: Context?, source: Source) -> SerializerError {
-        let data: Context = data ?? .null
+    static func invalidNumber(_ data: LeafData?, source: Source) -> SerializerError {
+        let data: LeafData = data ?? .null
         return SerializerError(source: source, reason: "`\(data)` is not a valid number.")
     }
 }

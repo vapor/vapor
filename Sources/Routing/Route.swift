@@ -2,6 +2,8 @@ import HTTP
 import Async
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/route/)
 public final class Route: Extendable {
     /// The path at which the route is assigned
     public var path: [PathComponent]

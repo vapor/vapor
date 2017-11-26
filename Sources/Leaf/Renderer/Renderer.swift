@@ -4,9 +4,9 @@ import Dispatch
 import Foundation
 
 /// Renders Leaf templates using the Leaf parser and serializer.
-public final class Renderer {
+public final class LeafRenderer {
     /// The tags available to this renderer.
-    public let tags: [String: Tag]
+    public let tags: [String: LeafTag]
 
     /// The renderer will use this to read files for
     /// tags that require it (such as #embed)
@@ -16,11 +16,19 @@ public final class Renderer {
     public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
     private let fileFactory: FileFactory
 
+    /// Views base directory.
+    public let viewsDir: String
+
     /// Create a new Leaf renderer.
-    public init(tags: [String: Tag], fileFactory: @escaping FileFactory) {
+    public init(
+        tags: [String: LeafTag] = defaultTags,
+        viewsDir: String = "/",
+        fileFactory: @escaping FileFactory = File.init
+    ) {
         self.tags = tags
         self._files = [:]
         self.fileFactory = fileFactory
+        self.viewsDir = viewsDir.finished(with: "/")
     }
 
     // ASTs only need to be parsed once
@@ -28,8 +36,10 @@ public final class Renderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: Context, on queue: DispatchQueue) throws -> Future<Data> {
+    public func render(template: Data, context: LeafData, on worker: Worker) -> Future<Data> {
         let hash = template.hashValue
+
+        let promise = Promise(Data.self)
 
         let ast: [Syntax]
         if let cached = _cachedASTs[hash] {
@@ -39,35 +49,49 @@ public final class Renderer {
             do {
                 ast = try parser.parse()
             } catch let error as ParserError {
-                throw RenderError(source: error.source, reason: error.reason, error: error)
+                promise.fail(RenderError(source: error.source, reason: error.reason, error: error))
+                return promise.future
+            } catch {
+                promise.fail(error)
+                return promise.future
             }
             _cachedASTs[hash] = ast
         }
 
-        do {
-            let serializer = Serializer(
-                ast: ast,
-                renderer: self,
-                context: context,
-                queue: queue
-            )
-            return try serializer.serialize()
-        } catch let error as SerializerError {
-            throw RenderError(source: error.source, reason: error.reason, error: error)
-        } catch let error as TagError {
-            throw RenderError(source: error.source, reason: error.reason, error: error)
+
+        let serializer = Serializer(
+            ast: ast,
+            renderer: self,
+            context: context,
+            worker: worker
+        )
+
+        serializer.serialize().do { data in
+            promise.complete(data)
+        }.catch { err in
+            if let serr = err as? SerializerError {
+                promise.fail(RenderError(source: serr.source, reason: serr.reason, error: serr))
+            } else if let terr = err as? TagError {
+                promise.fail(RenderError(source: terr.source, reason: terr.reason, error: terr))
+            } else {
+                promise.fail(err)
+            }
         }
+
+        return promise.future
     }
 }
 
 // MARK: View
 
-extension Renderer: ViewRenderer {
+extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on queue: DispatchQueue) throws -> Future<View> {
-        let encoder = ContextEncoder()
-        try context.encode(to: encoder)
-        return render(path: path, context: encoder.context, on: queue).map { data in
+    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
+        return try render(
+            path: path,
+            context: LeafEncoder().encode(context),
+            on: worker
+        ).map { data in
             return View(data: data)
         }
     }
@@ -75,32 +99,37 @@ extension Renderer: ViewRenderer {
 
 // MARK: Convenience
 
-extension Renderer {
+extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: Context, on queue: DispatchQueue) -> Future<Data> {
+    public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
+        let fullPath: String
+        if path.hasSuffix("/") {
+            fullPath = path
+        } else {
+            fullPath = viewsDir + path
+        }
+
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
-        if let existing = _files[queue.label.hashValue] {
+        if let existing = _files[worker.eventLoop.queue.label.hashValue] {
             file = existing
         } else {
-            file = fileFactory(queue)
-            _files[queue.label.hashValue] = file
+            file = fileFactory(worker.eventLoop.queue)
+            _files[worker.eventLoop.queue.label.hashValue] = file
         }
 
-        file.cachedRead(at: path).then { view in
-            do {
-                try self.render(template: view, context: context, on: queue).then { data in
-                    promise.complete(data)
-                }.catch { error in
+        file.cachedRead(at: fullPath).do { view in
+            self.render(template: view, context: context, on: worker).do { data in
+                promise.complete(data)
+            }.catch { error in
+                if var error = error as? RenderError {
+                    error.path = path
+                    promise.fail(error)
+                } else {
                     promise.fail(error)
                 }
-            } catch var error as RenderError {
-                error.path = path
-                promise.fail(error)
-            } catch {
-                promise.fail(error)
             }
         }.catch { error in
             promise.fail(error)
@@ -110,18 +139,18 @@ extension Renderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: Context, on queue: DispatchQueue) -> Future<String> {
+    public func render(_ view: String, context: LeafData, on worker: Worker) -> Future<String> {
         let promise = Promise(String.self)
 
         do {
             guard let data = view.data(using: .utf8) else {
                 throw RenderError(
-                    source: Source(line: 0, column: 0, range: 0..<view.characters.count),
+                    source: Source(line: 0, column: 0, range: 0..<view.count),
                     reason: "Could not convert view String to Data."
                 )
             }
 
-            try render(template: data, context: context, on: queue).then { rendered in
+            render(template: data, context: context, on: worker).do { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

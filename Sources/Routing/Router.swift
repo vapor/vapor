@@ -1,6 +1,8 @@
 import HTTP
 
-/// Routes requests to an appropriate responder.
+/// Routes requests to an appropriate responder. Can be used for custom router implementations
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/router/)
 public protocol Router: class {
     /// All routes registered to this Router
     var routes: [Route] { get }

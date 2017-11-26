@@ -11,10 +11,13 @@ let package = Package(
     name: "Vapor",
     products: [
         // Core
-        .library(name: "Async", targets: ["Async"]),
         .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
+
+        // Console
+        .library(name: "Console", targets: ["Console"]),
+        .library(name: "Command", targets: ["Command"]),
 
         // Crypto
         .library(name: "Crypto", targets: ["Crypto"]),
@@ -23,7 +26,8 @@ let package = Package(
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Fluent
-        // .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -45,11 +49,17 @@ let package = Package(
         // Random
         .library(name: "Random", targets: ["Random"]),
 
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
+
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
         // Service
         .library(name: "Service", targets: ["Service"]),
+
+        // SQL
+        .library(name: "SQL", targets: ["SQL"]),
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
@@ -63,19 +73,30 @@ let package = Package(
         // WebSockets
         .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
-    dependencies: [],
+    dependencies: [
+        // Swift Promises, Futures, and Streams.
+        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.3")),
+    ],
     targets: [
-        // Async
-        .target(name: "Async"),
-        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
-
         // Bits
         .target(name: "Bits"),
 
+        // Boilerplate
+        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
+        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+
         // Core
-        .target(name: "Core", dependencies: ["libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
         .target(name: "libc"),
         
+
+        // Console
+        .target(name: "Console", dependencies: ["Async", "Core"]),
+        .target(name: "Command", dependencies: ["Console"]),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
+        .testTarget(name: "CommandTests", dependencies: ["Command"]),
+        .target(name: "ConsoleExample", dependencies: ["Console"]),
+
         // Crypto
         .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
@@ -84,9 +105,14 @@ let package = Package(
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
-        // Debugging
-//        .target(name: "Fluent", dependencies: ["SQLite"]),
-//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
+        // Fluent
+        // FIXME: FluentRouting and FluentHTTP packages?
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
+        .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
+        .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
+
+        .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -110,7 +136,7 @@ let package = Package(
 
         // Net
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
@@ -138,19 +164,28 @@ let package = Package(
         // Service
         .target(name: "Service", dependencies: ["Core", "Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
-
+        
+        // Security
+        .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
+       
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
+        // SQL
+        .target(name: "SQL"),
+        .testTarget(name: "SQLTests", dependencies: ["SQL"]),
+
         // SQLite
         .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging", "Random"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
+        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
+            "Command",
+            "Console",
             "Core",
             "Debugging",
             "HTTP",
@@ -158,12 +193,14 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "WebSocket"
+            "TLS",
+            "ServerSecurity",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "TLS", "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
@@ -178,7 +215,7 @@ let package = Package(
     )
 #else
     package.dependencies.append(
-        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
+        .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
     )
     
     package.targets.append(

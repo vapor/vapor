@@ -1,3 +1,4 @@
+import Async
 import HTTP
 import Bits
 import Routing
@@ -6,21 +7,39 @@ import XCTest
 class RouterTests: XCTestCase {
     func testRouter() throws {
         let router = TrieRouter()
-
-        router.on(.get, to: ["hello", "world"].makePathComponents()) { req in
-            return try Response(body: "hello")
+        
+        let a = BasicResponder { req in
+            return try Future(Response(body: "hello"))
         }
+        let ra = Route(
+            method: .get,
+            path: ["hello", "world"].makePathComponents(),
+            responder: a
+        )
+        router.register(route: ra)
 
-        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req in
-            return try Response(body: "foo")
+        let b = BasicResponder { req in
+            return try Future(Response(body: "foo"))
         }
+        let rb = Route(
+            method: .get,
+            path: ["foo", "bar", "baz"].makePathComponents(),
+            responder: b
+        )
+        router.register(route: rb)
 
-        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req in
-            let bob = try req.parameters.next(User.self)
-            XCTAssertEqual(bob.name, "bob")
-            
-            return try Response(body: "users!")
+        let c = BasicResponder { req in
+            return try req.parameters.next(User.self).map { bob in
+                XCTAssertEqual(bob.name, "bob")
+                return try Response(body: "users!")
+            }
         }
+        let rc = Route(
+            method: .get,
+            path: ["users", User.parameter, "comments"].makePathComponents(),
+            responder: c
+        )
+        router.register(route: rc)
 
         do {
             let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))
@@ -69,8 +88,6 @@ class RouterTests: XCTestCase {
     ]
 }
 
-extension TrieRouter: SyncRouter { }
-
 final class User: Parameter {
     static let uniqueSlug: String = "user"
     var name: String
@@ -79,7 +96,7 @@ final class User: Parameter {
         self.name = name
     }
 
-    static func make(for parameter: String, in request: Request) throws -> User {
-        return User(name: parameter)
+    static func make(for parameter: String, in request: Request) throws -> Future<User> {
+        return Future(User(name: parameter))
     }
 }

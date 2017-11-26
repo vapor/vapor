@@ -1,13 +1,21 @@
 /// Components of a router path.
-public enum PathComponent {
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
+public enum PathComponent: ExpressibleByStringLiteral {
+    public init(stringLiteral value: String) {
+        self = .constants(value.split(separator: "/").map(String.init))
+    }
+    
     /// A normal, constant path component.
-    case constant(String)
+    case constants([String])
 
     /// A dynamic parameter component.
-    case parameter(Parameter.Type)
+    case parameter(String)
 }
 
 /// Capable of being represented by a path component.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
 public protocol PathComponentRepresentable {
     /// Convert to path component.
     func makePathComponent() -> PathComponent
@@ -34,6 +42,6 @@ extension String: PathComponentRepresentable {
     /// Convert string to constant path component.
     /// See PathComponentRepresentable.makePathComponent()
     public func makePathComponent() -> PathComponent {
-        return .constant(self) // TODO: .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed))
+        return .constants(self.split(separator: "/").map(String.init))
     }
 }

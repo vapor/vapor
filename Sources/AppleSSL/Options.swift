@@ -21,7 +21,7 @@ public struct SSLOption {
     /// Internal helper that asserts the success of an operation
     fileprivate static func assert(status: OSStatus) throws {
         guard status == 0 else {
-            throw Error(.sslError(status))
+            throw AppleSSLError(.sslError(status))
         }
     }
     
@@ -66,12 +66,12 @@ public struct SSLOption {
         return SSLOption { context in
             // Load the certificate
             guard let certificateData = FileManager.default.contents(atPath: path) else {
-                throw Error(.certificateNotFound)
+                throw AppleSSLError(.certificateNotFound)
             }
             
             // Process the certificate into one usable by the Security library
             guard let certificate = SecCertificateCreateWithData(nil, certificateData as CFData) else {
-                throw Error(.invalidCertificate)
+                throw AppleSSLError(.invalidCertificate)
             }
             
             var ref: SecIdentity?
@@ -87,12 +87,12 @@ public struct SSLOption {
         return SSLOption { context in
             // Load the certificate
             guard let certificateData = FileManager.default.contents(atPath: path) else {
-                throw Error(.certificateNotFound)
+                throw AppleSSLError(.certificateNotFound)
             }
             
             // Process the certificate into one usable by the Security library
             guard let certificate = SecCertificateCreateWithData(nil, certificateData as CFData) else {
-                throw Error(.invalidCertificate)
+                throw AppleSSLError(.invalidCertificate)
             }
             
             // Trust the certificate

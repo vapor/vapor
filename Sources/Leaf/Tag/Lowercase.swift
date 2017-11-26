@@ -1,12 +1,12 @@
 import Async
 
-public final class Lowercase: Leaf.Tag {
+public final class Lowercase: Leaf.LeafTag {
     public init() {}
-    public func render(parsed: ParsedTag, context: inout Context, renderer: Renderer) throws -> Future<Context?> {
+    public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         try parsed.requireParameterCount(1)
         let string = parsed.parameters[0].string?.lowercased() ?? ""
 
-        let promise = Promise(Context?.self)
+        let promise = Promise(LeafData?.self)
         promise.complete(.string(string))
         return promise.future
     }

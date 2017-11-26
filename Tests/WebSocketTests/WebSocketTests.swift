@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Foundation
 import Dispatch
@@ -23,10 +24,10 @@ final class HTTPTestServer {
     
     /// Creates a new engine server config
     public init(
-        hostname: String = CurrentHost.hostname,
-        port: UInt16 = 8080,
+        hostname: String = "0.0.0.0",
+        port: UInt16 = 8282,
         backlog: Int32 = 4096,
-        workerCount: Int = 8
+        workerCount: Int = 2
     ) {
         self.hostname = hostname
         self.port = port
@@ -37,29 +38,29 @@ final class HTTPTestServer {
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
         // create a tcp server
-        let tcp = try TCP.Server(workerCount: workerCount)
-        let server = HTTP.Server(clientStream: tcp)
+        let socket = try TCPSocket(isNonBlocking: false)
+        let tcp = TCPServer(socket: socket, eventLoopCount: workerCount)
+        let server = HTTPServer(socket: tcp)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(worker: client.tcp.worker)
+            let parser = HTTP.RequestParser(on: client.tcp.worker, maxBodySize: 100_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
                 .stream(to: responderStream)
                 .stream(to: serializer)
-                .drain(into: client)
+                .drain { data in
+                    client.onInput(data)
+                    serializer.upgradeHandler?(client.tcp)
+                }.catch { XCTFail("\($0)") }
             
             client.tcp.start()
-        }
-        
-        server.errorStream = { error in
-            debugPrint(error)
-        }
+        }.catch { XCTFail("\($0)") }
         
         // bind, listen, and start accepting
-        try server.clientStream.start(
+        try tcp.start(
             hostname: hostname,
             port: port,
             backlog: backlog
@@ -67,58 +68,76 @@ final class HTTPTestServer {
     }
 }
 
+struct MyError: Error {}
+
 class WebSocketTests : XCTestCase {
     func testClientServer() throws {
-        return;
+        // TODO: Failing on Linux
         let app = WebSocketApplication()
-        let tcp = try TCP.Server()
         let server = HTTPTestServer()
         
-        // try server.start(with: app)
+        try server.start(with: app)
+        sleep(1)
         
         let promise0 = Promise<Void>()
         let promise1 = Promise<Void>()
-
-        let worker = Worker(queue: .global())
-        _ = try WebSocket.connect(to: "ws://0.0.0.0:8080/", worker: worker).then { socket in
-            let responses = ["test", "cat", "banana"]
-            let reversedResponses = responses.map {
-                String($0.reversed())
-            }
-            
-            var count = 0
-            
-            socket.onText { string in
-                XCTAssert(reversedResponses.contains(string))
-                count += 1
-                
-                if count == 3 {
-                    promise0.complete(())
-                }
-            }
-            
-            socket.onBinary { blob in
-                defer { promise1.complete(()) }
-                
-                guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
-                    XCTFail()
-                    return
-                }
-            }
-            
-            for response in responses {
-                socket.send(response)
-            }
-            
-//            socket.send(Data([
-//                0x00, 0x01, 0x00, 0x02
-//                ]))
-            
-            promise0.complete(())
-        }
         
-        try promise0.future.blockingAwait(timeout: .seconds(10))
-//        try promise1.future.blockingAwait()
+        let queue = DispatchQueue(label: "test.client")
+        
+        let uri = URI(stringLiteral: "ws://localhost:8282/")
+        
+        do {
+            _ = try WebSocket.connect(to: uri, worker: queue).do { socket in
+                let responses = ["test", "cat", "banana"]
+                let reversedResponses = responses.map {
+                    String($0.reversed())
+                }
+                
+                var count = 0
+                
+                socket.onText { string in
+                    XCTAssert(reversedResponses.contains(string), "\(string) does not exist in reversed expectations")
+                    count += 1
+                    
+                    if count == 3 {
+                        promise0.complete()
+                    } else if count > 3 {
+                        XCTFail()
+                    }
+                }.catch { error in
+                    XCTFail("\(error)")
+                }
+                
+                socket.onBinary { blob in
+                    defer { promise1.complete() }
+                    
+                    guard Array(blob) == [0x00, 0x01, 0x00, 0x02] else {
+                        XCTFail()
+                        return
+                    }
+                }.catch { error in
+                    XCTFail("\(error)")
+                }
+                
+                for response in responses {
+                    socket.send(response)
+                }
+                
+                Data([
+                    0x00, 0x01, 0x00, 0x02
+                ]).withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: 4)
+                    
+                    socket.send(buffer)
+                }
+            }.blockingAwait(timeout: .seconds(10))
+            
+            try promise0.future.blockingAwait(timeout: .seconds(10))
+            try promise1.future.blockingAwait(timeout: .seconds(10))
+        } catch {
+            XCTFail("Error \(error) connecting to \(uri)")
+            throw error
+        }
     }
     
     static let allTests = [
@@ -126,17 +145,31 @@ class WebSocketTests : XCTestCase {
     ]
 }
 
-struct WebSocketApplication: Responder {
+final class WebSocketApplication: Responder {
+    var sockets = [UUID: WebSocket]()
+    
     func respond(to req: Request) throws -> Future<Response> {
         let promise = Promise<Response>()
         
         if WebSocket.shouldUpgrade(for: req) {
             let res = try WebSocket.upgradeResponse(for: req)
             res.onUpgrade = { client in
-                let websocket = WebSocket(client: client)
+                let websocket = WebSocket(socket: client)
+                let id = UUID()
+                
                 websocket.onText { text in
                     let rev = String(text.reversed())
                     websocket.send(rev)
+                }.catch(onError: promise.fail)
+                
+                websocket.onBinary { buffer in
+                    websocket.send(buffer)
+                }.catch(onError: promise.fail)
+                
+                self.sockets[id] = websocket
+                
+                websocket.finally {
+                    self.sockets[id] = nil
                 }
             }
             promise.complete(res)

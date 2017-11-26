@@ -20,21 +20,31 @@ import Foundation
 ///
 ///     let res = Response(status: .ok, body: "hello")
 ///
-/// See Message
+/// [Learn More →](https://docs.vapor.codes/3.0/http/response/)
 public final class Response: Message {
+    /// See EphemeralWorker.onInit
+    public static var onInit: LifecycleHook?
+
+    /// See EphemeralWorker.onDeinit
+    public static var onDeinit: LifecycleHook?
+
     /// See Message.version
     public var version: Version
 
     /// HTTP response status code.
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
     public var status: Status
 
     /// See Message.headers
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
     public var headers: Headers
 
     /// See Message.body
-    public var body: Body {
-        didSet { updateContentLength() }
-    }
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
+    public var body: Body
 
     /// See Extendable.extend
     public var extend: Extend
@@ -51,7 +61,12 @@ public final class Response: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
-        updateContentLength()
+        Response.onInit?(self)
+    }
+
+    /// Called when request is deinitializing
+    deinit {
+        Response.onDeinit?(self)
     }
 }
 
@@ -68,24 +83,34 @@ extension Response {
 }
 
 /// Can be converted from a response.
-public protocol ResponseInitializable {
-    init(response: Response) throws
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responseinitializable)
+public protocol ResponseDecodable {
+    static func decode(from res: Response, for req: Request) throws -> Future<Self>
 }
 
 /// Can be converted to a response
-public protocol ResponseRepresentable {
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responserepresentable)
+public protocol ResponseEncodable {
     /// Makes a response using the context provided by the Request
-    func makeResponse(for request: Request) throws -> Response
+    func encode(to res: inout Response, for req: Request) throws -> Future<Void>
 }
 
 /// Can be converted from and to a response
-public typealias ResponseConvertible = ResponseInitializable & ResponseRepresentable
+public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 
 // MARK: Response Conformance
 
-extension Response: ResponseRepresentable {
+extension Response: ResponseEncodable {
     /// See `ResponseRepresentable.makeResponse`
-    public func makeResponse(for request: Request) throws -> Response {
-        return self
+    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+        res = self
+        return .done
     }
+}
+
+/// Makes `Response` a drop-in replacement for `Future<Response>
+extension Response: FutureType {
+    public typealias Expectation = Response
 }

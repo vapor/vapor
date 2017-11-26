@@ -1,5 +1,6 @@
 import Async
 import Dispatch
+import Service
 
 /// An HTTP message.
 /// This is the basis of HTTP request and response,
@@ -28,7 +29,7 @@ import Dispatch
 /// to add your own stored properties to requests and responses
 /// that can be accessed simply by importing the module that
 /// adds them. This is how much of Vapor's functionality is created.
-public protocol Message: Extendable, Codable, CustomDebugStringConvertible {
+public protocol Message: Codable, CustomDebugStringConvertible, EphemeralWorker {
     /// The HTTP version of this message.
     var version: Version { get set }
     /// The HTTP headers.
@@ -37,12 +38,11 @@ public protocol Message: Extendable, Codable, CustomDebugStringConvertible {
     var body: Body { get set }
 }
 
+/// MARK: Container
 extension Message {
-    /// Updates the content length header to the current
-    /// body length. This should be called whenever the
-    /// body is modified.
-    internal func updateContentLength() {
-        headers[.contentLength] = body.count.description
+    /// See HasContainer.container
+    public var container: Container? {
+        return eventLoop.container
     }
 }
 
@@ -56,18 +56,9 @@ extension Message {
     ///
     /// Make sure not to block this queue as it will
     /// block all other requests on the queue.
-    public var worker: Worker? {
-        get { return extend["http:worker"] as? Worker }
-        set { return extend["http:worker"] = newValue }
-    }
-
-    /// Return's the message's queue if one exists or throws.
-    public func requireWorker() throws -> Worker {
-        guard let worker = self.worker else {
-            throw Error(identifier: "missingWorker", reason: "The worker property on this message is nil.")
-        }
-
-        return worker
+    public var eventLoop: EventLoop {
+        get { return extend["http:eventLoop"] as? EventLoop ?? .default }
+        set { return extend["http:eventLoop"] = newValue }
     }
 }
 

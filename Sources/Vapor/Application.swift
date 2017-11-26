@@ -1,4 +1,6 @@
 import Async
+import Command
+import Console
 import Dispatch
 import Foundation
 import HTTP
@@ -8,15 +10,17 @@ import Service
 /// Core framework class. You usually create only
 /// one of these per application.
 /// Acts as a service container and much more.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/getting-started/application/)
 public final class Application: Container {
     /// Config preferences and requirements for available services.
-    public var config: Config
+    public let config: Config
 
     /// Environment this application is running in.
     public let environment: Environment
 
     /// Services that can be created by this application.
-    public var services: Services
+    public let services: Services
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -26,11 +30,16 @@ public final class Application: Container {
         config: Config = .default(),
         environment: Environment = .development,
         services: Services = .default()
-    ) {
+    ) throws {
         self.config = config
         self.environment = environment
         self.services = services
         self.extend = Extend()
+
+        // boot all service providers
+        for provider in services.providers {
+            try provider.boot(self)
+        }
     }
 
     /// Make an instance of the provided interface for this Application.
@@ -38,22 +47,13 @@ public final class Application: Container {
         return try make(T.self, for: Application.self)
     }
 
-    /// Runs the Application's server.
+    /// Runs the Application's commands.
     public func run() throws -> Never {
-        // TODO: run console / commands here.
-        let server = try make(HTTPServer.self)
+        let command = try make(CommandConfig.self)
+            .makeCommandGroup(for: self)
 
-        let router = try RouterResponder(
-            router: make(Router.self)
-        )
-
-        let middleware = try make(MiddlewareConfig.self).resolve(for: self)
-        let chained = middleware.makeResponder(chainedto: router)
-        try server.start(with: chained)
-
-        let group = DispatchGroup()
-        group.enter()
-        group.wait()
+        let console = try make(Console.self)
+        try console.run(command, arguments: CommandLine.arguments)
         exit(0)
     }
 }

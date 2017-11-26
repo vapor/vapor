@@ -1,6 +1,9 @@
+import Async
 import HTTP
 
 /// A bag for holding parameters resolved during router
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
 public struct ParameterBag {
     /// The parameters, not yet resolved
     /// so that the `.next()` method can throw any errors.
@@ -24,44 +27,45 @@ public struct ParameterBag {
     ///     let post = try parameters.next(Post.self)
     ///     let comment = try parameters.next(Comment.self)
     ///
-    public mutating func next<P: Parameter>(_ parameter: P.Type = P.self) throws -> P {
+    public mutating func next<P>(_ parameter: P.Type = P.self) throws -> P.ResolvedParameter
+        where P: Parameter
+    {
         guard parameters.count > 0 else {
-            throw Error(.insufficientParameters)
+            throw RoutingError(.insufficientParameters)
         }
+
         let current = parameters[0]
-
-        guard current.type == P.self else {
-            throw Error(.invalidParameterType(
-                actual: current.type,
-                expected: P.self
+        guard current.slug == P.uniqueSlug else {
+            throw RoutingError(.invalidParameterType(
+                actual: current.slug,
+                expected: P.uniqueSlug
             ))
         }
 
-        let item = try current.type.make(for: current.value, in: request)
-        guard let cast = item as? P else {
-            throw Error(.invalidParameterType(
-                actual: type(of: item),
-                expected: P.self
-            ))
-        }
-
+        let item = try P.make(for: current.value, in: request)
         parameters = Array(parameters.dropFirst())
+        return item
+    }
 
-        return cast
+    /// Infer requested type where the resolved parameter is the parameter type.
+    public mutating func next<P>() throws -> P
+        where P: Parameter, P.ResolvedParameter == P
+    {
+        return try self.next(P.self)
     }
 }
 
 /// A parameter and its resolved value.
 internal struct LazyParameter {
     /// The parameter type.
-    let type: Parameter.Type
+    let slug: String
 
     /// The resolved value.
     let value: String
 
     /// Create a new lazy parameter.
-    init(type: Parameter.Type, value: String) {
-        self.type = type
+    init(slug: String, value: String) {
+        self.slug = slug
         self.value = value
     }
 }

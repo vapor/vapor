@@ -36,3 +36,21 @@ extension Environment: Equatable {
         }
     }
 }
+
+private let commandLineKey = "--env="
+
+extension Environment {
+    public static func detect(arguments: [String] = CommandLine.arguments) -> Environment {
+        var env: Environment = .development
+
+        for arg in arguments {
+            if arg.hasPrefix(commandLineKey) {
+                var string = arg
+                string.removeFirst(commandLineKey.count)
+                env = Environment(string: string)
+            }
+        }
+
+        return env
+    }
+}

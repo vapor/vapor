@@ -20,22 +20,36 @@ import Foundation
 ///
 ///     let req = Request(method: .post, body: "hello")
 ///
-/// See Message
+/// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
 public final class Request: Message {
+    /// See EphemeralWorker.onInit
+    public static var onInit: LifecycleHook?
+
+    /// See EphemeralWorker.onDeinit
+    public static var onDeinit: LifecycleHook?
+
     /// HTTP requests have a method, like GET or POST
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
     public var method: Method
 
     /// This is usually just a path like `/foo` but
     /// may be a full URI in the case of a proxy
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/uri/)
     public var uri: URI
 
     /// See `Message.version`
     public var version: Version
 
     /// See `Message.headers`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
     public var headers: Headers
 
     /// See `Message.body`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
     public var body: Body
     
     /// See `Extendable.extend`
@@ -55,7 +69,13 @@ public final class Request: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
-        updateContentLength()
+        Request.onInit?(self)
+    }
+
+    /// Called when request is deinitializing
+    deinit {
+        Request.onDeinit?(self)
+        // print("Request.deinit")
     }
 }
 
@@ -74,24 +94,32 @@ extension Request {
     }
 }
 
-/// Can be converted from a response.
-public protocol RequestInitializable {
-    init(request: Request) throws
+/// Can be converted from a request.
+public protocol RequestDecodable {
+    static func decode(from req: Request) throws -> Future<Self>
 }
 
-/// Can be converted to a response
-public protocol RequestRepresentable {
-    func makeRequest() throws -> Request
+/// Can be converted to a request
+public protocol RequestEncodable {
+    func encode(to req: inout Request) throws -> Future<Void>
 }
 
-/// Can be converted from and to a response
-public typealias RequestConvertible = RequestInitializable & RequestRepresentable
+/// Can be converted from and to a request
+public typealias RequestCodable = RequestDecodable & RequestEncodable
 
-// MARK: Response Conformance
+// MARK: Request Conformance
 
-extension Request: RequestRepresentable {
-    public func makeRequest() throws -> Request {
-        return self
+extension Request: RequestEncodable {
+    public func encode(to req: inout Request) throws -> Future<Void> {
+        req = self
+        return .done
+    }
+}
+
+extension Request: RequestDecodable {
+    /// See RequestInitializable.decode
+    public static func decode(from request: Request) throws -> Future<Request> {
+        return Future(request)
     }
 }
 

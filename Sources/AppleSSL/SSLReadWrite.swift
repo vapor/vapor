@@ -8,12 +8,12 @@ extension SSLStream {
     func initialize(side: SSLProtocolSide) throws -> SSLContext {
         // We currently don't support renegotiation of SSL connections
         guard context == nil else {
-            throw Error(.contextAlreadyCreated)
+            throw AppleSSLError(.contextAlreadyCreated)
         }
         
         // Creates a new context
         guard let context = SSLCreateContext(nil, side, .streamType) else {
-            throw Error(.cannotCreateContext)
+            throw AppleSSLError(.cannotCreateContext)
         }
         
         self.context = context
@@ -22,14 +22,14 @@ extension SSLStream {
         var status = SSLSetIOFuncs(context, readSSL, writeSSL)
         
         guard status == 0 else {
-            throw Error(.sslError(status))
+            throw AppleSSLError(.sslError(status))
         }
         
         // Adds the file descriptor to this connection
         status = SSLSetConnection(context, &self.descriptor)
         
         guard status == 0 else {
-            throw Error(.sslError(status))
+            throw AppleSSLError(.sslError(status))
         }
         
         return context
@@ -43,7 +43,7 @@ extension SSLStream {
     func write(from buffer: ByteBuffer, allowWouldBlock: Bool) throws -> Int {
         guard let context = self.context else {
             close()
-            throw Error(.noSSLContext)
+            throw AppleSSLError(.noSSLContext)
         }
         
         var processed = 0
@@ -66,7 +66,7 @@ extension SSLStream {
                 return buffer.count
                 // Error
             } else {
-                throw Error(.sslError(status))
+                throw AppleSSLError(.sslError(status))
             }
         }
         

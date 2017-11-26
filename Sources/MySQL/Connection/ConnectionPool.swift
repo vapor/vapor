@@ -2,9 +2,12 @@ import Core
 import Async
 import Dispatch
 
+/// An automatically managed pool of connections to a server.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
 public class ConnectionPool {
     /// The queue on which connections will be created
-    let queue: DispatchQueue
+    let worker: Worker
     
     /// The hostname to which connections will be connected
     let hostname: String
@@ -24,6 +27,13 @@ public class ConnectionPool {
     /// A list of all currently active connections
     var pool = [ConnectionPair]()
     
+    var waitQueue = [Promise<ConnectionPair>]()
+    
+    /// The maximum amount of connections in this pool
+    ///
+    /// Lowering this number may not result in closing connections
+    public var maxConnections = 10
+    
     class ConnectionPair {
         let connection: Connection
         var reserved = false
@@ -38,8 +48,8 @@ public class ConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) {
-        self.queue = queue
+    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) {
+        self.worker = worker
         self.hostname = hostname
         self.port = port
         self.user = user
@@ -47,46 +57,65 @@ public class ConnectionPool {
         self.database = database
     }
     
+    func release(_ pair: ConnectionPair) {
+        pair.reserved = false
+        
+        if waitQueue.count > 0 {
+            waitQueue.removeFirst().complete(pair)
+        }
+    }
+    
     typealias Complete = (()->())
     
     /// Retains a connection (or creates a new one) to execute the handler with
-    internal func retain<T>(_ handler: @escaping ((Connection, @escaping ((T) -> ()), @escaping Stream.ErrorHandler) -> Void)) throws -> Future<T> {
-        let promise = Promise<T>()
+    ///
+    /// Retained connections can only be used for a single query at a time
+    ///
+    ///
+    public func retain<T>(_ handler: @escaping ((Connection) -> Future<T>)) -> Future<T> {
+        let promise = Promise<ConnectionPair>()
         
-        // Checks for an existing connection
-        for pair in pool where !pair.reserved {
+        let future = promise.future.flatMap { pair -> Future<T> in
             pair.reserved = true
             
             // Runs the handler with the connection
-            handler(pair.connection, { result in
-                // On completion, return the connection, complete the promise
-                pair.reserved = false
-                promise.complete(result)
-            }) { error in
-                pair.reserved = false
-                promise.fail(error)
+            let future = handler(pair.connection)
+                
+            future.do { _ in
+                self.release(pair)
+            }.catch { _ in
+                self.release(pair)
             }
             
-            return promise.future
+            return future
         }
         
-        _ = try Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, queue: queue).then { connection in
+        // Checks for an existing connection
+        pairChecker: for pair in pool where !pair.reserved {
+            promise.complete(pair)
+            
+            return future
+        }
+        
+        if self.pool.count >= maxConnections {
+            let connectionPromise = Promise<ConnectionPair>()
+            
+            waitQueue.append(connectionPromise)
+            
+            connectionPromise.future.do(promise.complete).catch(promise.fail)
+            
+            return future
+        }
+        
+        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, on: worker).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             
             self.pool.append(pair)
             
-            // Runs the handler with the connection
-            handler(pair.connection, { result in
-                // On completion, return the connection, complete the promise
-                pair.reserved = false
-                promise.complete(result)
-            }) { error in
-                pair.reserved = false
-                promise.fail(error)
-            }
-        }
+            promise.complete(pair)
+        }.catch(promise.fail)
         
-        return promise.future
+        return future
     }
 }

@@ -1,9 +1,13 @@
 import Foundation
+import Bits
+import HTTP
 
 /// An enum with no cases can't be instantiated
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
-public final class Parser {
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
+public final class MultipartParser {
     /// The boundary between all parts
     fileprivate let boundary: Data
     
@@ -11,7 +15,7 @@ public final class Parser {
     fileprivate let fullBoundary: Data
     
     /// The multipart form data to parse
-    fileprivate let data: Data
+    fileprivate let data: ByteBuffer
     
     /// The current position, used for parsing
     var position = 0
@@ -20,7 +24,7 @@ public final class Parser {
     var multipart = Form(parts: [])
     
     /// Creates a new parser for a Multipart form
-    init(data: Data, boundary: Data) {
+    init(data: ByteBuffer, boundary: Data) {
         self.data = data
         self.boundary = boundary
         self.fullBoundary = Data([.carriageReturn, .newLine, .hyphen, .hyphen] + boundary)
@@ -29,7 +33,7 @@ public final class Parser {
     // Requires `n` bytes
     fileprivate func require(_ n: Int) throws {
         guard position + n < data.count else {
-            throw Error(identifier: "multipart:missing-data", reason: "Invalid multipart formatting")
+            throw MultipartError(identifier: "multipart:missing-data", reason: "Invalid multipart formatting")
         }
     }
     
@@ -47,7 +51,7 @@ public final class Parser {
         
         headerKey: while true {
             guard position + offset < data.count else {
-                throw Error(identifier: "multipart:eof", reason: "Unexpected end of multipart")
+                throw MultipartError(identifier: "multipart:eof", reason: "Unexpected end of multipart")
             }
             
             if data[position &+ offset] == trigger {
@@ -67,7 +71,7 @@ public final class Parser {
     /// Asserts that the position is on top of two hyphens
     fileprivate func assertBoundaryStartEnd() throws {
         guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
-            throw Error(identifier: "multipart:boundary", reason: "Invalid multipart formatting")
+            throw MultipartError(identifier: "multipart:boundary", reason: "Invalid multipart formatting")
         }
     }
     
@@ -88,7 +92,7 @@ public final class Parser {
             
             // header key
             guard let key = try scanStringUntil(.colon) else {
-                throw Error(identifier: "multipart:invalid-header-key", reason: "Invalid multipart header key string encoding")
+                throw MultipartError(identifier: "multipart:invalid-header-key", reason: "Invalid multipart header key string encoding")
             }
             
             // skip space (': ')
@@ -96,7 +100,7 @@ public final class Parser {
             
             // header value
             guard let value = try scanStringUntil(.carriageReturn) else {
-                throw Error(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
+                throw MultipartError(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
             }
             
             headers[Headers.Name(key)] = value
@@ -109,17 +113,19 @@ public final class Parser {
     fileprivate func seekUntilBoundary() throws -> Data {
         var base = position
         
-        // Seeks to the end of this part's content
-        contentSeek: while true {
-            try require(fullBoundary.count)
-            
-            // The first 2 bytes match, check if a boundary is hit
-            if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], data[base..<base + fullBoundary.count] == fullBoundary {
-                defer { position = base }
-                return Data(data[position..<base])
+        return try fullBoundary.withUnsafeBytes { (boundaryPointer: BytesPointer) throws -> Data in
+            // Seeks to the end of this part's content
+            contentSeek: while true {
+                try require(fullBoundary.count)
+                
+                // The first 2 bytes match, check if a boundary is hit
+                if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], memcmp(boundaryPointer, data.baseAddress!.advanced(by: base), fullBoundary.count) == 0 {
+                    defer { position = base }
+                    return Data(data[position..<base])
+                }
+                
+                base = base &+ 1
             }
-            
-            base = base &+ 1
         }
     }
     
@@ -136,7 +142,7 @@ public final class Parser {
         // If a different encoding mechanism is specified, use that
         if let encodingString = headers[.contentTransferEncoding] {
             guard let registeredCoder = TransferEncoding.registery[encodingString] else {
-                throw Error(identifier: "multipart:body-encoding", reason: "Unknown multipart encoding")
+                throw MultipartError(identifier: "multipart:body-encoding", reason: "Unknown multipart encoding")
             }
             
             decoder = try registeredCoder.decoder(headers)
@@ -153,7 +159,7 @@ public final class Parser {
     /// Parses the `Data` and adds it to the Multipart.
     fileprivate func parse() throws {
         guard multipart.parts.count == 0 else {
-            throw Error(identifier: "multipart:multiple-parses", reason: "Multipart may only be parsed once")
+            throw MultipartError(identifier: "multipart:multiple-parses", reason: "Multipart may only be parsed once")
         }
         
         while position < data.count {
@@ -166,9 +172,11 @@ public final class Parser {
             // skip '--'
             position = position &+ 2
             
-            // check boundary
-            guard data[position..<position &+ boundary.count] == boundary else {
-                throw Error(identifier: "multipart:boundary", reason: "Wrong boundary")
+            try boundary.withUnsafeBytes { (boundaryPointer: BytesPointer) in
+                // check boundary
+                guard memcmp(data.baseAddress!.advanced(by: position), boundaryPointer, boundary.count) == 0 else {
+                    throw MultipartError(identifier: "multipart:boundary", reason: "Wrong boundary")
+                }
             }
             
             // skip boundary
@@ -182,7 +190,7 @@ public final class Parser {
             var headers = try readHeaders()
             
             guard let content = headers[.contentDisposition], content.starts(with: "form-data") else {
-                throw Error(identifier: "multipart:headers", reason: "Invalid content disposition")
+                throw MultipartError(identifier: "multipart:headers", reason: "Invalid content disposition")
             }
             
             let key = headers[.contentDisposition, "name"]
@@ -192,7 +200,7 @@ public final class Parser {
             // If it doesn't end in a second `\r\n`, this must be the end of the data z
             guard try carriageReturnNewLine() else {
                 guard data[position] == .hyphen, data[position &+ 1] == .hyphen else {
-                    throw Error(identifier: "multipart:invalid-eof", reason: "Invalid multipart ending")
+                    throw MultipartError(identifier: "multipart:invalid-eof", reason: "Invalid multipart ending")
                 }
                 
                 return
@@ -204,12 +212,31 @@ public final class Parser {
     
     /// Parses the input mulitpart data using the provided boundary
     ///
-    /// - throws: If the multipart data is invalid
-    public static func parse(multipart data: Data, boundary: Data) throws -> Form {
-        let parser = Parser(data: data, boundary: boundary)
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
+    ///
+    /// - throws: If the multipart data is an invalid Multipart form
+    public static func parse(from buffer: ByteBuffer, boundary: Data) throws -> Form {
+        let parser = MultipartParser(data: buffer, boundary: boundary)
         
         try parser.parse()
         
         return parser.multipart
+    }
+    
+    /// Parses the input mulitpart body using the provided boundary
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
+    ///
+    /// - throws: If the multipart data is an invalid Multipart form
+    public static func parse(from body: Body, boundary: Data) throws -> Form {
+        return try body.withUnsafeBytes { pointer in
+            let buffer = ByteBuffer(start: pointer, count: body.count)
+            
+            let parser = MultipartParser(data: buffer, boundary: boundary)
+            
+            try parser.parse()
+            
+            return parser.multipart
+        }
     }
 }

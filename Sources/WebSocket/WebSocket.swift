@@ -1,3 +1,4 @@
+import Async
 import Foundation
 import Bits
 import HTTP
@@ -5,7 +6,9 @@ import Crypto
 import TCP
 
 /// A websocket connection. Can be either the client or server side of the connection
-public class WebSocket {
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
+public class WebSocket: ClosableStream {
     /// A stream of incoming and outgoing strings between both parties
     let textStream = TextStream()
     
@@ -21,17 +24,30 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init(client: TCPClient, serverSide: Bool = true) {
-        self.connection = Connection(client: client, serverSide: serverSide)
+    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
+        ByteStream: Async.Stream,
+        ByteStream.Input == ByteBuffer,
+        ByteStream.Output == ByteBuffer
+    {
+        self.connection = Connection(socket: socket, serverSide: serverSide)
         
         self.textStream.frameStream = self.connection
         self.binaryStream.frameStream = self.connection
-        
-        self.connection.drain(self.processFrame)
+
+        /// FIXME: use a stream splitter here? this api seems a bit odd
+        self.connection.drain(onInput: self.processFrame).catch { error in
+            self.textStream.onError(error)
+            self.binaryStream.onError(error)
+        }
     }
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
         connection.close()
+    }
+    
+    /// Sets a handler that will be triggered when the WebSocket closes
+    public func onClose(_ onClose: ClosableStream) {
+        connection.onClose(onClose)
     }
 }

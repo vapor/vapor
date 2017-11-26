@@ -1,9 +1,11 @@
 #if os(Linux)
 
 import XCTest
-@testable import AsyncTests
+@testable import CommandTests
+@testable import ConsoleTests
 @testable import CryptoTests
 @testable import DebuggingTests
+@testable import FluentTests
 @testable import HTTPTests
 @testable import HTTP2Tests
 @testable import JWTTests
@@ -21,10 +23,10 @@ import XCTest
 @testable import WebSocketTests
 
 XCTMain([
-    // Core
-    testCase(FutureTests.allTests),
-    testCase(StreamTests.allTests),
-
+    /// Console & Commands
+    testCase(ConsoleTests.allTests),
+    testCase(CommandTests.allTests),
+  
     // Crypto
     testCase(Base64Tests.allTests),
     testCase(MD5Tests.allTests),
@@ -36,6 +38,9 @@ XCTMain([
     testCase(FooErrorTests.allTests),
     testCase(GeneralTests.allTests),
     testCase(TraceableTests.allTests),
+
+    // Fluent
+    testCase(SQLiteBenchmarkTests.allTests),
 
     // HTTP
     testCase(MiddlewareTests.allTests),
@@ -51,6 +56,7 @@ XCTMain([
 
     // Leaf
     testCase(LeafTests.allTests),
+    testCase(LeafEncoderTests.allTests),
 
     // Multipart
     testCase(MultipartTests.allTests),

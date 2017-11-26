@@ -6,19 +6,14 @@ import Foundation
 import libc
 
 /// TCP client stream.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/)
 public final class TCPClient: Async.Stream, ClosableStream {
-    // MARK: Stream
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
+
+    /// See OutputStream.Output
     public typealias Output = ByteBuffer
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
 
     /// This client's dispatch queue. Use this
     /// for all async operations performed as a
@@ -26,7 +21,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public let worker: Worker
 
     /// The client stream's underlying socket.
-    public let socket: Socket
+    public let socket: TCPSocket
 
     /// Bytes from the socket are read into this buffer.
     /// Views into this buffer supplied to output streams.
@@ -42,10 +37,15 @@ public final class TCPClient: Async.Stream, ClosableStream {
     var writeSource: DispatchSourceWrite?
 
     /// Keeps track of the writesource's active status so it's not resumed too often
-    var writing = false
-    
-    /// Creates a new Remote Client from the ServerSocket's details
-    public init(socket: Socket, worker: Worker) {
+    var isWriting = false
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output> = .init()
+
+    /// Creates a new Remote Client from the a socket
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#creating-and-connecting-a-socket)
+    public init(socket: TCPSocket, worker: Worker) {
         self.socket = socket
         self.worker = worker
 
@@ -55,30 +55,48 @@ public final class TCPClient: Async.Stream, ClosableStream {
         self.outputBuffer = MutableByteBuffer(start: pointer, count: size)
     }
 
-    // MARK: Stream
-    
-    /// Handles normal stream input
-    public func inputStream(_ input: ByteBuffer) {
+    /// See InputStream.onInput
+    public func onInput(_ input: ByteBuffer) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
     }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        /// pass the error on to our output stream
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, TCPClient.Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
     
     /// Handles DispatchData input
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func inputStream(_ input: DispatchData) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
     }
     
     /// Handles Data input
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func inputStream(_ input: Data) {
         inputBuffer.append(input)
         ensureWriteSourceResumed()
     }
     
     private func ensureWriteSourceResumed() {
-        if !writing {
+        if !isWriting {
             ensureWriteSource().resume()
-            writing = true
+            isWriting = true
         }
     }
     
@@ -87,7 +105,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
         guard let source = writeSource else {
             let source = DispatchSource.makeWriteSource(
                 fileDescriptor: socket.descriptor,
-                queue: worker.queue
+                queue: worker.eventLoop.queue
             )
             
             source.setEventHandler {
@@ -103,7 +121,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                     // will keep calling.
                     self.writeSource?.suspend()
                     
-                    self.writing = false
+                    self.isWriting = false
                 }
                 
                 data.withUnsafeBytes { (pointer: BytesPointer) in
@@ -115,7 +133,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                     } catch {
                         // any errors that occur here cannot be thrown,
                         // so send them to stream error catcher.
-                        self.errorStream?(error)
+                        self.onError(error)
                     }
                 }
             }
@@ -132,10 +150,12 @@ public final class TCPClient: Async.Stream, ClosableStream {
     }
 
     /// Starts receiving data from the client
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: worker.queue
+            queue: worker.eventLoop.queue
         )
 
         source.setEventHandler {
@@ -148,7 +168,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 //selfso send them to stream error catcher.
-                self.errorStream?(error)
+                self.outputStream.onError(error)
                 return
             }
 
@@ -164,7 +184,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.outputStream?(bufferView)
+            self.outputStream.onInput(bufferView)
         }
 
         source.setCancelHandler {
@@ -189,12 +209,15 @@ public final class TCPClient: Async.Stream, ClosableStream {
         socket.close()
         // important! it's common for a client to drain into itself
         // we need to make sure to break that reference cycle
-        outputStream = nil
-        errorStream = nil
+        // FIXME: more performant way to do this?
+        // possible make the reference weak?
+        outputStream.close()
+        outputStream = .init()
     }
 
     /// Deallocated the pointer buffer
     deinit {
+        close()
         outputBuffer.baseAddress.unsafelyUnwrapped.deallocate(capacity: outputBuffer.count)
         outputBuffer.baseAddress.unsafelyUnwrapped.deinitialize()
     }

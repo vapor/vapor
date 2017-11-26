@@ -5,9 +5,9 @@ import Foundation
 import Leaf
 import libc
 
-extension Renderer {
-    static func makeTestRenderer() -> Renderer {
-        return Renderer(tags: defaultTags) { queue in
+extension LeafRenderer {
+    static func makeTestRenderer() -> LeafRenderer {
+        return LeafRenderer(tags: defaultTags) { queue in
             return TestFiles()
         }
     }

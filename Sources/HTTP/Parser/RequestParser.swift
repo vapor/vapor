@@ -6,11 +6,11 @@ import Foundation
 
 /// Parses requests from a readable stream.
 public final class RequestParser: CParser {
-    // MARK: Stream
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
+
+    /// See OutputStream.Output
     public typealias Output = Request
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
 
     // Internal variables to conform
     // to the C HTTP parser protocol.
@@ -21,26 +21,56 @@ public final class RequestParser: CParser {
     /// Queue to be set on messages created by this parser.
     private let worker: Worker
 
+    /// The maxiumum possible body size
+    /// larger sizes will result in an error
+    private let maxBodySize: Int
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
+
     /// Creates a new Request parser.
-    public init(worker: Worker) {
+    public init(on worker: Worker, maxBodySize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
         self.worker = worker
+        self.maxBodySize = maxBodySize
+        self.outputStream = .init()
         reset(HTTP_REQUEST)
     }
 
     /// Handles incoming stream data
-    public func inputStream(_ input: ByteBuffer) {
+    /// See InputStream.onInput
+    public func onInput(_ input: ByteBuffer) {
         do {
             guard let request = try parse(from: input) else {
                 return
             }
-            outputStream?(request)
+            self.outputStream.onInput(request)
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
             reset(HTTP_REQUEST)
         }
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+    
+    /// See ClosableStream.close
+    public func close() {
+        self.outputStream.close()
+    }
+    
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        self.outputStream.onClose(onClose)
     }
 
     /// Parses request Data. If the data does not contain
@@ -61,7 +91,7 @@ public final class RequestParser: CParser {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser)
+            let newResults = CParseResults.set(on: &parser, maxBodySize: maxBodySize)
             results = newResults
             state = .parsing
         case .parsing:
@@ -108,14 +138,13 @@ public final class RequestParser: CParser {
                 let pointer = http_method_str(http_method(parser.method)),
                 let string = String(validatingUTF8: pointer)
             else {
-                throw Error.invalidMessage()
+                throw HTTPError.invalidMessage()
             }
             method = Method(string)
         }
 
         // parse the uri from the url bytes.
-        var uri = URIParser.shared.parse(bytes: results.url!)
-        let headers = Headers(storage: results.headers)
+        var uri = URIParser.shared.parse(data: results.url)
 
         // if there is no scheme, use http by default
         if uri.scheme?.isEmpty == true {
@@ -124,15 +153,12 @@ public final class RequestParser: CParser {
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
 
-        let body: Body
-        if let data = results.body {
-            body = Body(data)
-        } else {
-            body = Body()
-        }
+        let body = Body(results.body)
+        
+        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
 
         // create the request
         let request = Request(
@@ -143,7 +169,7 @@ public final class RequestParser: CParser {
             body: body
         )
 
-        request.worker = self.worker
+        request.eventLoop = worker.eventLoop
         return request
     }
 }

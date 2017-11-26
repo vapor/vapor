@@ -3,6 +3,8 @@ import Async
 extension RedisClient {
     /// Stores the `value` at the key `key`
     ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/basics/#creating-a-record)
+    ///
     /// - returns: A future that will be completed (or failed) when the key is stored or failed to be stored
     @discardableResult
     public func set(_ value: RedisData, forKey key: String) -> Future<Void> {
@@ -14,6 +16,8 @@ extension RedisClient {
     }
     
     /// Removes the value at the key `key`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/basics/#deleting-a-record)
     ///
     /// - returns: A future that will be completed (or failed) when the key is removed or failed to be removed
     @discardableResult
@@ -34,6 +38,8 @@ extension RedisClient {
     }
     
     /// Fetches the value at the key `key`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/redis/basics/#reading-a-record)
     ///
     /// - returns: A future that will be completed (or failed) with the value associated with this `key`
     public func getData(forKey key: String) -> Future<RedisData> {

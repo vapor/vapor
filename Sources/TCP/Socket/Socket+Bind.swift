@@ -1,10 +1,10 @@
 import libc
 import Foundation
 
-extension Socket {
+extension TCPSocket {
     /// bind - bind a name to a socket
     /// http://man7.org/linux/man-pages/man2/bind.2.html
-    public func bind(hostname: String = CurrentHost.hostname, port: UInt16) throws {
+    public func bind(hostname: String = "0.0.0.0", port: UInt16) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6
@@ -25,19 +25,28 @@ extension Socket {
 
         var res = getaddrinfo(hostname, port.description, &hints, &result)
         guard res == 0 else {
-            throw Error.posix(errno, identifier: "getAddressInfo")
+            throw TCPError.posix(
+                errno,
+                identifier: "getAddressInfo",
+                possibleCauses: [
+                    "The address that binding was attempted on does not refer to your machine."
+                ],
+                suggestedFixes: [
+                    "Bind to `0.0.0.0` or to your machine's IP address"
+                ]
+            )
         }
         defer {
             freeaddrinfo(result)
         }
 
         guard let info = result else {
-            throw Error(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
+            throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
         res = libc.bind(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 else {
-            throw Error.posix(errno, identifier: "bind")
+            throw TCPError.posix(errno, identifier: "bind")
         }
     }
 
@@ -46,22 +55,32 @@ extension Socket {
     public func listen(backlog: Int32 = 4096) throws {
         let res = libc.listen(descriptor, backlog)
         guard res == 0 else {
-            throw Error.posix(errno, identifier: "listen")
+            throw TCPError.posix(errno, identifier: "listen")
         }
     }
 
     /// accept, accept4 - accept a connection on a socket
     /// http://man7.org/linux/man-pages/man2/accept.2.html
-    public func accept() throws -> Socket {
-        let clientfd = libc.accept(descriptor, nil, nil)
-        guard clientfd > 0 else {
-            throw Error.posix(errno, identifier: "accept")
+    public func accept() throws -> TCPSocket {
+        let (clientfd, address) = try Address.withSockaddrPointer { address -> Int32 in
+            var size = socklen_t(MemoryLayout<sockaddr>.size)
+            
+            let descriptor = libc.accept(self.descriptor, address, &size)
+            
+            guard descriptor > 0 else {
+                throw TCPError.posix(errno, identifier: "accept")
+            }
+            
+            return descriptor
         }
-
-        return Socket(
+        
+        let socket = TCPSocket(
             established: clientfd,
             isNonBlocking: isNonBlocking,
-            shouldReuseAddress: shouldReuseAddress
+            shouldReuseAddress: shouldReuseAddress,
+            address: address
         )
+        
+        return socket
     }
 }

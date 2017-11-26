@@ -4,55 +4,61 @@ import Dispatch
 import libc
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class Server: Async.OutputStream, ClosableStream {
-    /// Closes the socket
-    public func close() {
-        socket.close()
-    }
-    
-    // MARK: Stream
+public final class TCPServer: Async.OutputStream, ClosableStream {
+    /// See OutputStream.Output
     public typealias Output = TCPClient
-    
-    /// See `BaseStream.onClose`
-    public var onClose: CloseHandler?
-    
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
-
-    // MARK: Dispatch
 
     /// The dispatch queue that peers are accepted on.
     public let queue: DispatchQueue
 
-    // MARK: Internal
+    /// This server's event loops.
+    /// Configuring these using the eventLoopCount at init.
+    /// These will be supplied to requests at they arrive.
+    public let eventLoops: [EventLoop]
 
-    let socket: Socket
-    let workers: [Worker]
-    var worker: LoopIterator<[Worker]>
-    var readSource: DispatchSourceRead?
+    /// A closure that can dictate if a client will be accepted
+    ///
+    /// `true` for accepted, `false` for not accepted
+    public typealias AcceptHandler = (TCPClient) -> (Bool)
+
+    /// Controls whether or not to accept a client
+    ///
+    /// Useful for security purposes
+    public var willAccept: AcceptHandler = { _ in
+        return true
+    }
+
+    /// This server's TCP socket.
+    private let socket: TCPSocket
+
+    /// A round robin view into the event loop array.
+    private var eventLoopsIterator: LoopIterator<[EventLoop]>
+
+    /// Keep a reference to the read source so it doesn't deallocate
+    private var readSource: DispatchSourceRead?
+
+    /// Use a basic output stream to implement server output stream.
+    private var outputStream: BasicStream<Output> = .init()
 
     /// Creates a TCP server from an existing TCP socket.
-    public init(socket: Socket, workerCount: Int) {
+    public init(socket: TCPSocket, eventLoopCount: Int) {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
-        var workers: [Worker] = []
+        var eventLoops: [EventLoop] = []
         /// important! this should be _less than_ the worker count
         /// to leave room for the accepting thread
-        for i in 1..<workerCount {
-            let worker = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
-            workers.append(Worker(queue: worker))
+        for i in 1..<eventLoopCount {
+            let queue = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
+            eventLoops.append(EventLoop(queue: queue))
         }
-        worker = LoopIterator(collection: workers)
-        self.workers = workers
+        eventLoopsIterator = LoopIterator(collection: eventLoops)
+        self.eventLoops = eventLoops
     }
 
     /// Creates a new Server Socket
-    public convenience init(workerCount: Int = 8) throws {
-        let socket = try Socket()
-        self.init(socket: socket, workerCount: workerCount)
+    public convenience init(eventLoopCount: Int = 8) throws {
+        let socket = try TCPSocket()
+        self.init(socket: socket, eventLoopCount: eventLoopCount)
     }
 
     /// Starts listening for peers asynchronously
@@ -66,21 +72,46 @@ public final class Server: Async.OutputStream, ClosableStream {
             fileDescriptor: socket.descriptor,
             queue: queue
         )
+        
         source.setEventHandler {
-            let socket: Socket
+            let socket: TCPSocket
             do {
                 socket = try self.socket.accept()
             } catch {
-                self.errorStream?(error)
+                self.outputStream.onError(error)
                 return
             }
 
-            let worker = self.worker.next()!
+            let worker = self.eventLoopsIterator.next()!
             let client = TCPClient(socket: socket, worker: worker)
-            client.errorStream = self.errorStream
-            self.outputStream?(client)
+            
+            guard self.willAccept(client) else {
+                client.close()
+                return
+            }
+
+            self.outputStream.onInput(client)
         }
+        
         source.resume()
         readSource = source
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
+    /// See CloseableStream.close
+    public func close() {
+        socket.close()
+        outputStream.close()
+        /// reinit output stream to clear any ref cycles
+        outputStream = .init()
     }
 }

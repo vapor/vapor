@@ -7,7 +7,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class Connection {
     /// The TCP socket it's connected on
-    let socket: Socket
+    let socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -47,6 +47,8 @@ public final class Connection {
         
         readBuffer.deinitialize(count: Int(UInt16.max))
         readBuffer.deallocate(capacity: Int(UInt16.max))
+        
+        self.close()
     }
     
     /// The client's capabilities
@@ -69,19 +71,38 @@ public final class Connection {
     }
     
     /// Creates a new connection and completes the handshake
-    public static func makeConnection(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws -> Future<Connection> {
-        let connection = try Connection(hostname: hostname, port: port, user: user, password: password, database: database, queue: queue)
-        
-        return connection.authenticated.future.map { _ in
-            return connection
+    public static func makeConnection(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String?,
+        on worker: Worker
+    ) -> Future<Connection> {
+        return then {
+            let connection = try Connection(
+                hostname: hostname,
+                port: port,
+                user: user,
+                password: password,
+                database: database,
+                on: worker
+            )
+
+            return connection.authenticated.future.map { _ in
+                return connection
+            }
         }
     }
+
+    /// This connection's subscribable packet stream
+    var packetStream: BasicStream<Packet> = .init()
     
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, queue: DispatchQueue) throws {
-        let socket = try Socket()
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
+        let socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
@@ -91,14 +112,14 @@ public final class Connection {
         
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: queue
+            queue: worker.eventLoop.queue
         )
         
         self.source = source
         
         self.parser = parser
         self.socket = socket
-        self.queue = queue
+        self.queue = worker.eventLoop.queue
         self.buffer = buffer
         self.source = source
         self.username = user
@@ -109,31 +130,27 @@ public final class Connection {
         
         source.setEventHandler {
             do {
-                let usedBufferSize = try socket.read(max: numericCast(UInt16.max), into: self.readBuffer)
+                let usedBufferSize = try socket.read(
+                    max: numericCast(UInt16.max),
+                    into: self.readBuffer
+                )
                 
                 // Reuse existing pointer to data
-                let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
-                
-                parser.inputStream(newBuffer)
+                let newBuffer = MutableByteBuffer(
+                    start: self.readBuffer,
+                    count: usedBufferSize
+                )
+                parser.onInput(newBuffer)
             } catch {
                 socket.close()
             }
         }
         source.resume()
-        
-        self.parser.drain(self.handlePacket)
-    }
-    
-    /// Closes the connection
-    func close() {
-        self.socket.close()
-    }
-    
-    /// Sets the proided handler to capture packets
-    ///
-    /// - throws: The connection is reserved
-    internal func receivePackets(into handler: @escaping ((Packet) -> ())) {
-        self.parser.outputStream = handler
+
+        parser.drain(onInput: self.handlePacket).catch { error in
+            // FIXME: @joannis
+            print(error)
+        }
     }
     
     /// Handles the incoming packet with the default handler
@@ -147,6 +164,8 @@ public final class Connection {
         
         guard authenticated.future.isCompleted else {
             finishAuthentication(for: packet, completing: authenticated)
+            /// start streaming to packet stream now
+            parser.stream(to: packetStream)
             return
         }
         
@@ -167,7 +186,7 @@ public final class Connection {
         var offset = 0
         
         guard let input = data.baseAddress else {
-            throw Error(.invalidPacket)
+            throw MySQLError(.invalidPacket)
         }
         
         // Starts the packet number at the starting number
@@ -187,7 +206,7 @@ public final class Connection {
                 UInt8((packetSize) & 0xff),
                 UInt8((packetSize >> 8) & 0xff),
                 UInt8((packetSize >> 16) & 0xff),
-                ]
+            ]
             
             defer {
                 offset = offset + dataSize
@@ -202,5 +221,14 @@ public final class Connection {
         }
         
         return
+    }
+    
+    /// Closes the connection
+    func close() {
+        // Write `close`
+        _ = try? self.write(packetFor: Data([0x01]))
+        
+        self.socket.close()
+        self.packetStream.close()
     }
 }

@@ -22,7 +22,7 @@ import Bits
 /// + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
 /// |                     Payload Data continued ...                |
 /// +---------------------------------------------------------------+
-
+///
 /// A WebSocket frame contains a payload
 ///
 /// Interfacing with this class directly is usually not necessary and not recommended unless you know how WebSockets work.
@@ -126,7 +126,7 @@ public final class Frame {
         if !isFinal {
             // Only binary and continuation frames can be not final
             guard op == .binary || op == .continuation else {
-                throw Error(.invalidFrameParameters)
+                throw WebSocketError(.invalidFrameParameters)
             }
         }
         
@@ -184,7 +184,7 @@ public final class Frame {
             // Masks must be 4 bytes
             guard mask.count == 4 else {
                 self.buffer.dealloc()
-                throw Error(.invalidMask)
+                throw WebSocketError(.invalidMask)
             }
             
             // If the data is already masked

@@ -34,9 +34,17 @@ extension SSLStream {
                 code == SSL_ERROR_WANT_CONNECT
             )
             
+<<<<<<< HEAD
             if case .server = side, !accepted {
                 accepted = true
                 return attemptInstantiation()
+=======
+            // If it's not blocking and not a success, it's an error
+            guard result > 0 else {
+                readSource.cancel()
+                promise.fail(OpenSSLError(.sslError(result)))
+                return
+>>>>>>> 59d25a108d40605c6a15290011be77ac94fbd980
             }
             
             if result == -1 {
@@ -46,7 +54,33 @@ extension SSLStream {
             }
         }
         
+<<<<<<< HEAD
         attemptInstantiation()
+=======
+        // Listen for input
+        readSource.setEventHandler {
+            tryAgain()
+        }
+        
+        // Now that the async stuff's et up, let's start your engines
+        readSource.resume()
+        
+        let future = promise.future
+        
+        future.addAwaiter { _ in
+            self.readSource = nil
+        }
+        
+        self.readSource = readSource
+        
+        return future
+    }
+    
+    func setCertificate(certificatePath: String) throws {
+        guard let context = context else {
+            throw OpenSSLError(.noSSLContext)
+        }
+>>>>>>> 59d25a108d40605c6a15290011be77ac94fbd980
         
         return promise.future
     }
@@ -60,7 +94,7 @@ extension SSLStream {
     /// https://www.sslshopper.com/article-most-common-openssl-commands.html
     func setServerCertificates(certificatePath: String, keyPath: String) throws {
         guard let context = context else {
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
@@ -68,13 +102,13 @@ extension SSLStream {
         var error = SSL_CTX_use_certificate_file(context, certificatePath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            throw Error(.sslError(error))
+            throw OpenSSLError(.sslError(error))
         }
         
         error = SSL_CTX_use_PrivateKey_file(context, keyPath, SSL_FILETYPE_PEM)
         
         guard error > 0 else {
-            throw Error(.sslError(error))
+            throw OpenSSLError(.sslError(error))
         }
     }
     
@@ -92,7 +126,7 @@ extension SSLStream {
             } catch {
                 // any errors that occur here cannot be thrown,
                 // so send them to stream error catcher.
-                self.errorStream?(error)
+                self.onError(error)
                 return
             }
             
@@ -108,7 +142,7 @@ extension SSLStream {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
-            self.outputStream?(bufferView)
+            self.outputStream.onInput(bufferView)
         }
         
         readSource.setCancelHandler {

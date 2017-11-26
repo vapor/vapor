@@ -1,49 +1,78 @@
 import Async
+import libc
 
-protocol ResultsStream : OutputStream, ClosableStream {
+/// A type that can parse streaming query results
+protocol ResultsStream: Stream {
+    /// Keeps track of all columns associated with the results
     var columns: [Field] { get set }
-    var header: UInt64? { get set }
+    
+    /// Used to indicate the amount of returned columns
+    var columnCount: UInt64? { get set }
+    
+    /// Keeps track of the server's protocol version for reading
     var mysql41: Bool { get }
     
     func parseRows(from packet: Packet) throws -> Output
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<Output> { get }
 }
 
+/// The "moreResultsExists" flag
+///
+/// TODO: Use this with cursor support
 fileprivate let serverMoreResultsExists: UInt16 = 0x0008
 
 extension ResultsStream {
-    public func inputStream(_ input: Packet) {
+    /// See InputStream.Input
+    public typealias Input = Packet
+
+    /// Parses an incoming packet as part of the results
+    public func onInput(_ input: Packet) {
         do {
-            guard let header = self.header else {
-                let parser = Parser(packet: input)
-                
-                guard let header = try? parser.parseLenEnc() else {
-                    if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
-                        self.errorStream?(error)
-                    } else {
-                        self.close()
-                    }
-                    return
-                }
-                
-                if header == 0 {
-                    self.close()
-                }
-                
-                self.header = header
-                return
-            }
-            
-            guard columns.count == header else {
-                parseColumns(from: input, amount: header)
-                return
-            }
-            
-            try preParseRows(from: input)
+            try parse(packet: input)
         } catch {
-            errorStream?(error)
+            onError(error)
         }
     }
+
+    func parse(packet: Packet) throws {
+        // If the header (column count) is not yet set
+        guard let columnCount = self.columnCount else {
+            // Parse the column count
+            let parser = Parser(packet: packet)
+
+            // Tries to parse the header count
+            guard let columnCount = try? parser.parseLenEnc() else {
+                if case .error(let error) = try packet.parseResponse(mysql41: mysql41) {
+                    throw error
+                } else {
+                    self.close()
+                }
+                return
+            }
+
+            // No columns means an empty stream
+            if columnCount == 0 {
+                self.close()
+            }
+
+            self.columnCount = columnCount
+            return
+        }
+
+        // if the column count isn't met yet
+        if columns.count != columnCount {
+            // Parse the next column
+            try parseColumns(from: packet)
+            return
+        }
+
+        // Otherwise, parse the next row
+        try preParseRows(from: packet)
+    }
     
+    /// Parses a row from this packet, checks
     func preParseRows(from packet: Packet) throws {
         // End of file packet
         if packet.payload[0] == 0xfe {
@@ -55,7 +84,7 @@ extension ResultsStream {
                 return
             }
             
-            close()
+            self.close()
             return
         }
         
@@ -64,80 +93,40 @@ extension ResultsStream {
             let pointer = packet.payload.baseAddress,
             pointer[0] == 0xff,
             let error = try packet.parseResponse(mysql41: self.mysql41).error {
+            print(error)
                 throw error
         }
         
-        self.outputStream?(try parseRows(from: packet))
+        try outputStream.onInput(parseRows(from: packet))
     }
     
-    func parseColumns(from packet: Packet, amount: UInt64) {
-        if amount == 0 {
-            self.columns = []
-        }
-        
-        // EOF
-        if packet.isResponse {
+    /// Parses the packet as a columm specification
+    func parseColumns(from packet: Packet) throws {
+        // Normal responses indicate an end of columns or an error
+        if packet.isTextProtocolResponse {
             do {
                 switch try packet.parseResponse(mysql41: mysql41) {
                 case .error(let error):
-                    self.errorStream?(error)
-                    return
+                    // Errors are thrown into the stream
+                    throw error
                 case .ok(_):
                     fallthrough
                 case .eof(_):
-                    guard amount == columns.count else {
-                        self.errorStream?(Error(.invalidPacket))
-                        return
-                    }
+                    // If this is the end of the stream, stop
+                    return
                 }
             } catch {
-                self.errorStream?(Error(.invalidPacket))
-                return
+                throw MySQLError(.invalidPacket)
             }
         }
         
-        let parser = Parser(packet: packet)
-        
         do {
-            try parser.skipLenEnc() // let catalog = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let database = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let table = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let originalTable = try parser.parseLenEncString()
-            let name = try parser.parseLenEncString()
-            try parser.skipLenEnc() // let originalName = try parser.parseLenEncString()
-            
-            parser.position += 1
-            
-            let charSet = try parser.byte()
-            let collation = try parser.byte()
-            
-            let length = try parser.parseUInt32()
-            
-            guard let fieldType = Field.FieldType(rawValue: try parser.byte()) else {
-                throw Error(.invalidPacket)
-            }
-            
-            let flags = Field.Flags(rawValue: try parser.parseUInt16())
-            
-            let decimals = try parser.byte()
-            
-            let field = Field(catalog: nil,
-                              database: nil,
-                              table: nil,
-                              originalTable: nil,
-                              name: name,
-                              originalName: nil,
-                              charSet: charSet,
-                              collation: collation,
-                              length: length,
-                              fieldType: fieldType,
-                              flags: flags,
-                              decimals: decimals)
+            // Parse the column field definition
+            let field = try packet.parseFieldDefinition()
             
             self.columns.append(field)
         } catch {
-            self.errorStream?(Error(.invalidPacket))
-            return
+            throw MySQLError(.invalidPacket)
         }
     }
 }

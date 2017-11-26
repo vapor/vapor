@@ -1,3 +1,4 @@
+/// [Learn More →](https://docs.vapor.codes/3.0/mysql/basics/#queries)
 public protocol Query {
     /// Returns this query represented as a String
     var string: String { get }

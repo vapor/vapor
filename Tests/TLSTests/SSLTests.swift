@@ -17,7 +17,7 @@ import TLS
 
 #if Xcode
     private var workDir: String {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
         let path = "/\(parent)/"
         return path
     }
@@ -28,8 +28,8 @@ import TLS
 class SSLTests: XCTestCase {
     func testSSL() throws {
         // FIXME: @joannis, this is failing on macOS
-        return;
-        let server = try! TCP.Server()
+        /*
+        let server = try TCP.Server()
         
         var peers = [SSLStream<TCPClient>]()
         var clients = [TLSClient]()
@@ -73,12 +73,13 @@ class SSLTests: XCTestCase {
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
 
-        let future = try! clientQueue.sync { () -> Future<()> in
-            let client = try! TLSClient(worker: Worker(queue: clientQueue))
+
+        let future = try clientQueue.sync { () -> Future<()> in
+            let client = try TLSClient(worker: EventLoop(queue: clientQueue))
 
             clients.append(client)
 
-            return try! client.connect(hostname: CurrentHost.hostname, port: 8432).map {
+            return try client.connect(hostname: "localhost", port: 8432).map {
                 message.withUnsafeBytes { (pointer: BytesPointer) in
                     let buffer = ByteBuffer(start: pointer, count: message.count)
 
@@ -93,6 +94,7 @@ class SSLTests: XCTestCase {
         XCTAssertEqual(count, 1)
         XCTAssertEqual(peers.count, 1)
         XCTAssertEqual(clients.count, 1)
+        */
     }
 
     static let allTests = [

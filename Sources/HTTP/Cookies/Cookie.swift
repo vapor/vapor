@@ -1,6 +1,8 @@
 import Foundation
 
 /// A single Key-Value pair
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/http/cookies/#a-single-cookie)
 public struct Cookie {
     /// The cookie's `Key`/name
     public var name: String
@@ -29,6 +31,8 @@ public protocol CookieValueRepresentable {
 
 extension Cookie {
     /// The `Cookie` pair's `Value`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/cookies/#values)
     public struct Value: CookieValueInitializable, CookieValueRepresentable, ExpressibleByStringLiteral {
         /// Initializes itself to itself
         public init(from value: Cookie.Value) throws {

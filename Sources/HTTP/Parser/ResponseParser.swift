@@ -4,24 +4,33 @@ import Bits
 import Foundation
 
 /// Parses requests from a readable stream.
-public final class ResponseParser: CParser, Async.Stream {
-    // MARK: Stream
+public final class ResponseParser: CParser, Async.Stream, ClosableStream {
+    /// See InputStream.Input
     public typealias Input = ByteBuffer
+
+    /// See OutputStream.Output
     public typealias Output = Response
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
     
     // Internal variables to conform
     // to the C HTTP parser protocol.
     var parser: http_parser
     var settings: http_parser_settings
     var state:  CHTTPParserState
+
+    /// The maxiumum possible body size
+    /// larger sizes will result in an error
+    let maxBodySize: Int
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output>
     
     /// Creates a new Request parser.
-    public init() {
+    public init(maxBodySize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
+        self.maxBodySize = maxBodySize
+        self.outputStream = .init()
         reset(HTTP_RESPONSE)
     }
 
@@ -33,18 +42,41 @@ public final class ResponseParser: CParser, Async.Stream {
     }
     
     /// Handles incoming stream data
-    public func inputStream(_ input: ByteBuffer) {
+    public func onInput(_ input: ByteBuffer) {
         do {
             guard let request = try parse(from: input) else {
                 return
             }
-            outputStream?(request)
+            outputStream.onInput(request)
         } catch {
-            self.errorStream?(error)
+            onError(error)
             reset(HTTP_RESPONSE)
         }
     }
     
+    /// See ClosableStream.close
+    public func close() {
+        self.outputStream.close()
+    }
+    
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        self.outputStream.onClose(onClose)
+    }
+    
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// Parses the supplied data into a response or throws an error.
+    /// If the data is incomplete, a nil response will be returned.
+    /// Contiguous data may be supplied as multiple calls.
     public func parse(from data: Data) throws -> Response? {
         return try data.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: data.count)
@@ -60,7 +92,7 @@ public final class ResponseParser: CParser, Async.Stream {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser)
+            let newResults = CParseResults.set(on: &parser, maxBodySize: maxBodySize)
             results = newResults
             state = .parsing
         case .parsing:
@@ -85,20 +117,15 @@ public final class ResponseParser: CParser, Async.Stream {
 
         /// get response status
         let status = Status(code: Int(parser.status_code))
-        let headers = Headers(storage: results.headers)
 
         // require a version to have been parsed
         guard let version = results.version else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
         
-        let body: Body
-        if let data = results.body {
-            let copied = Data(data)
-            body = Body(copied)
-        } else {
-            body = Body()
-        }
+        let body = Body(results.body)
+        
+        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
         
         // create the request
         return Response(

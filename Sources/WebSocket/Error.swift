@@ -1,7 +1,70 @@
 import Debugging
 
 /// A WebSocket error, when creating or using a WebSocket
-public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
+public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
+    public var possibleCauses: [String] {
+        switch problem {
+        case .invalidURI:
+            return [
+                "The URI was not a valid WebSocket URI"
+            ]
+        case .notUpgraded:
+            return [
+                "The remote server must support WebSocket at the provided path, port and hostname",
+                "The remote server did not send the correct acceptation key"
+            ]
+        case .invalidMask:
+            return [
+                "The mask provided was not 4 bytes long as per standard"
+            ]
+        case .invalidFrame:
+            return [
+                "The incoming buffer was corrupt or incomplete."
+            ]
+        case .invalidFrameParameters:
+            return [
+                "WebSocket frames that aren't final must be binary or a continuation of binary"
+            ]
+        case .invalidBufferSize:
+            return [
+                "The binary buffer provided to writing was empty"
+            ]
+        case .invalidRequest:
+            return [
+                "The request is not valid for websocket upgrading"
+            ]
+        }
+    }
+    
+    public var suggestedFixes: [String] {
+        switch problem {
+        case .invalidURI:
+            return [
+                "The scheme must be either `ws` or `wss`",
+                "The hostname must be set and a valid hostname"
+            ]
+        case .notUpgraded:
+            return []
+        case .invalidMask:
+            return [
+                "Generate 4 random bytes using any Random Number Generator for clients",
+                "Leave the mask empty (`nil`) for servers"
+            ]
+        case .invalidFrame:
+            return []
+        case .invalidFrameParameters:
+            return [
+                "Only write binary or continuation frames that are non-final"
+            ]
+        case .invalidBufferSize:
+            return [
+                "Do not write an empty set of bytes"
+            ]
+        case .invalidRequest:
+            return []
+        }
+    }
+    
     /// A description of the problem
     public var reason: String {
         switch problem {
@@ -37,7 +100,7 @@ public struct Error : Swift.Error, Debuggable, Traceable, Encodable {
          line: UInt = #line,
          column: UInt = #column
     ) {
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = WebSocketError.makeStackTrace()
         self.file = file
         self.function = function
         self.line = line
