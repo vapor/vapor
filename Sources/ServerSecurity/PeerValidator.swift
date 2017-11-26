@@ -50,7 +50,9 @@ public final class PeerValidator {
         
         // If the remote address doesn't have connections open
         if currentRemote == nil {
-            currentRemote = RemoteAddress(address: currentRemoteAddress)
+            let remote = RemoteAddress(address: currentRemoteAddress)
+            self.remotes.append(remote)
+            currentRemote = remote
         }
         
         // Cleans up be decreasing the counter
@@ -68,7 +70,7 @@ public final class PeerValidator {
                 }
                 
                 // Otherwise, remove the remote address
-                if let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
+                if  self.remotes.count > 0, let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
                     self.remotes.remove(at: index)
                 }
             }

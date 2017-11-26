@@ -84,9 +84,6 @@ router.grouped(DateMiddleware()).get("plaintext") { req in
     return helloRes
 }
 
-let view = try app.make(ViewRenderer.self)
-
-
 router.post("login") { req -> Response in
     let loginRequest = try req.content(LoginRequest.self)
 
@@ -103,8 +100,8 @@ router.get("leaf") { req -> Future<View> in
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
-
-    return try view.make("hello", context: promise.future, on: req)
+    
+    return try req.makeLeafRenderer().make("hello", context: promise.future, on: req)
 }
 
 final class FooController {
@@ -158,7 +155,7 @@ extension Request: ConnectionRepresentable {}
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
 
-    return try view.make("hello", [
+    return try req.makeLeafRenderer().make("hello", [
         "user": user
     ], on: req)
 }

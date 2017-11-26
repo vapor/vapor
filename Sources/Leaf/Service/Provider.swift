@@ -6,16 +6,19 @@ import Service
 
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
+    /// Create a file reader & cache for the supplied queue
+    public typealias FileFactory = (Worker) -> (FileReader & FileCache)
+    
     let tags: [String: LeafTag]
     let viewsDir: String
-    let fileFactory: LeafRenderer.FileFactory
+    let fileFactory: FileFactory
     let cache: Bool
 
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
         cache: Bool = true,
-        fileFactory: @escaping LeafRenderer.FileFactory = File.init
+        fileFactory: @escaping FileFactory = File.init
     ) {
         self.tags = tags
         self.viewsDir = viewsDir
@@ -32,16 +35,6 @@ public final class LeafProvider: Provider {
 
     /// See Service.Provider.Register
     public func register(_ services: inout Services) throws {
-        services.register(ViewRenderer.self) { container -> LeafRenderer in
-            let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
-            return LeafRenderer(
-                tags: config.tags,
-                viewsDir: config.viewsDir,
-                cache: config.cache,
-                fileFactory: config.fileFactory
-            )
-        }
-
         services.register { container -> LeafConfig in
             let dir = try container.make(DirectoryConfig.self, for: LeafRenderer.self)
             return LeafConfig(viewsDir: dir.workDir + "Resources/Views")
@@ -52,6 +45,27 @@ public final class LeafProvider: Provider {
     public func boot(_ container: Container) throws { }
 }
 
+fileprivate let leafRendererKey = "leaf:renderer"
+
+extension HasContainer where Self: Worker {
+    public func makeLeafRenderer() throws -> LeafRenderer {
+        if let renderer = self.eventLoop.extend[leafRendererKey] as? LeafRenderer {
+            return renderer
+        }
+        
+        let config = try self.workerMake(LeafConfig.self, for: LeafRenderer.self)
+        let renderer =  LeafRenderer(
+            tags: config.tags,
+            viewsDir: config.viewsDir,
+            cache: config.cache,
+            fileReader: config.fileFactory(self)
+        )
+        
+        self.eventLoop.extend[leafRendererKey] = renderer
+        
+        return renderer
+    }
+}
 
 // MARK: View
 

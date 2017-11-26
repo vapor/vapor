@@ -10,11 +10,7 @@ public final class LeafRenderer {
 
     /// The renderer will use this to read files for
     /// tags that require it (such as #embed)
-    private var _files: [Int: FileReader & FileCache]
-
-    /// Create a file reader & cache for the supplied queue
-    public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
-    private let fileFactory: FileFactory
+    private var fileReader: FileReader & FileCache
 
     /// Views base directory.
     public let viewsDir: String
@@ -26,13 +22,12 @@ public final class LeafRenderer {
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
         cache: Bool = true,
-        fileFactory: @escaping FileFactory = File.init
+        fileReader: FileReader & FileCache
     ) {
         self.tags = tags
-        self._files = [:]
-        self.fileFactory = fileFactory
         self.viewsDir = viewsDir.finished(with: "/")
         self.mustCache = cache
+        self.fileReader = fileReader
     }
 
     // ASTs only need to be parsed once
@@ -121,20 +116,12 @@ extension LeafRenderer {
 
         let promise = Promise(Data.self)
 
-        let file: FileReader & FileCache
-        if let existing = _files[worker.eventLoop.queue.label.hashValue] {
-            file = existing
-        } else {
-            file = fileFactory(worker.eventLoop.queue)
-            _files[worker.eventLoop.queue.label.hashValue] = file
-        }
-        
         let data: Future<Data>
 
         if self.mustCache {
-            data = file.cachedRead(at: fullPath)
+            data = fileReader.cachedRead(at: fullPath)
         } else {
-            data = file.read(at: fullPath)
+            data = fileReader.read(at: fullPath)
         }
             
         data.do { view in
