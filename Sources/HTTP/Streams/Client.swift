@@ -44,10 +44,6 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         self.outputStream = .init()
         self.socket = socket
 
-        let dataToByteByffer = MapStream<Data, ByteBuffer> { data in
-            return data.withByteBuffer { $0 }
-        }
-
         /// FIXME: is there a way to support end users
         /// setting an output stream as well?
         outputStream.drain { res in
@@ -62,7 +58,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
             }
         }
 
-        serializer.stream(to: dataToByteByffer).stream(to: socket)
+        serializer.stream(to: socket)
         socket.stream(to: parser).stream(to: outputStream)
     }
     

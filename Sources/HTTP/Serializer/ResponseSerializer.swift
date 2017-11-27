@@ -94,8 +94,8 @@ public final class ResponseSerializer: Serializer {
             case .staticString(let pointer):
                 memcpy(message.advanced(by: offset), pointer.utf8Start, pointer.utf8CodeUnitCount)
                 offset += pointer.utf8CodeUnitCount
-            case .stream(let body):
-                body.drain(onInput: outputStream.onInput).catch(onError: self.onError)
+            case .stream(let bodyStream):
+                bodyStream.drain(onInput: outputStream.onInput).catch(onError: self.onError)
             }
         }
 

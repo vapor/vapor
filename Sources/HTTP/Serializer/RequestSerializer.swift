@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Dispatch
 import Foundation
 
@@ -8,7 +9,7 @@ public final class RequestSerializer: Serializer {
     public typealias Input = Request
 
     /// See OutputStream.Output
-    public typealias Output = Data
+    public typealias Output = ByteBuffer
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
@@ -20,8 +21,7 @@ public final class RequestSerializer: Serializer {
     
     /// See InputStream.onInput
     public func onInput(_ input: Request) {
-        let message = serialize(input)
-        outputStream.onInput(message)
+        serialize(input).withByteBuffer(outputStream.onInput)
     }
 
     /// See InputStream.onError
@@ -76,11 +76,10 @@ public final class RequestSerializer: Serializer {
             
             serialized.append(contentsOf: buffer)
         case .stream(let bodyStream):
-            body.drain(onInput: outputStream.onInput).catch(onError: self.onError)
+            bodyStream.drain(onInput: outputStream.onInput).catch(onError: self.onError)
         }
         
         return serialized
-        return Data()
     }
 }
 
