@@ -10,12 +10,6 @@ public final class FrameParser: Async.Stream {
     /// See `OutputStream.Output`
     public typealias Output = Frame
     
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
-    
-    /// See `Stream.errorStream`
-    public var errorStream: ErrorHandler?
-    
     /// The maximum size of a frame
     var maxFrameSize: UInt32
     
@@ -58,7 +52,7 @@ public final class FrameParser: Async.Stream {
     }
     
     /// Process the next buffer
-    public func inputStream(_ input: ByteBuffer) {
+    public func onInput(_ input: ByteBuffer) {
         do {
             try self.process(buffer: input)
         } catch {
@@ -72,7 +66,7 @@ public final class FrameParser: Async.Stream {
     func process(buffer input: ByteBuffer) throws {
         // Empty buffers are invalid
         guard let pointer = input.baseAddress else {
-            throw Error(.invalidFrameReceived)
+            throw HTTP2Error(.invalidFrameReceived)
         }
         
         var offset = 0
@@ -121,7 +115,7 @@ public final class FrameParser: Async.Stream {
             // Process the frame type byte
             guard (try continueNextByte(offset: 3) {
                 guard let frameType = Frame.FrameType(rawValue: pointer[offset]) else {
-                    throw Error(.invalidFrameReceived)
+                    throw HTTP2Error(.invalidFrameReceived)
                 }
                 
                 self.type = frameType
@@ -141,7 +135,7 @@ public final class FrameParser: Async.Stream {
                 // Reserved bit must not be set
                 guard pointer[offset] & 0b10000000 == 0 else {
                     // RESERVED BIT
-                    throw Error(.invalidFrameReceived)
+                    throw HTTP2Error(.invalidFrameReceived)
                 }
                 
                 streamIdentifier |= numericCast((pointer[offset]) << 24)
@@ -172,7 +166,7 @@ public final class FrameParser: Async.Stream {
             
             // Assert that the payload length is within this client's maximum
             guard self.payloadLength < self.maxFrameSize else {
-                throw Error(.invalidFrameReceived)
+                throw HTTP2Error(.invalidFrameReceived)
             }
             
             // Take the next bytes to fill up the payload
@@ -191,7 +185,7 @@ public final class FrameParser: Async.Stream {
             }
             
             guard let type = type, let flags = flags else {
-                throw Error(.invalidFrameReceived)
+                throw HTTP2Error(.invalidFrameReceived)
             }
             
             let frame = Frame(type: type, payload: Payload(data: payload), streamID: streamIdentifier, flags: flags)

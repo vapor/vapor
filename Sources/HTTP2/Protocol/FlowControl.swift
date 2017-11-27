@@ -8,7 +8,7 @@ struct WindowUpdate {
                 ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame
             )
             
-            throw Error(.invalidSettingsFrame(frame))
+            throw HTTP2Error(.invalidSettingsFrame(frame))
         }
         
         self.windowSize = frame.payload.data.withUnsafeBytes { (pointer: UnsafePointer<Int32>) in
@@ -20,7 +20,7 @@ struct WindowUpdate {
                 ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame
             )
             
-            throw Error(.invalidFrameReceived)
+            throw HTTP2Error(.invalidFrameReceived)
         }
     }
     

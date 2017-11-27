@@ -10,12 +10,6 @@ public final class FrameSerializer: Async.Stream {
     /// See `OutputStream.Output`
     public typealias Output = ByteBuffer
     
-    /// See `OutputStream.outputStream`
-    public var outputStream: OutputHandler?
-    
-    /// See `Stream.errorStream`
-    public var errorStream: ErrorHandler?
-    
     /// The maximum size per frame
     var maxLength: UInt32
     
@@ -24,10 +18,10 @@ public final class FrameSerializer: Async.Stream {
     }
     
     /// Serializes a frame
-    public func inputStream(_ input: Frame) {
+    public func onInput(_ input: Frame) {
         // the payload must be a valid length
         guard input.payload.data.count <= 16_777_215 && input.payload.data.count + 9 < numericCast(maxLength) else {
-            errorStream?(Error(.invalidFrameReceived))
+            onError(HTTP2Error(.invalidFrameReceived))
             return
         }
         
@@ -61,6 +55,6 @@ public final class FrameSerializer: Async.Stream {
             _ = memcpy(pointer.advanced(by: 9), payload, input.payload.data.count)
         }
         
-        outputStream?(ByteBuffer(start: pointer, count: messageLength))
+        stream.onInput(ByteBuffer(start: pointer, count: messageLength))
     }
 }

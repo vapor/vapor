@@ -5,7 +5,7 @@ extension HTTP2Client {
     /// TODO: Pause streams from processing?
     func processSettings(from frame: Frame) throws {
         guard frame.streamIdentifier == 0 else {
-            throw Error(.invalidStreamIdentifier)
+            throw HTTP2Error(.invalidStreamIdentifier)
         }
         
         if frame.flags & 0x01 == 0x01 {
@@ -33,7 +33,7 @@ extension HTTP2Client {
             frame.type == .priority || frame.type == .reset ||
             frame.type == .goAway   || frame.type == .windowUpdate
         else {
-            throw Error(.invalidStreamIdentifier)
+            throw HTTP2Error(.invalidStreamIdentifier)
         }
         
         switch frame.type {
@@ -59,7 +59,7 @@ extension HTTP2Client {
                 context.windowSize = numericCast(update.windowSize)
             }
         default:
-            throw Error(.invalidStreamIdentifier)
+            throw HTTP2Error(.invalidStreamIdentifier)
         }
     }
 }

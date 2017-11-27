@@ -44,12 +44,11 @@ public final class HTTP2Stream: Async.Stream {
     public typealias Input = Frame
     public typealias Output = Frame
     
-    public var outputStream: OutputHandler?
-    public var errorStream: ErrorHandler?
-    
     let identifier: Int32
     let context: ConnectionContext
     var windowSize: UInt64? = nil
+    
+    private let stream = BasicStream<Output>()
     
     init(id: Int32, context: ConnectionContext) {
         self.identifier = id
@@ -57,10 +56,18 @@ public final class HTTP2Stream: Async.Stream {
     }
     
     public func close() {
-        errorStream?(Error(.clientError))
+        errorStream?(HTTP2Error(.clientError))
     }
     
-    public func inputStream(_ frame: Frame) {
+    public func onClose(_ onClose: ClosableStream) {
+        stream.onClose(onClose)
+    }
+    
+    public func onOutput<I>(_ input: I) where I : InputStream, HTTP2Stream.Output == I.Input {
+        stream.onOutput(input)
+    }
+    
+    public func onInput(_ frame: Frame) {
         do {
             switch frame.type {
             case .windowUpdate:
@@ -72,11 +79,11 @@ public final class HTTP2Stream: Async.Stream {
                     windowSize = numericCast(update.windowSize)
                 }
             case .headers:
-                outputStream?(frame)
+                stream.onInput(input)
             case .data:
-                outputStream?(frame)
+                stream.onInput(input)
             case .reset:
-                throw Error(.clientError)
+                throw HTTP2Error(.clientError)
             case .pushPromise:
                 assertionFailure("Unsupported")
                 break
@@ -84,7 +91,7 @@ public final class HTTP2Stream: Async.Stream {
                 break
             }
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
         }
     }
 }

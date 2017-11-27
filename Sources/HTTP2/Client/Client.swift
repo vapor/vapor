@@ -18,8 +18,7 @@ public final class HTTP2Client: BaseStream {
     /// All streams share the connection and it's context
     let context: ConnectionContext
     
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+    let stream = BasicStream<Output>()
     
     /// A shorthand that helps keep track of the stream ID
     fileprivate var _nextStreamID: Int32 = 3
@@ -30,7 +29,7 @@ public final class HTTP2Client: BaseStream {
             
             // When overflowing, stop the connection (connection has existed too long)
             if _nextStreamID <= 0 {
-                errorStream?(Error(.tooManyConnectionReuses))
+                onError(HTTP2Error(.tooManyConnectionReuses))
                 self.close()
             }
         }
@@ -76,12 +75,13 @@ public final class HTTP2Client: BaseStream {
             parser: FrameParser(maxFrameSize: settings.maxFrameSize),
             serializer: FrameSerializer(maxLength: remoteSettings.maxFrameSize)
         )
+        
         self.streamPool = HTTP2StreamPool(
             context: context
         )
         
-        client.drain(into: context.parser)
-        context.serializer.drain(into: client)
+        client.stream(to: context.parser).catch(onError: self.onError)
+        context.serializer.stream(to: client).catch(onError: self.onError)
         
         context.parser.drain { frame in
             do {
@@ -93,7 +93,7 @@ public final class HTTP2Client: BaseStream {
                         frame.type == .pushPromise  || frame.type == .data ||
                         frame.type == .reset
                     else {
-                        throw Error(.invalidStreamIdentifier)
+                        throw HTTP2Error(..invalidStreamIdentifier)
                     }
                     
                     self.streamPool[frame.streamIdentifier].inputStream(frame)
@@ -102,15 +102,11 @@ public final class HTTP2Client: BaseStream {
                 self.context.serializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
                 self.handleError(error: error)
             }
-        }
-        
-        client.catch(self.handleError)
-        context.parser.catch(self.handleError)
-        context.serializer.catch(self.handleError)
+        }.catch(onError: self.onError)
     }
     
-    fileprivate func handleError(error: Swift.Error) {
-        self.errorStream?(error)
+    public func onError(_ error: Error) {
+        stream.onError(error)
         self.close()
     }
 }

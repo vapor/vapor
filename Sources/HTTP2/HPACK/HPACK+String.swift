@@ -19,7 +19,7 @@ extension Payload {
     /// Parses a string from the payload
     func parseString() throws -> String {
         guard self.bytePosition < self.data.count else {
-            throw Error(.unexpectedEOF)
+            throw HTTP2Error(.unexpectedEOF)
         }
         
         let byte = self.data[self.bytePosition]
@@ -28,7 +28,7 @@ extension Payload {
         let length = try self.parseInteger(prefix: 7)
         
         guard self.bytePosition + length <= self.data.count else {
-            throw Error(.unexpectedEOF)
+            throw HTTP2Error(.unexpectedEOF)
         }
         
         let rawStringBytes = self.data[self.bytePosition..<self.bytePosition &+ length]
@@ -37,7 +37,7 @@ extension Payload {
         
         if plainText {
             guard let string = String(data: rawStringBytes, encoding: .utf8) else {
-                throw Error(.invalidUTF8String)
+                throw HTTP2Error(.invalidUTF8String)
             }
             
             return string
@@ -46,7 +46,7 @@ extension Payload {
         let decodedStringBytes = try HuffmanDecoder.hpack().decode(data: rawStringBytes)
         
         guard let string = String(data: decodedStringBytes, encoding: .utf8) else {
-            throw Error(.invalidUTF8String)
+            throw HTTP2Error(.invalidUTF8String)
         }
         
         return string

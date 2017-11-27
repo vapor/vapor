@@ -1,7 +1,7 @@
 import Bits
 import Foundation
 
-struct Error: Swift.Error {
+struct HTTP2Error: Swift.Error {
     let problem: Problem
     
     init(_ problem: Problem) {

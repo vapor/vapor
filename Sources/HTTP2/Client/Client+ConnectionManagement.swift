@@ -18,13 +18,13 @@ extension HTTP2Client {
     ///
     /// Requires an SSL driver with ALPN on your system
     public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), worker: Worker) throws -> Future<HTTP2Client> {
-        let tlsClient = try TLSClient(worker: worker)
+        let tlsClient = try TLSClient(on: worker)
         tlsClient.protocols = ["h2", "http/1.1"]
         
         let client = HTTP2Client(upgrading: tlsClient)
         
         // Connect the TLS client
-        try tlsClient.connect(hostname: hostname, port: port).then {
+        try tlsClient.connect(hostname: hostname, port: port).do {
             // On successful connection, send the preface
             Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
                 let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
@@ -34,7 +34,7 @@ extension HTTP2Client {
             
             // Send the settings, next
             client.updateSettings(to: settings)
-        }.catch(callback: client.promise.fail)
+            }.catch(client.promise.fail)
         
         return client.future
     }

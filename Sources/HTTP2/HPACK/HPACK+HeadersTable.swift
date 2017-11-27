@@ -38,7 +38,7 @@ final class HeadersTable {
         }
         
         if !dynamicTable {
-            throw Error(.invalidTableIndex(index))
+            throw HTTP2Error(.invalidTableIndex(index))
         }
         
         // Get the dynamic entry index
@@ -46,7 +46,7 @@ final class HeadersTable {
         
         // The dynamic entry *must* exist
         guard index < dynamicEntries.count else {
-            throw Error(.invalidTableIndex(index))
+            throw HTTP2Error(.invalidTableIndex(index))
         }
         
         let entry = dynamicEntries[index]

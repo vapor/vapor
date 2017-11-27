@@ -4,7 +4,7 @@ extension Payload {
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.5.1
     func parseInteger(prefix n: Int) throws -> Int {
         guard n >= 1 && n <= 8, bytePosition < data.count else {
-            throw Error(.invalidPrefixSize(n))
+            throw HTTP2Error(.invalidPrefixSize(n))
         }
         
         let max: UInt8 = numericCast(power(of: 2, to: n) - 1)
@@ -35,7 +35,7 @@ extension Payload {
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.5.1
     func append(integer int: Int, prefix n: Int) throws {
         guard n >= 1 && n <= 8 else {
-            throw Error(.invalidPrefixSize(n))
+            throw HTTP2Error(.invalidPrefixSize(n))
         }
         
         let max: UInt8 = numericCast(power(of: 2, to: n) - 1)
@@ -52,7 +52,7 @@ extension Payload {
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.5.1
     func serialize(integer int: Int, prefix n: Int) throws {
         guard n >= 1 && n <= 8, bytePosition < data.count else {
-            throw Error(.invalidPrefixSize(n))
+            throw HTTP2Error(.invalidPrefixSize(n))
         }
         
         let max: UInt8 = numericCast(power(of: 2, to: n) - 1)

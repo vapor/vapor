@@ -4,10 +4,11 @@ import HTTP
 extension HTTP2Client {
     /// Sends a request and receives a response
     /// TODO: Disconnected connection during the request cascading here
-    public func send(_ request: RequestRepresentable) throws -> Future<Response> {
+    public func send(_ requestType: RequestEncodable) throws -> Future<Response> {
         do {
             // Serialize the request
-            let request = try request.makeRequest()
+            var request = Request()
+            
             let promise = Promise<Response>()
             
             // Open an HTTP/2 stream
@@ -15,6 +16,7 @@ extension HTTP2Client {
             
             // Create a response to build up
             let response = Response()
+            let stream = BodyStream()
             
             stream.drain { frame in
                 switch frame.type {
@@ -29,30 +31,36 @@ extension HTTP2Client {
                             promise.complete(response)
                         }
                     } catch {
-                        self.context.serializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
-                        self.errorStream?(error)
+                        self.context.serializer.onInput(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
+                        self.onError(error)
                         return
                     }
                 case .data:
+                    promise.complete(response)
                     response.body.data.append(contentsOf: frame.payload.data)
                     
                     // If the `END_STREAM` is set
                     if frame.flags & 0x01 != 0 {
-                        promise.complete(response)
+                        stream.close()
                     }
                 case .reset:
-                    promise.fail(Error(.clientError))
+                    promise.fail(HTTP2Error(.clientError))
                 default:
                     break
                 }
+            }.catch { error in
+                self.onError(error)
+                promise.fail(error)
             }
             
-            // Fail the promise on stream errors
-            stream.catch(promise.fail)
-            
-            // Send all header frames
-            for frame in try request.headerFrames(for: stream) {
-                stream.context.serializer.inputStream(frame)
+            try requestType.encode(to: &request).map {
+                // Send all header frames
+                for frame in try request.headerFrames(for: stream) {
+                    stream.context.serializer.onInput(frame)
+                }
+            }.catch { error in
+                self.onError(error)
+                promise.fail(error)
             }
             
             // TODO: Send the body

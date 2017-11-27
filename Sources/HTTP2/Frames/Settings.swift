@@ -23,7 +23,7 @@ public struct HTTP2Settings {
     /// Updates the settings by a HTTP2 settings specification
     public mutating func update(to frame: Frame) throws {
         guard frame.payload.data.count % 6 == 0 else {
-            throw Error(.invalidSettingsFrame(frame))
+            throw HTTP2Error(.invalidSettingsFrame(frame))
         }
         
         try frame.payload.data.withUnsafeBytes { (pointer: BytesPointer) in
@@ -38,7 +38,7 @@ public struct HTTP2Settings {
                     self.headerTableSize = value
                 case 0x02:
                     guard value <= 1 else {
-                        throw Error(.invalidSettingsFrame(frame))
+                        throw HTTP2Error(.invalidSettingsFrame(frame))
                     }
                     
                     self.pushEnabled = value == 1
