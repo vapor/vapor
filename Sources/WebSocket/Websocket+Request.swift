@@ -1,14 +1,17 @@
 import HTTP
 
 extension Request {
-    public func upgradeToWebSocket(subprotocols: ([String]) -> [String] = { $0 },
+    public func upgradeToWebSocket(subprotocols: [String]? = nil,
                                    body: @escaping (WebSocket) throws -> Void) throws -> Response {
         guard WebSocket.shouldUpgrade(for: self) else {
             throw WebSocketError(.notUpgraded)
         }
 
-        let matchingSubProtocol = try SubProtocolMatcher(request: requestWebSocketProtocol,
-                                                         router: subprotocols(requestWebSocketProtocol)).matching()
+        let requestWebSocketProtocols = self.requestWebSocketProtocols
+
+        let matcher = SubProtocolMatcher(request: requestWebSocketProtocols,
+                                         router: subprotocols ?? requestWebSocketProtocols)
+        let matchingSubProtocol = try matcher.matching()
 
         let response = try WebSocket.upgradeResponse(for: self)
 
@@ -24,7 +27,7 @@ extension Request {
         return response
     }
 
-    private var requestWebSocketProtocol: [String] {
+    private var requestWebSocketProtocols: [String] {
         return headers[.secWebSocketProtocol]?.components(separatedBy: ", ") ?? []
     }
 }
@@ -33,6 +36,11 @@ struct SubProtocolMatcher {
     let request: [String]
     let router: [String]
 
+    init(request: [String], router: [String]) {
+        self.request = request.filter { !$0.isEmpty }
+        self.router = router.filter { !$0.isEmpty }
+    }
+
     func matching() throws -> String? {
         if request.isEmpty && router.isEmpty {
             return nil
@@ -40,7 +48,7 @@ struct SubProtocolMatcher {
 
         if request.isEmpty || router.isEmpty {
             print("Unsupported subprotocol. Request: \(request). Router: \(router)")
-            throw WebSocketError(.invalidRequest)
+            throw WebSocketError(.invalidSubprotocol)
         }
 
         for subprotocol in router {
@@ -49,6 +57,7 @@ struct SubProtocolMatcher {
             }
         }
 
-        throw WebSocketError(.invalidRequest)
+        throw WebSocketError(.invalidSubprotocol)
     }
 }
+

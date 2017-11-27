@@ -5,6 +5,8 @@ final class SubProtocolMatcherTests : XCTestCase {
     static let allTests = [
         ("testEmptyRequestAndEmptyRouterShouldReturnNil", testEmptyRequestAndEmptyRouterShouldReturnNil),
 
+        ("testEmptyStringsRequestAndEmptyRouterShouldReturnNil", testEmptyStringsRequestAndEmptyRouterShouldReturnNil),
+
         ("testRequestAndRouterHaveTheSameSubProtocolsInSameOrderShouldReturnTheFirst", testRequestAndRouterHaveTheSameSubProtocolsInSameOrderShouldReturnTheFirst),
 
         ("testRequestAndRouterHaveTheSameSubProtocolsInDifferentOrderShouldReturnTheFirstDeclaredByRouter", testRequestAndRouterHaveTheSameSubProtocolsInDifferentOrderShouldReturnTheFirstDeclaredByRouter),
@@ -22,6 +24,11 @@ final class SubProtocolMatcherTests : XCTestCase {
 
     func testEmptyRequestAndEmptyRouterShouldReturnNil() throws {
         let response = try SubProtocolMatcher(request: [], router: []).matching()
+        XCTAssertNil(response, "When neither request nor router declare subprotocol, the matching subprotocol (response) should be nil.")
+    }
+
+    func testEmptyStringsRequestAndEmptyRouterShouldReturnNil() throws {
+        let response = try SubProtocolMatcher(request: [""], router: [""]).matching()
         XCTAssertNil(response, "When neither request nor router declare subprotocol, the matching subprotocol (response) should be nil.")
     }
 
@@ -52,13 +59,13 @@ final class SubProtocolMatcherTests : XCTestCase {
     func testThrowsErrorWhenRouterDeclaresNoSubProtocolButRequestDeclaresAny() throws {
         let matcher = SubProtocolMatcher(request: ["aprotocol"], router: [])
 
-        XCTAssertThrowsError(try matcher.matching(), "When the router declares no subprotocols and the request declares any, an WebSocketError(.invalidRequest) should be thrown.")
+        XCTAssertThrowsError(try matcher.matching(), "When the router declares no subprotocols and the request declares any, an WebSocketError(.invalidSubprotocol) should be thrown.")
     }
 
     func testThrowsErrorWhenRequestDeclaresNoSubProtocolButRouterDeclaresAny() throws {
         let matcher = SubProtocolMatcher(request: [], router: ["aprotocol"])
 
-        XCTAssertThrowsError(try matcher.matching(), "When the request declares no subprotocols and the router declares any, an WebSocketError(.invalidRequest) should be thrown.")
+        XCTAssertThrowsError(try matcher.matching(), "When the request declares no subprotocols and the router declares any, an WebSocketError(.invalidSubprotocol) should be thrown.")
     }
 
     func testIfSearchForTheMatchingSubProtocolIsOptimal() throws {
