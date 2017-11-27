@@ -16,7 +16,7 @@ final class HeadersTable {
         /// Creates a new header table entry
         init(index: Int = 0, name: Headers.Name, value: String = "") {
             self.index = index
-            self.name = name ?? ""
+            self.name = name
             self.value = value
         }
     }

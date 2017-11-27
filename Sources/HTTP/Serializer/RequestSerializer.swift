@@ -76,7 +76,7 @@ public final class RequestSerializer: Serializer {
             
             serialized.append(contentsOf: buffer)
         case .stream(let bodyStream):
-            bodyStream.drain(onInput: outputStream.onInput).catch(onError: self.onError)
+            bodyStream.stream(to: ChunkEncoder()).drain(onInput: outputStream.onInput).catch(onError: self.onError)
         }
         
         return serialized

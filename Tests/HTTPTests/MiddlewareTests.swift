@@ -61,10 +61,10 @@ class MiddlewareTests : XCTestCase {
         let client = HTTPClient(socket: tcpClient)
         tcpClient.start()
         
-        let response = try client.send(request: Request()).blockingAwait()
+        let response = try client.send(request: Request()).blockingAwait(timeout: .seconds(3))
         
-        response.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: response.body.count)
+        try response.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: response.body.count ?? 0)
             XCTAssertEqual(Data(buffer), Data(responder.response.utf8))
         }
     }

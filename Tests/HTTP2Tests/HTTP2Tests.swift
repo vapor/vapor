@@ -10,9 +10,8 @@ public class HTTP2Tests: XCTestCase {
     
     func testClient() throws {
         let queue = DispatchQueue(label: "http2.client")
-        let worker = Worker(queue: queue)
         
-        let response = try HTTP2Client.connect(hostname: "google.com", worker: worker).flatten { client -> Future<Response> in
+        let response = try HTTP2Client.connect(hostname: "google.com", worker: queue).flatMap { client -> Future<Response> in
             let request = Request(method: .get, uri: "/", headers: [
                 .host: "www.google.com"
             ], body: Body())

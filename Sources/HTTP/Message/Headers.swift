@@ -68,11 +68,6 @@ public struct Headers: Codable {
             }
         }
         set {
-            guard name != .contentLength else {
-                // Blocked for correctness of the rbody length
-                return
-            }
-            
             guard let newValue = newValue else {
                 self.removeValues(forName: name)
                 return

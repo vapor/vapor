@@ -36,8 +36,8 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(req.headers[.acceptEncoding], "gzip, deflate")
         XCTAssertEqual(req.headers[.connection], "Keep-Alive")
         
-        req.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: req.body.count)
+        try req.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: req.body.count ?? 0)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
         }
     }
@@ -70,8 +70,8 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(res.mediaType, .html)
         XCTAssertEqual(res.headers[.connection], "Closed")
         
-        res.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: res.body.count)
+        try res.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: res.body.count ?? 0)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "<vapor>")
         }
     }
