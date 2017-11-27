@@ -1,6 +1,7 @@
 import Async
-import Core
 import Bits
+import Core
+import Dispatch
 import HTTP
 import XCTest
 
