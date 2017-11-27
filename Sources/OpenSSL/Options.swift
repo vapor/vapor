@@ -121,7 +121,7 @@ public struct SSLOption {
                 let proto = String(bytes: protoBuffer, encoding: .utf8) ?? ""
                 
                 guard preferences.protocols.contains(proto) else {
-                    throw Error(.invalidALPNProtocol)
+                    throw OpenSSLError(.invalidALPNProtocol)
                 }
             }
         )

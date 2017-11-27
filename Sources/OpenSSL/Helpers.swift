@@ -34,53 +34,19 @@ extension SSLStream {
                 code == SSL_ERROR_WANT_CONNECT
             )
             
-<<<<<<< HEAD
             if case .server = side, !accepted {
                 accepted = true
                 return attemptInstantiation()
-=======
-            // If it's not blocking and not a success, it's an error
-            guard result > 0 else {
-                readSource.cancel()
-                promise.fail(OpenSSLError(.sslError(result)))
-                return
->>>>>>> 59d25a108d40605c6a15290011be77ac94fbd980
             }
             
             if result == -1 {
-                promise.fail(Error(.sslError(result)))
+                promise.fail(OpenSSLError(.sslError(result)))
             } else {
                 promise.complete(())
             }
         }
         
-<<<<<<< HEAD
         attemptInstantiation()
-=======
-        // Listen for input
-        readSource.setEventHandler {
-            tryAgain()
-        }
-        
-        // Now that the async stuff's et up, let's start your engines
-        readSource.resume()
-        
-        let future = promise.future
-        
-        future.addAwaiter { _ in
-            self.readSource = nil
-        }
-        
-        self.readSource = readSource
-        
-        return future
-    }
-    
-    func setCertificate(certificatePath: String) throws {
-        guard let context = context else {
-            throw OpenSSLError(.noSSLContext)
-        }
->>>>>>> 59d25a108d40605c6a15290011be77ac94fbd980
         
         return promise.future
     }
@@ -114,11 +80,6 @@ extension SSLStream {
     
     /// Starts receiving data from the client, reads on the provided queue
     public func start() {
-        let readSource = DispatchSource.makeReadSource(
-            fileDescriptor: self.descriptor,
-            queue: self.queue
-        )
-        
         readSource.setEventHandler {
             let read: Int
             do {
@@ -150,13 +111,14 @@ extension SSLStream {
         }
         
         readSource.resume()
-        self.readSource = readSource
-        
-        let writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
+        self.reading = true
         
         writeSource.setEventHandler {
             guard self.writeQueue.count > 0 else {
-                writeSource.suspend()
+                if self.writing {
+                    self.writeSource.suspend()
+                }
+                
                 return
             }
             
@@ -169,16 +131,16 @@ extension SSLStream {
                     try self.write(from: buffer)
                     _ = self.writeQueue.removeFirst()
                 } catch {
-                    self.errorStream?(error)
+                    self.onError(error)
                 }
             }
             
             guard self.writeQueue.count > 0 else {
-                writeSource.suspend()
+                self.writeSource.suspend()
+                self.writing = false
                 return
             }
         }
-        
-        self.writeSource = writeSource
+        self.writing = true
     }
 }
