@@ -19,9 +19,9 @@ public class HTTP2Tests: XCTestCase {
                 ], body: Body())
                 
                 return try client.send(request)
-            }.blockingAwait()
+            }.blockingAwait(timeout: .seconds(10))
             
-            print(response)
+            XCTAssertEqual(response.status, 302)
         #else
             print("WARNING: For macOS, HTTP/2 needs Apple's ALPN support or an OpenSSL dependency")
         #endif
