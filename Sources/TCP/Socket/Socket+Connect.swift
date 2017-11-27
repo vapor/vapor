@@ -5,7 +5,7 @@ import libc
 extension TCPSocket {
     /// connect - initiate a connection on a socket
     /// http://man7.org/linux/man-pages/man2/connect.2.html
-    public func connect(hostname: String, port: UInt16) throws {
+    public mutating func connect(hostname: String, port: UInt16) throws {
         var hints = addrinfo()
 
         // Support both IPv4 and IPv6
@@ -41,41 +41,5 @@ extension TCPSocket {
         }
         
         self.address = Address(storage: info.pointee.ai_addr.pointee)
-    }
-    
-    /// Gets called when the connection becomes readable.
-    ///
-    /// This operation *must* once at a time.
-    public func readable(queue: DispatchQueue) -> Future<Void> {
-        let promise = Promise<Void>()
-        let read = self.readSource ?? DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
-        
-        read.setEventHandler {
-            promise.complete()
-            read.suspend()
-        }
-        
-        self.readSource = read
-        read.resume()
-        
-        return promise.future
-    }
-    
-    /// Gets called when the connection becomes writable.
-    ///
-    /// This operation *must* once at a time.
-    public func writable(queue: DispatchQueue) -> Future<Void> {
-        let promise = Promise<Void>()
-        let write = self.writeSource ?? DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
-        
-        write.setEventHandler {
-            promise.complete(())
-            write.suspend()
-        }
-        
-        write.resume()
-        self.writeSource = write
-        
-        return promise.future
     }
 }

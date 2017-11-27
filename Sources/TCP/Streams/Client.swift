@@ -21,7 +21,10 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public let worker: Worker
 
     /// The client stream's underlying socket.
-    public let socket: TCPSocket
+    public private(set) var socket: TCPSocket
+    
+    /// Will be triggered before closing the socket, as part of the cleanup process
+    public var didClose: BasicStream.OnClose = { }
 
     /// Bytes from the socket are read into this buffer.
     /// Views into this buffer supplied to output streams.
@@ -33,8 +36,14 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Stores read event source.
     var readSource: DispatchSourceRead?
 
+    /// All promises waiting for this client to become readable
+    var readableWaiters = [Promise<Void>]()
+    
     /// Stores write event source.
     var writeSource: DispatchSourceWrite?
+    
+    /// All promises waiting for this client to become writeable
+    var writableWaiters = [Promise<Void>]()
 
     /// Keeps track of the writesource's active status so it's not resumed too often
     var isWriting = false
@@ -53,6 +62,11 @@ public final class TCPClient: Async.Stream, ClosableStream {
         let size = 65_507
         let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
         self.outputBuffer = MutableByteBuffer(start: pointer, count: size)
+    }
+    
+    public convenience init(worker: Worker) throws {
+        let socket = try TCPSocket()
+        self.init(socket: socket, worker: worker)
     }
 
     /// See InputStream.onInput
@@ -109,6 +123,12 @@ public final class TCPClient: Async.Stream, ClosableStream {
             )
             
             source.setEventHandler {
+                for waiter in self.writableWaiters {
+                    waiter.complete()
+                }
+                
+                self.writableWaiters = []
+                
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
                     return
@@ -174,7 +194,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
 
             guard read > 0 else {
                 // need to close!!! gah
-                self.close()
+                source.cancel()
                 return
             }
 
@@ -204,6 +224,10 @@ public final class TCPClient: Async.Stream, ClosableStream {
             writeSource?.resume()
         }
         
+        for waiter in readableWaiters + writableWaiters {
+            waiter.fail(TCPError(identifier: "socket-closed", reason: "The socket closed before triggering the required notification"))
+        }
+        
         readSource = nil
         writeSource = nil
         socket.close()
@@ -213,6 +237,37 @@ public final class TCPClient: Async.Stream, ClosableStream {
         // possible make the reference weak?
         outputStream.close()
         outputStream = .init()
+        didClose()
+    }
+    
+    /// Attempts to connect to a server on the provided hostname and port
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        try self.socket.connect(hostname: hostname, port: port)
+        
+        return writable()
+    }
+    
+    /// Gets called when the connection becomes readable.
+    ///
+    /// This operation *must* once at a time.
+    public func readable() -> Future<Void> {
+        let promise = Promise<Void>()
+        
+        self.readableWaiters.append(promise)
+        
+        return promise.future
+    }
+    
+    /// Gets called when the connection becomes writable.
+    ///
+    /// This operation *must* once at a time.
+    public func writable() -> Future<Void> {
+        let promise = Promise<Void>()
+        
+        self.writableWaiters.append(promise)
+        ensureWriteSourceResumed()
+        
+        return promise.future
     }
 
     /// Deallocated the pointer buffer

@@ -24,12 +24,9 @@ extension HTTPClient {
                 return HTTPClient(socket: client)
             }
         } else {
-            let socket = try TCPSocket()
-            try socket.connect(hostname: hostname, port: port)
+            let client = try TCPClient(worker: worker)
             
-            return socket.writable(queue: worker.eventLoop.queue).map {
-                let client = TCPClient(socket: socket, worker: worker)
-                
+            return try client.connect(hostname: hostname, port: port).map {
                 client.start()
                 
                 return HTTPClient(socket: client)
