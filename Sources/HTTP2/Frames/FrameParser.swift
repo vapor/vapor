@@ -3,12 +3,12 @@ import Bits
 import Foundation
 
 /// Transforms an input bytes stream into a stream of frames
-public final class FrameParser: Async.Stream {
+final class FrameParser: Async.Stream {
     /// See `InputStream.Input`
-    public typealias Input = ByteBuffer
+    typealias Input = ByteBuffer
     
     /// See `OutputStream.Output`
-    public typealias Output = Frame
+    typealias Output = Frame
     
     /// The maximum size of a frame
     var maxFrameSize: UInt32
@@ -34,6 +34,8 @@ public final class FrameParser: Async.Stream {
     /// The in-progress parsing payload
     var payload = Data()
     
+    let stream = BasicStream<Output>()
+    
     /// Creates a new frame parser
     init(maxFrameSize: UInt32) {
         self.maxFrameSize = maxFrameSize
@@ -52,11 +54,11 @@ public final class FrameParser: Async.Stream {
     }
     
     /// Process the next buffer
-    public func onInput(_ input: ByteBuffer) {
+    func onInput(_ input: ByteBuffer) {
         do {
             try self.process(buffer: input)
         } catch {
-            self.errorStream?(error)
+            self.onError(error)
         }
     }
     
@@ -189,9 +191,25 @@ public final class FrameParser: Async.Stream {
             }
             
             let frame = Frame(type: type, payload: Payload(data: payload), streamID: streamIdentifier, flags: flags)
-            outputStream?(frame)
+            stream.onInput(frame)
             
             reset()
         }
+    }
+    
+    func onError(_ error: Error) {
+        stream.onError(error)
+    }
+    
+    func onOutput<I>(_ input: I) where I : Async.InputStream, FrameParser.Output == I.Input {
+        stream.onOutput(input)
+    }
+    
+    func close() {
+        stream.close()
+    }
+    
+    func onClose(_ onClose: ClosableStream) {
+        stream.onClose(onClose)
     }
 }

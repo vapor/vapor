@@ -88,6 +88,10 @@ public struct Body: Codable {
         self.storage = .data(data)
     }
     
+    public init(chunked stream: BodyStream) {
+        self.storage = .stream(stream)
+    }
+    
     /// Decodes a body from from a Decoder
     public init(from decoder: Decoder) throws {
         self.storage = try Storage(from: decoder)

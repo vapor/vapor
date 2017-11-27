@@ -80,7 +80,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Handles DispatchData input
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    public func inputStream(_ input: DispatchData) {
+    public func onInput(_ input: DispatchData) {
         inputBuffer.append(Data(input))
         ensureWriteSourceResumed()
     }
@@ -88,7 +88,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Handles Data input
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    public func inputStream(_ input: Data) {
+    public func onInput(_ input: Data) {
         inputBuffer.append(input)
         ensureWriteSourceResumed()
     }

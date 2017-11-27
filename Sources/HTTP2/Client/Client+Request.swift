@@ -16,7 +16,7 @@ extension HTTP2Client {
             
             // Create a response to build up
             let response = Response()
-            let stream = BodyStream()
+            let body = BodyStream()
             
             stream.drain { frame in
                 switch frame.type {
@@ -37,7 +37,7 @@ extension HTTP2Client {
                     }
                 case .data:
                     promise.complete(response)
-                    response.body.data.append(contentsOf: frame.payload.data)
+                    frame.payload.data.withByteBuffer(body.onInput)
                     
                     // If the `END_STREAM` is set
                     if frame.flags & 0x01 != 0 {

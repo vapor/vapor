@@ -11,14 +11,12 @@ enum Constants {
 }
 
 /// An HTTP/2 client is similar to an HTTP/1 client, only using another protocol with a slightly different set of features
-public final class HTTP2Client: BaseStream {
+public final class HTTP2Client {
     /// HTTP/2 only runs over TLS
     let client: TLSClient
     
     /// All streams share the connection and it's context
     let context: ConnectionContext
-    
-    let stream = BasicStream<Output>()
     
     /// A shorthand that helps keep track of the stream ID
     fileprivate var _nextStreamID: Int32 = 3
@@ -48,7 +46,7 @@ public final class HTTP2Client: BaseStream {
     /// Reads the local (client) settings
     public internal(set) var settings = HTTP2Settings() {
         didSet {
-            self.context.serializer.inputStream(settings.frame)
+            self.context.serializer.onInput(settings.frame)
             self.context.parser.maxFrameSize = settings.maxFrameSize
         }
     }
@@ -80,8 +78,8 @@ public final class HTTP2Client: BaseStream {
             context: context
         )
         
-        client.stream(to: context.parser).catch(onError: self.onError)
-        context.serializer.stream(to: client).catch(onError: self.onError)
+        client.stream(to: context.parser)
+        context.serializer.stream(to: client)
         
         context.parser.drain { frame in
             do {
@@ -93,20 +91,19 @@ public final class HTTP2Client: BaseStream {
                         frame.type == .pushPromise  || frame.type == .data ||
                         frame.type == .reset
                     else {
-                        throw HTTP2Error(..invalidStreamIdentifier)
+                        throw HTTP2Error(.invalidStreamIdentifier)
                     }
                     
-                    self.streamPool[frame.streamIdentifier].inputStream(frame)
+                    self.streamPool[frame.streamIdentifier].onInput(frame)
                 }
             } catch {
-                self.context.serializer.inputStream(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
-                self.handleError(error: error)
+                self.context.serializer.onInput(ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame)
+                self.onError(error)
             }
         }.catch(onError: self.onError)
     }
     
-    public func onError(_ error: Error) {
-        stream.onError(error)
+    func onError(_ error: Error) {
         self.close()
     }
 }

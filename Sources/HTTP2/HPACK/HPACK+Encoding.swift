@@ -88,7 +88,7 @@ final class HPACKEncoder {
         return [Frame](
             headers: payloads,
             streamID: streamID,
-            endingStream: request.body.data.count == 0
+            endingStream: request.body.count == 0
         )
     }
 }

@@ -3,22 +3,24 @@ import Bits
 import libc
 
 /// Serializes input frames and outputs them
-public final class FrameSerializer: Async.Stream {
+final class FrameSerializer: Async.Stream {
     /// See `InputStream.Input`
-    public typealias Input = Frame
+    typealias Input = Frame
     
     /// See `OutputStream.Output`
-    public typealias Output = ByteBuffer
+    typealias Output = ByteBuffer
     
     /// The maximum size per frame
     var maxLength: UInt32
+    
+    let stream = BasicStream<Output>()
     
     init(maxLength: UInt32) {
         self.maxLength = maxLength
     }
     
     /// Serializes a frame
-    public func onInput(_ input: Frame) {
+    func onInput(_ input: Frame) {
         // the payload must be a valid length
         guard input.payload.data.count <= 16_777_215 && input.payload.data.count + 9 < numericCast(maxLength) else {
             onError(HTTP2Error(.invalidFrameReceived))
@@ -56,5 +58,21 @@ public final class FrameSerializer: Async.Stream {
         }
         
         stream.onInput(ByteBuffer(start: pointer, count: messageLength))
+    }
+    
+    func onOutput<I>(_ input: I) where I : InputStream, FrameSerializer.Output == I.Input {
+        stream.onOutput(input)
+    }
+    
+    func onError(_ error: Error) {
+        stream.onError(error)
+    }
+    
+    func close() {
+        stream.close()
+    }
+    
+    func onClose(_ onClose: ClosableStream) {
+        stream.onClose(onClose)
     }
 }

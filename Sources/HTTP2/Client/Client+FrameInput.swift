@@ -19,10 +19,10 @@ extension HTTP2Client {
             do {
                 try self.remoteSettings.update(to: frame)
             } catch {
-                self.context.serializer.inputStream(ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame)
+                self.context.serializer.onInput(ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame)
                 return
             }
-            self.context.serializer.inputStream(HTTP2Settings.acknowledgeFrame)
+            self.context.serializer.onInput(HTTP2Settings.acknowledgeFrame)
         }
     }
     
@@ -41,7 +41,7 @@ extension HTTP2Client {
             try self.processSettings(from: frame)
         case .ping:
             frame.flags = 0x01
-            self.context.serializer.inputStream(frame)
+            self.context.serializer.onInput(frame)
         case .priority:
             // TODO: In the future this can be used for processing order
             break

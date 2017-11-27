@@ -165,8 +165,14 @@ router.get("userview") { req -> Future<View> in
     ], on: req)
 }
 
+struct InvalidBody: Error{}
+
 router.post("users") { req -> Future<User> in
-    let user = try JSONDecoder().decode(User.self, from: req.body.data)
+    guard let data = req.body.data else {
+        throw InvalidBody()
+    }
+    
+    let user = try JSONDecoder().decode(User.self, from: data)
     return user.save(on: req).map { user }
 }
 

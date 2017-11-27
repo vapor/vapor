@@ -56,7 +56,7 @@ public final class HTTP2Stream: Async.Stream {
     }
     
     public func close() {
-        errorStream?(HTTP2Error(.clientError))
+        self.onError(HTTP2Error(.clientError))
     }
     
     public func onClose(_ onClose: ClosableStream) {
@@ -79,9 +79,9 @@ public final class HTTP2Stream: Async.Stream {
                     windowSize = numericCast(update.windowSize)
                 }
             case .headers:
-                stream.onInput(input)
+                stream.onInput(frame)
             case .data:
-                stream.onInput(input)
+                stream.onInput(frame)
             case .reset:
                 throw HTTP2Error(.clientError)
             case .pushPromise:
@@ -94,4 +94,9 @@ public final class HTTP2Stream: Async.Stream {
             self.onError(error)
         }
     }
+    
+    public func onError(_ error: Error) {
+        stream.onError(error)
+    }
+    
 }

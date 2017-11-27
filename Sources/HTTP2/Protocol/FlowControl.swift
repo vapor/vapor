@@ -4,7 +4,7 @@
 struct WindowUpdate {
     init(frame: Frame, errorsTo serializer: FrameSerializer) throws {
         guard frame.payload.data.count == 4 else {
-            serializer.inputStream(
+            serializer.onInput(
                 ResetFrame(code: .frameSizeError, stream: frame.streamIdentifier).frame
             )
             
@@ -16,7 +16,7 @@ struct WindowUpdate {
         }
         
         guard self.windowSize > 0 else {
-            serializer.inputStream(
+            serializer.onInput(
                 ResetFrame(code: .protocolError, stream: frame.streamIdentifier).frame
             )
             

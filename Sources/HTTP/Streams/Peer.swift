@@ -7,7 +7,7 @@ import Foundation
 /// An HTTP `Server`'s peer wrapped around TCP client
 public final class HTTPPeer: Async.Stream, ClosableStream {
     /// See InputStream.Input
-    public typealias Input = Data
+    public typealias Input = ByteBuffer
     
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
@@ -26,8 +26,8 @@ public final class HTTPPeer: Async.Stream, ClosableStream {
     }
     
     /// See InputStream.onInput
-    public func onInput(_ input: Data) {
-        tcp.inputStream(input)
+    public func onInput(_ input: ByteBuffer) {
+        tcp.onInput(input)
     }
 
     /// See InputStream.onError
