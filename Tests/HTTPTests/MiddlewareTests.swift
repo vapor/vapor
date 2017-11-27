@@ -39,7 +39,7 @@ class MiddlewareTests : XCTestCase {
         let serverSocket = try TCPServer()
         let server = HTTPServer(socket: serverSocket)
         server.drain { peer in
-            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxBodySize: 100_000)
+            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxSize: 100_000)
             
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
