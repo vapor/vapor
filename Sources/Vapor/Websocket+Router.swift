@@ -10,7 +10,7 @@ extension Router {
     public func socket(_ path: PathComponent...,
         subprotocols: [String]? = nil,
         use closure: @escaping WebSocketClosure) -> Route {
-        return socket(path, supportedProtocols: { _ in subprotocols ?? [] }, use: closure)
+        return socket(path, supportedProtocols: { subprotocols ?? $0 }, use: closure)
     }
 
     @discardableResult

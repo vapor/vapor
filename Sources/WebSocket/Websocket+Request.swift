@@ -33,33 +33,6 @@ struct SubProtocolMatcher {
     let request: [String]
     let router: [String]
 
-
-
-
-    //    Request : ["aprotocol", "minichat-v2"]
-    //    Router  : ["aprotocol", "minichat-v2"]
-    //    Response: "aprotocol"
-    //
-    //
-    //    Request : ["aprotocol", "minichat-v2"]
-    //    Router  : ["minichat-v2"]
-    //    Response: "minichat-v2"
-    //
-    //
-    //    Request : ["minichat-v2"]
-    //    Router  : ["aprotocol", "minichat-v2"]
-    //    Response: "minichat-v2"
-    //
-    //
-    //    Request : ["aprotocol", "minichat-v2"]
-    //    Router  : []
-    //    Response: throw unsupported subprotocol
-    //
-    //
-    //    Request : []
-    //    Router  : ["aprotocol", "minichat-v2"]
-    //    Response: throw unsupported subprotocol
-
     func matching() throws -> String? {
         if request.isEmpty && router.isEmpty {
             return nil
