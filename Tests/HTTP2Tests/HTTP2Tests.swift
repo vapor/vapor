@@ -1,5 +1,6 @@
 import XCTest
 import HTTP
+import Dispatch
 @testable import HTTP2
 import Async
 
