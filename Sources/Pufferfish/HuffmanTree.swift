@@ -74,6 +74,10 @@ public final class HuffmanTree {
                 if bit == 0 {
                     let leaf = table.elements[index]
                     
+                    if case .single(let byte) = leaf, byte == 39 || byte == 42 {
+//                        print(byte)
+                    }
+                    
                     if left {
                         currentTree.left = .leaf(leaf)
                     } else {

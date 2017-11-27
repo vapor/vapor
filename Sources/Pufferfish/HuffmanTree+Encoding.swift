@@ -122,12 +122,7 @@ public final class HuffmanEncoder {
                     let remainingFirstBits = 8 &- alreadyFilled
                     data.append(array[0] << remainingFirstBits)
                     
-                    // Leftover is the bits from the second byte that we do have
-                    let consumed = bitLength &- alreadyFilled
-                    
                     // Remainderbits is the same because we're adding exactly 8 bits
-                    
-                    data[data.count &- 1] |= array[1] << consumed
                     continue nextCharacter
                 } else if bitLength > remainderBits && bitLength < 8 &+ remainderBits {
                     // If the buffer has enough to fill up the current byte and the next one partially and not more than that

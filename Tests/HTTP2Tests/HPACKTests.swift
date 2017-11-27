@@ -126,7 +126,9 @@ public class HPACKTests: XCTestCase {
             let encoded = try HuffmanEncoder.hpack.encode(data: data)
             let decoded = try HuffmanDecoder.hpack().decode(data: encoded)
             
-            XCTAssertEqual(decoded, data, "Byte \(byte) failed \(Array(encoded))")
+            if decoded != data {
+                XCTFail("Byte \(byte) failed \(Array(encoded))")
+            }
         }
     }
     
@@ -548,6 +550,7 @@ public class HPACKTests: XCTestCase {
         let method = decoded[":method"]
         let path = decoded[":path"]
         
+        decoded[":scheme"] = nil
         decoded[":authority"] = nil
         decoded[.contentLength] = nil
         decoded[":method"] = nil
