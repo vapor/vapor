@@ -15,6 +15,7 @@ public struct Body: Codable {
         case data(Data)
         case staticString(StaticString)
         case dispatchData(DispatchData)
+        case stream(BodyStream)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -24,6 +25,7 @@ public struct Body: Codable {
                 try Data(data).encode(to: encoder)
             case .staticString(let string):
                 try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
+            case .stream(_): return
             }
         }
         
@@ -37,11 +39,12 @@ public struct Body: Codable {
             case .data(let data): return data.count
             case .dispatchData(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
+            case .stream(_): return 0
             }
         }
         
         /// Accesses the bytes of this data
-        func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
+        func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) throws -> Return {
             switch self {
             case .data(let data):
                 return try data.withUnsafeBytes(run)
@@ -49,6 +52,8 @@ public struct Body: Codable {
                 return try data.withUnsafeBytes(body: run)
             case .staticString(let staticString):
                 return try run(staticString.utf8Start)
+            case .stream(_):
+                throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
             }
         }
     }
@@ -91,24 +96,26 @@ public struct Body: Codable {
     /// Executes a closure with a pointer to the start of the data
     ///
     /// Can be used to read data from this buffer until the `count`.
-    public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
+    public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) throws -> Return {
         return try self.storage.withUnsafeBytes(run)
     }
 
     /// Get body data.
-    public var data: Data {
+    public var data: Data? {
         switch storage {
         case .data(let data):
             return data
         case .dispatchData(let dispatch):
             return Data(dispatch)
         case .staticString(_):
-            fatalError("//FIXME: @joannis")
+            return nil
+        case .stream(_):
+            return nil
         }
     }
     
     /// The size of the data buffer
-    public var count: Int {
+    public var count: Int? {
         return self.storage.count
     }
 }

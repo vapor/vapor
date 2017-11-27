@@ -29,7 +29,7 @@ extension HTTP2Client {
             Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
                 let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
                 
-                tlsClient.inputStream(buffer)
+                tlsClient.onInput(buffer)
             }
             
             // Send the settings, next

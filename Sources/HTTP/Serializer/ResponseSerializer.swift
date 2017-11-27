@@ -9,7 +9,7 @@ public final class ResponseSerializer: Serializer {
     public typealias Input = Response
 
     /// See OutputStream.Output
-    public typealias Output = Data
+    public typealias Output = ByteBuffer
     
     /// When an upgrade request is in progress, this is set
     public private(set) var upgradeHandler: OnUpgrade?
@@ -24,8 +24,7 @@ public final class ResponseSerializer: Serializer {
 
     /// See InputStream.onInput
     public func onInput(_ input: Response) {
-        let message = serialize(input)
-        outputStream.onInput(message)
+        serialize(input).withByteBuffer(outputStream.onInput)
     }
 
     /// See InputStream.onError
@@ -51,23 +50,22 @@ public final class ResponseSerializer: Serializer {
     /// Efficiently serializes a response into Data.
     public func serialize(_ response: Response) -> Data {
         self.upgradeHandler = response.onUpgrade
-        
+
         let statusCode = Data(response.status.code.description.utf8)
-        let contentLength = Data(response.body.count.description.utf8)
-        
-        let contentLengthLength = Headers.Name.contentLength.original.count + headerKeyValueSeparator.count + contentLength.count + eol.count
-        
+
+        let contentLengthLength = Headers.Name.contentLength.original.count + headerKeyValueSeparator.count + 5 + eol.count
+
         // prefix + status + space + message + eol
         let firstLineCount = http1Prefix.count + statusCode.count + 1 + response.status.messageData.count + eol.count
-        
+
         // first line + headers + contentLengthHeader + EOL + body + EOL
-        let messageSize = firstLineCount + response.headers.storage.count + contentLengthLength + eol.count + response.body.count
-        
+        let messageSize = firstLineCount + response.headers.storage.count + contentLengthLength + eol.count + response.body.storage.count
+
         var data = Data(repeating: 0, count: messageSize)
-        
+
         data.withUnsafeMutableBytes { (message: MutableBytesPointer) in
             var offset = 0
-            
+
             // First line
             offset += copy(http1Prefix, to: message)
             offset += copy(statusCode, to: message.advanced(by: offset))
@@ -75,19 +73,19 @@ public final class ResponseSerializer: Serializer {
             offset += 1
             offset += copy(response.status.messageData, to: message.advanced(by: offset))
             offset += copy(eol, to: message.advanced(by: offset))
-            
+
+            if let count = response.body.count {
+                response.headers[.contentLength] = count.description
+            } else if case .stream(_) = response.body.storage {
+                response.headers[.transferEncoding] = "chunked"
+            }
+
             // headers
             offset += copy(response.headers.storage, to: message.advanced(by: offset))
-            
-            // Content-Length
-            offset += copy(Headers.Name.contentLength.original, to: message.advanced(by: offset))
-            offset += copy(headerKeyValueSeparator, to: message.advanced(by: offset))
-            offset += copy(contentLength, to: message.advanced(by: offset))
-            offset += copy(eol, to: message.advanced(by: offset))
-            
+
             // End of headers
             offset += copy(eol, to: message.advanced(by: offset))
-            
+
             switch response.body.storage {
             case .data(let data):
                 offset += copy(data, to: message.advanced(by: offset))
@@ -95,9 +93,12 @@ public final class ResponseSerializer: Serializer {
                 offset += copy(Data(data), to: message.advanced(by: offset))
             case .staticString(let pointer):
                 memcpy(message.advanced(by: offset), pointer.utf8Start, pointer.utf8CodeUnitCount)
+                offset += pointer.utf8CodeUnitCount
+            case .stream(let body):
+                body.drain(onInput: outputStream.onInput).catch(onError: self.onError)
             }
         }
-        
+
         return data
     }
 }
