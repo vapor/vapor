@@ -56,7 +56,7 @@ public final class HTTP2Stream: Async.Stream {
     }
     
     public func close() {
-        self.onError(HTTP2Error(.clientError))
+        stream.close()
     }
     
     public func onClose(_ onClose: ClosableStream) {
