@@ -49,7 +49,7 @@ extension WebSocket {
         if uri.scheme == "wss" {
             let client = try TLSClient(on: worker)
             
-            parser = client.stream(to: ResponseParser(maxBodySize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
             try client.connect(hostname: hostname, port: port).do {
                 // Send the initial request
@@ -67,7 +67,7 @@ extension WebSocket {
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
             let client = TCPClient(socket: socket, worker: worker)
             
-            parser = client.stream(to: ResponseParser(maxBodySize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
             client.socket.writable(queue: worker.eventLoop.queue).do {
                 // Start reading in the client
