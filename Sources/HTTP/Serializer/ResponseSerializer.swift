@@ -49,17 +49,21 @@ public final class ResponseSerializer: Serializer {
 
     /// Efficiently serializes a response into Data.
     public func serialize(_ response: Response) -> Data {
+        if let count = response.body.count {
+            response.headers[.contentLength] = count.description
+        } else if case .stream(_) = response.body.storage {
+            response.headers[.transferEncoding] = "chunked"
+        }
+        
         self.upgradeHandler = response.onUpgrade
 
         let statusCode = Data(response.status.code.description.utf8)
-
-        let contentLengthLength = Headers.Name.contentLength.original.count + headerKeyValueSeparator.count + 5 + eol.count
 
         // prefix + status + space + message + eol
         let firstLineCount = http1Prefix.count + statusCode.count + 1 + response.status.messageData.count + eol.count
 
         // first line + headers + contentLengthHeader + EOL + body + EOL
-        let messageSize = firstLineCount + response.headers.storage.count + contentLengthLength + eol.count + response.body.storage.count
+        let messageSize = firstLineCount + response.headers.storage.count + eol.count + response.body.storage.count
 
         var data = Data(repeating: 0, count: messageSize)
 
@@ -73,12 +77,6 @@ public final class ResponseSerializer: Serializer {
             offset += 1
             offset += copy(response.status.messageData, to: message.advanced(by: offset))
             offset += copy(eol, to: message.advanced(by: offset))
-
-            if let count = response.body.count {
-                response.headers[.contentLength] = count.description
-            } else if case .stream(_) = response.body.storage {
-                response.headers[.transferEncoding] = "chunked"
-            }
 
             // headers
             offset += copy(response.headers.storage, to: message.advanced(by: offset))
