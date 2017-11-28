@@ -22,7 +22,7 @@ public final class PSQLConnection {
         client.stream(to: parser)
     }
     
-    public static func makeConnection(hostname: String, port: UInt16 = 5432, credentials: Credentials, database: String, on worker: Worker) throws -> Future<PSQLConnection> {
+    public static func makeConnection(hostname: String, port: UInt16 = 5432, credentials: Credentials, on worker: Worker) throws -> Future<PSQLConnection> {
         let connection = try PSQLConnection(credentials: credentials, worker: worker)
             
         try connection.client.socket.connect(hostname: hostname, port: port)
