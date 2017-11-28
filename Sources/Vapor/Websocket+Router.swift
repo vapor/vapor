@@ -1,17 +1,17 @@
 import WebSocket
 
 extension Router {
-    public typealias WebSocketClosure = (Request, WebSocket) throws -> Void
-
+    /// Registers a websocket route handler at the supplied path.
+    /// WebSocketSettings can be used as an [String] to define custom subprotocols.
+    ///
+    /// example: router.websocket("path", with: ["subprotocol"]) { req, ws in /*...*/ }
     @discardableResult
     public func websocket(_ path: PathComponent...,
-        subprotocols: [String]? = nil,
-        use closure: @escaping WebSocketClosure
-    ) -> Route {
+        with settings: WebSocketSettings = WebSocketSettings(),
+        onUpgrade closure: @escaping WebSocket.OnUpgradeClosure) -> Route {
+
         let responder = RouteResponder { request in
-            return try request.upgradeToWebSocket(subprotocols: subprotocols) { websocket in
-                try closure(request, websocket)
-            }
+            return try WebSocket.upgradeResponse(for: request, with: settings, onUpgrade: closure)
         }
         let route = Route(method: .get, path: path, responder: responder)
         self.register(route: route)

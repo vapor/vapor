@@ -150,34 +150,33 @@ final class WebSocketApplication: Responder {
     
     func respond(to req: Request) throws -> Future<Response> {
         let promise = Promise<Response>()
-        
-        if WebSocket.shouldUpgrade(for: req) {
-            let res = try WebSocket.upgradeResponse(for: req)
-            res.onUpgrade = { client in
-                let websocket = WebSocket(socket: client)
-                let id = UUID()
-                
-                websocket.onText { text in
-                    let rev = String(text.reversed())
-                    websocket.send(rev)
-                }.catch(onError: promise.fail)
-                
-                websocket.onBinary { buffer in
-                    websocket.send(buffer)
-                }.catch(onError: promise.fail)
-                
-                self.sockets[id] = websocket
-                
-                websocket.finally {
-                    self.sockets[id] = nil
-                }
-            }
-            promise.complete(res)
-        } else {
+
+        guard WebSocket.shouldUpgrade(for: req) else {
             let res = try Response(status: .ok, body: "hi")
             promise.complete(res)
+            return promise.future
         }
-        
+
+        let res = try WebSocket.upgradeResponse(for: req, with: WebSocketSettings()) { request, websocket in
+            let id = UUID()
+
+            websocket.onText { text in
+                let rev = String(text.reversed())
+                websocket.send(rev)
+                }.catch(onError: promise.fail)
+
+            websocket.onBinary { buffer in
+                websocket.send(buffer)
+                }.catch(onError: promise.fail)
+
+            self.sockets[id] = websocket
+
+            websocket.finally {
+                self.sockets[id] = nil
+            }
+        }
+        promise.complete(res)
+
         return promise.future
     }
 }
