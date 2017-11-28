@@ -69,8 +69,12 @@ public struct TCPSocket {
     }
     
     public func disablePipeSignal() {
-        var n = 1
-        setsockopt(self.descriptor, SOL_SOCKET, SO_NOSIGPIPE, &n, numericCast(MemoryLayout<Int>.size))
+        signal(SIGPIPE, SIG_IGN)
+        
+        #if !os(Linux)
+            var n = 1
+            setsockopt(self.descriptor, SOL_SOCKET, SO_NOSIGPIPE, &n, numericCast(MemoryLayout<Int>.size))
+        #endif
     }
 
     /// Closes the socket
