@@ -74,7 +74,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .branch("error-chaining")),
+        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.3")),
     ],
     targets: [
         // Bits
@@ -106,7 +106,7 @@ let package = Package(
 
         // Fluent
         // FIXME: FluentRouting and FluentHTTP packages?
-        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "Routing", "Service"]),
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),

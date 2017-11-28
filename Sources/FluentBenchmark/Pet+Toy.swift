@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 
@@ -25,12 +26,12 @@ public final class PetToy<D: Database>: ModifiablePivot {
     /// See Pivot.rightIDKey
     public static var rightIDKey: RightIDKey { return \.toyID }
 
-    /// See Model.keyFieldMap
-    public static var keyFieldMap: KeyFieldMap {
+    /// See Model.keyStringMap
+    public static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.petID): field("petID"),
-            key(\.toyID): field("toyID")
+            key(\.id): "id",
+            key(\.petID): "petID",
+            key(\.toyID): "toyID"
         ]
     }
 

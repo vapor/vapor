@@ -1,29 +1,24 @@
 import Async
+import Core
+import Service
 
 /// Fluent database models. These types can be fetched
 /// from a database connection using a query.
 ///
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
-public protocol Model: class, Codable, KeyFieldMappable {
+public protocol Model: AnyModel, EphemeralWorkerFindable {
     /// The type of database this model can be queried on.
     associatedtype Database: Fluent.Database
+    /// This model's database
+    static var database: DatabaseIdentifier<Database> { get }
 
     /// The associated Identifier type.
     /// Usually Int or UUID.
     associatedtype ID: Fluent.ID
 
-    /// This model's unique name.
-    static var name: String { get }
-
-    /// This model's collection/table name
-    static var entity: String { get }
-
     /// Key path to identifier
     typealias IDKey = ReferenceWritableKeyPath<Self, ID?>
-
-    /// This model's database
-    static var database: DatabaseIdentifier<Database> { get }
 
     /// This model's id key.
     /// note: If this is not `id`, you
@@ -48,6 +43,35 @@ public protocol Model: class, Codable, KeyFieldMappable {
     func willDelete(on connection: Database.Connection) throws -> Future<Void>
     /// Called after the model is deleted.
     func didDelete(on connection: Database.Connection) throws -> Future<Void>
+}
+
+/// Type-erased model.
+/// See Model
+public protocol AnyModel: class, Codable, KeyStringMappable {
+    /// This model's unique name.
+    static var name: String { get }
+
+    /// This model's collection/table name
+    static var entity: String { get }
+}
+
+extension Model where ID: StringDecodable {
+    /// See EphemeralWorkerFindable.find
+    public static func find(identifier: String, for worker: EphemeralWorker) throws -> Future<Self> {
+        guard let id = ID.decode(from: identifier) else {
+            throw "could not convert parameter \(identifier) to type `\(ID.self)`"
+        }
+
+        return worker.makeConnection(to: database).then { conn in
+            return self.find(id, on: conn).map { pet in
+                guard let pet = pet else {
+                    throw "no model id \(id) was found"
+                }
+
+                return pet
+            }
+        }
+    }
 }
 
 extension Model {

@@ -35,6 +35,16 @@ final class DataSerializer: Async.Stream {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
 }
 
 extension DataSerializer {

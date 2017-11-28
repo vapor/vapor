@@ -39,7 +39,16 @@ internal final class PacketParser: Async.Stream {
     func onOutput<I>(_ input: I) where I: InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+    
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
 
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
     
     func parse(_ input: MutableByteBuffer) throws {
         // If there's no input pointer, throw an error

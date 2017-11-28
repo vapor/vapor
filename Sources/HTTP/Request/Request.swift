@@ -22,6 +22,12 @@ import Foundation
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
 public final class Request: Message {
+    /// See EphemeralWorker.onInit
+    public static var onInit: LifecycleHook?
+
+    /// See EphemeralWorker.onDeinit
+    public static var onDeinit: LifecycleHook?
+
     /// HTTP requests have a method, like GET or POST
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
@@ -63,6 +69,13 @@ public final class Request: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
+        Request.onInit?(self)
+    }
+
+    /// Called when request is deinitializing
+    deinit {
+        Request.onDeinit?(self)
+        // print("Request.deinit")
     }
 }
 

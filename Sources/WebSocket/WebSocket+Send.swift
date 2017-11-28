@@ -43,6 +43,16 @@ final class FrameSerializer : Async.Stream {
     func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
 }
 
 /// Generates a random mask for client sockets

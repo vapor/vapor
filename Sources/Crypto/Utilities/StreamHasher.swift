@@ -49,4 +49,14 @@ public final class ByteStreamHasher<H, O> : Async.Stream where H: Hash {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, O == I.Input {
         outputStream.onOutput(input)
     }
+
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
 }

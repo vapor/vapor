@@ -8,7 +8,7 @@ import TCP
 /// A websocket connection. Can be either the client or server side of the connection
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
-public final class WebSocket {
+public class WebSocket: ClosableStream {
     /// A stream of incoming and outgoing strings between both parties
     let textStream = TextStream()
     
@@ -24,11 +24,10 @@ public final class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
-        where ByteStream: Async.Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer,
-            ByteStream: ClosableStream
+    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
+        ByteStream: Async.Stream,
+        ByteStream.Input == ByteBuffer,
+        ByteStream.Output == ByteBuffer
     {
         self.connection = Connection(socket: socket, serverSide: serverSide)
         
@@ -45,5 +44,10 @@ public final class WebSocket {
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
         connection.close()
+    }
+    
+    /// Sets a handler that will be triggered when the WebSocket closes
+    public func onClose(_ onClose: ClosableStream) {
+        connection.onClose(onClose)
     }
 }

@@ -29,11 +29,10 @@ internal final class Connection: Async.Stream, ClosableStream {
     /// Creates a new WebSocket Connection manager for a TCP.Client
     ///
     /// `serverSide` is used to determine if sent frames need to be masked
-    init<ByteStream>(socket: ByteStream, serverSide: Bool = true)
-        where ByteStream: Async.Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer,
-            ByteStream: ClosableStream
+    init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
+        ByteStream: Async.Stream,
+        ByteStream.Input == ByteBuffer,
+        ByteStream.Output == ByteBuffer
     {
         self.socket = socket
         self.serverSide = serverSide
@@ -63,7 +62,7 @@ internal final class Connection: Async.Stream, ClosableStream {
     }
 
     /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
+    func onClose(_ onClose: ClosableStream) {
         outputStream.onClose(onClose)
     }
 

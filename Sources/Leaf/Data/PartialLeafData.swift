@@ -1,3 +1,5 @@
+import Core
+
 /// A reference type wrapper around LeafData for passing
 /// between multiple encoders.
 internal final class PartialLeafData {

@@ -1,3 +1,5 @@
+import Core
+
 internal final class LeafUnkeyedEncoder: UnkeyedEncodingContainer {
     var count: Int
     var codingPath: [CodingKey]
@@ -50,29 +52,4 @@ internal final class LeafUnkeyedEncoder: UnkeyedEncodingContainer {
         let encoder = _LeafEncoder(partialData: partialData, codingPath: codingPath)
         try value.encode(to: encoder)
     }
-}
-
-internal struct ArrayKey: CodingKey {
-    var intValue: Int?
-    var index: Int {
-        return intValue!
-    }
-
-    init(index: Int) {
-        self.intValue = index
-    }
-
-    init?(intValue: Int) {
-        self.intValue = intValue
-    }
-
-    var stringValue: String {
-        get { fatalError() }
-        set { fatalError() }
-    }
-
-    init?(stringValue: String) {
-        fatalError()
-    }
-
 }

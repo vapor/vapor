@@ -17,18 +17,20 @@ final class TextStream: Async.Stream {
     }
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new TextStream that has yet to be linked up with other streams
     init() { }
     
     /// Sends a string to the other party
     func onInput(_ input: String) {
+        let count = input.utf8.count
+        
         _ = input.withCString(encodedAs: UTF8.self) { pointer in
             do {
                 let mask = self.masking ? randomMask() : nil
                 
-                let frame = try Frame(op: .text, payload: ByteBuffer(start: pointer, count: input.utf8.count), mask: mask)
+                let frame = try Frame(op: .text, payload: ByteBuffer(start: pointer, count: count), mask: mask)
                 
                 frameStream?.onInput(frame)
             } catch {
@@ -45,6 +47,16 @@ final class TextStream: Async.Stream {
     /// See OutputStream.onOutput
     func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
         outputStream.onOutput(input)
+    }
+
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
 }
 

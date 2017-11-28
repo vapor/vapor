@@ -45,7 +45,7 @@ public final class FluentProvider: Provider {
 
         print("Migrations complete")
 
-        // verify middleware
-        // let middleware = MiddlewareConfig()
+        let workerConfig = try container.make(EphemeralWorkerConfig.self, for: FluentProvider.self)
+        workerConfig.onDeinit { $0.releaseConnections() }
     }
 }

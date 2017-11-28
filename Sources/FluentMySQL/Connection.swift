@@ -37,7 +37,7 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
     }
     
     /// See QueryExecutor.execute
-    public func execute<I, D>(query: DatabaseQuery, into stream: I) where I : ClosableStream, I : InputStream, D : Decodable, D == I.Input {
+    public func execute<I, D: Decodable>(query: DatabaseQuery, into stream: I) where I : Async.InputStream, D == I.Input {
         /// convert fluent query to an abstract SQL query
         var (dataQuery, binds) = query.makeDataQuery()
         
@@ -85,9 +85,7 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
                 switch query.action {
                 case .read:
                     // Streams all results into the parameter-provided stream
-                    let future = bound.forEach(D.self) { decodable in
-                        stream.onInput(decodable)
-                    }
+                    let future = bound.forEach(D.self, stream.onInput)
 
                     future.do {
                         // On success, close the stream

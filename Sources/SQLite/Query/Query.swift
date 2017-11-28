@@ -55,6 +55,16 @@ public final class SQLiteQuery: Async.OutputStream {
         outputStream.onOutput(input)
     }
 
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Executes the query, blocking until complete.
     public func blockingExecute() throws {
         var columns: [SQLiteColumn] = []

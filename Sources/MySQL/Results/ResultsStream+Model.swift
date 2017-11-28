@@ -33,4 +33,12 @@ final class ModelStream<Model>: Async.Stream where Model: Decodable {
     func onOutput<I>(_ input: I) where I: InputStream, Model == I.Input {
         mapStream.onOutput(input)
     }
+    
+    func close() {
+        mapStream.close()
+    }
+    
+    func onClose(_ onClose: ClosableStream) {
+        mapStream.onClose(onClose)
+    }
 }
