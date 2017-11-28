@@ -33,6 +33,10 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
             return [
                 "The request is not valid for websocket upgrading"
             ]
+        case .invalidSubprotocol:
+            return [
+                "The requested subprotocols are not valid"
+            ]
         }
     }
     
@@ -62,6 +66,10 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
             ]
         case .invalidRequest:
             return []
+        case .invalidSubprotocol:
+            return [
+                "The request should inform at least one of the subprotocols defined by the server"
+            ]
         }
     }
     
@@ -82,6 +90,8 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
             return "The buffer provided was empty"
         case .invalidRequest:
             return "The websocket upgrade request is not valid"
+        case .invalidSubprotocol:
+            return "The requested subprotocols are not defined by the WebSocket server."
         }
     }
     
@@ -145,5 +155,8 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
 
         /// The upgrade request was not formatted properly
         case invalidRequest
+
+        /// The upgrade request doesn't have any of the right subprotocol
+        case invalidSubprotocol
     }
 }
