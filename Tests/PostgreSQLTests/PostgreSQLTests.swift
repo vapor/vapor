@@ -3,22 +3,22 @@ import Dispatch
 import XCTest
 import Async
 import TCP
-@testable import MySQL
+@testable import PostgreSQL
 import Core
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
-class MySQLTests: XCTestCase {
+class PostgreSQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
     
-    let pool = ConnectionPool(
-        hostname: "localhost",
-        user: "root",
-        password: nil,
-        database: "vapor_test",
-        worker: MySQLTests.poolQueue
-    )
+//    let pool = ConnectionPool(
+//        hostname: "localhost",
+//        user: "root",
+//        password: nil,
+//        database: "vapor_test",
+//        worker: MySQLTests.poolQueue
+//    )
     
-    let connection = try! Connection.makeConnection(
+    let connection = try! PSQLConnection.makeConnection(
         hostname: "localhost",
         user: "root",
         password: nil,
@@ -80,7 +80,7 @@ class MySQLTests: XCTestCase {
         
         var results = [Future<Void>]()
         
-        MySQLTests.poolQueue.sync {
+        PSQLConnectionSQLTests.poolQueue.sync {
             for i in 0..<100 {
                 results.append(pool.retain { connection in
                     return connection.administrativeQuery("INSERT INTO users (username) VALUES ('User\(i)')")
