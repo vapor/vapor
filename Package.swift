@@ -40,6 +40,9 @@ let package = Package(
 
         // MySQL
         .library(name: "MySQL", targets: ["MySQL"]),
+        
+        // PostgreSQL
+        .library(name: "PostgreSQL", targets: ["PostgreSQL"]),
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
@@ -128,6 +131,10 @@ let package = Package(
         // MySQL
         .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
+        
+        // PostgreSQL
+        .target(name: "PostgreSQL", dependencies: ["TCP", "Crypto"]),
+        .testTarget(name: "PostgreSQLTests", dependencies: ["PostgreSQL"]),
         
         // MySQL
         .target(name: "Multipart", dependencies: ["Core", "Debugging", "HTTP"]),

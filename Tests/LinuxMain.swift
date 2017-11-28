@@ -11,6 +11,7 @@ import XCTest
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
+@testable import PostgreSQLTests
 @testable import RandomTests
 @testable import RedisTests
 @testable import RoutingTests
@@ -57,6 +58,9 @@ XCTMain([
 
     // MySQL
     testCase(MySQLTests.allTests),
+
+    // PostgreSQL
+    testCase(PostgreSQLTests.allTests),
 
     // Random
     testCase(RandomTests.allTests),
