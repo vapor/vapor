@@ -66,6 +66,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     
     public convenience init(worker: Worker) throws {
         let socket = try TCPSocket()
+        socket.disablePipeSignal()
         self.init(socket: socket, worker: worker)
     }
 
