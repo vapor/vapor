@@ -1,5 +1,3 @@
-import HTTP
-
 struct SubProtocolMatcher {
     let request: [String]
     let router: [String]
