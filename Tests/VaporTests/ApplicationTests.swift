@@ -1,5 +1,6 @@
 import Async
 import Bits
+import Dispatch
 import HTTP
 import Routing
 import Vapor
@@ -60,6 +61,38 @@ class ApplicationTests: XCTestCase {
         response?.body.withUnsafeBytes { pointer in
             let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
             XCTAssertEqual(data, Data("hello".utf8))
+        }
+    }
+    
+    func testAnyResponse() throws {
+        let response = "hello"
+        var result = Response()
+        let req = Request()
+        req.eventLoop = EventLoop.default
+        EventLoop.default.container = try Application()
+        
+        AnyResponse(response).map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("hello".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
+        }
+        
+        let response2: Future<String?> = Future(nil)
+        let response3: Future<String?> = Future("test")
+        
+        AnyResponse(future: response2, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("fail".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
+        }
+        
+        AnyResponse(future: response3, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("test".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
         }
     }
 

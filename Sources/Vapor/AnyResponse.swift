@@ -36,4 +36,11 @@ public struct AnyResponse: FutureType {
     public init<F: FutureType>(future encodable: F) where F.Expectation : ResponseEncodable {
         wrapped = encodable.map(AnyResponseType.init)
     }
+    
+    /// Wraps a future response encodable type
+    public init<F: FutureType, RE>(future encodable: F, or other: ResponseEncodable) where F.Expectation == Optional<RE>, RE: ResponseEncodable {
+        wrapped = encodable.map { encodable in
+            AnyResponseType(encodable: encodable ?? other)
+        }
+    }
 }
