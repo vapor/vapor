@@ -69,13 +69,13 @@ internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
 
 /// MARK: Content
 
-extension HTMLEncoder: BodyEncoder {
+extension HTMLEncoder: DataEncoder {
     /// See BodyEncoder.encode
-    public func encodeBody<T>(_ encodable: T) throws -> Body where T: Encodable {
+    public func encode<T>(_ encodable: T) throws -> Data where T: Encodable {
         try encodable.encode(to: self)
         guard let html = self.html else {
             throw "no html encoded"
         }
-        return Body(html)
+        return html
     }
 }

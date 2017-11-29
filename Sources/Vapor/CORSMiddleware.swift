@@ -20,30 +20,31 @@ public final class CORSMiddleware: Middleware {
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         // Check if it's valid CORS request
-        guard request.headers["Origin"] != nil else {
+        guard request.http.headers["Origin"] != nil else {
             return try next.respond(to: request)
         }
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let response = request.isPreflight ? Future(Response()) : try next.respond(to: request)
+        let response = request.isPreflight
+            ? Future(request.makeResponse()) : try next.respond(to: request)
         
         return response.map { response in
             // Modify response headers based on CORS settings
-            response.headers[.accessControlAllowOrigin] = self.configuration.allowedOrigin.header(forRequest: request)
-            response.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
-            response.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
+            response.http.headers[.accessControlAllowOrigin] = self.configuration.allowedOrigin.header(forRequest: request)
+            response.http.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders
+            response.http.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
             
             if let exposedHeaders = self.configuration.exposedHeaders {
-                response.headers["Access-Control-Expose-Headers"] = exposedHeaders
+                response.http.headers["Access-Control-Expose-Headers"] = exposedHeaders
             }
             
             if let cacheExpiration = self.configuration.cacheExpiration {
-                response.headers["Access-Control-Max-Age"] = String(cacheExpiration)
+                response.http.headers["Access-Control-Max-Age"] = String(cacheExpiration)
             }
             
             if self.configuration.allowCredentials {
-                response.headers["Access-Control-Allow-Credentials"] = "true"
+                response.http.headers["Access-Control-Allow-Credentials"] = "true"
             }
             
             return response
@@ -54,6 +55,6 @@ public final class CORSMiddleware: Middleware {
 extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return method == .options && headers[.accessControlRequestMethod] != nil
+        return http.method == .options && http.headers[.accessControlRequestMethod] != nil
     }
 }

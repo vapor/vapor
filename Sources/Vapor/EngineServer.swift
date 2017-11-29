@@ -39,8 +39,12 @@ public final class EngineServer: Server {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(on: client.tcp.worker, maxSize: 10_000_000)
-            let responderStream = responder.makeStream()
+            let parser = HTTP.RequestParser(maxSize: 10_000_000)
+            let responderStream = ResponderStream(
+                responder: responder,
+                on: client.tcp.worker,
+                using: self.container
+            )
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
@@ -48,7 +52,7 @@ public final class EngineServer: Server {
                 .stream(to: serializer)
                 .drain { data in
                     client.onInput(data)
-                    serializer.upgradeHandler?(client.tcp)
+                    serializer.upgradeHandler?.closure(client.tcp)
                 }.catch { err in
                     /// FIXME: use log protocol?
                     console.reportError(err, as: "Uncaught error")

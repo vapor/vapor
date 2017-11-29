@@ -18,20 +18,14 @@ import Foundation
 /// a request and use the HTTP client to prompt a response
 /// from the remote server.
 ///
-///     let req = Request(method: .post, body: "hello")
+///     let req = HTTPRequest(method: .post, body: "hello")
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
-public final class Request: Message {
-    /// See EphemeralWorker.onInit
-    public static var onInit: LifecycleHook?
-
-    /// See EphemeralWorker.onDeinit
-    public static var onDeinit: LifecycleHook?
-
+public struct HTTPRequest: Message {
     /// HTTP requests have a method, like GET or POST
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
-    public var method: Method
+    public var method: HTTPMethod
 
     /// This is usually just a path like `/foo` but
     /// may be a full URI in the case of a proxy
@@ -51,13 +45,13 @@ public final class Request: Message {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
     public var body: Body
-    
-    /// See `Extendable.extend`
-    public var extend: Extend
+
+    /// See Message.onUpgrade
+    public var onUpgrade: OnUpgrade?
 
     /// Create a new HTTP request.
     public init(
-        method: Method = .get,
+        method: HTTPMethod = .get,
         uri: URI = URI(),
         version: Version = Version(major: 1, minor: 1),
         headers: Headers = Headers(),
@@ -68,23 +62,15 @@ public final class Request: Message {
         self.version = version
         self.headers = headers
         self.body = body
-        self.extend = Extend()
-        Request.onInit?(self)
-    }
-
-    /// Called when request is deinitializing
-    deinit {
-        Request.onDeinit?(self)
-        // print("Request.deinit")
     }
 }
 
 // MARK: Convenience
 
-extension Request {
+extension HTTPRequest {
     /// Create a new HTTP request using something BodyRepresentable.
-    public convenience init(
-        method: Method = .get,
+    public init(
+        method: HTTPMethod = .get,
         uri: URI = URI(),
         version: Version = Version(major: 1, minor: 1),
         headers: Headers = Headers(),
@@ -93,33 +79,3 @@ extension Request {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
     }
 }
-
-/// Can be converted from a request.
-public protocol RequestDecodable {
-    static func decode(from req: Request) throws -> Future<Self>
-}
-
-/// Can be converted to a request
-public protocol RequestEncodable {
-    func encode(to req: inout Request) throws -> Future<Void>
-}
-
-/// Can be converted from and to a request
-public typealias RequestCodable = RequestDecodable & RequestEncodable
-
-// MARK: Request Conformance
-
-extension Request: RequestEncodable {
-    public func encode(to req: inout Request) throws -> Future<Void> {
-        req = self
-        return .done
-    }
-}
-
-extension Request: RequestDecodable {
-    /// See RequestInitializable.decode
-    public static func decode(from request: Request) throws -> Future<Request> {
-        return Future(request)
-    }
-}
-

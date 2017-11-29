@@ -39,7 +39,7 @@ extension WebSocket {
         let id = OSRandom().data(count: 16).base64EncodedString()
         
         // Create a basic HTTP Request, requesting an upgrade
-        let request = Request(method: .get, uri: uri, headers: [
+        let request = HTTPRequest(method: .get, uri: uri, headers: [
             "Host": uri.hostname ?? "",
             "Connection": "Upgrade",
             "Sec-WebSocket-Key": id,

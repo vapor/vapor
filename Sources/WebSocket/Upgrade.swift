@@ -4,20 +4,22 @@ import Crypto
 // MARK: Convenience
 
 extension WebSocket {
-    public typealias OnUpgradeClosure = (Request, WebSocket) throws -> Void
+    public typealias OnUpgradeClosure = (HTTPRequest, WebSocket) throws -> Void
 
     /// Returns true if this request should upgrade to websocket protocol
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#determining-an-upgrade)	§
-    public static func shouldUpgrade(for req: Request) -> Bool {
+    public static func shouldUpgrade(for req: HTTPRequest) -> Bool {
         return req.headers[.connection] == "Upgrade" && req.headers[.secWebSocketKey] != nil && req.headers[.secWebSocketVersion] != nil
     }
     
     /// Creates a websocket upgrade response for the upgrade request
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#upgrading-the-connection)
-    public static func upgradeResponse(for request: Request,
-                                       with settings: WebSocketSettings) throws -> Response {
+    public static func upgradeResponse(
+        for request: HTTPRequest,
+        with settings: WebSocketSettings
+    ) throws -> HTTPResponse {
         guard shouldUpgrade(for: request) else {
             throw WebSocketError(.invalidRequest)
         }
@@ -25,9 +27,9 @@ extension WebSocket {
         try settings.apply(on: request)
 
         let headers = try buildWebSocketHeaders(for: request)
-        let response = Response(status: 101, headers: headers)
+        var response = HTTPResponse(status: 101, headers: headers)
 
-        try settings.apply(on: response, request: request)
+        try settings.apply(on: &response, request: request)
 
         return response
     }
@@ -35,12 +37,14 @@ extension WebSocket {
     /// Creates a websocket upgrade response for the upgrade request
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#upgrading-the-connection)
-    public static func upgradeResponse(for request: Request,
-                                       with settings: WebSocketSettings,
-                                       onUpgrade: @escaping OnUpgradeClosure) throws -> Response {
-        let response = try upgradeResponse(for: request, with: settings)
+    public static func upgradeResponse(
+        for request: HTTPRequest,
+        with settings: WebSocketSettings,
+        onUpgrade: @escaping OnUpgradeClosure
+    ) throws -> HTTPResponse {
+        var response = try upgradeResponse(for: request, with: settings)
 
-        response.onUpgrade = { tcpClient in
+        response.onUpgrade = OnUpgrade { tcpClient in
             let websocket = WebSocket(socket: tcpClient)
             // Does it make sense to be defined here? If someone calls the above method, the websocket won't be set according to the given settings.
             try? settings.apply(on: websocket, request: request, response: response)
@@ -51,7 +55,7 @@ extension WebSocket {
         return response
     }
 
-    private static func buildWebSocketHeaders(for req: Request) throws -> Headers {
+    private static func buildWebSocketHeaders(for req: HTTPRequest) throws -> Headers {
         guard
             req.method == .get,
             let key = req.headers[.secWebSocketKey],

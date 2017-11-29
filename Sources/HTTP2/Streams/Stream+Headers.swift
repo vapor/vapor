@@ -1,7 +1,7 @@
 import HTTP
 import Pufferfish
 
-extension Request {
+extension HTTPRequest {
     func headerFrames(for stream: HTTP2Stream) throws -> [Frame] {
         // TODO: Support Padding, Stream Dependencies and priorities
         

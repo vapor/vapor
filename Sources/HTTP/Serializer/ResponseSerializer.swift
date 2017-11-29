@@ -6,7 +6,7 @@ import Foundation
 /// Converts responses to Data.
 public final class ResponseSerializer: Serializer {
     /// See InputStream.Input
-    public typealias Input = Response
+    public typealias Input = HTTPResponse
 
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
@@ -23,7 +23,7 @@ public final class ResponseSerializer: Serializer {
     }
 
     /// See InputStream.onInput
-    public func onInput(_ input: Response) {
+    public func onInput(_ input: HTTPResponse) {
         serialize(input).withByteBuffer(outputStream.onInput)
     }
 
@@ -48,7 +48,10 @@ public final class ResponseSerializer: Serializer {
     }
 
     /// Efficiently serializes a response into Data.
-    public func serialize(_ response: Response) -> Data {
+    public func serialize(_ response: HTTPResponse) -> Data {
+        // make copy
+        var response = response
+
         if let count = response.body.count {
             response.headers[.contentLength] = count.description
         } else if case .stream(_) = response.body.storage {

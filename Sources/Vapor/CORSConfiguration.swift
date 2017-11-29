@@ -27,10 +27,10 @@ extension CORSMiddleware {
         public func header(forRequest request: Request) -> String {
             switch self {
             case .none: return ""
-            case .originBased: return request.headers["Origin"] ?? ""
+            case .originBased: return request.http.headers["Origin"] ?? ""
             case .all: return "*"
             case .custom(let string):
-                guard let origin = request.headers["Origin"] else {
+                guard let origin = request.http.headers["Origin"] else {
                     return string
                 }
                 return string.contains(origin) ? origin : string
@@ -81,7 +81,7 @@ extension CORSMiddleware {
         ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
         public init(
             allowedOrigin: AllowOriginSetting,
-            allowedMethods: [Method],
+            allowedMethods: [HTTPMethod],
             allowedHeaders: [String],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,

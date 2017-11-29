@@ -12,8 +12,8 @@ import Routing
 /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/)
 public final class RouteGroup: Router {
     /// All routes registered to this group
-    public private(set) var routes: [Route] = []
-    
+    public private(set) var routes: [Route<Responder>] = []
+
     let `super`: Router
     let components: [PathComponent]
     let middleware: [Middleware]
@@ -32,10 +32,10 @@ public final class RouteGroup: Router {
     /// Registers a route to this `Group`.
     ///
     /// Warning: Will modify the route
-    public func register(route: Route) {
+    public func register(route: Route<Responder>) {
         self.routes.append(route)
         route.path.insert(contentsOf: self.components, at: 0)
-        route.responder = middleware.makeResponder(chainedto: route.responder)
+        route.output = middleware.makeResponder(chainedto: route.output)
         self.super.register(route: route)
     }
     

@@ -2,7 +2,7 @@ import Async
 
 /// Workers that are frequently created and
 /// destroyed as an application does work.
-public protocol EphemeralWorker: Worker, Extendable, HasContainer {
+public protocol EphemeralWorker: Worker, Container {
     /// Takes a self as input
     typealias LifecycleHook = (EphemeralWorker) -> ()
 

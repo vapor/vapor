@@ -14,7 +14,7 @@ final class HPACKEncoder {
     /// Encodes a request into a set of frames including the method, path and authority
     ///
     /// TODO: Body for non-GET requests
-    func encode(request: Request, chunksOf size: Int, streamID: Int32) throws -> [Frame] {
+    func encode(request: HTTPRequest, chunksOf size: Int, streamID: Int32) throws -> [Frame] {
         var payloads = [Payload]()
         
         // Encode the path (required)

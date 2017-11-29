@@ -4,18 +4,15 @@ import HTTP
 extension HTTP2Client {
     /// Sends a request and receives a response
     /// TODO: Disconnected connection during the request cascading here
-    public func send(_ requestType: RequestEncodable) throws -> Future<Response> {
+    public func send(request: HTTPRequest) throws -> Future<HTTPResponse> {
         do {
-            // Serialize the request
-            var request = Request()
-            
-            let promise = Promise<Response>()
+            let promise = Promise<HTTPResponse>()
             
             // Open an HTTP/2 stream
             let stream = openStream()
             
             // Create a response to build up
-            let response = Response()
+            var response = HTTPResponse()
             let body = BodyStream()
             
             stream.drain { frame in
@@ -52,15 +49,10 @@ extension HTTP2Client {
                 self.onError(error)
                 promise.fail(error)
             }
-            
-            try requestType.encode(to: &request).map {
-                // Send all header frames
-                for frame in try request.headerFrames(for: stream) {
-                    stream.context.serializer.onInput(frame)
-                }
-            }.catch { error in
-                self.onError(error)
-                promise.fail(error)
+
+            // Send all header frames
+            for frame in try request.headerFrames(for: stream) {
+                stream.context.serializer.onInput(frame)
             }
             
             // TODO: Send the body

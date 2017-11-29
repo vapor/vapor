@@ -8,12 +8,16 @@ extension Router {
     @discardableResult
     public func websocket(_ path: PathComponent...,
         with settings: WebSocketSettings = WebSocketSettings(),
-        onUpgrade closure: @escaping WebSocket.OnUpgradeClosure) -> Route {
+        onUpgrade closure: @escaping WebSocket.OnUpgradeClosure) -> Route<Responder> {
 
-        let responder = RouteResponder { request in
-            return try WebSocket.upgradeResponse(for: request, with: settings, onUpgrade: closure)
+        let responder = RouteResponder { (request: Request) -> Response in
+            let http = try WebSocket.upgradeResponse(for: request.http, with: settings, onUpgrade: closure)
+            return Response(http: http, on: request, using: request)
         }
-        let route = Route(method: .get, path: path, responder: responder)
+        let route = Route<Responder>(
+            path: [.constants([HTTPMethod.get.data])] + path,
+            output: responder
+        )
         self.register(route: route)
 
         return route

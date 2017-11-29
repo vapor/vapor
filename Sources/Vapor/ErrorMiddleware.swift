@@ -55,7 +55,9 @@ public final class ErrorMiddleware: Middleware {
             }
 
             do {
-                let res = try Response(status: status, body: "Oops: \(reason)")
+                let res = req.makeResponse()
+                res.http.body = try Body(string: "Oops: \(reason)")
+                res.http.status = status
                 promise.complete(res)
             } catch {
                 promise.fail(error)

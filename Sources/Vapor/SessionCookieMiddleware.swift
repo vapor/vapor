@@ -35,11 +35,11 @@ public final class SessionCookieMiddleware<SC: SessionCookie>: Middleware {
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         let session: SC
         
-        if let cookieValue = request.cookies[cookieName] {
+        if let cookieValue = request.http.cookies[cookieName] {
             session = try SC.init(from: cookieValue)
         } else {
             let cookieValue = try sessionFactory(request)
-            request.cookies[cookieName] = try cookieValue.makeCookieValue()
+            request.http.cookies[cookieName] = try cookieValue.makeCookieValue()
             session = cookieValue
         }
         

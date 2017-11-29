@@ -65,7 +65,7 @@ struct LoginRequest: Content {
     var password: String
 }
 
-let helloRes = try! Response(headers: [
+let helloRes = try! HTTPResponse(headers: [
     .contentType: "text/plain; charset=utf-8"
 ], body: "Hello, world!")
 router.grouped(DateMiddleware()).get("plaintext") { req in
@@ -76,12 +76,12 @@ let view = try app.make(ViewRenderer.self)
 
 
 router.post("login") { req -> Response in
-    let loginRequest = try req.content(LoginRequest.self)
+    let loginRequest = try req.content.decode(LoginRequest.self)
 
     print(loginRequest.email) // user@vapor.codes
     print(loginRequest.password) // don't look!
 
-    return Response(status: .ok)
+    return req.makeResponse()
 }
 
 router.get("leaf") { req -> Future<View> in
@@ -100,7 +100,7 @@ router.get("leaf") { req -> Future<View> in
 final class FooController {
     func foo(_ req: Request) -> Future<Response> {
         return req.withConnection(to: alpha) { db in
-            return Response(status: .ok)
+            return req.makeResponse()
         }
     }
 }
@@ -156,7 +156,7 @@ router.get("userview") { req -> Future<View> in
 struct InvalidBody: Error{}
 
 router.post("users") { req -> Future<User> in
-    guard let data = req.body.data else {
+    guard let data = req.http.body.data else {
         throw InvalidBody()
     }
     
@@ -186,13 +186,13 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("pets", Pet.parameter, "toys") { req in
-    return try req.parameters.next(Pet.self).then { pet in
+    return try req.next(Pet.self).then { pet in
         return try pet.toys.query(on: req).all()
     }
 }
 
 router.get("string", String.parameter) { req -> String in
-    return try req.parameters.next(String.self)
+    return try req.next(String.self)
 }
 
 router.get("error") { req -> String in
@@ -207,12 +207,14 @@ router.get("users") { req -> Future<Response> in
         marie.save(on: req),
         charles.save(on: req)
     ].map {
-        return Response(status: .created)
+        return req.makeResponse()
     }
 }
 
-router.get("fast") { req in
-    return try Response(body: "123")
+router.get("fast") { req -> Response in
+    let res = req.makeResponse()
+    res.http.body = Body(string: "123")
+    return res
 }
 
 router.get("123") { req in

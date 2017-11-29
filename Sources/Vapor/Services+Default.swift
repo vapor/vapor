@@ -38,8 +38,8 @@ extension Services {
         }
 
         // register router
-        services.register([Router.self], isSingleton: true) { container in
-            return TrieRouter()
+        services.register(Router.self, isSingleton: true) { container in
+            return EngineRouter()
         }
 
         // register content coders

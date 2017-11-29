@@ -18,38 +18,37 @@ extension Content {
 
     /// See RequestEncodable.encode
     public func encode(to req: inout Request) throws -> Future<Void> {
-        try req.content(self)
+        try req.content.encode(self)
         return .done
     }
 
     /// See ResponseEncodable.encode
     public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
-        try res.content(self)
+        try res.content.encode(self)
         return .done
     }
 
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<Self> {
-        let content = try req.content(Self.self)
+        let content = try req.content.decode(Self.self)
         return Future(content)
     }
 
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
-        let content = try res.content(Self.self)
+        let content = try res.content.decode(Self.self)
         return Future(content)
     }
 }
 
 
-
 /// Configures which encoders/decoders to use for a given media type.
 public struct ContentConfig {
     /// Configured encoders.
-    var encoders: [MediaType: BodyEncoder]
+    var encoders: [MediaType: DataEncoder]
 
     /// Configured decoders.
-    var decoders: [MediaType: BodyDecoder]
+    var decoders: [MediaType: DataDecoder]
 
     /// Create a new content config.
     public init() {
@@ -58,17 +57,17 @@ public struct ContentConfig {
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use(encoder: BodyEncoder, for mediaType: MediaType) {
+    public mutating func use(encoder: DataEncoder, for mediaType: MediaType) {
         self.encoders[mediaType] = encoder
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use(decoder: BodyDecoder, for mediaType: MediaType) {
+    public mutating func use(decoder: DataDecoder, for mediaType: MediaType) {
         self.decoders[mediaType] = decoder
     }
 
     /// Returns an encoder for the specified media type or throws an error.
-    func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
+    func requireEncoder(for mediaType: MediaType) throws -> DataEncoder {
         guard let encoder = encoders[mediaType] else {
             throw "no encoder for \(mediaType)"
         }
@@ -77,7 +76,7 @@ public struct ContentConfig {
     }
 
     /// Returns a decoder for the specified media type or throws an error.
-    func requireDecoder(for mediaType: MediaType) throws -> BodyDecoder {
+    func requireDecoder(for mediaType: MediaType) throws -> DataDecoder {
         guard let decoder = decoders[mediaType] else {
             throw "no decoder for \(mediaType)"
         }
@@ -102,66 +101,58 @@ extension ContentConfig {
 }
 
 /// Encodes encodable types to an HTTP body.
-public protocol BodyEncoder {
+public protocol DataEncoder {
     /// Serializes an encodable type to the data in an HTTP body.
-    func encodeBody<T: Encodable>(_ encodable: T) throws -> Body
+    func encode<T: Encodable>(_ encodable: T) throws -> Data
 }
 
 /// Decodes decodable types from an HTTP body.
-public protocol BodyDecoder {
+public protocol DataDecoder {
     /// Parses a decodable type from the data in the HTTP body.
-    func decode<T: Decodable>(_ decodable: T.Type, body: Body) throws -> T
+    func decode<T: Decodable>(_ decodable: T.Type, from data: Data) throws -> T
 }
 
 // MARK: Message
 
-extension Message {
+extension ContentContainer {
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
-    public func content<C: Content>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws {
-        let coders = try make(ContentConfig.self, for: Self.self)
+    public mutating func encode<C: Content>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws {
+        let coders = try container.make(ContentConfig.self, for: ContentContainer.self)
         let encoder = try coders.requireEncoder(for: mediaType)
-        body = try encoder.encodeBody(content)
-        self.mediaType = mediaType
+        message.body = try Body(encoder.encode(content))
+        message.mediaType = mediaType
     }
 }
 
-extension Message {
+extension ContentContainer {
     /// Parses the supplied content from the mesage.
-    public func content<C: Content>(_ content: C.Type) throws -> C {
-        let coders = try make(ContentConfig.self, for: Self.self)
-        guard let mediaType = self.mediaType else {
+    public func decode<C: Content>(_ content: C.Type) throws -> C {
+        let coders = try container.make(ContentConfig.self, for: ContentContainer.self)
+        guard let mediaType = message.mediaType else {
             throw "no media type"
         }
+        guard let data = message.body.data else {
+            throw "no body data"
+        }
         let encoder = try coders.requireDecoder(for: mediaType)
-        return try encoder.decode(C.self, body: body)
+        return try encoder.decode(C.self, from: data)
+    }
+}
+
+extension QueryContainer {
+    /// Parses the supplied content from the mesage.
+    public func decode<C: Content>(_ content: C.Type) throws -> C {
+        let coders = try container.make(ContentConfig.self, for: ContentContainer.self)
+        let encoder = try coders.requireDecoder(for: .urlEncodedForm)
+        return try encoder.decode(C.self, from: Data(query.utf8))
     }
 }
 
 // MARK: Foundation
 
-extension JSONEncoder: BodyEncoder {
-    /// See BodyEncoder.encode
-    public func encodeBody<T>(_ encodable: T) throws -> Body
-        where T: Encodable
-    {
-        let data: Data = try encode(encodable)
-        return Body(data)
-    }
-}
-
-extension JSONDecoder: BodyDecoder {
-    /// See BodyDecoder.decode
-    public func decode<T>(_ decodable: T.Type, body: Body) throws -> T
-        where T: Decodable
-    {
-        guard let data = body.data else {
-            throw VaporError(identifier: "vapor-stream-decode", reason: "Cannot decode JSON from a stream")
-        }
-        
-        return try decode(T.self, from: data)
-    }
-}
+extension JSONEncoder: DataEncoder {}
+extension JSONDecoder: DataDecoder {}
 
 extension String: Content {
     /// See Content.defaultMediaType
@@ -186,17 +177,13 @@ extension Array: Content {
 
 extension Request {
     public func makeResponse() -> Response {
-        let res = Response(status: .ok)
-        res.eventLoop = self.eventLoop
-        return res
+        return Response(on: self, using: self)
     }
 }
 
 extension Response {
     public func makeRequest() -> Request {
-        let req = Request()
-        req.eventLoop = self.eventLoop
-        return req
+        return Request(on: self, using: self)
     }
 }
 

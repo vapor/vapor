@@ -12,10 +12,10 @@ import TCP
 /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
 public final class HTTPClient: Async.Stream, ClosableStream {
     /// See InputStream.Input
-    public typealias Input = Request
+    public typealias Input = HTTPRequest
 
     /// See OutputStream.Output
-    public typealias Output = Response
+    public typealias Output = HTTPResponse
 
     /// Parses the received `Response`s
     private let parser: ResponseParser
@@ -27,7 +27,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     private let outputStream: BasicStream<Output>
 
     /// The client's current in flight promise
-    private var inFlight: Promise<Response>?
+    private var inFlight: Promise<HTTPResponse>?
 
     /// The socket from init. We need to hold
     /// onto it to close when the client closes.
@@ -63,7 +63,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     }
     
     /// Sends a single `Request` and returns a future that can be completed with a `Response`.
-    public func send(request: RequestEncodable) -> Future<Response> {
+    public func send(request: HTTPRequest) -> Future<HTTPResponse> {
         if let inFlight = self.inFlight {
             /// complete the current in flight request
             /// before sending the next one
@@ -76,20 +76,17 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     }
 
     /// Sends a request, not regarding any inflight requests.
-    private func _send(request: RequestEncodable) -> Future<Response> {
+    private func _send(request: HTTPRequest) -> Future<HTTPResponse> {
         return then {
-            var req = Request()
-            return try request.encode(to: &req).then { _ -> Future<Response> in
-                let promise = Promise(Response.self)
-                self.inFlight = promise
-                self.serializer.onInput(req)
-                return promise.future
-            }
+            let promise = Promise(HTTPResponse.self)
+            self.inFlight = promise
+            self.serializer.onInput(request)
+            return promise.future
         }
     }
 
     /// See InputStream.onInput
-    public func onInput(_ input: Request) {
+    public func onInput(_ input: HTTPRequest) {
         serializer.onInput(input)
     }
 
