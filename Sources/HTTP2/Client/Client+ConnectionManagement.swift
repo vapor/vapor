@@ -34,7 +34,7 @@ extension HTTP2Client {
             
             // Send the settings, next
             client.updateSettings(to: settings)
-            }.catch(client.promise.fail)
+        }.catch(client.promise.fail)
         
         return client.future
     }

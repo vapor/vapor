@@ -1,6 +1,9 @@
 import Async
 import Bits
 
+/// A stream of Bytes used for HTTP bodies
+///
+/// In HTTP/1 this becomes chunk encoded data
 public final class BodyStream: Async.Stream, ClosableStream {
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
