@@ -48,13 +48,17 @@ public final class Response: Message {
 
     /// See Extendable.extend
     public var extend: Extend
+    
+    /// See `Message.eventLoop`
+    public var eventLoop = EventLoop.default
 
     /// Create a new HTTP response.
     public init(
         version: Version = Version(major: 1, minor: 1),
         status: Status = .ok,
         headers: Headers = Headers(),
-        body: Body = Body()
+        body: Body = Body(),
+        worker: Worker = EventLoop.default
     ) {
         self.version = version
         self.status = status

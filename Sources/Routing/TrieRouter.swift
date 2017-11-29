@@ -37,15 +37,21 @@ public final class TrieRouter: Router {
             switch path {
             case .constants(let consants):
                 for s in consants {
+                    let count = s.utf8.count
+                    
                     // find the child node matching this constant
-                    if let node = current.findConstantNode(at: [UInt8](s.utf8)) {
-                        current = node
-                    } else {
-                        // if no child node matches this constant,
-                        // we must create a new one
-                        let new = ConstantNode(constant: s)
-                        current.constantChildren.append(new)
-                        current = new
+                    s.withCString { pointer in
+                        pointer.withMemoryRebound(to: UInt8.self, capacity: count) { pointer in
+                            if let node = current.findConstantNode(at: ByteBuffer(start: pointer, count: count)) {
+                                current = node
+                            } else {
+                                // if no child node matches this constant,
+                                // we must create a new one
+                                let new = ConstantNode(constant: s)
+                                current.constantChildren.append(new)
+                                current = new
+                            }
+                        }
                     }
                 }
             case .parameter(let p):
@@ -68,8 +74,8 @@ public final class TrieRouter: Router {
     }
     
     /// Splits the URI into a substring for each component
-    fileprivate func split(_ uri: [UInt8]) -> [ArraySlice<UInt8>] {
-        var path = [ArraySlice<UInt8>]()
+    fileprivate func split(_ uri: ByteBuffer) -> [ByteBuffer] {
+        var path = [ByteBuffer]()
         path.reserveCapacity(8)
         
         // Skip past the first `/`
@@ -81,7 +87,7 @@ public final class TrieRouter: Router {
             // Split up the path
             while currentIndex < uri.endIndex {
                 if uri[currentIndex] == .forwardSlash {
-                    path.append(uri[baseIndex..<currentIndex])
+                    path.append(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex))
                     
                     baseIndex = uri.index(after: currentIndex)
                     currentIndex = baseIndex
@@ -92,7 +98,7 @@ public final class TrieRouter: Router {
             
             // Add remaining path component
             if baseIndex != uri.endIndex {
-                path.append(uri[baseIndex...])
+                path.append(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex))
             }
         }
         
@@ -106,11 +112,11 @@ public final class TrieRouter: Router {
     /// Uses the provided request for parameterized components
     ///
     /// TODO: Binary data
-    fileprivate func walk<C: Collection>(
+    fileprivate func walk(
         node current: inout TrieRouterNode,
-        component: C,
+        component: ByteBuffer,
         request: Request
-    ) -> Bool where C.Element == UInt8 {
+    ) -> Bool {
         if let node = current.findConstantNode(at: component) {
             // if we find a constant route path that matches this component,
             // then we should use it.
@@ -132,25 +138,31 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        let path = split(request.uri.pathBytes)
-        
-        // always start at the root node
-        var current: TrieRouterNode = root
-        
-        guard walk(node: &current, component: request.method.bytes, request: request) else {
-            return fallbackResponder
-        }
-
-        // traverse the constant path supplied
-        for component in path {
-            guard walk(node: &current, component: component, request: request) else {
+        return request.uri.pathBytes.withUnsafeBufferPointer { (buffer: ByteBuffer) in
+            let path = split(buffer)
+            
+            // always start at the root node
+            var current: TrieRouterNode = root
+            
+            let found = request.method.bytes.withUnsafeBufferPointer {  (buffer: ByteBuffer) in
+                walk(node: &current, component: buffer, request: request)
+            }
+            
+            guard found else {
                 return fallbackResponder
             }
+            
+            // traverse the constant path supplied
+            for component in path {
+                guard walk(node: &current, component: component, request: request) else {
+                    return fallbackResponder
+                }
+            }
+            
+            // return the resolved responder if there hasn't
+            // been an early exit.
+            return current.responder ?? fallbackResponder
         }
-        
-        // return the resolved responder if there hasn't
-        // been an early exit.
-        return current.responder ?? fallbackResponder
     }
 }
 
@@ -172,13 +184,13 @@ protocol TrieRouterNode {
 extension TrieRouterNode {
     /// Finds the node with the supplied path in the
     /// node's constant children.
-    func findConstantNode<C: Collection>(at path: C) -> ConstantNode? where C.Element == UInt8 {
+    func findConstantNode(at path: ByteBuffer) -> ConstantNode? {
         for child in constantChildren {
             guard path.count == child.constant.count else {
                 continue
             }
             
-            if path.elementsEqual(child.constant) {
+            if memcmp(path.baseAddress, child.constant, path.count) == 0 {
                 return child
             }
         }

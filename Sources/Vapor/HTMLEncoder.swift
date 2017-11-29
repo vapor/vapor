@@ -2,10 +2,10 @@ import Core
 import Foundation
 import HTTP
 
-public final class HTMLEncoder: Encoder {
-    public var codingPath: [CodingKey]
-    public var userInfo: [CodingUserInfoKey: Any]
-    public var html: Data?
+fileprivate final class _HTMLEncoder: Encoder {
+    fileprivate var codingPath: [CodingKey]
+    fileprivate var userInfo: [CodingUserInfoKey: Any]
+    fileprivate var html: Body?
 
     public init() {
         self.codingPath = []
@@ -28,13 +28,13 @@ public final class HTMLEncoder: Encoder {
 
 /// MARK: Container
 
-internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
+fileprivate final class HTMLEncodingContainer: SingleValueEncodingContainer {
     var codingPath: [CodingKey] {
         return encoder.codingPath
     }
 
-    let encoder: HTMLEncoder
-    init(encoder: HTMLEncoder) {
+    let encoder: _HTMLEncoder
+    init(encoder: _HTMLEncoder) {
         self.encoder = encoder
     }
 
@@ -43,24 +43,24 @@ internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
     }
 
     func encode(_ value: Bool) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.html = Body(string: value.description)
     }
 
     func encode(_ value: Int) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.html = Body(string: value.description)
     }
 
     func encode(_ value: Double) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.html = Body(string: value.description)
     }
 
     func encode(_ value: String) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.html = Body(string: value)
     }
 
     func encode<T: Encodable>(_ value: T) throws {
         if let data = value as? Data {
-            encoder.html = data
+            encoder.html = Body(data)
         } else {
             try value.encode(to: encoder)
         }
@@ -69,13 +69,17 @@ internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
 
 /// MARK: Content
 
-extension HTMLEncoder: BodyEncoder {
+public struct HTMLEncoder: BodyEncoder {
+    public init() {}
+    
     /// See BodyEncoder.encode
     public func encodeBody<T>(_ encodable: T) throws -> Body where T: Encodable {
-        try encodable.encode(to: self)
-        guard let html = self.html else {
+        let encoder = _HTMLEncoder()
+        try encodable.encode(to: encoder)
+        guard let html = encoder.html else {
             throw "no html encoded"
         }
-        return Body(html)
+        
+        return html
     }
 }

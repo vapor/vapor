@@ -32,10 +32,21 @@ import Service
 public protocol Message: Codable, CustomDebugStringConvertible, EphemeralWorker {
     /// The HTTP version of this message.
     var version: Version { get set }
+    
     /// The HTTP headers.
     var headers: Headers { get set }
+    
     /// The message body.
     var body: Body { get set }
+    
+    /// This message's event loop.
+    ///
+    /// All async tasks (such as completing or awaiting futures)
+    /// must be performed on this queue.
+    ///
+    /// Make sure not to block this queue as it will
+    /// block all other requests on the queue.
+    var eventLoop: EventLoop { get }
 }
 
 /// MARK: Container
@@ -46,19 +57,11 @@ extension Message {
     }
 }
 
-// MARK: Queue
-
-extension Message {
-    /// This message's event loop.
-    ///
-    /// All async tasks (such as completing or awaiting futures)
-    /// must be performed on this queue.
-    ///
-    /// Make sure not to block this queue as it will
-    /// block all other requests on the queue.
-    public var eventLoop: EventLoop {
-        get { return extend["http:eventLoop"] as? EventLoop ?? .default }
-        set { return extend["http:eventLoop"] = newValue }
+extension EventLoop: Codable {
+    public func encode(to encoder: Encoder) throws {}
+    
+    public convenience init(from decoder: Decoder) throws {
+        self.init(queue: .global())
     }
 }
 

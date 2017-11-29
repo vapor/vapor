@@ -33,8 +33,11 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     /// onto it to close when the client closes.
     private var socket: ClosableStream
     
+    /// The worker that we use to create new requests on
+    let worker: Worker
+    
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init<ByteStream>(socket: ByteStream, maxResponseSize: Int = 10_000_000) where
+    public init<ByteStream>(socket: ByteStream, maxResponseSize: Int = 10_000_000, worker: Worker) where
         ByteStream: Async.Stream,
         ByteStream.Input == ByteBuffer,
         ByteStream.Output == ByteBuffer
@@ -43,6 +46,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         self.serializer = RequestSerializer()
         self.outputStream = .init()
         self.socket = socket
+        self.worker = worker
 
         /// FIXME: is there a way to support end users
         /// setting an output stream as well?
@@ -78,7 +82,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     /// Sends a request, not regarding any inflight requests.
     private func _send(request: RequestEncodable) -> Future<Response> {
         return then {
-            var req = Request()
+            var req = Request(worker: self.worker)
             return try request.encode(to: &req).then { _ -> Future<Response> in
                 let promise = Promise(Response.self)
                 self.inFlight = promise

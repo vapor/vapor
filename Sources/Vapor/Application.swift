@@ -12,7 +12,7 @@ import Service
 /// Acts as a service container and much more.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/application/)
-public final class Application: Container {
+public final class Application: Container, Extendable {
     /// Config preferences and requirements for available services.
     public let config: Config
 
@@ -24,6 +24,9 @@ public final class Application: Container {
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
+    
+    /// Used to cache services
+    public let cache = ServiceCache()
 
     /// Creates a new Application.
     public init(
@@ -44,7 +47,7 @@ public final class Application: Container {
 
     /// Make an instance of the provided interface for this Application.
     public func make<T>(_ interface: T.Type) throws -> T {
-        return try make(T.self, for: Application.self)
+        return try (self as Container).make(T.self, for: Application.self)
     }
 
     /// Runs the Application's commands.

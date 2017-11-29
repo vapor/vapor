@@ -176,11 +176,11 @@ public final class RequestParser: CParser {
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: body,
+            worker: worker
         )
 
         currentSize = 0
-        request.eventLoop = worker.eventLoop
         return request
     }
 }

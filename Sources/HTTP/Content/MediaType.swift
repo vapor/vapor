@@ -157,7 +157,7 @@ extension MediaType : CustomStringConvertible {
     /// :nodoc:
     public var description: String {
         var string = String()
-        string.reserveCapacity(type.count + subtype.count + 1)
+        string.reserveCapacity(type.count + subtype.count + 32) // extra room for parameters
         string += type
         string += "/"
         string += subtype

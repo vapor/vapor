@@ -44,7 +44,7 @@ extension WebSocket {
             "Connection": "Upgrade",
             "Sec-WebSocket-Key": id,
             "Sec-WebSocket-Version": "13"
-        ])
+        ], worker: worker)
         
         if uri.scheme == "wss" {
             let client = try TLSClient(on: worker)
