@@ -170,6 +170,15 @@ extension HasContainer {
             return try service.resolve()
         }
         
+        /// locking is required here so that we don't
+        /// run into threading issues with the shared container.
+        /// however, the lock will only be hit on the first request,
+        /// so it should't be a huge issue.
+        _containerLock.lock()
+        defer {
+            _containerLock.unlock()
+        }
+        
         // resolve the service and cache it
         let result: ResolvedService
         do {
@@ -185,6 +194,8 @@ extension HasContainer {
         return try result.resolve()
     }
 }
+
+let _containerLock = NSLock()
 
 fileprivate enum ResolvedService {
     case service(Any)
