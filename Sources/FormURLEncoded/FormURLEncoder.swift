@@ -55,7 +55,7 @@ final class _FormURLEncoder: Encoder {
 
     /// See Encoder.unkeyedContainer
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError()
+        return FormURLUnkeyedEncoder(partialData: partialData, codingPath: codingPath)
     }
 
     /// See Encoder.singleValueContainer

@@ -30,8 +30,8 @@ final class FormURLEncodedSerializer {
 
     private func serialize(_ array: [FormURLEncodedData], forKey key: Data) throws -> Data {
         let collection = try array.map { value -> Data in
-            let keyPath = key + [.leftSquareBracket, .rightSquareBracket, .equals]
-            return try serialize(value, forKey: key + keyPath)
+            let keyPath = key + [.leftSquareBracket, .rightSquareBracket]
+            return try serialize(value, forKey: keyPath)
         }
 
         return collection.joinedWithAmpersands()
