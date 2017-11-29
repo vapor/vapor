@@ -34,19 +34,15 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     private var socket: ClosableStream
     
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init<ByteStream>(socket: ByteStream, maxBodySize: Int = 10_000_000) where
+    public init<ByteStream>(socket: ByteStream, maxResponseSize: Int = 10_000_000) where
         ByteStream: Async.Stream,
         ByteStream.Input == ByteBuffer,
         ByteStream.Output == ByteBuffer
     {
-        self.parser = ResponseParser(maxBodySize: maxBodySize)
+        self.parser = ResponseParser(maxSize: maxResponseSize)
         self.serializer = RequestSerializer()
         self.outputStream = .init()
         self.socket = socket
-
-        let dataToByteByffer = MapStream<Data, ByteBuffer> { data in
-            return data.withByteBuffer { $0 }
-        }
 
         /// FIXME: is there a way to support end users
         /// setting an output stream as well?
@@ -62,7 +58,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
             }
         }
 
-        serializer.stream(to: dataToByteByffer).stream(to: socket)
+        serializer.stream(to: socket)
         socket.stream(to: parser).stream(to: outputStream)
     }
     

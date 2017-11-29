@@ -29,7 +29,7 @@ class SocketsTests: XCTestCase {
 
 fileprivate func clientHello(port: UInt16) throws {
     do {
-        let client = try TCPSocket(isNonBlocking: false)
+        var client = try TCPSocket(isNonBlocking: false)
         try client.connect(hostname: "localhost", port: port)
         let data = "hello".data(using: .utf8)!
         _ = try! client.write(data)

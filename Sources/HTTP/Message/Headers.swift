@@ -68,11 +68,6 @@ public struct Headers: Codable {
             }
         }
         set {
-            guard name != .contentLength else {
-                // Blocked for correctness of the rbody length
-                return
-            }
-            
             guard let newValue = newValue else {
                 self.removeValues(forName: name)
                 return
@@ -180,7 +175,18 @@ public struct Headers: Codable {
     }
 }
 
-extension Headers: ExpressibleByDictionaryLiteral {
+/// Joins two headers, overwriting the data in `lhs` with `rhs`' equivalent for duplicated
+public func +(lhs: Headers, rhs: Headers) -> Headers {
+    var lhs = lhs
+    
+    for (key, value) in rhs {
+        lhs[key] = value
+    }
+    
+    return lhs
+}
+
+extension Headers : ExpressibleByDictionaryLiteral {
     /// Creates HTTP headers.
     public init(dictionaryLiteral: (Name, String)...) {
         storage = Data()
