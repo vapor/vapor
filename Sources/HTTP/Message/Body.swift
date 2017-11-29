@@ -16,6 +16,7 @@ public struct Body: Codable {
         case staticString(StaticString)
         case dispatchData(DispatchData)
         case stream(BodyStream)
+        case string(String)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -25,6 +26,8 @@ public struct Body: Codable {
                 try Data(data).encode(to: encoder)
             case .staticString(let string):
                 try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
+            case .string(let string):
+                try string.encode(to: encoder)
             case .stream(_): return
             }
         }
@@ -39,6 +42,7 @@ public struct Body: Codable {
             case .data(let data): return data.count
             case .dispatchData(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
+            case .string(let string): return string.utf8.count
             case .stream(_): return 0
             }
         }
@@ -52,6 +56,10 @@ public struct Body: Codable {
                 return try data.withUnsafeBytes(body: run)
             case .staticString(let staticString):
                 return try run(staticString.utf8Start)
+            case .string(let string):
+                return try string.withCString { pointer in
+                    return try pointer.withMemoryRebound(to: UInt8.self, capacity: self.count, run)
+                }
             case .stream(_):
                 throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
             }
@@ -113,6 +121,8 @@ public struct Body: Codable {
             return Data(dispatch)
         case .staticString(_):
             return nil
+        case .string(let string):
+            return Data(string.utf8)
         case .stream(_):
             return nil
         }

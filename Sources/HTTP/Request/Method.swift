@@ -1,11 +1,12 @@
 import Foundation
+import Bits
 
 /// An HTTP Request method
 ///
 /// Used to provide information about the kind of action being requested
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
-public struct Method : Equatable, Hashable, Codable, CustomDebugStringConvertible, ExpressibleByStringLiteral {
+public struct Method : Equatable, Codable, CustomDebugStringConvertible, ExpressibleByStringLiteral {
     /// Decodes a method from a String
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -23,14 +24,14 @@ public struct Method : Equatable, Hashable, Codable, CustomDebugStringConvertibl
     /// Represents this method as a String
     public var string: String {
         get {
-            return String(data: self.data, encoding: .utf8) ?? ""
+            return String(bytes: self.bytes, encoding: .utf8) ?? ""
         }
         set {
-            self.data = Data(newValue.utf8)
+            self.bytes = [UInt8](newValue.utf8)
         }
     }
     
-    public private(set) var data: Data
+    public private(set) var bytes: [UInt8]
 
     /// Encodes this method to a String
     public func encode(to encoder: Encoder) throws {
@@ -69,20 +70,17 @@ public struct Method : Equatable, Hashable, Codable, CustomDebugStringConvertibl
     ///
     /// Often used for secutity purposes.
     public static let options = Method(staticString: "OPTIONS")
-    
-    /// A hashValue is useful for using the method in a dictionary
-    public var hashValue: Int {
-        return data.hashValue
-    }
 
     /// Compares two methods to be equal
     public static func ==(lhs: Method, rhs: Method) -> Bool {
-        return lhs.data == rhs.data
+        return lhs.bytes == rhs.bytes
     }
     
     /// Creates a new method from a StaticString
     init(staticString: StaticString) {
-        self.data = Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
+        self.bytes = Array(
+            ByteBuffer(start: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
+        )
     }
 
     /// Creates a new method from a String
@@ -95,7 +93,7 @@ public struct Method : Equatable, Hashable, Codable, CustomDebugStringConvertibl
         case "DELETE": self = .delete
         case "OPTIONS": self = .options
         default:
-            self.data = Data(string.utf8)
+            self.bytes = [UInt8](string.utf8)
         }
     }
 

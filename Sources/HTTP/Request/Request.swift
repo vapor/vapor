@@ -69,6 +69,8 @@ public final class Request: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
+        
+        self.headers.reserveAdditionalCapacity(bytes: 1024)
         Request.onInit?(self)
     }
 
