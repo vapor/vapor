@@ -7,9 +7,7 @@ import libc
 
 extension LeafRenderer {
     static func makeTestRenderer() -> LeafRenderer {
-        return LeafRenderer(tags: defaultTags) { queue in
-            return TestFiles()
-        }
+        return LeafRenderer(tags: defaultTags, fileReader: TestFiles())
     }
 }
 

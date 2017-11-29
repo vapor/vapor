@@ -330,9 +330,7 @@ class LeafTests: XCTestCase {
         Content: <p>Nested!</p>
         """
 
-        let renderer = LeafRenderer(tags: defaultTags) { queue in
-            return preloaded
-        }
+        let renderer = LeafRenderer(tags: defaultTags, fileReader: preloaded)
         try XCTAssertEqual(renderer.render(template, context: .dictionary([:]), on: queue).blockingAwait(), expected)
     }
 
