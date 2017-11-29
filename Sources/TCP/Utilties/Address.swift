@@ -59,11 +59,8 @@ extension Address: Equatable {
             }
         case numericCast(AF_INET6):
             // If the family is IPv6, compare the 2 as IPv6
-            return lhs.withIn6_addr { lhs in
-                return rhs.withIn6_addr { rhs in
-                    return memcmp(&lhs.__u6_addr, &rhs.__u6_addr, MemoryLayout<in6_addr.__Unnamed_union___u6_addr>.size) == 0
-                }
-            }
+            // TODO: This may not be sensible at all and is tough to get working cross-platform
+            return false
         default:
             // Impossible scenario
             fatalError()
