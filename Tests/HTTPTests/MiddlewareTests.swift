@@ -54,7 +54,7 @@ class MiddlewareTests : XCTestCase {
         
         try serverSocket.start(port: 1234)
         
-        let socket = try TCPSocket()
+        var socket = try TCPSocket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
