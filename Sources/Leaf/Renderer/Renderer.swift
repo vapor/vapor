@@ -15,13 +15,14 @@ public final class LeafRenderer {
     /// Views base directory.
     public let viewsDir: String
     
-    var mustCache: Bool
+    /// If `true`, this Leaf renderer caches it's loaded in the FileReader templates
+    var shouldCache: Bool
     
     /// Create a new Leaf renderer.
     public init(config: LeafConfig, worker: Worker) {
         self.tags = config.tags
         self.viewsDir = config.viewsDir.finished(with: "/")
-        self.mustCache = config.cache
+        self.shouldCache = config.shouldCache
         self.fileReader = config.fileFactory(worker)
     }
 
@@ -113,7 +114,7 @@ extension LeafRenderer {
 
         let data: Future<Data>
 
-        if self.mustCache {
+        if self.shouldCache {
             data = fileReader.cachedRead(at: fullPath)
         } else {
             data = fileReader.read(at: fullPath)

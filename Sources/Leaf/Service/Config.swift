@@ -6,20 +6,28 @@ public struct LeafConfig {
     /// Create a file reader & cache for the supplied queue
     public typealias FileFactory = (Worker) -> (FileReader & FileCache)
     
+    /// All registered leaf tags
     let tags: [String: LeafTag]
-    let viewsDir: String
-    let fileFactory: FileFactory
-    let cache: Bool
     
+    /// The directory to read templates from
+    let viewsDir: String
+    
+    /// A filefactory can create a new FileReader
+    let fileFactory: FileFactory
+    
+    /// If `true`, the read files should be cached in the fileReader
+    let shouldCache: Bool
+    
+    /// Creates a new Leaf configuration
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        cache: Bool = true,
-        fileFactory: @escaping FileFactory = File.init
-        ) {
+        shouldCache: Bool = true,
+        fileFactory: @escaping FileFactory = BasicFileReader.init
+    ) {
         self.tags = tags
         self.viewsDir = viewsDir
         self.fileFactory = fileFactory
-        self.cache = cache
+        self.shouldCache = shouldCache
     }
 }
