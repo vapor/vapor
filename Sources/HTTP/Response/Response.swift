@@ -65,8 +65,6 @@ public final class Response: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
-        
-        self.headers.reserveAdditionalCapacity(bytes: 1024)
         Response.onInit?(self)
     }
 

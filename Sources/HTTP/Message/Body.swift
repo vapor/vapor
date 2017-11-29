@@ -91,9 +91,7 @@ public struct Body: Codable {
     
     /// Create a new body from the UTF-8 representation of a string
     public init(string: String) {
-        let data = string.data(using: .utf8) ?? Data()
-        
-        self.storage = .data(data)
+        self.storage = .string(string)
     }
     
     public init(chunked stream: BodyStream) {

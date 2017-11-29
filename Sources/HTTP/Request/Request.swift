@@ -75,7 +75,6 @@ public final class Request: Message {
         self.extend = Extend()
         self.eventLoop = worker.eventLoop
         
-        self.headers.reserveAdditionalCapacity(bytes: 1024)
         Request.onInit?(self)
     }
 

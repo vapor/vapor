@@ -113,15 +113,8 @@ public struct Headers: Codable {
         }
     }
     
-    /// Reserves X bytes of extra capacity in advance
-    public mutating func reserveAdditionalCapacity(bytes: Int) {
-        storage.reserveCapacity(storage.count + bytes)
-    }
-    
     /// An internal API that blindly adds a header without checking for doubles
     internal mutating func appendValue(_ value: String, forName name: Name) {
-        reserveAdditionalCapacity(bytes: 64)
-        
         let nameStartIndex = storage.endIndex
         storage.append(contentsOf: name.original)
         
@@ -246,7 +239,11 @@ extension Headers {
         }
         
         return storage.withUnsafeBytes { (lhs: BytesPointer) in
-            return name.lowercased.withUnsafeBytes { (rhs: BytesPointer) in
+            return name.lowercased.withUnsafeBufferPointer { rhs in
+                guard let rhs = rhs.baseAddress else {
+                    return false
+                }
+                
                 for i in 0..<indexSize {
                     let byte = lhs[index.nameStartIndex &+ i]
                     
@@ -322,22 +319,23 @@ extension Headers {
     /// Type used for the name of a HTTP header in the `HTTPHeaders` storage.
     public struct Name: Codable, Hashable, ExpressibleByStringLiteral, CustomStringConvertible {
         public var hashValue: Int {
-            return lowercased.hashValue
+            // TODO: Change to a faster implementation
+            return Data(lowercased).hashValue
         }
         
-        let original: Data
-        let lowercased: Data
+        let original: [UInt8]
+        let lowercased: [UInt8]
 
         /// Create a HTTP header name with the provided String.
         public init(_ name: String) {
-            original = Data(name.utf8)
+            original = [UInt8](name.utf8)
             lowercased = original.lowercasedASCIIString()
         }
         
         /// Create a HTTP header name with the provided String.
         init(data: Data) {
-            original = data
-            lowercased = data.lowercasedASCIIString()
+            original = Array(data)
+            lowercased = Array(data.lowercasedASCIIString())
         }
 
         public init(stringLiteral: String) {
@@ -354,7 +352,7 @@ extension Headers {
 
         /// :nodoc:
         public var description: String {
-            return String(data: original, encoding: .utf8) ?? ""
+            return String(bytes: original, encoding: .utf8) ?? ""
         }
 
         /// :nodoc:

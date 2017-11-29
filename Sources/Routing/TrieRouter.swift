@@ -74,10 +74,7 @@ public final class TrieRouter: Router {
     }
     
     /// Splits the URI into a substring for each component
-    fileprivate func split(_ uri: ByteBuffer) -> [ByteBuffer] {
-        var path = [ByteBuffer]()
-        path.reserveCapacity(8)
-        
+    fileprivate func forEachComponent(in uri: ByteBuffer, do closure: (ByteBuffer) -> (Bool)) -> Bool {
         // Skip past the first `/`
         var baseIndex = uri.index(after: uri.startIndex)
         
@@ -87,7 +84,9 @@ public final class TrieRouter: Router {
             // Split up the path
             while currentIndex < uri.endIndex {
                 if uri[currentIndex] == .forwardSlash {
-                    path.append(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex))
+                    guard closure(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex)) else {
+                        return false
+                    }
                     
                     baseIndex = uri.index(after: currentIndex)
                     currentIndex = baseIndex
@@ -98,11 +97,11 @@ public final class TrieRouter: Router {
             
             // Add remaining path component
             if baseIndex != uri.endIndex {
-                path.append(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex))
+                return closure(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex))
             }
         }
         
-        return path
+        return false
     }
     
     /// Walks the provided node based on the provided component.
@@ -139,12 +138,10 @@ public final class TrieRouter: Router {
     /// See Router.route()
     public func route(request: Request) -> Responder? {
         return request.uri.pathBytes.withUnsafeBufferPointer { (buffer: ByteBuffer) in
-            let path = split(buffer)
-            
             // always start at the root node
             var current: TrieRouterNode = root
             
-            let found = request.method.bytes.withUnsafeBufferPointer {  (buffer: ByteBuffer) in
+            var found = request.method.bytes.withUnsafeBufferPointer {  (buffer: ByteBuffer) in
                 walk(node: &current, component: buffer, request: request)
             }
             
@@ -152,11 +149,8 @@ public final class TrieRouter: Router {
                 return fallbackResponder
             }
             
-            // traverse the constant path supplied
-            for component in path {
-                guard walk(node: &current, component: component, request: request) else {
-                    return fallbackResponder
-                }
+            found = forEachComponent(in: buffer) { component in
+                return walk(node: &current, component: component, request: request)
             }
             
             // return the resolved responder if there hasn't

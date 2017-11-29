@@ -156,11 +156,7 @@ public struct MediaType {
 extension MediaType : CustomStringConvertible {
     /// :nodoc:
     public var description: String {
-        var string = String()
-        string.reserveCapacity(type.count + subtype.count + 32) // extra room for parameters
-        string += type
-        string += "/"
-        string += subtype
+        var string = "\(type)/\(subtype)"
 
         if !parameters.isEmpty {
             string += parameters.reduce(";") { $0 + " \($1.0)=\($1.1)" }

@@ -138,8 +138,7 @@ extension Address {
             stringData.deallocate(capacity: numericCast(maxStringLength))
         }
         
-        // This cannot fail
-        return String(validatingUTF8: stringData)!
+        return String(bytesNoCopy: stringData, length: numericCast(maxStringLength), encoding: .utf8, freeWhenDone: true)!
     }
 }
 

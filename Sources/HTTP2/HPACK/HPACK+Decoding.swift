@@ -19,8 +19,6 @@ final class HPACKDecoder {
     public func decode(_ packet: Payload) throws -> Headers {
         var decoded = Headers()
         
-        self.headers.reserveAdditionalCapacity(bytes: 1024)
-        
         nextHeader: while packet.bytePosition < packet.data.count {
             let byte = packet.data[packet.bytePosition]
             

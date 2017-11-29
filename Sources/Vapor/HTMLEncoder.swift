@@ -74,6 +74,11 @@ public struct HTMLEncoder: BodyEncoder {
     
     /// See BodyEncoder.encode
     public func encodeBody<T>(_ encodable: T) throws -> Body where T: Encodable {
+        // Performant shortcut
+        if let string = encodable as? String {
+            return Body(string: string)
+        }
+        
         let encoder = _HTMLEncoder()
         try encodable.encode(to: encoder)
         guard let html = encoder.html else {
