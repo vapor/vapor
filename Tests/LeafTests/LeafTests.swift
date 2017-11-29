@@ -10,8 +10,8 @@ class LeafTests: XCTestCase {
     var queue: Worker!
 
     override func setUp() {
-        self.renderer = LeafRenderer.makeTestRenderer()
         self.queue = EventLoop(queue: DispatchQueue(label: "codes.vapor.leaf.test"))
+        self.renderer = LeafRenderer.makeTestRenderer(worker: queue)
     }
 
     func testRaw() throws {
@@ -330,7 +330,11 @@ class LeafTests: XCTestCase {
         Content: <p>Nested!</p>
         """
 
-        let renderer = LeafRenderer(tags: defaultTags, fileReader: preloaded)
+        let config = LeafConfig(tags: defaultTags) { _ in
+            return preloaded
+        }
+        
+        let renderer = LeafRenderer(config: config, worker: queue)
         try XCTAssertEqual(renderer.render(template, context: .dictionary([:]), on: queue).blockingAwait(), expected)
     }
 
@@ -346,7 +350,8 @@ class LeafTests: XCTestCase {
 
         let container = BasicContainer(services: services)
 
-        let view = try container.make(ViewRenderer.self, for: XCTest.self)
+        let config = try container.make(LeafConfig.self, for: XCTest.self)
+        let view = LeafRenderer(config: config, worker: queue)
 
         struct TestContext: Encodable {
             var name = "test"

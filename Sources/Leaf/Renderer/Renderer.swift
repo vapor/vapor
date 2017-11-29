@@ -16,18 +16,13 @@ public final class LeafRenderer {
     public let viewsDir: String
     
     var mustCache: Bool
-
+    
     /// Create a new Leaf renderer.
-    public init(
-        tags: [String: LeafTag] = defaultTags,
-        viewsDir: String = "/",
-        cache: Bool = true,
-        fileReader: FileReader & FileCache
-    ) {
-        self.tags = tags
-        self.viewsDir = viewsDir.finished(with: "/")
-        self.mustCache = cache
-        self.fileReader = fileReader
+    public init(config: LeafConfig, worker: Worker) {
+        self.tags = config.tags
+        self.viewsDir = config.viewsDir.finished(with: "/")
+        self.mustCache = config.cache
+        self.fileReader = config.fileFactory(worker)
     }
 
     // ASTs only need to be parsed once

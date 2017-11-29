@@ -4,29 +4,6 @@ import Dispatch
 import Foundation
 import Service
 
-/// Used to configure Leaf renderer.
-public struct LeafConfig {
-    /// Create a file reader & cache for the supplied queue
-    public typealias FileFactory = (Worker) -> (FileReader & FileCache)
-    
-    let tags: [String: LeafTag]
-    let viewsDir: String
-    let fileFactory: FileFactory
-    let cache: Bool
-
-    public init(
-        tags: [String: LeafTag] = defaultTags,
-        viewsDir: String = "/",
-        cache: Bool = true,
-        fileFactory: @escaping FileFactory = File.init
-    ) {
-        self.tags = tags
-        self.viewsDir = viewsDir
-        self.fileFactory = fileFactory
-        self.cache = cache
-    }
-}
-
 public final class LeafProvider: Provider {
     /// See Service.Provider.repositoryName
     public static let repositoryName = "leaf"
@@ -54,12 +31,7 @@ extension HasContainer where Self: Worker {
         }
         
         let config = try self.workerMake(LeafConfig.self, for: LeafRenderer.self)
-        let renderer =  LeafRenderer(
-            tags: config.tags,
-            viewsDir: config.viewsDir,
-            cache: config.cache,
-            fileReader: config.fileFactory(self)
-        )
+        let renderer =  LeafRenderer(config: config, worker: self)
         
         self.eventLoop.extend[leafRendererKey] = renderer
         

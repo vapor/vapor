@@ -6,14 +6,16 @@ import Leaf
 import libc
 
 extension LeafRenderer {
-    static func makeTestRenderer() -> LeafRenderer {
-        return LeafRenderer(tags: defaultTags, fileReader: TestFiles())
+    static func makeTestRenderer(worker: Worker) -> LeafRenderer {
+        let config = LeafConfig(tags: defaultTags, fileFactory: TestFiles.init)
+        return LeafRenderer(config: config, worker: worker)
     }
 }
 
 final class TestFiles: FileReader, FileCache {
 
-    init() {}
+    // worker as a workaround for file factory
+    init(_ worker: Worker? = nil) {}
 
     func getFile<H: Hashable>(hash: H) -> Future<Data?> {
         return Future(nil)
@@ -36,7 +38,9 @@ final class TestFiles: FileReader, FileCache {
 
 final class PreloadedFiles: FileReader, FileCache {
     var files: [String: Data]
-    init() {
+    
+    // worker as a workaround for file factory
+    init(worker: Worker? = nil) {
         files = [:]
     }
 
