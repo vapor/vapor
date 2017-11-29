@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Dispatch
 import Foundation
 
@@ -8,7 +9,7 @@ public final class RequestSerializer: Serializer {
     public typealias Input = Request
 
     /// See OutputStream.Output
-    public typealias Output = Data
+    public typealias Output = ByteBuffer
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
@@ -17,11 +18,10 @@ public final class RequestSerializer: Serializer {
     public init() {
         outputStream = .init()
     }
-
+    
     /// See InputStream.onInput
     public func onInput(_ input: Request) {
-        let message = serialize(input)
-        outputStream.onInput(message)
+        serialize(input).withByteBuffer(outputStream.onInput)
     }
 
     /// See InputStream.onError
@@ -47,21 +47,19 @@ public final class RequestSerializer: Serializer {
     /// Serializes a request into DispatchData.
     public func serialize(_ request: Request) -> Data {
         var serialized = request.method.data
-        serialized.reserveCapacity(request.headers.storage.count + 256 + request.body.count)
+        serialized.reserveCapacity(request.headers.storage.count + 256)
         
         serialized.append(.space)
         serialized.append(contentsOf: request.uri.pathData)
         serialized.append(contentsOf: http1newLine)
         
-        serialized.append(contentsOf: request.headers.storage)
+        if let count = request.body.count {
+            request.headers[.contentLength] = count.description
+        } else if case .stream(_) = request.body.storage {
+            request.headers[.transferEncoding] = "chunked"
+        }
         
-        // Content-Length header
-        serialized.append(contentsOf: Headers.Name.contentLength.original)
-        serialized.append(.colon)
-        serialized.append(.space)
-        serialized.append(contentsOf: request.body.count.description.utf8)
-        serialized.append(.carriageReturn)
-        serialized.append(.newLine)
+        serialized.append(contentsOf: request.headers.storage)
         
         // End of Headers
         serialized.append(.carriageReturn)
@@ -77,6 +75,8 @@ public final class RequestSerializer: Serializer {
             let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
             
             serialized.append(contentsOf: buffer)
+        case .stream(let bodyStream):
+            bodyStream.stream(to: ChunkEncoder()).drain(onInput: outputStream.onInput).catch(onError: self.onError)
         }
         
         return serialized

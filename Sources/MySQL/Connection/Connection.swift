@@ -7,7 +7,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class Connection {
     /// The TCP socket it's connected on
-    let socket: TCPSocket
+    var socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -102,7 +102,7 @@ public final class Connection {
     ///
     /// Doesn't finish the handshake synchronously
     init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
-        let socket = try TCPSocket()
+        var socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         

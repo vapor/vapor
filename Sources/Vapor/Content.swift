@@ -155,7 +155,11 @@ extension JSONDecoder: BodyDecoder {
     public func decode<T>(_ decodable: T.Type, body: Body) throws -> T
         where T: Decodable
     {
-        return try decode(T.self, from: body.data)
+        guard let data = body.data else {
+            throw VaporError(identifier: "vapor-stream-decode", reason: "Cannot decode JSON from a stream")
+        }
+        
+        return try decode(T.self, from: data)
     }
 }
 

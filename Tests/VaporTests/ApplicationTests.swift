@@ -1,5 +1,6 @@
 import Async
 import Bits
+import Dispatch
 import HTTP
 import Routing
 import Vapor
@@ -39,8 +40,8 @@ class ApplicationTests: XCTestCase {
         
 //        XCTAssertEqual(response?.status, 200)
         
-        response?.body.withUnsafeBytes { pointer in
-            let data = Array(ByteBuffer(start: pointer, count: response!.body.count))
+        try response?.body.withUnsafeBytes { pointer in
+            let data = Array(ByteBuffer(start: pointer, count: response!.body.count ?? 0))
             XCTAssertNotEqual(data, Array("hello".utf8))
         }
         
@@ -48,8 +49,8 @@ class ApplicationTests: XCTestCase {
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertNotEqual(response?.status, 200)
-        response?.body.withUnsafeBytes { pointer in
-            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
+        try response?.body.withUnsafeBytes { pointer in
+            let data = Data(ByteBuffer(start: pointer, count: response!.body.count ?? 0))
             XCTAssertNotEqual(data, Data("hello".utf8))
         }
         
@@ -57,9 +58,41 @@ class ApplicationTests: XCTestCase {
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertEqual(response?.status, 200)
-        response?.body.withUnsafeBytes { pointer in
-            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
+        try response?.body.withUnsafeBytes { pointer in
+            let data = Data(ByteBuffer(start: pointer, count: response!.body.count ?? 0))
             XCTAssertEqual(data, Data("hello".utf8))
+        }
+    }
+    
+    func testAnyResponse() throws {
+        let response = "hello"
+        var result = Response()
+        let req = Request()
+        req.eventLoop = EventLoop.default
+        EventLoop.default.container = try Application()
+        
+        AnyResponse(response).map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("hello".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
+        }
+        
+        let response2: Future<String?> = Future(nil)
+        let response3: Future<String?> = Future("test")
+        
+        AnyResponse(future: response2, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("fail".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
+        }
+        
+        AnyResponse(future: response3, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.body.data, Data("test".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
         }
     }
 

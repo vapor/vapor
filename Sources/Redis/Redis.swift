@@ -33,10 +33,10 @@ public final class RedisClient: Async.Stream {
     private let socket: ClosableStream
 
     /// Creates a new Redis client on the provided connection
-    public init<ByteStream>(socket: ByteStream)
-        where ByteStream: Async.Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer
+    public init<ByteStream>(socket: ByteStream) where
+        ByteStream: Async.Stream,
+        ByteStream.Input == ByteBuffer,
+        ByteStream.Output == ByteBuffer
     {
         self.socket = socket
 
@@ -128,11 +128,8 @@ extension RedisClient {
         port: UInt16 = 6379,
         on worker: Worker
     ) throws -> Future<RedisClient> {
-        let socket = try TCPSocket()
-        try socket.connect(hostname: hostname, port: port)
-        
-        return socket.writable(queue: worker.eventLoop.queue).map { _ in
-            let client = TCPClient(socket: socket, worker: worker)
+        let client = try TCPClient(worker: worker)
+        return try client.connect(hostname: hostname, port: port).map { _ -> RedisClient in
             client.start()
             
             return RedisClient(socket: client)

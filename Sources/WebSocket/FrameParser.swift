@@ -1,7 +1,7 @@
 import Async
 import Bits
 
-public final class FrameParser: Async.Stream {
+public final class FrameParser: Async.Stream, ClosableStream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
     
@@ -41,20 +41,20 @@ public final class FrameParser: Async.Stream {
     public func onError(_ error: Error) {
         outputStream.onError(error)
     }
-
-    /// See CloseableStream.close
+    
+    /// See ClosableStream.close
     public func close() {
-        outputStream.close()
+        self.outputStream.close()
     }
-
-    /// See CloseableStream.onClose
+    
+    /// See ClosableStream.onClose
     public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+        self.outputStream.onClose(onClose)
     }
-
+    
     /// See OutputStream.onInput
     public func onInput(_ input: ByteBuffer) {
-        guard let pointer = input.baseAddress, input.count > 0 else {
+        guard var pointer = input.baseAddress, input.count > 0 else {
             // ignore
             return
         }
@@ -138,33 +138,38 @@ public final class FrameParser: Async.Stream {
             accumulated += input.count
             
             // process the incoming data
-            let result =  process(pointer: pointer, length: input.count)
+            let (successful, byteLength) =  process(pointer: pointer, length: input.count)
             
             // If the processing was successful
-            if result.0 {
+            if successful {
                 // Add the unconsumed data to a pointer, and process that now
-                let unconsumed = accumulated &- result.1
+                let unconsumed = accumulated &- byteLength
                 let pointer = MutableBytesPointer.allocate(capacity: unconsumed)
-                pointer.assign(from: pointer.advanced(by: result.1), count: unconsumed)
+                pointer.assign(from: pointer.advanced(by: byteLength), count: unconsumed)
                 
                 defer { pointer.deallocate(capacity: unconsumed) }
                 
                 self.onInput(ByteBuffer(start: pointer, count: unconsumed))
             }
         } else {
-            let result = process(pointer: pointer, length: input.count)
+            var length = input.count
+            var successful: Bool
+            var byteLength: Int
             
-            if result.0 {
-                self.onInput(ByteBuffer(start: pointer.advanced(by: result.1), count: input.count &- result.1))
-            }
+            repeat {
+                (successful, byteLength) = process(pointer: pointer, length: length)
+                pointer = pointer.advanced(by: byteLength)
+                length = length &- byteLength
+            } while successful && length > 0
         }
     }
     
     static func decodeFrameHeader(from base: UnsafePointer<UInt8>, length: Int) throws -> Frame.Header {
         guard
             length > 3,
-            let code = Frame.OpCode(rawValue: base[0] & 0b00001111) else {
-                throw WebSocketError(.invalidFrame)
+            let code = Frame.OpCode(rawValue: base[0] & 0b00001111)
+        else {
+            throw WebSocketError(.invalidFrame)
         }
         
         // If the FIN bit is set
@@ -178,7 +183,7 @@ public final class FrameParser: Async.Stream {
         
         // Binary and continuation frames don't need to be final
         if !final {
-            guard code == .continuation || code == .binary else {
+            guard code == .continuation || code == .binary || code == .close else {
                 throw WebSocketError(.invalidFrameParameters)
             }
         }

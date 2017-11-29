@@ -9,19 +9,13 @@ enum SSLSettings {
     internal static var initialized: Bool = {
         SSL_library_init()
         SSL_load_error_strings()
-//        OpenSSL_add_all_ciphers()
         OPENSSL_config(nil)
         OPENSSL_add_all_algorithms_conf()
         return true
     }()
 }
 
-public final class SSLStream<ByteStream>: Async.Stream, ClosableStream 
-    where ByteStream: Async.Stream, 
-        ByteStream.Output == ByteBuffer, 
-        ByteStream.Input == ByteBuffer, 
-        ByteStream: ClosableStream 
-{
+public final class SSLStream: Async.Stream, ClosableStream {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
@@ -38,19 +32,25 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     var descriptor: Int32
     
     /// The underlying TCP socket
-    let socket: ByteStream
+    let socket: ClosableStream
     
     /// The queue to read on
     let queue: DispatchQueue
     
     /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
-    var readSource: DispatchSourceRead?
+    let readSource: DispatchSourceRead
+    
+    /// Keeps track of if the readSource is activated
+    var reading = false
     
     /// A buffer of all data that still needs to be written
     var writeQueue = [Data]()
     
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
     let writeSource: DispatchSourceWrite
+    
+    /// Keeps track of if the writeSource is activated
+    var writing = false
     
     /// A buffer storing all deciphered data received from the remote
     let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
@@ -63,11 +63,16 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
     }
     
     /// Creates a new SSLStream on top of a socket
-    public init(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws {
+    public init<ByteStream>(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws where
+        ByteStream: Async.Stream,
+        ByteStream.Output == ByteBuffer,
+        ByteStream.Input == ByteBuffer
+    {
         self.socket = socket
         self.descriptor = descriptor
         self.queue = queue
         
+        self.readSource = DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
         self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
         
         self.writeSource.setEventHandler {
@@ -163,8 +168,16 @@ public final class SSLStream<ByteStream>: Async.Stream, ClosableStream
         outputStream.onClose(onClose)
     }
     
+    /// Returns a boolean describing if the socket is still healthy and open
+    public var isConnected: Bool {
+        var error = 0
+        getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &error, nil)
+        
+        return error == 0
+    }
+    
     public func close() {
-        guard let readSource = readSource else {
+        guard reading else {
             socket.close()
             return
         }

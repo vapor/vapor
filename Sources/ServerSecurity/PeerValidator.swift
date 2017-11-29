@@ -54,7 +54,7 @@ public final class PeerValidator {
         }
         
         // Cleans up be decreasing the counter
-        client.socket.didClose = {
+        client.didClose = {
             client.worker.eventLoop.queue.async {
                 guard let currentRemote = currentRemote else {
                     return
@@ -71,6 +71,9 @@ public final class PeerValidator {
                 if let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
                     self.remotes.remove(at: index)
                 }
+                
+                // Prevent memory leak
+                client.didClose = {}
             }
         }
         

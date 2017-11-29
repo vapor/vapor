@@ -46,6 +46,7 @@ let package = Package(
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
+        .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
@@ -145,9 +146,18 @@ let package = Package(
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // HTTP/2
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
+        // Random crypto
         .target(name: "Random", dependencies: ["Core"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
+        
+        // Compression
+        .target(name: "Pufferfish"),
+        .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -202,10 +212,10 @@ let package = Package(
 )
 
 #if os(macOS) || os(iOS)
-    package.targets.append(
+   package.targets.append(
         .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
-    
+
     package.products.append(
         .library(name: "AppleSSL", targets: ["AppleSSL"])
     )

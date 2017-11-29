@@ -84,7 +84,7 @@ extension ResultsStream {
                 return
             }
             
-            close()
+            self.close()
             return
         }
         

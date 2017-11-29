@@ -23,18 +23,21 @@ public final class RequestParser: CParser {
 
     /// The maxiumum possible body size
     /// larger sizes will result in an error
-    private let maxBodySize: Int
+    private let maxSize: Int
+    
+    /// The currently parsing request's size
+    private var currentSize = 0
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
 
     /// Creates a new Request parser.
-    public init(on worker: Worker, maxBodySize: Int) {
+    public init(on worker: Worker, maxSize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
         self.worker = worker
-        self.maxBodySize = maxBodySize
+        self.maxSize = maxSize
         self.outputStream = .init()
         reset(HTTP_REQUEST)
     }
@@ -46,6 +49,7 @@ public final class RequestParser: CParser {
             guard let request = try parse(from: input) else {
                 return
             }
+            
             self.outputStream.onInput(request)
         } catch {
             self.onError(error)
@@ -62,15 +66,15 @@ public final class RequestParser: CParser {
     public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
-
-    /// See CloseableStream.close
+    
+    /// See ClosableStream.close
     public func close() {
-        outputStream.close()
+        self.outputStream.close()
     }
-
-    /// See CloseableStream.onClose
+    
+    /// See ClosableStream.onClose
     public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+        self.outputStream.onClose(onClose)
     }
 
     /// Parses request Data. If the data does not contain
@@ -85,13 +89,19 @@ public final class RequestParser: CParser {
 
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> Request? {
+        currentSize += buffer.count
+        
+        guard currentSize < maxSize else {
+            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
+        }
+        
         let results: CParseResults
 
         switch state {
         case .ready:
             // create a new results object and set
             // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maxBodySize: maxBodySize)
+            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
             results = newResults
             state = .parsing
         case .parsing:
@@ -169,6 +179,7 @@ public final class RequestParser: CParser {
             body: body
         )
 
+        currentSize = 0
         request.eventLoop = worker.eventLoop
         return request
     }
