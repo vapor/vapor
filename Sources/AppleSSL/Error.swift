@@ -27,6 +27,9 @@ public struct AppleSSLError: Swift.Error {
         /// The provided certificate was not loaded/used successfully
         case invalidCertificate
         
+        /// Unsupported feature
+        case notSupported
+        
         /// The certificate didn't exist at the given path
         case certificateNotFound
     }

@@ -7,10 +7,12 @@ import XCTest
 @testable import DebuggingTests
 @testable import FluentTests
 @testable import HTTPTests
+@testable import HTTP2Tests
 @testable import JWTTests
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
+@testable import PufferfishTests
 @testable import RandomTests
 @testable import RedisTests
 @testable import RoutingTests
@@ -45,6 +47,10 @@ XCTMain([
     testCase(ParserTests.allTests),
     testCase(SerializerTests.allTests),
 
+    // HTTP2
+    testCase(HTTP2Tests.allTests),
+    testCase(HPACKTests.allTests),
+
     // JWT
     testCase(JWSTests.allTests),
 
@@ -58,6 +64,9 @@ XCTMain([
     // MySQL
     testCase(MySQLTests.allTests),
 
+    // Pufferfish
+    testCase(PufferfishTests.allTests),
+  
     // Random
     testCase(RandomTests.allTests),
 

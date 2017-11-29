@@ -39,7 +39,7 @@ class MiddlewareTests : XCTestCase {
         let serverSocket = try TCPServer()
         let server = HTTPServer(socket: serverSocket)
         server.drain { peer in
-            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxBodySize: 100_000)
+            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxSize: 100_000)
             
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
@@ -54,17 +54,17 @@ class MiddlewareTests : XCTestCase {
         
         try serverSocket.start(port: 1234)
         
-        let socket = try TCPSocket()
+        var socket = try TCPSocket()
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
         let client = HTTPClient(socket: tcpClient)
         tcpClient.start()
         
-        let response = try client.send(request: Request()).blockingAwait()
+        let response = try client.send(request: Request()).blockingAwait(timeout: .seconds(3))
         
-        response.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: response.body.count)
+        try response.body.withUnsafeBytes { (pointer: BytesPointer) in
+            let buffer = ByteBuffer(start: pointer, count: response.body.count ?? 0)
             XCTAssertEqual(Data(buffer), Data(responder.response.utf8))
         }
     }

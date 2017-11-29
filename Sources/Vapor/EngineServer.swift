@@ -38,7 +38,7 @@ public final class EngineServer: Server {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(on: client.tcp.worker, maxBodySize: 10_000_000)
+            let parser = HTTP.RequestParser(on: client.tcp.worker, maxSize: 10_000_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
