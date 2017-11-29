@@ -49,7 +49,7 @@ public final class ResponseSerializer: Serializer {
         let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes
         
         serialized.withUnsafeBufferPointer(write)
-        response.headers.storage.withByteBuffer(write)
+        response.headers.write(to: write)
         
         // End of Headers
         crlf.withUnsafeBufferPointer(write)

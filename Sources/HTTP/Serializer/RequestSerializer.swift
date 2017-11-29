@@ -33,7 +33,6 @@ public final class RequestSerializer: Serializer {
     /// See InputStream.onInput
     public func onInput(_ request: Request) {
         var serialized = request.method.bytes
-        serialized.reserveCapacity(request.headers.storage.count + 256)
         
         serialized.append(.space)
         serialized.append(contentsOf: request.uri.pathBytes)
@@ -46,7 +45,7 @@ public final class RequestSerializer: Serializer {
         }
         
         serialized.withUnsafeBufferPointer(write)
-        request.headers.storage.withByteBuffer(write)
+        request.headers.write(to: write)
         
         // End of Headers
         crlf.withByteBuffer(write)

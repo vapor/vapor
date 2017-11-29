@@ -27,26 +27,82 @@ public struct Headers: Codable {
         var endIndex: Int
     }
     
-    var headerIndexes = [Headers.Index]()
-    var storage: Data
-    
-    public init() {
-        self.storage = Data()
-        self.storage.reserveCapacity(4096)
-        self.headerIndexes.reserveCapacity(50)
+    enum StorageType {
+        case data, array
     }
     
+    var headerIndexes = [Headers.Index]()
+    private var storage: Data!
+    
+    private var array: [(Name, String)]!
+    
+    var type: StorageType
+    
+    /// Creates new, empty Headers
+    public init() {
+        self.array = []
+        array.reserveCapacity(16)
+        self.type = .array
+    }
+    
+    /// Creates new Headers from the raw parsed data
     internal init(storage: Data, indexes: [Headers.Index]) {
         self.storage = storage
+        self.type = .data
         self.headerIndexes = indexes
     }
     
+    /// Encodes using the underlying storage
     public func encode(to encoder: Encoder) throws {
-        try storage.encode(to: encoder)
+        var dict = [Name: String]()
+        
+        for (key, value) in self {
+            dict[key] = value
+        }
+        
+        try dict.encode(to: encoder)
     }
     
+    /// Encodes itself from a dictionary
     public init(from decoder: Decoder) throws {
-        self.storage = try Data(from: decoder)
+        self.array = []
+        type = .array
+        
+        let dict = try [Name: String](from: decoder)
+        
+        for (key, value) in dict {
+            self[key] = value
+        }
+    }
+    
+    /// Writes it's binary format to the closure
+    func write(to closure: (ByteBuffer)->()) {
+        let separator: [UInt8] = [
+            .colon, .space
+        ]
+        
+        let clrf: [UInt8] = [
+            .carriageReturn, .newLine
+        ]
+        
+        switch type {
+        case .data: storage.withByteBuffer(closure)
+        case .array:
+            for (key, value) in self {
+                key.original.withUnsafeBufferPointer(closure)
+                separator.withUnsafeBufferPointer(closure)
+                
+                let count = value.utf8.count
+                
+                value.withCString { pointer in
+                    pointer.withMemoryRebound(to: UInt8.self, capacity: count) { pointer in
+                        closure(ByteBuffer(start: pointer, count: count))
+                    }
+                }
+                
+                clrf.withUnsafeBufferPointer(closure)
+            }
+        }
     }
 
     /// Accesses the (first) value associated with the `Name` if any
@@ -54,10 +110,9 @@ public struct Headers: Codable {
     /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/#accessing-headers)
     public subscript(name: Name) -> String? {
         get {
-            switch name {
-            case Name.setCookie: // Exception, see note in [RFC7230, section 3.2.2]
+            if name == .setCookie { // Exception, see note in [RFC7230, section 3.2.2]
                 return self[valuesFor: .setCookie].first
-            default:
+            } else {
                 let values = self[valuesFor: name]
                 
                 if values.isEmpty {
@@ -68,15 +123,23 @@ public struct Headers: Codable {
             }
         }
         set {
+            if type == .array {
+                removeFromArray(name)
+                
+                if let newValue = newValue {
+                    array.append((name, newValue))
+                }
+                return
+            }
+            
             guard let newValue = newValue else {
-                self.removeValues(forName: name)
+                self.removeValuesFromData(forName: name)
                 return
             }
             
             let indexes = self.indexes(forName: name)
             
-            if  indexes.count == 1,
-                indexes[0].valueEndIndex - indexes[0].valueStartIndex == newValue.utf8.count
+            if indexes.count == 1, indexes[0].valueEndIndex - indexes[0].valueStartIndex == newValue.utf8.count
             {
                 storage.withUnsafeMutableBytes { (outputPointer: MutableBytesPointer) in
                     _ = memcpy(
@@ -86,15 +149,27 @@ public struct Headers: Codable {
                     )
                 }
             } else {
-                removeValues(forName: name)
+                removeValuesFromData(forName: name)
                 
-                appendValue(newValue, forName: name)
+                appendValueToData(newValue, forName: name)
             }
         }
     }
     
+    mutating func removeFromArray(_ name: Name) {
+        var indexes = [Int]()
+        
+        for i in 0..<array.count where array[i].0 == name {
+            indexes.append(i)
+        }
+        
+        for index in indexes.reversed() {
+            array.remove(at: index)
+        }
+    }
+    
     /// Removes all headers with this name
-    public mutating func removeValues(forName name: Name) {
+    mutating func removeValuesFromData(forName name: Name) {
         // Reverse iteration to keep the index positions intact
         for index in dropIndexes(forName: name).reversed() {
             storage.removeSubrange(index.startIndex..<index.endIndex)
@@ -114,7 +189,7 @@ public struct Headers: Codable {
     }
     
     /// An internal API that blindly adds a header without checking for doubles
-    internal mutating func appendValue(_ value: String, forName name: Name) {
+    internal mutating func appendValueToData(_ value: String, forName name: Name) {
         let nameStartIndex = storage.endIndex
         storage.append(contentsOf: name.original)
         
@@ -161,15 +236,26 @@ public struct Headers: Codable {
     /// Accesses all values associated with the `Name`
     public subscript(valuesFor name: Name) -> [String] {
         get {
-            return self.indexes(forName: name).flatMap { index in
-                return String(data: storage[index.valueStartIndex..<index.valueEndIndex], encoding: .utf8)
+            switch type {
+            case .data:
+                return self.indexes(forName: name).flatMap { index in
+                    return String(data: storage[index.valueStartIndex..<index.valueEndIndex], encoding: .utf8)
+                }
+            case .array:
+                return self.array.flatMap { key, value in
+                    guard key == name else {
+                        return nil
+                    }
+                    
+                    return value
+                }
             }
         }
         set {
-            removeValues(forName: name)
+            removeValuesFromData(forName: name)
             
             for value in newValue {
-                appendValue(value, forName: name)
+                appendValueToData(value, forName: name)
             }
         }
     }
@@ -189,14 +275,8 @@ public func +(lhs: Headers, rhs: Headers) -> Headers {
 extension Headers : ExpressibleByDictionaryLiteral {
     /// Creates HTTP headers.
     public init(dictionaryLiteral: (Name, String)...) {
-        storage = Data()
-        
-        // 64 bytes per key-value pair shouldn't be too far off
-        storage.reserveCapacity(dictionaryLiteral.count * 64)
-        
-        for (name, value) in dictionaryLiteral {
-            appendValue(value, forName: name)
-        }
+        array = dictionaryLiteral
+        type = .array
     }
 }
 
@@ -214,7 +294,7 @@ extension Headers {
     /// Appends a header to the headers
     public mutating func append(_ literal: Headers.Literal) {
         for (name, value) in literal.fields {
-            appendValue(value, forName: name)
+            appendValueToData(value, forName: name)
         }
     }
     
@@ -295,7 +375,23 @@ extension Headers {
 extension Headers: Sequence {
     /// Iterates over all headers
     public func makeIterator() -> AnyIterator<(name: Name, value: String)> {
-        let storage = self.storage
+        switch type {
+        case .data: return makeDataIterator()
+        case .array:
+            var iterator = array.makeIterator()
+            
+            return AnyIterator {
+                guard let next = iterator.next() else {
+                    return nil
+                }
+                
+                return (next.0, next.1)
+            }
+        }
+    }
+    
+    fileprivate func makeDataIterator() -> AnyIterator<(name: Name, value: String)> {
+        let storage = self.storage!
         var indexIterator = self.headerIndexes.makeIterator()
         
         return AnyIterator {
