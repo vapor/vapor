@@ -45,20 +45,12 @@ var middlewareConfig = MiddlewareConfig()
 // middlewareConfig.use(FluentMiddleware.self)
 services.register(middlewareConfig)
 
-let app = try Application(services: services)
-
-let foo = try app.withConnection(to: alpha) { alpha in
-    return try alpha.query(string: "select sqlite_version();").all()
-}.blockingAwait()
-print(foo)
-
-let router = try app.make(Router.self)
+let router = EngineRouter.default()
 
 router.get("hello") { req -> [User] in
     let user = User(name: "Vapor", age: 3);
     return [user]
 }
-
 
 struct LoginRequest: Content {
     var email: String
@@ -71,8 +63,6 @@ let helloRes = try! HTTPResponse(headers: [
 router.grouped(DateMiddleware()).get("plaintext") { req in
     return helloRes
 }
-
-let view = try app.make(ViewRenderer.self)
 
 
 router.post("login") { req -> Response in
@@ -94,7 +84,7 @@ router.get("leaf") { req -> Future<View> in
     }
 
     let user = User(name: "Vapor", age: 3);
-    return try view.make("/Users/tanner/Desktop/hello", context: user, on: req)
+    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: user, on: req)
 }
 
 final class FooController {
@@ -148,7 +138,7 @@ extension Request: DatabaseConnectable {}
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
 
-    return try view.make("/Users/tanner/Desktop/hello", context: [
+    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: [
         "user": user
     ], on: req)
 }
@@ -213,11 +203,12 @@ router.get("users") { req -> Future<Response> in
 
 router.get("fast") { req -> Response in
     let res = req.makeResponse()
-    res.http.body = Body(string: "123")
+    res.http.body = HTTPBody(string: "123")
     return res
 }
 
-router.get("123") { req in
+router.get("123") { req -> String in
+    print("123")
     return "123"
 }
 
@@ -250,6 +241,20 @@ router.get("asyncusers") { req -> Future<User> in
     }
 }
 
-print("Starting server...")
+router.get("fuzzy") { req -> String in
+    let data = req.content["foo", 1, "bar", "baz"]
+    let flag = req.query["flag"]
+    return data ?? flag ?? "none"
+}
+
+services.register(Router.self, router)
+
+let app = try Application(services: services)
+
+let foo = try app.withConnection(to: alpha) { alpha in
+    return try alpha.query(string: "select sqlite_version();").all()
+}.blockingAwait()
+print(foo)
+
 try app.run()
 

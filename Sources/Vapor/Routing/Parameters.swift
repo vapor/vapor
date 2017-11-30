@@ -1,13 +1,44 @@
 import Async
+import Foundation
 import HTTP
 import Routing
 
-extension String: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-string"
+/// Capable of being used as a route parameter.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/#creating-custom-parameters)
+public protocol Parameter {
+    /// the type of this parameter after it has been resolved.
+    associatedtype ResolvedParameter
+
+    /// the unique key to use as a slug in route building
+    static var uniqueSlug: String { get }
+
+    // returns the found model for the resolved url parameter
+    static func make(for parameter: String, in request: Request) throws -> ResolvedParameter
+}
+
+extension Parameter {
+    /// The path component for this route parameter
+    public static var parameter: PathComponent {
+        return .parameter(Data(uniqueSlug.utf8))
     }
-    
+}
+
+extension Parameter {
+    /// See Parameter.uniqueSlug
+    public static var uniqueSlug: String {
+        return "\(Self.self)".lowercased()
+    }
+}
+
+extension Parameter where Self: EphemeralContainerFindable {
+    /// See Parameter.make
+    public static func make(for parameter: String, in request: Request) throws -> EphemeralContainerFindableResult {
+        return try find(identifier: parameter, for: request)
+    }
+}
+
+extension String: Parameter {
     /// Reads the raw parameter
     public static func make(for parameter: String, in request: Request) throws -> String {
         return parameter
@@ -15,10 +46,6 @@ extension String: Parameter {
 }
 
 extension Int: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-int"
-    }
     
     /// Attempts to read the parameter into a `Int`
     public static func make(for parameter: String, in request: Request) throws -> Int {
@@ -31,11 +58,6 @@ extension Int: Parameter {
 }
 
 extension Double: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-double"
-    }
-    
     /// Attempts to read the parameter into a `Double`
     public static func make(for parameter: String, in request: Request) throws -> Double {
         guard let number = Double(parameter) else {
@@ -47,11 +69,6 @@ extension Double: Parameter {
 }
 
 extension Int8: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-int8"
-    }
-    
     /// Attempts to read the parameter into a `Int8`
     public static func make(for parameter: String, in request: Request) throws -> Int8 {
         guard let number = Int8(parameter) else {
@@ -63,11 +80,6 @@ extension Int8: Parameter {
 }
 
 extension Int16: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-int16"
-    }
-    
     /// Attempts to read the parameter into a `Int16`
     public static func make(for parameter: String, in request: Request) throws -> Int16 {
         guard let number = Int16(parameter) else {
@@ -79,11 +91,6 @@ extension Int16: Parameter {
 }
 
 extension Int32: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-int32"
-    }
-    
     /// Attempts to read the parameter into a `Int32`
     public static func make(for parameter: String, in request: Request) throws -> Int32 {
         guard let number = Int32(parameter) else {
@@ -95,11 +102,6 @@ extension Int32: Parameter {
 }
 
 extension Int64: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-int64"
-    }
-    
     /// Attempts to read the parameter into a `Int64`
     public static func make(for parameter: String, in request: Request) throws -> Int64 {
         guard let number = Int64(parameter) else {
@@ -111,11 +113,6 @@ extension Int64: Parameter {
 }
 
 extension UInt8: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-uint8"
-    }
-    
     /// Attempts to read the parameter into a `UInt8`
     public static func make(for parameter: String, in request: Request) throws -> UInt8 {
         guard let number = UInt8(parameter) else {
@@ -127,11 +124,6 @@ extension UInt8: Parameter {
 }
 
 extension UInt16: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-uint16"
-    }
-    
     /// Attempts to read the parameter into a `UInt16`
     public static func make(for parameter: String, in request: Request) throws -> UInt16 {
         guard let number = UInt16(parameter) else {
@@ -143,11 +135,6 @@ extension UInt16: Parameter {
 }
 
 extension UInt32: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-uint32"
-    }
-    
     /// Attempts to read the parameter into a `UInt32`
     public static func make(for parameter: String, in request: Request) throws -> UInt32 {
         guard let number = UInt32(parameter) else {
@@ -159,11 +146,6 @@ extension UInt32: Parameter {
 }
 
 extension UInt64: Parameter {
-    /// See `Parameter.uniqueSlug`
-    public static var uniqueSlug: String {
-        return "swift-uint64"
-    }
-    
     /// Attempts to read the parameter into a `UInt64`
     public static func make(for parameter: String, in request: Request) throws -> UInt64 {
         guard let number = UInt64(parameter) else {

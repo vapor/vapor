@@ -6,7 +6,7 @@ public protocol ServiceCacheable {
 
 public final class ServiceCache {
     /// The internal storage.
-    internal var storage: [String: ResolvedService]
+    internal var storage: [InterfaceClientPair: ResolvedService]
 
     /// Create a new service cache.
     public init() {
@@ -36,7 +36,7 @@ public final class ServiceCache {
         _ interface: Interface.Type,
         for client: Client.Type
     ) {
-        let key = "\(Interface.self):\(Client.self)"
+        let key = InterfaceClientPair(interface: Interface.self, client: Client.self)
         storage[key] = resolved
     }
 
@@ -46,7 +46,7 @@ public final class ServiceCache {
         _ interface: Interface.Type,
         for client: Client.Type
     ) throws -> Interface? {
-        let key = "\(Interface.self):\(Client.self)"
+        let key = InterfaceClientPair(interface: Interface.self, client: Client.self)
         guard let resolved = storage[key] else {
             return nil
         }
@@ -67,5 +67,23 @@ internal enum ResolvedService {
         case .error(let error): throw error
         case .service(let service): return service
         }
+    }
+}
+
+struct InterfaceClientPair: Hashable {
+    static func ==(lhs: InterfaceClientPair, rhs: InterfaceClientPair) -> Bool {
+        return lhs.client == rhs.client && lhs.client == rhs.client
+    }
+
+    var hashValue: Int {
+        return interface.hashValue & client.hashValue
+    }
+
+    private let interface: ObjectIdentifier
+    private let client: ObjectIdentifier
+
+    public init<Interface, Client>(interface: Interface.Type, client: Client.Type) {
+        self.interface = ObjectIdentifier(Interface.self)
+        self.client = ObjectIdentifier(Client.self)
     }
 }

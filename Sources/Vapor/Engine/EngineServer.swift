@@ -29,9 +29,6 @@ public final class EngineServer: Server {
         // create a tcp server
         let tcp = try TCPServer(eventLoopCount: config.workerCount)
 
-        // set container on each event loop
-        tcp.eventLoops.forEach { $0.container = self.container }
-
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         let server = HTTPServer(socket: tcp)
 

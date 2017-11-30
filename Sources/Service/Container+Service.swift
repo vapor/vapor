@@ -42,14 +42,6 @@ extension Container {
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
-        return try uncachedUnsafeMake(interface, for: client)
-    }
-
-    /// Makes the interface for the client. Does not consult the service cache.
-    fileprivate func uncachedUnsafeMake(
-        _ interface: Any.Type,
-        for client: Any.Type
-    ) throws -> Any {
         // find all available service types that match the requested type.
         let available = services.factories(supporting: interface)
 
@@ -83,17 +75,7 @@ extension Container {
 
         // lazy loading
         // create an instance of this service type.
-        var item: Any?
-
-        let key = "\(chosen.serviceType)"
-        if chosen.serviceIsSingleton, let cached = singletonCache[key] {
-            item = cached
-        } else {
-            item = try chosen.makeService(for: self)
-            if chosen.serviceIsSingleton {
-                singletonCache[key] = item
-            }
-        }
+        let item = try chosen.makeService(for: self)
 
         guard let ret = item else {
             throw ServiceError.incorrectType(
@@ -103,20 +85,6 @@ extension Container {
         }
 
         return ret
-    }
-
-    fileprivate var singletonCache: [String: Any] {
-        get { return extend[singletonCacheKey] as? [String: Any] ?? [:] }
-        set { extend[singletonCacheKey] = newValue }
-    }
-
-    internal var lock: NSLock {
-        if let existing = extend[lockKey] as? NSLock {
-            return existing
-        }
-        let new = NSLock()
-        extend[lockKey] = new
-        return new
     }
 }
 

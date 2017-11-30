@@ -38,7 +38,7 @@ extension Services {
         }
 
         // register router
-        services.register(Router.self, isSingleton: true) { container in
+        services.register(Router.self) { container in
             return EngineRouter()
         }
 
@@ -67,6 +67,11 @@ extension Services {
         }
         services.register { container -> CommandConfig in
             return CommandConfig.default()
+        }
+        services.register { container -> RoutesCommand in
+            return try RoutesCommand(
+                router: container.make(for: RoutesCommand.self)
+            )
         }
 
         // worker

@@ -161,9 +161,9 @@ public final class RequestParser: CParser {
             throw HTTPError.invalidMessage()
         }
 
-        let body = Body(results.body)
+        let body = HTTPBody(results.body)
         
-        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
+        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
 
         // create the request
         let request = HTTPRequest(

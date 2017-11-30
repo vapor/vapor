@@ -126,16 +126,16 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         CParseResults.remove(from: &parser)
 
         /// get response status
-        let status = Status(code: Int(parser.status_code))
+        let status = HTTPStatus(code: Int(parser.status_code))
 
         // require a version to have been parsed
         guard let version = results.version else {
             throw HTTPError.invalidMessage()
         }
         
-        let body = Body(results.body)
+        let body = HTTPBody(results.body)
         
-        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
+        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
         
         currentSize = 0
         

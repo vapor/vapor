@@ -12,7 +12,7 @@ public final class ResponseSerializer: Serializer {
     public typealias Output = ByteBuffer
     
     /// When an upgrade request is in progress, this is set
-    public private(set) var upgradeHandler: OnUpgrade?
+    public private(set) var upgradeHandler: HTTPOnUpgrade?
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>

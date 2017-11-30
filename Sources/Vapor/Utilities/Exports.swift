@@ -3,5 +3,4 @@
 @_exported import Async
 @_exported import Core
 @_exported import HTTP
-@_exported import Routing
 @_exported import Service

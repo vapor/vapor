@@ -30,19 +30,19 @@ import TCP
 /// to add your own stored properties to requests and responses
 /// that can be accessed simply by importing the module that
 /// adds them. This is how much of Vapor's functionality is created.
-public protocol Message: Codable, CustomDebugStringConvertible {
+public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
     /// The HTTP version of this message.
-    var version: Version { get set }
+    var version: HTTPVersion { get set }
     /// The HTTP headers.
-    var headers: Headers { get set }
+    var headers: HTTPHeaders { get set }
     /// The message body.
-    var body: Body { get set }
+    var body: HTTPBody { get set }
     /// Closure to be called on upgrade
-    var onUpgrade: OnUpgrade? { get set }
+    var onUpgrade: HTTPOnUpgrade? { get set }
 }
 
 /// An action that happens when the message is upgraded.
-public struct OnUpgrade: Codable {
+public struct HTTPOnUpgrade: Codable {
     /// Accepts a TCP client
     public typealias Closure = (TCPClient) -> ()
 
@@ -67,7 +67,7 @@ public struct OnUpgrade: Codable {
 
 // MARK: Debug string
 
-extension Message {
+extension HTTPMessage {
     /// A debug description for this HTTP message.
     public var debugDescription: String {
         var desc: [String] = []

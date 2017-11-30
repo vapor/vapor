@@ -21,7 +21,7 @@ public final class ErrorMiddleware: Middleware {
             // TODO: Don't log on production?
 
             let reason: String
-            let status: Status
+            let status: HTTPStatus
 
             switch environment {
             case .production:
@@ -56,7 +56,7 @@ public final class ErrorMiddleware: Middleware {
 
             do {
                 let res = req.makeResponse()
-                res.http.body = try Body(string: "Oops: \(reason)")
+                res.http.body = try HTTPBody(string: "Oops: \(reason)")
                 res.http.status = status
                 promise.complete(res)
             } catch {

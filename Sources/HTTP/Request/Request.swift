@@ -21,7 +21,7 @@ import Foundation
 ///     let req = HTTPRequest(method: .post, body: "hello")
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
-public struct HTTPRequest: Message {
+public struct HTTPRequest: HTTPMessage {
     /// HTTP requests have a method, like GET or POST
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
@@ -34,28 +34,28 @@ public struct HTTPRequest: Message {
     public var uri: URI
 
     /// See `Message.version`
-    public var version: Version
+    public var version: HTTPVersion
 
     /// See `Message.headers`
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: Headers
+    public var headers: HTTPHeaders
 
     /// See `Message.body`
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: Body
+    public var body: HTTPBody
 
     /// See Message.onUpgrade
-    public var onUpgrade: OnUpgrade?
+    public var onUpgrade: HTTPOnUpgrade?
 
     /// Create a new HTTP request.
     public init(
         method: HTTPMethod = .get,
         uri: URI = URI(),
-        version: Version = Version(major: 1, minor: 1),
-        headers: Headers = Headers(),
-        body: Body = Body()
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBody = HTTPBody()
     ) {
         self.method = method
         self.uri = uri
@@ -72,9 +72,9 @@ extension HTTPRequest {
     public init(
         method: HTTPMethod = .get,
         uri: URI = URI(),
-        version: Version = Version(major: 1, minor: 1),
-        headers: Headers = Headers(),
-        body: BodyRepresentable
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBodyRepresentable
     ) throws {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
     }

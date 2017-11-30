@@ -7,7 +7,7 @@ import Service
 ///
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
-public protocol Model: AnyModel, EphemeralWorkerFindable {
+public protocol Model: AnyModel, EphemeralContainerFindable {
     /// The type of database this model can be queried on.
     associatedtype Database: Fluent.Database
     /// This model's database
@@ -57,7 +57,7 @@ public protocol AnyModel: class, Codable, KeyStringMappable {
 
 extension Model where ID: StringDecodable {
     /// See EphemeralWorkerFindable.find
-    public static func find(identifier: String, for worker: EphemeralWorker) throws -> Future<Self> {
+    public static func find(identifier: String, for worker: EphemeralContainer) throws -> Future<Self> {
         guard let id = ID.decode(from: identifier) else {
             throw "could not convert parameter \(identifier) to type `\(ID.self)`"
         }

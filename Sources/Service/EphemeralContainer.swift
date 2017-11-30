@@ -2,9 +2,9 @@ import Async
 
 /// Workers that are frequently created and
 /// destroyed as an application does work.
-public protocol EphemeralWorker: Worker, Container {
+public protocol EphemeralContainer: Container {
     /// Takes a self as input
-    typealias LifecycleHook = (EphemeralWorker) -> ()
+    typealias LifecycleHook = (EphemeralContainer) -> ()
 
     /// Call this closure each time a new self is initailized.
     static var onInit: LifecycleHook? { get set }
@@ -13,17 +13,17 @@ public protocol EphemeralWorker: Worker, Container {
     static var onDeinit: LifecycleHook? { get set }
 }
 
-public protocol EphemeralWorkerFindable {
-    associatedtype EphemeralWorkerFindableResult
-    static func find(identifier: String, for worker: EphemeralWorker) throws -> EphemeralWorkerFindableResult
+public protocol EphemeralContainerFindable {
+    associatedtype EphemeralContainerFindableResult
+    static func find(identifier: String, for worker: EphemeralContainer) throws -> EphemeralContainerFindableResult
 }
 
 /// Configures ephemeral workers.
 public final class EphemeralWorkerConfig {
     /// Storage
-    private var inits: [EphemeralWorker.LifecycleHook]
-    private var deinits: [EphemeralWorker.LifecycleHook]
-    private var workers: [EphemeralWorker.Type]
+    private var inits: [EphemeralContainer.LifecycleHook]
+    private var deinits: [EphemeralContainer.LifecycleHook]
+    private var workers: [EphemeralContainer.Type]
 
     /// Creates a new ephemeral worker config.
     public init() {
@@ -33,18 +33,18 @@ public final class EphemeralWorkerConfig {
     }
 
     /// Adds a new onInit lifecycle hook.
-    public func onInit(_ onInit: @escaping EphemeralWorker.LifecycleHook) {
+    public func onInit(_ onInit: @escaping EphemeralContainer.LifecycleHook) {
         inits.append(onInit)
         self.apply()
     }
 
     /// Adds a new onDeinit lifecycle hook.
-    public func onDeinit(_ onDeinit: @escaping EphemeralWorker.LifecycleHook) {
+    public func onDeinit(_ onDeinit: @escaping EphemeralContainer.LifecycleHook) {
         deinits.append(onDeinit)
         self.apply()
     }
 
-    public func add(_ worker: EphemeralWorker.Type) {
+    public func add(_ worker: EphemeralContainer.Type) {
         workers.append(worker)
         self.apply()
     }

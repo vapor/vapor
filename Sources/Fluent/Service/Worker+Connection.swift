@@ -2,7 +2,7 @@ import Async
 import Service
 
 /// Create non-pooled connections that can be closed when done.
-extension Worker where Self: Container {
+extension Container {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
@@ -38,7 +38,7 @@ extension Worker where Self: Container {
 }
 
 /// Ephemeral workers use connection pooling.
-extension EphemeralWorker {
+extension EphemeralContainer {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
@@ -124,7 +124,7 @@ extension EphemeralWorker {
 }
 
 /// Automatic connection releasing when the ephemeral worker deinits.
-extension EphemeralWorker {
+extension EphemeralContainer {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         if let current = connections[database.uid]?.connection as? Future<D.Connection> {

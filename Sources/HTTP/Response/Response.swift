@@ -21,34 +21,34 @@ import Foundation
 ///     let res = Response(status: .ok, body: "hello")
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/)
-public struct HTTPResponse: Message {
+public struct HTTPResponse: HTTPMessage {
     /// See Message.version
-    public var version: Version
+    public var version: HTTPVersion
 
     /// HTTP response status code.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
-    public var status: Status
+    public var status: HTTPStatus
 
     /// See Message.headers
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: Headers
+    public var headers: HTTPHeaders
 
     /// See Message.body
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: Body
+    public var body: HTTPBody
 
     /// See Message.onUpgrade
-    public var onUpgrade: OnUpgrade?
+    public var onUpgrade: HTTPOnUpgrade?
 
     /// Create a new HTTP response.
     public init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: Body = Body()
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBody = HTTPBody()
     ) {
         self.version = version
         self.status = status
@@ -61,10 +61,10 @@ public struct HTTPResponse: Message {
 extension HTTPResponse {
     /// Create a new HTTP response using something BodyRepresentable.
     public init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: BodyRepresentable
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBodyRepresentable
     ) throws {
         try self.init(version: version, status: status, headers: headers, body: body.makeBody())
     }

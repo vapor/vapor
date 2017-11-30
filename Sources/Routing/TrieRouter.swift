@@ -14,10 +14,9 @@ public final class TrieRouter<Output> {
     var root: TrieRouterNode<Output>
     
     /// If a route cannot be found, this is the fallback responder that will be used instead
-    public var fallback: Output? /* = BasicResponder { _ in
-        return Future(HTTPResponse(status: .notFound))
-    }*/
+    public var fallback: Output?
 
+    /// Create a new trie router
     public init() {
         self.root = TrieRouterNode<Output>(kind: .root)
     }
@@ -148,7 +147,7 @@ public final class TrieRouter<Output> {
 
 // MARK: Node Protocol
 
-struct TrieRouterNode<Output> {
+final class TrieRouterNode<Output> {
     /// Kind of node
     var kind: TrieRouterNodeKind
 

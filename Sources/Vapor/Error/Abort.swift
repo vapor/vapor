@@ -4,7 +4,7 @@ import HTTP
 /// Vapor to the end-user (even in production mode where most errors are silenced).
 public protocol AbortError: Swift.Error {
     /// The HTTP status code this error will return.
-    var status: Status { get }
+    var status: HTTPStatus { get }
 
     /// The human-readable (and hopefully understandable)
     /// reason for this error.
@@ -17,13 +17,13 @@ public protocol AbortError: Swift.Error {
 /// error type minimally.
 public struct Abort: AbortError {
     /// See AbortError.status
-    public var status: Status
+    public var status: HTTPStatus
 
     /// See AbortError.reason
     public var reason: String
 
     /// Create a new abort error.
-    public init(_ status: Status, reason: String? = nil) {
+    public init(_ status: HTTPStatus, reason: String? = nil) {
         self.status = status
         self.reason = status.message
     }

@@ -7,7 +7,7 @@ import Foundation
 /// Possible header states
 enum HeaderState {
     case none
-    case value(Headers.Index)
+    case value(HTTPHeaders.Index)
     case key(startIndex: Int, endIndex: Int)
 }
 
@@ -130,7 +130,7 @@ extension CParser {
                 results.headersData.append(contentsOf: headerSeparator)
                 
                 // Set a dummy hashvalue
-                let index = Headers.Index(
+                let index = HTTPHeaders.Index(
                     nameStartIndex: key.startIndex,
                     nameEndIndex: key.endIndex,
                     valueStartIndex: results.headersData.count,
@@ -205,7 +205,7 @@ extension CParser {
             // parse version
             let major = Int(parser.pointee.http_major)
             let minor = Int(parser.pointee.http_minor)
-            results.version = Version(major: major, minor: minor)
+            results.version = HTTPVersion(major: major, minor: minor)
 
             return 0
         }
