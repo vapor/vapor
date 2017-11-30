@@ -21,7 +21,7 @@ class MySQLTests: XCTestCase {
     let connection = try! Connection.makeConnection(
         hostname: "localhost",
         user: "root",
-        password: nil,
+        password: "",
         database: "vapor_test",
         on: DispatchQueue(label: "single")
     ).blockingAwait(timeout: .seconds(3))
