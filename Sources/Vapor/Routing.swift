@@ -45,7 +45,6 @@ public struct RouteResponder<F: FutureType>: Responder
     }
 }
 
-
 /// Converts a router into a responder.
 public struct RouterResponder: Responder {
     let router: Router

@@ -23,7 +23,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        on: DispatchQueue(label: "single")
+        on: MySQLTests.poolQueue
     ).blockingAwait(timeout: .seconds(3))
 
     static let allTests = [

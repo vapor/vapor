@@ -7,7 +7,7 @@ extension HTTP2Client {
     public func send(_ requestType: RequestEncodable) throws -> Future<Response> {
         do {
             // Serialize the request
-            var request = Request()
+            var request = Request(worker: self)
             
             let promise = Promise<Response>()
             

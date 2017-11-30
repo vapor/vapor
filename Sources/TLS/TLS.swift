@@ -10,7 +10,7 @@ import Dispatch
 import TCP
 
 /// A Client (used for connecting to servers) that uses the platform specific SSL library.
-public final class TLSClient: Async.Stream, ClosableStream {
+public final class TLSClient: Async.Stream, ClosableStream, Worker {
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
     
@@ -23,8 +23,8 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// The TCP that is used in the SSL Stream
     let client: TCPClient
     
-    /// A DispatchQueue on which this Client executes all operations
-    let queue: DispatchQueue
+    /// An EventLoop on which this Client executes all operations
+    public var eventLoop: EventLoop
     
     /// The certificate used by the client, if any
     public var clientCertificatePath: String? = nil
@@ -43,9 +43,9 @@ public final class TLSClient: Async.Stream, ClosableStream {
     public init(on worker: Worker) throws {
         let socket = try TCPSocket()
         
-        self.queue = worker.eventLoop.queue
+        self.eventLoop = worker.eventLoop
         self.client = TCPClient(socket: socket, worker: worker)
-        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
+        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: eventLoop.queue)
     }
     
     /// Attempts to connect to a server on the provided hostname and port

@@ -21,7 +21,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 
@@ -50,7 +50,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 

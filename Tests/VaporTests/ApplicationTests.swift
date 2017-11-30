@@ -27,7 +27,8 @@ class ApplicationTests: XCTestCase {
             headers: [
                 .origin: "http://localhost:8090",
                 .accessControlRequestMethod: "POST",
-            ]
+            ],
+            worker: EventLoop.default
         )
         
         let trieRouter = try app.make(TrieRouter.self)
@@ -38,14 +39,12 @@ class ApplicationTests: XCTestCase {
         
         var response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
-//        XCTAssertEqual(response?.status, 200)
-        
         try response?.body.withUnsafeBytes { pointer in
             let data = Array(ByteBuffer(start: pointer, count: response!.body.count ?? 0))
             XCTAssertNotEqual(data, Array("hello".utf8))
         }
         
-        request = Request(method: .get, uri: "/good")
+        request = Request(method: .get, uri: "/good", worker: EventLoop.default)
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertNotEqual(response?.status, 200)
@@ -54,7 +53,7 @@ class ApplicationTests: XCTestCase {
             XCTAssertNotEqual(data, Data("hello".utf8))
         }
         
-        request = Request(method: .post, uri: "/good")
+        request = Request(method: .post, uri: "/good", worker: EventLoop.default)
         response = try router.route(request: request)?.respond(to: request).blockingAwait()
         
         XCTAssertEqual(response?.status, 200)
@@ -67,8 +66,7 @@ class ApplicationTests: XCTestCase {
     func testAnyResponse() throws {
         let response = "hello"
         var result = Response()
-        let req = Request()
-        req.eventLoop = EventLoop.default
+        let req = Request(worker: EventLoop.default)
         EventLoop.default.container = try Application()
         
         AnyResponse(response).map { encodable in

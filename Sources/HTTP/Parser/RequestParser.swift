@@ -169,19 +169,18 @@ public final class RequestParser: CParser {
         let body = Body(results.body)
         
         let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
+        
+        currentSize = 0
 
         // create the request
-        let request = Request(
+        return Request(
             method: method,
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: body,
+            worker: worker
         )
-
-        currentSize = 0
-        request.eventLoop = worker.eventLoop
-        return request
     }
 }
 

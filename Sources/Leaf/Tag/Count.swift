@@ -9,7 +9,7 @@ public final class Count: Leaf.LeafTag {
 
         switch parsed.parameters[0] {
         case .dictionary(let dict):
-            promise.complete(.int(dict.values.count))
+            promise.complete(.int(dict.count))
         case .array(let arr):
             promise.complete(.int(arr.count))
         default:

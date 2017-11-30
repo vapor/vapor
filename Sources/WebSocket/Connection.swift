@@ -15,6 +15,9 @@ internal final class Connection: Async.Stream, ClosableStream {
     /// Serializes data into frames
     let serializer: FrameSerializer
     
+    /// Parses data frames
+    let parser: FrameParser
+    
     /// Defines the side of the socket
     ///
     /// Server side Sockets don't use masking
@@ -37,7 +40,7 @@ internal final class Connection: Async.Stream, ClosableStream {
         self.socket = socket
         self.serverSide = serverSide
         
-        let parser = FrameParser()
+        self.parser = FrameParser()
         serializer = FrameSerializer(masking: !serverSide)
         
         // Streams incoming data into the parser which sends it to this frame's handler

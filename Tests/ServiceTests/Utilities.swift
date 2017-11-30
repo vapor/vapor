@@ -5,13 +5,13 @@ final class TestContainer: Container {
     let config: Config
     let environment: Environment
     let services: Services
-    var extend: Extend
+    var cache: ServiceCache
 
     init(environment: Environment = .development, config: Config, services: Services) {
         self.config = config
         self.environment = environment
         self.services = services
-        self.extend = [:]
+        self.cache = ServiceCache()
     }
 }
 

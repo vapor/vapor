@@ -22,12 +22,11 @@ extension Connection {
         }
     
         promise.future.addAwaiter { result in
-            switch result {
-            case .error(let error):
+            if let error = result.error {
                 stream.onError(error)
-            case .expectation(_):
-                stream.close()
             }
+            
+            stream.close()
         }
         
         return stream
@@ -56,13 +55,11 @@ extension Connection {
         }
         
         promise.future.addAwaiter { result in
-            switch result {
-            case .error(let error):
+            if let error = result.error {
                 stream.onError(error)
-                stream.close()
-            case .expectation(_):
-                stream.close()
             }
+            
+            stream.close()
         }
         
         return stream

@@ -37,15 +37,21 @@ public final class TrieRouter: Router {
             switch path {
             case .constants(let consants):
                 for s in consants {
+                    let count = s.utf8.count
+                    
                     // find the child node matching this constant
-                    if let node = current.findConstantNode(at: Data(s.utf8)) {
-                        current = node
-                    } else {
-                        // if no child node matches this constant,
-                        // we must create a new one
-                        let new = ConstantNode(constant: s)
-                        current.constantChildren.append(new)
-                        current = new
+                    s.withCString { pointer in
+                        pointer.withMemoryRebound(to: UInt8.self, capacity: count) { pointer in
+                            if let node = current.findConstantNode(at: ByteBuffer(start: pointer, count: count)) {
+                                current = node
+                            } else {
+                                // if no child node matches this constant,
+                                // we must create a new one
+                                let new = ConstantNode(constant: s)
+                                current.constantChildren.append(new)
+                                current = new
+                            }
+                        }
                     }
                 }
             case .parameter(let p):
@@ -68,10 +74,7 @@ public final class TrieRouter: Router {
     }
     
     /// Splits the URI into a substring for each component
-    fileprivate func split(_ uri: Data) -> [Data] {
-        var path = [Data]()
-        path.reserveCapacity(8)
-        
+    fileprivate func forEachComponent(in uri: ByteBuffer, do closure: (ByteBuffer) -> (Bool)) -> Bool {
         // Skip past the first `/`
         var baseIndex = uri.index(after: uri.startIndex)
         
@@ -81,7 +84,9 @@ public final class TrieRouter: Router {
             // Split up the path
             while currentIndex < uri.endIndex {
                 if uri[currentIndex] == .forwardSlash {
-                    path.append(uri[baseIndex..<currentIndex])
+                    guard closure(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex)) else {
+                        return false
+                    }
                     
                     baseIndex = uri.index(after: currentIndex)
                     currentIndex = baseIndex
@@ -92,11 +97,11 @@ public final class TrieRouter: Router {
             
             // Add remaining path component
             if baseIndex != uri.endIndex {
-                path.append(uri[baseIndex...])
+                return closure(ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex))
             }
         }
         
-        return path
+        return false
     }
     
     /// Walks the provided node based on the provided component.
@@ -108,7 +113,7 @@ public final class TrieRouter: Router {
     /// TODO: Binary data
     fileprivate func walk(
         node current: inout TrieRouterNode,
-        component: Data,
+        component: ByteBuffer,
         request: Request
     ) -> Bool {
         if let node = current.findConstantNode(at: component) {
@@ -118,7 +123,7 @@ public final class TrieRouter: Router {
         } else if let node = current.parameterChild {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = LazyParameter(slug: node.parameter, value: String(data: component, encoding: .utf8) ?? "")
+            let lazy = LazyParameter(slug: node.parameter, value: String(bytes: component, encoding: .utf8) ?? "")
             request.parameters.parameters.append(lazy)
             current = node
         } else {
@@ -132,25 +137,26 @@ public final class TrieRouter: Router {
 
     /// See Router.route()
     public func route(request: Request) -> Responder? {
-        let path = split(request.uri.pathData)
-        
-        // always start at the root node
-        var current: TrieRouterNode = root
-        
-        guard walk(node: &current, component: request.method.data, request: request) else {
-            return fallbackResponder
-        }
-
-        // traverse the constant path supplied
-        for component in path {
-            guard walk(node: &current, component: component, request: request) else {
+        return request.uri.pathBytes.withUnsafeBufferPointer { (buffer: ByteBuffer) in
+            // always start at the root node
+            var current: TrieRouterNode = root
+            
+            var found = request.method.bytes.withUnsafeBufferPointer {  (buffer: ByteBuffer) in
+                walk(node: &current, component: buffer, request: request)
+            }
+            
+            guard found else {
                 return fallbackResponder
             }
+            
+            found = forEachComponent(in: buffer) { component in
+                return walk(node: &current, component: component, request: request)
+            }
+            
+            // return the resolved responder if there hasn't
+            // been an early exit.
+            return current.responder ?? fallbackResponder
         }
-        
-        // return the resolved responder if there hasn't
-        // been an early exit.
-        return current.responder ?? fallbackResponder
     }
 }
 
@@ -172,13 +178,17 @@ protocol TrieRouterNode {
 extension TrieRouterNode {
     /// Finds the node with the supplied path in the
     /// node's constant children.
-    func findConstantNode(at path: Data) -> ConstantNode? {
+    func findConstantNode(at path: ByteBuffer) -> ConstantNode? {
+        guard let pointer = path.baseAddress else {
+            return nil
+        }
+        
         for child in constantChildren {
             guard path.count == child.constant.count else {
                 continue
             }
             
-            if path == child.constant {
+            if memcmp(pointer, child.constant, path.count) == 0 {
                 return child
             }
         }
@@ -243,7 +253,7 @@ final class ConstantNode: TrieRouterNode {
     var parameterChild: ParameterNode?
 
     /// This nodes path component
-    let constant: Data
+    let constant: [UInt8]
 
     /// This node's resopnder
     var responder: Responder?
@@ -252,7 +262,7 @@ final class ConstantNode: TrieRouterNode {
     ///
     /// TODO: Binary data
     init(constant: String) {
-        self.constant = Data(constant.utf8)
+        self.constant = [UInt8](constant.utf8)
         self.constantChildren = []
     }
 }

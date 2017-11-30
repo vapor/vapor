@@ -1,4 +1,5 @@
 import Foundation
+import Bits
 
 /// The HTTP response status
 ///
@@ -20,25 +21,27 @@ public struct Status: Codable, ExpressibleByIntegerLiteral, Equatable {
 
     public var message: String {
         get {
-            return String(data: messageData, encoding: .utf8) ?? ""
+            return String(bytes: messageBytes, encoding: .utf8) ?? ""
         }
         set {
-            self.messageData = Data(newValue.utf8)
+            self.messageBytes = [UInt8](newValue.utf8)
         }
     }
     
-    public private(set) var messageData: Data
-
+    internal private(set) var messageBytes: [UInt8]
+    
     /// Creates a new (custom) status code
     public init(code: Int, message: String = "") {
         self.code = code 
-        self.messageData = Data(message.utf8)
+        self.messageBytes = [UInt8](message.utf8)
     }
     
     /// Creates a new statis code using an efficient StaticString
     init(code: Int, staticMessage: StaticString) {
         self.code = code
-        self.messageData = Data(bytes: staticMessage.utf8Start, count: staticMessage.utf8CodeUnitCount)
+        self.messageBytes = Array(
+            ByteBuffer(start: staticMessage.utf8Start, count: staticMessage.utf8CodeUnitCount)
+        )
     }
 
     /// Creates a new status from an integer literal

@@ -1,8 +1,30 @@
 import Async
 import Foundation
 
-private let serviceCacheKey = "service:service-cache"
-private let singletonCacheKey = "service:singleton-cache"
+public final class ServiceCache {
+    public init() {}
+    
+    fileprivate subscript(serviceFor interface: Any.Type, client: Any.Type) -> ResolvedService? {
+        get {
+            return self.cache[(ObjectIdentifier(interface).hashValue &+ 31) &+ ObjectIdentifier(client).hashValue]
+        }
+        set {
+            self.cache[(ObjectIdentifier(interface).hashValue &+ 31) &+ ObjectIdentifier(client).hashValue] = newValue
+        }
+    }
+    
+    fileprivate subscript(singletonFor type: Any.Type) -> Any? {
+        get {
+            return self.singletons[ObjectIdentifier(type)]
+        }
+        set {
+            self.singletons[ObjectIdentifier(type)] = newValue
+        }
+    }
+    
+    fileprivate var cache = [Int: ResolvedService]()
+    fileprivate var singletons = [ObjectIdentifier: Any]()
+}
 
 extension Container {
     /// Returns or creates a service for the given type.
@@ -27,10 +49,8 @@ extension Container {
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
-        let key = "\(interface):\(client)"
-
         // check if we've previously resolved this service
-        if let service = serviceCache[key] {
+        if let service = cache[serviceFor: interface, client] {
             return try service.resolve()
         }
 
@@ -42,7 +62,8 @@ extension Container {
         } catch {
             result = .error(error)
         }
-        serviceCache[key] = result
+        
+        self.cache[serviceFor: interface, client] = result
 
         // return the newly cached service
         return try result.resolve()
@@ -88,13 +109,12 @@ extension Container {
         // create an instance of this service type.
         var item: Any?
 
-        let key = "\(chosen.serviceType)"
-        if chosen.serviceIsSingleton, let cached = singletonCache[key] {
+        if chosen.serviceIsSingleton, let cached = self.cache[singletonFor: chosen.serviceType] {
             item = cached
         } else {
             item = try chosen.makeService(for: self)
             if chosen.serviceIsSingleton {
-                singletonCache[key] = item
+                self.cache[singletonFor: chosen.serviceType] = item
             }
         }
 
@@ -106,16 +126,6 @@ extension Container {
         }
 
         return ret
-    }
-
-    fileprivate var serviceCache: [String: ResolvedService] {
-        get { return extend[serviceCacheKey] as? [String: ResolvedService] ?? [:] }
-        set { extend[serviceCacheKey] = newValue }
-    }
-
-    fileprivate var singletonCache: [String: Any] {
-        get { return extend[singletonCacheKey] as? [String: Any] ?? [:] }
-        set { extend[singletonCacheKey] = newValue }
     }
 }
 
@@ -129,12 +139,12 @@ extension Services {
     }
 }
 
-extension Worker where Self: HasContainer {
+extension HasContainer {
     /// Returns or creates a service for the given type.
     ///
     /// If a protocol is supplied, a service conforming
     /// to the protocol will be returned.
-    public func workerMake<Interface, Client>(
+    public func make<Interface, Client>(
         _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
@@ -152,15 +162,14 @@ extension Worker where Self: HasContainer {
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
-        let key = "\(interface):\(client)"
-        // check if we've previously resolved this service
-        if let service = eventLoop.serviceCache[key] {
-            return try service.resolve()
-        }
-
         /// require the worker's container
         let container = try requireContainer()
-
+        
+        // check if we've previously resolved this service
+        if let service = container.cache[serviceFor: interface, client] {
+            return try service.resolve()
+        }
+        
         /// locking is required here so that we don't
         /// run into threading issues with the shared container.
         /// however, the lock will only be hit on the first request,
@@ -169,7 +178,7 @@ extension Worker where Self: HasContainer {
         defer {
             _containerLock.unlock()
         }
-
+        
         // resolve the service and cache it
         let result: ResolvedService
         do {
@@ -179,7 +188,7 @@ extension Worker where Self: HasContainer {
             result = .error(error)
         }
 
-        eventLoop.serviceCache[key] = result
+        container.cache[serviceFor: interface, client] = result
 
         // return the newly cached service
         return try result.resolve()
@@ -187,13 +196,6 @@ extension Worker where Self: HasContainer {
 }
 
 let _containerLock = NSLock()
-
-extension EventLoop {
-    fileprivate var serviceCache: [String: ResolvedService] {
-        get { return extend[serviceCacheKey] as? [String: ResolvedService] ?? [:] }
-        set { extend[serviceCacheKey] = newValue }
-    }
-}
 
 fileprivate enum ResolvedService {
     case service(Any)
