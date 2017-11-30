@@ -25,14 +25,20 @@ internal protocol Serializer: Async.Stream {
 }
 
 extension Serializer {
+    /// Flushes all remaining data on to the output stream
     func flush() {
         self.outputStream.onInput(ByteBuffer(start: writeBuffer, count: writeBufferUsage))
         self.writeBufferUsage = 0
     }
     
+    /// Manages the internal buffer and uses it for building a message for more efficient stream writes
     func write(_ buffer: ByteBuffer) {
+        guard let pointer = buffer.baseAddress else {
+            return
+        }
+        
         if buffer.count + writeBufferUsage <= writeBufferSize {
-            memcpy(writeBuffer.advanced(by: writeBufferUsage), buffer.baseAddress, buffer.count)
+            memcpy(writeBuffer.advanced(by: writeBufferUsage), pointer, buffer.count)
             writeBufferUsage += buffer.count
         } else {
             var taken = writeBufferSize - writeBufferUsage
@@ -41,7 +47,7 @@ extension Serializer {
                 taken = buffer.count
             }
             
-            memcpy(writeBuffer.advanced(by: writeBufferUsage), buffer.baseAddress, taken)
+            memcpy(writeBuffer.advanced(by: writeBufferUsage), pointer, taken)
             
             while taken < buffer.count {
                 flush()
