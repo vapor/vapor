@@ -66,6 +66,7 @@ final class PreloadedFiles: FileReader, FileCache {
 import Service
 
 final class BasicContainer: Container {
+    var eventLoop: EventLoop = .default
     var config: Config
     var environment: Environment
     var services: Services

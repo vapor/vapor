@@ -20,8 +20,7 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
 
-        let worker = EventLoop(queue: .global())
-        let parser = RequestParser(on: worker, maxSize: 100_000)
+        let parser = RequestParser(maxSize: 100_000)
         guard let req = try parser.parse(from: data) else {
             XCTFail("No request parsed")
             return
