@@ -82,34 +82,19 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
                     }
                 }
                 
-                switch query.action {
-                case .read:
-                    // Streams all results into the parameter-provided stream
-                    let future = bound.forEach(D.self, stream.onInput)
+                // Streams all results into the parameter-provided stream
+                let future = bound.forEach(D.self, stream.onInput)
 
-                    future.do {
-                        // On success, close the stream
-                        stream.close()
-                    }.catch { error in
-                        // Close the stream with an error
-                        stream.onError(error)
-                        stream.close()
-                    }
-
-                    return future
-                default:
-                    let future = try bound.execute()
-                    
-                    future.do {
-                        // On success, close the stream
-                        stream.close()
-                    }.catch { error in
-                        // Close the stream with an error
-                        stream.onError(error)
-                        stream.close()
-                    }
-                    return future
+                future.do {
+                    // On success, close the stream
+                    stream.close()
+                }.catch { error in
+                    // Close the stream with an error
+                    stream.onError(error)
+                    stream.close()
                 }
+
+                return future
             } catch {
                 // Close the stream with an error
                 stream.onError(error)

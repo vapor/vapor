@@ -8,7 +8,7 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
     fileprivate func _benchmark(on conn: Database.Connection) throws -> Future<Void> {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
-        let ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
+        var ziz: Pet<Database>!
         let foo = Pet<Database>(name: "Foo", ownerID: UUID())
         let plasticBag = Toy<Database>(name: "Plastic Bag")
         let oldBologna = Toy<Database>(name: "Old Bologna")
@@ -17,7 +17,8 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
         
         conn.enableReferences().then {
             return tanner.save(on: conn)
-        }.then {
+        }.then { _ -> Future<Void> in
+            ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
             return ziz.save(on: conn)
         }.then {
             return foo.save(on: conn)
@@ -97,20 +98,18 @@ extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporti
     /// The schema will be prepared first.
     public func benchmarkRelations_withSchema() throws -> Future<Void> {
         return pool.requestConnection().then { conn in
-            return UserMigration<Database>.prepare(on: conn).then {
-                return conn.enableReferences().then {
-                    return UserMigration<Database>.prepare(on: conn)
-                }.then {
-                    return PetMigration<Database>.prepare(on: conn)
-                }.then {
-                    return ToyMigration<Database>.prepare(on: conn)
-                }.then {
-                    return PetToyMigration<Database>.prepare(on: conn)
-                }.then {
-                    return try self._benchmark(on: conn)
-                }.map {
-                    self.pool.releaseConnection(conn)
-                }
+            return conn.enableReferences().then {
+                return UserMigration<Database>.prepare(on: conn)
+            }.then {
+                return PetMigration<Database>.prepare(on: conn)
+            }.then {
+                return ToyMigration<Database>.prepare(on: conn)
+            }.then {
+                return PetToyMigration<Database>.prepare(on: conn)
+            }.then {
+                return try self._benchmark(on: conn)
+            }.map {
+                self.pool.releaseConnection(conn)
             }
         }
     }

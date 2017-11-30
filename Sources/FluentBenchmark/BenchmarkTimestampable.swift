@@ -21,8 +21,10 @@ extension Benchmarker {
                 self.fail("timestamps should be current")
             }
             
+            let updated = tanner.updatedAt!
+            
             return tanner.save(on: conn).map {
-                return tanner.updatedAt!
+                return updated
             }
         }.then { originalUpdatedAt -> Future<User<Database>?> in
             if tanner.updatedAt! <= originalUpdatedAt {

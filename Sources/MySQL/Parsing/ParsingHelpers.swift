@@ -51,10 +51,7 @@ final class Parser {
         
         defer { position = position &+ 2 }
         
-        let byte0 = UInt16(self.payload[position])
-        let byte1 = UInt16(self.payload[position &+ 1]) << 8
-        
-        return byte0 | byte1
+        return self.payload.baseAddress!.advanced(by: position).withMemoryRebound(to: UInt16.self, capacity: 1) { $0.pointee }
     }
     
     /// Reads 4 bytes into an UInt32
@@ -63,12 +60,7 @@ final class Parser {
         
         defer { position = position &+ 4 }
         
-        let byte0 = UInt32(self.payload[position])
-        let byte1 = UInt32(self.payload[position &+ 1]) << 8
-        let byte2 = UInt32(self.payload[position &+ 2]) << 16
-        let byte3 = UInt32(self.payload[position &+ 3]) << 24
-        
-        return byte0 | byte1 | byte2 | byte3
+        return self.payload.baseAddress!.advanced(by: position).withMemoryRebound(to: UInt32.self, capacity: 1) { $0.pointee }
     }
     
     /// Reads 8 bytes into an UInt64
@@ -77,16 +69,7 @@ final class Parser {
         
         defer { position = position &+ 8 }
         
-        let byte0 = UInt64(self.payload[position])
-        let byte1 = UInt64(self.payload[position &+ 1]) << 8
-        let byte2 = UInt64(self.payload[position &+ 2]) << 16
-        let byte3 = UInt64(self.payload[position &+ 3]) << 24
-        let byte4 = UInt64(self.payload[position &+ 4]) << 32
-        let byte5 = UInt64(self.payload[position &+ 5]) << 40
-        let byte6 = UInt64(self.payload[position &+ 6]) << 48
-        let byte7 = UInt64(self.payload[position &+ 7]) << 56
-        
-        return byte0 | byte1 | byte2 | byte3 | byte4 | byte5 | byte6 | byte7
+        return self.payload.baseAddress!.advanced(by: position).withMemoryRebound(to: UInt64.self, capacity: 1) { $0.pointee }
     }
     
     /// Parses the length encoded integer

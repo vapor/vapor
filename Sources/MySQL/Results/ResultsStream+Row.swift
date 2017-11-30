@@ -115,7 +115,7 @@ final class RowStream: Async.Stream, ClosableStream {
     /// Parses a row from this packet, checks
     func preParseRows(from packet: Packet) throws {
         // End of file packet
-        if packet.payload[0] == 0xfe {
+        if packet.payload.first == 0xfe {
             let parser = Parser(packet: packet)
             parser.position = 1
             let flags = try parser.parseUInt16()

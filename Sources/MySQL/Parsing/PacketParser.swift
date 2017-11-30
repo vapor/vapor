@@ -15,6 +15,8 @@ internal final class PacketParser: Async.Stream {
 
     /// Internal buffer
     private var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
+    
+    private var headerBytes = [UInt8]()
 
     /// Create a new packet parser
     init() {
@@ -59,7 +61,6 @@ internal final class PacketParser: Async.Stream {
         // Capture the pointer's contentlength
         var length = input.count
         
-        var bufferSize: Int
         var containing: Int
         var sequenceId: UInt8
         var buffer: MutableByteBuffer
@@ -72,38 +73,83 @@ internal final class PacketParser: Async.Stream {
                 // Continue parsing from the start
                 
                 buffer = _buffer
-                bufferSize = buffer.count
                 containing = _containing
                 sequenceId = _sequenceId
             } else {
                 // at least 4 packet bytes for new packets
-                // TODO: internal 3-byte buffer like MongoKitten's for this odd scenario
-                guard length > 3 else {
+                guard length &+ headerBytes.count > 3 else {
                     if length == 0 {
                         return
                     }
                     
-                    throw MySQLError(.invalidPacket)
+                    if length == 1 {
+                        headerBytes = [
+                            pointer[0]
+                        ]
+                    } else if length == 2 {
+                        headerBytes = [
+                            pointer[0], pointer[1]
+                        ]
+                    } else {
+                        headerBytes = [
+                            pointer[0], pointer[1], pointer[1]
+                        ]
+                    }
+                    
+                    return
                 }
                 
+                let byte0: UInt32
+                let byte1: UInt32
+                let byte2: UInt32
+                let offset: Int
+                
                 // take the first 3 bytes
-                let byte0 = (numericCast(pointer[0]) as UInt32).littleEndian
-                let byte1 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
-                let byte2 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
+                // Take the cached previous packet edge-case bytes into consideration
+                switch headerBytes.count {
+                case 1:
+                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
+                    byte1 = (numericCast(pointer[0]) as UInt32).littleEndian << 8
+                    byte2 = (numericCast(pointer[1]) as UInt32).littleEndian << 16
+                    
+                    offset = 2
+                    headerBytes = []
+                case 2:
+                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
+                    byte1 = (numericCast(headerBytes[1]) as UInt32).littleEndian << 8
+                    byte2 = (numericCast(pointer[0]) as UInt32).littleEndian << 16
+                    
+                    offset = 1
+                    headerBytes = []
+                case 3:
+                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
+                    byte1 = (numericCast(headerBytes[1]) as UInt32).littleEndian << 8
+                    byte2 = (numericCast(headerBytes[2]) as UInt32).littleEndian << 16
+                    
+                    offset = 0
+                    headerBytes = []
+                default:
+                    byte0 = (numericCast(pointer[0]) as UInt32).littleEndian
+                    byte1 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
+                    byte2 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
+                    
+                    offset = 3
+                }
                 
                 // Parse buffer size
-                bufferSize = Int(byte0 | byte1 | byte2)
-                sequenceId = input[3]
+                let bufferSize = Int(byte0 | byte1 | byte2)
+                
+                sequenceId = input[offset]
                 
                 // Build a buffer size
                 let bufferPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
                 buffer = MutableByteBuffer(start: bufferPointer, count: bufferSize)
                 
                 // Advance the pointer by the header size
-                pointer = pointer.advanced(by: 4)
+                pointer = pointer.advanced(by: 1 &+ offset)
                 
                 // Decrease the pointer size by the header size
-                length = length &- 4
+                length = length &- (1 &+ offset)
             }
             // Parse the packet contents
         } while try parseInput(
@@ -156,7 +202,7 @@ internal final class PacketParser: Async.Stream {
             memcpy(destination, pointer, length)
 
             // If the packet is not complete yet
-            guard containing &+ length == buffer.count else {
+            guard containing &+ length == needing else {
                 // update the partial packet
                 self.buffer = (buffer, containing &+ length, sequenceId)
                 return false

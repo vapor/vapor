@@ -98,8 +98,10 @@ public final class BoundStatement {
                     promise.complete()
                 } else if byte == 0xfe {
                     promise.complete()
-                } else {
+                } else if byte == 0xff {
                     promise.fail(MySQLError(packet: packet))
+                } else {
+                    print("NO")
                 }
             } catch {
                 promise.fail(error)
@@ -108,7 +110,6 @@ public final class BoundStatement {
             promise.fail(err)
         }
 
-        
         // Send the query
         try send()
         

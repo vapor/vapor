@@ -10,17 +10,24 @@ extension Benchmarker {
         var fetched64: [User<Database>] = []
         var fetched2047: [User<Database>] = []
         
-        return (1...2048).map { i -> Future<Void> in
+        var future = Future<Void>(())
+        
+        for i in 1...2048 {
             let user = User<Database>(name: "User \(i)", age: i)
-            return user.save(on: conn)
-        }.flatten().then {
+            
+            future = future.then {
+                return user.save(on: conn)
+            }
+        }
+        
+        return future.then { () -> Future<Void> in
             return conn.query(User<Database>.self).chunk(max: 64) { chunk in
                 if chunk.count != 64 {
                     self.fail("bad chunk count")
                 }
                 fetched64 += chunk
             }
-            }.then { () -> Future<Void> in
+        }.then { () -> Future<Void> in
             if fetched64.count != 2048 {
                 self.fail("did not fetch all - only \(fetched64.count) out of 2048")
             }
@@ -31,7 +38,7 @@ extension Benchmarker {
                 }
                 fetched2047 += chunk
             }
-        }.map {
+        }.map { _ in
             if fetched2047.count != 2048 {
                 self.fail("did not fetch all - only \(fetched2047.count) out of 2048")
             }
@@ -57,15 +64,15 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
             
             UserMigration<Database>.prepare(on: conn).do {
                 promise.complete(conn)
-                }.catch { _ in
-                    promise.complete(conn)
+            }.catch { _ in
+                promise.complete(conn)
             }
             
             return promise.future
-            }.then { conn in
-                return try self._benchmark(on: conn).map {
-                    self.pool.releaseConnection(conn)
-                }
+        }.then { conn in
+            return try self._benchmark(on: conn).map {
+                self.pool.releaseConnection(conn)
+            }
         }
     }
 }
