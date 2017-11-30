@@ -194,6 +194,7 @@ let package = Package(
             "Console",
             "Core",
             "Debugging",
+            "FormURLEncoded",
             "HTTP",
             "Leaf",
             "Routing",

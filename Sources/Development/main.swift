@@ -176,13 +176,13 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("pets", Pet.parameter, "toys") { req in
-    return try req.next(Pet.self).then { pet in
+    return try req.parameters.next(Pet.self).then { pet in
         return try pet.toys.query(on: req).all()
     }
 }
 
 router.get("string", String.parameter) { req -> String in
-    return try req.next(String.self)
+    return try req.parameters.next(String.self)
 }
 
 router.get("error") { req -> String in
@@ -241,11 +241,26 @@ router.get("asyncusers") { req -> Future<User> in
     }
 }
 
-router.get("fuzzy") { req -> String in
-    let data = req.content["foo", 1, "bar", "baz"]
-    let flag = req.query["flag"]
-    return data ?? flag ?? "none"
+router.get("query") { req -> String in
+    struct Hello: Decodable {
+        var name: String?
+        var flag: Bool?
+    }
+    let hello = try req.query.decode(Hello.self)
+    print(hello.flag ?? false)
+    return hello.name ?? "none"
 }
+
+router.get("redirect") { req in
+    return req.redirect(to: "http://google.com")
+}
+
+
+//router.get("fuzzy") { req -> String in
+//    let data = req.content["foo", 1, "bar", "baz"]
+//    let flag = req.query["flag"]
+//    return data ?? flag ?? "none"
+//}
 
 services.register(Router.self, router)
 

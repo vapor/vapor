@@ -106,7 +106,7 @@ public final class TrieRouter<Output> {
     fileprivate func walk(
         node current: inout TrieRouterNode<Output>,
         component: Data,
-        parameters: ParameterBag
+        parameters: ParameterContainer
     ) -> Bool {
         if let node = current.findNode(withConstant: component) {
             // if we find a constant route path that matches this component,
@@ -115,8 +115,8 @@ public final class TrieRouter<Output> {
         } else if let (node, parameter) = current.findNode(withParameter: component) {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = ResolvedParameter(slug: parameter, value: component)
-            parameters.parameters.append(lazy)
+            let lazy = ParameterValue(slug: parameter, value: component)
+            parameters.values.append(lazy)
             current = node
         } else {
             // no constant routes were found, and this node doesn't have
@@ -128,7 +128,7 @@ public final class TrieRouter<Output> {
     }
 
     /// See Router.route()
-    public func route(path: [Data], parameters: ParameterBag) -> Output? {
+    public func route(path: [Data], parameters: ParameterContainer) -> Output? {
         // always start at the root node
         var current: TrieRouterNode = root
 
@@ -142,76 +142,5 @@ public final class TrieRouter<Output> {
         // return the resolved responder if there hasn't
         // been an early exit.
         return current.output ?? fallback
-    }
-}
-
-// MARK: Node Protocol
-
-final class TrieRouterNode<Output> {
-    /// Kind of node
-    var kind: TrieRouterNodeKind
-
-    /// All constant child nodes
-    var children: [TrieRouterNode<Output>]
-
-    /// This node's output
-    var output: Output?
-
-    init(
-        kind: TrieRouterNodeKind,
-        children: [TrieRouterNode<Output>] = [],
-        output: Output? = nil
-    ) {
-        self.kind = kind
-        self.children = children
-        self.output = output
-    }
-}
-
-enum TrieRouterNodeKind {
-    case root
-    case parameter(Data)
-    case constant(Data)
-}
-
-extension TrieRouterNode {
-    /// Finds the node with the supplied path in the
-    /// node's constant children.
-    func findNode(withConstant path: Data) -> TrieRouterNode<Output>? {
-        for child in children {
-            guard case .constant(let constant) = child.kind else {
-                continue
-            }
-
-            guard path.count == constant.count else {
-                continue
-            }
-            
-            if path == constant {
-                return child
-            }
-        }
-        
-        return nil
-    }
-
-    /// Finds the node with the supplied path in the
-    /// node's constant children.
-    func findNode(withParameter path: Data) -> (TrieRouterNode<Output>, Data)? {
-        for child in children {
-            guard case .parameter(let parameter) = child.kind else {
-                continue
-            }
-
-            guard path.count == parameter.count else {
-                continue
-            }
-
-            if path == parameter {
-                return (child, parameter)
-            }
-        }
-
-        return nil
     }
 }

@@ -7,17 +7,24 @@ public struct ContentContainer {
 extension ContentContainer {
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
-    public func encode<C: Content>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws {
+    public func encode<C: Content>(_ content: C) throws {
+        let coders = try message!.make(ContentConfig.self, for: ContentContainer.self)
+        let encoder = try coders.requireEncoder(for: C.defaultMediaType)
+        message!._http.body = try HTTPBody(encoder.encode(content))
+        message!._http.mediaType = C.defaultMediaType
+    }
+
+    /// Serializes the supplied content to this message.
+    /// Uses the Content's default media type if none is supplied.
+    public func encode<E: Encodable>(_ encodable: E, as mediaType: MediaType) throws {
         let coders = try message!.make(ContentConfig.self, for: ContentContainer.self)
         let encoder = try coders.requireEncoder(for: mediaType)
-        message!._http.body = try HTTPBody(encoder.encode(content))
+        message!._http.body = try HTTPBody(encoder.encode(encodable))
         message!._http.mediaType = mediaType
     }
-}
-
-extension ContentContainer {
+    
     /// Parses the supplied content from the mesage.
-    public func decode<C: Content>(_ content: C.Type) throws -> C {
+    public func decode<D: Decodable>(_ content: D.Type) throws -> D {
         let coders = try message!.make(ContentConfig.self, for: ContentContainer.self)
         guard let mediaType = message!._http.mediaType else {
             throw "no media type"
@@ -26,43 +33,16 @@ extension ContentContainer {
             throw "no body data"
         }
         let encoder = try coders.requireDecoder(for: mediaType)
-        return try encoder.decode(C.self, from: data)
+        return try encoder.decode(D.self, from: data)
     }
 }
 
 extension QueryContainer {
     /// Parses the supplied content from the mesage.
-    public func decode<C: Content>(_ content: C.Type) throws -> C {
+    public func decode<D: Decodable>(_ decodable: D.Type) throws -> D {
         let coders = try container.make(ContentConfig.self, for: QueryContainer.self)
         let encoder = try coders.requireDecoder(for: .urlEncodedForm)
-        return try encoder.decode(C.self, from: Data(query.utf8))
-    }
-}
-
-/// MARK: Key fetch
-
-public protocol KeyPathRepresentable {}
-
-extension String: KeyPathRepresentable {}
-extension Int: KeyPathRepresentable {}
-
-extension ContentContainer {
-    public func get<D: Decodable>(_ decodable: D.Type, at path: KeyPathRepresentable...) throws -> D? {
-        fatalError("FIXME: @tanner")
-    }
-
-    public subscript(_  path: KeyPathRepresentable...) -> String? {
-        fatalError("FIXME: @tanner")
-    }
-}
-
-extension QueryContainer {
-    public func get<D: Decodable>(_ decodable: D.Type, at path: KeyPathRepresentable...) throws -> D? {
-        fatalError("FIXME: @tanner")
-    }
-
-    public subscript(_  path: KeyPathRepresentable...) -> String? {
-        fatalError("FIXME: @tanner")
+        return try encoder.decode(D.self, from: Data(query.utf8))
     }
 }
 

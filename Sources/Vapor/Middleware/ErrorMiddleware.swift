@@ -54,14 +54,10 @@ public final class ErrorMiddleware: Middleware {
                 debugPrint(error)
             }
 
-            do {
-                let res = req.makeResponse()
-                res.http.body = try HTTPBody(string: "Oops: \(reason)")
-                res.http.status = status
-                promise.complete(res)
-            } catch {
-                promise.fail(error)
-            }
+            let res = req.makeResponse()
+            res.http.body = HTTPBody(string: "Oops: \(reason)")
+            res.http.status = status
+            promise.complete(res)
         }
 
         do {

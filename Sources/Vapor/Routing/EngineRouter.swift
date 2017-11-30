@@ -36,7 +36,7 @@ public final class EngineRouter: Router {
     public func route(request: Request) -> Responder? {
         return router.route(
             path: [request.http.method.data] + request.http.uri.pathData.split(separator: .forwardSlash),
-            parameters: request
+            parameters: request.parameters
         )
     }
 }

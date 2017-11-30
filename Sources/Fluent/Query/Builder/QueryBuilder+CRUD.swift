@@ -39,7 +39,7 @@ extension QueryBuilder {
 
             return try model.willCreate(on: conn)
                 .then {
-                    self.run { model in
+                    return self.run { model in
                         try model.parseID(from: conn)
                     }
                 }

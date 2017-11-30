@@ -6,7 +6,7 @@ public final class FormURLEncoder {
     public init() {}
 
     /// Encodes the supplied encodable structure to form-urlencoded data.
-    public func encode(_ encodable: Encodable) throws -> Data {
+    public func encode<E: Encodable>(_ encodable: E) throws -> Data {
         let partialData = PartialFormURLEncodedData(
             data: .dictionary([:])
         )

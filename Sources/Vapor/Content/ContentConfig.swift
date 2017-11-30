@@ -1,4 +1,5 @@
 import Foundation
+import FormURLEncoded
 
 /// Configures which encoders/decoders to use for a given media type.
 public struct ContentConfig {
@@ -56,6 +57,14 @@ extension ContentConfig {
         // html
         config.use(encoder: HTMLEncoder(), for: .html)
 
+
+        // form-urlencoded
+        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
+        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+
         return config
     }
 }
+
+extension FormURLEncoder: DataEncoder {}
+extension FormURLDecoder: DataDecoder {}

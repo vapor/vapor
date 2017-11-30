@@ -75,5 +75,18 @@ public struct View: Codable {
 
 
 public protocol ViewRenderer {
+    /// Renders a view using the supplied encodable context and worker.
     func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
+}
+
+extension ViewRenderer {
+    /// Renders a view without a context.
+    func make(_ path: String, on worker: Worker) throws -> Future<View> {
+        return try make(path, context: nil as String?, on: worker)
+    }
+
+    /// Renders a view using the supplied dictionary.
+    func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View> {
+        return try make(path, context: context as Encodable, on: worker)
+    }
 }

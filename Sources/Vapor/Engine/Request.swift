@@ -3,7 +3,7 @@ import HTTP
 import Routing
 import Service
 
-public final class Request: EphemeralContainer, ParameterBag {
+public final class Request: EphemeralContainer {
     /// See EphemeralWorker.onInit
     public static var onInit: LifecycleHook?
 
@@ -24,9 +24,6 @@ public final class Request: EphemeralContainer, ParameterBag {
 
     /// Container for parsing/serializing URI query strings
     public var query: QueryContainer
-
-    /// See ParameterBag.parameters
-    public var parameters: [ResolvedParameter]
     
     /// See Container.config
     public var config: Config
@@ -42,6 +39,9 @@ public final class Request: EphemeralContainer, ParameterBag {
         return eventLoop.serviceCache
     }
 
+    /// Holds parameters for routing
+    public var parameters: ParameterContainer!
+
     /// Container for parsing/serializing content
     public var content: ContentContainer!
 
@@ -56,8 +56,8 @@ public final class Request: EphemeralContainer, ParameterBag {
         self.environment = container.environment
         self.services = container.services
         self.query = QueryContainer(query: http.uri.query ?? "", container: container)
-        self.parameters = []
         self.extend = Extend()
+        self.parameters = ParameterContainer(container: self)
         self.content = ContentContainer(message: self)
         Request.onInit?(self)
     }
