@@ -95,6 +95,7 @@ final class RowStream: Async.Stream, ClosableStream {
             // No columns means an empty stream
             if columnCount == 0 {
                 self.close()
+                return
             }
 
             self.columnCount = columnCount

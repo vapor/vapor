@@ -44,7 +44,9 @@ extension MySQLConnection {
     {
         return forEachRow(in: query) { row in
             let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
-            try handler(D(from: decoder))
+            let d = try D(from: decoder)
+            
+            try handler(d)
         }
     }
 }
