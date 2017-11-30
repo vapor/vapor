@@ -1,3 +1,4 @@
+import Async
 import XCTest
 import HTTP
 @testable import HTTP2
@@ -28,10 +29,17 @@ public class HPACKTests: XCTestCase {
     ]
     
     func testPerformanceB() {
-        let request = Request(method: .get, uri: "/", headers: [
-            .host: "www.example.com",
-            .cookie: "foo"
-        ], body: Body())
+        let request = Request(
+            method: .get,
+            uri: "/",
+            headers: [
+                .host: "www.example.com",
+                .cookie: "foo"
+            ],
+            body: Body(),
+            worker: EventLoop.default
+        )
+        
         let encoder = HPACKEncoder()
         let data = try! encoder.encode(request: request, chunksOf: 4000, streamID: 0)
 
@@ -538,7 +546,7 @@ public class HPACKTests: XCTestCase {
         
         var encoded: Payload
             
-        if let data = try encoder.encode(request: Request(method: .get, headers: headers), chunksOf: 1_000_000, streamID: 1).first {
+        if let data = try encoder.encode(request: Request(method: .get, headers: headers, worker: EventLoop.default), chunksOf: 1_000_000, streamID: 1).first {
             encoded = data.payload
         } else {
             XCTFail()

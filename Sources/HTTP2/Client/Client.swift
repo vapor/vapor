@@ -11,9 +11,13 @@ enum Constants {
 }
 
 /// An HTTP/2 client is similar to an HTTP/1 client, only using another protocol with a slightly different set of features
-public final class HTTP2Client {
+public final class HTTP2Client: Worker {
     /// HTTP/2 only runs over TLS
     let client: TLSClient
+    
+    public var eventLoop: EventLoop {
+        return client.eventLoop
+    }
     
     /// All streams share the connection and it's context
     let context: ConnectionContext

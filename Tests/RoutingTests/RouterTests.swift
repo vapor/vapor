@@ -42,7 +42,7 @@ class RouterTests: XCTestCase {
         router.register(route: rc)
 
         do {
-            let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))
+            let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"), worker: EventLoop.default)
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
@@ -56,7 +56,7 @@ class RouterTests: XCTestCase {
         }
 
         do {
-            let request = Request(method: .get, uri: URI(path: "/hello/world"))
+            let request = Request(method: .get, uri: URI(path: "/hello/world"), worker: EventLoop.default)
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)
@@ -69,7 +69,7 @@ class RouterTests: XCTestCase {
         }
 
         do {
-            let request = Request(method: .get, uri: URI(path: "/users/bob/comments"))
+            let request = Request(method: .get, uri: URI(path: "/users/bob/comments"), worker: EventLoop.default)
             let responder = router.route(request: request)
 
             XCTAssertNotNil(responder)

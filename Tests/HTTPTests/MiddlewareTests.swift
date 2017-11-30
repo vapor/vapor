@@ -28,7 +28,7 @@ class MiddlewareTests : XCTestCase {
             group.leave()
         }.catch { XCTFail("\($0)") }
 
-        let req = Request()
+        let req = Request(worker: EventLoop.default)
         server.emit(req)
         group.wait()
     }
@@ -58,10 +58,10 @@ class MiddlewareTests : XCTestCase {
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
-        let client = HTTPClient(socket: tcpClient)
+        let client = HTTPClient(socket: tcpClient, worker: EventLoop.default)
         tcpClient.start()
         
-        let response = try client.send(request: Request()).blockingAwait(timeout: .seconds(3))
+        let response = try client.send(request: Request(worker: EventLoop.default)).blockingAwait(timeout: .seconds(3))
         
         try response.body.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: response.body.count ?? 0)
