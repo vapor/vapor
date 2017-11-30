@@ -163,11 +163,11 @@ final class WebSocketApplication: Responder {
             websocket.onText { text in
                 let rev = String(text.reversed())
                 websocket.send(rev)
-                }.catch(onError: promise.fail)
+            }.catch(onError: promise.fail)
 
             websocket.onBinary { buffer in
                 websocket.send(buffer)
-                }.catch(onError: promise.fail)
+            }.catch(onError: promise.fail)
 
             self.sockets[id] = websocket
 

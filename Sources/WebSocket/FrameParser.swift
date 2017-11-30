@@ -15,7 +15,7 @@ public final class FrameParser: Async.Stream, ClosableStream {
     let bufferBuilder: MutableBytesPointer
     
     /// The maximum accepted payload size (to prevent memory attacks)
-    let maximumPayloadSize: Int
+    var maximumPayloadSize: Int
     
     /// The remainder buffer that couldn't yet be parsed (such as 2 bytes of an UInt32)
     var partialBuffer = [UInt8]()

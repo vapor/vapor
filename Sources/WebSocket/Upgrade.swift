@@ -16,8 +16,10 @@ extension WebSocket {
     /// Creates a websocket upgrade response for the upgrade request
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#upgrading-the-connection)
-    public static func upgradeResponse(for request: Request,
-                                       with settings: WebSocketSettings) throws -> Response {
+    public static func upgradeResponse(
+        for request: Request,
+        with settings: WebSocketSettings
+    ) throws -> Response {
         guard shouldUpgrade(for: request) else {
             throw WebSocketError(.invalidRequest)
         }
@@ -35,9 +37,11 @@ extension WebSocket {
     /// Creates a websocket upgrade response for the upgrade request
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/upgrade/#upgrading-the-connection)
-    public static func upgradeResponse(for request: Request,
-                                       with settings: WebSocketSettings,
-                                       onUpgrade: @escaping OnUpgradeClosure) throws -> Response {
+    public static func upgradeResponse(
+        for request: Request,
+        with settings: WebSocketSettings,
+        onUpgrade: @escaping OnUpgradeClosure
+    ) throws -> Response {
         let response = try upgradeResponse(for: request, with: settings)
 
         response.onUpgrade = { tcpClient in
@@ -57,8 +61,8 @@ extension WebSocket {
             let key = req.headers[.secWebSocketKey],
             let secWebsocketVersion = req.headers[.secWebSocketVersion],
             let version = Int(secWebsocketVersion)
-            else {
-                throw WebSocketError(.invalidRequest)
+        else {
+            throw WebSocketError(.invalidRequest)
         }
 
         let data = Base64Encoder.encode(data: SHA1.hash(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))

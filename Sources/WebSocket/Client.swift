@@ -98,16 +98,16 @@ extension WebSocket {
             // The server must accept the upgrade
             guard
                 response.status == .upgrade,
-                response.headers["Connection"] == "Upgrade",
-                response.headers["Upgrade"] == "websocket"
+                response.headers[.connection] == "Upgrade",
+                response.headers[.upgrade] == "websocket"
             else {
                 promise.fail(WebSocketError(.notUpgraded))
                 return
             }
             
             // Protocol version 13 uses `-Key` instead of `Accept`
-            if response.headers["Sec-WebSocket-Version"] == "13",
-                response.headers["Sec-WebSocket-Key"] == expectedKeyString {
+            if response.headers[.secWebSocketAccept] == "13",
+                response.headers[.secWebSocketKey] == expectedKeyString {
                 promise.complete(factory())
             } else {
                 // Fail if the handshake didn't return the expected accept-key

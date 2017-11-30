@@ -252,10 +252,19 @@ public struct Headers: Codable {
             }
         }
         set {
-            removeValuesFromData(forName: name)
-            
-            for value in newValue {
-                appendValueToData(value, forName: name)
+            switch type {
+            case .data:
+                removeValuesFromData(forName: name)
+                
+                for value in newValue {
+                    appendValueToData(value, forName: name)
+                }
+            case .array:
+                self.removeFromArray(name)
+                
+                for value in newValue {
+                    self.array.append((name, value))
+                }
             }
         }
     }
