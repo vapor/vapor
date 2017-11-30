@@ -21,9 +21,9 @@ class MySQLTests: XCTestCase {
     let connection = try! Connection.makeConnection(
         hostname: "localhost",
         user: "root",
-        password: "",
+        password: nil,
         database: "vapor_test",
-        on: DispatchQueue(label: "single")
+        on: MySQLTests.poolQueue
     ).blockingAwait(timeout: .seconds(3))
 
     static let allTests = [

@@ -66,8 +66,7 @@ class ApplicationTests: XCTestCase {
     func testAnyResponse() throws {
         let response = "hello"
         var result = Response()
-        let req = Request()
-        req.eventLoop = EventLoop.default
+        let req = Request(worker: EventLoop.default)
         EventLoop.default.container = try Application()
         
         AnyResponse(response).map { encodable in
