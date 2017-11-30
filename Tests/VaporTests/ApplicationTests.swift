@@ -11,8 +11,8 @@ class ApplicationTests: XCTestCase {
     func testAnyResponse() throws {
         let response = "hello"
         let app = try Application()
-        var result = Response(on: DispatchQueue.global(), using: app)
-        let req = Request(on: DispatchQueue.global(), using: app)
+        var result = Response(using: app)
+        let req = Request(using: app)
         
         AnyResponse(response).map { encodable in
             try encodable.encode(to: &result, for: req).blockingAwait()

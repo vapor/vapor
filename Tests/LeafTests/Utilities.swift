@@ -62,22 +62,3 @@ final class PreloadedFiles: FileReader, FileCache {
         return promise.future
     }
 }
-
-import Service
-
-final class BasicContainer: Container {
-    var eventLoop: EventLoop = .default
-    var config: Config
-    var environment: Environment
-    var services: Services
-    var extend: Extend
-    var serviceCache: ServiceCache
-
-    init(services: Services) {
-        self.config = Config()
-        self.environment = .development
-        self.services = services
-        self.serviceCache = .init()
-        self.extend = Extend()
-    }
-}

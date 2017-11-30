@@ -2,22 +2,6 @@ import Async
 import Core
 import Service
 
-final class TestContainer: Container {
-    var eventLoop: EventLoop = .default
-    let config: Config
-    let environment: Environment
-    let services: Services
-    var serviceCache: ServiceCache
-
-    init(environment: Environment = .development, config: Config, services: Services) {
-        self.config = config
-        self.environment = environment
-        self.services = services
-        self.serviceCache = .init()
-        self.extend = [:]
-    }
-}
-
 // MARK: Log
 
 protocol Log {

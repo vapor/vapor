@@ -15,7 +15,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        worker: MySQLTests.poolQueue
+        on: MySQLTests.poolQueue
     )
     
     let connection = try! Connection.makeConnection(

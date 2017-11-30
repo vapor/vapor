@@ -44,13 +44,13 @@ final class HTTPTestServer {
     public func start(with responder: Responder) throws {
         // create a tcp server
         let socket = try TCPSocket(isNonBlocking: false)
-        let tcp = TCPServer(socket: socket, eventLoopCount: workerCount)
+        let tcp = TCPServer(socket: socket, eventLoops: [DispatchQueue.global()])
         let server = HTTPServer(socket: tcp)
         
         // setup the server pipeline
         server.drain { client in
             let parser = HTTP.RequestParser(maxSize: 100_000)
-            let responderStream = ResponderStream(responder: responder, on: client.tcp.worker, using: self.container)
+            let responderStream = ResponderStream(responder: responder, using: self.container)
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
