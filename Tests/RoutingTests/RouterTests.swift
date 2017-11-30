@@ -49,8 +49,8 @@ class RouterTests: XCTestCase {
             
             let res = try responder?.respond(to: request).blockingAwait()
             
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
+            try res?.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res!.body.count ?? 0)
                 XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "foo")
             }
         }
@@ -62,8 +62,8 @@ class RouterTests: XCTestCase {
             XCTAssertNotNil(responder)
             
             let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
+            try res?.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res!.body.count ?? 0)
                 XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
             }
         }
@@ -75,8 +75,8 @@ class RouterTests: XCTestCase {
             XCTAssertNotNil(responder)
             
             let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
+            try res?.body.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: res!.body.count ?? 0)
                 XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "users!")
             }
         }

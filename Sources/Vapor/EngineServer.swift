@@ -1,3 +1,4 @@
+import Foundation
 import Async
 import Console
 import Debugging
@@ -38,7 +39,7 @@ public final class EngineServer: Server {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(on: client.tcp.worker, maxBodySize: 10_000_000)
+            let parser = HTTP.RequestParser(on: client.tcp.worker, maxSize: 10_000_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             
@@ -73,9 +74,8 @@ public final class EngineServer: Server {
             backlog: config.backlog
         )
 
-        let group = DispatchGroup()
-        group.enter()
-        group.wait()
+        // non-blocking main thread run
+        RunLoop.main.run()
     }
 }
 
