@@ -179,12 +179,16 @@ extension TrieRouterNode {
     /// Finds the node with the supplied path in the
     /// node's constant children.
     func findConstantNode(at path: ByteBuffer) -> ConstantNode? {
+        guard let pointer = path.baseAddress else {
+            return nil
+        }
+        
         for child in constantChildren {
             guard path.count == child.constant.count else {
                 continue
             }
             
-            if memcmp(path.baseAddress, child.constant, path.count) == 0 {
+            if memcmp(pointer, child.constant, path.count) == 0 {
                 return child
             }
         }
