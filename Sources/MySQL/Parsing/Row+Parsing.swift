@@ -264,8 +264,21 @@ extension Row {
             }
             
             append(.float(float), forField: field)
+        case .datetime:
+            guard let date = mysqlFormatter.date(from: value) else {
+                throw MySQLError(.parsingError)
+            }
+            
+            append(.datetime(date), forField: field)
         default:
             throw MySQLError(.unsupported)
         }
     }
 }
+
+fileprivate let mysqlFormatter: DateFormatter = {
+    var formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    
+    return formatter
+}()
