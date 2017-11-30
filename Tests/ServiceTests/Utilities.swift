@@ -1,7 +1,8 @@
 import Async
 import Service
 
-final class Testcontext: Context {
+final class TestContext: Context {
+    var eventLoop: EventLoop = .default
     let config: Config
     let environment: Environment
     let services: Services
@@ -90,7 +91,7 @@ extension BCryptHasher: ServiceType {
     }
 
     static func makeService(for context: Context) throws -> Self? {
-        let config = try container.make(BCryptConfig.self, for: BCryptHasher.self)
+        let config = try context.make(BCryptConfig.self, for: BCryptHasher.self)
         return .init(cost: config.cost)
     }
 }
@@ -116,7 +117,7 @@ extension BCryptConfig: ServiceType {
     static func makeService(for context: Context) throws -> BCryptConfig? {
         let cost: Int
 
-        switch container.environment {
+        switch context.environment {
         case .production:
             cost = 12
         default:

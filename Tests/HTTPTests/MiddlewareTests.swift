@@ -2,6 +2,7 @@ import Async
 import Bits
 import Core
 import Dispatch
+import Service
 import HTTP
 import TCP
 import XCTest
@@ -39,7 +40,7 @@ class MiddlewareTests : XCTestCase {
         let serverSocket = try TCPServer()
         let server = HTTPServer(socket: serverSocket)
         server.drain { peer in
-            let parser = HTTP.RequestParser(on: peer.tcp.worker, maxSize: 100_000)
+            let parser = HTTP.RequestParser(in: peer.tcp.worker.eventLoop, maxSize: 100_000)
             
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
@@ -58,7 +59,7 @@ class MiddlewareTests : XCTestCase {
         try socket.connect(hostname: "0.0.0.0", port: 1234)
         
         let tcpClient = TCPClient.init(socket: socket, worker: EventLoop(queue: .global()))
-        let client = HTTPClient(socket: tcpClient)
+        let client = HTTPClient(context: BasicContext(), socket: tcpClient)
         tcpClient.start()
         
         let response = try client.send(request: Request()).blockingAwait(timeout: .seconds(3))

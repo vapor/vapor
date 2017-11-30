@@ -1,5 +1,6 @@
 import Async
 import Dispatch
+import Service
 
 /// Represents a tag that has been parsed.
 public struct ParsedTag {
@@ -16,20 +17,20 @@ public struct ParsedTag {
     public let source: Source
 
     /// Queue to complete futures on.
-    public let worker: Worker
+    public let serviceContext: Context
 
     init(
         name: String,
         parameters: [LeafData],
         body: [Syntax]?,
         source: Source,
-        worker: Worker
+        serviceContext: Context
     ) {
         self.name = name
         self.parameters = parameters
         self.body = body
         self.source = source
-        self.worker = worker
+        self.serviceContext = serviceContext
     }
 }
 

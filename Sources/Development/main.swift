@@ -101,7 +101,7 @@ router.get("leaf") { req -> Future<View> in
         promise.complete(user)
     }
     
-    return try req.makeLeafRenderer().make("hello", context: promise.future, on: req)
+    return try req.make(ViewRenderer.self).make("hello", context: promise.future)
 }
 
 final class FooController {
@@ -154,10 +154,10 @@ extension Request: ConnectionRepresentable {}
 
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
-
-    return try req.makeLeafRenderer().make("hello", [
+    
+    return try req.make(ViewRenderer.self).make("hello", [
         "user": user
-    ], on: req)
+    ])
 }
 
 struct InvalidBody: Error{}

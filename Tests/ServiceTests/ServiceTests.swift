@@ -7,7 +7,7 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(PrintLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -20,7 +20,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -36,7 +36,7 @@ class ServiceTests: XCTestCase {
         let foo = PrintLog()
         services.register(foo, tag: "foo", supports: [Log.self])
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -49,7 +49,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -60,7 +60,7 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -70,7 +70,7 @@ class ServiceTests: XCTestCase {
         var services = Services()
         try services.register(AllCapsProvider())
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -82,7 +82,7 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(AllCapsLog.self)
 
-        let container = TestContainer(config: config, services: services)
+        let container = TestContext(config: config, services: services)
         do {
             _ = try container.make(Log.self, for: ServiceTests.self)
             XCTFail("Should not have resolved.")

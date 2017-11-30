@@ -6,9 +6,9 @@ import Leaf
 import libc
 
 extension LeafRenderer {
-    static func makeTestRenderer(worker: Worker) -> LeafRenderer {
+    static func makeTestRenderer(context: Context) -> LeafRenderer {
         let config = LeafConfig(tags: defaultTags, fileFactory: TestFiles.init)
-        return LeafRenderer(config: config, worker: worker)
+        return LeafRenderer(config: config, context: context)
     }
 }
 
@@ -66,17 +66,3 @@ final class PreloadedFiles: FileReader, FileCache {
 }
 
 import Service
-
-final class Basiccontext: Context {
-    var config: Config
-    var environment: Environment
-    var services: Services
-    var extend: Extend
-
-    init(services: Services) {
-        self.config = Config()
-        self.environment = .development
-        self.services = services
-        self.extend = Extend()
-    }
-}

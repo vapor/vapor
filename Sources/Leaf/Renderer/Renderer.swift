@@ -2,6 +2,7 @@ import Async
 import Core
 import Dispatch
 import Foundation
+import Service
 
 /// Renders Leaf templates using the Leaf parser and serializer.
 public final class LeafRenderer {
@@ -18,12 +19,15 @@ public final class LeafRenderer {
     /// If `true`, this Leaf renderer caches it's loaded in the FileReader templates
     var shouldCache: Bool
     
+    let context: Context
+    
     /// Create a new Leaf renderer.
-    public init(config: LeafConfig, worker: Worker) {
+    public init(config: LeafConfig, context: Context) {
         self.tags = config.tags
         self.viewsDir = config.viewsDir.finished(with: "/")
         self.shouldCache = config.shouldCache
-        self.fileReader = config.fileFactory(worker)
+        self.fileReader = config.fileFactory(context)
+        self.context = context
     }
 
     // ASTs only need to be parsed once
@@ -31,7 +35,7 @@ public final class LeafRenderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: LeafData, on worker: Worker) -> Future<Data> {
+    public func render(template: Data, context: LeafData) -> Future<Data> {
         let hash = template.hashValue
 
         let promise = Promise(Data.self)
@@ -58,7 +62,7 @@ public final class LeafRenderer {
             ast: ast,
             renderer: self,
             context: context,
-            worker: worker
+            serviceContext: self.context
         )
 
         serializer.serialize().do { data in
@@ -81,11 +85,10 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
+    public func make(_ path: String, context: Encodable) throws -> Future<View> {
         return try render(
             path: path,
-            context: LeafEncoder().encode(context),
-            on: worker
+            context: LeafEncoder().encode(context)
         ).map { data in
             return View(data: data)
         }
@@ -96,7 +99,7 @@ extension LeafRenderer: ViewRenderer {
 
 extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
+    public func render(path: String, context: LeafData) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let fullPath: String
         if path.hasSuffix("/") {
@@ -116,7 +119,7 @@ extension LeafRenderer {
         }
             
         data.do { view in
-            self.render(template: view, context: context, on: worker).do { data in
+            self.render(template: view, context: context).do { data in
                 promise.complete(data)
             }.catch { error in
                 if var error = error as? RenderError {
@@ -134,7 +137,7 @@ extension LeafRenderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: LeafData, on worker: Worker) -> Future<String> {
+    public func render(_ view: String, context: LeafData) -> Future<String> {
         let promise = Promise(String.self)
 
         do {
@@ -145,7 +148,7 @@ extension LeafRenderer {
                 )
             }
 
-            render(template: data, context: context, on: worker).do { rendered in
+            render(template: data, context: context).do { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

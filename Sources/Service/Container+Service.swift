@@ -15,6 +15,27 @@ extension Context {
     ) throws -> Interface {
         return try unsafeMake(Interface.self, for: Client.self) as! Interface
     }
+    
+    /// Returns or creates a service for the given type.
+    ///
+    /// If a protocol is supplied, a service conforming
+    /// to the protocol will be returned.
+    public func make<Interface, Client>(
+        _ interface: Interface.Type = Interface.self,
+        for client: Client
+        ) throws -> Interface {
+        return try unsafeMake(Interface.self, for: Client.self) as! Interface
+    }
+    
+    /// Returns or creates a service for the given type.
+    ///
+    /// If a protocol is supplied, a service conforming
+    /// to the protocol will be returned.
+    public func make<Interface>(
+        _ interface: Interface.Type = Interface.self
+        ) throws -> Interface {
+        return try unsafeMake(Interface.self, for: Self.self) as! Interface
+    }
 
     /// Returns or creates a service for the given type.
     /// If the service has already been requested once,
