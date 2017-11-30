@@ -26,7 +26,6 @@ extension Benchmarker {
         }.then { _ -> Future<Foo<Database>?> in
             return try Foo<Database>.find(b.requireID(), on: conn)
         }.then { fetched -> Future<Void> in
-            print("done")
             // read
             if fetched?.bar != "fdsa" {
                 self.fail("b.bar should have been updated")

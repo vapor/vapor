@@ -87,22 +87,13 @@ public final class BoundStatement {
         
         // Set up a parser
         statement.connection.packetStream.drain { packet in
-            let parser = Parser(packet: packet)
-            
             do {
-                let byte = try parser.byte()
-                
-                if byte == 0x00 {
-                    self.statement.connection.affectedRows = try parser.parseLenEnc()
-                    self.statement.connection.lastInsertID = try parser.parseLenEnc()
-                    promise.complete()
-                } else if byte == 0xfe {
-                    promise.complete()
-                } else if byte == 0xff {
-                    promise.fail(MySQLError(packet: packet))
-                } else {
-                    print("NO")
+                if let (affectedRows, lastInsertID) = try packet.parseBinaryOK() {
+                    self.statement.connection.affectedRows = affectedRows
+                    self.statement.connection.lastInsertID = lastInsertID
                 }
+                
+                promise.complete()
             } catch {
                 promise.fail(error)
             }
@@ -129,7 +120,11 @@ public final class BoundStatement {
     internal func forEachRow(_ handler: @escaping Callback<Row>) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        let rowStream = RowStream(mysql41: true, binary: true)
+        let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in
+            self.statement.connection.affectedRows = affectedRows
+            self.statement.connection.lastInsertID = lastInsertID
+        }
+        
         statement.connection.packetStream.stream(to: rowStream)
             .drain(onInput: handler)
             .catch(onError: promise.fail)
@@ -163,5 +158,22 @@ public final class BoundStatement {
             let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
             try handler(D(from: decoder))
         }
+    }
+}
+
+extension Packet {
+    func parseBinaryOK() throws -> (UInt64, UInt64)? {
+        let parser = Parser(packet: self)
+        let byte = try parser.byte()
+        
+        if byte == 0x00 {
+            return (try parser.parseLenEnc(), try parser.parseLenEnc())
+        } else if byte == 0xfe {
+            return nil
+        } else if byte == 0xff {
+            throw MySQLError(packet: self)
+        }
+        
+        return nil
     }
 }
