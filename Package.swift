@@ -117,7 +117,7 @@ let package = Package(
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // FormURLEncoded
-        .target(name: "FormURLEncoded", dependencies: ["Bits"]),
+        .target(name: "FormURLEncoded", dependencies: ["Bits", "Debugging"]),
         .testTarget(name: "FormURLEncodedTests", dependencies: ["FormURLEncoded"]),
 
         // JWT
@@ -144,7 +144,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
+        .target(name: "TCP", dependencies: ["Async", "Debugging", "libc"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
