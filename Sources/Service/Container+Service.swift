@@ -159,7 +159,7 @@ extension Services {
     }
 }
 
-let _containerLock = NSLock()
+let _containerLock = NSRecursiveLock()
 
 extension EventLoop {
     fileprivate var serviceCache: [String: ResolvedService] {
