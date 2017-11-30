@@ -46,7 +46,7 @@ public final class ResponseSerializer: Serializer {
         let statusCode = [UInt8](response.status.code.description.utf8)
         
         // First line
-        let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes
+        let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes + crlf
         
         serialized.withUnsafeBufferPointer(write)
         response.headers.write(to: write)
