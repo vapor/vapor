@@ -131,7 +131,6 @@ extension RedisClient {
         let client = try TCPClient(on: eventLoop)
         return try client.connect(hostname: hostname, port: port).map { _ -> RedisClient in
             client.start()
-            
             return RedisClient(socket: client)
         }
     }

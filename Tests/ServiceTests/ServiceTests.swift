@@ -1,5 +1,6 @@
-import XCTest
+import Dispatch
 import Service
+import XCTest
 
 class ServiceTests: XCTestCase {
     func testHappyPath() throws {

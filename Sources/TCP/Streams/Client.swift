@@ -245,7 +245,6 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try self.socket.connect(hostname: hostname, port: port)
-        
         return writable()
     }
     
