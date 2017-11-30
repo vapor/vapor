@@ -14,27 +14,27 @@ final class SQLiteBenchmarkTests: XCTestCase {
     }
 
     func testSchema() throws {
-        try benchmarker.benchmarkSchema()
+        try benchmarker.benchmarkSchema().blockingAwait(timeout: .seconds(60))
     }
 
     func testModels() throws {
-        try benchmarker.benchmarkModels_withSchema()
+        try benchmarker.benchmarkModels_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     func testRelations() throws {
-        try benchmarker.benchmarkRelations_withSchema()
+        try benchmarker.benchmarkRelations_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     func testTimestampable() throws {
-        try benchmarker.benchmarkTimestampable_withSchema()
+        try benchmarker.benchmarkTimestampable_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     func testTransactions() throws {
-        try benchmarker.benchmarkTransactions_withSchema()
+        try benchmarker.benchmarkTransactions_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     func testChunking() throws {
-        try benchmarker.benchmarkChunking_withSchema()
+        try benchmarker.benchmarkChunking_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     static let allTests = [
