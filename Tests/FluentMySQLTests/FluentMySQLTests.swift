@@ -23,7 +23,7 @@ class FluentMySQLTests: XCTestCase {
             }.then { _ -> Future<Void> in
                 return conn.enableReferences()
             }
-        }.blockingAwait(timeout: .seconds(3))
+        }.blockingAwait(timeout: .seconds(10)) 
     }
     
     func testSchema() throws {
