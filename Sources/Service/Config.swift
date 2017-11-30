@@ -38,7 +38,7 @@ public struct Config {
     internal func choose(
         from available: [ServiceFactory],
         interface: Any.Type,
-        for container: Container,
+        for context: Context,
         neededBy client: Any.Type
     ) throws -> ServiceFactory {
         let specific = ServiceIdentifier(interface: interface, client: client)
@@ -72,7 +72,7 @@ public struct Config {
     internal func approve(
         chosen: ServiceFactory,
         interface: Any.Type,
-        for container: Container,
+        for context: Context,
         neededBy client: Any.Type
     ) throws {
         let specific = ServiceIdentifier(interface: interface, client: client)

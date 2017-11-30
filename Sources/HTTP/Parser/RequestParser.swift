@@ -1,6 +1,7 @@
 import Bits
 import CHTTP
 import Async
+import Service
 import Dispatch
 import Foundation
 
@@ -19,7 +20,7 @@ public final class RequestParser: CParser {
     var state:  CHTTPParserState
 
     /// Queue to be set on messages created by this parser.
-    private let worker: Worker
+    private let context: Context
 
     /// The maxiumum possible body size
     /// larger sizes will result in an error
@@ -32,11 +33,11 @@ public final class RequestParser: CParser {
     private var outputStream: BasicStream<Output>
 
     /// Creates a new Request parser.
-    public init(on worker: Worker, maxSize: Int) {
+    public init(in context: Context, maxSize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
-        self.worker = worker
+        self.context = context
         self.maxSize = maxSize
         self.outputStream = .init()
         reset(HTTP_REQUEST)
@@ -176,11 +177,11 @@ public final class RequestParser: CParser {
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: body,
+            context: self.context
         )
 
         currentSize = 0
-        request.eventLoop = worker.eventLoop
         return request
     }
 }

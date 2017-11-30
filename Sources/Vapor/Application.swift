@@ -12,7 +12,11 @@ import Service
 /// Acts as a service container and much more.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/application/)
-public final class Application: Container {
+public final class Application: Context {
+    public var eventLoop: EventLoop {
+        return EventLoop.default
+    }
+    
     /// Config preferences and requirements for available services.
     public let config: Config
 

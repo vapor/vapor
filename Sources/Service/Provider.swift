@@ -31,7 +31,7 @@ public protocol Provider {
     func register(_ services: inout Services) throws
 
     /// Called after the container has initialized.
-    func boot(_ container: Container) throws
+    func boot(_ context: Context) throws
 }
 
 // MARK: Optional

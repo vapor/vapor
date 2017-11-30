@@ -1,4 +1,5 @@
 import CHTTP
+import Service
 import Async
 import Bits
 import Foundation
@@ -27,13 +28,16 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
     
+    private var context: Context
+    
     /// Creates a new Request parser.
-    public init(maxSize: Int) {
+    public init(in context: Context, maxSize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
         self.maxSize = maxSize
         self.outputStream = .init()
+        self.context = context
         reset(HTTP_RESPONSE)
     }
 
@@ -144,7 +148,8 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
             version: version,
             status: status,
             headers: headers,
-            body: body
+            body: body,
+            context: context
         )
     }
 }

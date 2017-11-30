@@ -15,8 +15,8 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
         return nil
     }
 
-    public func makeService(for container: Container) throws -> Any? {
-        return try S.makeService(for: container)
+    public func makeService(for context: Context) throws -> Any? {
+        return try S.makeService(for: context)
     }
 
     public init(_ s: S.Type = S.self) { }

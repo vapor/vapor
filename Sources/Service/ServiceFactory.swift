@@ -3,5 +3,5 @@ public protocol ServiceFactory {
     var serviceIsSingleton: Bool { get }
     var serviceSupports: [Any.Type] { get }
     var serviceTag: String? { get }
-    func makeService(for container: Container) throws -> Any?
+    func makeService(for context: Context) throws -> Any?
 }

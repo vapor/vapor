@@ -12,15 +12,15 @@ public final class EngineServer: Server {
     public let config: EngineServerConfig
 
     /// Container for setting on event loops.
-    public let container: Container
+    public let context: Context
 
     /// Create a new EngineServer using config struct.
     public init(
         config: EngineServerConfig,
-        container: Container
+        context: Context
     ) {
         self.config = config
-        self.container = container
+        self.context = context
     }
 
     /// Start the server. Server protocol requirement.
@@ -29,16 +29,16 @@ public final class EngineServer: Server {
         let tcp = try TCPServer(eventLoopCount: config.workerCount)
 
         // set container on each event loop
-        tcp.eventLoops.forEach { $0.container = self.container }
+        tcp.eventLoops.forEach { $0.context = self.context }
 
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         let server = HTTPServer(socket: tcp)
 
-        let console = try container.make(Console.self, for: EngineServer.self)
+        let console = try context.make(Console.self, for: EngineServer.self)
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(on: client.tcp.worker, maxSize: 10_000_000)
+            let parser = HTTP.RequestParser(in: client.tcp.worker.eventLoop, maxSize: 10_000_000)
             let responderStream = responder.makeStream()
             let serializer = HTTP.ResponseSerializer()
             

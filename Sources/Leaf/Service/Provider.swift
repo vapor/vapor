@@ -19,25 +19,10 @@ public final class LeafProvider: Provider {
     }
 
     /// See Service.Provider.boot
-    public func boot(_ container: Container) throws { }
+    public func boot(_ context: Context) throws { }
 }
 
 fileprivate let leafRendererKey = "leaf:renderer"
-
-extension HasContainer where Self: Worker {
-    public func makeLeafRenderer() throws -> LeafRenderer {
-        if let renderer = self.eventLoop.extend[leafRendererKey] as? LeafRenderer {
-            return renderer
-        }
-        
-        let config = try self.workerMake(LeafConfig.self, for: LeafRenderer.self)
-        let renderer =  LeafRenderer(config: config, worker: self)
-        
-        self.eventLoop.extend[leafRendererKey] = renderer
-        
-        return renderer
-    }
-}
 
 // MARK: View
 

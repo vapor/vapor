@@ -38,14 +38,6 @@ public protocol Message: Codable, CustomDebugStringConvertible, EphemeralWorker 
     var body: Body { get set }
 }
 
-/// MARK: Container
-extension Message {
-    /// See HasContainer.container
-    public var container: Container? {
-        return eventLoop.container
-    }
-}
-
 // MARK: Queue
 
 extension Message {

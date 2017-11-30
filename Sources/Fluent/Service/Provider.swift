@@ -28,9 +28,9 @@ public final class FluentProvider: Provider {
     }
 
     /// See Provider.boot()
-    public func boot(_ container: Container) throws {
-        let migrations = try container.make(MigrationConfig.self, for: FluentProvider.self)
-        let databases = try container.make(Databases.self, for: FluentProvider.self)
+    public func boot(_ context: Context) throws {
+        let migrations = try context.make(MigrationConfig.self, for: FluentProvider.self)
+        let databases = try context.make(Databases.self, for: FluentProvider.self)
 
         let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
 
@@ -45,7 +45,7 @@ public final class FluentProvider: Provider {
 
         print("Migrations complete")
 
-        let workerConfig = try container.make(EphemeralWorkerConfig.self, for: FluentProvider.self)
+        let workerConfig = try context.make(EphemeralWorkerConfig.self, for: FluentProvider.self)
         workerConfig.onDeinit { $0.releaseConnections() }
     }
 }

@@ -1,5 +1,5 @@
 public struct BasicServiceFactory: ServiceFactory {
-    public typealias ServiceFactoryClosure = (Container) throws -> Any?
+    public typealias ServiceFactoryClosure = (Context) throws -> Any?
 
     public let serviceType: Any.Type
     public let serviceIsSingleton: Bool
@@ -22,7 +22,7 @@ public struct BasicServiceFactory: ServiceFactory {
         self.closure = closure
     }
 
-    public func makeService(for container: Container) throws -> Any? {
-        return try closure(container)
+    public func makeService(for context: Context) throws -> Any? {
+        return try closure(context)
     }
 }

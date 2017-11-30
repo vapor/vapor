@@ -52,7 +52,7 @@ extension Services {
         _ supports: [Any.Type] = [],
         tag: String? = nil,
         isSingleton: Bool = false,
-        factory: @escaping (Container) throws -> (S)
+        factory: @escaping (Context) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
             S.self,
@@ -70,7 +70,7 @@ extension Services {
         _ interface: Any.Type,
         tag: String? = nil,
         isSingleton: Bool = true,
-        factory: @escaping (Container) throws -> (S)
+        factory: @escaping (Context) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
             S.self,

@@ -1,4 +1,5 @@
 import Async
+import Service
 import Foundation
 
 /// An HTTP request.
@@ -54,6 +55,24 @@ public final class Request: Message {
     
     /// See `Extendable.extend`
     public var extend: Extend
+    
+    /// The super container in which this Request is used
+    var context: BasicContext
+    
+    /// See `Container.config`
+    public var config: Config {
+        return context.config
+    }
+    
+    /// See `Container.environment`
+    public var environment: Environment {
+        return context.environment
+    }
+    
+    /// See `Container.services`
+    public var services: Services {
+        return context.services
+    }
 
     /// Create a new HTTP request.
     public init(
@@ -61,7 +80,8 @@ public final class Request: Message {
         uri: URI = URI(),
         version: Version = Version(major: 1, minor: 1),
         headers: Headers = Headers(),
-        body: Body = Body()
+        body: Body = Body(),
+        context: Context = BasicContext()
     ) {
         self.method = method
         self.uri = uri
@@ -69,6 +89,7 @@ public final class Request: Message {
         self.headers = headers
         self.body = body
         self.extend = Extend()
+        self.context = .boxing(context)
         Request.onInit?(self)
     }
 
@@ -88,9 +109,10 @@ extension Request {
         uri: URI = URI(),
         version: Version = Version(major: 1, minor: 1),
         headers: Headers = Headers(),
-        body: BodyRepresentable
+        body: BodyRepresentable,
+        context: Context = BasicContext()
     ) throws {
-        try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
+        try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody(), context: context)
     }
 }
 

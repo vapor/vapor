@@ -1,5 +1,6 @@
 import Async
 import Foundation
+import Service
 
 /// An HTTP response.
 ///
@@ -48,19 +49,39 @@ public final class Response: Message {
 
     /// See Extendable.extend
     public var extend: Extend
+    
+    /// The super container in which this Response is used
+    var context: BasicContext
+    
+    /// See `Container.config`
+    public var config: Config {
+        return context.config
+    }
+    
+    /// See `Container.environment`
+    public var environment: Environment {
+        return context.environment
+    }
+    
+    /// See `Container.services`
+    public var services: Services {
+        return context.services
+    }
 
     /// Create a new HTTP response.
     public init(
         version: Version = Version(major: 1, minor: 1),
         status: Status = .ok,
         headers: Headers = Headers(),
-        body: Body = Body()
+        body: Body = Body(),
+        context: Context = BasicContext()
     ) {
         self.version = version
         self.status = status
         self.headers = headers
         self.body = body
         self.extend = Extend()
+        self.context = .boxing(context)
         Response.onInit?(self)
     }
 
@@ -76,9 +97,10 @@ extension Response {
         version: Version = Version(major: 1, minor: 1),
         status: Status = .ok,
         headers: Headers = Headers(),
-        body: BodyRepresentable
+        body: BodyRepresentable,
+        context: Context = BasicContext()
     ) throws {
-        try self.init(version: version, status: status, headers: headers, body: body.makeBody())
+        try self.init(version: version, status: status, headers: headers, body: body.makeBody(), context: context)
     }
 }
 

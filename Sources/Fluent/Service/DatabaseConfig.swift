@@ -3,10 +3,10 @@ import Service
 /// Helper struct for configuring Fluent databases.
 public struct DatabaseConfig {
     /// Lazy closure for initializing a database.
-    public typealias LazyDatabase<D: Database> = (Container) throws -> D
+    public typealias LazyDatabase<D: Database> = (Context) throws -> D
 
     /// Internal storage.
-    internal var databases: [String: (Container) throws -> Any]
+    internal var databases: [String: (Context) throws -> Any]
     internal var logging: [String: DatabaseLogger]
 
     /// Create a new database config helper.
