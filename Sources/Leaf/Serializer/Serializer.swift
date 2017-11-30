@@ -23,7 +23,6 @@ public final class Serializer {
 
         for syntax in ast {
             let promise = Promise(Data.self)
-            print(syntax.kind)
             switch syntax.kind {
             case .raw(let data):
                 promise.complete(data)
@@ -55,17 +54,9 @@ public final class Serializer {
             parts.append(promise.future)
         }
         
-        let promise = Promise(Data.self)
-        print(parts)
-
-        parts.flatten().do { data in
-            let serialized = Data(data.joined())
-            promise.complete(serialized)
-        }.catch { error in
-            promise.fail(error)
+        return parts.map { data in
+            return Data(data.joined())
         }
-        
-        return promise.future
     }
 
     // MARK: private
