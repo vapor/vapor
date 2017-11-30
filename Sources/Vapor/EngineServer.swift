@@ -1,3 +1,4 @@
+import Foundation
 import Async
 import Console
 import Debugging
@@ -73,9 +74,8 @@ public final class EngineServer: Server {
             backlog: config.backlog
         )
 
-        let group = DispatchGroup()
-        group.enter()
-        group.wait()
+        // non-blocking main thread run
+        RunLoop.main.run()
     }
 }
 
