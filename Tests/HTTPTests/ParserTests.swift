@@ -90,7 +90,7 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
         
-        let parser = RequestParser(on: DispatchQueue.global(), maxSize: data.count - 2)
+        let parser = RequestParser(maxSize: data.count - 2)
         XCTAssertThrowsError(try parser.parse(from: data))
     }
     

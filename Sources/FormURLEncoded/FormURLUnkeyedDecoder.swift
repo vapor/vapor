@@ -76,6 +76,7 @@ final class FormURLUnkeyedDecoder: UnkeyedDecodingContainer {
     /// See UnkeyedDecodingContainer.decode
     func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
         let decoder = _FormURLDecoder(data: data, codingPath: codingPath + [key])
+        currentIndex += 1
         return try T(from: decoder)
     }
 

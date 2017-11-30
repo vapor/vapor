@@ -2,6 +2,7 @@ import Async
 import Service
 
 final class TestContainer: Container {
+    var eventLoop: EventLoop = .default
     let config: Config
     let environment: Environment
     let services: Services

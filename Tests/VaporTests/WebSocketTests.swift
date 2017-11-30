@@ -5,6 +5,7 @@ import Foundation
 import Dispatch
 import TCP
 import HTTP
+import Vapor
 import WebSocket
 import XCTest
 
@@ -21,18 +22,22 @@ final class HTTPTestServer {
     /// Number of client accepting workers.
     /// Should be equal to the number of logical cores.
     public let workerCount: Int
+
+    let container: Container
     
     /// Creates a new engine server config
     public init(
         hostname: String = "0.0.0.0",
         port: UInt16 = 8282,
         backlog: Int32 = 4096,
-        workerCount: Int = 2
+        workerCount: Int = 2,
+        container: Container
     ) {
         self.hostname = hostname
         self.port = port
         self.workerCount = workerCount
         self.backlog = backlog
+        self.container = container
     }
     
     /// Start the server. Server protocol requirement.
@@ -44,8 +49,8 @@ final class HTTPTestServer {
         
         // setup the server pipeline
         server.drain { client in
-            let parser = HTTP.RequestParser(on: client.tcp.worker, maxSize: 100_000)
-            let responderStream = responder.makeStream()
+            let parser = HTTP.RequestParser(maxSize: 100_000)
+            let responderStream = ResponderStream(responder: responder, on: client.tcp.worker, using: self.container)
             let serializer = HTTP.ResponseSerializer()
             
             client.stream(to: parser)
@@ -53,7 +58,7 @@ final class HTTPTestServer {
                 .stream(to: serializer)
                 .drain { data in
                     client.onInput(data)
-                    serializer.upgradeHandler?(client.tcp)
+                    serializer.upgradeHandler?.closure(client.tcp)
                 }.catch { XCTFail("\($0)") }
             
             client.tcp.start()
@@ -74,7 +79,8 @@ class WebSocketTests : XCTestCase {
     func testClientServer() throws {
         // TODO: Failing on Linux
         let app = WebSocketApplication()
-        let server = HTTPTestServer()
+        let container = BasicContainer(config: Config(), environment: .development, services: Services(), on: DispatchQueue.global())
+        let server = HTTPTestServer(container: container)
         
         try server.start(with: app)
         sleep(1)
@@ -151,13 +157,14 @@ final class WebSocketApplication: Responder {
     func respond(to req: Request) throws -> Future<Response> {
         let promise = Promise<Response>()
 
-        guard WebSocket.shouldUpgrade(for: req) else {
-            let res = try Response(status: .ok, body: "hi")
+        guard WebSocket.shouldUpgrade(for: req.http) else {
+            let res = req.makeResponse()
+            res.http = try HTTPResponse(status: .ok, body: "hi")
             promise.complete(res)
             return promise.future
         }
 
-        let res = try WebSocket.upgradeResponse(for: req, with: WebSocketSettings()) { request, websocket in
+        let http = try WebSocket.upgradeResponse(for: req.http, with: WebSocketSettings()) { request, websocket in
             let id = UUID()
 
             websocket.onText { text in
@@ -175,6 +182,8 @@ final class WebSocketApplication: Responder {
                 self.sockets[id] = nil
             }
         }
+        let res = req.makeResponse()
+        res.http = http
         promise.complete(res)
 
         return promise.future

@@ -3,7 +3,7 @@ import XCTest
 
 class SerializerTests : XCTestCase {
     func testRequest() throws {
-        let request = try Request(
+        let request = try HTTPRequest(
             method: .post,
             uri: URI(path: "/foo"),
             body: "<vapor>"

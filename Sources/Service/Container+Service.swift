@@ -1,10 +1,6 @@
 import Async
 import Foundation
 
-
-private let singletonCacheKey = "service:singleton-cache"
-private let lockKey = "service:lock"
-
 extension Container {
     /// Returns or creates a service for the given type.
     ///

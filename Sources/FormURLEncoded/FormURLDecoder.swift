@@ -46,9 +46,10 @@ final class _FormURLDecoder: Decoder {
 
     /// See Decoder.container
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key>
-        where Key: CodingKey {
-            let container = FormURLKeyedDecoder<Key>(data: data, codingPath: codingPath)
-            return .init(container)
+        where Key: CodingKey
+    {
+        let container = FormURLKeyedDecoder<Key>(data: data, codingPath: codingPath)
+        return .init(container)
     }
 
     /// See Decoder.unkeyedContainer

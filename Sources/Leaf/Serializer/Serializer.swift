@@ -23,6 +23,7 @@ public final class Serializer {
 
         for syntax in ast {
             let promise = Promise(Data.self)
+            print(syntax.kind)
             switch syntax.kind {
             case .raw(let data):
                 promise.complete(data)
@@ -55,6 +56,7 @@ public final class Serializer {
         }
         
         let promise = Promise(Data.self)
+        print(parts)
 
         parts.flatten().do { data in
             let serialized = Data(data.joined())
@@ -76,27 +78,22 @@ public final class Serializer {
         chained: Syntax?,
         source: Source
     ) -> Future<LeafData?> {
-        let promise = Promise(LeafData?.self)
-
-        guard let tag = renderer.tags[name] else {
-            promise.fail(SerializerError.unknownTag(name: name, source: source))
-            return promise.future
-        }
-
-        var inputFutures: [Future<LeafData>] = []
-
-        for parameter in parameters {
-            let inputPromise = Promise(LeafData.self)
-            resolveSyntax(parameter).do { input in
-                inputPromise.complete(input ?? .null)
-            }.catch { error in
-                inputPromise.fail(error)
+        return then { () -> Future<LeafData?> in
+            guard let tag = self.renderer.tags[name] else {
+                throw SerializerError.unknownTag(name: name, source: source)
             }
-            inputFutures.append(inputPromise.future)
-        }
 
-        inputFutures.flatten().do { inputs in
-            do {
+            let inputFutures: [Future<LeafData>] = parameters.map { parameter in
+                let inputPromise = Promise(LeafData.self)
+                self.resolveSyntax(parameter).do { input in
+                    inputPromise.complete(input ?? .null)
+                }.catch { error in
+                    inputPromise.fail(error)
+                }
+                return inputPromise.future
+            }
+
+            return inputFutures.then { inputs -> Future<LeafData?> in
                 let parsed = ParsedTag(
                     name: name,
                     parameters: inputs,
@@ -104,45 +101,33 @@ public final class Serializer {
                     source: source,
                     worker: self.worker
                 )
-                print("render tag")
-                try tag.render(
+
+                return try tag.render(
                     parsed: parsed,
                     context: &self.context,
                     renderer: self.renderer
-                ).do { data in
+                ).then { data -> Future<LeafData?> in
                     if let data = data {
-                        promise.complete(data)
+                        return Future(data)
                     } else if let chained = chained {
                         switch chained.kind {
                         case .tag(let name, let params, let body, let c):
-                            self.renderTag(
+                            return self.renderTag(
                                 name: name,
                                 parameters: params,
                                 body: body,
                                 chained: c,
                                 source: chained.source
-                            ).do { data in
-                                promise.complete(data)
-                            }.catch { error in
-                                promise.fail(error)
-                            }
+                            )
                         default:
-                            promise.fail(SerializerError.unexpectedSyntax(chained))
+                            throw SerializerError.unexpectedSyntax(chained)
                         }
                     } else {
-                        promise.complete(nil)
+                        return Future(nil)
                     }
-                }.catch { error in
-                    promise.fail(error)
                 }
-            } catch {
-                promise.fail(error)
             }
-        }.catch { error in
-            promise.fail(error)
         }
-
-        return promise.future
     }
 
     // resolves a constant to data

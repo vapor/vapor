@@ -49,7 +49,9 @@ internal final class LeafUnkeyedEncoder: UnkeyedEncodingContainer {
     }
 
     func encode<T>(_ value: T) throws where T: Encodable {
-        let encoder = _LeafEncoder(partialData: partialData, codingPath: codingPath)
+        let index = ArrayKey(index: count)
+        defer { count += 1 }
+        let encoder = _LeafEncoder(partialData: partialData, codingPath: codingPath + [index])
         try value.encode(to: encoder)
     }
 }

@@ -67,5 +67,17 @@ extension TrieRouterNode {
 
         return nil
     }
+
+    /// Returns the first parameter node
+    func firstParameterNode() -> (TrieRouterNode<Output>, Data)? {
+        for child in children {
+            guard case .parameter(let parameter) = child.kind else {
+                continue
+            }
+            return (child, parameter)
+        }
+
+        return nil
+    }
 }
 

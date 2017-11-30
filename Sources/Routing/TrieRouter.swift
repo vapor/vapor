@@ -112,7 +112,7 @@ public final class TrieRouter<Output> {
             // if we find a constant route path that matches this component,
             // then we should use it.
             current = node
-        } else if let (node, parameter) = current.findNode(withParameter: component) {
+        } else if let (node, parameter) = current.firstParameterNode() {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
             let lazy = ParameterValue(slug: parameter, value: component)

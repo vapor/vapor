@@ -39,8 +39,9 @@ extension QueryBuilder {
 
             return try model.willCreate(on: conn)
                 .then {
-                    return self.run { model in
+                    return self.run().then { _ -> Future<Void> in
                         try model.parseID(from: conn)
+                        return .done
                     }
                 }
                 .then { try model.didCreate(on: conn) }
