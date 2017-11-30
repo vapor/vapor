@@ -56,7 +56,6 @@ public final class Request: EphemeralContainer, ParameterContainer {
     /// Called when request is deinitializing
     deinit {
         Request.onDeinit?(self)
-        print("Request.deinit")
     }
 }
 

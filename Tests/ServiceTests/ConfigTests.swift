@@ -1,5 +1,6 @@
-import XCTest
+import Dispatch
 import Service
+import XCTest
 
 class ConfigTests: XCTestCase {
     /// Tests that BCryptConfig can be added as an instance

@@ -33,7 +33,6 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
 
     /// Request a connection from this queue pool.
     public func requestConnection() -> Future<Database.Connection> {
-        print("REQUEST")
         let promise = Promise(Database.Connection.self)
 
         if let ready = self.available.popLast() {
@@ -62,7 +61,6 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
 
     /// Release a connection back to the queue pool.
     public func releaseConnection(_ connection: Database.Connection) {
-        print("RELEASE")
         if let waiter = self.waiters.popLast() {
             waiter(connection)
         } else {
