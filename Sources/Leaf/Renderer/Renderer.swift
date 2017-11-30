@@ -90,11 +90,6 @@ extension LeafRenderer: ViewRenderer {
             return View(data: data)
         }
     }
-    
-    /// See ViewRenderer.make
-    public func make(_ path: String, _ context: [String: Encodable], on worker: Worker) throws -> Future<View> {
-        return try make(path, context: context, on: worker)
-    }
 }
 
 // MARK: Convenience
