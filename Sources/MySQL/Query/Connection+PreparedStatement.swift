@@ -13,6 +13,11 @@ extension MySQLConnection {
         var statement: PreparedStatement?
         
         self.packetStream.drain { packet in
+            if packet.payload.first == 0xfe {
+                // Ignore `0xfe` payloads, since we skip past those in the above `do {} catch {}`
+                return
+            }
+            
             if let statement = statement {
                 do {
                     if statement.columns.count < statement.columnCount {
@@ -28,11 +33,6 @@ extension MySQLConnection {
                     promise.fail(error)
                 }
             } else {
-                if packet.payload.first == 0xfe {
-                    // Ignore `0xfe` payloads, since we skip past those in the above `do {} catch {}`
-                    return
-                }
-                
                 guard packet.payload.count == 12, packet.payload.first == 0x00 else {
                     promise.fail(MySQLError(packet: packet))
                     return

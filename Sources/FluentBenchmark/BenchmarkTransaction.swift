@@ -8,18 +8,22 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
     fileprivate func _benchmark(on conn: Database.Connection) throws -> Future<Void> {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
-        return tanner.save(on: conn).then {
+        let promise = Promise<Void>()
+        
+        tanner.save(on: conn).then {
             return conn.transaction { conn in
-                var futures = [Future<Void>]()
+                var future = Future<Void>(())
                 
                 /// create 100 users
-                for i in 1...1000 {
+                for i in 1...100 {
                     let user = User<Database>(name: "User \(i)", age: i)
                     
-                    futures.append(user.save(on: conn))
+                    future = future.then { _ -> Future<Void> in
+                        return user.save(on: conn)
+                    }
                 }
                 
-                return futures.flatten().then {
+                return future.then {
                     // count users
                     return conn.query(User<Database>.self).count().then { count -> Future<Void> in
                         if count != 101 {
@@ -30,9 +34,15 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
                     }
                 }
             }
-        }.do {
-            self.fail("transaction must fail")
-        }.then {
+        }.addAwaiter { result in
+            if result.error == nil {
+                self.fail("transaction must fail")
+            }
+            
+            promise.complete()
+        }
+        
+        return promise.future.then { () -> Future<Int> in
             return conn.query(User<Database>.self).count()
         }.map { count in
             guard count == 1 else {
@@ -56,7 +66,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting & SchemaS
     /// Benchmark fluent transactions.
     /// The schema will be prepared first.
     public func benchmarkTransactions_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().map { conn in
+        return pool.requestConnection().then { conn in
             return UserMigration<Database>.prepare(on: conn).then {
                 return try self._benchmark(on: conn).map {
                     self.pool.releaseConnection(conn)
