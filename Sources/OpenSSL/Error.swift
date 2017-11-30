@@ -29,5 +29,8 @@ public struct OpenSSLError: Swift.Error {
         
         /// The provided certificate was not loaded/used successfully
         case invalidCertificate
+        
+        /// Unknown ALPN protocol selected
+        case invalidALPNProtocol
     }
 }
