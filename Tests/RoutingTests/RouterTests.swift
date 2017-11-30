@@ -1,4 +1,5 @@
 import Async
+import Dispatch
 import HTTP
 import Bits
 import Routing
