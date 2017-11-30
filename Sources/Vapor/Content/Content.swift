@@ -66,13 +66,13 @@ extension Array: Content {
 
 extension Request {
     public func makeResponse() -> Response {
-        return Response(on: self, using: self)
+        return Response(using: superContainer)
     }
 }
 
 extension Response {
     public func makeRequest() -> Request {
-        return Request(on: self, using: self)
+        return Request(using: superContainer)
     }
 }
 

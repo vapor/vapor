@@ -13,7 +13,7 @@ extension Router {
 
         let responder = RouteResponder { (request: Request) -> Response in
             let http = try WebSocket.upgradeResponse(for: request.http, with: settings, onUpgrade: closure)
-            return Response(http: http, on: request, using: request)
+            return Response(http: http, using: request.superContainer)
         }
         let route = Route<Responder>(
             path: [.constants([HTTPMethod.get.data])] + path,

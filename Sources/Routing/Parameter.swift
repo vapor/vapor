@@ -31,16 +31,10 @@ extension Parameter {
     }
 }
 
-extension Parameter where Self: EphemeralContainerFindable {
+extension Parameter where Self: ContainerFindable {
     /// See Parameter.make
-    public static func make(for parameter: String, using container: Container) throws -> EphemeralContainerFindableResult {
-        guard let ephemeral = container as? EphemeralContainer else {
-            throw RoutingError(
-                identifier: "invalidContainer",
-                reason: "\(Self.self) requires an EphemeralContainer to be parameterized."
-            )
-        }
-        return try find(identifier: parameter, for: ephemeral)
+    public static func make(for parameter: String, using container: Container) throws -> ContainerFindableResult {
+        return try find(identifier: parameter, using: container)
     }
 }
 

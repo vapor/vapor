@@ -1,10 +1,12 @@
-import Foundation
 import Async
 import Console
+import Core
 import Debugging
 import Dispatch
+import Foundation
 import HTTP
 import ServerSecurity
+import Service
 import TCP
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
@@ -26,8 +28,19 @@ public final class EngineServer: Server {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
+        var eventLoops: [Container] = []
+        for i in 0..<config.workerCount {
+            // create new event loop
+            let queue = DispatchQueue(label: "codes.vapor.engine.server.worker.\(i)")
+
+            // copy services into new container
+            let eventLoop = self.container.makeSubContainer(on: queue)
+            eventLoops.append(eventLoop)
+        }
+        var eventLoopsIterator = LoopIterator<[Container]>(collection: eventLoops)
+
         // create a tcp server
-        let tcp = try TCPServer(eventLoopCount: config.workerCount)
+        let tcp = try TCPServer(eventLoops: eventLoops.map { $0.queue })
 
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         let server = HTTPServer(socket: tcp)
@@ -36,11 +49,11 @@ public final class EngineServer: Server {
         
         // setup the server pipeline
         server.drain { client in
+            let eventLoop = eventLoopsIterator.next()!
             let parser = HTTP.RequestParser(maxSize: 10_000_000)
             let responderStream = ResponderStream(
                 responder: responder,
-                on: client.tcp.worker,
-                using: self.container
+                using: eventLoop
             )
             let serializer = HTTP.ResponseSerializer()
             

@@ -25,6 +25,11 @@ public final class Application: Container {
     /// See ServiceCacheable.serviceCache
     public let serviceCache: ServiceCache
 
+    /// See EventLoop.queue
+    public var queue: DispatchQueue {
+        return .global()
+    }
+
     /// Use this to create stored properties in extensions.
     public var extend: Extend
 

@@ -66,8 +66,8 @@ extension Services {
             S.self,
             tag: tag,
             supports: supports
-        ) { container in
-            try factory(container)
+        ) { worker in
+            try factory(worker)
         }
         self.register(factory)
     }
@@ -82,8 +82,8 @@ extension Services {
             S.self,
             tag: tag,
             supports: [interface]
-        ) { container in
-            try factory(container)
+        ) { worker in
+            try factory(worker)
         }
         self.register(factory)
     }

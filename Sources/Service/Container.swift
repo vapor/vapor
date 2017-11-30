@@ -1,14 +1,17 @@
 import Async
+import Core
+import Dispatch
 
 /// Capable of creating instances of registered services.
 /// This container makes use of config and environment
 /// to determine which service instances are most appropriate to create.
-public protocol Container: Extendable, ServiceCacheable, Worker {
+public protocol Container: EventLoop, ServiceCacheable {
     var config: Config { get }
     var environment: Environment { get }
     var services: Services { get }
 }
 
+/// A basic container
 public final class BasicContainer: Container {
     /// See Container.config
     public var config: Config
@@ -19,22 +22,18 @@ public final class BasicContainer: Container {
     /// See Container.services
     public var services: Services
 
-    /// See Container.extend
-    public var extend: Extend
-
     /// See Container.serviceCache
     public var serviceCache: ServiceCache
 
-    /// See Container.eventLoop
-    public var eventLoop: EventLoop
+    /// See EventLoop.queue
+    public var queue: DispatchQueue
 
     /// Create a new basic container
-    public init(config: Config, environment: Environment, services: Services, on worker: Worker) {
+    public init(config: Config, environment: Environment, services: Services, on eventLoop: EventLoop) {
         self.config = config
         self.environment = environment
         self.services = services
-        self.extend = .init()
         self.serviceCache = .init()
-        self.eventLoop = worker.eventLoop
+        self.queue = eventLoop.queue
     }
 }

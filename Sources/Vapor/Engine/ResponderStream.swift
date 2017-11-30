@@ -11,9 +11,6 @@ public final class ResponderStream: Async.Stream {
     private let responder: Responder
 
     /// Worker to pass onto incoming requests
-    public let worker: Worker
-
-    /// Container to pass onto incoming requests
     public let container: Container
 
     /// Use a basic stream to easily implement our output stream.
@@ -21,16 +18,15 @@ public final class ResponderStream: Async.Stream {
 
     /// Create a new response stream.
     /// The responses will be awaited on the supplied queue.
-    public init(responder: Responder, on worker: Worker, using container: Container) {
+    public init(responder: Responder, using container: Container) {
         self.responder = responder
         self.outputStream = .init()
-        self.worker = worker
         self.container = container
     }
 
     /// See InputStream.onInput
     public func onInput(_ input: Input) {
-        let req = Request(http: input, on: worker, using: container)
+        let req = Request(http: input, using: container)
         do {
             // dispatches the incoming request to the responder.
             // the response is awaited on the responder stream's queue.

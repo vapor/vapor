@@ -1,4 +1,5 @@
 import Async
+import Core
 import Service
 
 final class TestContainer: Container {
@@ -6,7 +7,6 @@ final class TestContainer: Container {
     let config: Config
     let environment: Environment
     let services: Services
-    var extend: Extend
     var serviceCache: ServiceCache
 
     init(environment: Environment = .development, config: Config, services: Services) {

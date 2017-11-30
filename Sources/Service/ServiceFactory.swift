@@ -16,5 +16,5 @@ public protocol ServiceFactory {
 
     /// Creates an instance of the service for the supplied
     /// container and worker
-    func makeService(for container: Container) throws -> Any?
+    func makeService(for worker: Container) throws -> Any?
 }

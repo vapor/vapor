@@ -7,14 +7,14 @@ public final class Serializer {
     let ast: [Syntax]
     var context: LeafData
     let renderer: LeafRenderer
-    let worker: Worker
+    let eventLoop: EventLoop
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, worker: Worker) {
+    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, on eventLoop: EventLoop) {
         self.ast = ast
         self.context = context
         self.renderer = renderer
-        self.worker = worker
+        self.eventLoop = eventLoop
     }
 
     /// Serializes the AST into Bytes.
@@ -90,7 +90,7 @@ public final class Serializer {
                     parameters: inputs,
                     body: body,
                     source: source,
-                    worker: self.worker
+                    on: self.eventLoop
                 )
 
                 return try tag.render(
@@ -136,7 +136,7 @@ public final class Serializer {
                 ast: ast,
                 renderer: renderer,
                 context: context,
-                worker: self.worker
+                on: eventLoop
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))

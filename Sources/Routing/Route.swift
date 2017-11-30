@@ -1,5 +1,5 @@
+import Core
 import HTTP
-import Async
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
 ///

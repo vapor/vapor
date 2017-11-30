@@ -2,7 +2,7 @@ import Async
 
 /// Workers that are frequently created and
 /// destroyed as an application does work.
-public protocol EphemeralContainer: Container {
+public protocol EphemeralContainer: SubContainer {
     /// Takes a self as input
     typealias LifecycleHook = (EphemeralContainer) -> ()
 
@@ -13,9 +13,9 @@ public protocol EphemeralContainer: Container {
     static var onDeinit: LifecycleHook? { get set }
 }
 
-public protocol EphemeralContainerFindable {
-    associatedtype EphemeralContainerFindableResult
-    static func find(identifier: String, for worker: EphemeralContainer) throws -> EphemeralContainerFindableResult
+public protocol ContainerFindable {
+    associatedtype ContainerFindableResult
+    static func find(identifier: String, using container: Container) throws -> ContainerFindableResult
 }
 
 /// Configures ephemeral workers.

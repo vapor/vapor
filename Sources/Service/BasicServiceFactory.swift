@@ -31,7 +31,7 @@ public struct BasicServiceFactory: ServiceFactory {
     }
 
     /// See ServiceFactory.makeService
-    public func makeService(for container: Container) throws -> Any? {
-        return try closure(container)
+    public func makeService(for worker: Container) throws -> Any? {
+        return try closure(worker)
     }
 }

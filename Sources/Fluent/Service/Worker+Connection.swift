@@ -1,5 +1,8 @@
 import Async
+import Core
 import Service
+
+// MARK: Connection
 
 /// Create non-pooled connections that can be closed when done.
 extension Container {
@@ -37,30 +40,21 @@ extension Container {
     }
 }
 
-/// Ephemeral workers use connection pooling.
-extension EphemeralContainer {
+// MARK: Pool
+
+extension Container {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func withConnection<Database, F>(
+    public func withPooledConnection<Database, F>(
         to database: DatabaseIdentifier<Database>,
         closure: @escaping (Database.Connection) throws -> F
     ) -> Future<F.Expectation> where F: FutureType {
         return then {
-            let pool: DatabaseConnectionPool<Database>
-
-            /// this is the first attempt to connect to this
-            /// db for this request
-            if let existing = self.eventLoop.getConnectionPool(database: database) {
-                pool = existing
-            } else {
-                pool = try self.eventLoop.makeConnectionPool(
-                    database: database,
-                    using: self.make(Databases.self, for: Self.self)
-                )
-            }
+            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
             return pool.requestConnection().then { conn in
@@ -74,22 +68,12 @@ extension EphemeralContainer {
 
     /// Requests a connection to the database.
     /// important: you must be sure to call `.releaseConnection`
-    public func requestConnection<Database>(
+    public func requestPooledConnection<Database>(
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
         return then {
-            let pool: DatabaseConnectionPool<Database>
-
-            /// this is the first attempt to connect to this
-            /// db for this request
-            if let existing = self.eventLoop.getConnectionPool(database: database) {
-                pool = existing
-            } else {
-                pool = try self.eventLoop.makeConnectionPool(
-                    database: database,
-                    using: self.make(Databases.self, for: Self.self)
-                )
-            }
+            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
             return pool.requestConnection()
@@ -99,7 +83,7 @@ extension EphemeralContainer {
     /// Releases a connection back to the pool.
     /// important: make sure to return connections called by `requestConnection`
     /// to this function.
-    public func releaseConnection<Database>(
+    public func releasePooledConnection<Database>(
         _ conn: Database.Connection,
         to database: DatabaseIdentifier<Database>
     ) throws {
@@ -112,69 +96,102 @@ extension EphemeralContainer {
     internal func requireConnectionPool<Database>(
         to database: DatabaseIdentifier<Database>
     ) throws -> DatabaseConnectionPool<Database> {
-        guard let pool = self.eventLoop.getConnectionPool(database: database) else {
-            throw FluentError(
-                identifier: "noReleasePool",
-                reason: "No connection pool was found while attempting to release a connection."
-            )
-        }
-
-        return pool
+        let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+        return try cache.pool(for: database)
     }
 }
+
+// MARK: Ephemeral
 
 /// Automatic connection releasing when the ephemeral worker deinits.
 extension EphemeralContainer {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        if let current = connections[database.uid]?.connection as? Future<D.Connection> {
-            return current
-        }
-
-        /// create an active connection, since we don't have to worry about threading
-        /// we can be sure that .connection will be set before this is called again
-        let active = ActiveConnection()
-        connections[database.uid] = active
-
-        let conn = requestConnection(to: database).map { conn -> D.Connection in
-            /// first get a pointer to the pool
-            let pool = try self.requireConnectionPool(to: database)
-
-            /// then create an active connection that knows how to
-            /// release itself
-            active.release = {
-                pool.releaseConnection(conn)
+        return then {
+            let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
+            if let current = connections.cache[database.uid]?.connection as? Future<D.Connection> {
+                return current
             }
+
+            /// create an active connection, since we don't have to worry about threading
+            /// we can be sure that .connection will be set before this is called again
+            let active = ActiveConnection()
+            connections.cache[database.uid] = active
+
+            let conn = self.superContainer.requestPooledConnection(to: database).map { conn -> D.Connection in
+                /// first get a pointer to the pool
+                let pool = try self.superContainer.requireConnectionPool(to: database)
+
+                /// then create an active connection that knows how to
+                /// release itself
+                active.release = {
+                    pool.releaseConnection(conn)
+                }
+                return conn
+            }
+
+            /// set the active connection so it is returned next time
+            active.connection = active
+
             return conn
         }
-
-        /// set the active connection so it is returned next time
-        active.connection = active
-
-        return conn
     }
 
     /// Releases all active connections.
-    public func releaseConnections() {
-        let conns = connections
-        connections = [:]
+    public func releaseConnections() throws {
+        let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
+        let conns = connections.cache
+        connections.cache = [:]
         for (_, conn) in conns {
             conn.release!()
         }
     }
-
-    /// This worker's active connections.
-    fileprivate var connections: [String: ActiveConnection] {
-        get { return extend["fluent:connections"] as? [String: ActiveConnection] ?? [:] }
-        set { return extend["fluent:connections"] = newValue }
-    }
 }
 
+
+// MARK: Internal
+
 /// Represents an active connection.
-fileprivate final class ActiveConnection {
+internal final class ActiveConnection {
     typealias OnRelease = () -> ()
     var connection: Any?
     var release: OnRelease?
 
     init() {}
 }
+
+internal final class ActiveConnectionCache {
+    var cache: [String: ActiveConnection]
+    init() {
+        self.cache = [:]
+    }
+}
+
+internal final class ConnectionPoolCache {
+    let databases: Databases
+    var cache: [String: Any]
+    let eventLoop: EventLoop
+
+    init(databases: Databases, on eventLoop: EventLoop) {
+        self.databases = databases
+        self.eventLoop = eventLoop
+        self.cache = [:]
+    }
+
+    func pool<D>(for id: DatabaseIdentifier<D>) throws -> DatabaseConnectionPool<D>
+        where D: Database
+    {
+        if let existing = cache[id.uid] as? DatabaseConnectionPool<D> {
+            return existing
+        } else {
+            guard let database = databases.storage[id.uid] as? D else {
+                throw "invalid db"
+            }
+
+            let new = database.makeConnectionPool(max: 2, on: eventLoop)
+            cache[id.uid] = new
+            return new
+        }
+    }
+}
+

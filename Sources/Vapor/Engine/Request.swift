@@ -1,30 +1,27 @@
 import Async
+import Dispatch
 import HTTP
 import Routing
 import Service
 
-public final class Request: EphemeralContainer {
+public final class Request: EphemeralContainer, ParameterContainer {
     /// See EphemeralWorker.onInit
     public static var onInit: LifecycleHook?
 
     /// See EphemeralWorker.onDeinit
     public static var onDeinit: LifecycleHook?
 
-    /// This message's event loop.
-    ///
-    /// All async tasks (such as completing or awaiting futures)
-    /// must be performed on this queue.
-    ///
-    /// Make sure not to block this queue as it will
-    /// block all other requests on the queue.
-    public var eventLoop: EventLoop
-
     /// Underlying HTTP request.
     public var http: HTTPRequest
 
-    /// Container for parsing/serializing URI query strings
-    public var query: QueryContainer
-    
+    /// This response's worker
+    public let superContainer: Container
+
+    /// See EventLoop.queue
+    public var queue: DispatchQueue {
+        return superContainer.queue
+    }
+
     /// See Container.config
     public var config: Config
 
@@ -35,37 +32,52 @@ public final class Request: EphemeralContainer {
     public var services: Services
 
     /// See Container.serviceCache
-    public var serviceCache: ServiceCache {
-        return eventLoop.serviceCache
-    }
+    public var serviceCache: ServiceCache
 
     /// Holds parameters for routing
-    public var parameters: ParameterContainer!
-
-    /// Container for parsing/serializing content
-    public var content: ContentContainer!
+    public var parameters: Parameters
 
     /// See Extendable.extend
     public var extend: Extend
 
     /// Create a new Request
-    public init(http: HTTPRequest = HTTPRequest(), on worker: Worker, using container: Container) {
+    public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
         self.http = http
-        self.eventLoop = worker.eventLoop
+        self.superContainer = container
         self.config = container.config
         self.environment = container.environment
         self.services = container.services
-        self.query = QueryContainer(query: http.uri.query ?? "", container: container)
+        self.serviceCache = .init()
         self.extend = Extend()
-        self.parameters = ParameterContainer(container: self)
-        self.content = ContentContainer(message: self)
+        self.parameters = []
         Request.onInit?(self)
     }
 
     /// Called when request is deinitializing
     deinit {
         Request.onDeinit?(self)
-        // print("Request.deinit")
+        print("Request.deinit")
+    }
+}
+
+extension Request {
+    /// The request's event loop container.
+    /// note: convenience name for `.superContainer`
+    public var eventLoop: Container {
+        return superContainer
+    }
+
+    /// Container for parsing/serializing URI query strings
+    public var query: QueryContainer {
+        return QueryContainer(query: http.uri.query ?? "", container: self)
+    }
+
+    /// Container for parsing/serializing content
+    public var content: ContentContainer {
+        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
+            self.http.body = body
+            self.http.mediaType = mediaType
+        }
     }
 }
 

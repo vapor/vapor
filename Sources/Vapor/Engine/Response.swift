@@ -1,3 +1,6 @@
+import Dispatch
+import Service
+
 public final class Response: EphemeralContainer {
     /// See EphemeralWorker.onInit
     public static var onInit: LifecycleHook?
@@ -5,17 +8,16 @@ public final class Response: EphemeralContainer {
     /// See EphemeralWorker.onDeinit
     public static var onDeinit: LifecycleHook?
 
-    /// This message's event loop.
-    ///
-    /// All async tasks (such as completing or awaiting futures)
-    /// must be performed on this queue.
-    ///
-    /// Make sure not to block this queue as it will
-    /// block all other requests on the queue.
-    public var eventLoop: EventLoop
-
     /// Underlying HTTP response.
     public var http: HTTPResponse
+
+    /// This response's worker
+    public let superContainer: Container
+
+    /// See EventLoop.queue
+    public var queue: DispatchQueue {
+        return superContainer.queue
+    }
 
     /// See Container.config
     public var config: Config
@@ -27,26 +29,20 @@ public final class Response: EphemeralContainer {
     public var services: Services
 
     /// See Container.serviceCache
-    public var serviceCache: ServiceCache {
-        return eventLoop.serviceCache
-    }
-
-    /// Container for parsing/serializing content
-    public var content: ContentContainer!
+    public var serviceCache: ServiceCache
 
     /// See Extendable.extend
     public var extend: Extend
 
-
     /// Create a new Response
-    public init(http: HTTPResponse = HTTPResponse(), on worker: Worker, using container: Container) {
+    public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
         self.http = http
-        self.eventLoop = worker.eventLoop
+        self.superContainer = container
         self.config = container.config
         self.environment = container.environment
         self.services = container.services
+        self.serviceCache = .init()
         self.extend = Extend()
-        self.content = ContentContainer(message: self)
         Response.onInit?(self)
     }
 
@@ -54,5 +50,21 @@ public final class Response: EphemeralContainer {
     /// Called when request is deinitializing
     deinit {
         Response.onDeinit?(self)
+    }
+}
+
+extension Response {
+    /// The response's event loop container.
+    /// note: convenience name for `.superContainer`
+    public var eventLoop: Container {
+        return superContainer
+    }
+
+    /// Container for parsing/serializing content
+    public var content: ContentContainer {
+        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
+            self.http.body = body
+            self.http.mediaType = mediaType
+        }
     }
 }

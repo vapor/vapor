@@ -22,7 +22,7 @@ public final class Var: LeafTag {
                     ast: body,
                     renderer: renderer,
                     context: context,
-                    worker: parsed.worker
+                    on: parsed.eventLoop
                 )
                 serializer.serialize().do { rendered in
                     dict[key] = .data(rendered)

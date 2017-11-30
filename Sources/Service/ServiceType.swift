@@ -10,5 +10,5 @@ public protocol ServiceType {
 
     /// Creates a new instance of the service
     /// Using the service container.
-    static func makeService(for container: Container) throws -> Self?
+    static func makeService(for worker: Container) throws -> Self?
 }

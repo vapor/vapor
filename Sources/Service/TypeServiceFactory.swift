@@ -17,8 +17,8 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
     }
 
     /// See ServiceType.makeService
-    public func makeService(for container: Container) throws -> Any? {
-        return try S.makeService(for: container)
+    public func makeService(for worker: Container) throws -> Any? {
+        return try S.makeService(for: worker)
     }
 
     /// Create a new type service factory

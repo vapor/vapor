@@ -1,5 +1,6 @@
 import Async
 import Console
+import Dispatch
 import HTTP
 import Foundation
 import Routing
@@ -33,8 +34,8 @@ extension Services {
             return DateMiddleware()
         }
         
-        services.register { container in
-            return ErrorMiddleware(environment: container.environment)
+        services.register { worker in
+            return ErrorMiddleware(environment: worker.environment)
         }
 
         // register router
@@ -51,17 +52,17 @@ extension Services {
         services.register(Console.self) { container in
             return Terminal()
         }
-        services.register { container -> ServeCommand in
+        services.register { worker -> ServeCommand in
             let router = try RouterResponder(
-                router: container.make(for: ServeCommand.self)
+                router: worker.make(for: ServeCommand.self)
             )
 
-            let middleware = try container
+            let middleware = try worker
                 .make(MiddlewareConfig.self, for: ServeCommand.self)
-                .resolve(for: container)
+                .resolve(for: worker)
 
             return try ServeCommand(
-                server: container.make(for: ServeCommand.self),
+                server: worker.make(for: ServeCommand.self),
                 responder: middleware.makeResponder(chainedto: router)
             )
         }
@@ -88,11 +89,5 @@ extension Services {
         }
 
         return services
-    }
-}
-
-extension Application: Worker {
-    public var eventLoop: EventLoop {
-        return EventLoop.default
     }
 }

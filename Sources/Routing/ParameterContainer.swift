@@ -6,24 +6,18 @@ import Service
 /// A bag for holding parameters resolved during router
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/routing/parameters/)
-public final class ParameterContainer {
+public protocol ParameterContainer: class {
+    /// An array of parameters
+    typealias Parameters = [ParameterValue]
+
     /// The parameters, not yet resolved
     /// so that the `.next()` method can throw any errors.
-    var values: [ParameterValue]
-
-    /// The container we are using to initialize parameters.
-    weak var container: Container?
-
-    /// Create a new parameters bag.
-    public init(container: Container) {
-        values = []
-        self.container = container
-    }
+    var parameters: Parameters { get set }
 }
 
 /// MARK: Next
 
-extension ParameterContainer {
+extension Container where Self: ParameterContainer {
     /// Grabs the next parameter from the parameter bag.
     ///
     /// Note: the parameters _must_ be fetched in the order they
@@ -35,25 +29,18 @@ extension ParameterContainer {
     ///     let post = try parameters.next(Post.self)
     ///     let comment = try parameters.next(Comment.self)
     ///
-    public func next<P>(_ parameter: P.Type = P.self) throws -> P.ResolvedParameter
+    public func parameter<P>(_ parameter: P.Type = P.self) throws -> P.ResolvedParameter
         where P: Parameter
     {
-        guard values.count > 0 else {
+        guard parameters.count > 0 else {
             throw RoutingError(identifier: "insufficientParameters", reason: "Insufficient parameters")
         }
 
-        let current = values[0]
+        let current = parameters[0]
         guard current.slug == Data(P.uniqueSlug.utf8) else {
             throw RoutingError(
                 identifier: "invalidParameterType",
                 reason: "Invalid parameter type. Expected \(P.self) got \(current.slug)"
-            )
-        }
-
-        guard let container = self.container else {
-            throw RoutingError(
-                identifier: "noContainer",
-                reason: "The container has deallocated."
             )
         }
 
@@ -64,15 +51,15 @@ extension ParameterContainer {
             )
         }
 
-        let item = try P.make(for: string, using: container)
-        values = Array(values.dropFirst())
+        let item = try P.make(for: string, using: self)
+        parameters = Array(parameters.dropFirst())
         return item
     }
 
     /// Infer requested type where the resolved parameter is the parameter type.
-    public func next<P>() throws -> P
+    public func parameter<P>() throws -> P
         where P: Parameter, P.ResolvedParameter == P
     {
-        return try self.next(P.self)
+        return try self.parameter(P.self)
     }
 }

@@ -18,13 +18,13 @@ internal struct SchemaMigrationConfig<
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, on worker: Worker) -> Future<Void> {
+    internal func migrate(using databases: Databases, on eventLoop: EventLoop) -> Future<Void> {
         return then {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw "no database \(self.database.uid) was found for migrations"
             }
 
-            return database.makeConnection(on: worker).then { conn in
+            return database.makeConnection(on: eventLoop).then { conn in
                 self.prepareForMigration(on: conn)
             }
         }

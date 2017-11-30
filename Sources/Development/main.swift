@@ -78,7 +78,7 @@ router.get("leaf") { req -> Future<View> in
     let promise = Promise(User.self)
     // user.futureChild = promise.future
 
-    req.eventLoop.queue.asyncAfter(deadline: .now() + 2) {
+    req.queue.asyncAfter(deadline: .now() + 2) {
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
@@ -176,13 +176,13 @@ router.get("transaction") { req -> Future<String> in
 }
 
 router.get("pets", Pet.parameter, "toys") { req in
-    return try req.parameters.next(Pet.self).then { pet in
+    return try req.parameter(Pet.self).then { pet in
         return try pet.toys.query(on: req).all()
     }
 }
 
 router.get("string", String.parameter) { req -> String in
-    return try req.parameters.next(String.self)
+    return try req.parameter(String.self)
 }
 
 router.get("error") { req -> String in
@@ -228,9 +228,12 @@ router.get("all") { req -> Future<String> in
     }
 }
 
-router.get("first") { req -> Future<String> in
-    return try User.query(on: req).filter(\User.name == "Vapor").first().then { _ -> String in
-        return "done"
+router.get("first") { req -> Future<User> in
+    return try User.query(on: req).filter(\User.name == "Vapor").first().then { user -> User in
+        guard let user = user else {
+            throw Abort(.notFound)
+        }
+        return user
     }
 }
 

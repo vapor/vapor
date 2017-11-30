@@ -7,7 +7,7 @@ import Dispatch
 /// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
 public class ConnectionPool {
     /// The queue on which connections will be created
-    let worker: Worker
+    let eventLoop: EventLoop
     
     /// The hostname to which connections will be connected
     let hostname: String
@@ -48,8 +48,15 @@ public class ConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) {
-        self.worker = worker
+    public init(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String?,
+        on eventLoop: EventLoop
+    ) {
+        self.eventLoop = eventLoop
         self.hostname = hostname
         self.port = port
         self.user = user
@@ -107,7 +114,13 @@ public class ConnectionPool {
             return future
         }
         
-        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, on: worker).do { connection in
+        Connection.makeConnection(
+            hostname: hostname,
+            user: user,
+            password: password,
+            database: database,
+            on: eventLoop
+        ).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             
