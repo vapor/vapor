@@ -19,6 +19,8 @@ public var defaultTags: [String: LeafTag] {
         "comment": Comment(),
         "contains": Contains(),
         "lowercase": Lowercase(),
+        "uppercase": Uppercase(),
+        "capitalize": Capitalize(),
         "count": Count(),
         "set": Var(),
         "get": Raw(),

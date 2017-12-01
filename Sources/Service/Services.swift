@@ -24,21 +24,24 @@ extension Services {
     public mutating func register<S>(
         _ interface: Any.Type,
         tag: String? = nil,
+        isSingleton: Bool = false,
         _ instance: S
     ) {
-        return register(supports: [interface], tag: tag, instance)
+        return register(supports: [interface], tag: tag, isSingleton: isSingleton, instance)
     }
 
     /// Adds an instance of a service to the Services.
     public mutating func register<S>(
         supports: [Any.Type] = [],
         tag: String? = nil,
+        isSingleton: Bool = false,
         _ instance: S
     ) {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
-            supports: supports
+            supports: supports,
+            isSingleton: isSingleton
         ) { container in
             return instance
         }
@@ -60,12 +63,14 @@ extension Services {
     public mutating func register<S>(
         _ supports: [Any.Type] = [],
         tag: String? = nil,
+        isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
-            supports: supports
+            supports: supports,
+            isSingleton: isSingleton
         ) { worker in
             try factory(worker)
         }
@@ -76,12 +81,14 @@ extension Services {
     public mutating func register<S>(
         _ interface: Any.Type,
         tag: String? = nil,
+        isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
             S.self,
             tag: tag,
-            supports: [interface]
+            supports: [interface],
+            isSingleton: isSingleton
         ) { worker in
             try factory(worker)
         }

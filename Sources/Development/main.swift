@@ -45,7 +45,9 @@ var middlewareConfig = MiddlewareConfig()
 // middlewareConfig.use(FluentMiddleware.self)
 services.register(middlewareConfig)
 
-let router = EngineRouter.default()
+let app = try Application(services: services)
+
+let router = try app.make(Router.self)
 
 router.get("hello") { req -> [User] in
     let user = User(name: "Vapor", age: 3);
@@ -186,7 +188,7 @@ router.get("string", String.parameter) { req -> String in
 }
 
 router.get("error") { req -> String in
-    throw "foo"
+    throw Abort(.internalServerError, reason: "Test error")
 }
 
 router.get("users") { req -> Future<Response> in
@@ -264,10 +266,6 @@ router.get("redirect") { req in
 //    let flag = req.query["flag"]
 //    return data ?? flag ?? "none"
 //}
-
-services.register(Router.self, router)
-
-let app = try Application(services: services)
 
 let foo = try app.withConnection(to: alpha) { alpha in
     return try alpha.query(string: "select sqlite_version();").all()

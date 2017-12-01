@@ -14,7 +14,10 @@ public protocol ServiceFactory {
     /// it from identical service types.
     var serviceTag: String? { get }
 
+    /// If true, the service will only ever be booted once.
+    var serviceIsSingleton: Bool { get }
+
     /// Creates an instance of the service for the supplied
     /// container and worker
-    func makeService(for worker: Container) throws -> Any?
+    func makeService(for worker: Container) throws -> Any
 }

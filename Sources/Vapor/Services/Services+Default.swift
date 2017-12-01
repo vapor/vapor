@@ -39,8 +39,8 @@ extension Services {
         }
 
         // register router
-        services.register(Router.self) { container in
-            return EngineRouter()
+        services.register(Router.self, isSingleton: true) { container in
+            return EngineRouter.default()
         }
 
         // register content coders
@@ -52,10 +52,14 @@ extension Services {
         services.register(Console.self) { container in
             return Terminal()
         }
-        services.register { worker -> ServeCommand in
-            let router = try RouterResponder(
-                router: worker.make(for: Application.self)
+        services.register(Responder.self) { container in
+            return try RouterResponder(
+                router: container.make(for: Responder.self)
             )
+        }
+
+        services.register { worker -> ServeCommand in
+            let responder = try worker.make(Responder.self, for: ServeCommand.self)
 
             let middleware = try worker
                 .make(MiddlewareConfig.self, for: ServeCommand.self)
@@ -63,7 +67,7 @@ extension Services {
 
             return try ServeCommand(
                 server: worker.make(for: ServeCommand.self),
-                responder: middleware.makeResponder(chainedto: router)
+                responder: middleware.makeResponder(chainedto: responder)
             )
         }
         services.register { container -> CommandConfig in
@@ -86,6 +90,16 @@ extension Services {
         // directory
         services.register { container -> DirectoryConfig in
             return DirectoryConfig.default()
+        }
+
+        // logging
+        services.register(Logger.self) { container -> ConsoleLogger in
+            return try ConsoleLogger(
+                console: container.make(for: ConsoleLogger.self)
+            )
+        }
+        services.register(Logger.self) { container -> PrintLogger in
+            return PrintLogger()
         }
 
         return services

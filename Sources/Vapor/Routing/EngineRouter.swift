@@ -38,9 +38,12 @@ public final class EngineRouter: Router {
         return request.http.uri.pathBytes.withUnsafeBufferPointer { (uri: ByteBuffer) in
             var array = [PathComponent.Parameter]()
             array.reserveCapacity(8)
-            
-            // Skip past the first `/`
-            var baseIndex = uri.index(after: uri.startIndex)
+
+            var baseIndex = uri.startIndex
+            if uri[0] == .forwardSlash {
+                // Skip past the first `/`
+                baseIndex = uri.index(after: uri.startIndex)
+            }
             
             if baseIndex < uri.endIndex {
                 var currentIndex = baseIndex
