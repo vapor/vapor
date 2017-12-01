@@ -2,6 +2,7 @@ import Async
 import Bits
 import Fluent
 
+/// Authenticatable by Basic username:password auth.
 public protocol PasswordAuthenticatable: Authenticatable {
     /// Key path to the username
     typealias UsernameKey = ReferenceWritableKeyPath<Self, String>

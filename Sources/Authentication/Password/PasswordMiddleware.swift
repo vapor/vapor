@@ -1,5 +1,8 @@
 import Vapor
 
+/// Protects a route group, requiring a password authenticatable
+/// instance to pass through.
+/// use `req.requireAuthenticated(A.self)` to fetch the instance.
 public final class PasswordAuthenticationMiddleware<A>: Middleware
     where A: PasswordAuthenticatable
 {
@@ -14,6 +17,7 @@ public final class PasswordAuthenticationMiddleware<A>: Middleware
         self.verifier = verifier
     }
 
+    /// See Middleware.respond
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue

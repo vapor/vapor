@@ -65,7 +65,6 @@ public final class EngineServer: Server {
                     client.onInput(data)
                     serializer.upgradeHandler?.closure(client.tcp)
                 }.catch { err in
-                    /// FIXME: use log protocol?
                     logger.reportError(err, as: "Uncaught error")
                     client.close()
                 }.finally {

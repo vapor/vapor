@@ -15,3 +15,10 @@ public protocol ServiceType {
     /// Using the service container.
     static func makeService(for worker: Container) throws -> Self
 }
+
+extension ServiceType {
+    /// See ServiceType.serviceIsSingleton
+    public static var serviceIsSingleton: Bool {
+        return false
+    }
+}

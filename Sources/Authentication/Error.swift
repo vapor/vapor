@@ -1,4 +1,5 @@
 import Debugging
+import Vapor
 
 /// Errors that can be thrown while working with Authentication.
 public struct AuthenticationError: Traceable, Debuggable, Error {
@@ -42,5 +43,12 @@ public struct AuthenticationError: Traceable, Debuggable, Error {
         self.line = line
         self.column = column
         self.stackTrace = AuthenticationError.makeStackTrace()
+    }
+}
+
+extension AuthenticationError: AbortError {
+    /// See AbortError.status
+    public var status: HTTPStatus {
+        return .unauthorized
     }
 }
