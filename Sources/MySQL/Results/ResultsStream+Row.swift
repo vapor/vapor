@@ -9,6 +9,8 @@ final class RowStream: Async.Stream, ClosableStream {
 
     /// See OutputStream.Output
     typealias Output = Row
+    
+    typealias PacketOKSetter = ((UInt64, UInt64) -> ())
 
     /// A list of all fields' descriptions in this table
     var columns = [Field]()
@@ -21,6 +23,8 @@ final class RowStream: Async.Stream, ClosableStream {
 
     /// If `true`, the results are using the binary protocols
     var binary: Bool
+    
+    var packetOKcallback: PacketOKSetter?
 
     /// Handles EOF
     typealias OnEOF = (UInt16) throws -> ()
@@ -32,13 +36,13 @@ final class RowStream: Async.Stream, ClosableStream {
     private var outputStream: BasicStream<Output>
     
     /// Creates a new RowStream using the specified protocol (from MySQL 4.0 or 4.1) and optionally the binary protocol instead of text
-    init(mysql41: Bool, binary: Bool = false) {
+    init(mysql41: Bool, binary: Bool = false, packetOKcallback: PacketOKSetter? = nil) {
         self.mysql41 = mysql41
         self.binary = binary
+        self.packetOKcallback = packetOKcallback
         outputStream = .init()
         self.onEOF = { _ in self.close() }
     }
-    
 
     /// For internal notification purposes only
     func close() {
@@ -80,7 +84,7 @@ final class RowStream: Async.Stream, ClosableStream {
         guard let columnCount = self.columnCount else {
             // Parse the column count
             let parser = Parser(packet: packet)
-
+            
             // Tries to parse the header count
             guard let columnCount = try? parser.parseLenEnc() else {
                 if case .error(let error) = try packet.parseResponse(mysql41: mysql41) {
@@ -92,12 +96,22 @@ final class RowStream: Async.Stream, ClosableStream {
                 return
             }
 
-            // No columns means an empty stream
+            // No columns means that this is likely the success response of a binary INSERT/UPDATE/DELETE query
             if columnCount == 0 {
+                guard binary else {
+                    self.onError(MySQLError(packet: packet))
+                    self.close()
+                    return
+                }
+                
+                if let (affectedRows, lastInsertID) = try packet.parseBinaryOK() {
+                    self.packetOKcallback?(affectedRows, lastInsertID)
+                }
+                
                 self.close()
                 return
             }
-
+            
             self.columnCount = columnCount
             return
         }
@@ -160,7 +174,7 @@ final class RowStream: Async.Stream, ClosableStream {
                 throw MySQLError(.invalidPacket)
             }
         }
-
+        
         do {
             // Parse the column field definition
             let field = try packet.parseFieldDefinition()

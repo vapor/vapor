@@ -67,12 +67,11 @@ public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceS
         _ = self.logger?.log(query: sqlString)
         
         if query.data == nil && binds.count == 0 {
-            let future = connection.forEach(D.self, in: sqlString) { result in
-                stream.close()
+            connection.forEach(D.self, in: sqlString) { result in
                 stream.onInput(result)
-            }
-                
-            future.catch { error in
+            }.do {
+                stream.close()
+            }.catch { error in
                 stream.onError(error)
                 stream.close()
             }
