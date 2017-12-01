@@ -12,16 +12,50 @@ public final class RequestSerializer: Serializer {
     public typealias Output = ByteBuffer
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output>
+    var outputStream: BasicStream<Output>
+    
+    /// A buffer used to store writes in temporarily
+    let writeBuffer: MutableBytesPointer
+    
+    /// A current data in the writeBuffer
+    var writeBufferUsage: Int = 0
+    
+    /// The size of the above buffer
+    let writeBufferSize: Int
 
     /// Create a new RequestSerializer
-    public init() {
+    public init(bufferSize: Int = 65_535) {
         outputStream = .init()
+        writeBufferSize = bufferSize
+        writeBuffer = MutableBytesPointer.allocate(capacity: bufferSize)
     }
     
     /// See InputStream.onInput
-    public func onInput(_ input: HTTPRequest) {
-        serialize(input).withByteBuffer(outputStream.onInput)
+    public func onInput(_ request: HTTPRequest) {
+        var serialized = request.method.bytes
+        serialized.reserveCapacity(request.headers.storage.count + 256)
+        
+        serialized.append(.space)
+        serialized.append(contentsOf: request.uri.pathBytes)
+        serialized.append(contentsOf: http1newLine)
+        
+        var headers = request.headers
+        
+        if let count = request.body.count {
+            headers[.contentLength] = count.description
+        } else if case .stream(_) = request.body.storage {
+            headers[.transferEncoding] = "chunked"
+        }
+        
+        serialized.withUnsafeBufferPointer(write)
+        headers.storage.withByteBuffer(write)
+        
+        // End of Headers
+        crlf.withByteBuffer(write)
+        
+        // Body
+        request.body.serialize(into: self)
+        self.flush()
     }
 
     /// See InputStream.onError
@@ -43,47 +77,10 @@ public final class RequestSerializer: Serializer {
     public func onClose(_ onClose: ClosableStream) {
         outputStream.onClose(onClose)
     }
-
-    /// Serializes a request into DispatchData.
-    public func serialize(_ request: HTTPRequest) -> Data {
-        // make copy
-        var request = request
-
-        var serialized = request.method.data
-        serialized.reserveCapacity(request.headers.storage.count + 256)
-        
-        serialized.append(.space)
-        serialized.append(contentsOf: request.uri.pathData)
-        serialized.append(contentsOf: http1newLine)
-        
-        if let count = request.body.count {
-            request.headers[.contentLength] = count.description
-        } else if case .stream(_) = request.body.storage {
-            request.headers[.transferEncoding] = "chunked"
-        }
-        
-        serialized.append(contentsOf: request.headers.storage)
-        
-        // End of Headers
-        serialized.append(.carriageReturn)
-        serialized.append(.newLine)
-        
-        // Body
-        switch request.body.storage {
-        case .dispatchData(let data):
-            serialized.append(contentsOf: data)
-        case .data(let data):
-            serialized.append(contentsOf: data)
-        case .staticString(let string):
-            let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
-            
-            serialized.append(contentsOf: buffer)
-        case .stream(let bodyStream):
-            bodyStream.stream(to: ChunkEncoder()).drain(onInput: outputStream.onInput).catch(onError: self.onError)
-        }
-        
-        return serialized
-    }
 }
 
-fileprivate let http1newLine = Data(" HTTP/1.1\r\n".utf8)
+fileprivate let crlf = Data([
+    .carriageReturn,
+    .newLine
+])
+fileprivate let http1newLine = [UInt8](" HTTP/1.1\r\n".utf8)

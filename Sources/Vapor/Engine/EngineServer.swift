@@ -76,7 +76,7 @@ public final class EngineServer: Server {
             console.reportError(err, as: "Server error")
             debugPrint(err)
         }
-
+        
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
         console.output(":" + config.port.description, style: .custom(.cyan))

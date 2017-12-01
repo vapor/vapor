@@ -8,16 +8,22 @@ class SerializerTests : XCTestCase {
             uri: URI(path: "/foo"),
             body: "<vapor>"
         )
-
-        let data = Data(RequestSerializer().serialize(request))
+        
+        let serializer = RequestSerializer()
         let expected = """
         POST /foo HTTP/1.1\r
         Content-Length: 7\r
         \r
         <vapor>
         """
-
-        XCTAssertEqual(data, expected.data(using: .utf8))
+        
+        serializer.drain { buffer in
+            XCTAssertEqual(Array(buffer), [UInt8](expected.utf8))
+        }.catch { _ in
+            XCTFail()
+        }       
+            
+        serializer.onInput(request)
     }
     
     func testChunkEncoder() {

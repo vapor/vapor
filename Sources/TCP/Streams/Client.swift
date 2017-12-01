@@ -30,7 +30,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Bytes from the socket are read into this buffer.
     /// Views into this buffer supplied to output streams.
     let outputBuffer: MutableByteBuffer
-
+    
     /// Data being fed into the client stream is stored here.
     var inputBuffer = [Data]()
 
@@ -73,8 +73,20 @@ public final class TCPClient: Async.Stream, ClosableStream {
 
     /// See InputStream.onInput
     public func onInput(_ input: ByteBuffer) {
-        inputBuffer.append(Data(input))
-        ensureWriteSourceResumed()
+        do {
+            let count = try socket.write(from: input)
+            
+            guard count == input.count else {
+                let data = Data(input[input.count...])
+                
+                inputBuffer.append(data)
+                ensureWriteSourceResumed()
+                return
+            }
+        } catch {
+            inputBuffer.append(Data(input))
+            ensureWriteSourceResumed()
+        }
     }
 
     /// See InputStream.onError
@@ -150,8 +162,11 @@ public final class TCPClient: Async.Stream, ClosableStream {
                     let buffer = ByteBuffer(start: pointer, count: data.count)
                     
                     do {
-                        _ = try self.socket.write(max: data.count, from: buffer)
-                        // FIXME: we should verify the lengths match here.
+                        let length = try self.socket.write(from: buffer)
+                        
+                        if length < buffer.count {
+                            self.inputBuffer.insert(Data(buffer[length...]), at: 0)
+                        }
                     } catch {
                         // any errors that occur here cannot be thrown,
                         // so send them to stream error catcher.

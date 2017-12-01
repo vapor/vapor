@@ -15,16 +15,49 @@ public final class ResponseSerializer: Serializer {
     public private(set) var upgradeHandler: HTTPOnUpgrade?
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output>
+    var outputStream: BasicStream<Output>
+    
+    /// A buffer used to store writes in temporarily
+    let writeBuffer: MutableBytesPointer
+    
+    /// A current data in the writeBuffer
+    var writeBufferUsage: Int = 0
+    
+    /// The size of the above buffer
+    let writeBufferSize: Int
 
     /// Create a new ResponseSerializer
-    public init() {
+    public init(bufferSize: Int = 65_535) {
         outputStream = .init()
+        writeBufferSize = bufferSize
+        writeBuffer = MutableBytesPointer.allocate(capacity: bufferSize)
     }
 
     /// See InputStream.onInput
-    public func onInput(_ input: HTTPResponse) {
-        serialize(input).withByteBuffer(outputStream.onInput)
+    public func onInput(_ response: HTTPResponse) {
+        var headers = response.headers
+        
+        if let count = response.body.count {
+            headers[.contentLength] = count.description
+        } else if case .stream(_) = response.body.storage {
+            headers[.transferEncoding] = "chunked"
+        }
+        
+        self.upgradeHandler = response.onUpgrade
+        
+        let statusCode = [UInt8](response.status.code.description.utf8)
+        
+        // First line
+        let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes
+        
+        serialized.withUnsafeBufferPointer(write)
+        headers.storage.withByteBuffer(write)
+        
+        // End of Headers
+        crlf.withUnsafeBufferPointer(write)
+        
+        response.body.serialize(into: self)
+        self.flush()
     }
 
     /// See InputStream.onError
@@ -46,75 +79,15 @@ public final class ResponseSerializer: Serializer {
     public func onClose(_ onClose: ClosableStream) {
         outputStream.onClose(onClose)
     }
-
-    /// Efficiently serializes a response into Data.
-    public func serialize(_ response: HTTPResponse) -> Data {
-        // make copy
-        var response = response
-
-        if let count = response.body.count {
-            response.headers[.contentLength] = count.description
-        } else if case .stream(_) = response.body.storage {
-            response.headers[.transferEncoding] = "chunked"
-        }
-        
-        self.upgradeHandler = response.onUpgrade
-
-        let statusCode = Data(response.status.code.description.utf8)
-
-        // prefix + status + space + message + eol
-        let firstLineCount = http1Prefix.count + statusCode.count + 1 + response.status.messageData.count + eol.count
-
-        // first line + headers + contentLengthHeader + EOL + body + EOL
-        let messageSize = firstLineCount + response.headers.storage.count + eol.count + response.body.storage.count
-
-        var data = Data(repeating: 0, count: messageSize)
-
-        data.withUnsafeMutableBytes { (message: MutableBytesPointer) in
-            var offset = 0
-
-            // First line
-            offset += copy(http1Prefix, to: message)
-            offset += copy(statusCode, to: message.advanced(by: offset))
-            message.advanced(by: offset).pointee = .space
-            offset += 1
-            offset += copy(response.status.messageData, to: message.advanced(by: offset))
-            offset += copy(eol, to: message.advanced(by: offset))
-
-            // headers
-            offset += copy(response.headers.storage, to: message.advanced(by: offset))
-
-            // End of headers
-            offset += copy(eol, to: message.advanced(by: offset))
-
-            switch response.body.storage {
-            case .data(let data):
-                offset += copy(data, to: message.advanced(by: offset))
-            case .dispatchData(let data):
-                offset += copy(Data(data), to: message.advanced(by: offset))
-            case .staticString(let pointer):
-                memcpy(message.advanced(by: offset), pointer.utf8Start, pointer.utf8CodeUnitCount)
-                offset += pointer.utf8CodeUnitCount
-            case .stream(let bodyStream):
-                bodyStream.stream(to: ChunkEncoder()).drain(onInput: outputStream.onInput).catch(onError: self.onError)
-            }
-        }
-
-        return data
-    }
-}
-
-fileprivate func copy(_ data: Data, to pointer: MutableBytesPointer) -> Int {
-    data.withUnsafeBytes { (dataPointer: BytesPointer) in
-        _ = memcpy(pointer, dataPointer, data.count)
-    }
     
-    return data.count
+    deinit {
+        writeBuffer.deallocate(capacity: writeBufferSize)
+    }
 }
 
-internal let http1Prefix = Data("HTTP/1.1 ".utf8)
-internal let eol = Data("\r\n".utf8)
-internal let headerKeyValueSeparator: Data = Data(": ".utf8)
+fileprivate let http1Prefix = [UInt8]("HTTP/1.1 ".utf8)
+fileprivate let crlf = [UInt8]("\r\n".utf8)
+fileprivate let headerKeyValueSeparator = [UInt8](": ".utf8)
 
 // MARK: Utilities
 

@@ -1,4 +1,5 @@
 import Foundation
+import Bits
 
 final class TrieRouterNode<Output> {
     /// Kind of node
@@ -23,14 +24,18 @@ final class TrieRouterNode<Output> {
 
 enum TrieRouterNodeKind {
     case root
-    case parameter(Data)
-    case constant(Data)
+    case parameter([UInt8])
+    case constant([UInt8])
 }
 
 extension TrieRouterNode {
     /// Finds the node with the supplied path in the
     /// node's constant children.
-    func findNode(withConstant path: Data) -> TrieRouterNode<Output>? {
+    func findNode(withConstant path: ByteBuffer) -> TrieRouterNode<Output>? {
+        guard let pointer = path.baseAddress else {
+            return nil
+        }
+        
         for child in children {
             guard case .constant(let constant) = child.kind else {
                 continue
@@ -40,7 +45,7 @@ extension TrieRouterNode {
                 continue
             }
 
-            if path == constant {
+            if memcmp(pointer, constant, path.count) == 0 {
                 return child
             }
         }
@@ -50,7 +55,11 @@ extension TrieRouterNode {
 
     /// Finds the node with the supplied path in the
     /// node's constant children.
-    func findNode(withParameter path: Data) -> (TrieRouterNode<Output>, Data)? {
+    func findNode(withParameter path: ByteBuffer) -> (TrieRouterNode<Output>, [UInt8])? {
+        guard let pointer = path.baseAddress else {
+            return nil
+        }
+        
         for child in children {
             guard case .parameter(let parameter) = child.kind else {
                 continue
@@ -60,7 +69,7 @@ extension TrieRouterNode {
                 continue
             }
 
-            if path == parameter {
+            if memcmp(pointer, parameter, path.count) == 0 {
                 return (child, parameter)
             }
         }
@@ -69,7 +78,7 @@ extension TrieRouterNode {
     }
 
     /// Returns the first parameter node
-    func firstParameterNode() -> (TrieRouterNode<Output>, Data)? {
+    func firstParameterNode() -> (TrieRouterNode<Output>, [UInt8])? {
         for child in children {
             guard case .parameter(let parameter) = child.kind else {
                 continue

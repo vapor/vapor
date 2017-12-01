@@ -20,19 +20,19 @@ class RedisTests: XCTestCase {
         return try RedisClient.connect(
             hostname: "localhost",
             on: queue
-        ).blockingAwait(timeout: .seconds(1))
+        ).blockingAwait(timeout: .seconds(5))
     }
     
     func testCRUD() throws {
         let connection = try makeClient()
       
-        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
+        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(2))
         
         let result = try! connection.set("world", forKey: "hello").flatMap {
             return connection.getData(forKey: "hello")
         }.blockingAwait(timeout: .seconds(1))
         
-        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(1))
+        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
         
         XCTAssertEqual(removedCount, 1)
         
@@ -71,7 +71,7 @@ class RedisTests: XCTestCase {
             .enqueue(command: "SET", arguments: [.bulkString("hello"), .bulkString("world")])
             .enqueue(command: "SET", arguments: [.bulkString("hello1"), .bulkString("world")])
             .execute()
-            .blockingAwait(timeout: .seconds(1))
+            .blockingAwait(timeout: .seconds(2))
         
         
         XCTAssertEqual(result[0].string, "+OK\r")
@@ -82,7 +82,7 @@ class RedisTests: XCTestCase {
             .enqueue(command: "DEL", arguments: [.bulkString("hello")])
             .enqueue(command: "DEL", arguments: [.bulkString("hello1")])
             .execute()
-            .blockingAwait(timeout: .seconds(1))
+            .blockingAwait(timeout: .seconds(2))
         
         XCTAssertEqual(deleted[0].int, 1)
         XCTAssertEqual(deleted[1].int, 1)

@@ -20,7 +20,7 @@ public protocol Parameter {
 extension Parameter {
     /// The path component for this route parameter
     public static var parameter: PathComponent {
-        return .parameter(Data(uniqueSlug.utf8))
+        return .parameter(.string(uniqueSlug))
     }
 }
 
