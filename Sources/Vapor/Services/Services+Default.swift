@@ -54,7 +54,7 @@ extension Services {
         }
         services.register { worker -> ServeCommand in
             let router = try RouterResponder(
-                router: worker.make(for: ServeCommand.self)
+                router: worker.make(for: Application.self)
             )
 
             let middleware = try worker
