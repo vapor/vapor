@@ -30,6 +30,10 @@ extension Serializer {
     }
     
     func write(_ buffer: ByteBuffer) {
+        guard let pointer = buffer.baseAddress else {
+            return
+        }
+        
         if buffer.count + writeBufferUsage <= writeBufferSize {
             memcpy(writeBuffer.advanced(by: writeBufferUsage), buffer.baseAddress, buffer.count)
             writeBufferUsage += buffer.count
@@ -40,7 +44,7 @@ extension Serializer {
                 taken = buffer.count
             }
             
-            memcpy(writeBuffer.advanced(by: writeBufferUsage), buffer.baseAddress, taken)
+            memcpy(writeBuffer.advanced(by: writeBufferUsage), pointer, taken)
             
             while taken < buffer.count {
                 flush()
