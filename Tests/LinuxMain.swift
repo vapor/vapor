@@ -6,6 +6,7 @@ import XCTest
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import FluentTests
+@testable import FluentMySQLTests
 @testable import HTTPTests
 @testable import HTTP2Tests
 @testable import JWTTests
@@ -41,6 +42,7 @@ XCTMain([
 
     // Fluent
     testCase(SQLiteBenchmarkTests.allTests),
+    testCase(FluentMySQLTests.allTests),
 
     // HTTP
     testCase(MiddlewareTests.allTests),

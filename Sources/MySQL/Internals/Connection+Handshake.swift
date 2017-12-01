@@ -4,7 +4,7 @@ import Crypto
 import Core
 import Foundation
 
-extension Connection {
+extension MySQLConnection {
     /// Respond to the server's incoming handshake
     func doHandshake(for packet: Packet) {
         do {
@@ -112,7 +112,9 @@ extension Connection {
                 self.socket.close()
                 return
             default:
-                completing.complete(())
+                // auth is finished, have the parser stream to the packet stream now
+                parser.stream(to: packetStream)
+                completing.complete()
                 return
             }
         } catch {

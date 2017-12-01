@@ -99,7 +99,39 @@ extension Parser {
             case .int24: throw MySQLError(.unsupported)
             case .date: throw MySQLError(.unsupported)
             case .time: throw MySQLError(.unsupported)
-            case .datetime: throw MySQLError(.unsupported)
+            case .datetime:
+                let format = try byte()
+                
+                let year = try parseUInt16()
+                let month = try byte()
+                let day = try byte()
+                let hour = try byte()
+                let minute = try byte()
+                let second = try byte()
+                var microseconds: UInt32 = 0
+                
+                if format == 11 {
+                    microseconds = try parseUInt32()
+                }
+                
+                let calendar = Calendar(identifier: .gregorian)
+                
+                guard let date = calendar.date(from:
+                    DateComponents(
+                        calendar: calendar,
+                        year: numericCast(year),
+                        month: numericCast(month),
+                        day: numericCast(day),
+                        hour: numericCast(hour),
+                        minute: numericCast(minute),
+                        second: numericCast(second),
+                        nanosecond: numericCast(microseconds * 1000)
+                    )
+                ) else {
+                    throw MySQLError(.invalidPacket)
+                }
+                
+                return .datetime(date)
             case .year: throw MySQLError(.unsupported)
             case .newdate: throw MySQLError(.unsupported)
             case .varchar:
@@ -232,8 +264,21 @@ extension Row {
             }
             
             append(.float(float), forField: field)
+        case .datetime:
+            guard let date = mysqlFormatter.date(from: value) else {
+                throw MySQLError(.parsingError)
+            }
+            
+            append(.datetime(date), forField: field)
         default:
             throw MySQLError(.unsupported)
         }
     }
 }
+
+fileprivate let mysqlFormatter: DateFormatter = {
+    var formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    
+    return formatter
+}()

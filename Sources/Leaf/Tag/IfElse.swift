@@ -4,13 +4,12 @@ public final class IfElse: LeafTag {
     public init() {}
 
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
-        print("if/else")
         try parsed.requireParameterCount(1)
         let body = try parsed.requireBody()
         let expr = parsed.parameters[0]
 
         let promise = Promise(LeafData?.self)
-        if expr.bool != false {
+        if expr.bool == true || (expr.bool == nil && !expr.isNull) {
             let serializer = Serializer(
                 ast: body,
                 renderer: renderer,

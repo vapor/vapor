@@ -9,7 +9,6 @@ extension SQLiteConnection: TransactionSupporting {
 
         query(string: "BEGIN TRANSACTION").execute().do {
             transaction.run(on: self).do {
-                print("transaction done")
                 self.query(string: "COMMIT TRANSACTION")
                     .execute()
                     .chain(to: promise)

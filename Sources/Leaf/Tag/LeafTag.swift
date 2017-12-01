@@ -15,16 +15,13 @@ public var defaultTags: [String: LeafTag] {
     return [
         "": Print(),
         "ifElse": IfElse(),
-        "embed": Embed(),
         "loop": Loop(),
         "comment": Comment(),
         "contains": Contains(),
         "lowercase": Lowercase(),
         "count": Count(),
-        "var": Var(),
-        "raw": Raw(),
-        // import/export
-        "export": Var(),
-        "import": Raw()
+        "set": Var(),
+        "get": Raw(),
+        "embed": Embed(),
     ]
 }
