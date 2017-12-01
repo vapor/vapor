@@ -68,7 +68,7 @@ class LeafTests: XCTestCase {
     func testRuntime() throws {
         // FIXME: need to run var/exports first and in order
         let template = """
-            #var("foo", "bar")
+            #set("foo", "bar")
             Runtime: #(foo)
         """
 
@@ -314,7 +314,7 @@ class LeafTests: XCTestCase {
         let preloaded = PreloadedFiles()
 
         preloaded.files["/template.leaf"] = """
-        Content: #raw(content)
+        Content: #get(content)
         """.data(using: .utf8)!
 
         preloaded.files["/nested.leaf"] = """
@@ -322,7 +322,7 @@ class LeafTests: XCTestCase {
         """.data(using: .utf8)!
 
         let template = """
-        #export("content") {<p>#embed("nested")</p>}
+        #set("content") {<p>#embed("nested")</p>}
         #embed("template")
         """
 

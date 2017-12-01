@@ -122,6 +122,14 @@ extension LeafData {
             return nil
         }
     }
+
+    /// Returns true if the data is null.
+    public var isNull: Bool {
+        switch self {
+        case .null: return true
+        default: return false
+        }
+    }
 }
 
 // MARK: Equatable
