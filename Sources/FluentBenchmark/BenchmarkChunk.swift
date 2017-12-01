@@ -12,7 +12,7 @@ extension Benchmarker {
         
         var future = Future<Void>(())
         
-        for i in 1...2048 {
+        for i in 1...512 {
             let user = User<Database>(name: "User \(i)", age: i)
             
             future = future.then {
@@ -21,7 +21,6 @@ extension Benchmarker {
         }
         
         return future.then { () -> Future<Void> in
-            print("pass C")
             return conn.query(User<Database>.self).chunk(max: 64) { chunk in
                 if chunk.count != 64 {
                     self.fail("bad chunk count")
@@ -29,20 +28,18 @@ extension Benchmarker {
                 fetched64 += chunk
             }
         }.then { () -> Future<Void> in
-            print("pass D")
-            if fetched64.count != 2048 {
+            if fetched64.count != 512 {
                 self.fail("did not fetch all - only \(fetched64.count) out of 2048")
             }
             
-            return conn.query(User<Database>.self).chunk(max: 2047) { chunk in
-                print("pass E")
-                if chunk.count != 2047 && chunk.count != 1 {
+            return conn.query(User<Database>.self).chunk(max: 511) { chunk in
+                if chunk.count != 511 && chunk.count != 1 {
                     self.fail("bad chunk count")
                 }
                 fetched2047 += chunk
             }
         }.map { _ in
-            if fetched2047.count != 2048 {
+            if fetched2047.count != 512 {
                 self.fail("did not fetch all - only \(fetched2047.count) out of 2048")
             }
         }
@@ -71,13 +68,9 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
                 promise.complete(conn)
             }
             
-            print("pass A")
-            
             return promise.future
         }.then { conn -> Future<Void> in
-            print("pass B")
             return try self._benchmark(on: conn).map {
-                print("pass F")
                 self.pool.releaseConnection(conn)
             }
         }
