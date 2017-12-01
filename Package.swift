@@ -27,6 +27,7 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
