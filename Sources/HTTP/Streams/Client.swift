@@ -35,12 +35,12 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     private var socket: ClosableStream
     
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init<ByteStream>(context: Context, socket: ByteStream, maxResponseSize: Int = 10_000_000) where
+    public init<ByteStream>(socket: ByteStream, maxResponseSize: Int = 10_000_000) where
         ByteStream: Async.Stream,
         ByteStream.Input == ByteBuffer,
         ByteStream.Output == ByteBuffer
     {
-        self.parser = ResponseParser(in: context, maxSize: maxResponseSize)
+        self.parser = ResponseParser(maxSize: maxResponseSize)
         self.serializer = RequestSerializer()
         self.outputStream = .init()
         self.socket = socket

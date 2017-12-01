@@ -18,11 +18,7 @@ extension WebSocket {
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/client/#connecting-a-websocket-client)
     public static func connect(
         to uri: URI,
-<<<<<<< HEAD
         on eventLoop: EventLoop
-=======
-        context: Context
->>>>>>> 503de6b06912672ed95565679354d11171f72740
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
@@ -52,13 +48,9 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-<<<<<<< HEAD
             let client = try TLSClient(on: eventLoop)
-=======
-            let client = try TLSClient(on: context)
->>>>>>> 503de6b06912672ed95565679354d11171f72740
             
-            parser = client.stream(to: ResponseParser(in: context, maxSize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
             try client.connect(hostname: hostname, port: port).do {
                 // Send the initial request
@@ -74,13 +66,9 @@ extension WebSocket {
             try socket.connect(hostname: hostname, port: port)
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
-<<<<<<< HEAD
             let client = TCPClient(socket: socket, on: eventLoop)
-=======
-            let client = TCPClient(socket: socket, worker: context)
->>>>>>> 503de6b06912672ed95565679354d11171f72740
             
-            parser = client.stream(to: ResponseParser(in: context, maxSize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
             client.writable().do {
                 // Start reading in the client

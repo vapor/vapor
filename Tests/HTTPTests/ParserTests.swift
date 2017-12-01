@@ -21,12 +21,7 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
 
-<<<<<<< HEAD
         let parser = RequestParser(maxSize: 100_000)
-=======
-        let context = EventLoop(queue: .global())
-        let parser = RequestParser(in: context, maxSize: 100_000)
->>>>>>> 503de6b06912672ed95565679354d11171f72740
         guard let req = try parser.parse(from: data) else {
             XCTFail("No request parsed")
             return
@@ -61,7 +56,7 @@ class ParserTests : XCTestCase {
         <vapor>
         """.data(using: .utf8) ?? Data()
 
-        let parser = ResponseParser(in: BasicContext(), maxSize: 100_000)
+        let parser = ResponseParser(maxSize: 100_000)
         guard let res = try parser.parse(from: data) else {
             XCTFail("No response parsed")
             return
@@ -96,11 +91,7 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
         
-<<<<<<< HEAD
         let parser = RequestParser(maxSize: data.count - 2)
-=======
-        let parser = RequestParser(in: BasicContext(), maxSize: data.count - 2)
->>>>>>> 503de6b06912672ed95565679354d11171f72740
         XCTAssertThrowsError(try parser.parse(from: data))
     }
     
@@ -117,7 +108,7 @@ class ParserTests : XCTestCase {
         <vapor>
         """.data(using: .utf8) ?? Data()
         
-        let parser = ResponseParser(in: BasicContext(), maxSize: data.count - 2)
+        let parser = ResponseParser(maxSize: data.count - 2)
         XCTAssertThrowsError(try parser.parse(from: data))
     }
 

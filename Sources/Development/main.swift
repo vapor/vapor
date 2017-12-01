@@ -82,14 +82,8 @@ router.get("leaf") { req -> Future<View> in
         let user = User(name: "unborn", age: -1)
         promise.complete(user)
     }
-<<<<<<< HEAD
-
-    let user = User(name: "Vapor", age: 3);
-    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: user)
-=======
     
     return try req.make(ViewRenderer.self).make("hello", context: promise.future)
->>>>>>> 503de6b06912672ed95565679354d11171f72740
 }
 
 final class FooController {
@@ -142,13 +136,8 @@ extension Request: DatabaseConnectable {}
 
 router.get("userview") { req -> Future<View> in
     let user = User.query(on: req).first()
-<<<<<<< HEAD
-
-    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: [
-=======
     
     return try req.make(ViewRenderer.self).make("hello", [
->>>>>>> 503de6b06912672ed95565679354d11171f72740
         "user": user
     ])
 }
