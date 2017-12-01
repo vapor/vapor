@@ -44,16 +44,20 @@ class AuthenticationTests: XCTestCase {
         let password = PasswordAuthenticationMiddleware(User.self, verifier: PlaintextVerifier())
         let group = router.grouped(password)
         group.get("test") { req -> String in
+            print(req)
             let user = try req.requireAuthenticated(User.self)
+            print(user)
             return user.name
         }
 
         let req = Request(using: app)
+        req.http.method = .get
         req.http.uri.path = "test"
         req.http.headers.authorizationBasic = Password(username: "tanner@vapor.codes", password: "foo")
 
         let responder = try app.make(Responder.self)
         let res = try responder.respond(to: req).blockingAwait()
+        XCTAssertEqual(res.http.status, .ok)
         XCTAssertEqual(res.http.body.data, Data("Tanner".utf8))
     }
 

@@ -40,7 +40,7 @@ extension Services {
 
         // register router
         services.register(Router.self, isSingleton: true) { container in
-            return EngineRouter()
+            return EngineRouter.default()
         }
 
         // register content coders
