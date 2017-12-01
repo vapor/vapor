@@ -20,6 +20,16 @@ private var _pidLock = NSLock()
 public final class Terminal: Console {
     /// See Extendable.extend
     public var extend: Extend
+    
+    public var styleXcode = false
+    
+    internal var applyStyle: Bool {
+        #if Xcode
+            return styleXcode
+        #else
+            return true
+        #endif
+    }
 
     /// Create a new Terminal.
     public init() {
@@ -131,7 +141,7 @@ public final class Terminal: Console {
         let terminator = newLine ? "\n" : ""
 
         let output: String
-        if let color = style.terminalColor {
+        if let color = style.terminalColor, applyStyle {
             output = string.terminalColorize(color)
         } else {
             output = string
