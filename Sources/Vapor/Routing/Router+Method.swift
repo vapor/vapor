@@ -11,7 +11,7 @@ extension Router {
     ) -> Route<Responder> where F.Expectation: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
         let route = Route<Responder>(
-            path: [.constants([method.data])] + path,
+            path: [.constants([.bytes(method.bytes)])] + path,
             output: responder
         )
         self.register(route: route)

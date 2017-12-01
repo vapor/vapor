@@ -51,9 +51,9 @@ extension WebSocket {
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
-            try client.connect(hostname: hostname, port: port).do {
+            try client.connect(hostname: hostname, port: port).do { _ in 
                 // Send the initial request
-                serializer.serialize(request).withByteBuffer(client.onInput)
+                serializer.stream(to: client)
             }.catch(promise.fail)
             
             WebSocket.complete(to: promise, with: parser, id: id) {
@@ -74,13 +74,15 @@ extension WebSocket {
                 client.start()
                 
                 // Send the initial request
-                serializer.serialize(request).withByteBuffer(client.onInput)
+                serializer.stream(to: client)
             }.catch(promise.fail)
             
             WebSocket.complete(to: promise, with: parser, id: id) {
                 return WebSocket(socket: client, serverSide: false)
             }
         }
+        
+        serializer.onInput(request)
         
         return promise.future
     }

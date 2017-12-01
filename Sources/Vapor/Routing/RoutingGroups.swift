@@ -34,7 +34,8 @@ public final class RouteGroup: Router {
     /// Warning: Will modify the route
     public func register(route: Route<Responder>) {
         self.routes.append(route)
-        route.path.insert(contentsOf: self.components, at: 0)
+        // Right after the method
+        route.path.insert(contentsOf: self.components, at: 1)
         route.output = middleware.makeResponder(chainedto: route.output)
         self.super.register(route: route)
     }

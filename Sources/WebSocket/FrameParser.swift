@@ -26,7 +26,7 @@ public final class FrameParser: Async.Stream, ClosableStream {
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output> = .init()
     
-    public init(maximumPayloadSize: Int = 10_000_000) {
+    public init(maximumPayloadSize: Int = 100_000) {
         self.maximumPayloadSize = maximumPayloadSize
         // 2 for the header, 9 for the length, 4 for the mask
         self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)

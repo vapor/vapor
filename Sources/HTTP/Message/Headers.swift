@@ -113,8 +113,15 @@ public struct HTTPHeaders: Codable {
         }
     }
     
+    /// Reserves X bytes of extra capacity in advance
+    public mutating func reserveAdditionalCapacity(bytes: Int) {
+        storage.reserveCapacity(storage.count + bytes)
+    }
+    
     /// An internal API that blindly adds a header without checking for doubles
     internal mutating func appendValue(_ value: String, forName name: Name) {
+        reserveAdditionalCapacity(bytes: 64)
+        
         let nameStartIndex = storage.endIndex
         storage.append(contentsOf: name.original)
         
