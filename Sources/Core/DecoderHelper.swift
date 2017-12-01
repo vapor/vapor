@@ -804,3 +804,4 @@ extension SingleValueDecodingContainerHelper {
 public enum DecodingError : Error {
     case failedLossyIntegerConversion, invalidContext, incorrectValue, unimplemented
 }
+

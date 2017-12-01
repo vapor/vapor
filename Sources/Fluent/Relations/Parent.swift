@@ -27,7 +27,7 @@ public struct Parent<Child: Model, Parent: Model>
 
     /// Create a query for the parent.
     public func query(
-        on conn: ConnectionRepresentable
+        on conn: DatabaseConnectable
     ) throws -> QueryBuilder<Parent> {
         return try Parent.query(on: conn)
             .filter(Parent.idKey == child[keyPath: parentForeignIDKey])
@@ -35,7 +35,7 @@ public struct Parent<Child: Model, Parent: Model>
 
     /// Convenience for getting the parent.
     public func get(
-        on conn: ConnectionRepresentable
+        on conn: DatabaseConnectable
     ) -> Future<Parent> {
         return then {
             try self.query(on: conn).first().map { first in

@@ -1,3 +1,4 @@
+import Async
 import Service
 
 /// Helper struct for configuring Fluent databases.

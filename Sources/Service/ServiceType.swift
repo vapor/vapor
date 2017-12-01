@@ -1,9 +1,6 @@
-public protocol ServiceType {
-    /// If true, the `makeService` method will only
-    /// be called once and the service instance will be cached.
-    /// Defaults to true.
-    static var serviceIsSingleton: Bool { get }
+import Async
 
+public protocol ServiceType {
     /// An array of protocols (or types) that this
     /// service conforms to. 
     ///     ex. when `container.make(X.self)`
@@ -13,11 +10,5 @@ public protocol ServiceType {
 
     /// Creates a new instance of the service
     /// Using the service container.
-    static func makeService(for container: Container) throws -> Self?
-}
-
-extension ServiceType {
-    public static var serviceIsSingleton: Bool {
-        return true
-    }
+    static func makeService(for worker: Container) throws -> Self?
 }

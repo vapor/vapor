@@ -5,7 +5,7 @@ final class HeadersTable {
     /// A single table entry
     struct Entry {
         /// The header name, *must* be lowercased
-        var name: Headers.Name
+        var name: HTTPHeaders.Name
         
         /// The table index of this header
         var index: Int
@@ -14,7 +14,7 @@ final class HeadersTable {
         var value: String
         
         /// Creates a new header table entry
-        init(index: Int = 0, name: Headers.Name, value: String = "") {
+        init(index: Int = 0, name: HTTPHeaders.Name, value: String = "") {
             self.index = index
             self.name = name
             self.value = value

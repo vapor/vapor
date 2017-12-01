@@ -28,7 +28,7 @@ public final class Loop: LeafTag {
                     ast: body,
                     renderer: renderer,
                     context: temp,
-                    worker: parsed.worker
+                    on: parsed.eventLoop
                 )
                 let subpromise = Promise(Data.self)
                 serializer.serialize().do { bytes in

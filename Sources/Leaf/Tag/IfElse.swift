@@ -4,6 +4,7 @@ public final class IfElse: LeafTag {
     public init() {}
 
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
+        print("if/else")
         try parsed.requireParameterCount(1)
         let body = try parsed.requireBody()
         let expr = parsed.parameters[0]
@@ -14,7 +15,7 @@ public final class IfElse: LeafTag {
                 ast: body,
                 renderer: renderer,
                 context: context,
-                worker: parsed.worker
+                on: parsed.eventLoop
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))

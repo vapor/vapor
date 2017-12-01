@@ -76,8 +76,8 @@ public final class MultipartParser {
     }
     
     /// Reads the headers at the current position
-    fileprivate func readHeaders() throws -> Headers {
-        var headers = Headers()
+    fileprivate func readHeaders() throws -> HTTPHeaders {
+        var headers = HTTPHeaders()
         
         // headers
         headerScan: while position < data.count, try carriageReturnNewLine() {
@@ -103,7 +103,7 @@ public final class MultipartParser {
                 throw MultipartError(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
             }
             
-            headers[Headers.Name(key)] = value
+            headers[HTTPHeaders.Name(key)] = value
         }
         
         return headers
@@ -132,7 +132,7 @@ public final class MultipartParser {
     /// Parses the part data until the boundary and decodes it.
     ///
     /// Also appends the part to the Multipart
-    fileprivate func appendPart(named name: String?, headers: Headers) throws {
+    fileprivate func appendPart(named name: String?, headers: HTTPHeaders) throws {
         // The compiler doesn't understand this will never be `nil`
         var partData = try seekUntilBoundary()
         
@@ -229,7 +229,7 @@ public final class MultipartParser {
     ///
     /// - throws: If the multipart data is an invalid Multipart form
     /// - TODO: Parse streaming bodies 
-    public static func parse(from body: Body, boundary: Data) throws -> Form {
+    public static func parse(from body: HTTPBody, boundary: Data) throws -> Form {
         guard let count = body.count else {
             throw MultipartError(identifier: "streaming-body-form", reason: "Multipart cannot parse streaming bodies into a form yet")
         }

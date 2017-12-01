@@ -1,5 +1,6 @@
 import Async
 import TCP
+import Service
 
 /// HTTP server wrapped around TCP server
 public final class HTTPServer: Async.OutputStream, ClosableStream {

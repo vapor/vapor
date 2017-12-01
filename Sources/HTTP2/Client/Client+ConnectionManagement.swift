@@ -17,8 +17,8 @@ extension HTTP2Client {
     /// Connects to an HTTP/2 server using the knowledge that it's HTTP/2
     ///
     /// Requires an SSL driver with ALPN on your system
-    public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), worker: Worker) throws -> Future<HTTP2Client> {
-        let tlsClient = try TLSClient(on: worker)
+    public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), on eventLoop: EventLoop) throws -> Future<HTTP2Client> {
+        let tlsClient = try TLSClient(on: eventLoop)
         tlsClient.protocols = ["h2", "http/1.1"]
         
         let client = HTTP2Client(upgrading: tlsClient)

@@ -26,13 +26,13 @@ class RedisTests: XCTestCase {
     func testCRUD() throws {
         let connection = try makeClient()
       
-        _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
+        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
         
-        let result = try connection.set("world", forKey: "hello").flatMap {
+        let result = try! connection.set("world", forKey: "hello").flatMap {
             return connection.getData(forKey: "hello")
         }.blockingAwait(timeout: .seconds(1))
         
-        let removedCount = try connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(1))
+        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(1))
         
         XCTAssertEqual(removedCount, 1)
         

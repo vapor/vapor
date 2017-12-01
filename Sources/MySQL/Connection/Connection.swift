@@ -77,7 +77,7 @@ public final class Connection {
         user: String,
         password: String?,
         database: String?,
-        on worker: Worker
+        on eventLoop: EventLoop
     ) -> Future<Connection> {
         return then {
             let connection = try Connection(
@@ -86,7 +86,7 @@ public final class Connection {
                 user: user,
                 password: password,
                 database: database,
-                on: worker
+                on: eventLoop
             )
 
             return connection.authenticated.future.map { _ in
@@ -101,7 +101,7 @@ public final class Connection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on worker: Worker) throws {
+    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on eventLoop: EventLoop) throws {
         var socket = try TCPSocket()
         
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
@@ -112,14 +112,14 @@ public final class Connection {
         
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: worker.eventLoop.queue
+            queue: eventLoop.queue
         )
         
         self.source = source
         
         self.parser = parser
         self.socket = socket
-        self.queue = worker.eventLoop.queue
+        self.queue = eventLoop.queue
         self.buffer = buffer
         self.source = source
         self.username = user

@@ -18,20 +18,14 @@ import Foundation
 /// a request and use the HTTP client to prompt a response
 /// from the remote server.
 ///
-///     let req = Request(method: .post, body: "hello")
+///     let req = HTTPRequest(method: .post, body: "hello")
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/request/)
-public final class Request: Message {
-    /// See EphemeralWorker.onInit
-    public static var onInit: LifecycleHook?
-
-    /// See EphemeralWorker.onDeinit
-    public static var onDeinit: LifecycleHook?
-
+public struct HTTPRequest: HTTPMessage {
     /// HTTP requests have a method, like GET or POST
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
-    public var method: Method
+    public var method: HTTPMethod
 
     /// This is usually just a path like `/foo` but
     /// may be a full URI in the case of a proxy
@@ -40,86 +34,48 @@ public final class Request: Message {
     public var uri: URI
 
     /// See `Message.version`
-    public var version: Version
+    public var version: HTTPVersion
 
     /// See `Message.headers`
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: Headers
+    public var headers: HTTPHeaders
 
     /// See `Message.body`
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: Body
-    
-    /// See `Extendable.extend`
-    public var extend: Extend
+    public var body: HTTPBody
+
+    /// See Message.onUpgrade
+    public var onUpgrade: HTTPOnUpgrade?
 
     /// Create a new HTTP request.
     public init(
-        method: Method = .get,
+        method: HTTPMethod = .get,
         uri: URI = URI(),
-        version: Version = Version(major: 1, minor: 1),
-        headers: Headers = Headers(),
-        body: Body = Body()
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBody = HTTPBody()
     ) {
         self.method = method
         self.uri = uri
         self.version = version
         self.headers = headers
         self.body = body
-        self.extend = Extend()
-        Request.onInit?(self)
-    }
-
-    /// Called when request is deinitializing
-    deinit {
-        Request.onDeinit?(self)
-        // print("Request.deinit")
     }
 }
 
 // MARK: Convenience
 
-extension Request {
+extension HTTPRequest {
     /// Create a new HTTP request using something BodyRepresentable.
-    public convenience init(
-        method: Method = .get,
+    public init(
+        method: HTTPMethod = .get,
         uri: URI = URI(),
-        version: Version = Version(major: 1, minor: 1),
-        headers: Headers = Headers(),
-        body: BodyRepresentable
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBodyRepresentable
     ) throws {
         try self.init(method: method, uri: uri, version: version, headers: headers, body: body.makeBody())
     }
 }
-
-/// Can be converted from a request.
-public protocol RequestDecodable {
-    static func decode(from req: Request) throws -> Future<Self>
-}
-
-/// Can be converted to a request
-public protocol RequestEncodable {
-    func encode(to req: inout Request) throws -> Future<Void>
-}
-
-/// Can be converted from and to a request
-public typealias RequestCodable = RequestDecodable & RequestEncodable
-
-// MARK: Request Conformance
-
-extension Request: RequestEncodable {
-    public func encode(to req: inout Request) throws -> Future<Void> {
-        req = self
-        return .done
-    }
-}
-
-extension Request: RequestDecodable {
-    /// See RequestInitializable.decode
-    public static func decode(from request: Request) throws -> Future<Request> {
-        return Future(request)
-    }
-}
-

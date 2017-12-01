@@ -40,11 +40,11 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
-    public init(on worker: Worker) throws {
+    public init(on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
-        self.queue = worker.eventLoop.queue
-        self.client = TCPClient(socket: socket, worker: worker)
+        self.queue = eventLoop.queue
+        self.client = TCPClient(socket: socket, on: eventLoop)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     

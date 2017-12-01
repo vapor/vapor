@@ -27,14 +27,14 @@ extension SoftDeletable {
 extension Model where Self: SoftDeletable {
     /// Permanently deletes a soft deletable model.
     public func forceDelete(
-        on conn: ConnectionRepresentable
+        on conn: DatabaseConnectable
     ) -> Future<Void> {
         return query(on: conn)._delete(self)
     }
 
     /// Restores a soft deleted model.
     public func restore(
-        on connection: ConnectionRepresentable
+        on connection: DatabaseConnectable
     ) -> Future<Void> {
         fluentDeletedAt = nil
         return update(on: connection)

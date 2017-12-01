@@ -6,7 +6,7 @@ import Foundation
 /// Converts requests to DispatchData.
 public final class RequestSerializer: Serializer {
     /// See InputStream.Input
-    public typealias Input = Request
+    public typealias Input = HTTPRequest
 
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
@@ -20,7 +20,7 @@ public final class RequestSerializer: Serializer {
     }
     
     /// See InputStream.onInput
-    public func onInput(_ input: Request) {
+    public func onInput(_ input: HTTPRequest) {
         serialize(input).withByteBuffer(outputStream.onInput)
     }
 
@@ -45,7 +45,10 @@ public final class RequestSerializer: Serializer {
     }
 
     /// Serializes a request into DispatchData.
-    public func serialize(_ request: Request) -> Data {
+    public func serialize(_ request: HTTPRequest) -> Data {
+        // make copy
+        var request = request
+
         var serialized = request.method.data
         serialized.reserveCapacity(request.headers.storage.count + 256)
         

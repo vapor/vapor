@@ -17,8 +17,8 @@ internal final class CParseResults {
     var isComplete: Bool
 
     // message components
-    var version: Version?
-    var headersIndexes: [Headers.Index]
+    var version: HTTPVersion?
+    var headersIndexes: [HTTPHeaders.Index]
     var headersData = Data()
     var body = Data()
     var url = Data()

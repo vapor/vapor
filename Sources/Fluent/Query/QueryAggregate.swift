@@ -67,7 +67,7 @@ extension QueryBuilder {
         query.action = .read
         query.aggregates.append(aggregate)
 
-        _run(decoding: AggregateResult<D>.self) { res, conn in
+        run(decoding: AggregateResult<D>.self) { res in
             promise.complete(res.fluentAggregate)
         }.catch { err in
             promise.fail(err)
