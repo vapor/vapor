@@ -4,6 +4,7 @@ import Dispatch
 import Foundation
 import TCP
 import HTTP
+import Service
 import TLS
 
 extension WebSocket {

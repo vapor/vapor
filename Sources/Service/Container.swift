@@ -15,19 +15,19 @@ public protocol Container: EventLoop, ServiceCacheable {
 public final class BasicContainer: Container {
     /// See Container.config
     public var config: Config
-
+    
     /// See Container.environment
     public var environment: Environment
-
+    
     /// See Container.services
     public var services: Services
-
+    
     /// See Container.serviceCache
     public var serviceCache: ServiceCache
-
+    
     /// See EventLoop.queue
     public var queue: DispatchQueue
-
+    
     /// Create a new basic container
     public init(config: Config, environment: Environment, services: Services, on eventLoop: EventLoop) {
         self.config = config
@@ -37,3 +37,4 @@ public final class BasicContainer: Container {
         self.queue = eventLoop.queue
     }
 }
+

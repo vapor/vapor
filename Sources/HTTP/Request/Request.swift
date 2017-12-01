@@ -1,4 +1,5 @@
 import Async
+import Service
 import Foundation
 
 /// An HTTP request.

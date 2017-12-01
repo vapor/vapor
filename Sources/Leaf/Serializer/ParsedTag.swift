@@ -1,5 +1,6 @@
 import Async
 import Dispatch
+import Service
 
 /// Represents a tag that has been parsed.
 public struct ParsedTag {

@@ -54,16 +54,13 @@ extension Address: Equatable {
             // If the family is IPv4, compare the 2 as IPv4
             return lhs.withIn_addr { lhs in
                 return rhs.withIn_addr { rhs in
-                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
+                    return lhs.s_addr == rhs.s_addr
                 }
             }
         case numericCast(AF_INET6):
             // If the family is IPv6, compare the 2 as IPv6
-            return lhs.withIn6_addr { lhs in
-                return rhs.withIn6_addr { rhs in
-                    return memcmp(&lhs, &rhs, MemoryLayout<in6_addr>.size) == 0
-                }
-            }
+            // TODO: This may not be sensible at all and is tough to get working cross-platform
+            return false
         default:
             // Impossible scenario
             fatalError()

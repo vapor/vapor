@@ -1,6 +1,7 @@
 import Bits
 import CHTTP
 import Async
+import Service
 import Dispatch
 import Foundation
 
@@ -17,6 +18,7 @@ public final class RequestParser: CParser {
     var parser: http_parser
     var settings: http_parser_settings
     var state:  CHTTPParserState
+
     /// The maxiumum possible body size
     /// larger sizes will result in an error
     private let maxSize: Int

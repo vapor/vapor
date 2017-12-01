@@ -15,7 +15,7 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
     public var serviceTag: String? {
         return nil
     }
-
+    
     /// See ServiceType.makeService
     public func makeService(for worker: Container) throws -> Any? {
         return try S.makeService(for: worker)

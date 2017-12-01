@@ -1,9 +1,10 @@
 import Async
+import Service
 import Dispatch
 import Foundation
 
 /// Serializes parsed Leaf ASTs into view bytes.
-public final class Serializer {
+final class Serializer {
     let ast: [Syntax]
     var context: LeafData
     let renderer: LeafRenderer

@@ -14,6 +14,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -32,6 +33,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -53,6 +55,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -71,6 +74,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -87,6 +91,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -102,6 +107,7 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+        
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }

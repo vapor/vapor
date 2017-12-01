@@ -12,6 +12,8 @@ extension Future: Encodable {
     public func encode(to encoder: Encoder) throws {
         if let encoder = encoder as? FutureEncoder {
             try encoder.encodeFuture(self)
+        } else {
+            throw CoreError(identifier: "future-encoder", reason: "The future was not encoded by a FutureEncoder")
         }
     }
 }

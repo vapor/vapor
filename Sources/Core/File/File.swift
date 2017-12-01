@@ -3,7 +3,7 @@ import Dispatch
 import Foundation
 import libc
 
-public final class File: FileReader, FileCache {
+public final class BasicFileReader: FileReader, FileCache {
     /// Cached data.
     private var cache: [Int: Data]
 
@@ -14,9 +14,9 @@ public final class File: FileReader, FileCache {
 
     /// Create a new CFile
     /// FIXME: add cache maximum
-    public init(queue: DispatchQueue) {
+    public init(on eventLoop: EventLoop) {
         self.cache = [:]
-        self.queue = queue
+        self.queue = eventLoop.queue
     }
 
     /// See FileReader.read

@@ -6,18 +6,24 @@ import Service
 
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
+    /// Create a file reader & cache for the supplied queue
+    public typealias FileReaderFactory = (EventLoop) -> (FileReader & FileCache)
+    
     let tags: [String: LeafTag]
     let viewsDir: String
-    let fileFactory: LeafRenderer.FileFactory
+    let fileReaderFactory: FileReaderFactory
+    let shouldCache: Bool
 
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        fileFactory: @escaping LeafRenderer.FileFactory = File.init
+        shouldCache: Bool = true,
+        fileReaderFactory: @escaping FileReaderFactory = BasicFileReader.init
     ) {
         self.tags = tags
         self.viewsDir = viewsDir
-        self.fileFactory = fileFactory
+        self.fileReaderFactory = fileReaderFactory
+        self.shouldCache = shouldCache
     }
 }
 
@@ -29,18 +35,15 @@ public final class LeafProvider: Provider {
 
     /// See Service.Provider.Register
     public func register(_ services: inout Services) throws {
-        services.register(ViewRenderer.self) { container -> LeafRenderer in
-            let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
-            return LeafRenderer(
-                tags: config.tags,
-                viewsDir: config.viewsDir,
-                fileFactory: config.fileFactory
-            )
-        }
-
         services.register { container -> LeafConfig in
             let dir = try container.make(DirectoryConfig.self, for: LeafRenderer.self)
             return LeafConfig(viewsDir: dir.workDir + "Resources/Views")
+        }
+        
+        services.register(ViewRenderer.self) { container -> LeafRenderer in
+            let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
+            
+            return LeafRenderer(config: config, on: container.queue)
         }
     }
 
@@ -48,6 +51,7 @@ public final class LeafProvider: Provider {
     public func boot(_ container: Container) throws { }
 }
 
+fileprivate let leafRendererKey = "leaf:renderer"
 
 // MARK: View
 
@@ -76,17 +80,17 @@ public struct View: Codable {
 
 public protocol ViewRenderer {
     /// Renders a view using the supplied encodable context and worker.
-    func make(_ path: String, context: Encodable, on eventLoop: EventLoop) throws -> Future<View>
+    func make(_ path: String, context: Encodable) throws -> Future<View>
 }
 
 extension ViewRenderer {
     /// Renders a view without a context.
-    func make(_ path: String, on eventLoop: EventLoop) throws -> Future<View> {
-        return try make(path, context: nil as String?, on: eventLoop)
+    func make(_ path: String) throws -> Future<View> {
+        return try make(path, context: nil as String?)
     }
 
-    /// Renders a view using the supplied dictionary.
-    func make(_ path: String, _ context: [String: Encodable], on eventLoop: EventLoop) throws -> Future<View> {
-        return try make(path, context: context as Encodable, on: eventLoop)
+    /// See ViewRenderer.make
+    public func make(_ path: String, _ context: [String: Encodable]) throws -> Future<View> {
+        return try make(path, context: context)
     }
 }

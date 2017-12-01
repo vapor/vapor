@@ -18,5 +18,5 @@ public final class SQLiteProvider: Provider {
     }
 
     /// See Provider.boot
-    public func boot(_ container: Container) throws {}
+    public func boot(_ context: Container) throws {}
 }
