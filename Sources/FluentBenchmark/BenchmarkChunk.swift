@@ -74,7 +74,7 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
             print("pass A")
             
             return promise.future
-        }.then { conn in
+        }.then { conn -> Future<Void> in
             print("pass B")
             return try self._benchmark(on: conn).map {
                 print("pass F")
