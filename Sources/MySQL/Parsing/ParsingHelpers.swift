@@ -16,7 +16,7 @@ final class Parser {
     }
     
     /// Accesses the packet's payload (helper)
-    var payload: MutableByteBuffer {
+    var payload: ByteBuffer {
         return packet.payload
     }
     

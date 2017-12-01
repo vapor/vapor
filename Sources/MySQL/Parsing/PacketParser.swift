@@ -60,21 +60,21 @@ internal final class PacketParser: Async.Stream {
         
         // Capture the pointer's contentlength
         var length = input.count
+        var canContinue: Bool
         
-        var containing: Int
-        var sequenceId: UInt8
-        var buffer: MutableByteBuffer
-        
-        repeat {
-            containing = 0
-            
+        nextPacket: repeat {
             // If an existing packet it building
             if let (_buffer, _containing, _sequenceId) = self.buffer {
                 // Continue parsing from the start
                 
-                buffer = _buffer
-                containing = _containing
-                sequenceId = _sequenceId
+                // Parse the packet contents
+                canContinue = try parseInput(
+                    pointer: &pointer,
+                    into: _buffer,
+                    length: &length,
+                    alreadyContaining: _containing,
+                    sequenceId: _sequenceId
+                )
             } else {
                 // at least 4 packet bytes for new packets
                 guard length &+ headerBytes.count > 3 else {
@@ -139,26 +139,42 @@ internal final class PacketParser: Async.Stream {
                 // Parse buffer size
                 let bufferSize = Int(byte0 | byte1 | byte2)
                 
-                sequenceId = input[offset]
-                
-                // Build a buffer size
-                let bufferPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-                buffer = MutableByteBuffer(start: bufferPointer, count: bufferSize)
+                let sequenceId = input[offset]
                 
                 // Advance the pointer by the header size
                 pointer = pointer.advanced(by: 1 &+ offset)
                 
                 // Decrease the pointer size by the header size
                 length = length &- (1 &+ offset)
+                
+                // if we can immediately send the packet through our processing layers
+                if bufferSize <= length {
+                    let buffer = ByteBuffer(start: pointer, count: bufferSize)
+                    
+                    // Packet is complete, send it up
+                    let packet = Packet(sequenceId: sequenceId, payload: buffer)
+                    outputStream.onInput(packet)
+                    
+                    length -= bufferSize
+                    pointer = pointer.advanced(by: bufferSize)
+                    canContinue = true
+                    continue nextPacket
+                }
+                
+                // Build a buffer size
+                let bufferPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
+                let buffer = MutableByteBuffer(start: bufferPointer, count: bufferSize)
+                
+                // Parse the packet contents
+                canContinue = try parseInput(
+                    pointer: &pointer,
+                    into: buffer,
+                    length: &length,
+                    alreadyContaining: 0,
+                    sequenceId: sequenceId
+                )
             }
-            // Parse the packet contents
-        } while try parseInput(
-            pointer: &pointer,
-            into: buffer,
-            length: &length,
-            alreadyContaining: containing,
-            sequenceId: sequenceId
-        )
+        } while canContinue
     }
 
     // Parses the buffer

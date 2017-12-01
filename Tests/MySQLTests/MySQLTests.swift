@@ -51,7 +51,7 @@ class MySQLTests: XCTestCase {
             return try statement.bind { binding in
                 try binding.bind("Joannis")
             }.all(User.self)
-        }.blockingAwait(timeout: .seconds(150))
+        }.blockingAwait(timeout: .seconds(15))
         
         XCTAssertEqual(users.count, 1)
         XCTAssertEqual(users.first?.username, "Joannis")
