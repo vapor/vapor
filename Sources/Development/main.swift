@@ -84,7 +84,7 @@ router.get("leaf") { req -> Future<View> in
     }
 
     let user = User(name: "Vapor", age: 3);
-    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: user, on: req)
+    return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: user)
 }
 
 final class FooController {
@@ -140,7 +140,7 @@ router.get("userview") { req -> Future<View> in
 
     return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", context: [
         "user": user
-    ], on: req)
+    ])
 }
 
 struct InvalidBody: Error{}

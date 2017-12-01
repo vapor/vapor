@@ -6,10 +6,11 @@ import Leaf
 import libc
 
 extension LeafRenderer {
-    static func makeTestRenderer() -> LeafRenderer {
-        return LeafRenderer(tags: defaultTags) { queue in
+    static func makeTestRenderer(eventLoop: EventLoop) -> LeafRenderer {
+        let config = LeafConfig { _ in
             return TestFiles()
         }
+        return LeafRenderer(config: config, on: eventLoop)
     }
 }
 
