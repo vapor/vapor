@@ -35,7 +35,7 @@ extension Serializer {
         }
         
         if buffer.count + writeBufferUsage <= writeBufferSize {
-            memcpy(writeBuffer.advanced(by: writeBufferUsage), buffer.baseAddress, buffer.count)
+            memcpy(writeBuffer.advanced(by: writeBufferUsage), pointer, buffer.count)
             writeBufferUsage += buffer.count
         } else {
             var taken = writeBufferSize - writeBufferUsage
