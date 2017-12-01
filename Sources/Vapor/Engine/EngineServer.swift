@@ -46,6 +46,7 @@ public final class EngineServer: Server {
         let server = HTTPServer(socket: tcp)
 
         let console = try container.make(Console.self, for: EngineServer.self)
+        let logger = try container.make(Logger.self, for: EngineServer.self)
         
         // setup the server pipeline
         server.drain { client in
@@ -65,7 +66,7 @@ public final class EngineServer: Server {
                     serializer.upgradeHandler?.closure(client.tcp)
                 }.catch { err in
                     /// FIXME: use log protocol?
-                    console.reportError(err, as: "Uncaught error")
+                    logger.reportError(err, as: "Uncaught error")
                     client.close()
                 }.finally {
                     // client closed
@@ -73,7 +74,7 @@ public final class EngineServer: Server {
 
             client.tcp.start()
         }.catch { err in
-            console.reportError(err, as: "Server error")
+            logger.reportError(err, as: "Server error")
             debugPrint(err)
         }
 
@@ -93,14 +94,25 @@ public final class EngineServer: Server {
     }
 }
 
-extension Console {
+extension Logger {
     fileprivate func reportError(_ error: Error, as label: String) {
-        self.error("\(label): ", newLine: false)
+        var string = "\(label): "
         if let debuggable = error as? Debuggable {
-            self.print(debuggable.fullIdentifier)
-            self.print(debuggable.debuggableHelp(format: .short))
+            string += debuggable.fullIdentifier
+            string += ": "
+            string += debuggable.reason
         } else {
-            self.print("\(error)")
+            string += "\(error)"
+        }
+        if let traceable = error as? Traceable {
+            self.error(string,
+                file: traceable.file,
+                function: traceable.function,
+                line: traceable.line,
+                column: traceable.column
+            )
+        } else {
+            self.error(string)
         }
     }
 }

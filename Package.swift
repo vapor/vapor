@@ -30,6 +30,7 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
@@ -209,6 +210,7 @@ let package = Package(
             "FormURLEncoded",
             "HTTP",
             "Leaf",
+            "Logging",
             "Routing",
             "Service",
             "TCP",

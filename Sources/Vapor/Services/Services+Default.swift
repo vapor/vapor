@@ -52,7 +52,6 @@ extension Services {
         services.register(Console.self) { container in
             return Terminal()
         }
-
         services.register(Responder.self) { container in
             return try RouterResponder(
                 router: container.make(for: Responder.self)
@@ -91,6 +90,16 @@ extension Services {
         // directory
         services.register { container -> DirectoryConfig in
             return DirectoryConfig.default()
+        }
+
+        // logging
+        services.register(Logger.self) { container -> ConsoleLogger in
+            return try ConsoleLogger(
+                console: container.make(for: ConsoleLogger.self)
+            )
+        }
+        services.register(Logger.self) { container -> PrintLogger in
+            return PrintLogger()
         }
 
         return services
