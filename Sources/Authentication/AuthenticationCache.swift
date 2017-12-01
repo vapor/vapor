@@ -1,6 +1,9 @@
 import Vapor
 
-/// Caches authenticated objects.
+/// Stores authenticated objects. This should be created
+/// using the request container as a singleton. Authenticated
+/// objects can then be stored here by middleware and fetched
+/// later in route closures.
 final class AuthenticationCache {
     /// The internal storage.
     private var storage: [ObjectIdentifier: Any]

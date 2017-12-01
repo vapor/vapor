@@ -25,7 +25,7 @@ public final class PasswordAuthenticationMiddleware<A>: Middleware
             return try next.respond(to: req)
         }
 
-        guard let password = req.http.headers.authorizationBasic else {
+        guard let password = req.http.headers.basicAuthorization else {
             throw AuthenticationError(
                 identifier: "invalidCredentials",
                 reason: "Basic authorization header required."

@@ -4,7 +4,7 @@ import HTTP
 
 extension HTTPHeaders {
     /// Access or set the `Authorization: Basic: ...` header.
-    public var authorizationBasic: Password? {
+    public var basicAuthorization: Password? {
         get {
             guard let string = self[.authorization] else {
                 return nil

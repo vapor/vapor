@@ -1,4 +1,5 @@
 import Authentication
+import Dispatch
 import FluentSQLite
 import Vapor
 import XCTest

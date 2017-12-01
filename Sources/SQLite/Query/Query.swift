@@ -83,8 +83,6 @@ public final class SQLiteQuery: Async.OutputStream {
             throw SQLiteError(statusCode: ret, connection: connection)
         }
 
-        print(string)
-
         var nextBindPosition: Int32 = 1
 
         for bind in binds {
