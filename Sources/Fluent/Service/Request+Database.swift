@@ -1,7 +1,7 @@
 import Async
 import Service
 
-extension Worker where Self: HasContainer {
+extension Context {
     /// Returns a future database connection for the
     /// supplied database identifier if one can be fetched.
     /// The database connection will be cached on this worker.
@@ -21,7 +21,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 
@@ -50,7 +50,7 @@ extension Worker where Self: HasContainer {
             } else {
                 pool = try self.eventLoop.makeConnectionPool(
                     database: database,
-                    using: self.workerMake(Databases.self, for: Self.self)
+                    using: self.make(Databases.self, for: Self.self)
                 )
             }
 

@@ -10,8 +10,8 @@ class LeafTests: XCTestCase {
     var queue: DispatchQueue!
 
     override func setUp() {
-        self.renderer = LeafRenderer.makeTestRenderer(on: queue)
         self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
+        self.renderer = LeafRenderer.makeTestRenderer(on: queue)
     }
 
     func testRaw() throws {
@@ -350,11 +350,13 @@ class LeafTests: XCTestCase {
 
         let container = BasicContainer(config: Config(), environment: .development, services: services, on: queue)
 
-        let view = try container.make(ViewRenderer.self, for: XCTest.self)
+        let config = try container.make(LeafConfig.self, for: XCTest.self)
+        let view = LeafRenderer(config: config, on: queue)
 
         struct TestContext: Encodable {
             var name = "test"
         }
+        
         let rendered = try view.make(
             "foo", context: TestContext()
         ).blockingAwait()

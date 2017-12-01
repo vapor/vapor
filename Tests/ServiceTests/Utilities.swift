@@ -2,6 +2,24 @@ import Async
 import Core
 import Service
 
+<<<<<<< HEAD
+=======
+final class TestContext: Context {
+    var eventLoop: EventLoop = .default
+    let config: Config
+    let environment: Environment
+    let services: Services
+    var extend: Extend
+
+    init(environment: Environment = .development, config: Config, services: Services) {
+        self.config = config
+        self.environment = environment
+        self.services = services
+        self.extend = [:]
+    }
+}
+
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
 // MARK: Log
 
 protocol Log {
@@ -17,7 +35,7 @@ class PrintLog: Log {
 extension PrintLog: ServiceType {
     static let serviceName = "print"
     static let serviceSupports: [Any.Type] = [Log.self]
-    static func makeService(for container: Container) throws -> Self? {
+    static func makeService(for context: Context) throws -> Self? {
         return .init()
     }
 }
@@ -32,7 +50,7 @@ class AllCapsLog: Log {
 extension AllCapsLog: ServiceType {
     static let serviceName = "all-caps"
     static let serviceSupports: [Any.Type] = [Log.self]
-    static func makeService(for container: Container) throws -> Self? {
+    static func makeService(for context: Context) throws -> Self? {
         return .init()
     }
 }
@@ -45,7 +63,7 @@ class AllCapsProvider: Provider {
         services.register(AllCapsLog.self)
     }
 
-    func boot(_ container: Container) throws { }
+    func boot(_ context: Context) throws { }
 }
 
 // MARK: BCrypt
@@ -76,8 +94,8 @@ extension BCryptHasher: ServiceType {
         return [Hasher.self]
     }
 
-    static func makeService(for container: Container) throws -> Self? {
-        let config = try container.make(BCryptConfig.self, for: BCryptHasher.self)
+    static func makeService(for context: Context) throws -> Self? {
+        let config = try context.make(BCryptConfig.self, for: BCryptHasher.self)
         return .init(cost: config.cost)
     }
 }
@@ -100,10 +118,10 @@ extension BCryptConfig: ServiceType {
         return []
     }
 
-    static func makeService(for container: Container) throws -> BCryptConfig? {
+    static func makeService(for context: Context) throws -> BCryptConfig? {
         let cost: Int
 
-        switch container.environment {
+        switch context.environment {
         case .production:
             cost = 12
         default:

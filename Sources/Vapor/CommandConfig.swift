@@ -6,7 +6,7 @@ import Foundation
 /// run when the application boots.
 public struct CommandConfig {
     /// A not-yet configured runnable.
-    public typealias LazyRunnable = (Container) throws -> Runnable
+    public typealias LazyRunnable = (Context) throws -> Runnable
 
     /// Internal storage
     var commands: [String: LazyRunnable]
@@ -51,15 +51,15 @@ public struct CommandConfig {
     }
 
     /// Converts the config into a command group.
-    internal func makeCommandGroup(for container: Container) throws -> BasicCommandGroup {
-        let commands = try self.commands.mapValues { try $0(container) }
+    internal func makeCommandGroup(for context: Context) throws -> BasicCommandGroup {
+        let commands = try self.commands.mapValues { try $0(context) }
         return BasicCommandGroup(
             commands: commands,
             options: [],
             help: ["Runs your Vapor application's commands"]
         ) { console, input in
             if let def = self.defaultRunnable {
-                try def(container).run(using: console, with: input)
+                try def(context).run(using: console, with: input)
             } else {
                 throw "No default command"
             }

@@ -17,7 +17,8 @@ extension LeafRenderer {
 
 final class TestFiles: FileReader, FileCache {
 
-    init() {}
+    // worker as a workaround for file factory
+    init(_ worker: EventLoop? = nil) {}
 
     func getFile<H: Hashable>(hash: H) -> Future<Data?> {
         return Future(nil)
@@ -40,7 +41,9 @@ final class TestFiles: FileReader, FileCache {
 
 final class PreloadedFiles: FileReader, FileCache {
     var files: [String: Data]
-    init() {
+    
+    // worker as a workaround for file factory
+    init(worker: EventLoop? = nil) {
         files = [:]
     }
 

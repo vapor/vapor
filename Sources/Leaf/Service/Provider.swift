@@ -12,18 +12,18 @@ public struct LeafConfig {
     let tags: [String: LeafTag]
     let viewsDir: String
     let fileReaderFactory: FileReaderFactory
-    let cache: Bool
+    let shouldCache: Bool
 
     public init(
         tags: [String: LeafTag] = defaultTags,
         viewsDir: String = "/",
-        cache: Bool = true,
-        fileReaderFactory: @escaping FileReaderFactory = File.init
+        shouldCache: Bool = true,
+        fileReaderFactory: @escaping FileReaderFactory = BasicFileReader.init
     ) {
         self.tags = tags
         self.viewsDir = viewsDir
         self.fileReaderFactory = fileReaderFactory
-        self.cache = cache
+        self.shouldCache = shouldCache
     }
 }
 
@@ -89,8 +89,8 @@ extension ViewRenderer {
         return try make(path, context: nil as String?)
     }
 
-    /// Renders a view using the supplied dictionary.
-    func make(_ path: String, _ context: [String: Encodable]) throws -> Future<View> {
-        return try make(path, context: context as Encodable)
+    /// See ViewRenderer.make
+    public func make(_ path: String, _ context: [String: Encodable]) throws -> Future<View> {
+        return try make(path, context: context)
     }
 }

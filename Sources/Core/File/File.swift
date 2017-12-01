@@ -3,7 +3,7 @@ import Dispatch
 import Foundation
 import libc
 
-public final class File: FileReader, FileCache {
+public final class BasicFileReader: FileReader, FileCache {
     /// Cached data.
     private var cache: [Int: Data]
 

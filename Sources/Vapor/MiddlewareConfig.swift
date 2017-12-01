@@ -5,7 +5,7 @@ import Service
 /// Middleware will be used in the order they are added.
 public struct MiddlewareConfig {
     /// Lazily initializes a middleware using container.
-    typealias LazyMiddleware = (Container) throws -> Middleware
+    typealias LazyMiddleware = (Context) throws -> Middleware
 
     /// The configured middleware.
     var storage: [LazyMiddleware]
@@ -36,9 +36,9 @@ public struct MiddlewareConfig {
 
 extension MiddlewareConfig {
     /// Resolves the desired middleware for a given container
-    internal func resolve(for container: Container) throws -> [Middleware] {
+    internal func resolve(for context: Context) throws -> [Middleware] {
         return try storage.map { lazy in
-            return try lazy(container)
+            return try lazy(context)
         }
     }
 }

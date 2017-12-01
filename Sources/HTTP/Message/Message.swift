@@ -41,6 +41,7 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
     var onUpgrade: HTTPOnUpgrade? { get set }
 }
 
+<<<<<<< HEAD
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
     /// Accepts a TCP client
@@ -58,6 +59,9 @@ public struct HTTPOnUpgrade: Codable {
     public func encode(to encoder: Encoder) throws {
         // skip
     }
+=======
+// MARK: Queue
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
 
     /// See Decodable.init
     public init(from decoder: Decoder) throws {

@@ -13,7 +13,12 @@ class ConfigTests: XCTestCase {
         let bcryptConfig = BCryptConfig(cost: 4)
         services.register(bcryptConfig)
 
+<<<<<<< HEAD
         let container = BasicContainer(
+=======
+        let container = TestContext(
+            environment: .production,
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
             config: config,
             environment: .production,
             services: services,
@@ -31,7 +36,12 @@ class ConfigTests: XCTestCase {
         services.register(BCryptHasher.self)
         services.register(BCryptConfig.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
+=======
+        let container = TestContext(
+            environment: .production,
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
             config: config,
             environment: .production,
             services: services,
@@ -48,7 +58,12 @@ class ConfigTests: XCTestCase {
         var services = Services()
         services.register(BCryptHasher.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
+=======
+        let container = TestContext(
+            environment: .production,
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
             config: config,
             environment: .production,
             services: services,
@@ -74,7 +89,12 @@ class ConfigTests: XCTestCase {
         let bcryptConfig5 = BCryptConfig(cost: 5)
         services.register(bcryptConfig5)
 
+<<<<<<< HEAD
         let container = BasicContainer(
+=======
+        let container = TestContext(
+            environment: .production,
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
             config: config,
             environment: .production,
             services: services,

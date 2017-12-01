@@ -2,6 +2,7 @@ import Async
 import Core
 import Dispatch
 import Foundation
+import Service
 
 /// Renders Leaf templates using the Leaf parser and serializer.
 public final class LeafRenderer {
@@ -15,7 +16,7 @@ public final class LeafRenderer {
     /// Views base directory.
     public let viewsDir: String
     
-    var mustCache: Bool
+    var shouldCache: Bool
     
     let eventLoop: EventLoop
 
@@ -23,7 +24,7 @@ public final class LeafRenderer {
     public init(config: LeafConfig, on eventLoop: EventLoop) {
         self.tags = config.tags
         self.viewsDir = config.viewsDir.finished(with: "/")
-        self.mustCache = config.cache
+        self.shouldCache = config.shouldCache
         self.fileReader = config.fileReaderFactory(eventLoop)
         self.eventLoop = eventLoop
     }
@@ -54,7 +55,6 @@ public final class LeafRenderer {
             }
             _cachedASTs[hash] = ast
         }
-
 
         let serializer = Serializer(
             ast: ast,
@@ -110,8 +110,8 @@ extension LeafRenderer {
 
         let data: Future<Data>
 
-        if self.mustCache {
-            data = self.fileReader.cachedRead(at: fullPath)
+        if self.shouldCache {
+            data = fileReader.cachedRead(at: fullPath)
         } else {
             data = self.fileReader.read(at: fullPath)
         }

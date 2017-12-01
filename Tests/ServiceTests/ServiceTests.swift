@@ -8,12 +8,16 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(PrintLog.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -26,12 +30,16 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -45,6 +53,7 @@ class ServiceTests: XCTestCase {
         services.register(AllCapsLog.self)
 
         let foo = PrintLog()
+<<<<<<< HEAD
         services.register(supports: [Log.self], tag: "foo", foo)
 
         let container = BasicContainer(
@@ -53,6 +62,11 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        services.register(foo, tag: "foo", supports: [Log.self])
+
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -65,12 +79,16 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
@@ -81,12 +99,16 @@ class ServiceTests: XCTestCase {
         services.register(PrintLog.self)
         services.register(AllCapsLog.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -96,12 +118,16 @@ class ServiceTests: XCTestCase {
         var services = Services()
         try services.register(AllCapsProvider())
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
     }
@@ -113,12 +139,16 @@ class ServiceTests: XCTestCase {
         var services = Services()
         services.register(AllCapsLog.self)
 
+<<<<<<< HEAD
         let container = BasicContainer(
             config: config,
             environment: .production,
             services: services,
             on: DispatchQueue.global()
         )
+=======
+        let container = TestContext(config: config, services: services)
+>>>>>>> 503de6b06912672ed95565679354d11171f72740
         do {
             _ = try container.make(Log.self, for: ServiceTests.self)
             XCTFail("Should not have resolved.")
