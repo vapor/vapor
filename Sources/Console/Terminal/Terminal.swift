@@ -21,11 +21,9 @@ public final class Terminal: Console {
     /// See Extendable.extend
     public var extend: Extend
     
-    public var styleXcode = false
-    
     internal var applyStyle: Bool {
         #if Xcode
-            return styleXcode
+            return false
         #else
             return true
         #endif
