@@ -365,6 +365,17 @@ class LeafTests: XCTestCase {
         XCTAssertEqual(String(data: rendered.data, encoding: .utf8), expected)
     }
 
+    func testCount() throws {
+        let template = """
+        count: #count(array)
+        """
+        let expected = """
+        count: 4
+        """
+        let context = LeafData.dictionary(["array": .array([.null, .null, .null, .null])])
+        try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
+    }
+
     static var allTests = [
         ("testPrint", testPrint),
         ("testConstant", testConstant),
@@ -388,5 +399,6 @@ class LeafTests: XCTestCase {
         ("testIndentationCorrection", testIndentationCorrection),
         ("testAsyncExport", testAsyncExport),
         ("testService", testService),
+        ("testCount", testCount),
     ]
 }

@@ -118,6 +118,8 @@ extension LeafData {
             return s.data(using: .utf8)
         case .lazy(let lazy):
             return lazy().data
+        case .int(let i):
+            return i.description.data(using: .utf8)
         default:
             return nil
         }

@@ -40,7 +40,7 @@ public final class Serializer {
                     }
 
                     guard let data = context.data else {
-                        promise.fail(SerializerError.unexpectedSyntax(syntax)) // FIXME: unexpected context type
+                        promise.fail(SerializerError.unexpectedTagData(name: name, source: syntax.source))
                         return
                     }
 
