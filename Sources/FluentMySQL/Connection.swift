@@ -14,9 +14,13 @@ internal final class MySQLSerializer: SQLSerializer {
 struct InvalidConnectionType: Error{}
 
 /// A Fluent wrapper around a MySQL connection that can log
-public final class FluentMySQLConnection: Connection, JoinSupporting, ReferenceSupporting {
+public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, ReferenceSupporting {
+    public func close() {
+        self.connection.close()
+    }
+    
     /// Respresents the current FluentMySQLConnection as a connection to `D`
-    public func makeConnection<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+    public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         guard let mysql = self as? D.Connection else {
             return Future(error: InvalidConnectionType())
         }

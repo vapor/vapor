@@ -37,14 +37,14 @@ public final class MySQLDatabase : LogSupporting {
 
 extension MySQLDatabase : Database {
     /// Creates a new connection to the database
-    public func makeConnection(on worker: Worker) -> Future<FluentMySQLConnection> {
+    public func makeConnection(on eventloop: EventLoop) -> Future<FluentMySQLConnection> {
         return MySQLConnection.makeConnection(
             hostname: hostname,
             port: port,
             user: user,
             password: password,
             database: database,
-            on: worker
+            on: eventloop
         ).map { connection in
             return FluentMySQLConnection(connection: connection, logger: self.logger)
         }

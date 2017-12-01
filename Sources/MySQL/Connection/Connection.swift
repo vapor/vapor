@@ -200,7 +200,7 @@ public final class MySQLConnection {
     }
     
     /// Closes the connection
-    func close() {
+    public func close() {
         // Write `close`
         _ = try? self.write(packetFor: Data([0x01]))
         self.socket.close()
