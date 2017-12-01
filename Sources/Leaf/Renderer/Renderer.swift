@@ -10,25 +10,22 @@ public final class LeafRenderer {
 
     /// The renderer will use this to read files for
     /// tags that require it (such as #embed)
-    private var _files: [Int: FileReader & FileCache]
-
-    /// Create a file reader & cache for the supplied queue
-    public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
-    private let fileFactory: FileFactory
+    private var fileReader: FileReader & FileCache
 
     /// Views base directory.
     public let viewsDir: String
+    
+    var mustCache: Bool
+    
+    let eventLoop: EventLoop
 
     /// Create a new Leaf renderer.
-    public init(
-        tags: [String: LeafTag] = defaultTags,
-        viewsDir: String = "/",
-        fileFactory: @escaping FileFactory = File.init
-    ) {
-        self.tags = tags
-        self._files = [:]
-        self.fileFactory = fileFactory
-        self.viewsDir = viewsDir.finished(with: "/")
+    public init(config: LeafConfig, on eventLoop: EventLoop) {
+        self.tags = config.tags
+        self.viewsDir = config.viewsDir.finished(with: "/")
+        self.mustCache = config.cache
+        self.fileReader = config.fileReaderFactory(eventLoop)
+        self.eventLoop = eventLoop
     }
 
     // ASTs only need to be parsed once
@@ -86,11 +83,10 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on eventLoop: EventLoop) throws -> Future<View> {
+    public func make(_ path: String, context: Encodable) throws -> Future<View> {
         return try render(
             path: path,
-            context: LeafEncoder().encode(context),
-            on: eventLoop
+            context: LeafEncoder().encode(context)
         ).map { data in
             return View(data: data)
         }
@@ -101,7 +97,7 @@ extension LeafRenderer: ViewRenderer {
 
 extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: LeafData, on eventLoop: EventLoop) -> Future<Data> {
+    public func render(path: String, context: LeafData) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let fullPath: String
         if path.hasSuffix("/") {
@@ -112,16 +108,16 @@ extension LeafRenderer {
 
         let promise = Promise(Data.self)
 
-        let file: FileReader & FileCache
-        if let existing = _files[eventLoop.queue.label.hashValue] {
-            file = existing
-        } else {
-            file = fileFactory(eventLoop.queue)
-            _files[eventLoop.queue.label.hashValue] = file
-        }
+        let data: Future<Data>
 
-        file.cachedRead(at: fullPath).do { view in
-            self.render(template: view, context: context, on: eventLoop).do { data in
+        if self.mustCache {
+            data = self.fileReader.cachedRead(at: fullPath)
+        } else {
+            data = self.fileReader.read(at: fullPath)
+        }
+            
+        data.do { view in
+            self.render(template: view, context: context, on: self.eventLoop).do { data in
                 promise.complete(data)
             }.catch { error in
                 if var error = error as? RenderError {

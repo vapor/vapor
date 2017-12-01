@@ -14,9 +14,9 @@ public final class File: FileReader, FileCache {
 
     /// Create a new CFile
     /// FIXME: add cache maximum
-    public init(queue: DispatchQueue) {
+    public init(on eventLoop: EventLoop) {
         self.cache = [:]
-        self.queue = queue
+        self.queue = eventLoop.queue
     }
 
     /// See FileReader.read
