@@ -16,7 +16,7 @@ extension Router {
             return Response(http: http, using: request.superContainer)
         }
         let route = Route<Responder>(
-            path: [.constants([HTTPMethod.get.data])] + path,
+            path: [.constants([.bytes(HTTPMethod.get.bytes)])] + path,
             output: responder
         )
         self.register(route: route)

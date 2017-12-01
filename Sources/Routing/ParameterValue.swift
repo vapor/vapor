@@ -3,13 +3,13 @@ import Foundation
 /// A parameter and its resolved value.
 public struct ParameterValue {
     /// The parameter type.
-    public let slug: Data
+    let slug: [UInt8]
 
     /// The resolved value.
-    public let value: Data
+    let value: [UInt8]
 
     /// Create a new lazy parameter.
-    public init(slug: Data, value: Data) {
+    init(slug: [UInt8], value: [UInt8]) {
         self.slug = slug
         self.value = value
     }

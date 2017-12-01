@@ -34,66 +34,37 @@ public final class TrieRouter<Output> {
             switch path {
             case .constants(let consants):
                 for s in consants {
-                    // find the child node matching this constant
-                    if let node = current.findNode(withConstant: s) {
+                    s.withByteBuffer { buffer in
+                        if let node = current.findNode(withConstant: buffer) {
+                            current = node
+                        } else {
+                            // if no child node matches this constant,
+                            // we must create a new one
+                            let new = TrieRouterNode<Output>(kind: .constant(s.bytes))
+                            current.children.append(new)
+                            current = new
+                        }
+                    }
+                }
+            case .parameter(let p):
+                p.withByteBuffer { buffer in
+                    if let (node, _) = current.findNode(withParameter: buffer) {
+                        // there can only ever be one parameter node at
+                        // a given node in the tree, so always overwrite the closure
                         current = node
                     } else {
                         // if no child node matches this constant,
                         // we must create a new one
-                        let new = TrieRouterNode<Output>(kind: .constant(s))
+                        let new = TrieRouterNode<Output>(kind: .parameter(p.bytes))
                         current.children.append(new)
                         current = new
                     }
-                }
-            case .parameter(let p):
-                if let (node, _) = current.findNode(withParameter: p) {
-                    // there can only ever be one parameter node at
-                    // a given node in the tree, so always overwrite the closure
-                    current = node
-                } else {
-                    // if no child node matches this constant,
-                    // we must create a new one
-                    let new = TrieRouterNode<Output>(kind: .parameter(p))
-                    current.children.append(new)
-                    current = new
                 }
             }
         }
 
         // set the resolved nodes responder
         current.output = route.output
-    }
-    
-    /// Splits the URI into a substring for each component
-    fileprivate func split(_ uri: Data) -> [Data] {
-        var path = [Data]()
-        path.reserveCapacity(8)
-        
-        // Skip past the first `/`
-        var baseIndex = uri.index(after: uri.startIndex)
-        
-        if baseIndex < uri.endIndex {
-            var currentIndex = baseIndex
-            
-            // Split up the path
-            while currentIndex < uri.endIndex {
-                if uri[currentIndex] == .forwardSlash {
-                    path.append(uri[baseIndex..<currentIndex])
-                    
-                    baseIndex = uri.index(after: currentIndex)
-                    currentIndex = baseIndex
-                } else {
-                    currentIndex = uri.index(after: currentIndex)
-                }
-            }
-            
-            // Add remaining path component
-            if baseIndex != uri.endIndex {
-                path.append(uri[baseIndex...])
-            }
-        }
-        
-        return path
     }
     
     /// Walks the provided node based on the provided component.
@@ -105,30 +76,32 @@ public final class TrieRouter<Output> {
     /// TODO: Binary data
     fileprivate func walk(
         node current: inout TrieRouterNode<Output>,
-        component: Data,
+        component: PathComponent.Parameter,
         parameters: ParameterContainer
     ) -> Bool {
-        if let node = current.findNode(withConstant: component) {
-            // if we find a constant route path that matches this component,
-            // then we should use it.
-            current = node
-        } else if let (node, parameter) = current.firstParameterNode() {
-            // if no constant routes were found that match the path, but
-            // a dynamic parameter child was found, we can use it
-            let lazy = ParameterValue(slug: parameter, value: component)
-            parameters.parameters.append(lazy)
-            current = node
-        } else {
-            // no constant routes were found, and this node doesn't have
-            // a dynamic parameter child. so no match.
-            return false
+        return component.withByteBuffer { buffer in
+            if let node = current.findNode(withConstant: buffer) {
+                // if we find a constant route path that matches this component,
+                // then we should use it.
+                current = node
+            } else if let (node, parameter) = current.firstParameterNode() {
+                // if no constant routes were found that match the path, but
+                // a dynamic parameter child was found, we can use it
+                let lazy = ParameterValue(slug: parameter, value: component.bytes)
+                parameters.parameters.append(lazy)
+                current = node
+            } else {
+                // no constant routes were found, and this node doesn't have
+                // a dynamic parameter child. so no match.
+                return false
+            }
+            
+            return true
         }
-        
-        return true
     }
 
     /// See Router.route()
-    public func route(path: [Data], parameters: ParameterContainer) -> Output? {
+    public func route(path: [PathComponent.Parameter], parameters: ParameterContainer) -> Output? {
         // always start at the root node
         var current: TrieRouterNode = root
 

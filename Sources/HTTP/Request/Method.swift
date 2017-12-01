@@ -1,4 +1,5 @@
 import Foundation
+import Bits
 
 /// An HTTP Request method
 ///
@@ -23,14 +24,14 @@ public struct HTTPMethod : Equatable, Hashable, Codable, CustomDebugStringConver
     /// Represents this method as a String
     public var string: String {
         get {
-            return String(data: self.data, encoding: .utf8) ?? ""
+            return String(bytes: self.bytes, encoding: .utf8) ?? ""
         }
         set {
-            self.data = Data(newValue.utf8)
+            self.bytes = [UInt8](newValue.utf8)
         }
     }
     
-    public private(set) var data: Data
+    public private(set) var bytes: [UInt8]
 
     /// Encodes this method to a String
     public func encode(to encoder: Encoder) throws {
@@ -65,6 +66,7 @@ public struct HTTPMethod : Equatable, Hashable, Codable, CustomDebugStringConver
     /// ..but where PUT replaces an entity, PATCH only updated the specified fields
     public static let patch = HTTPMethod(staticString: "PATCH")
 
+
     /// OPTIONS is used by the browser to check if the conditions allow a specific request.
     ///
     /// Often used for secutity purposes.
@@ -72,17 +74,19 @@ public struct HTTPMethod : Equatable, Hashable, Codable, CustomDebugStringConver
     
     /// A hashValue is useful for using the method in a dictionary
     public var hashValue: Int {
-        return data.hashValue
+        return Data(bytes).hashValue
     }
 
     /// Compares two methods to be equal
     public static func ==(lhs: HTTPMethod, rhs: HTTPMethod) -> Bool {
-        return lhs.data == rhs.data
+        return lhs.bytes == rhs.bytes
     }
     
     /// Creates a new method from a StaticString
     init(staticString: StaticString) {
-        self.data = Data(bytes: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
+        self.bytes = Array(
+            ByteBuffer(start: staticString.utf8Start, count: staticString.utf8CodeUnitCount)
+        )
     }
 
     /// Creates a new method from a String
@@ -95,7 +99,7 @@ public struct HTTPMethod : Equatable, Hashable, Codable, CustomDebugStringConver
         case "DELETE": self = .delete
         case "OPTIONS": self = .options
         default:
-            self.data = Data(string.utf8)
+            self.bytes = [UInt8](string.utf8)
         }
     }
 

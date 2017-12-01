@@ -183,7 +183,7 @@ public final class MySQLConnection {
             memcpy(self.writeBuffer.advanced(by: 4), input.advanced(by: offset), dataSize)
             
             let buffer = ByteBuffer(start: self.writeBuffer, count: dataSize &+ 4)
-            _ = try self.socket.write(max: dataSize &+ 4, from: buffer)
+            _ = try self.socket.write(from: buffer)
         }
         
         return

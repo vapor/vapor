@@ -55,7 +55,6 @@ public struct HTTPResponse: HTTPMessage {
         self.headers = headers
         self.body = body
     }
-
 }
 
 extension HTTPResponse {
