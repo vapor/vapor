@@ -18,11 +18,11 @@ extension Container {
         do {
             // resolve the service and cache it
             let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
-            serviceCache.set(service, for: Client.self)
+            serviceCache.set(.service(service), Interface.self, for: Client.self)
             return service
         } catch {
             // cache the error
-            serviceCache.set(error: error, Interface.self, for: Client.self)
+            serviceCache.set(.error(error), Interface.self, for: Client.self)
             throw error
         }
     }
@@ -70,17 +70,25 @@ extension Container {
         )
 
         // lazy loading
-        // create an instance of this service type.
-        let item = try chosen.makeService(for: self)
 
-        guard let ret = item else {
-            throw ServiceError.incorrectType(
-                type: chosen.serviceType,
-                desired: interface
-            )
+        if chosen.serviceIsSingleton {
+            // attempt to fetch singleton from cache
+            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
+                return singleton
+            } else {
+                do {
+                    let item = try chosen.makeService(for: self)
+                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
+                    return item
+                } catch {
+                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
+                    throw error
+                }
+            }
+        } else {
+            // create an instance of this service type.
+            return try chosen.makeService(for: self)
         }
-
-        return ret
     }
 }
 

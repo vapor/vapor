@@ -8,7 +8,10 @@ public protocol ServiceType {
     ///     will be considered.
     static var serviceSupports: [Any.Type] { get }
 
+    /// If true, the service will only be initialized once.
+    static var serviceIsSingleton: Bool { get }
+
     /// Creates a new instance of the service
     /// Using the service container.
-    static func makeService(for worker: Container) throws -> Self?
+    static func makeService(for worker: Container) throws -> Self
 }

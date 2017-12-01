@@ -84,8 +84,12 @@ let package = Package(
         .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
     ],
     targets: [
-        .target(name: "Authentication", dependencies: ["Async", "Debugging", "Fluent", "Service"]),
-        .testTarget(name: "AuthenticationTests", dependencies: ["Authentication", "FluentSQLite"]),
+        .target(name: "Authentication", dependencies: [
+            "Async", "Bits", "Crypto", "Debugging", "Fluent", "HTTP", "Service", "Vapor"
+        ]),
+        .testTarget(name: "AuthenticationTests", dependencies: [
+            "Authentication", "FluentSQLite", "Vapor"
+        ]),
 
         // Bits
         .target(name: "Bits"),

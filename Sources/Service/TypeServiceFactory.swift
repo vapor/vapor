@@ -16,8 +16,13 @@ public struct TypeServiceFactory<S: ServiceType>: ServiceFactory {
         return nil
     }
 
+    /// See ServiceFactory.serviceIsSingleton
+    public var serviceIsSingleton: Bool {
+        return S.serviceIsSingleton
+    }
+
     /// See ServiceType.makeService
-    public func makeService(for worker: Container) throws -> Any? {
+    public func makeService(for worker: Container) throws -> Any {
         return try S.makeService(for: worker)
     }
 

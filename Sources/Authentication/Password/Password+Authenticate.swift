@@ -14,17 +14,12 @@ extension PasswordAuthenticatable {
             .first()
             .map
         { user in
-            print(password.username)
-            print(password)
-            print(user)
             guard let user = user else {
                 throw AuthenticationError(
                     identifier: "invalidCredentials",
                     reason: "No \(Self.self) with matching credentials was found"
                 )
             }
-
-            print(user.authPassword)
 
             guard try verifier.verify(
                 password: password.password,
