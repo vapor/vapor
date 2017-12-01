@@ -54,7 +54,7 @@ class AuthenticationTests: XCTestCase {
         let req = Request(using: app)
         req.http.method = .get
         req.http.uri.path = "test"
-        req.http.headers.authorizationBasic = Password(username: "tanner@vapor.codes", password: "foo")
+        req.http.headers.basicAuthorization = Password(username: "tanner@vapor.codes", password: "foo")
 
         let responder = try app.make(Responder.self)
         let res = try responder.respond(to: req).blockingAwait()
