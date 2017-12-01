@@ -10,6 +10,9 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
+        // Auth
+        .library(name: "Authentication", targets: ["Authentication"]),
+
         // Core
         .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
@@ -81,6 +84,9 @@ let package = Package(
         .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.5")),
     ],
     targets: [
+        .target(name: "Authentication", dependencies: ["Fluent", "Service"]),
+        .testTarget(name: "AuthenticationTests", dependencies: ["Authentication"]),
+
         // Bits
         .target(name: "Bits"),
 
