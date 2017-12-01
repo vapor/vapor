@@ -10,7 +10,7 @@ import Core
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
     
-    let pool = ConnectionPool(
+    let pool = MySQLConnectionPool(
         hostname: "localhost",
         user: "root",
         password: nil,
@@ -18,7 +18,7 @@ class MySQLTests: XCTestCase {
         on: MySQLTests.poolQueue
     )
     
-    let connection = try! Connection.makeConnection(
+    let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
         user: "root",
         password: nil,
@@ -116,7 +116,6 @@ class MySQLTests: XCTestCase {
         var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
      
         let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(3))
-     
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
         }
@@ -131,7 +130,7 @@ class MySQLTests: XCTestCase {
         var count = 0
         let promise = Promise<Int>()
      
-        connection.stream(User.self, in: "SELECT * FROM users").drain { user in
+        connection.forEach(User.self, in: "SELECT * FROM users") { user in
             XCTAssertEqual(user.username, iterator.next())
             count += 1
             

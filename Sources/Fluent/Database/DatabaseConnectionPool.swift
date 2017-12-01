@@ -37,23 +37,21 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
 
         if let ready = self.available.popLast() {
             promise.complete(ready)
-        } else {
-            if self.active < self.max {
-                self.database.makeConnection(on: eventLoop).do { connection in
-                    self.active += 1
-                    if let references = connection as? _ReferenceSupporting {
-                        references.enableReferences().do {
-                            promise.complete(connection)
-                        }.catch(promise.fail)
-                    } else {
+        } else if self.active < self.max {
+            self.database.makeConnection(on: eventLoop).do { connection in
+                self.active += 1
+                if let references = connection as? _ReferenceSupporting {
+                    references.enableReferences().do {
                         promise.complete(connection)
-                    }
-                }.catch { err in
-                    promise.fail(err)
+                    }.catch(promise.fail)
+                } else {
+                    promise.complete(connection)
                 }
-            } else {
-                self.waiters.append(promise.complete)
+            }.catch { err in
+                promise.fail(err)
             }
+        } else {
+            self.waiters.append(promise.complete)
         }
 
         return promise.future

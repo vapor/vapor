@@ -92,7 +92,7 @@ public final class Serializer {
                     source: source,
                     on: self.eventLoop
                 )
-
+                
                 return try tag.render(
                     parsed: parsed,
                     context: &self.context,

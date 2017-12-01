@@ -179,7 +179,6 @@ internal final class ConnectionPoolCache {
     }
 
     func pool<D>(for id: DatabaseIdentifier<D>) throws -> DatabaseConnectionPool<D>
-        where D: Database
     {
         if let existing = cache[id.uid] as? DatabaseConnectionPool<D> {
             return existing

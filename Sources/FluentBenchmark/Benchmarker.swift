@@ -1,10 +1,13 @@
 import Async
 import Fluent
+import Dispatch
 
 /// Benchmarks a Fluent database implementation.
 public final class Benchmarker<Database: Fluent.Database> {
     /// The database being benchmarked
     public let database: Database
+    
+    let pool: DatabaseConnectionPool<Database>
 
     /// Error handler
     public typealias OnFail = (String, StaticString, UInt) -> ()
@@ -20,6 +23,7 @@ public final class Benchmarker<Database: Fluent.Database> {
         self.database = database
         self.onFail = onFail
         self.logs = []
+        self.pool = self.database.makeConnectionPool(max: 20, on: DispatchQueue(label: "fluent-bench"))
 
         if let logSupporting = database as? LogSupporting {
             let logger = DatabaseLogger { log in
@@ -57,7 +61,7 @@ public final class Benchmarker<Database: Fluent.Database> {
     /// Awaits the future or fails
     internal func test<T>(_ future: Future<T>, file: StaticString = #file, line: UInt = #line) throws -> T {
         do {
-            return try future.blockingAwait()
+            return try future.blockingAwait(timeout: .seconds(60))
         } catch {
             fail("\(error)", file: file, line: line)
             throw error

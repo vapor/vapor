@@ -81,7 +81,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.5")),
+        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: ["Async", "Debugging", "Fluent", "Service"]),
@@ -119,6 +119,8 @@ let package = Package(
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
+        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 

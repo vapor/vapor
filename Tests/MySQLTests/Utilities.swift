@@ -174,7 +174,7 @@ public final class Table {
 }
 
 
-extension Connection {
+extension MySQLConnection {
     /// Creates a table from the provided specification
     public func createTable(_ table: Table) -> Future<Void> {
         let temporary = table.temporary ? "TEMPORARY" : ""

@@ -59,6 +59,8 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
             return "More parameters were bound than specified in the query"
         case .notEnoughParametersBound:
             return "Not enough parameters were bound to match the parameter count of this query"
+        case .invalidBinding(_):
+            return "A type was bound that didn't match the expectation"
         }
     }
     
@@ -157,6 +159,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
             case .tooManyParametersBound: return "tooManyParametersBound"
             case .notEnoughParametersBound: return "notEnoughParametersBound"
             case .invalidTypeBound(_, _): return "invalidTypeBound"
+            case .invalidBinding(_): return "invalidBinding"
             }
         }
         
@@ -170,6 +173,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
         case decodingError
         case connectionInUse
         case invalidCredentials
+        case invalidBinding(for: Field.FieldType)
         case notEnoughParametersBound
         case tooManyParametersBound
     }

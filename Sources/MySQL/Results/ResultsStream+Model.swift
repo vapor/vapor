@@ -1,56 +1,44 @@
 import Async
 
 /// A stream of decoded models related to a query
-public final class ModelStream<D: Decodable> : ResultsStream {
-    /// -
-    public typealias Output = D
-    
-    /// A list of all fields' descriptions in this table
-    var columns = [Field]()
-    
-    /// Used to indicate the amount of returned columns
-    var columnCount: UInt64?
-    
-    /// If `true`, the server protocol version is for MySQL 4.1
-    let mysql41: Bool
-    
-    /// If `true`, the results are using the binary protocols
-    var binary: Bool
+final class ModelStream<Model>: Async.Stream where Model: Decodable {
+    /// See InputStream.Input
+    typealias Input = Row
 
-    /// Use a basic stream to easily implement our output stream.
-    internal var outputStream: BasicStream<Output> = .init()
-    
-    /// Creates a new ModelStream using the specified protocol (from MySQL 4.0 or 4.1) and optionally the binary protocol instead of text
-    init(mysql41: Bool, binary: Bool = false) {
-        self.mysql41 = mysql41
-        self.binary = binary
+    /// See OutputStream.Output
+    typealias Output = Model
+
+    /// Internal mapping stream
+    private var mapStream: MapStream<Row, Model>
+
+    /// Creates a new Model stream.
+    init(_ model: Model.Type = Model.self) {
+        mapStream = .init { row in
+            let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+            return try Model(from: decoder)
+        }
     }
-    
-    /// Parses a packet into a Decodable entity
-    func parseRows(from packet: Packet) throws -> D {
-        let row = try packet.makeRow(columns: columns, binary: binary)
-        
-        let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
-        return try D(from: decoder)
+
+    /// See InputStream.onInput
+    func onInput(_ input: Row) {
+        mapStream.onInput(input)
     }
 
     /// See InputStream.onError
-    public func onError(_ error: Error) {
-        outputStream.onError(error)
+    func onError(_ error: Error) {
+        mapStream.onError(error)
     }
 
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: InputStream, D == I.Input {
-        outputStream.onOutput(input)
+    /// See OutuptStream.onOutput
+    func onOutput<I>(_ input: I) where I: InputStream, Model == I.Input {
+        mapStream.onOutput(input)
     }
-
-    /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    
+    func close() {
+        mapStream.close()
     }
-
-    /// For internal notification purposes only
-    public func close() {
-        outputStream.close()
+    
+    func onClose(_ onClose: ClosableStream) {
+        mapStream.onClose(onClose)
     }
 }
