@@ -8,9 +8,8 @@ final class Routes: RouteCollection {
     }
 
     func boot(router: Router) throws {
-        let body = try "Hello, world!".makeBody()
         router.get("hello") { req in
-            return Response(status: .ok, body: body)
+            return "Hello, world!"
         }
     }
 }

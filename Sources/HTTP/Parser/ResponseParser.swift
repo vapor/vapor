@@ -9,7 +9,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     public typealias Input = ByteBuffer
 
     /// See OutputStream.Output
-    public typealias Output = Response
+    public typealias Output = HTTPResponse
     
     // Internal variables to conform
     // to the C HTTP parser protocol.
@@ -81,7 +81,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     /// Parses the supplied data into a response or throws an error.
     /// If the data is incomplete, a nil response will be returned.
     /// Contiguous data may be supplied as multiple calls.
-    public func parse(from data: Data) throws -> Response? {
+    public func parse(from data: Data) throws -> HTTPResponse? {
         return try data.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: data.count)
             return try parse(from: buffer)
@@ -89,7 +89,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     }
     
     /// Parses a Request from the stream.
-    public func parse(from buffer: ByteBuffer) throws -> Response? {
+    public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
         currentSize += buffer.count
         
         guard currentSize < maxSize else {
@@ -126,21 +126,21 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         CParseResults.remove(from: &parser)
 
         /// get response status
-        let status = Status(code: Int(parser.status_code))
+        let status = HTTPStatus(code: Int(parser.status_code))
 
         // require a version to have been parsed
         guard let version = results.version else {
             throw HTTPError.invalidMessage()
         }
         
-        let body = Body(results.body)
+        let body = HTTPBody(results.body)
         
-        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
+        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
         
         currentSize = 0
         
         // create the request
-        return Response(
+        return HTTPResponse(
             version: version,
             status: status,
             headers: headers,

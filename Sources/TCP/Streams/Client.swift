@@ -4,6 +4,7 @@ import Async
 import Dispatch
 import Foundation
 import libc
+import Service
 
 /// TCP client stream.
 ///
@@ -18,7 +19,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// This client's dispatch queue. Use this
     /// for all async operations performed as a
     /// result of this client.
-    public let worker: Worker
+    public let eventLoop: EventLoop
 
     /// The client stream's underlying socket.
     public private(set) var socket: TCPSocket
@@ -54,9 +55,9 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Creates a new Remote Client from the a socket
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#creating-and-connecting-a-socket)
-    public init(socket: TCPSocket, worker: Worker) {
+    public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
-        self.worker = worker
+        self.eventLoop = eventLoop
 
         // Allocate one TCP packet
         let size = 65_507
@@ -64,10 +65,10 @@ public final class TCPClient: Async.Stream, ClosableStream {
         self.outputBuffer = MutableByteBuffer(start: pointer, count: size)
     }
     
-    public convenience init(worker: Worker) throws {
+    public convenience init(on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         socket.disablePipeSignal()
-        self.init(socket: socket, worker: worker)
+        self.init(socket: socket, on: eventLoop)
     }
 
     /// See InputStream.onInput
@@ -120,7 +121,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
         guard let source = writeSource else {
             let source = DispatchSource.makeWriteSource(
                 fileDescriptor: socket.descriptor,
-                queue: worker.eventLoop.queue
+                queue: eventLoop.queue
             )
             
             source.setEventHandler {
@@ -176,7 +177,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
-            queue: worker.eventLoop.queue
+            queue: eventLoop.queue
         )
 
         source.setEventHandler {
@@ -244,7 +245,6 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try self.socket.connect(hostname: hostname, port: port)
-        
         return writable()
     }
     

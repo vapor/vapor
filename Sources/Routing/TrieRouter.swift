@@ -6,65 +6,62 @@ import Bits
 /// A basic router that can route requests depending on the method and URI
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/routing/router/)
-public final class TrieRouter: Router {
+public final class TrieRouter<Output> {
     /// All routes registered to this router
-    public private(set) var routes: [Route] = []
+    public private(set) var routes: [Route<Output>] = []
     
     /// The root node
-    var root: RootNode
+    var root: TrieRouterNode<Output>
     
     /// If a route cannot be found, this is the fallback responder that will be used instead
-    public var fallbackResponder: Responder? = BasicResponder { _ in
-        return Future(Response(status: .notFound))
-    }
+    public var fallback: Output?
 
+    /// Create a new trie router
     public init() {
-        self.root = RootNode()
+        self.root = TrieRouterNode<Output>(kind: .root)
     }
 
     /// See Router.register()
-    public func register(route: Route) {
+    public func register(route: Route<Output>) {
         self.routes.append(route)
         
         // always start at the root node
         var current: TrieRouterNode = root
-
-        let path = [.constants([route.method.string])] + route.path
         
         // traverse the path components supplied
-        var iterator = path.makeIterator()
+        var iterator = route.path.makeIterator()
         while let path = iterator.next() {
             switch path {
             case .constants(let consants):
                 for s in consants {
                     // find the child node matching this constant
-                    if let node = current.findConstantNode(at: Data(s.utf8)) {
+                    if let node = current.findNode(withConstant: s) {
                         current = node
                     } else {
                         // if no child node matches this constant,
                         // we must create a new one
-                        let new = ConstantNode(constant: s)
-                        current.constantChildren.append(new)
+                        let new = TrieRouterNode<Output>(kind: .constant(s))
+                        current.children.append(new)
                         current = new
                     }
                 }
             case .parameter(let p):
-                if let node = current.parameterChild {
+                if let (node, _) = current.findNode(withParameter: p) {
                     // there can only ever be one parameter node at
                     // a given node in the tree, so always overwrite the closure
                     current = node
                 } else {
                     // if no child node matches this constant,
                     // we must create a new one
-                    let new = ParameterNode(parameter: p)
-                    current.parameterChild = new
+                    let new = TrieRouterNode<Output>(kind: .parameter(p))
+                    current.children.append(new)
                     current = new
                 }
             }
         }
 
         // set the resolved nodes responder
-        current.responder = route.responder
+        current.output = route.output
     }
     
     /// Splits the URI into a substring for each component
@@ -107,19 +104,19 @@ public final class TrieRouter: Router {
     ///
     /// TODO: Binary data
     fileprivate func walk(
-        node current: inout TrieRouterNode,
+        node current: inout TrieRouterNode<Output>,
         component: Data,
-        request: Request
+        parameters: ParameterContainer
     ) -> Bool {
-        if let node = current.findConstantNode(at: component) {
+        if let node = current.findNode(withConstant: component) {
             // if we find a constant route path that matches this component,
             // then we should use it.
             current = node
-        } else if let node = current.parameterChild {
+        } else if let (node, parameter) = current.firstParameterNode() {
             // if no constant routes were found that match the path, but
             // a dynamic parameter child was found, we can use it
-            let lazy = LazyParameter(slug: node.parameter, value: String(data: component, encoding: .utf8) ?? "")
-            request.parameters.parameters.append(lazy)
+            let lazy = ParameterValue(slug: parameter, value: component)
+            parameters.parameters.append(lazy)
             current = node
         } else {
             // no constant routes were found, and this node doesn't have
@@ -131,128 +128,19 @@ public final class TrieRouter: Router {
     }
 
     /// See Router.route()
-    public func route(request: Request) -> Responder? {
-        let path = split(request.uri.pathData)
-        
+    public func route(path: [Data], parameters: ParameterContainer) -> Output? {
         // always start at the root node
         var current: TrieRouterNode = root
-        
-        guard walk(node: &current, component: request.method.data, request: request) else {
-            return fallbackResponder
-        }
 
         // traverse the constant path supplied
         for component in path {
-            guard walk(node: &current, component: component, request: request) else {
-                return fallbackResponder
+            guard walk(node: &current, component: component, parameters: parameters) else {
+                return fallback
             }
         }
         
         // return the resolved responder if there hasn't
         // been an early exit.
-        return current.responder ?? fallbackResponder
-    }
-}
-
-// MARK: Node Protocol
-
-protocol TrieRouterNode {
-    /// All constant child nodes
-    var constantChildren: [ConstantNode] { get set }
-
-    /// A node can only ever have one child
-    /// of the parameter type. We store this separately
-    /// for performance
-    var parameterChild: ParameterNode? { get set }
-
-    /// This node's resopnder
-    var responder: Responder? { get set }
-}
-
-extension TrieRouterNode {
-    /// Finds the node with the supplied path in the
-    /// node's constant children.
-    func findConstantNode(at path: Data) -> ConstantNode? {
-        for child in constantChildren {
-            guard path.count == child.constant.count else {
-                continue
-            }
-            
-            if path == child.constant {
-                return child
-            }
-        }
-        
-        return nil
-    }
-}
-
-// MARK: Concrete Node
-
-/// An empty node that only has children
-/// and doesn't store anything
-final class RootNode: TrieRouterNode {
-    /// All constant child nodes
-    var constantChildren: [ConstantNode]
-
-    /// A node can only ever have one child
-    /// of the parameter type. We store this separately
-    /// for performance
-    var parameterChild: ParameterNode?
-
-    /// This node's resopnder
-    var responder: Responder?
-
-    /// Creates a new RouterNode
-    init() {
-        self.constantChildren = []
-    }
-}
-
-/// A node that stores a dynamic parameter.
-final class ParameterNode: TrieRouterNode {
-    /// The parameter type stored at this node
-    let parameter: String
-
-    /// All constant child nodes
-    var constantChildren: [ConstantNode]
-
-    /// A node can only ever have one child
-    /// of the parameter type. We store this separately
-    /// for performance
-    var parameterChild: ParameterNode?
-
-    /// This node's resopnder
-    var responder: Responder?
-
-    /// Creates a new RouterNode
-    init(parameter: String) {
-        self.parameter = parameter
-        self.constantChildren = []
-    }
-}
-
-/// A node that stores a constant parameter.
-final class ConstantNode: TrieRouterNode {
-    /// All constant child nodes
-    var constantChildren: [ConstantNode]
-
-    /// A node can only ever have one child
-    /// of the parameter type. We store this separately
-    /// for performance
-    var parameterChild: ParameterNode?
-
-    /// This nodes path component
-    let constant: Data
-
-    /// This node's resopnder
-    var responder: Responder?
-
-    /// Creates a new RouterNode
-    ///
-    /// TODO: Binary data
-    init(constant: String) {
-        self.constant = Data(constant.utf8)
-        self.constantChildren = []
+        return current.output ?? fallback
     }
 }

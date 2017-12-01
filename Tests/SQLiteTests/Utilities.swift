@@ -9,7 +9,7 @@ extension SQLiteConnection {
             let sqlite = SQLiteDatabase(
                 storage: .file(path: "/tmp/test_database.sqlite")
             )
-            return try sqlite.makeConnection(on: EventLoop(queue: queue)).blockingAwait()
+            return try sqlite.makeConnection(on: queue).blockingAwait()
         } catch {
             XCTFail()
         }

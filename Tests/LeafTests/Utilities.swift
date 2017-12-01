@@ -62,19 +62,3 @@ final class PreloadedFiles: FileReader, FileCache {
         return promise.future
     }
 }
-
-import Service
-
-final class BasicContainer: Container {
-    var config: Config
-    var environment: Environment
-    var services: Services
-    var extend: Extend
-
-    init(services: Services) {
-        self.config = Config()
-        self.environment = .development
-        self.services = services
-        self.extend = Extend()
-    }
-}

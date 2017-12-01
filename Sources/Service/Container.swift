@@ -1,36 +1,39 @@
 import Async
+import Core
+import Dispatch
 
 /// Capable of creating instances of registered services.
 /// This container makes use of config and environment
 /// to determine which service instances are most appropriate to create.
-public protocol Container: Extendable {
+public protocol Container: EventLoop, ServiceCacheable {
     var config: Config { get }
     var environment: Environment { get }
     var services: Services { get }
 }
 
-/// Has a pointer to a container.
-/// FIXME: this name is awful!
-public protocol HasContainer {
-    var container: Container? { get }
-}
+/// A basic container
+public final class BasicContainer: Container {
+    /// See Container.config
+    public var config: Config
 
-extension HasContainer {
-    /// Returns a container or throws an error if none exists.
-    public func requireContainer() throws -> Container {
-        guard let container = self.container else {
-            throw "container required"
-        }
-        return container
-    }
-}
+    /// See Container.environment
+    public var environment: Environment
 
-// MARK: Async
+    /// See Container.services
+    public var services: Services
 
-extension EventLoop: HasContainer {
-    /// See HasContainer.container
-    public var container: Container? {
-        get { return extend["vapor:container"] as? Container }
-        set { extend["vapor:container"] = newValue }
+    /// See Container.serviceCache
+    public var serviceCache: ServiceCache
+
+    /// See EventLoop.queue
+    public var queue: DispatchQueue
+
+    /// Create a new basic container
+    public init(config: Config, environment: Environment, services: Services, on eventLoop: EventLoop) {
+        self.config = config
+        self.environment = environment
+        self.services = services
+        self.serviceCache = .init()
+        self.queue = eventLoop.queue
     }
 }

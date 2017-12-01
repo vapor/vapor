@@ -28,10 +28,10 @@ public class HPACKTests: XCTestCase {
     ]
     
     func testPerformanceB() {
-        let request = Request(method: .get, uri: "/", headers: [
+        let request = HTTPRequest(method: .get, uri: "/", headers: [
             .host: "www.example.com",
             .cookie: "foo"
-        ], body: Body())
+        ], body: HTTPBody())
         let encoder = HPACKEncoder()
         let data = try! encoder.encode(request: request, chunksOf: 4000, streamID: 0)
 
@@ -526,7 +526,7 @@ public class HPACKTests: XCTestCase {
     }
     
     func testHeaderEncoding0() throws {
-        var headers = Headers()
+        var headers = HTTPHeaders()
         let encoder = HPACKEncoder()
         let decoder = HPACKDecoder()
         
@@ -538,7 +538,7 @@ public class HPACKTests: XCTestCase {
         
         var encoded: Payload
             
-        if let data = try encoder.encode(request: Request(method: .get, headers: headers), chunksOf: 1_000_000, streamID: 1).first {
+        if let data = try encoder.encode(request: HTTPRequest(method: .get, headers: headers), chunksOf: 1_000_000, streamID: 1).first {
             encoded = data.payload
         } else {
             XCTFail()
@@ -589,8 +589,8 @@ public class HPACKTests: XCTestCase {
     }
 }
 
-extension Headers: Equatable {
-    public static func ==(lhs: Headers, rhs: Headers) -> Bool {
+extension HTTPHeaders: Equatable {
+    public static func ==(lhs: HTTPHeaders, rhs: HTTPHeaders) -> Bool {
         let lhs = Array(lhs)
         let rhsCount = Array(rhs).count
         

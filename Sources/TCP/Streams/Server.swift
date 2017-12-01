@@ -1,7 +1,8 @@
 import Async
-import Async
+import Core
 import Dispatch
 import libc
+import Service
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
 public final class TCPServer: Async.OutputStream, ClosableStream {
@@ -41,24 +42,16 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
     private var outputStream: BasicStream<Output> = .init()
 
     /// Creates a TCP server from an existing TCP socket.
-    public init(socket: TCPSocket, eventLoopCount: Int) {
+    public init(socket: TCPSocket, eventLoops: [EventLoop]) {
         self.socket = socket
-        self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server.main", qos: .background)
-        var eventLoops: [EventLoop] = []
-        /// important! this should be _less than_ the worker count
-        /// to leave room for the accepting thread
-        for i in 1..<eventLoopCount {
-            let queue = DispatchQueue(label: "codes.vapor.net.tcp.server.worker.\(i)", qos: .userInteractive)
-            eventLoops.append(EventLoop(queue: queue))
-        }
-        eventLoopsIterator = LoopIterator(collection: eventLoops)
+        self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server", qos: .background)
         self.eventLoops = eventLoops
+        self.eventLoopsIterator = LoopIterator(collection: eventLoops)
     }
 
-    /// Creates a new Server Socket
-    public convenience init(eventLoopCount: Int = 8) throws {
-        let socket = try TCPSocket()
-        self.init(socket: socket, eventLoopCount: eventLoopCount)
+    /// Creates a new socket
+    public convenience init(eventLoops: [EventLoop]) throws {
+        try self.init(socket: .init(), eventLoops: eventLoops)
     }
 
     /// Starts listening for peers asynchronously
@@ -82,8 +75,9 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
                 return
             }
 
-            let worker = self.eventLoopsIterator.next()!
-            let client = TCPClient(socket: socket, worker: worker)
+            let eventLoop = self.eventLoopsIterator.next()!
+            /// FIXME: pass worker
+            let client = TCPClient(socket: socket, on: eventLoop)
             
             guard self.willAccept(client) else {
                 client.close()

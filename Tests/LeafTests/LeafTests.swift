@@ -7,11 +7,11 @@ import XCTest
 
 class LeafTests: XCTestCase {
     var renderer: LeafRenderer!
-    var queue: Worker!
+    var queue: DispatchQueue!
 
     override func setUp() {
         self.renderer = LeafRenderer.makeTestRenderer()
-        self.queue = EventLoop(queue: DispatchQueue(label: "codes.vapor.leaf.test"))
+        self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
     }
 
     func testRaw() throws {
@@ -68,7 +68,7 @@ class LeafTests: XCTestCase {
     func testRuntime() throws {
         // FIXME: need to run var/exports first and in order
         let template = """
-            #var("foo", "bar")
+            #set("foo", "bar")
             Runtime: #(foo)
         """
 
@@ -314,7 +314,7 @@ class LeafTests: XCTestCase {
         let preloaded = PreloadedFiles()
 
         preloaded.files["/template.leaf"] = """
-        Content: #raw(content)
+        Content: #get(content)
         """.data(using: .utf8)!
 
         preloaded.files["/nested.leaf"] = """
@@ -322,8 +322,8 @@ class LeafTests: XCTestCase {
         """.data(using: .utf8)!
 
         let template = """
-        #export("content") {<p>#import("nested")</p>}
-        #import("template")
+        #set("content") {<p>#embed("nested")</p>}
+        #embed("template")
         """
 
         let expected = """
@@ -346,7 +346,7 @@ class LeafTests: XCTestCase {
             }
         }
 
-        let container = BasicContainer(services: services)
+        let container = BasicContainer(config: Config(), environment: .development, services: services, on: queue)
 
         let view = try container.make(ViewRenderer.self, for: XCTest.self)
 

@@ -29,6 +29,9 @@ let package = Package(
         .library(name: "Fluent", targets: ["Fluent"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
+        // FormURLEncoded
+        .library(name: "FormURLEncoded", targets: ["Bits"]),
+
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
@@ -75,7 +78,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.3")),
+        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
     ],
     targets: [
         // Bits
@@ -106,7 +109,6 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        // FIXME: FluentRouting and FluentHTTP packages?
         .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
@@ -115,6 +117,10 @@ let package = Package(
         .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
+
+        // FormURLEncoded
+        .target(name: "FormURLEncoded", dependencies: ["Bits", "Debugging"]),
+        .testTarget(name: "FormURLEncodedTests", dependencies: ["FormURLEncoded"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -140,7 +146,7 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
+        .target(name: "TCP", dependencies: ["Async", "Debugging", "libc", "Service"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
@@ -190,6 +196,7 @@ let package = Package(
             "Console",
             "Core",
             "Debugging",
+            "FormURLEncoded",
             "HTTP",
             "Leaf",
             "Routing",

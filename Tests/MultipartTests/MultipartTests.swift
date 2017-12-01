@@ -4,38 +4,38 @@ import XCTest
 
 class MultipartTests: XCTestCase {
     let named = """
-test123
-aijdisadi>SDASD<a|
+    test123
+    aijdisadi>SDASD<a|
 
-"""
+    """
     
     let multinamed = """
-test123
-aijdisadi>dwekqie4u219034u129e0wque90qjsd90asffs
+    test123
+    aijdisadi>dwekqie4u219034u129e0wque90qjsd90asffs
 
 
-SDASD<a|
+    SDASD<a|
 
-"""
+    """
     
     func testBasics() throws {
         let data = """
-------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
-Content-Disposition: form-data; name="test"\r
-\r
-eqw-dd-sa----123;1[234\r
-------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
-Content-Disposition: form-data; name="named"; filename=""\r
-\r
-\(named)\r
-------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
-Content-Disposition: form-data; name="multinamed[]"; filename=""\r
-\r
-\(multinamed)\r
-------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
-"""
+        ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
+        Content-Disposition: form-data; name="test"\r
+        \r
+        eqw-dd-sa----123;1[234\r
+        ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
+        Content-Disposition: form-data; name="named"; filename=""\r
+        \r
+        \(named)\r
+        ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
+        Content-Disposition: form-data; name="multinamed[]"; filename=""\r
+        \r
+        \(multinamed)\r
+        ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
+        """
         
-        let body = Body(Data(data.utf8))
+        let body = HTTPBody(Data(data.utf8))
         
         let form = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         
@@ -64,7 +64,7 @@ Content-Disposition: form-data; name="multinamed[]"; filename=""\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
         """
         
-        let body = Body(Data(data.utf8))
+        let body = HTTPBody(Data(data.utf8))
         
         let multipart = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
         

@@ -69,7 +69,7 @@ extension QueryBuilder {
         
         var result: D? = nil
 
-        _run(decoding: AggregateResult<D>.self) { res, conn in
+        run(decoding: AggregateResult<D>.self) { res in
             result = res.fluentAggregate
         }.do {
             if let result = result {

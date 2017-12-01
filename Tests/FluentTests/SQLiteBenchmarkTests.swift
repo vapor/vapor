@@ -37,6 +37,10 @@ final class SQLiteBenchmarkTests: XCTestCase {
         try benchmarker.benchmarkChunking_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
+    func testAutoincrement() throws {
+        try benchmarker.benchmarkAutoincrement_withSchema()
+    }
+
     static let allTests = [
         ("testSchema", testSchema),
         ("testModels", testModels),
@@ -44,5 +48,6 @@ final class SQLiteBenchmarkTests: XCTestCase {
         ("testTimestampable", testTimestampable),
         ("testTransactions", testTransactions),
         ("testChunking", testChunking),
+        ("testAutoincrement", testAutoincrement),
     ]
 }

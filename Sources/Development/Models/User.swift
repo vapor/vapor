@@ -17,7 +17,7 @@ final class TestUser: Codable {
 
 extension TestUser: Model {
     /// Database ID
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
 
     /// See Model.idKey
     static var idKey = \TestUser.id
@@ -73,7 +73,7 @@ struct TestSiblings: Migration {
 }
 
 final class User: Model, Content {
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
     static let keyStringMap: KeyStringMap = [
         key(\.id): "id",
         key(\.name): "name",

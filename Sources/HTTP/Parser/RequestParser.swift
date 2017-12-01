@@ -10,17 +10,13 @@ public final class RequestParser: CParser {
     public typealias Input = ByteBuffer
 
     /// See OutputStream.Output
-    public typealias Output = Request
+    public typealias Output = HTTPRequest
 
     // Internal variables to conform
     // to the C HTTP parser protocol.
     var parser: http_parser
     var settings: http_parser_settings
     var state:  CHTTPParserState
-
-    /// Queue to be set on messages created by this parser.
-    private let worker: Worker
-
     /// The maxiumum possible body size
     /// larger sizes will result in an error
     private let maxSize: Int
@@ -32,11 +28,10 @@ public final class RequestParser: CParser {
     private var outputStream: BasicStream<Output>
 
     /// Creates a new Request parser.
-    public init(on worker: Worker, maxSize: Int) {
+    public init(maxSize: Int) {
         self.parser = http_parser()
         self.settings = http_parser_settings()
         self.state = .ready
-        self.worker = worker
         self.maxSize = maxSize
         self.outputStream = .init()
         reset(HTTP_REQUEST)
@@ -80,7 +75,7 @@ public final class RequestParser: CParser {
     /// Parses request Data. If the data does not contain
     /// an entire HTTP request, nil will be returned and
     /// the parser will remain ready to accept new Data.
-    public func parse(from data: Data) throws -> Request? {
+    public func parse(from data: Data) throws -> HTTPRequest? {
         return try data.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: data.count)
             return try parse(from: buffer)
@@ -88,7 +83,7 @@ public final class RequestParser: CParser {
     }
 
     /// Parses a Request from the stream.
-    public func parse(from buffer: ByteBuffer) throws -> Request? {
+    public func parse(from buffer: ByteBuffer) throws -> HTTPRequest? {
         currentSize += buffer.count
         
         guard currentSize < maxSize else {
@@ -126,7 +121,7 @@ public final class RequestParser: CParser {
 
 
         /// switch on the C method type from the parser
-        let method: Method
+        let method: HTTPMethod
         switch http_method(parser.method) {
         case HTTP_DELETE:
             method = .delete
@@ -150,7 +145,7 @@ public final class RequestParser: CParser {
             else {
                 throw HTTPError.invalidMessage()
             }
-            method = Method(string)
+            method = HTTPMethod(string)
         }
 
         // parse the uri from the url bytes.
@@ -166,12 +161,12 @@ public final class RequestParser: CParser {
             throw HTTPError.invalidMessage()
         }
 
-        let body = Body(results.body)
+        let body = HTTPBody(results.body)
         
-        let headers = Headers(storage: results.headersData, indexes: results.headersIndexes)
+        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
 
         // create the request
-        let request = Request(
+        let request = HTTPRequest(
             method: method,
             uri: uri,
             version: version,
@@ -180,7 +175,6 @@ public final class RequestParser: CParser {
         )
 
         currentSize = 0
-        request.eventLoop = worker.eventLoop
         return request
     }
 }

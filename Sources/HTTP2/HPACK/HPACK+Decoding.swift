@@ -16,8 +16,8 @@ final class HPACKDecoder {
     let table = HeadersTable()
     
     /// Decodes HPACK encoded headers using the statically defined HPACK table
-    public func decode(_ packet: Payload) throws -> Headers {
-        var decoded = Headers()
+    public func decode(_ packet: Payload) throws -> HTTPHeaders {
+        var decoded = HTTPHeaders()
         
         nextHeader: while packet.bytePosition < packet.data.count {
             let byte = packet.data[packet.bytePosition]
@@ -55,14 +55,14 @@ final class HPACKDecoder {
             let incrementallyIndexed = (byte & 0b11000000) == 0b01000000
             let neverIndexed = (byte & 0b11110000) == 0b00010000
             
-            let name: Headers.Name
+            let name: HTTPHeaders.Name
             
             if incrementallyIndexed {
                 // Incrementally indexed
                 if (byte & 0b00111111) == 0 {
                     // Header not indexed
                     packet.bytePosition += 1
-                    name = Headers.Name(try packet.parseString())
+                    name = HTTPHeaders.Name(try packet.parseString())
                 } else {
                     // Header indexed
                     let nameIndex = try packet.parseInteger(prefix: 6)
@@ -74,7 +74,7 @@ final class HPACKDecoder {
                 
                 if nameIndex == 0 {
                     // Header not indexed
-                    name = Headers.Name(try packet.parseString())
+                    name = try HTTPHeaders.Name(packet.parseString())
                 } else {
                     // Header indexed
                     name = try table.getEntry(at: nameIndex, dynamicTable: false).name
@@ -84,7 +84,7 @@ final class HPACKDecoder {
                 if (byte & 0b00001111) == 0 {
                     // Header not indexed
                     packet.bytePosition += 1
-                    name = Headers.Name(try packet.parseString())
+                    name = try HTTPHeaders.Name(packet.parseString())
                 } else {
                     // Header indexed
                     let nameIndex = try packet.parseInteger(prefix: 4)

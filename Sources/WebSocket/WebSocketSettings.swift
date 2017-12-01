@@ -15,7 +15,7 @@ public struct WebSocketSettings {
     /// empty initialiser for defaults
     public init() { }
 
-    func apply(on request: Request) throws {
+    func apply(on request: HTTPRequest) throws {
         guard requireSSL else { return }
 
         // TODO is there a better way of checking if the request is over ssl?
@@ -27,22 +27,22 @@ public struct WebSocketSettings {
         throw WebSocketError(.invalidURI)
     }
 
-    func apply(on response: Response, request: Request) throws {
-        try applySubProtocol(on: response, request)
+    func apply(on response: inout HTTPResponse, request: HTTPRequest) throws {
+        try applySubProtocol(on: &response, request)
     }
 
-    func apply(on websocket: WebSocket, request: Request, response: Response) throws {
+    func apply(on websocket: WebSocket, request: HTTPRequest, response: HTTPResponse) throws {
         // TODO apply maxPacketSize on the WebSocket?
     }
 
-    private func applySubProtocol(on response: Response, _ request: Request) throws {
+    private func applySubProtocol(on response: inout HTTPResponse, _ request: HTTPRequest) throws {
         let requestSubProtocols = getSubProtocols(from: request)
         if let responseSubProtocol = try subProtocols(requestSubProtocols) {
             response.headers[.secWebSocketProtocol] = responseSubProtocol
         }
     }
 
-    private func getSubProtocols(from request: Request) -> [String] {
+    private func getSubProtocols(from request: HTTPRequest) -> [String] {
         return request.headers[.secWebSocketProtocol]?.components(separatedBy: ", ") ?? []
     }
 }

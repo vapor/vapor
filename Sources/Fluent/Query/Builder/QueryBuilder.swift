@@ -28,49 +28,35 @@ public final class QueryBuilder<Model: Fluent.Model> {
         decoding type: T.Type,
         into outputStream: @escaping (T) throws -> ()
     ) -> Future<Void> {
-        return _run(decoding: T.self) { model, conn in
-            try outputStream(model)
-        }
-    }
-
-    /// Internal run that spits out connection + model.
-    internal func _run<T: Decodable>(
-        decoding type: T.Type,
-        into outputStream: @escaping (T, Model.Database.Connection) throws -> ()
-    ) -> Future<Void> {
-        /// if the model is soft deletable, and soft deleted
-        /// models were not requested, then exclude them
-        if
-            let type = Model.self as? AnySoftDeletable.Type,
-            !self.query.withSoftDeleted
-        {
-            guard let deletedAtKey = type.keyStringMap[type.anyDeletedAtKey] else {
-                /// FIXME: return error in promise
-                fatalError("no deleted at field in key map")
-            }
-
-            let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey)
-
-            try! self.group(.or) { or in
-                try or.filter(deletedAtField > Date())
-                try or.filter(deletedAtField == Date.null)
-            }
-        }
-
-        let query = self.query
         return connection.then { conn -> Future<Void> in
+            /// if the model is soft deletable, and soft deleted
+            /// models were not requested, then exclude them
+            if
+                let type = Model.self as? AnySoftDeletable.Type,
+                !self.query.withSoftDeleted
+            {
+                guard let deletedAtKey = type.keyStringMap[type.anyDeletedAtKey] else {
+                    throw "no deleted at field in key map"
+                }
+
+                let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey)
+
+                try self.group(.or) { or in
+                    try or.filter(deletedAtField > Date())
+                    try or.filter(deletedAtField == Date.null)
+                }
+            }
             let promise = Promise(Void.self)
             let stream = BasicStream<T>()
 
             // wire up the stream
-            stream.drain { model in
-                try outputStream(model, conn)
-            }.catch(onError: promise.fail)
-            .finally(onClose: { promise.complete() })
+            stream.drain(onInput: outputStream)
+                .catch(onError: promise.fail)
+                .finally(onClose: { promise.complete() })
 
             // execute
             // note: this must be in this file to access connection!
-            conn.execute(query: query, into: stream)
+            conn.execute(query: self.query, into: stream)
             return promise.future
         }
     }
@@ -82,14 +68,15 @@ public final class QueryBuilder<Model: Fluent.Model> {
     public func run(
         into outputStream: @escaping BasicStream<Model>.OnInput = { _ in }
     ) -> Future<Void> {
-        let query = self.query
-        return _run(decoding: Model.self) { output, conn in
-            switch query.action {
-            case .create:
-                try output.parseID(from: conn)
-            default: break
+        return connection.then { conn in
+            return self.run(decoding: Model.self) { output in
+                switch self.query.action {
+                case .create:
+                    try output.parseID(from: conn)
+                default: break
+                }
+                try outputStream(output)
             }
-            try outputStream(output)
         }
     }
 

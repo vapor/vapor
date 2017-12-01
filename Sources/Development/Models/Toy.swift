@@ -5,7 +5,7 @@ import Foundation
 import SQLite
 
 final class Toy: Model {
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
 
     static let keyStringMap: KeyStringMap = [
         key(\.id): "id",
