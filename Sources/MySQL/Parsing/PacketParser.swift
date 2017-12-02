@@ -5,7 +5,7 @@ import libc
 /// Parses buffers into packets
 internal final class PacketParser: Async.Stream {
     /// See InputStream.Input
-    typealias Input = MutableByteBuffer
+    typealias Input = ByteBuffer
 
     /// See OutputStream.Output
     typealias Output = Packet
@@ -24,7 +24,7 @@ internal final class PacketParser: Async.Stream {
     }
 
     /// See InputStream.onInput
-    func onInput(_ input: MutableByteBuffer) {
+    func onInput(_ input: ByteBuffer) {
         do {
             try parse(input)
         } catch {
@@ -52,7 +52,7 @@ internal final class PacketParser: Async.Stream {
         outputStream.onClose(onClose)
     }
     
-    func parse(_ input: MutableByteBuffer) throws {
+    func parse(_ input: ByteBuffer) throws {
         // If there's no input pointer, throw an error
         guard var pointer = input.baseAddress else {
             throw MySQLError(.invalidPacket)
@@ -181,7 +181,7 @@ internal final class PacketParser: Async.Stream {
     //
     // returns true if parsing needs to continue
     private func parseInput(
-        pointer: inout UnsafeMutablePointer<Byte>,
+        pointer: inout BytesPointer,
         into buffer: MutableByteBuffer,
         length: inout Int,
         alreadyContaining containing: Int,
