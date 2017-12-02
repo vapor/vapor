@@ -2,9 +2,13 @@ import Foundation
 
 extension Packet {
     /// Reads this packet as a row containing the data related to the provided columns
-    func makeRow(columns: [Field], binary: Bool) throws -> Row {
+    func makeRow(columns: [Field], binary: Bool, reserveCapacity: Int? = nil) throws -> Row {
         let parser = Parser(packet: self)
         var row = Row()
+        
+        if let reserveCapacity = reserveCapacity {
+            row.reserveCapacity(reserveCapacity)
+        }
         
         // Binary packets have a bit more data to carry `null`s  and a header
         if binary {

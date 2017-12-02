@@ -60,7 +60,7 @@ class MySQLTests: XCTestCase {
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")
      
-        table.schema.append(Table.Column(named: "id", type: .int8(length: nil), autoIncrement: true, primary: true, unique: true))
+        table.schema.append(Table.Column(named: "id", type: .int16(length: nil), autoIncrement: true, primary: true, unique: true))
      
         table.schema.append(Table.Column(named: "username", type: .varChar(length: 32, binary: false), autoIncrement: false, primary: false, unique: false))
      
@@ -74,11 +74,44 @@ class MySQLTests: XCTestCase {
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
     }
+    
+    #if Xcode
+        func testInsanePerformnace() throws {
+            try testCreateUsersSchema()
+            
+            var query = "INSERT INTO users (username) VALUES"
+            
+            for i in 0..<10_000 {
+                if i == 0 {
+                    query += " ('User\(i)')"
+                } else {
+                    query += ", ('User\(i)')"
+                }
+            }
+            
+            var future = self.connection.administrativeQuery(query)
+            
+            for _ in 0..<100 {
+                var counter = 0
+                
+                future = future.then {_ in
+                    return self.connection.forEach(User.self, in: "SELECT * FROM users") { _ in
+                        counter += 1
+                    }.map {_ in
+                        XCTAssertEqual(counter, 10_000)
+                    }
+                }
+            }
+            
+            _ = try future.blockingAwait()
+        }
+    #endif
 
     func testManyQueries() throws {
         try testCreateUsersSchema()
         
         var results = [Future<Void>]()
+        results.reserveCapacity(100)
         
         MySQLTests.poolQueue.sync {
             for i in 0..<100 {

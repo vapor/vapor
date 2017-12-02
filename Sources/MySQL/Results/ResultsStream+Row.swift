@@ -20,6 +20,9 @@ final class RowStream: Async.Stream, ClosableStream {
 
     /// If `true`, the server protocol version is for MySQL 4.1
     let mysql41: Bool
+    
+    /// Used to reserve capacity when parsing rows
+    var reserveCapacity: Int? = nil
 
     /// If `true`, the results are using the binary protocols
     var binary: Bool
@@ -50,8 +53,8 @@ final class RowStream: Async.Stream, ClosableStream {
     }
 
     /// Parses a packet into a Row
-    func parseRows(from packet: Packet) throws -> Row {
-        return try packet.makeRow(columns: columns, binary: binary)
+    func parseRows(from packet: Packet, reserveCapacity: Int? = nil) throws -> Row {
+        return try packet.makeRow(columns: columns, binary: binary, reserveCapacity: reserveCapacity)
     }
 
     /// Parses an incoming packet as part of the results
@@ -152,8 +155,14 @@ final class RowStream: Async.Stream, ClosableStream {
         {
             throw error
         }
-
-        try outputStream.onInput(parseRows(from: packet))
+        
+        let row = try parseRows(from: packet, reserveCapacity: reserveCapacity)
+        
+        if reserveCapacity == nil {
+            self.reserveCapacity = row.fields.count
+        }
+        
+        outputStream.onInput(row)
     }
 
     /// Parses the packet as a columm specification

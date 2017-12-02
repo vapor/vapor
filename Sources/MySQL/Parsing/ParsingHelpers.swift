@@ -128,7 +128,8 @@ final class Parser {
             return ""
         }
         
-        let result = String.init(bytes: self.payload[position &- length ..< position], encoding: .utf8)
+        let data = Data(bytes: self.payload.baseAddress!.advanced(by: position), count: length)
+        let result = String(data: data, encoding: .utf8)
         
         return result ?? ""
     }

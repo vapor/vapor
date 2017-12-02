@@ -37,5 +37,13 @@ struct Row {
     
     /// All column data associated with the field
     var columns = [Column]()
+    
+    init() {}
+    
+    mutating func reserveCapacity(_ n: Int) {
+        fields.reserveCapacity(n)
+        fieldNames.reserveCapacity(n)
+        columns.reserveCapacity(n)
+    }
 }
 

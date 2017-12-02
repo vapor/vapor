@@ -24,8 +24,8 @@ extension Request {
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
             let modifiedAt = attributes[.modificationDate] as? Date,
             let fileSize = attributes[.size] as? NSNumber
-            else {
-                throw Abort(.internalServerError)
+        else {
+            throw Abort(.internalServerError)
         }
 
         var headers: [HTTPHeaders.Name: String] = [:]
@@ -49,20 +49,8 @@ extension Request {
         }
 
         let bodyStream = BodyStream()
-        let fileStream = BasicStream(Data.self)
-
-        fileStream.drain { data in
-            data.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: data.count)
-                bodyStream.onInput(buffer)
-            }
-        }.catch { err in
-            bodyStream.onError(err)
-        }.finally {
-            bodyStream.close()
-        }
-
-        reader.read(at: path, into: fileStream, chunkSize: 2048)
+        
+        reader.read(at: path, into: bodyStream, chunkSize: 2048)
         res.http.body = HTTPBody(chunked: bodyStream)
         return res
     }
