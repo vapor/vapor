@@ -260,6 +260,12 @@ router.get("redirect") { req in
     return req.redirect(to: "http://google.com")
 }
 
+router.get("vapor") { req -> Future<String> in
+    return req.send(.get, to: "http://vapor.codes").then { res -> String in
+        print(res.http.headers)
+        return "done!"
+    }
+}
 
 //router.get("fuzzy") { req -> String in
 //    let data = req.content["foo", 1, "bar", "baz"]

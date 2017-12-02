@@ -22,6 +22,10 @@ extension Services {
             return EngineServerConfig()
         }
 
+        services.register(Client.self) { container in
+            return EngineClient()
+        }
+
         // register middleware
         services.register { container -> MiddlewareConfig in
             var config = MiddlewareConfig()
