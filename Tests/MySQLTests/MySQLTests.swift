@@ -40,6 +40,7 @@ class MySQLTests: XCTestCase {
     override func setUp() {
         _ = try? connection.dropTables(named: "users").blockingAwait(timeout: .seconds(3))
         _ = try? connection.dropTables(named: "complex").blockingAwait(timeout: .seconds(3))
+        _ = try? connection.dropTables(named: "test").blockingAwait(timeout: .seconds(3))
     }
 
     func testPreparedStatements() throws {
@@ -74,38 +75,6 @@ class MySQLTests: XCTestCase {
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
     }
-    
-    #if Xcode
-        func testInsanePerformnace() throws {
-            try testCreateUsersSchema()
-            
-            var query = "INSERT INTO users (username) VALUES"
-            
-            for i in 0..<10_000 {
-                if i == 0 {
-                    query += " ('User\(i)')"
-                } else {
-                    query += ", ('User\(i)')"
-                }
-            }
-            
-            var future = self.connection.administrativeQuery(query)
-            
-            for _ in 0..<100 {
-                var counter = 0
-                
-                future = future.then {_ in
-                    return self.connection.forEach(User.self, in: "SELECT * FROM users") { _ in
-                        counter += 1
-                    }.map {_ in
-                        XCTAssertEqual(counter, 10_000)
-                    }
-                }
-            }
-            
-            _ = try future.blockingAwait()
-        }
-    #endif
 
     func testManyQueries() throws {
         try testCreateUsersSchema()
@@ -243,4 +212,9 @@ struct Complex: Decodable {
     var ui32: UInt32
     var i64: Int64
     var ui64: UInt64
+}
+
+struct Test: Decodable {
+    var id: Int
+    var num: Int
 }
