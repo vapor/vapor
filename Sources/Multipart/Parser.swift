@@ -230,12 +230,8 @@ public final class MultipartParser {
     /// - throws: If the multipart data is an invalid Multipart form
     /// - TODO: Parse streaming bodies 
     public static func parse(from body: HTTPBody, boundary: Data) throws -> Form {
-        guard let count = body.count else {
-            throw MultipartError(identifier: "streaming-body-form", reason: "Multipart cannot parse streaming bodies into a form yet")
-        }
-        
         return try body.withUnsafeBytes { pointer in
-            let buffer = ByteBuffer(start: pointer, count: count)
+            let buffer = ByteBuffer(start: pointer, count: body.count)
             
             let parser = MultipartParser(data: buffer, boundary: boundary)
             

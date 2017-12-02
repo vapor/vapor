@@ -22,7 +22,7 @@ public final class File: FileReader, FileCache {
 
     /// See FileReader.read
     public func read<S>(at path: String, into stream: S, chunkSize: Int = 2048)
-        where S: Async.InputStream, S.Input == DispatchData
+        where S: Async.InputStream, S.Input == Data
     {
         func onError(_ error: Error) {
             stream.onError(error)
@@ -55,7 +55,7 @@ public final class File: FileReader, FileCache {
                     }
                 } else {
                     if let data = data {
-                        stream.onInput(data)
+                        stream.onInput(Data(data))
                     } else {
                         onError(FileError(.readError(error, path: path)))
                     }
@@ -72,12 +72,12 @@ public final class File: FileReader, FileCache {
     }
 
     /// See FileCache.getFile
-    public func getFile<H: Hashable>(hash: H) -> Future<Data?> {
-        return Future(cache[hash.hashValue])
+    public func getCachedFile(at path: String) -> Data? {
+        return cache[path.hashValue]
     }
 
     /// See FileCache.setFile
-    public func setFile<H: Hashable>(file: Data?, hash: H) {
-        cache[hash.hashValue] = file
+    public func setCachedFile(file: Data?, at path: String) {
+        cache[path.hashValue] = file
     }
 }

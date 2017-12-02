@@ -49,11 +49,11 @@ extension Request {
         }
 
         let bodyStream = BodyStream()
-        let fileStream = BasicStream(DispatchData.self)
+        let fileStream = BasicStream(Data.self)
 
-        fileStream.drain { dispatchData in
-            dispatchData.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: dispatchData.count)
+        fileStream.drain { data in
+            data.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: data.count)
                 bodyStream.onInput(buffer)
             }
         }.catch { err in

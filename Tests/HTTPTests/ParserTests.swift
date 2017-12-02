@@ -37,7 +37,7 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(req.headers[.connection], "Keep-Alive")
         
         try req.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: req.body.count ?? 0)
+            let buffer = ByteBuffer(start: pointer, count: req.body.count)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
         }
     }
@@ -71,7 +71,7 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(res.headers[.connection], "Closed")
         
         try res.body.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: res.body.count ?? 0)
+            let buffer = ByteBuffer(start: pointer, count: res.body.count)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "<vapor>")
         }
     }
