@@ -129,7 +129,7 @@ public struct HTTPBody: Codable {
     }
     
     /// The size of the data buffer
-    public var count: Int? {
+    public var count: Int {
         return self.storage.count
     }
 }

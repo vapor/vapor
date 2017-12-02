@@ -7,7 +7,7 @@ public final class LeafEncoder {
     public init() {}
 
     /// Encode an encodable item to leaf data.
-    public func encode(_ encodable: Encodable) throws -> LeafData {
+    public func encode<E: Encodable>(_ encodable: E) throws -> LeafData {
         let encoder = _LeafEncoder()
         try encodable.encode(to: encoder)
         return encoder.partialData.context
