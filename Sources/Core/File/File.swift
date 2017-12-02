@@ -22,7 +22,7 @@ public final class File: FileReader, FileCache {
 
     /// See FileReader.read
     public func read<S>(at path: String, into stream: S, chunkSize: Int = 2048)
-        where S: Async.InputStream, S.Input == Data
+        where S: Async.InputStream, S.Input == ByteBuffer
     {
         func onError(_ error: Error) {
             stream.onError(error)
@@ -55,7 +55,7 @@ public final class File: FileReader, FileCache {
                     }
                 } else {
                     if let data = data {
-                        stream.onInput(Data(data))
+                        Data(data).withByteBuffer(stream.onInput)
                     } else {
                         onError(FileError(.readError(error, path: path)))
                     }

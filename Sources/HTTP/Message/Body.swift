@@ -1,3 +1,4 @@
+import Async
 import Foundation
 import Dispatch
 import Bits
@@ -8,6 +9,8 @@ import Bits
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
 public struct HTTPBody: Codable {
+    public typealias BodyClosure = (HTTPPeer) -> (Future<Void>)
+    
     /// The internal storage medium.
     ///
     /// NOTE: This is an implementation detail
@@ -15,8 +18,9 @@ public struct HTTPBody: Codable {
         case data(Data)
         case staticString(StaticString)
         case dispatchData(DispatchData)
-        case stream(BodyStream)
         case string(String)
+        case stream(BodyStream)
+        case closure(size: Int, writer: BodyClosure)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -29,6 +33,7 @@ public struct HTTPBody: Codable {
             case .string(let string):
                 try string.encode(to: encoder)
             case .stream(_): return
+            case .closure(_): return
             }
         }
         
@@ -44,6 +49,7 @@ public struct HTTPBody: Codable {
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
             case .stream(_): return 0
+            case .closure(let size, _): return size
             }
         }
         
@@ -62,6 +68,8 @@ public struct HTTPBody: Codable {
                 }
             case .stream(_):
                 throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
+            case .closure(_):
+                throw HTTPError(identifier: "invalid-stream-acccess", reason: "A write closure was being accessed as a sequential byte buffer, which is impossible.")
             }
         }
     }
@@ -124,6 +132,8 @@ public struct HTTPBody: Codable {
         case .string(let string):
             return Data(string.utf8)
         case .stream(_):
+            return nil
+        case .closure(_):
             return nil
         }
     }

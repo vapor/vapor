@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Dispatch
 import Foundation
 
@@ -7,7 +8,7 @@ public protocol FileReader {
     /// Reads the file at the supplied path
     /// Supply a queue to complete the future on.
     func read<S>(at path: String, into stream: S, chunkSize: Int)
-        where S: Async.InputStream, S.Input == Data
+        where S: Async.InputStream, S.Input == ByteBuffer
 
     /// Returns true if the file exists at supplied path.
     func fileExists(at path: String) -> Bool
@@ -17,11 +18,11 @@ extension FileReader {
     /// Reads data at the supplied path and combines into one Data.
     public func read(at path: String) -> Future<Data> {
         let promise = Promise(Data.self)
-        let stream = BasicStream(Data.self)
+        let stream = BasicStream(ByteBuffer.self)
         var data = Data()
 
         stream.drain { new in
-            data.append(new)
+            data.append(contentsOf: new)
         }.catch { err in
             promise.fail(err)
         }.finally {

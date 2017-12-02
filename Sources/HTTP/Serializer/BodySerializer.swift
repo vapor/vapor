@@ -24,6 +24,8 @@ extension HTTPBody {
             }
         case .stream(let bodyStream):
             bodyStream.stream(to: ChunkEncoder()).stream(to: outputStream.outputStream)
+        default:
+            return
         }
     }
 }
