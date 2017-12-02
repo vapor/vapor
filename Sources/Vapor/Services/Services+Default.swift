@@ -22,8 +22,14 @@ extension Services {
             return EngineServerConfig()
         }
 
-        services.register(Client.self) { container in
-            return EngineClient()
+        services.register(Client.self) { container -> EngineClient in
+            if let sub = container as? SubContainer {
+                /// if a request is creating a client, we should
+                /// use the event loop as the container
+                return EngineClient(container: sub.superContainer)
+            } else {
+                return EngineClient(container: container)
+            }
         }
 
         // register middleware

@@ -261,7 +261,7 @@ router.get("redirect") { req in
 }
 
 router.get("vapor") { req -> Future<String> in
-    return req.send(.get, to: "http://vapor.codes").then { res -> String in
+    return try req.make(Client.self).send(.get, to: "http://vapor.codes").then { res -> String in
         print(res.http.headers)
         return "done!"
     }

@@ -3,8 +3,15 @@ import HTTP
 import TCP
 import TLS
 
+/// HTTP/1.1 and HTTP/2 client wrapper.
 public final class EngineClient: Client {
-    public init() {}
+    /// See Client.container
+    public let container: Container
+
+    /// Create a new engine client
+    public init(container: Container) {
+        self.container = container
+    }
 
     /// See Responder.respond
     public func respond(to req: Request) -> Future<Response> {
