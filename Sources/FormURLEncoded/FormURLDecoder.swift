@@ -1,4 +1,5 @@
 import Foundation
+import HTTP
 
 public final class FormURLDecoder {
     /// Internal parser
@@ -18,7 +19,11 @@ public final class FormURLDecoder {
     }
 
     /// Decodes a decodable type from form-urlencoded data
-    public func decode<D>(_ type: D.Type, from data: Data) throws -> D where D: Decodable {
+    public func decode<D>(_ type: D.Type, from body: HTTPBody) throws -> D where D: Decodable {
+        guard let data = body.data else {
+            throw FormURLError(identifier: "unsupported-body", reason: "FormURLDecoder doesn't support streaming bodies yet")
+        }
+        
         let formURLData = try parser.parse(data, omitEmptyValues: omitEmptyValues, omitFlags: omitFlags)
         let decoder = _FormURLDecoder(data: .dictionary(formURLData), codingPath: [])
         return try D(from: decoder)

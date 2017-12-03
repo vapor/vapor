@@ -38,9 +38,9 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
             }
 
             /// encode sql placeholder binds
-            let dataEncoder = SQLiteDataEncoder()
+            let DataEncoder = SQLiteDataEncoder()
             for bind in binds {
-                try sqliteQuery.bind(dataEncoder.makeSQLiteData(bind))
+                try sqliteQuery.bind(DataEncoder.makeSQLiteData(bind))
             }
 
             /// setup drain

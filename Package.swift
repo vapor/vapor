@@ -34,7 +34,7 @@ let package = Package(
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
-        .library(name: "FormURLEncoded", targets: ["Bits"]),
+        .library(name: "FormURLEncoded", targets: ["FormURLEncoded"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -130,7 +130,7 @@ let package = Package(
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // FormURLEncoded
-        .target(name: "FormURLEncoded", dependencies: ["Bits", "Debugging"]),
+        .target(name: "FormURLEncoded", dependencies: ["Bits", "HTTP", "Debugging"]),
         .testTarget(name: "FormURLEncodedTests", dependencies: ["FormURLEncoded"]),
 
         // JWT
