@@ -3,6 +3,7 @@ import HTTP
 import Bits
 import Core
 import Foundation
+import Dispatch
 
 /// Services files from the public folder.
 public final class FileMiddleware: Middleware {
