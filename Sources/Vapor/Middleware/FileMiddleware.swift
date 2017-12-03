@@ -16,9 +16,9 @@ public final class FileMiddleware: Middleware {
     /// See Middleware.respond.
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
         return try next.respond(to: req).map { response in
-            let reader = try req.eventLoop.make(FileReader.self, for: FileMiddleware.self)
-            
             if response.http.status == 404 {
+                let reader = try req.eventLoop.make(FileReader.self, for: FileMiddleware.self)
+                
                 var path = req.http.uri.path
                 if path.hasPrefix("/") {
                     path = String(path.dropFirst())
