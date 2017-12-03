@@ -93,6 +93,8 @@ public final class MySQLConnection {
             try socket.connect(hostname: hostname, port: port).catch(authenticated.fail)
             socket.stream(to: parser)
             
+            socket.start()
+            
             self.socket = socket
             self.socketWrite = socket.onInput
         }
