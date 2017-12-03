@@ -91,7 +91,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
                     throw HTTPError(identifier: "manual-writing", reason: "Manual writing is not supported because the write function wasn't set")
                 }
                 
-                return writer(writeContext).then {
+                return try writer(writeContext).then {
                     return promise.future
                 }
             }

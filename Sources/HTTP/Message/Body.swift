@@ -24,7 +24,7 @@ public struct WriteContext {
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
 public struct HTTPBody: Codable {
-    public typealias BodyWriterClosure = (WriteContext) -> (Future<Void>)
+    public typealias BodyWriterClosure = (WriteContext) throws -> (Future<Void>)
     
     /// The internal storage medium.
     ///

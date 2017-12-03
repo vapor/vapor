@@ -67,7 +67,7 @@ public final class EngineServer: Server {
                     serializer.onInput(response)
                     
                     if let writer = response.body.writer {
-                        _ = writer(writeContext)
+                        _ = try writer(writeContext)
                     }
                 }.catch { error in
                     logger.reportError(error, as: "Uncaught error")

@@ -145,6 +145,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                 
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
+                    self.writeSource?.suspend()
                     return
                 }
                 
