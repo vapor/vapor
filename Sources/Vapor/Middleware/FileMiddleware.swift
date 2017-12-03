@@ -83,8 +83,12 @@ public final class FileMiddleware: Middleware {
                         let promise = Promise<DispatchSourceRead>()
                         
                         readSource.setEventHandler {
-                            let code = sendfile(fileFD, writeContext.descriptor, 0, &sent, nil, 0)
-                            
+                            #if os(Linux)
+                                let code = sendfile(writeContext.descriptor, fileFD, &sent)
+                            #else
+                                let code = sendfile(fileFD, writeContext.descriptor, 0, &sent, nil, 0)
+                            #endif
+                                
                             guard code > 0 && (errno != EAGAIN || errno == 0) else {
                                 let error = VaporError(identifier: "file-serve-error", reason: "An error code \(code) occurred trying to serve a file")
                                 promise.fail(error)
