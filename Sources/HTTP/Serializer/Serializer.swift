@@ -27,6 +27,7 @@ internal protocol Serializer: Async.Stream {
 extension Serializer {
     func flush() {
         self.outputStream.onInput(ByteBuffer(start: writeBuffer, count: writeBufferUsage))
+        self.writeBufferUsage = 0
     }
     
     func write(_ buffer: ByteBuffer) {
