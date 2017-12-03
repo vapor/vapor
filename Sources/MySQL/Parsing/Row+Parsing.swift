@@ -225,10 +225,7 @@ extension Row {
         case .short:
             // `long` is an (U)Int16 being either signed or unsigned
             try value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
-                let buffer = UnsafeBufferPointer(start: pointer, count: value.count)
-                let array = Array(buffer)
-                
-                let int = atoi(array)
+                let int = atoi(pointer)
                 
                 if field.flags.contains(.unsigned) {
                     guard int >= 0, int <= numericCast(UInt16.max) else {
@@ -247,10 +244,7 @@ extension Row {
         case .tiny:
             // `tiny` is an (U)Int8 being either signed or unsigned
             try value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
-                let buffer = UnsafeBufferPointer(start: pointer, count: value.count)
-                let array = Array(buffer)
-                
-                let int = atoi(array)
+                let int = atoi(pointer)
                 
                 if field.flags.contains(.unsigned) {
                     guard int >= 0, int <= numericCast(UInt8.max) else {
