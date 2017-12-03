@@ -2,6 +2,21 @@ import Async
 import Foundation
 import Dispatch
 import Bits
+import TCP
+
+public struct WriteContext {
+    public typealias WriteFunction = (ByteBuffer) throws -> Void
+    
+    public var descriptor: Int32
+    public var ssl: Bool
+    public var write: WriteFunction
+    
+    public init(descriptor: Int32, ssl: Bool = false, write: @escaping WriteFunction) {
+        self.descriptor = descriptor
+        self.ssl = ssl
+        self.write = write
+    }
+}
 
 /// Represents an HTTP Message's Body.
 ///
@@ -9,7 +24,7 @@ import Bits
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
 public struct HTTPBody: Codable {
-    public typealias BodyClosure = (HTTPPeer) -> (Future<Void>)
+    public typealias BodyWriterClosure = (WriteContext) -> (Future<Void>)
     
     /// The internal storage medium.
     ///
@@ -20,7 +35,7 @@ public struct HTTPBody: Codable {
         case dispatchData(DispatchData)
         case string(String)
         case stream(BodyStream)
-        case closure(size: Int, writer: BodyClosure)
+        case closure(size: Int, writer: BodyWriterClosure)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -104,8 +119,14 @@ public struct HTTPBody: Codable {
         self.storage = .data(data)
     }
     
+    /// A chunked body stream
     public init(chunked stream: BodyStream) {
         self.storage = .stream(stream)
+    }
+    
+    /// A closure that writes to the descriptor
+    public init(size: Int, writingManually: @escaping BodyWriterClosure) {
+        self.storage = .closure(size: size, writer: writingManually)
     }
     
     /// Decodes a body from from a Decoder
@@ -136,6 +157,15 @@ public struct HTTPBody: Codable {
         case .closure(_):
             return nil
         }
+    }
+    
+    /// Returns a body writer closure (a closure that writes on it's own)
+    public var writer: BodyWriterClosure? {
+        if case .closure(_, let writer) = storage {
+            return writer
+        }
+        
+        return nil
     }
     
     /// The size of the data buffer

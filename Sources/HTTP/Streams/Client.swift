@@ -33,6 +33,10 @@ public final class HTTPClient: Async.Stream, ClosableStream {
     /// onto it to close when the client closes.
     private var socket: ClosableStream
     
+    /// A pointer to the socket write function.
+    /// Used to pass to manual body writers
+    public var writeContext: WriteContext?
+    
     /// Creates a new Client wrapped around a `TCP.Client`
     public init<ByteStream>(socket: ByteStream, maxResponseSize: Int = 10_000_000) where
         ByteStream: Async.Stream,
@@ -81,6 +85,17 @@ public final class HTTPClient: Async.Stream, ClosableStream {
             let promise = Promise(HTTPResponse.self)
             self.inFlight = promise
             self.serializer.onInput(request)
+            
+            if let writer = request.body.writer {
+                guard let writeContext = self.writeContext else {
+                    throw HTTPError(identifier: "manual-writing", reason: "Manual writing is not supported because the write function wasn't set")
+                }
+                
+                return writer(writeContext).then {
+                    return promise.future
+                }
+            }
+            
             return promise.future
         }
     }
