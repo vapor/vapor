@@ -49,7 +49,6 @@ internal final class _LeafEncoder: Encoder {
 
     /// See Encoder.singleValueContainer
     func singleValueContainer() -> SingleValueEncodingContainer {
-        print("\(#function):\(#file):\(#line)")
         return LeafSingleValueEncoder(
             codingPath: codingPath,
             partialData: partialData
