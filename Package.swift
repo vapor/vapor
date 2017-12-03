@@ -100,7 +100,7 @@ let package = Package(
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // Core
-        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "Bits", "libc", "Debugging"]),
         .target(name: "libc"),
         
 
