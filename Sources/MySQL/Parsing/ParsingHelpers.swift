@@ -103,14 +103,14 @@ final class Parser {
     func parseLenEncData() throws -> Data {
         let length = try skipLenEnc()
         
-        return Data(self.payload[position..<position &+ length])
+        return Data(self.payload[position &- length..<position &+ length])
     }
     
     /// Parses length encoded Data
     func parseLenEncBytes() throws -> ByteBuffer {
         let length = try skipLenEnc()
         
-        return ByteBuffer(start: self.payload.baseAddress?.advanced(by: position), count: length)
+        return ByteBuffer(start: self.payload.baseAddress?.advanced(by: position &- length), count: length)
     }
     
     /// Skips length encoded data/strings
