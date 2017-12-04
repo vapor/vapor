@@ -75,44 +75,6 @@ class MySQLTests: XCTestCase {
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
     }
-    
-    func testInsanePerformnace() throws {
-        let table = Table(named: "test")
-        
-        table.schema.append(Table.Column(named: "id", type: .int16(length: nil), autoIncrement: true, primary: true, unique: true))
-        
-        table.schema.append(Table.Column(named: "num", type: .int16(length: nil), autoIncrement: false, primary: false, unique: false))
-        
-        try connection.createTable(table).blockingAwait(timeout: .seconds(3))
-        
-        var query = "INSERT INTO test (num) VALUES"
-        
-        for i in 0..<10_000 {
-            if i == 0 {
-                query += " (\(i))"
-            } else {
-                query += ", (\(i))"
-            }
-        }
-        
-        var future = self.connection.administrativeQuery("DELETE FROM test WHERE 1").then {
-            return self.connection.administrativeQuery(query)
-        }
-        
-        for _ in 0..<100 {
-            var counter = 0
-            
-            future = future.then {_ in
-                return self.connection.forEachRow(in: "SELECT * FROM test") { _ in
-                    counter += 1
-                }.map {_ in
-                    XCTAssertEqual(counter, 10_000)
-                }
-            }
-        }
-        
-        _ = try future.blockingAwait()
-    }
 
     func testManyQueries() throws {
         try testCreateUsersSchema()

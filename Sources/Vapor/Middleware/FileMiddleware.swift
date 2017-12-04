@@ -44,7 +44,13 @@ public final class FileMiddleware: Middleware {
                 }
                 
                 var headers = HTTPHeaders()
-                let modified = stat.st_mtimespec.tv_sec
+                
+                #if os(Linux)
+                    let modified = stat.st_mtime
+                #else
+                    let modified = stat.st_mtimespec.tv_sec
+                #endif
+                
                 let size: Int = numericCast(stat.st_size)
                 
                 // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
@@ -84,7 +90,7 @@ public final class FileMiddleware: Middleware {
                         
                         readSource.setEventHandler {
                             #if os(Linux)
-                                let code = sendfile(writeContext.descriptor, fileFD, &sent)
+                                let code = sendfile(writeContext.descriptor, fileFD, &sent, 0)
                             #else
                                 let code = sendfile(fileFD, writeContext.descriptor, 0, &sent, nil, 0)
                             #endif
