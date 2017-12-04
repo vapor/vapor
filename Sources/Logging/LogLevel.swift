@@ -1,6 +1,6 @@
 
 /// All log levels
-public enum LogLevel: ExpressibleByStringLiteral, CustomStringConvertible {
+public enum LogLevel: Codable, ExpressibleByStringLiteral, CustomStringConvertible {
     /// Verbose logs are used to log tiny, usually irrelevant information.
     /// They are helpful when tracing specific lines of code and their results
     ///
@@ -67,6 +67,26 @@ public enum LogLevel: ExpressibleByStringLiteral, CustomStringConvertible {
         case .info: return "INFO"
         case .verbose: return "VERBOSE"
         case .warning: return "WARNING"
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(description)
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let level = try container.decode(String.self)
+        
+        switch level.lowercased() {
+        case "debug": self = .debug
+        case "error": self = .error
+        case "fatal": self = .fatal
+        case "info": self = .info
+        case "verbose": self = .verbose
+        case "warning": self = .warning
+        default: self = .custom(level)
         }
     }
 }

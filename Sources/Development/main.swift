@@ -1,4 +1,5 @@
 import Async
+import ToolboxProvider
 import Core
 import Dispatch
 import Fluent
@@ -20,6 +21,7 @@ services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
 try services.register(LeafProvider())
 try services.register(FluentProvider())
 try services.register(SQLiteProvider())
+try services.register(ToolboxProvider.default)
 
 var databaseConfig = DatabaseConfig()
 databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
@@ -42,10 +44,13 @@ services.register(migrationConfig)
 
 var middlewareConfig = MiddlewareConfig()
 //middlewareConfig.use(ErrorMiddleware.self)
-// middlewareConfig.use(FluentMiddleware.self)
+ middlewareConfig.use(ToolboxMiddleware.self)
 services.register(middlewareConfig)
 
-let app = try Application(services: services)
+var config = Config()
+config.prefer(ToolboxLogger.self, for: Logger.self)
+
+let app = try Application(config: config, services: services)
 
 let router = try app.make(Router.self)
 
@@ -160,6 +165,7 @@ router.get("builder") { req -> Future<[User]> in
     return try User.query(on: req).filter(\User.name == "Bob").all()
 }
 
+router.statistics("stats")
 
 router.get("transaction") { req -> Future<String> in
     return req.withConnection(to: beta) { db in
@@ -210,7 +216,6 @@ router.get("fast") { req -> Response in
 }
 
 router.get("123") { req -> String in
-    print("123")
     return "123"
 }
 

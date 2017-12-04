@@ -73,6 +73,9 @@ let package = Package(
         
         // TLS/SSL
         .library(name: "TLS", targets: ["TLS"]),
+        
+        // ToolboxProvider
+        .library(name: "ToolboxProvider", targets: ["ToolboxProvider"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -190,6 +193,9 @@ let package = Package(
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
+        
+        // Toolbox Provider
+        .target(name: "ToolboxProvider", dependencies: ["Vapor", "Logging"]),
 
         // SQL
         .target(name: "SQL"),
@@ -201,7 +207,7 @@ let package = Package(
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
+        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite", "ToolboxProvider"]),
         .target(name: "Vapor", dependencies: [
             "Command",
             "Console",
