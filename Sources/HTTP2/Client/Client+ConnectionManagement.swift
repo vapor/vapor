@@ -17,26 +17,32 @@ extension HTTP2Client {
     /// Connects to an HTTP/2 server using the knowledge that it's HTTP/2
     ///
     /// Requires an SSL driver with ALPN on your system
-    public static func connect(hostname: String, port: UInt16 = 443, settings: HTTP2Settings = HTTP2Settings(), on eventLoop: EventLoop) throws -> Future<HTTP2Client> {
-        let tlsClient = try TLSClient(on: eventLoop)
-        tlsClient.protocols = ["h2", "http/1.1"]
-        
-        let client = HTTP2Client(upgrading: tlsClient)
-        
-        // Connect the TLS client
-        try tlsClient.connect(hostname: hostname, port: port).do {
-            // On successful connection, send the preface
-            Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
-                
-                tlsClient.onInput(buffer)
+    public static func connect(
+        to hostname: String,
+        port: UInt16? = nil,
+        settings: HTTP2Settings = HTTP2Settings(),
+        on eventLoop: EventLoop
+    ) -> Future<HTTP2Client> {
+        return then {
+            let tlsClient = try TLSClient(on: eventLoop)
+            tlsClient.protocols = ["h2", "http/1.1"]
+
+            let client = HTTP2Client(upgrading: tlsClient)
+
+            // Connect the TLS client
+            return try tlsClient.connect(hostname: hostname, port: port ?? 443).map { _ -> HTTP2Client in
+                // On successful connection, send the preface
+                Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
+                    let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
+
+                    tlsClient.onInput(buffer)
+                }
+
+                // Send the settings, next
+                client.updateSettings(to: settings)
+                return client
             }
-            
-            // Send the settings, next
-            client.updateSettings(to: settings)
-        }.catch(client.promise.fail)
-        
-        return client.future
+        }
     }
     
     /// Closes the HTTP/2 client by cleaning up

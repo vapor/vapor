@@ -10,9 +10,6 @@ public final class ResponseSerializer: Serializer {
 
     /// See OutputStream.Output
     public typealias Output = ByteBuffer
-    
-    /// When an upgrade request is in progress, this is set
-    public private(set) var upgradeHandler: HTTPOnUpgrade?
 
     /// Use a basic stream to easily implement our output stream.
     var outputStream: BasicStream<Output>
@@ -42,8 +39,6 @@ public final class ResponseSerializer: Serializer {
         } else if case .stream(_) = response.body.storage {
             headers[.transferEncoding] = "chunked"
         }
-        
-        self.upgradeHandler = response.onUpgrade
         
         let statusCode = [UInt8](response.status.code.description.utf8)
         
