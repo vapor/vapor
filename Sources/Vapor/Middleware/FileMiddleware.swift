@@ -46,7 +46,7 @@ public final class FileMiddleware: Middleware {
                 var headers = HTTPHeaders()
                 
                 #if os(Linux)
-                    let modified = stat.st_mtime
+                    let modified = stat.st_mtim.tv_sec
                 #else
                     let modified = stat.st_mtimespec.tv_sec
                 #endif
