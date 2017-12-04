@@ -57,24 +57,11 @@ public final class EngineServer: Server {
                 using: eventLoop
             )
             let serializer = HTTP.ResponseSerializer()
-            let writeContext = WriteContext(
-                descriptor: client.tcp.socket.descriptor,
-                write: client.onInput
-            )
             
             client.stream(to: parser)
-                .stream(to: responderStream).drain { response in
-                    serializer.onInput(response)
-                    
-                    if let writer = response.body.writer {
-                        _ = try writer(writeContext)
-                    }
-                }.catch { error in
-                    logger.reportError(error, as: "Uncaught error")
-                    client.close()
-                }
-                
-                serializer.drain { data in
+                .stream(to: responderStream)
+                .stream(to: serializer)
+                .drain { data in
                     client.onInput(data)
                     serializer.upgradeHandler?.closure(client.tcp)
                 }.catch { error in

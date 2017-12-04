@@ -4,28 +4,12 @@ import Dispatch
 import Bits
 import TCP
 
-public struct WriteContext {
-    public typealias WriteFunction = (ByteBuffer) throws -> Void
-    
-    public var descriptor: Int32
-    public var ssl: Bool
-    public var write: WriteFunction
-    
-    public init(descriptor: Int32, ssl: Bool = false, write: @escaping WriteFunction) {
-        self.descriptor = descriptor
-        self.ssl = ssl
-        self.write = write
-    }
-}
-
 /// Represents an HTTP Message's Body.
 ///
 /// This can contain any data and should match the Message's "Content-Type" header.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
 public struct HTTPBody: Codable {
-    public typealias BodyWriterClosure = (WriteContext) throws -> (Future<Void>)
-    
     /// The internal storage medium.
     ///
     /// NOTE: This is an implementation detail
@@ -35,7 +19,6 @@ public struct HTTPBody: Codable {
         case dispatchData(DispatchData)
         case string(String)
         case stream(BodyStream)
-        case closure(size: Int, writer: BodyWriterClosure)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -48,7 +31,6 @@ public struct HTTPBody: Codable {
             case .string(let string):
                 try string.encode(to: encoder)
             case .stream(_): return
-            case .closure(_): return
             }
         }
         
@@ -64,7 +46,6 @@ public struct HTTPBody: Codable {
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
             case .stream(_): return 0
-            case .closure(let size, _): return size
             }
         }
         
@@ -83,8 +64,6 @@ public struct HTTPBody: Codable {
                 }
             case .stream(_):
                 throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
-            case .closure(_):
-                throw HTTPError(identifier: "invalid-stream-acccess", reason: "A write closure was being accessed as a sequential byte buffer, which is impossible.")
             }
         }
     }
@@ -124,11 +103,6 @@ public struct HTTPBody: Codable {
         self.storage = .stream(stream)
     }
     
-    /// A closure that writes to the descriptor
-    public init(size: Int, writingManually: @escaping BodyWriterClosure) {
-        self.storage = .closure(size: size, writer: writingManually)
-    }
-    
     /// Decodes a body from from a Decoder
     public init(from decoder: Decoder) throws {
         self.storage = try Storage(from: decoder)
@@ -154,20 +128,9 @@ public struct HTTPBody: Codable {
             return Data(string.utf8)
         case .stream(_):
             return nil
-        case .closure(_):
-            return nil
         }
     }
-    
-    /// Returns a body writer closure (a closure that writes on it's own)
-    public var writer: BodyWriterClosure? {
-        if case .closure(_, let writer) = storage {
-            return writer
-        }
         
-        return nil
-    }
-    
     /// The size of the data buffer
     public var count: Int {
         return self.storage.count

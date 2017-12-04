@@ -21,14 +21,7 @@ extension HTTPClient {
             let client = try TLSClient(on: eventLoop)
             
             return try client.connect(hostname: hostname, port: port).map {_ in
-                let http = HTTPClient(socket: client)
-                
-                http.writeContext = WriteContext(
-                    descriptor: client.client.socket.descriptor,
-                    write: client.onInput
-                )
-                
-                return http
+                return HTTPClient(socket: client)
             }
         } else {
             let client = try TCPClient(on: eventLoop)
@@ -36,14 +29,7 @@ extension HTTPClient {
             return try client.connect(hostname: hostname, port: port).map {
                 client.start()
                 
-                let http = HTTPClient(socket: client)
-                
-                http.writeContext = WriteContext(
-                    descriptor: client.socket.descriptor,
-                    write: client.onInput
-                )
-                
-                return http
+                return HTTPClient(socket: client)
             }
         }
     }
