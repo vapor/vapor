@@ -106,8 +106,8 @@ extension MySQLConnection {
             let response = try packet.parseResponse(mysql41: self.mysql41)
             
             switch response {
-            case .error(_):
-                completing.fail(MySQLError(.invalidCredentials))
+            case .error(let error):
+                completing.fail(error)
                 // Unauthenticated
                 self.socket.close()
                 return
