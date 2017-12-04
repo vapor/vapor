@@ -376,6 +376,21 @@ class LeafTests: XCTestCase {
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
     }
 
+    func testNestedSet() throws {
+        let template = """
+        #if(a) {
+            #set("title") { "A" }
+        }
+        title: #get(title)
+        """
+        let expected = """
+        title: A
+        """
+
+        let context = LeafData.dictionary(["a": .bool(true)])
+        try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
+    }
+
     static var allTests = [
         ("testPrint", testPrint),
         ("testConstant", testConstant),
