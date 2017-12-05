@@ -10,7 +10,7 @@ class SourceKitTests: XCTestCase {
             print(c.inheritedTypes)
             for prop in c.subStructures {
                 print(prop.name)
-                print(prop.comments)
+                // print(prop.comments)
                 print()
             }
         }
