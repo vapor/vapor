@@ -38,7 +38,7 @@ public final class LeafRenderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: LeafData) -> Future<Data> {
+    public func render(template: Data, context: LeafContext) -> Future<Data> {
         let hash = template.hashValue
 
         let promise = Promise(Data.self)
@@ -93,7 +93,7 @@ extension LeafRenderer: ViewRenderer {
     {
         return try render(
             path: path,
-            context: LeafEncoder().encode(context)
+            context: LeafContext(data: LeafEncoder().encode(context))
         ).map { data in
             return View(data: data)
         }
@@ -104,7 +104,7 @@ extension LeafRenderer: ViewRenderer {
 
 extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: LeafData) -> Future<Data> {
+    public func render(path: String, context: LeafContext) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let fullPath: String
         if path.hasSuffix("/") {
@@ -142,7 +142,7 @@ extension LeafRenderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: LeafData) -> Future<String> {
+    public func render(_ view: String, context: LeafContext) -> Future<String> {
         let promise = Promise(String.self)
 
         do {
