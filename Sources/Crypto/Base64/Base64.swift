@@ -2,8 +2,7 @@ import Foundation
 import Async
 import Bits
 
-
-/// the encoding table
+/// the encoding tables
 fileprivate let encodeTable_base64 = Bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".utf8)
 fileprivate let encodeTable_base64url = Bytes("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".utf8)
 
@@ -27,7 +26,6 @@ fileprivate let decodeTable_base64url: Bytes = [
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
 ]
-
 fileprivate let decodeTable_base64: Bytes = [
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
     64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
@@ -51,8 +49,13 @@ fileprivate let decodeTable_base64: Bytes = [
 
 /// Supported encoding methods
 public struct Base64Encoding {
+    /// Encoding table
     public let encodingTable: Bytes
+
+    /// Decoding table
     public let decodingTable: Bytes
+
+    /// If true, `=` will be appended as padding
     public let encodePadding: Bool
 
     /// Create a new base64 encoding
@@ -62,6 +65,8 @@ public struct Base64Encoding {
         self.encodePadding = encodePadding
     }
 
+    /// base64-url encoding. does not encode padding.
+    /// + and / are swapped for - and _
     public static var base64url: Base64Encoding {
         return Base64Encoding(
             encodingTable: encodeTable_base64url,
@@ -70,6 +75,7 @@ public struct Base64Encoding {
         )
     }
 
+    /// normal base64 encoding.
     public static var base64: Base64Encoding {
         return Base64Encoding(
             encodingTable: encodeTable_base64,

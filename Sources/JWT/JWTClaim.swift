@@ -39,8 +39,6 @@ extension JWTClaim {
 /// Identifies by which application a Claim is issued
 /// - id: iss
 public struct IssuerClaim: JWTClaim, ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-
     /// The identifier (or URI) of the issuer of the token
     public var value: String
 
