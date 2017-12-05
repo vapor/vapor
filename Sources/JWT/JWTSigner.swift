@@ -3,9 +3,6 @@ import Foundation
 
 /// A JWT signer.
 public final class JWTSigner {
-    /// Secret
-    public var secret: Data
-
     /// Algorithm
     public var algorithm: JWTAlgorithm
 
@@ -13,8 +10,7 @@ public final class JWTSigner {
     private let base64: Base64Encoder
 
     /// Create a new JWT signer.
-    public init(secret: Data, algorithm: JWTAlgorithm) {
-        self.secret = secret
+    public init(algorithm: JWTAlgorithm) {
         self.algorithm = algorithm
         self.base64 = Base64Encoder(encoding: .base64url)
     }
@@ -28,7 +24,7 @@ public final class JWTSigner {
     /// let signedString = String(bytes: signed, encoding: .utf8)
     /// ```
     public func sign<Payload>(_ jwt: inout JWT<Payload>) throws -> Data {
-        jwt.header.alg = self.algorithm
+        jwt.header.alg = self.algorithm.jwtAlgorithmName
         let headerData = try JSONEncoder().encode(jwt.header)
         let encodedHeader = base64.encode(data: headerData)
 
@@ -42,7 +38,24 @@ public final class JWTSigner {
     /// Generates a signature for the supplied payload and header.
     public func signature(header: Data, payload: Data) throws -> Data {
         let message: Data = header + Data([.period]) + payload
-        let signature = try algorithm.sign(message, with: secret)
+        let signature = try algorithm.makeCiphertext(from: message)
         return base64.encode(data: signature)
+    }
+}
+
+extension JWTSigner {
+    /// Creates an HS256 JWT signer with the supplied key
+    public static func hs256(key: Data) -> JWTSigner {
+        return JWTSigner(algorithm: HMACAlgorithm(.sha256, key: key))
+    }
+
+    /// Creates an HS384 JWT signer with the supplied key
+    public static func hs384(key: Data) -> JWTSigner {
+        return JWTSigner(algorithm: HMACAlgorithm(.sha384, key: key))
+    }
+
+    /// Creates an HS512 JWT signer with the supplied key
+    public static func hs512(key: Data) -> JWTSigner {
+        return JWTSigner(algorithm: HMACAlgorithm(.sha512, key: key))
     }
 }
