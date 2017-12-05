@@ -5,6 +5,15 @@ extension HTTP2Client {
     /// Sends a request and receives a response
     /// TODO: Disconnected connection during the request cascading here
     public func send(request: HTTPRequest) -> Future<HTTPResponse> {
+        if let client = http1Client {
+            return client.send(request: request)
+        } else {
+            return sendHTTP2(request: request)
+        }
+    }
+    
+    /// Sends a request over HTTP/2
+    func sendHTTP2(request: HTTPRequest) -> Future<HTTPResponse> {
         return then {
             let promise = Promise<HTTPResponse>()
             
@@ -45,11 +54,11 @@ extension HTTP2Client {
                 default:
                     break
                 }
-            }.catch { error in
-                self.onError(error)
-                promise.fail(error)
+                }.catch { error in
+                    self.onError(error)
+                    promise.fail(error)
             }
-
+            
             // Send all header frames
             for frame in try request.headerFrames(for: stream) {
                 stream.context.serializer.onInput(frame)

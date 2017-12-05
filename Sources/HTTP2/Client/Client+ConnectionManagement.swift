@@ -1,4 +1,5 @@
 import Async
+import HTTP
 import Bits
 import TLS
 
@@ -31,15 +32,20 @@ extension HTTP2Client {
 
             // Connect the TLS client
             return try tlsClient.connect(hostname: hostname, port: port ?? 443).map { _ -> HTTP2Client in
-                // On successful connection, send the preface
-                Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
-                    let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
-
-                    tlsClient.onInput(buffer)
+                if tlsClient.selectedProtocol == "h2" {
+                    client.http1Client = HTTPClient(socket: tlsClient)
+                } else {
+                    // On successful connection, send the preface
+                    Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
+                        let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
+                        
+                        tlsClient.onInput(buffer)
+                    }
+                    
+                    // Send the settings, next
+                    client.updateSettings(to: settings)
                 }
-
-                // Send the settings, next
-                client.updateSettings(to: settings)
+                
                 return client
             }
         }

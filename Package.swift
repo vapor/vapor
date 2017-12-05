@@ -209,6 +209,7 @@ let package = Package(
             "Debugging",
             "FormURLEncoded",
             "HTTP",
+            "HTTP2",
             "Leaf",
             "Logging",
             "Routing",

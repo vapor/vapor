@@ -29,10 +29,16 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// The certificate used by the client, if any
     public var clientCertificatePath: String? = nil
     
+    /// The list of supported protocols negotiated with ALPN
     public var protocols = [String]() {
         didSet {
             preferences = ALPNPreferences(array: protocols)
         }
+    }
+    
+    /// The selected protocol that will be set post-handshake
+    public var selectedProtocol: String? {
+        return self.preferences.selectedProtocol
     }
     
     var preferences: ALPNPreferences = []
