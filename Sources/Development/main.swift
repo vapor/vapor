@@ -230,7 +230,7 @@ do {
     }
 
     router.get("all") { req -> Future<String> in
-        return try User.query(on: req).filter(\User.name == "Vapor").all().then { _ -> String in
+        return try User.query(on: req).filter(\.name == "Vapor").all().then { _ -> String in
             return "done"
         }
     }
@@ -251,6 +251,13 @@ do {
         }
     }
 
+    router.get("vapor") { req -> Future<String> in
+        return try req.make(Client.self).send(.get, to: "https://vapor.codes").then { res -> String in
+            print(res.http.headers)
+            return "done!"
+        }
+    }
+                                                                         
     router.get("query") { req -> String in
         struct Hello: Decodable {
             var name: String?

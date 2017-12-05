@@ -1,4 +1,5 @@
 import Async
+import Core
 import HTTP
 import Foundation
 import Service
@@ -46,14 +47,14 @@ extension Content {
 extension String: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
-        return .html
+        return .plainText
     }
 }
 
 extension Int: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
-        return .html
+        return .plainText
     }
 }
 
