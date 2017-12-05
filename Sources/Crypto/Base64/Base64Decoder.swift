@@ -2,27 +2,6 @@ import Foundation
 import Bits
 import Async
 
-/// Precomputed decoding table
-fileprivate let decodeTable: [UInt8] = [
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 62, 64, 62, 64, 63,
-    52, 53, 54, 55, 56, 57, 58, 59, 60, 61, 64, 64, 64, 64, 64, 64,
-    64, 00, 01, 02, 03, 04, 05, 06, 07, 08, 09, 10, 11, 12, 13, 14,
-    15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 63,
-    64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
-    41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-    64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64, 64,
-]
-
 public final class Base64Decoder: Base64 {
     /// The capacity currently used in the pointer
     var currentCapacity = 0
@@ -36,13 +15,17 @@ public final class Base64Decoder: Base64 {
     /// The bytes that couldn't be parsed from the previous buffer
     var remainder = Data()
 
+    /// base64 or base64 url
+    let encoding: Base64Encoding
+
     /// Use a basic stream to easily implement our output stream.
     var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
-    public init(bufferCapacity: Int = 65_507) {
+    public init(encoding: Base64Encoding, bufferCapacity: Int = 65_507) {
+        self.encoding = encoding
         self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
@@ -55,7 +38,7 @@ public final class Base64Decoder: Base64 {
     /// - parameter capacity: The capacity of the output pointer
     /// - parameter finish: If `true`, this base64 reached the end of it's stream
     /// - returns: If the base64 processing data is complete. The capacity of the pointer used, and the amount of input bytes consumed
-    static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
+    func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
         guard let input = buffer.baseAddress else {
             return (true, 0, 0)
         }
@@ -86,8 +69,8 @@ public final class Base64Decoder: Base64 {
             }
             
             // Decode the characters back to a byte
-            let input0 = decodeTable[numericCast(buffer[inputPosition])]
-            let input1 = decodeTable[numericCast(buffer[inputPosition &+ 1])]
+            let input0 = encoding.decodingTable[numericCast(buffer[inputPosition])]
+            let input1 = encoding.decodingTable[numericCast(buffer[inputPosition &+ 1])]
             
             // The bytes cannot be 64 or greater, that would make it an invalid base64 integer
             guard input0 < 64, input1 < 64 else {
@@ -101,7 +84,7 @@ public final class Base64Decoder: Base64 {
                 return (true, outputPosition &+ 1, inputPosition &+ 2)
             }
             
-            let input2 = decodeTable[numericCast(buffer[inputPosition &+ 2])]
+            let input2 = encoding.decodingTable[numericCast(buffer[inputPosition &+ 2])]
             
             // The byte cannot be 64 or greater, that would make it an invalid base64 integer
             guard input2 < 64 else {
@@ -115,7 +98,7 @@ public final class Base64Decoder: Base64 {
                 return (true, outputPosition &+ 2, inputPosition &+ 3)
             }
             
-            let input3 = decodeTable[numericCast(buffer[inputPosition &+ 3])]
+            let input3 = encoding.decodingTable[numericCast(buffer[inputPosition &+ 3])]
             
             // The byte cannot be 64 or greater, that would make it an invalid base64 integer
             guard input3 < 64 else {
@@ -133,7 +116,7 @@ public final class Base64Decoder: Base64 {
     ///
     /// - parameter data: The string data to decode
     /// - returns: A Data decoded from the inputted string
-    public static func decode(data bytes: Data) throws -> Data {
+    public func decode(data bytes: Data) throws -> Data {
         return try Array(bytes).withUnsafeBytes { input -> Data in
             guard let input = input.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return Data()
@@ -157,7 +140,7 @@ public final class Base64Decoder: Base64 {
     ///
     /// - parameter data: The string data to decode
     /// - returns: A Data decoded from the inputted string
-    public static func decode(string: String) throws -> Data {
+    public func decode(string: String) throws -> Data {
         let bytes = [UInt8](string.utf8)
         
         let pointer = MutableBytesPointer.allocate(capacity: bytes.count)
@@ -180,13 +163,13 @@ public final class Base64Decoder: Base64 {
     ///
     /// - parameter buffer: The buffer to encode
     /// - parameter handle: The closure to execute with the binary buffer
-    public static func decode<T>(buffer: ByteBuffer, _ handle: ((MutableByteBuffer) throws -> (T))) throws -> T {
+    public func decode<T>(buffer: ByteBuffer, _ handle: ((MutableByteBuffer) throws -> (T))) throws -> T {
         let allocatedCapacity = ((buffer.count / 4) * 3) &+ ((buffer.count % 4 > 0) ? 3 : 0)
         
         let pointer = MutableBytesPointer.allocate(capacity: allocatedCapacity)
         pointer.initialize(to: 0, count: allocatedCapacity)
         
-        let result = try Base64Decoder.process(buffer, toPointer: pointer, capacity: allocatedCapacity, finish: true)
+        let result = try process(buffer, toPointer: pointer, capacity: allocatedCapacity, finish: true)
         
         defer {
             pointer.deinitialize(count: allocatedCapacity)

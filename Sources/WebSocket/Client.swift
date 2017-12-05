@@ -89,7 +89,7 @@ extension WebSocket {
     
     fileprivate static func complete(to promise: Promise<WebSocket>, with parser: ResponseParser, id: String, factory: @escaping (() -> WebSocket)) {
         // Calculates the expected key
-        let expectatedKey = Base64Encoder.encode(data: SHA1.hash(id + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+        let expectatedKey = Base64Encoder().encode(data: SHA1.hash(id + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
         
         let expectedKeyString = String(bytes: expectatedKey, encoding: .utf8) ?? ""
         
