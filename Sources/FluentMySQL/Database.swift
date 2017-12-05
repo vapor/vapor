@@ -16,7 +16,7 @@ public final class MySQLDatabase : LogSupporting {
     let password: String?
     
     /// The database to select
-    let database: String?
+    let database: String
     
     /// If set, query logs will be sent to the supplied logger.
     public var logger: MySQLLogger?

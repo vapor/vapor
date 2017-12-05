@@ -95,7 +95,7 @@ final class Parser {
             throw MySQLError(packet: packet)
         default:
             defer { position = position &+ 1 }
-            return UInt64(self.payload[position])
+            return numericCast(self.payload[position])
         }
     }
     
@@ -103,7 +103,14 @@ final class Parser {
     func parseLenEncData() throws -> Data {
         let length = try skipLenEnc()
         
-        return Data(self.payload[position..<position &+ length])
+        return Data(self.payload[position &- length..<position &+ length])
+    }
+    
+    /// Parses length encoded Data
+    func parseLenEncBytes() throws -> ByteBuffer {
+        let length = try skipLenEnc()
+        
+        return ByteBuffer(start: self.payload.baseAddress?.advanced(by: position &- length), count: length)
     }
     
     /// Skips length encoded data/strings
@@ -128,7 +135,8 @@ final class Parser {
             return ""
         }
         
-        let result = String.init(bytes: self.payload[position &- length ..< position], encoding: .utf8)
+        let data = Data(bytes: self.payload.baseAddress!.advanced(by: position &- length), count: length)
+        let result = String(data: data, encoding: .utf8)
         
         return result ?? ""
     }

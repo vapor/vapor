@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Core
 import Dispatch
 import Foundation
@@ -30,11 +31,11 @@ final class TestFiles: FileReader, FileCache {
         // nothing
     }
 
-    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == Data {
+    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == ByteBuffer {
         let data = """
         Test file name: "\(path)"
         """.data(using: .utf8)!
-        stream.onInput(data)
+        data.withByteBuffer(stream.onInput)
         stream.close()
     }
 }
@@ -53,9 +54,9 @@ final class PreloadedFiles: FileReader, FileCache {
         // nothing
     }
 
-    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == Data {
+    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == ByteBuffer {
         if let data = files[path] {
-            stream.onInput(data)
+            data.withByteBuffer(stream.onInput)
         } else {
             stream.onError("Could not find file")
         }
