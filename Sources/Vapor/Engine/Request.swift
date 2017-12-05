@@ -39,6 +39,65 @@ public final class Request: EphemeralContainer, ParameterContainer {
 
     /// See Extendable.extend
     public var extend: Extend
+    
+    /// HTTP requests have a method, like GET or POST
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
+    public var method: HTTPMethod {
+        get {
+            return http.method
+        }
+        set {
+            http.method = newValue
+        }
+    }
+    
+    /// This is usually just a path like `/foo` but
+    /// may be a full URI in the case of a proxy
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/uri/)
+    public var uri: URI {
+        get {
+            return http.uri
+        }
+        set {
+            http.uri = newValue
+        }
+    }
+    
+    /// See `Message.version`
+    public var version: HTTPVersion {
+        get {
+            return http.version
+        }
+        set {
+            http.version = newValue
+        }
+    }
+    
+    /// See `Message.headers`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
+    public var headers: HTTPHeaders {
+        get {
+            return http.headers
+        }
+        set {
+            http.headers = newValue
+        }
+    }
+    
+    /// See `Message.body`
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
+    public var body: HTTPBody {
+        get {
+            return http.body
+        }
+        set {
+            http.body = newValue
+        }
+    }
 
     /// Create a new Request
     public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
