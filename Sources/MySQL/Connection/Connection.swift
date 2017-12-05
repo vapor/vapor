@@ -185,7 +185,8 @@ public final class MySQLConnection {
         readBuffer.deinitialize(count: Int(UInt16.max))
         readBuffer.deallocate(capacity: Int(UInt16.max))
 
-        self.close()
+        self.socket.close()
+        self.packetStream.close()
     }
     
     /// Closes the connection
