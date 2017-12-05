@@ -18,7 +18,7 @@ public enum QueryComparisonValue {
 
 /// Generic filter method acceptors.
 extension QueryBuilder {
-    /// Self operator filter queries
+    /// Applies a filter from one of the filter operators (==, !=, etc)
     @discardableResult
     public func filter(
         _ value: QueryFilterMethod
@@ -27,6 +27,9 @@ extension QueryBuilder {
         return addFilter(filter)
     }
 
+    /// Applies a filter from one of the filter operators (==, !=, etc)
+    /// note: this method is generic, allowing you to omit type names
+    /// when filtering using key paths.
     @discardableResult
     public func filter(
         _ value: ModelFilterMethod<Model>
