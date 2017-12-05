@@ -70,6 +70,15 @@ public struct RedisData {
         }
     }
     
+    /// Extracts the binary data from a Redis BulkString
+    public var data: Data? {
+        if case .bulkString(let data) = self.storage {
+            return data
+        }
+        
+        return nil
+    }
+    
     /// Extracts an array type from this data
     public var array: [RedisData]? {
         guard case .array(let array) = self.storage else {
