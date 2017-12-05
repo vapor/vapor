@@ -33,20 +33,20 @@ public final class Serializer {
                     body: body,
                     chained: chained,
                     source: syntax.source
-                    ).do { context in
-                        guard let context = context else {
-                            promise.complete(Data())
-                            return
-                        }
+                ).do { context in
+                    guard let context = context else {
+                        promise.complete(Data())
+                        return
+                    }
 
-                        guard let data = context.data else {
-                            promise.fail(SerializerError.unexpectedTagData(name: name, source: syntax.source))
-                            return
-                        }
+                    guard let data = context.data else {
+                        promise.fail(SerializerError.unexpectedTagData(name: name, source: syntax.source))
+                        return
+                    }
 
-                        promise.complete(data)
-                    }.catch { error in
-                        promise.fail(error)
+                    promise.complete(data)
+                }.catch { error in
+                    promise.fail(error)
                 }
             default:
                 promise.fail(SerializerError.unexpectedSyntax(syntax))
@@ -68,7 +68,7 @@ public final class Serializer {
         body: [Syntax]?,
         chained: Syntax?,
         source: Source
-        ) -> Future<LeafData?> {
+    ) -> Future<LeafData?> {
         return then { () -> Future<LeafData?> in
             guard let tag = self.renderer.tags[name] else {
                 throw SerializerError.unknownTag(name: name, source: source)
@@ -78,8 +78,8 @@ public final class Serializer {
                 let inputPromise = Promise(LeafData.self)
                 self.resolveSyntax(parameter).do { input in
                     inputPromise.complete(input ?? .null)
-                    }.catch { error in
-                        inputPromise.fail(error)
+                }.catch { error in
+                    inputPromise.fail(error)
                 }
                 return inputPromise.future
             }
@@ -97,25 +97,25 @@ public final class Serializer {
                     parsed: parsed,
                     context: &self.context,
                     renderer: self.renderer
-                    ).then { data -> Future<LeafData?> in
-                        if let data = data {
-                            return Future(data)
-                        } else if let chained = chained {
-                            switch chained.kind {
-                            case .tag(let name, let params, let body, let c):
-                                return self.renderTag(
-                                    name: name,
-                                    parameters: params,
-                                    body: body,
-                                    chained: c,
-                                    source: chained.source
-                                )
-                            default:
-                                throw SerializerError.unexpectedSyntax(chained)
-                            }
-                        } else {
-                            return Future(nil)
+                ).then { data -> Future<LeafData?> in
+                    if let data = data {
+                        return Future(data)
+                    } else if let chained = chained {
+                        switch chained.kind {
+                        case .tag(let name, let params, let body, let c):
+                            return self.renderTag(
+                                name: name,
+                                parameters: params,
+                                body: body,
+                                chained: c,
+                                source: chained.source
+                            )
+                        default:
+                            throw SerializerError.unexpectedSyntax(chained)
                         }
+                    } else {
+                        return Future(nil)
+                    }
                 }
             }
         }
@@ -168,8 +168,8 @@ public final class Serializer {
                     }.catch { error in
                         promise.fail(error)
                 }
-                }.catch { error in
-                    promise.fail(error)
+            }.catch { error in
+                promise.fail(error)
             }
         case .and:
             l.do { l in
@@ -214,11 +214,11 @@ public final class Serializer {
                     } else {
                         promise.complete(.bool(false))
                     }
-                    }.catch { error in
-                        promise.fail(error)
-                }
                 }.catch { error in
                     promise.fail(error)
+                }
+            }.catch { error in
+                promise.fail(error)
             }
         }
 
