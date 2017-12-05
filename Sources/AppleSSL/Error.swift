@@ -1,5 +1,5 @@
 /// An SSL Error related to Apple's Security libraries
-public struct Error: Swift.Error {
+public struct AppleSSLError: Swift.Error {
     /// The reason for this error
     let reason: Reason
     
@@ -26,6 +26,9 @@ public struct Error: Swift.Error {
         
         /// The provided certificate was not loaded/used successfully
         case invalidCertificate
+        
+        /// Unsupported feature
+        case notSupported
         
         /// The certificate didn't exist at the given path
         case certificateNotFound

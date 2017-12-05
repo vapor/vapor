@@ -1,6 +1,9 @@
 import Foundation
 import Bits
 
+/// RandomProtocol implementations can output random sets of data
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/crypto/random/)
 public protocol RandomProtocol {
     /// Get a random array of Data
     func data(count: Int) throws -> Data

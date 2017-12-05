@@ -20,73 +20,51 @@ import Foundation
 ///
 ///     let res = Response(status: .ok, body: "hello")
 ///
-/// http://localhost:8000/http/response/
-public final class Response: Message {
+/// [Learn More →](https://docs.vapor.codes/3.0/http/response/)
+public struct HTTPResponse: HTTPMessage {
     /// See Message.version
-    public var version: Version
+    public var version: HTTPVersion
 
     /// HTTP response status code.
-    public var status: Status
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
+    public var status: HTTPStatus
 
     /// See Message.headers
-    public var headers: Headers
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
+    public var headers: HTTPHeaders
 
     /// See Message.body
-    public var body: Body
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
+    public var body: HTTPBody
 
-    /// See Extendable.extend
-    public var extend: Extend
+    /// See Message.onUpgrade
+    public var onUpgrade: HTTPOnUpgrade?
 
     /// Create a new HTTP response.
     public init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: Body = Body()
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBody = HTTPBody()
     ) {
         self.version = version
         self.status = status
         self.headers = headers
         self.body = body
-        self.extend = Extend()
     }
 }
 
-extension Response {
+extension HTTPResponse {
     /// Create a new HTTP response using something BodyRepresentable.
-    public convenience init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: BodyRepresentable
+    public init(
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBodyRepresentable
     ) throws {
         try self.init(version: version, status: status, headers: headers, body: body.makeBody())
-    }
-}
-
-/// Can be converted from a response.
-///
-/// http://localhost:8000/http/response/#responseinitializable
-public protocol ResponseInitializable {
-    init(response: Response) throws
-}
-
-/// Can be converted to a response
-///
-/// http://localhost:8000/http/response/#responserepresentable
-public protocol ResponseRepresentable {
-    /// Makes a response using the context provided by the Request
-    func makeResponse(for request: Request) throws -> Response
-}
-
-/// Can be converted from and to a response
-public typealias ResponseConvertible = ResponseInitializable & ResponseRepresentable
-
-// MARK: Response Conformance
-
-extension Response: ResponseRepresentable {
-    /// See `ResponseRepresentable.makeResponse`
-    public func makeResponse(for request: Request) throws -> Response {
-        return self
     }
 }

@@ -1,6 +1,6 @@
 extension Cookies {
     /// Seriaizes the `Cookies` for a `Request`
-    public func serialize(into request: Request) {
+    public func serialize(into request: inout HTTPRequest) {
         guard !cookies.isEmpty else {
             request.headers[.cookie] = nil
             return
@@ -14,7 +14,7 @@ extension Cookies {
     }
     
     /// Seriaizes the `Cookies` for a `Response`
-    public func serialize(into request: Response)  {
+    public func serialize(into request: inout HTTPResponse)  {
         guard !cookies.isEmpty else {
             request.headers[.cookie] = nil
             return

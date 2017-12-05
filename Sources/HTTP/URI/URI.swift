@@ -14,7 +14,7 @@ import Dispatch
  / \ /                        \
  urn:example:animal:ferret:nose
  
- http://localhost:8000/http/uri/
+ [Learn More →](https://docs.vapor.codes/3.0/http/uri/)
  */
 public struct URI: Codable {
     // https://tools.ietf.org/html/rfc3986#section-3.1
@@ -28,15 +28,15 @@ public struct URI: Codable {
     public var port: Port?
     
     // https://tools.ietf.org/html/rfc3986#section-3.3
-    public private(set) var pathData: Data
+    public private(set) var pathBytes: [UInt8]
     
     // https://tools.ietf.org/html/rfc3986#section-3.3
     public var path: String {
         get {
-            return String(data: pathData, encoding: .utf8) ?? ""
+            return String(bytes: pathBytes, encoding: .utf8) ?? ""
         }
         set {
-            self.pathData = Data(newValue.utf8)
+            self.pathBytes = [UInt8](newValue.utf8)
         }
     }
     
@@ -63,7 +63,7 @@ public struct URI: Codable {
             userInfo: userInfo,
             hostname: hostname,
             port: port,
-            pathData: Data(path.utf8),
+            pathBytes: Array(path.utf8),
             query: query,
             fragment: fragment
         )
@@ -74,7 +74,7 @@ public struct URI: Codable {
         userInfo: UserInfo? = nil,
         hostname: String? = nil,
         port: Port? = nil,
-        pathData: Data,
+        pathBytes: [UInt8],
         query: String? = nil,
         fragment: String? = nil
     ) {
@@ -87,7 +87,7 @@ public struct URI: Codable {
             self.port = nil
         }
         
-        self.pathData = pathData
+        self.pathBytes = pathBytes
         self.query = query
         self.fragment = fragment
     }

@@ -1,27 +1,23 @@
+import Core
 import HTTP
-import Async
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.
 ///
-/// http://localhost:8000/routing/route/
-public final class Route: Extendable {
+/// [Learn More →](https://docs.vapor.codes/3.0/routing/route/)
+public final class Route<Output>: Extendable {
     /// The path at which the route is assigned
     public var path: [PathComponent]
     
-    /// The method that this route responds to
-    public var method: Method
-    
     /// The responder. Used to respond to a `Request`
-    public var responder: Responder
+    public var output: Output
     
     /// A storage place to extend the `Route` with.
     /// Can store metadata like Documentation/Route descriptions
     public var extend = Extend()
     
     /// Creates a new route from a Method, path and responder
-    public init(method: Method, path: [PathComponent], responder: Responder) {
-        self.method = method
+    public init(path: [PathComponent], output: Output) {
         self.path = path
-        self.responder = responder
+        self.output = output
     }
 }

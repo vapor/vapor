@@ -1,67 +1,24 @@
 import Async
+import Dispatch
 import HTTP
 import Bits
 import Routing
+import Service
 import XCTest
 
 class RouterTests: XCTestCase {
     func testRouter() throws {
-        let router = TrieRouter()
+        let router = TrieRouter<Int>()
 
-        router.on(.get, to: ["hello", "world"].makePathComponents()) { req -> Response in
-            return try Response(body: "hello")
-        }
+        let path: [PathComponent.Parameter] = [.string("foo"), .string("bar"), .string("baz")]
 
-        router.on(.get, to: ["foo", "bar", "baz"].makePathComponents()) { req -> Response in
-            return try Response(body: "foo")
-        }
+        let route = Route<Int>(path: [.constants(path), .parameter(.string(User.uniqueSlug))], output: 42)
+        router.register(route: route)
 
-        router.on(.get, to: ["users", User.parameter, "comments"].makePathComponents()) { req -> Response in
-            let bob = try req.parameters.next(User.self)
-            XCTAssertEqual(bob.name, "bob")
-            
-            return try Response(body: "users!")
-        }
-
-        do {
-            let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "foo")
-            }
-        }
-
-        do {
-            let request = Request(method: .get, uri: URI(path: "/hello/world"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
-            }
-        }
-
-        do {
-            let request = Request(method: .get, uri: URI(path: "/users/bob/comments"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "users!")
-            }
-        }
+        let container = BasicContainer(config: Config(), environment: .development, services: Services(), on: DispatchQueue.global())
+        let params = Params()
+        XCTAssertEqual(router.route(path: path + [.string("Tanner")], parameters: params), 42)
+        try XCTAssertEqual(params.parameter(User.self, using: container).blockingAwait().name, "Tanner")
     }
 
 
@@ -70,19 +27,19 @@ class RouterTests: XCTestCase {
     ]
 }
 
-extension Response: FutureType {
-    public typealias Expectation = Response
+final class Params: ParameterContainer {
+    var parameters: Parameters = []
+    init() {}
 }
 
 final class User: Parameter {
-    static let uniqueSlug: String = "user"
     var name: String
 
     init(name: String) {
         self.name = name
     }
 
-    static func make(for parameter: String, in request: Request) throws -> User {
-        return User(name: parameter)
+    static func make(for parameter: String, using container: Container) throws -> Future<User> {
+        return Future(User(name: parameter))
     }
 }

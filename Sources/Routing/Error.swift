@@ -1,34 +1,10 @@
 import Debugging
 
 /// Errors that can be thrown while working with TCP sockets.
-public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
-    enum Kind {
-        case insufficientParameters
-        case invalidParameterType(actual: Any.Type, expected: Any.Type)
-    }
-
+public struct RoutingError: Traceable, Debuggable, Swift.Error, Encodable {
     public static let readableName = "Routing Error"
-
-    let kind: Kind
-
-    public var identifier: String {
-        switch kind {
-        case .insufficientParameters:
-            return "insufficientParameters"
-        case .invalidParameterType:
-            return "invalidParameterType"
-        }
-    }
-
-    public var reason: String {
-        switch kind {
-        case .invalidParameterType:
-            return "Invalid parameter type"
-        case .insufficientParameters:
-            return "Insufficient parameters."
-        }
-    }
-
+    public var identifier: String
+    public var reason: String
     public var file: String
     public var function: String
     public var line: UInt
@@ -37,18 +13,20 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
 
     /// Create a new TCP error.
     init(
-        _ kind: Kind,
+        identifier: String,
+        reason: String,
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
     ) {
-        self.kind = kind
+        self.identifier = identifier
+        self.reason = reason
         self.file = file
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = RoutingError.makeStackTrace()
     }
 }
 

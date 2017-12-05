@@ -6,7 +6,7 @@ import HTTP
 ///
 /// This parser can only be used statically, a design choice considering the way multipart is best parsed
 ///
-/// http://localhost:8000/http/multipart/#parsing-a-multipart-form
+/// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
 public final class MultipartParser {
     /// The boundary between all parts
     fileprivate let boundary: Data
@@ -76,8 +76,8 @@ public final class MultipartParser {
     }
     
     /// Reads the headers at the current position
-    fileprivate func readHeaders() throws -> Headers {
-        var headers = Headers()
+    fileprivate func readHeaders() throws -> HTTPHeaders {
+        var headers = HTTPHeaders()
         
         // headers
         headerScan: while position < data.count, try carriageReturnNewLine() {
@@ -103,7 +103,7 @@ public final class MultipartParser {
                 throw MultipartError(identifier: "multipart:invalid-header-value", reason: "Invalid multipart header value string encoding")
             }
             
-            headers[Headers.Name(key)] = value
+            headers[HTTPHeaders.Name(key)] = value
         }
         
         return headers
@@ -132,7 +132,7 @@ public final class MultipartParser {
     /// Parses the part data until the boundary and decodes it.
     ///
     /// Also appends the part to the Multipart
-    fileprivate func appendPart(named name: String?, headers: Headers) throws {
+    fileprivate func appendPart(named name: String?, headers: HTTPHeaders) throws {
         // The compiler doesn't understand this will never be `nil`
         var partData = try seekUntilBoundary()
         
@@ -212,6 +212,8 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart data using the provided boundary
     ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
+    ///
     /// - throws: If the multipart data is an invalid Multipart form
     public static func parse(from buffer: ByteBuffer, boundary: Data) throws -> Form {
         let parser = MultipartParser(data: buffer, boundary: boundary)
@@ -223,8 +225,11 @@ public final class MultipartParser {
     
     /// Parses the input mulitpart body using the provided boundary
     ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/multipart/#parsing-a-multipart-form)
+    ///
     /// - throws: If the multipart data is an invalid Multipart form
-    public static func parse(from body: Body, boundary: Data) throws -> Form {
+    /// - TODO: Parse streaming bodies 
+    public static func parse(from body: HTTPBody, boundary: Data) throws -> Form {
         return try body.withUnsafeBytes { pointer in
             let buffer = ByteBuffer(start: pointer, count: body.count)
             

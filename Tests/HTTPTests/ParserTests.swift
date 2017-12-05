@@ -1,6 +1,7 @@
 import Async
-import Core
 import Bits
+import Core
+import Dispatch
 import HTTP
 import XCTest
 
@@ -19,8 +20,7 @@ class ParserTests : XCTestCase {
         hello
         """.data(using: .utf8) ?? Data()
 
-        let worker = Worker(queue: .global())
-        let parser = RequestParser(worker: worker, maxBodySize: 100_000)
+        let parser = RequestParser(maxSize: 100_000)
         guard let req = try parser.parse(from: data) else {
             XCTFail("No request parsed")
             return
@@ -36,7 +36,7 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(req.headers[.acceptEncoding], "gzip, deflate")
         XCTAssertEqual(req.headers[.connection], "Keep-Alive")
         
-        req.body.withUnsafeBytes { (pointer: BytesPointer) in
+        try req.body.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: req.body.count)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
         }
@@ -55,7 +55,7 @@ class ParserTests : XCTestCase {
         <vapor>
         """.data(using: .utf8) ?? Data()
 
-        let parser = ResponseParser(maxBodySize: 100_000)
+        let parser = ResponseParser(maxSize: 100_000)
         guard let res = try parser.parse(from: data) else {
             XCTFail("No response parsed")
             return
@@ -70,15 +70,52 @@ class ParserTests : XCTestCase {
         XCTAssertEqual(res.mediaType, .html)
         XCTAssertEqual(res.headers[.connection], "Closed")
         
-        res.body.withUnsafeBytes { (pointer: BytesPointer) in
+        try res.body.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: res.body.count)
             XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "<vapor>")
         }
+    }
+    
+    func testTooLargeRequest() throws {
+        let data = """
+        POST /cgi-bin/process.cgi HTTP/1.1\r
+        User-Agent: Mozilla/4.0 (compatible; MSIE5.01; Windows NT)\r
+        Host: www.tutorialspoint.com\r
+        Content-Type: text/plain\r
+        Content-Length: 5\r
+        Accept-Language: en-us\r
+        Accept-Encoding: gzip, deflate\r
+        Connection: Keep-Alive\r
+        \r
+        hello
+        """.data(using: .utf8) ?? Data()
+        
+        let parser = RequestParser(maxSize: data.count - 2)
+        XCTAssertThrowsError(try parser.parse(from: data))
+    }
+    
+    func testTooLargeResponse() throws {
+        let data = """
+        HTTP/1.1 200 OK\r
+        Date: Mon, 27 Jul 2009 12:28:53 GMT\r
+        Server: Apache/2.2.14 (Win32)\r
+        Last-Modified: Wed, 22 Jul 2009 19:15:56 GMT\r
+        Content-Length: 7\r
+        Content-Type: text/html\r
+        Connection: Closed\r
+        \r
+        <vapor>
+        """.data(using: .utf8) ?? Data()
+        
+        let parser = ResponseParser(maxSize: data.count - 2)
+        XCTAssertThrowsError(try parser.parse(from: data))
     }
 
     static let allTests = [
         ("testRequest", testRequest),
         ("testResponse", testResponse),
+        ("testTooLargeRequest", testTooLargeRequest),
+        ("testTooLargeResponse", testTooLargeResponse),
     ]
 }
 

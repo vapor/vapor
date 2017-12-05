@@ -1,13 +1,15 @@
+import Async
 import Foundation
 import Dispatch
 import Bits
+import TCP
 
 /// Represents an HTTP Message's Body.
 ///
 /// This can contain any data and should match the Message's "Content-Type" header.
 ///
-/// http://localhost:8000/http/body/
-public struct Body: Codable {
+/// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
+public struct HTTPBody: Codable {
     /// The internal storage medium.
     ///
     /// NOTE: This is an implementation detail
@@ -15,6 +17,8 @@ public struct Body: Codable {
         case data(Data)
         case staticString(StaticString)
         case dispatchData(DispatchData)
+        case string(String)
+        case stream(BodyStream)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -24,6 +28,9 @@ public struct Body: Codable {
                 try Data(data).encode(to: encoder)
             case .staticString(let string):
                 try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
+            case .string(let string):
+                try string.encode(to: encoder)
+            case .stream(_): return
             }
         }
         
@@ -37,11 +44,13 @@ public struct Body: Codable {
             case .data(let data): return data.count
             case .dispatchData(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
+            case .string(let string): return string.utf8.count
+            case .stream(_): return 0
             }
         }
         
         /// Accesses the bytes of this data
-        func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
+        func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) throws -> Return {
             switch self {
             case .data(let data):
                 return try data.withUnsafeBytes(run)
@@ -49,6 +58,12 @@ public struct Body: Codable {
                 return try data.withUnsafeBytes(body: run)
             case .staticString(let staticString):
                 return try run(staticString.utf8Start)
+            case .string(let string):
+                return try string.withCString { pointer in
+                    return try pointer.withMemoryRebound(to: UInt8.self, capacity: self.count, run)
+                }
+            case .stream(_):
+                throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
             }
         }
     }
@@ -83,6 +98,11 @@ public struct Body: Codable {
         self.storage = .data(data)
     }
     
+    /// A chunked body stream
+    public init(chunked stream: BodyStream) {
+        self.storage = .stream(stream)
+    }
+    
     /// Decodes a body from from a Decoder
     public init(from decoder: Decoder) throws {
         self.storage = try Storage(from: decoder)
@@ -91,10 +111,26 @@ public struct Body: Codable {
     /// Executes a closure with a pointer to the start of the data
     ///
     /// Can be used to read data from this buffer until the `count`.
-    public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) rethrows -> Return {
+    public func withUnsafeBytes<Return>(_ run: ((BytesPointer) throws -> (Return))) throws -> Return {
         return try self.storage.withUnsafeBytes(run)
     }
-    
+
+    /// Get body data.
+    public var data: Data? {
+        switch storage {
+        case .data(let data):
+            return data
+        case .dispatchData(let dispatch):
+            return Data(dispatch)
+        case .staticString(_):
+            return nil
+        case .string(let string):
+            return Data(string.utf8)
+        case .stream(_):
+            return nil
+        }
+    }
+        
     /// The size of the data buffer
     public var count: Int {
         return self.storage.count
@@ -103,16 +139,16 @@ public struct Body: Codable {
 
 /// Can be converted to an HTTP body.
 ///
-/// http://localhost:8000/http/body/#bodyrepresentable
-public protocol BodyRepresentable {
+/// [Learn More →](https://docs.vapor.codes/3.0/http/body/#bodyrepresentable)
+public protocol HTTPBodyRepresentable {
     /// Convert to an HTTP body.
-    func makeBody() throws -> Body
+    func makeBody() throws -> HTTPBody
 }
 
 /// String can be represented as an HTTP body.
-extension String: BodyRepresentable {
+extension String: HTTPBodyRepresentable {
     /// See BodyRepresentable.makeBody()
-    public func makeBody() throws -> Body {
-        return Body(string: self)
+    public func makeBody() throws -> HTTPBody {
+        return HTTPBody(string: self)
     }
 }

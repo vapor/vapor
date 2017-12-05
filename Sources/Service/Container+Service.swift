@@ -1,6 +1,5 @@
+import Async
 import Foundation
-
-private let serviceCacheKey = "service:service-cache"
 
 extension Container {
     /// Returns or creates a service for the given type.
@@ -11,15 +10,31 @@ extension Container {
         _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
-        return try unsafeMake(Interface.self, for: Client.self) as! Interface
+        // check if we've previously resolved this service
+        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+            return service
+        }
+
+        do {
+            // resolve the service and cache it
+            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
+            serviceCache.set(.service(service), Interface.self, for: Client.self)
+            return service
+        } catch {
+            // cache the error
+            serviceCache.set(.error(error), Interface.self, for: Client.self)
+            throw error
+        }
     }
 
     /// Returns or creates a service for the given type.
+    /// If the service has already been requested once,
+    /// the previous result for the interface and client is returned.
     ///
     /// This method accepts and returns Any.
     ///
     /// Use .make() for the safe method.
-    public func unsafeMake(
+    internal func unsafeMake(
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
@@ -55,42 +70,24 @@ extension Container {
         )
 
         // lazy loading
-        // create an instance of this service type.
-        let item = try _makeServiceFactoryConsultingCache(chosen, ofType: interface)
 
-        return item!
-    }
-
-    fileprivate func _makeServiceFactoryConsultingCache(
-        _ serviceFactory: ServiceFactory, ofType type: Any.Type
-    ) throws -> Any? {
-        let key = "\(serviceFactory.serviceType)"
-        if serviceFactory.serviceIsSingleton {
-            if let cached = serviceCache[key] {
-                return cached
+        if chosen.serviceIsSingleton {
+            // attempt to fetch singleton from cache
+            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
+                return singleton
+            } else {
+                do {
+                    let item = try chosen.makeService(for: self)
+                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
+                    return item
+                } catch {
+                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
+                    throw error
+                }
             }
-        }
-
-        guard let new = try serviceFactory.makeService(for: self) else {
-            throw ServiceError.incorrectType(
-                type: serviceFactory.serviceType,
-                desired: type
-            )
-        }
-
-        if serviceFactory.serviceIsSingleton {
-            serviceCache[key] = new
-        }
-
-        return new
-    }
-
-    fileprivate var serviceCache: [String: Any] {
-        get {
-            return extend[serviceCacheKey] as? [String: Any] ?? [:]
-        }
-        set {
-            extend[serviceCacheKey] = newValue
+        } else {
+            // create an instance of this service type.
+            return try chosen.makeService(for: self)
         }
     }
 }

@@ -129,7 +129,7 @@ public struct MediaType {
     /// media types in the collection.
     public func matches<C : Collection>(
         any mediaTypes: C
-        ) -> Bool where C.Iterator.Element == MediaType {
+    ) -> Bool where C.Iterator.Element == MediaType {
         for mediaType in mediaTypes {
             if matches(other: mediaType) {
                 return true
@@ -156,7 +156,11 @@ public struct MediaType {
 extension MediaType : CustomStringConvertible {
     /// :nodoc:
     public var description: String {
-        var string = "\(type)/\(subtype)"
+        var string = String()
+        string.reserveCapacity(type.count + subtype.count + 1)
+        string += type
+        string += "/"
+        string += subtype
 
         if !parameters.isEmpty {
             string += parameters.reduce(";") { $0 + " \($1.0)=\($1.1)" }

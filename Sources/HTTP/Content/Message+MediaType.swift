@@ -1,6 +1,6 @@
 // MARK: Message
 
-extension Message {
+extension HTTPMessage {
     /// The MediaType inside the `Message` `Headers`' "Content-Type"
     public var mediaType: MediaType? {
         get {

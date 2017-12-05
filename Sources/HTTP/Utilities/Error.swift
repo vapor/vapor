@@ -3,7 +3,7 @@ import Foundation
 import libc
 
 /// Errors that can be thrown while working with HTTP.
-public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
+public struct HTTPError: Traceable, Debuggable, Swift.Error, Encodable {
     public static let readableName = "HTTP Error"
     public let identifier: String
     public var reason: String
@@ -27,7 +27,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = HTTPError.makeStackTrace()
     }
 
     public static func invalidMessage(
@@ -36,7 +36,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         line: UInt = #line,
         column: UInt = #column
     ) -> Error {
-        return Error(
+        return HTTPError(
             identifier: "invalidMessage",
             reason: "Unable to parse invalid HTTP message.",
             file: file,
@@ -53,7 +53,7 @@ public struct Error: Traceable, Debuggable, Swift.Error, Encodable {
         line: UInt = #line,
         column: UInt = #column
     ) -> Error {
-        return Error(
+        return HTTPError(
             identifier: "contentRequired",
             reason: "\(type) content required.",
             file: file,

@@ -1,15 +1,14 @@
 import Async
 
 /// Outputs all notifications for a listening client's channels
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
 public final class SubscriptionStream: Async.OutputStream {
-    /// See `OutputStream.Output`
+    /// See OutputStream.Output
     public typealias Output = ChannelMessage
-    
-    /// See `OutputStream.OutputHandler`
-    public var outputStream: OutputHandler?
-    
-    /// See `BaseStream.errorStream`
-    public var errorStream: ErrorHandler?
+
+    /// Use a basic output stream to implement output stream.
+    private var outputStream: BasicStream<Output> = .init()
     
     /// Drains a Redis Client's parser of it's results
     init(reading parser: DataParser) {
@@ -23,9 +22,9 @@ public final class SubscriptionStream: Async.OutputStream {
                 let array = data.array,
                 array.count == 3,
                 let channel = array[1].string
-                else {
-                    self.errorStream?(RedisError(.unexpectedResult(data)))
-                    return
+            else {
+                self.outputStream.onError(RedisError(.unexpectedResult(data)))
+                return
             }
             
             // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
@@ -35,7 +34,22 @@ public final class SubscriptionStream: Async.OutputStream {
             
             let message = ChannelMessage(channel: channel, message: array[2])
             
-            self.outputStream?(message)
-        }
+            self.outputStream.onInput(message)
+        }.catch(onError: outputStream.onError)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I : InputStream, SubscriptionStream.Output == I.Input {
+        outputStream.onOutput(input)
+    }
+    
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
 }

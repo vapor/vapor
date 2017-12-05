@@ -4,6 +4,8 @@ import libc
 
 /// URandom represents a file connection to /dev/urandom on Unix systems.
 /// /dev/urandom is a cryptographically secure random generator provided by the OS.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/crypto/random/)
 public final class URandom: RandomProtocol {
     public enum Error: Swift.Error {
         case open(Int32)

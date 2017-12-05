@@ -7,13 +7,13 @@ import Foundation
 /// Possible header states
 enum HeaderState {
     case none
-    case value(Headers.Index)
+    case value(HTTPHeaders.Index)
     case key(startIndex: Int, endIndex: Int)
 }
 
 
 /// Internal CHTTP parser protocol
-internal protocol CParser: class, Async.Stream {
+internal protocol CParser: Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
 }
@@ -33,7 +33,7 @@ extension CParser {
         // if the parsed count does not equal the bytes passed
         // to the parser, it is signaling an error
         guard parsedCount == max else {
-            throw Error.invalidMessage()
+            throw HTTPError.invalidMessage()
         }
     }
 
@@ -130,7 +130,7 @@ extension CParser {
                 results.headersData.append(contentsOf: headerSeparator)
                 
                 // Set a dummy hashvalue
-                let index = Headers.Index(
+                let index = HTTPHeaders.Index(
                     nameStartIndex: key.startIndex,
                     nameEndIndex: key.endIndex,
                     valueStartIndex: results.headersData.count,
@@ -205,7 +205,7 @@ extension CParser {
             // parse version
             let major = Int(parser.pointee.http_major)
             let minor = Int(parser.pointee.http_minor)
-            results.version = Version(major: major, minor: minor)
+            results.version = HTTPVersion(major: major, minor: minor)
 
             return 0
         }

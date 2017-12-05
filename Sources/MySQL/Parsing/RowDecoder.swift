@@ -1,8 +1,12 @@
 import Core
 import Foundation
 
+func makeRowDecoder(row: Row, lossyIntegers: Bool, lossyStrings: Bool) throws -> Decoder {
+    return try RowDecoder(keyed: row, lossyIntegers: lossyIntegers, lossyStrings: lossyStrings)
+}
+
 /// Decodes into an entity Rows into entities, and columns into variables
-class RowDecoder : DecoderHelper {
+final class RowDecoder : DecoderHelper {
     /// Sets up a decoder for a row/struct/class
     required init(keyed: Row, lossyIntegers: Bool, lossyStrings: Bool) throws {
         self.either = .keyed(keyed)
@@ -41,6 +45,7 @@ class RowDecoder : DecoderHelper {
         case .uint8(let num): return .uint8(num)
         case .int8(let num): return .int8(num)
         case .double(let num): return .double(num)
+        // TODO: Date to epoch?
         case .float(let num): return .float(num)
         default: return nil
         }
@@ -58,7 +63,7 @@ class RowDecoder : DecoderHelper {
     var lossyStrings: Bool
     
     /// Decodes a column to a String
-    public func decode(_ type: Column) throws -> String {
+    func decode(_ type: Column) throws -> String {
         let value = try either.getValue()
         
         if case .varString(let string) = value {
@@ -69,7 +74,7 @@ class RowDecoder : DecoderHelper {
     }
     
     /// Decodes a column to a Bool, int8/uint8 is used here
-    public func decode(_ type: Column) throws -> Bool {
+    func decode(_ type: Column) throws -> Bool {
         let value = try either.getValue()
         
         if case .int8(let num) = value {
@@ -79,6 +84,16 @@ class RowDecoder : DecoderHelper {
         } else {
             throw DecodingError.incorrectValue
         }
+    }
+    
+    func decode<D>(_ type: D.Type, from value: Column) throws -> D where D : Decodable {
+        if D.self == Date.self, case .datetime(let date) = value {
+            return date as! D
+        }
+        
+        let newDecoder = try RowDecoder(any: value, lossyIntegers: self.lossyIntegers, lossyStrings: self.lossyStrings)
+        
+        return try D(from: newDecoder)
     }
     
     /// Columns contain values
@@ -97,18 +112,18 @@ class RowDecoder : DecoderHelper {
     public var userInfo: [CodingUserInfoKey : Any] = [:]
     
     /// Creates a new RowContainer at a path
-    public func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
+    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
         let container = RowContainer<Key>(decoder: self)
         return KeyedDecodingContainer(container)
     }
     
     /// Creates a new unkeyed container, will always throw since it's currently unsupported
-    public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
+    func unkeyedContainer() throws -> UnkeyedDecodingContainer {
         throw DecodingError.unimplemented
     }
     
     /// Creates a new single value column container
-    public func singleValueContainer() throws -> SingleValueDecodingContainer {
+    func singleValueContainer() throws -> SingleValueDecodingContainer {
         return ColumnContainer(decoder: self)
     }
 }
@@ -125,7 +140,7 @@ extension Row : KeyedDecodingHelper {
 }
 
 /// Used for decoding a row's values
-struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
+fileprivate struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
     /// The coding path being accessed
     var codingPath: [CodingKey]
     
@@ -170,7 +185,7 @@ struct RowContainer<Key : CodingKey>: KeyedDecodingContainerProtocolHelper {
 }
 
 /// Decodes a column's value
-struct ColumnContainer: SingleValueDecodingContainerHelper {
+fileprivate struct ColumnContainer: SingleValueDecodingContainerHelper {
     /// The coding path being accessed
     var codingPath: [CodingKey]
     
@@ -184,7 +199,7 @@ struct ColumnContainer: SingleValueDecodingContainerHelper {
     }
     
     /// Decodes a generic decodable
-    public func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
+    func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
         let value = try decoder.either.getValue()
         
         let d = try D(value: value, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings)
@@ -193,12 +208,12 @@ struct ColumnContainer: SingleValueDecodingContainerHelper {
     }
     
     /// Decodes this column as a string
-    public func decode(_ type: String.Type) throws -> String {
+    func decode(_ type: String.Type) throws -> String {
         return try decoder.decode(try decoder.either.getValue())
     }
     
     /// Checks if this value is `nil`
-    public func decodeNil() -> Bool {
+    func decodeNil() -> Bool {
         guard let value = try? decoder.either.getValue() else {
             return true
         }

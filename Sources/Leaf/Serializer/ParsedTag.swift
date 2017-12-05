@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 
 /// Represents a tag that has been parsed.
@@ -6,7 +7,7 @@ public struct ParsedTag {
     public let name: String
 
     /// Resolved parameters to this tag.
-    public let parameters: [Context]
+    public let parameters: [LeafData]
 
     /// Optional tag body
     public let body: [Syntax]?
@@ -15,20 +16,20 @@ public struct ParsedTag {
     public let source: Source
 
     /// Queue to complete futures on.
-    public let queue: DispatchQueue
+    public let eventLoop: EventLoop
 
     init(
         name: String,
-        parameters: [Context],
+        parameters: [LeafData],
         body: [Syntax]?,
         source: Source,
-        queue: DispatchQueue
+        on eventLoop: EventLoop
     ) {
         self.name = name
         self.parameters = parameters
         self.body = body
         self.source = source
-        self.queue = queue
+        self.eventLoop = eventLoop
     }
 }
 

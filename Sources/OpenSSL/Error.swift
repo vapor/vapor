@@ -1,5 +1,5 @@
 /// An SSL Error related to Apple's Security libraries
-public struct Error: Swift.Error {
+public struct OpenSSLError: Swift.Error {
     /// The reason for this error
     let reason: Reason
     
@@ -29,5 +29,8 @@ public struct Error: Swift.Error {
         
         /// The provided certificate was not loaded/used successfully
         case invalidCertificate
+        
+        /// Unknown ALPN protocol selected
+        case invalidALPNProtocol
     }
 }

@@ -1,6 +1,5 @@
 import XCTest
 import Async
-import Core
 import Dispatch
 import TCP
 import Bits
@@ -18,7 +17,7 @@ import TLS
 
 #if Xcode
     private var workDir: String {
-        let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
         let path = "/\(parent)/"
         return path
     }
@@ -29,7 +28,7 @@ import TLS
 class SSLTests: XCTestCase {
     func testSSL() throws {
         // FIXME: @joannis, this is failing on macOS
-        return;
+        /*
         let server = try TCP.Server()
         
         var peers = [SSLStream<TCPClient>]()
@@ -74,8 +73,9 @@ class SSLTests: XCTestCase {
         try server.start(port: 8432)
         let clientQueue = DispatchQueue(label: "test.client")
 
+
         let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(worker: Worker(queue: clientQueue))
+            let client = try TLSClient(worker: EventLoop(queue: clientQueue))
 
             clients.append(client)
 
@@ -94,6 +94,7 @@ class SSLTests: XCTestCase {
         XCTAssertEqual(count, 1)
         XCTAssertEqual(peers.count, 1)
         XCTAssertEqual(clients.count, 1)
+        */
     }
 
     static let allTests = [

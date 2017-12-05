@@ -5,15 +5,15 @@ import Bits
 /// Headers are subscriptable using case-insensitive comparison or provide `Name` constants. eg.
 ///
 /// ```swift
-///    let contentLength = headers["content-length"]
+///    let contentLength = headers["Content-Length"]
 /// ```
 /// or
 /// ```swift
 ///    let contentLength = headers[.contentLength]
 /// ```
 ///
-/// http://localhost:8000/http/headers/
-public struct Headers: Codable {
+/// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
+public struct HTTPHeaders: Codable {
     struct Index {
         var nameStartIndex: Int
         
@@ -27,7 +27,7 @@ public struct Headers: Codable {
         var endIndex: Int
     }
     
-    var headerIndexes = [Headers.Index]()
+    var headerIndexes = [HTTPHeaders.Index]()
     var storage: Data
     
     public init() {
@@ -36,7 +36,7 @@ public struct Headers: Codable {
         self.headerIndexes.reserveCapacity(50)
     }
     
-    internal init(storage: Data, indexes: [Headers.Index]) {
+    internal init(storage: Data, indexes: [HTTPHeaders.Index]) {
         self.storage = storage
         self.headerIndexes = indexes
     }
@@ -51,7 +51,7 @@ public struct Headers: Codable {
 
     /// Accesses the (first) value associated with the `Name` if any
     ///
-    /// http://localhost:8000/http/headers/#accessing-headers
+    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/#accessing-headers)
     public subscript(name: Name) -> String? {
         get {
             switch name {
@@ -68,11 +68,6 @@ public struct Headers: Codable {
             }
         }
         set {
-            guard name != .contentLength else {
-                // Blocked for correctness of the rbody length
-                return
-            }
-            
             guard let newValue = newValue else {
                 self.removeValues(forName: name)
                 return
@@ -118,8 +113,15 @@ public struct Headers: Codable {
         }
     }
     
+    /// Reserves X bytes of extra capacity in advance
+    public mutating func reserveAdditionalCapacity(bytes: Int) {
+        storage.reserveCapacity(storage.count + bytes)
+    }
+    
     /// An internal API that blindly adds a header without checking for doubles
     internal mutating func appendValue(_ value: String, forName name: Name) {
+        reserveAdditionalCapacity(bytes: 64)
+        
         let nameStartIndex = storage.endIndex
         storage.append(contentsOf: name.original)
         
@@ -180,7 +182,18 @@ public struct Headers: Codable {
     }
 }
 
-extension Headers: ExpressibleByDictionaryLiteral {
+/// Joins two headers, overwriting the data in `lhs` with `rhs`' equivalent for duplicated
+public func +(lhs: HTTPHeaders, rhs: HTTPHeaders) -> HTTPHeaders {
+    var lhs = lhs
+    
+    for (key, value) in rhs {
+        lhs[key] = value
+    }
+    
+    return lhs
+}
+
+extension HTTPHeaders : ExpressibleByDictionaryLiteral {
     /// Creates HTTP headers.
     public init(dictionaryLiteral: (Name, String)...) {
         storage = Data()
@@ -194,7 +207,7 @@ extension Headers: ExpressibleByDictionaryLiteral {
     }
 }
 
-extension Headers {
+extension HTTPHeaders {
     /// Used instead of HTTPHeaders to save CPU on dictionary construction
     /// :nodoc:
     public struct Literal : ExpressibleByDictionaryLiteral {
@@ -206,7 +219,7 @@ extension Headers {
     }
 
     /// Appends a header to the headers
-    public mutating func append(_ literal: Headers.Literal) {
+    public mutating func append(_ literal: HTTPHeaders.Literal) {
         for (name, value) in literal.fields {
             appendValue(value, forName: name)
         }
@@ -275,14 +288,14 @@ extension Headers {
     }
 
     /// Replaces a header in the headers
-    public mutating func replace(_ literal: Headers.Literal) {
+    public mutating func replace(_ literal: HTTPHeaders.Literal) {
         for (name, value) in literal.fields {
             self[valuesFor: name] = [value]
         }
     }
 }
 
-extension Headers: Sequence {
+extension HTTPHeaders: Sequence {
     /// Iterates over all headers
     public func makeIterator() -> AnyIterator<(name: Name, value: String)> {
         let storage = self.storage
@@ -305,7 +318,7 @@ extension Headers: Sequence {
 }
 
 /// HTTPHeaders structure.
-extension Headers {
+extension HTTPHeaders {
     /// Type used for the name of a HTTP header in the `HTTPHeaders` storage.
     public struct Name: Codable, Hashable, ExpressibleByStringLiteral, CustomStringConvertible {
         public var hashValue: Int {

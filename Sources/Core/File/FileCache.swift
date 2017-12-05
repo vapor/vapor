@@ -5,33 +5,23 @@ import Foundation
 public protocol FileCache {
     /// Fetches the file from the cache
     /// Supply a queue to complete the future on.
-    func getFile<H: Hashable>(hash: H) -> Future<Data?>
+    func getCachedFile(at path: String) -> Data?
 
     /// Sets the file into the cache
-    func setFile<H: Hashable>(file: Data?, hash: H)
+    func setCachedFile(file: Data?, at path: String)
 }
 
 extension FileReader where Self: FileCache {
     /// Checks the cache for the file path or reads
     /// it from the reader.
     public func cachedRead(at path: String) -> Future<Data> {
-        let promise = Promise(Data.self)
-
-        getFile(hash: path).then { data in
-            if let data = data {
-                promise.complete(data)
-            } else {
-                self.read(at: path).then { data in
-                    self.setFile(file: data, hash: path)
-                    promise.complete(data)
-                }.catch { error in
-                    promise.fail(error)
-                }
+        if let data = getCachedFile(at: path) {
+            return Future(data)
+        } else {
+            return read(at: path).map { data in
+                self.setCachedFile(file: data, at: path)
+                return data
             }
-        }.catch { error in
-            promise.fail(error)
         }
-
-        return promise.future
     }
 }

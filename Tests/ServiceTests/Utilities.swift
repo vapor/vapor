@@ -1,19 +1,6 @@
 import Async
+import Core
 import Service
-
-final class TestContainer: Container {
-    let config: Config
-    let environment: Environment
-    let services: Services
-    var extend: Extend
-
-    init(environment: Environment = .development, config: Config, services: Services) {
-        self.config = config
-        self.environment = environment
-        self.services = services
-        self.extend = [:]
-    }
-}
 
 // MARK: Log
 
@@ -30,7 +17,7 @@ class PrintLog: Log {
 extension PrintLog: ServiceType {
     static let serviceName = "print"
     static let serviceSupports: [Any.Type] = [Log.self]
-    static func makeService(for container: Container) throws -> Self? {
+    static func makeService(for container: Container) throws -> Self {
         return .init()
     }
 }
@@ -45,7 +32,7 @@ class AllCapsLog: Log {
 extension AllCapsLog: ServiceType {
     static let serviceName = "all-caps"
     static let serviceSupports: [Any.Type] = [Log.self]
-    static func makeService(for container: Container) throws -> Self? {
+    static func makeService(for container: Container) throws -> Self {
         return .init()
     }
 }
@@ -89,7 +76,7 @@ extension BCryptHasher: ServiceType {
         return [Hasher.self]
     }
 
-    static func makeService(for container: Container) throws -> Self? {
+    static func makeService(for container: Container) throws -> Self {
         let config = try container.make(BCryptConfig.self, for: BCryptHasher.self)
         return .init(cost: config.cost)
     }
@@ -113,7 +100,7 @@ extension BCryptConfig: ServiceType {
         return []
     }
 
-    static func makeService(for container: Container) throws -> BCryptConfig? {
+    static func makeService(for container: Container) throws -> BCryptConfig {
         let cost: Int
 
         switch container.environment {

@@ -1,7 +1,7 @@
 import Debugging
 
 /// A WebSocket error, when creating or using a WebSocket
-public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
+public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
     public var possibleCauses: [String] {
         switch problem {
         case .invalidURI:
@@ -33,6 +33,10 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
             return [
                 "The request is not valid for websocket upgrading"
             ]
+        case .invalidSubprotocol:
+            return [
+                "The requested subprotocols are not valid"
+            ]
         }
     }
     
@@ -62,6 +66,10 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
             ]
         case .invalidRequest:
             return []
+        case .invalidSubprotocol:
+            return [
+                "The request should inform at least one of the subprotocols defined by the server"
+            ]
         }
     }
     
@@ -82,6 +90,8 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
             return "The buffer provided was empty"
         case .invalidRequest:
             return "The websocket upgrade request is not valid"
+        case .invalidSubprotocol:
+            return "The requested subprotocols are not defined by the WebSocket server."
         }
     }
     
@@ -100,7 +110,7 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
          line: UInt = #line,
          column: UInt = #column
     ) {
-        self.stackTrace = Error.makeStackTrace()
+        self.stackTrace = WebSocketError.makeStackTrace()
         self.file = file
         self.function = function
         self.line = line
@@ -145,5 +155,8 @@ public struct Error : Swift.Error, Debuggable, Traceable, Helpable, Encodable {
 
         /// The upgrade request was not formatted properly
         case invalidRequest
+
+        /// The upgrade request doesn't have any of the right subprotocol
+        case invalidSubprotocol
     }
 }

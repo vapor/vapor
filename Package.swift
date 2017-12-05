@@ -10,11 +10,17 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
+        // Auth
+        .library(name: "Authentication", targets: ["Authentication"]),
+
         // Core
-        .library(name: "Async", targets: ["Async"]),
         .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
+
+        // Console
+        .library(name: "Console", targets: ["Console"]),
+        .library(name: "Command", targets: ["Command"]),
 
         // Crypto
         .library(name: "Crypto", targets: ["Crypto"]),
@@ -23,7 +29,12 @@ let package = Package(
         .library(name: "Debugging", targets: ["Debugging"]),
 
         // Fluent
-        // .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
+        .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
+
+        // FormURLEncoded
+        .library(name: "FormURLEncoded", targets: ["FormURLEncoded"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -39,16 +50,23 @@ let package = Package(
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
+        .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
         .library(name: "Random", targets: ["Random"]),
+
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
 
         // Service
         .library(name: "Service", targets: ["Service"]),
+
+        // SQL
+        .library(name: "SQL", targets: ["SQL"]),
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
@@ -62,19 +80,37 @@ let package = Package(
         // WebSockets
         .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
-    dependencies: [],
+    dependencies: [
+        // Swift Promises, Futures, and Streams.
+        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
+    ],
     targets: [
-        // Async
-        .target(name: "Async"),
-        .testTarget(name: "AsyncTests", dependencies: ["Async"]),
+        .target(name: "Authentication", dependencies: [
+            "Async", "Bits", "Crypto", "Debugging", "Fluent", "HTTP", "Service", "Vapor"
+        ]),
+        .testTarget(name: "AuthenticationTests", dependencies: [
+            "Authentication", "FluentSQLite", "Vapor"
+        ]),
 
         // Bits
         .target(name: "Bits"),
 
+        // Boilerplate
+        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
+        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+
         // Core
-        .target(name: "Core", dependencies: ["libc", "Async", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "Bits", "libc", "Debugging"]),
         .target(name: "libc"),
         
+
+        // Console
+        .target(name: "Console", dependencies: ["Async", "Core"]),
+        .target(name: "Command", dependencies: ["Console"]),
+        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
+        .testTarget(name: "CommandTests", dependencies: ["Command"]),
+        .target(name: "ConsoleExample", dependencies: ["Console"]),
+
         // Crypto
         .target(name: "Crypto", dependencies: ["libc", "Async", "Bits", "Core", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
@@ -83,9 +119,19 @@ let package = Package(
         .target(name: "Debugging"),
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
-        // Debugging
-//        .target(name: "Fluent", dependencies: ["SQLite"]),
-//        .testTarget(name: "FluentTests", dependencies: ["Fluent"]),
+        // Fluent
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
+        .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
+        .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
+        .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
+        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
+
+        .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
+
+        // FormURLEncoded
+        .target(name: "FormURLEncoded", dependencies: ["Bits", "HTTP", "Debugging"]),
+        .testTarget(name: "FormURLEncodedTests", dependencies: ["FormURLEncoded"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -100,7 +146,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // MySQL
@@ -109,13 +155,22 @@ let package = Package(
 
         // Net
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
+        .target(name: "TCP", dependencies: ["Async", "Debugging", "libc", "Service"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // HTTP/2
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
+        // Random crypto
         .target(name: "Random", dependencies: ["Core"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
+        
+        // Compression
+        .target(name: "Pufferfish"),
+        .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -135,44 +190,53 @@ let package = Package(
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
-        
+
+        // SQL
+        .target(name: "SQL"),
+        .testTarget(name: "SQLTests", dependencies: ["SQL"]),
+
         // SQLite
         .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging"]),
+        .target(name: "SQLite", dependencies: ["Core", "CSQLite", "Debugging", "Random"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Leaf", "Vapor", "MySQL", "SQLite"]),
+        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
         .target(name: "Vapor", dependencies: [
+            "Command",
+            "Console",
             "Core",
             "Debugging",
+            "FormURLEncoded",
             "HTTP",
             "Leaf",
+            "Logging",
             "Routing",
             "Service",
             "TCP",
+            "TLS",
             "ServerSecurity",
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "HTTP", "Crypto"]),
+        .target(name: "WebSocket", dependencies: ["Core", "Debugging", "TCP", "TLS", "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
 
 #if os(macOS) || os(iOS)
-    package.targets.append(
+   package.targets.append(
         .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
-    
+
     package.products.append(
         .library(name: "AppleSSL", targets: ["AppleSSL"])
     )
 #else
     package.dependencies.append(
-        .package(url: "https://github.com/vapor/copenssl.git", .revision("master"))
+        .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
     )
     
     package.targets.append(

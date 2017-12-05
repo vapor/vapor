@@ -101,8 +101,71 @@ public struct JWTHeader: Codable {
     }
 }
 
-/// JSON Web Signature (signature based JSON Web Token)
-extension JWTPayload {
+public struct JSONWebSignature<C: Codable>: Codable {
+    /// The headers linked to this message
+    ///
+    /// A Web Token can be signed by multiple headers
+    ///
+    /// Currently we don't support anything other than 1 header
+    private var headers: [Header]
+    
+    /// The JSON payload within this message
+    public var payload: C
+    
+    /// The secret that is used by all authorized parties to sign messages
+    private var secret: Data
+    
+    /// Signs the message and returns the UTF8 encoded String of this message
+    public func signedString(_ header: Header? = nil) throws -> String {
+        let signed = try sign(header)
+        
+        guard let string = String(bytes: signed, encoding: .utf8) else {
+            throw JWTError.unsupported
+        }
+        
+        return string
+    }
+    
+    /// Signs the message and returns the UTF8 of this message
+    ///
+    /// Can be transformed into a String like so:
+    ///
+    /// ```swift
+    /// let signed = try jws.sign()
+    /// let signedString = String(bytes: signed, encoding: .utf8)
+    /// ```
+    public func sign(_ header: Header? = nil) throws -> Data {
+        let usedHeader: Header
+        
+        if let header = header {
+            usedHeader = header
+        } else {
+            guard let header = headers.first else {
+                throw JWTError.unsupported
+            }
+            
+            usedHeader = header
+        }
+        
+        let headerData = try JSONEncoder().encode(usedHeader)
+        let encodedHeader = Base64Encoder.encode(data: headerData)
+        
+        let payloadData = try JSONEncoder().encode(payload)
+        let encodedPayload = Base64Encoder.encode(data: payloadData)
+        
+        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + Data([0x2e]) + encodedPayload), with: secret)
+        let encodedSignature = Base64Encoder.encode(data: signature)
+        
+        return encodedHeader + Data([0x2e]) + encodedPayload + Data([0x2e]) + encodedSignature
+    }
+    
+    /// Creates a new JSON Web Signature from predefined data
+    public init(headers: [Header], payload: C, secret: Data) {
+        self.headers = headers
+        self.payload = payload
+        self.secret = secret
+    }
+    
     /// Parses a JWT String into a JSON Web Signature
     ///
     /// Verifies using the provided secret
