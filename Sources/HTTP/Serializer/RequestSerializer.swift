@@ -40,11 +40,10 @@ public final class RequestSerializer: Serializer {
         serialized.append(contentsOf: http1newLine)
         
         var headers = request.headers
-        
-        if let count = request.body.count {
-            headers[.contentLength] = count.description
-        } else if case .stream(_) = request.body.storage {
+        if case .stream(_) = request.body.storage {
             headers[.transferEncoding] = "chunked"
+        } else  {
+            headers[.contentLength] = request.body.count.description
         }
         
         serialized.withUnsafeBufferPointer(write)

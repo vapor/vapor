@@ -22,7 +22,7 @@ public final class MySQLConnectionPool {
     let password: String?
     
     /// The database to select
-    let database: String?
+    let database: String
     
     /// A list of all currently active connections
     var pool = [ConnectionPair]()
@@ -53,7 +53,7 @@ public final class MySQLConnectionPool {
         port: UInt16 = 3306,
         user: String,
         password: String?,
-        database: String?,
+        database: String,
         on eventLoop: EventLoop
     ) {
         self.eventLoop = eventLoop

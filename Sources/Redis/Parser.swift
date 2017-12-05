@@ -151,9 +151,14 @@ final class DataParser: Async.Stream {
                 return nil
             }
             
+            // Negative bulk strings are `null`
+            if size < 0 {
+                return (.parsed(.null), true)
+            }
+            
             // Parse the following length in data
             guard
-                size >= -1,
+                size > -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
                 throw RedisError(.parsingError)

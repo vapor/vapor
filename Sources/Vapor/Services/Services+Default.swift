@@ -1,5 +1,6 @@
 import Async
 import Console
+import Core
 import Dispatch
 import HTTP
 import Foundation
@@ -35,9 +36,15 @@ extension Services {
         // register middleware
         services.register { container -> MiddlewareConfig in
             var config = MiddlewareConfig()
+            config.use(FileMiddleware.self)
             config.use(DateMiddleware.self)
             config.use(ErrorMiddleware.self)
             return config
+        }
+
+        services.register { container -> FileMiddleware in
+            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
+            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
         }
         
         services.register { container in
@@ -56,6 +63,10 @@ extension Services {
         // register content coders
         services.register { container in
             return ContentConfig.default()
+        }
+
+        services.register([FileReader.self, FileCache.self]) { container in
+            return File(queue: container.queue)
         }
 
         // register terminal console

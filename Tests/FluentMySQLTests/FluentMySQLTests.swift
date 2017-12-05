@@ -17,11 +17,13 @@ class FluentMySQLTests: XCTestCase {
         
         benchmarker = Benchmarker(database, onFail: XCTFail)
         
-        try! benchmarker.database.makeConnection(on: DispatchQueue(label: "temp")).then { conn -> Future<Void> in
+        try! benchmarker.pool.requestConnection().then { conn -> Future<Void> in
             return conn.disableReferences().then { _ -> Future<Void> in
                 return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `pet+toy`, `pets`, `toys`, `users`, `foos`")
             }.then { _ -> Future<Void> in
-                return conn.enableReferences()
+                return conn.enableReferences().map {
+                    self.benchmarker.pool.releaseConnection(conn)
+                }
             }
         }.blockingAwait(timeout: .seconds(10))
     }

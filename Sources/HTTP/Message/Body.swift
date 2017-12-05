@@ -1,6 +1,8 @@
+import Async
 import Foundation
 import Dispatch
 import Bits
+import TCP
 
 /// Represents an HTTP Message's Body.
 ///
@@ -15,8 +17,8 @@ public struct HTTPBody: Codable {
         case data(Data)
         case staticString(StaticString)
         case dispatchData(DispatchData)
-        case stream(BodyStream)
         case string(String)
+        case stream(BodyStream)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -96,6 +98,7 @@ public struct HTTPBody: Codable {
         self.storage = .data(data)
     }
     
+    /// A chunked body stream
     public init(chunked stream: BodyStream) {
         self.storage = .stream(stream)
     }
@@ -127,9 +130,9 @@ public struct HTTPBody: Codable {
             return nil
         }
     }
-    
+        
     /// The size of the data buffer
-    public var count: Int? {
+    public var count: Int {
         return self.storage.count
     }
 }
