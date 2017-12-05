@@ -1,85 +1,24 @@
 import Async
+import Dispatch
 import HTTP
 import Bits
 import Routing
+import Service
 import XCTest
 
 class RouterTests: XCTestCase {
     func testRouter() throws {
-        let router = TrieRouter()
-        
-        let a = BasicResponder { req in
-            return try Future(Response(body: "hello"))
-        }
-        let ra = Route(
-            method: .get,
-            path: ["hello", "world"].makePathComponents(),
-            responder: a
-        )
-        router.register(route: ra)
+        let router = TrieRouter<Int>()
 
-        let b = BasicResponder { req in
-            return try Future(Response(body: "foo"))
-        }
-        let rb = Route(
-            method: .get,
-            path: ["foo", "bar", "baz"].makePathComponents(),
-            responder: b
-        )
-        router.register(route: rb)
+        let path: [PathComponent.Parameter] = [.string("foo"), .string("bar"), .string("baz")]
 
-        let c = BasicResponder { req in
-            return try req.parameters.next(User.self).map { bob in
-                XCTAssertEqual(bob.name, "bob")
-                return try Response(body: "users!")
-            }
-        }
-        let rc = Route(
-            method: .get,
-            path: ["users", User.parameter, "comments"].makePathComponents(),
-            responder: c
-        )
-        router.register(route: rc)
+        let route = Route<Int>(path: [.constants(path), .parameter(.string(User.uniqueSlug))], output: 42)
+        router.register(route: route)
 
-        do {
-            let request = Request(method: .get, uri: URI(path: "/foo/bar/baz"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "foo")
-            }
-        }
-
-        do {
-            let request = Request(method: .get, uri: URI(path: "/hello/world"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
-            }
-        }
-
-        do {
-            let request = Request(method: .get, uri: URI(path: "/users/bob/comments"))
-            let responder = router.route(request: request)
-
-            XCTAssertNotNil(responder)
-            
-            let res = try responder?.respond(to: request).blockingAwait()
-            res?.body.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: res!.body.count)
-                XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "users!")
-            }
-        }
+        let container = BasicContainer(config: Config(), environment: .development, services: Services(), on: DispatchQueue.global())
+        let params = Params()
+        XCTAssertEqual(router.route(path: path + [.string("Tanner")], parameters: params), 42)
+        try XCTAssertEqual(params.parameter(User.self, using: container).blockingAwait().name, "Tanner")
     }
 
 
@@ -88,15 +27,19 @@ class RouterTests: XCTestCase {
     ]
 }
 
+final class Params: ParameterContainer {
+    var parameters: Parameters = []
+    init() {}
+}
+
 final class User: Parameter {
-    static let uniqueSlug: String = "user"
     var name: String
 
     init(name: String) {
         self.name = name
     }
 
-    static func make(for parameter: String, in request: Request) throws -> Future<User> {
+    static func make(for parameter: String, using container: Container) throws -> Future<User> {
         return Future(User(name: parameter))
     }
 }

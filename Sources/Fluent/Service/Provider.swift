@@ -25,6 +25,16 @@ public final class FluentProvider: Provider {
             }
             return Databases(storage: databases)
         }
+
+        services.register { worker -> ConnectionPoolCache in
+            return try ConnectionPoolCache(
+                databases: worker.make(for: ConnectionPoolCache.self),
+                on: worker
+            )
+        }
+        services.register { worker -> ActiveConnectionCache in
+            return ActiveConnectionCache()
+        }
     }
 
     /// See Provider.boot()
@@ -45,7 +55,9 @@ public final class FluentProvider: Provider {
 
         print("Migrations complete")
 
-        // verify middleware
-        // let middleware = MiddlewareConfig()
+        let workerConfig = try container.make(EphemeralWorkerConfig.self, for: FluentProvider.self)
+        workerConfig.onDeinit {
+            do { try $0.releaseConnections() } catch { print("Could not release database connections: \(error)") }
+        }
     }
 }

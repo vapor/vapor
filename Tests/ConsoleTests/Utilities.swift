@@ -1,5 +1,6 @@
 import Async
 import Console
+import Core
 
 final class TestConsole: Console {
     var output: String

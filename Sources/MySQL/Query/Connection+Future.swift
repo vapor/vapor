@@ -1,39 +1,14 @@
 import Async
 import Core
 
-extension Connection {
+extension MySQLConnection {
     /// Collects all resulting rows and returs them in the future
     ///
     /// - parameter query: The query to be executed to receive results from
     /// - returns: A future containing all results
-    internal func allRows(in query: Query) -> Future<[Row]> {
+    internal func allRows(in query: MySQLQuery) -> Future<[Row]> {
         var rows = [Row]()
-        let promise = Promise<[Row]>()
-
-        // Set up a parser
-        let stream = RowStream(mysql41: self.mysql41)
-        self.receivePackets(into: stream.inputStream)
-        
-        stream.onClose = {
-            promise.complete(rows)
-        }
-        
-        stream.errorStream = { error in
-            promise.fail(error)
-        }
-        
-        stream.drain { row in
-            rows.append(row)
-        }
-        
-        // Send the query
-        do {
-            try self.write(query: query.string)
-        } catch {
-            promise.fail(error)
-        }
-        
-        return promise.future
+        return forEachRow(in: query) { rows.append($0) }.map { rows }
     }
     
     /// Collects all decoded results and returs them in the future
@@ -42,33 +17,8 @@ extension Connection {
     ///
     /// - parameter query: The query to be executed to receive results from
     /// - returns: A future containing all results
-    public func all<D: Decodable>(_ type: D.Type, in query: Query) -> Future<[D]> {
+    public func all<D: Decodable>(_ type: D.Type, in query: MySQLQuery) -> Future<[D]> {
         var results = [D]()
-        let promise = Promise<[D]>()
-
-        // Set up a parser
-        let resultBuilder = ModelStream<D>(mysql41: self.mysql41)
-        self.receivePackets(into: resultBuilder.inputStream)
-        
-        resultBuilder.onClose = {
-            promise.complete(results)
-        }
-        
-        resultBuilder.errorStream = { error in
-            promise.fail(error)
-        }
-        
-        resultBuilder.drain { result in
-            results.append(result)
-        }
-        
-        // Send the query
-        do {
-            try self.write(query: query.string)
-        } catch {
-            promise.fail(error)
-        }
-        
-        return promise.future
+        return forEach(D.self, in: query) { results.append($0) }.map { results }
     }
 }

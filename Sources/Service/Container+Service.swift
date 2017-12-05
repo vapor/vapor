@@ -1,7 +1,5 @@
+import Async
 import Foundation
-
-private let serviceCacheKey = "service:service-cache"
-private let singletonCacheKey = "service:singleton-cache"
 
 extension Container {
     /// Returns or creates a service for the given type.
@@ -12,7 +10,21 @@ extension Container {
         _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
-        return try unsafeMake(Interface.self, for: Client.self) as! Interface
+        // check if we've previously resolved this service
+        if let service = try serviceCache.get(Interface.self, for: Client.self) {
+            return service
+        }
+
+        do {
+            // resolve the service and cache it
+            let service = try unsafeMake(Interface.self, for: Client.self) as! Interface
+            serviceCache.set(.service(service), Interface.self, for: Client.self)
+            return service
+        } catch {
+            // cache the error
+            serviceCache.set(.error(error), Interface.self, for: Client.self)
+            throw error
+        }
     }
 
     /// Returns or creates a service for the given type.
@@ -22,33 +34,7 @@ extension Container {
     /// This method accepts and returns Any.
     ///
     /// Use .make() for the safe method.
-    fileprivate func unsafeMake(
-        _ interface: Any.Type,
-        for client: Any.Type
-    ) throws -> Any {
-        let key = "\(interface):\(client)"
-
-        // check if we've previously resolved this service
-        if let service = serviceCache[key] {
-            return try service.resolve()
-        }
-
-        // resolve the service and cache it
-        let result: ResolvedService
-        do {
-            let service = try uncachedUnsafeMake(interface, for: client)
-            result = .service(service)
-        } catch {
-            result = .error(error)
-        }
-        serviceCache[key] = result
-
-        // return the newly cached service
-        return try result.resolve()
-    }
-
-    /// Makes the interface for the client. Does not consult the service cache.
-    fileprivate func uncachedUnsafeMake(
+    internal func unsafeMake(
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
@@ -84,37 +70,25 @@ extension Container {
         )
 
         // lazy loading
-        // create an instance of this service type.
-        var item: Any?
 
-        let key = "\(chosen.serviceType)"
-        if chosen.serviceIsSingleton, let cached = singletonCache[key] {
-            item = cached
-        } else {
-            item = try chosen.makeService(for: self)
-            if chosen.serviceIsSingleton {
-                singletonCache[key] = item
+        if chosen.serviceIsSingleton {
+            // attempt to fetch singleton from cache
+            if let singleton = try serviceCache.getSingleton(chosen.serviceType) {
+                return singleton
+            } else {
+                do {
+                    let item = try chosen.makeService(for: self)
+                    serviceCache.setSingleton(.service(item), type: chosen.serviceType)
+                    return item
+                } catch {
+                    serviceCache.setSingleton(.error(error), type: chosen.serviceType)
+                    throw error
+                }
             }
+        } else {
+            // create an instance of this service type.
+            return try chosen.makeService(for: self)
         }
-
-        guard let ret = item else {
-            throw ServiceError.incorrectType(
-                type: chosen.serviceType,
-                desired: interface
-            )
-        }
-
-        return ret
-    }
-
-    fileprivate var serviceCache: [String: ResolvedService] {
-        get { return extend[serviceCacheKey] as? [String: ResolvedService] ?? [:] }
-        set { extend[serviceCacheKey] = newValue }
-    }
-
-    fileprivate var singletonCache: [String: Any] {
-        get { return extend[singletonCacheKey] as? [String: Any] ?? [:] }
-        set { extend[singletonCacheKey] = newValue }
     }
 }
 
@@ -124,18 +98,6 @@ extension Services {
     internal func factories(supporting interface: Any.Type) -> [ServiceFactory] {
         return factories.filter { factory in
             return factory.serviceType == interface || factory.serviceSupports.contains(where: { $0 == interface })
-        }
-    }
-}
-
-fileprivate enum ResolvedService {
-    case service(Any)
-    case error(Error)
-
-    func resolve() throws -> Any {
-        switch self {
-        case .error(let error): throw error
-        case .service(let service): return service
         }
     }
 }

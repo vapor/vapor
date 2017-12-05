@@ -49,10 +49,10 @@ public final class Generate: Command {
         let parser = CodeParser()
         let types = try parser.parse(files: files)
 
-        let renderer = LeafRenderer(tags: defaultTags, fileFactory: File.init)
-        let encoder = LeafDataEncoder()
-        let context = ["types": types]
-        try context.encode(to: encoder)
+        let queue = DispatchQueue(label: "codes.vapor.generate")
+        let config = LeafConfig()
+        let renderer = LeafRenderer(config: config, on: queue)
+        let context = try LeafEncoder().encode(["types": types])
 
         //        let json = JSONEncoder()
         //        json.outputFormatting = .prettyPrinted
@@ -68,9 +68,8 @@ public final class Generate: Command {
             if path.hasSuffix(".leaf"), let data = FileManager.default.contents(atPath: path) {
                 let view = try renderer.render(
                     template: data,
-                    context: encoder.context,
-                    on: DispatchQueue.global()
-                    ).blockingAwait()
+                    context: context
+                ).blockingAwait()
                 generated.append(view)
             }
         }

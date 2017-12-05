@@ -23,13 +23,9 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
             return self.query(string: string).execute()
         }
     }
-
-    /// See SchemaSupporting.SchemaFieldType
-    public typealias SchemaFieldType = SQLiteFieldType
-
+    
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        print("enabled")
         return query(string: "PRAGMA foreign_keys = ON;").execute()
     }
 
@@ -64,35 +60,30 @@ extension SQLiteFieldType: SchemaFieldType {
 }
 
 extension String: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .text
     }
 }
 
 extension Int: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .integer
     }
 }
 
 extension Date: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .real
     }
 }
 
 extension Double: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .real
     }
 }
 
 extension UUID: SchemaFieldTypeRepresentable {
-    /// See SQLiteFieldTypeRepresentable.makeSchemaFieldType
     public static func makeSchemaFieldType() -> SQLiteFieldType {
         return .blob
     }

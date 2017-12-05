@@ -17,17 +17,11 @@ let SQLITE_TRANSIENT = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 ///         .catch { ... }
 ///
 public final class SQLiteQuery: Async.OutputStream {
-    // internal C api pointer for this query
-    typealias Raw = OpaquePointer
-
-    // stream conformance
+    // See OutputStream.Output
     public typealias Output = SQLiteRow
 
-    /// See OutputStream.OutputHandler
-    public var outputStream: OutputHandler?
-
-    /// See BaseStream.ErrorHandler
-    public var errorStream: ErrorHandler?
+    // internal C api pointer for this query
+    typealias Raw = OpaquePointer
 
     /// the database this statement will
     /// be executed on.
@@ -38,6 +32,9 @@ public final class SQLiteQuery: Async.OutputStream {
 
     /// data bound to this query
     public var binds: [SQLiteData]
+
+    /// Use a basic stream to easily implement our output stream.
+    private var outputStream: BasicStream<Output> = .init()
 
     /// Create a new SQLite statement with a supplied query string and database.
     internal init(string: String, connection: SQLiteConnection) {
@@ -53,6 +50,22 @@ public final class SQLiteQuery: Async.OutputStream {
 
     // MARK: Execute
 
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See CloseableStream.close
+    public func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
+    /// Executes the query, blocking until complete.
     public func blockingExecute() throws {
         var columns: [SQLiteColumn] = []
 
@@ -132,8 +145,8 @@ public final class SQLiteQuery: Async.OutputStream {
             }
 
             // return to event loop
-            self.connection.worker.eventLoop.queue.async {
-                self.output(row)
+            self.connection.eventLoop.queue.async {
+                self.outputStream.onInput(row)
             }
         }
 
@@ -157,12 +170,12 @@ public final class SQLiteQuery: Async.OutputStream {
                 try self.blockingExecute()
 
                 // return to event loop
-                self.connection.worker.eventLoop.queue.async {
+                self.connection.eventLoop.queue.async {
                     promise.complete()
                 }
             } catch {
                 // return to event loop
-                self.connection.worker.eventLoop.queue.async {
+                self.connection.eventLoop.queue.async {
                     promise.fail(error)
                 }
             }

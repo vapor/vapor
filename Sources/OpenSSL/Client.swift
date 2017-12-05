@@ -4,17 +4,24 @@ import COpenSSL
 /// An SSL client. Can be initialized by upgrading an existing socket or by starting an SSL socket.
 extension SSLStream {
     /// Upgrades the connection to SSL.
-    public func initializeClient(hostname: String, signedBy certificate: String? = nil) throws -> Future<Void> {
-        let ssl = try self.initialize(side: .client, method: .ssl23)
+    public func initializeClient(options: [SSLOption]) throws -> Future<Void> {
+        let context = try self.initialize(side: .client, method: .tls1_2)
         
-        var hostname = [UInt8](hostname.utf8)
-        SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
-        
-        if let certificate = certificate {
-            try self.setCertificate(certificatePath: certificate)
+        for option in options {
+            try option.setupContext?(context)
         }
         
-        return try handshake(for: ssl, side: .client)
+        let ssl = try self.createSSL(for: context)
+        
+        for option in options {
+            try option.preHandshake?(ssl, context)
+        }
+        
+        return try handshake(for: ssl, side: .client).map {
+            for option in options {
+                try option.postHandshake?(ssl, context)
+            }
+        }
     }
     
     /// The type of handshake to perform
@@ -50,30 +57,23 @@ extension SSLStream {
     }
     
     /// A helper that initializes SSL as either the client or server side
-    func initialize(side: Side, method: Method) throws -> UnsafeMutablePointer<SSL> {
+    func initialize(side: Side, method version: Method) throws -> UnsafeMutablePointer<SSL_CTX> {
         guard SSLSettings.initialized else {
-            throw Error(.notInitialized)
+            throw OpenSSLError(.notInitialized)
         }
         
         guard context == nil else {
-            throw Error(.contextAlreadyCreated)
+            throw OpenSSLError(.contextAlreadyCreated)
         }
         
-        let method: UnsafePointer<SSL_METHOD>
-        
-        switch side {
-        case .client:
-            method = SSLv23_client_method()
-        case .server(_, _):
-            method = TLSv1_2_server_method()
-        }
+        let method = version.method(side: side)
         
         guard let context = SSL_CTX_new(method) else {
-            throw Error(.cannotCreateContext)
+            throw OpenSSLError(.cannotCreateContext)
         }
         
         guard SSL_CTX_set_cipher_list(context, "DEFAULT") == 1 else {
-            throw Error(.cannotCreateContext)
+            throw OpenSSLError(.cannotCreateContext)
         }
         
         self.context = context
@@ -82,14 +82,18 @@ extension SSLStream {
             try self.setServerCertificates(certificatePath: certificate, keyPath: key)
         }
         
+        return context
+    }
+    
+    func createSSL(for context: UnsafeMutablePointer<SSL_CTX>) throws -> UnsafeMutablePointer<SSL> {
         guard let ssl = SSL_new(context) else {
-            throw Error(.noSSLContext)
+            throw OpenSSLError(.noSSLContext)
         }
         
         let status = SSL_set_fd(ssl, self.descriptor)
         
         guard status > 0 else {
-            throw Error(.sslError(status))
+            throw OpenSSLError(.sslError(status))
         }
         
         self.ssl = ssl

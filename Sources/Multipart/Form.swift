@@ -12,10 +12,10 @@ public struct Part {
     internal let key: String?
     
     /// The headers metadata
-    public var headers: Headers
+    public var headers: HTTPHeaders
     
     /// Creates a new part
-    init(data: Data, key: String?, headers: Headers) {
+    init(data: Data, key: String?, headers: HTTPHeaders) {
         self.data = data
         self.key = key
         self.headers = headers

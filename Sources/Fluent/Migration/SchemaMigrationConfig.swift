@@ -18,13 +18,13 @@ internal struct SchemaMigrationConfig<
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, on worker: Worker) -> Future<Void> {
+    internal func migrate(using databases: Databases, on eventLoop: EventLoop) -> Future<Void> {
         return then {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw "no database \(self.database.uid) was found for migrations"
             }
 
-            return database.makeConnection(on: worker).then { conn in
+            return database.makeConnection(on: eventLoop).then { conn in
                 self.prepareForMigration(on: conn)
             }
         }
@@ -34,7 +34,7 @@ internal struct SchemaMigrationConfig<
     /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
         return MigrationLogMigration<Database>.prepareMetadata(on: conn).then { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch in
+            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch -> Future<Void> in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }
@@ -51,7 +51,7 @@ internal struct SchemaMigrationConfig<
     /// Adds a migration to the config.
     internal mutating func add<M: Migration> (
         migration: M.Type
-        ) where M.Database == Database {
+    ) where M.Database == Database {
         let container = MigrationContainer(migration)
         migrations.append(container)
     }

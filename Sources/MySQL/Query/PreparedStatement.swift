@@ -10,7 +10,7 @@ public final class PreparedStatement {
     let statementID: UInt32
     
     /// The connection this statment is bound to
-    let connection: Connection
+    let connection: MySQLConnection
     
     /// The amount of columns to be returned
     let columnCount: UInt16
@@ -52,7 +52,7 @@ public final class PreparedStatement {
     }
     
     /// Creates a new prepared statement from parsed data
-    init(statementID: UInt32, columnCount: UInt16, connection: Connection, parameterCount: UInt16) {
+    init(statementID: UInt32, columnCount: UInt16, connection: MySQLConnection, parameterCount: UInt16) {
         self.statementID = statementID
         self.columnCount = columnCount
         self.connection = connection
@@ -91,24 +91,12 @@ public final class PreparationBinding {
         boundStatement.boundParameters += 1
     }
     
-    func bind(_ pseudoType: PseudoType, unsigned: Bool, data: Data) throws {
+    func bind(_ type: Field.FieldType, unsigned: Bool, data: Data) throws {
         guard boundStatement.boundParameters < boundStatement.statement.parameterCount else {
             throw MySQLError(.tooManyParametersBound)
         }
         
-        let associatedFieldType = boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
-        
-        // TODO: Lossy binding (UInt8 -> Int16)?
-        guard pseudoType.supports(associatedFieldType) else {
-            throw MySQLError(
-                .invalidTypeBound(
-                    got: pseudoType,
-                    expected: boundStatement.statement.parameters[boundStatement.boundParameters].fieldType
-                )
-            )
-        }
-        
-        boundStatement.header.append(associatedFieldType.rawValue)
+        boundStatement.header.append(type.rawValue)
         boundStatement.header.append(unsigned ? 128 : 0)
         
         boundStatement.parameterData.append(contentsOf: data)
@@ -117,11 +105,11 @@ public final class PreparationBinding {
     }
 }
 
-extension Connection {
+extension MySQLConnection {
     /// Prepares a query and calls the captured closure with the prepared statement
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    public func withPreparation<T>(statement: Query, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
+    public func withPreparation<T>(statement: MySQLQuery, run closure: @escaping ((PreparedStatement) throws -> Future<T>)) -> Future<T> {
         return self.prepare(query: statement).flatMap(closure)
     }
 }

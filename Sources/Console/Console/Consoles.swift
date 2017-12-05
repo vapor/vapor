@@ -1,4 +1,4 @@
-import Async
+import Core
 
 /// Protocol for powering styled Console I/O.
 public protocol BaseConsole: Extendable {

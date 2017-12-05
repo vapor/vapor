@@ -4,7 +4,7 @@ extension String {
     /// Convert self to any type that conforms to LosslessStringConvertible
     func convertTo<T: LosslessStringConvertible>(_ type: T.Type) throws -> T {
         guard let converted = T.self.init(self) else {
-            throw ConversionError(
+            throw CoreError(
                 identifier: "string",
                 reason: "Unable to convert \(self) to \(T.self)"
             )
@@ -25,16 +25,20 @@ extension String {
     }
 }
 
-/// An error converting types.
-public struct ConversionError: Debuggable, Error {
-    /// See Debuggable.reason
-    public var reason: String
-
-    /// See Debuggable.identifier
-    public var identifier: String
-
-    fileprivate init(identifier: String, reason: String) {
-        self.reason = reason
-        self.identifier = identifier
+extension String {
+    /// Ensures a string has a strailing suffix w/o duplicating
+    ///
+    ///     "hello.jpg".finished(with: ".jpg") // hello.jpg
+    ///     "hello".finished(with: ".jpg") // hello.jpg
+    ///
+    public func finished(with end: String) -> String {
+        guard !self.hasSuffix(end) else { return self }
+        return self + end
     }
+}
+
+/// Capable of being decoded from a string.
+public protocol StringDecodable {
+    /// Decode self from a string.
+    static func decode(from string: String) -> Self?
 }

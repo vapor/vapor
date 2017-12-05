@@ -1,3 +1,5 @@
+import Async
+
 /// Services available for a service container.
 public struct Services {
     var factories: [ServiceFactory]
@@ -15,15 +17,25 @@ extension Services {
     /// Adds a service type to the Services.
     public mutating func register<S: ServiceType>(_ type: S.Type = S.self) {
         let factory = TypeServiceFactory(S.self)
-        register(factory)
+        self.register(factory)
     }
 
     /// Adds an instance of a service to the Services.
     public mutating func register<S>(
-        _ instance: S,
+        _ interface: Any.Type,
         tag: String? = nil,
+        isSingleton: Bool = false,
+        _ instance: S
+    ) {
+        return register(supports: [interface], tag: tag, isSingleton: isSingleton, instance)
+    }
+
+    /// Adds an instance of a service to the Services.
+    public mutating func register<S>(
         supports: [Any.Type] = [],
-        isSingleton: Bool = true
+        tag: String? = nil,
+        isSingleton: Bool = false,
+        _ instance: S
     ) {
         let factory = BasicServiceFactory(
             S.self,
@@ -33,7 +45,7 @@ extension Services {
         ) { container in
             return instance
         }
-        register(factory)
+        self.register(factory)
     }
 
     /// Adds any type conforming to ServiceFactory
@@ -51,7 +63,7 @@ extension Services {
     public mutating func register<S>(
         _ supports: [Any.Type] = [],
         tag: String? = nil,
-        isSingleton: Bool = true,
+        isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
@@ -59,17 +71,17 @@ extension Services {
             tag: tag,
             supports: supports,
             isSingleton: isSingleton
-        ) { container in
-            try factory(container)
+        ) { worker in
+            try factory(worker)
         }
-        register(factory)
+        self.register(factory)
     }
 
     /// Adds a closure based service factory
     public mutating func register<S>(
         _ interface: Any.Type,
         tag: String? = nil,
-        isSingleton: Bool = true,
+        isSingleton: Bool = false,
         factory: @escaping (Container) throws -> (S)
     ) {
         let factory = BasicServiceFactory(
@@ -77,15 +89,15 @@ extension Services {
             tag: tag,
             supports: [interface],
             isSingleton: isSingleton
-        ) { container in
-            try factory(container)
+        ) { worker in
+            try factory(worker)
         }
-        register(factory)
+        self.register(factory)
     }
 
     /// Adds an initialized provider
     public mutating func register<P: Provider>(_ provider: P) throws {
-        guard !providers.contains(where: { type(of: $0) == P.self }) else {
+        guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }
         try provider.register(&self)

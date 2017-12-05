@@ -2,17 +2,22 @@ import Async
 import Bits
 import Foundation
 
-extension Connection {
+extension MySQLConnection {
     /// https://mariadb.com/kb/en/library/com_stmt_prepare/
     ///
     /// Prepares a query and returns a prepared statement that can be used for binding and execution
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    func prepare(query: Query) -> Future<PreparedStatement> {
+    func prepare(query: MySQLQuery) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
+            if packet.payload.first == 0xfe {
+                // Ignore `0xfe` payloads, since we skip past those in the above `do {} catch {}`
+                return
+            }
+            
             if let statement = statement {
                 do {
                     if statement.columns.count < statement.columnCount {
@@ -56,10 +61,10 @@ extension Connection {
                     promise.fail(error)
                 }
             }
-        }
+        }.catch(onError: promise.fail)
         
         do {
-            try self.prepare(query: query.string)
+            try self.prepare(query: query.queryString)
             return promise.future
         } catch {
             return Future(error: error)
@@ -83,14 +88,14 @@ extension Connection {
         do {
             let promise = Promise<Void>()
             
-            self.receivePackets { packet in
+            self.packetStream.drain { packet in
                 guard packet.payload.first == 0x00 else {
                     promise.fail(MySQLError(packet: packet))
                     return
                 }
                 
-                promise.complete(())
-            }
+                promise.complete()
+            }.catch(onError: promise.fail)
             
             try self.write(packetFor: data)
             

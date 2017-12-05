@@ -7,7 +7,7 @@ public protocol TransferEncoder {
     // Encodes the buffer
     func encode(_ buffer: ByteBuffer) throws -> ByteBuffer
     
-    init(headers: Headers) throws
+    init(headers: HTTPHeaders) throws
 }
 
 extension TransferEncoder {
@@ -25,7 +25,7 @@ public protocol TransferDecoder {
     // Decodes the buffer
     func decode(_ buffer: ByteBuffer) throws -> ByteBuffer
     
-    init(headers: Headers) throws
+    init(headers: HTTPHeaders) throws
 }
 
 extension TransferDecoder {
@@ -40,8 +40,8 @@ extension TransferDecoder {
 
 /// An encoding registery
 public enum TransferEncoding {
-    public typealias TransferEncoderBuilder = ((Headers) throws -> (TransferEncoder))
-    public typealias TransferDecoderBuilder = ((Headers) throws -> (TransferDecoder))
+    public typealias TransferEncoderBuilder = ((HTTPHeaders) throws -> (TransferEncoder))
+    public typealias TransferDecoderBuilder = ((HTTPHeaders) throws -> (TransferDecoder))
     
     /// Keeps track of all encoding types and their encoder and decoder
     public static var registery: [String: (encoder: TransferEncoderBuilder, decoder: TransferDecoderBuilder)] = [
@@ -66,5 +66,5 @@ public final class BinaryTransferCoder: TransferEncoder, TransferDecoder {
     /// Helper initializer, since Headers aren't used
     public init() {}
     
-    public init(headers: Headers) throws {}
+    public init(headers: HTTPHeaders) throws {}
 }

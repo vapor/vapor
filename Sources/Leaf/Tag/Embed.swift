@@ -1,6 +1,6 @@
 import Async
 
-public final class Embed: Tag {
+public final class Embed: LeafTag {
     public init() {}
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         try parsed.requireParameterCount(1)
@@ -9,7 +9,7 @@ public final class Embed: Tag {
 
         let promise = Promise(LeafData?.self)
 
-        renderer.render(path: name, context: copy, on: parsed.worker).do { data in
+        renderer.render(path: name, context: copy).do { data in
             promise.complete(.data(data))
         }.catch { error in
             promise.fail(error)

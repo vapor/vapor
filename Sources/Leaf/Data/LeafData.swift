@@ -118,8 +118,18 @@ extension LeafData {
             return s.data(using: .utf8)
         case .lazy(let lazy):
             return lazy().data
+        case .int(let i):
+            return i.description.data(using: .utf8)
         default:
             return nil
+        }
+    }
+
+    /// Returns true if the data is null.
+    public var isNull: Bool {
+        switch self {
+        case .null: return true
+        default: return false
         }
     }
 }

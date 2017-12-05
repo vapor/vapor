@@ -4,44 +4,61 @@ import Foundation
 
 /// A streaming Redis value serializer
 final class DataSerializer: Async.Stream {
-    /// See `InputStream.Input`
+    /// See InputStream.Input
     typealias Input = RedisData
     
-    /// See `OutputStream.Output`
+    /// See OutputStream.Output
     typealias Output = ByteBuffer
-    
-    /// See `BaseStream.errorStream`
-    var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.outputStream`
-    var outputStream: OutputHandler?
+
+    /// Use a basic output stream to implement server output stream.
+    internal var outputStream: BasicStream<Output> = .init()
 
     /// Creates a new ValueSerializer
     init() {}
-    
-    /// Serializes a value to the outputStream
-    func inputStream(_ input: RedisData) {
+
+    /// See InputStream.onInput
+    public func onInput(_ input: RedisData) {
         let message = input.serialize()
-            
+
         message.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: message.count)
-            output(buffer)
+            outputStream.onInput(buffer)
         }
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
 }
 
 extension DataSerializer {
-    
     /// Used for pipelining commands
     /// Concatenates commands to RedisData for the outputStream
-    func inputStream(_ input: [RedisData]) {
+    func onInput(_ input: [RedisData]) {
+        /// FIXME: should we make a `PipelinedDataSerializer` that properly conforms?
         var buffer = Data()
         for item in input {
             buffer.append(contentsOf: item.serialize())
         }
         buffer.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: buffer.count)
-            output(buffer)
+            outputStream.onInput(buffer)
         }
     }
     

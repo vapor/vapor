@@ -2,11 +2,13 @@ import Foundation
 import Async
 import Bits
 
-protocol Base64: Async.Stream, ClosableStream {
-    static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int)
-    
-    associatedtype Input = ByteBuffer
-    associatedtype Output = ByteBuffer
+protocol Base64: Async.Stream {
+    static func process(
+        _ buffer: ByteBuffer,
+        toPointer pointer: MutableBytesPointer,
+        capacity: Int,
+        finish: Bool
+    ) throws -> (complete: Bool, filled: Int, consumed: Int)
     
     init(bufferCapacity: Int)
     
@@ -21,30 +23,32 @@ protocol Base64: Async.Stream, ClosableStream {
     
     /// The bytes that couldn't be parsed from the previous buffer
     var remainder: Data { get set }
+
+    /// Use a basic stream to easily implement our output stream.
+    var outputStream: BasicStream<ByteBuffer> { get }
 }
 
 extension Base64 {
+    /// Accepts Base64 encoded byte streams
+    public typealias Input = ByteBuffer
+
+    /// Outputs  byte streams
+    public typealias Output = ByteBuffer
+
     /// Transforms a binary until stream depending on the Base64 mode (encoding/decoding) to the en/decoded variant.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/crypto/base64/#transforming-binary-streams)
-    public static func transforming<ByteStream: Async.OutputStream>(_ input: ByteStream) -> Self where ByteStream.Output == ByteBuffer {
+    public static func transforming<ByteStream>(_ input: ByteStream) -> Self
+        where ByteStream: Async.OutputStream, ByteStream.Output == Input
+    {
         let stream = Self.init(bufferCapacity: 65_507)
-        
-        if let input = input as? ClosableStream {
-            input.onClose = {
-                stream.close()
-            }
-        }
-        
-        input.drain(stream.inputStream)
-        
-        return stream
+        return input.stream(to: stream)
     }
     
     /// Processed the `input`'s `ByteBuffer` by Base64-encoding it
     ///
     /// Calls the `OutputHandler` with the Base64-encoded data
-    public func inputStream(_ input: ByteBuffer) {
+    public func onInput(_ input: ByteBuffer) {
         var input = input
         
         // Continues processing the `ByteBuffer` at `input`
@@ -58,19 +62,24 @@ extension Base64 {
                 
                 // Swift doesn't recognize that Output == ByteBuffer
                 // Create a buffer referencing the ouput pointer and the outputted capacity
-                let writeBuffer: Output = ByteBuffer(start: pointer, count: capacity) as! Self.Output
+                let writeBuffer = ByteBuffer(start: pointer, count: capacity)
                 
                 // Write the output buffer to the output stream
-                output(writeBuffer)
+                outputStream.onInput(writeBuffer)
                 
                 // If processing is complete
                 guard complete else {
                     // Append any unprocessed data to the remainder storage
-                    remainder.append(contentsOf: ByteBuffer(start: input.baseAddress?.advanced(by: consumed), count: input.count &- consumed))
+                    remainder.append(
+                        contentsOf: ByteBuffer(
+                            start: input.baseAddress?.advanced(by: consumed),
+                            count: input.count &- consumed
+                        )
+                    )
                     return
                 }
             } catch {
-                errorStream?(error)
+                self.onError(error)
             }
         }
         
@@ -105,7 +114,22 @@ extension Base64 {
         
         process()
     }
-    
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, ByteBuffer == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See ClosableStream.onClose
+    public func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
+    }
+
     /// Completes the stream, flushing all remaining bytes by encoding them
     ///
     /// Any data after this will reopen the stream
@@ -119,16 +143,16 @@ extension Base64 {
                     let (_, capacity, _) = try Self.process(buffer, toPointer: self.pointer, capacity: allocatedCapacity, finish: true)
                     
                     /// Create an output buffer (having to force cast an always-success case)
-                    let writeBuffer: Output = ByteBuffer(start: self.pointer, count: capacity) as! Self.Output
+                    let writeBuffer = ByteBuffer(start: self.pointer, count: capacity)
                     
                     // Write the output buffer to the output stream
-                    self.output(writeBuffer)
+                    self.outputStream.onInput(writeBuffer)
                 } catch {
-                    self.errorStream?(error)
+                    self.onError(error)
                 }
             }
         }
         
-        self.onClose?()
+        outputStream.close()
     }
 }

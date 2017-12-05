@@ -64,7 +64,7 @@ public enum QueryJoinMethod {
 
 // MARK: Support
 
-public protocol JoinSupporting: Connection { }
+public protocol JoinSupporting: DatabaseConnection { }
 
 // MARK: Query
 

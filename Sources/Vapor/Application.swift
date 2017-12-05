@@ -22,6 +22,12 @@ public final class Application: Container {
     /// Services that can be created by this application.
     public let services: Services
 
+    /// See ServiceCacheable.serviceCache
+    public let serviceCache: ServiceCache
+
+    /// See EventLoop.queue
+    public var queue: DispatchQueue
+
     /// Use this to create stored properties in extensions.
     public var extend: Extend
 
@@ -34,7 +40,9 @@ public final class Application: Container {
         self.config = config
         self.environment = environment
         self.services = services
+        self.serviceCache = .init()
         self.extend = Extend()
+        self.queue = .init(label: "codes.vapor.application")
 
         // boot all service providers
         for provider in services.providers {

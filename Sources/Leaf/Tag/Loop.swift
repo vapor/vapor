@@ -1,7 +1,7 @@
 import Async
 import Foundation
 
-public final class Loop: Tag {
+public final class Loop: LeafTag {
     public init() {}
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
         let promise = Promise(LeafData?.self)
@@ -28,7 +28,7 @@ public final class Loop: Tag {
                     ast: body,
                     renderer: renderer,
                     context: temp,
-                    worker: parsed.worker
+                    on: parsed.eventLoop
                 )
                 let subpromise = Promise(Data.self)
                 serializer.serialize().do { bytes in

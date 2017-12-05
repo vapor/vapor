@@ -3,7 +3,7 @@ import Async
 // MARK: Protocols
 
 /// Capable of executing a database schema query.
-public protocol SchemaSupporting: Connection {
+public protocol SchemaSupporting: DatabaseConnection {
     /// See SchemaFieldType
     associatedtype FieldType: SchemaFieldType
 

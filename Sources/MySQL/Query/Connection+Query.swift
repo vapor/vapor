@@ -2,7 +2,7 @@ import Async
 import Foundation
 import Core
 
-extension Connection {
+extension MySQLConnection {
     /// Writes a query to the connection
     ///
     /// Doesn't handle anything else
@@ -31,22 +31,23 @@ extension Connection {
     
     /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
-    public func administrativeQuery(_ query: Query) -> Future<Void> {
+    public func administrativeQuery(_ query: MySQLQuery) -> Future<Void> {
         let promise = Promise<Void>()
         
-        self.receivePackets { packet in
+        self.packetStream.drain { packet in
             // Expect an `OK` or `EOF` packet
-            guard packet.payload.first == 0x00 else {
+            if packet.payload.first == 0xff {
                 // Otherwise, reutrn an error
                 promise.fail(MySQLError(packet: packet))
                 return
             }
             
-            promise.complete(())
-        }
+            promise.complete()
+        }.catch(onError: promise.fail)
+        .finally(onClose:  { promise.complete() })
         
         do {
-            try self.write(query: query.string)
+            try self.write(query: query.queryString)
         } catch {
             return Future(error: error)
         }

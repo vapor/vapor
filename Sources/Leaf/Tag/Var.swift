@@ -1,6 +1,6 @@
 import Async
 
-public final class Var: Tag {
+public final class Var: LeafTag {
     public init() {}
 
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
@@ -22,7 +22,7 @@ public final class Var: Tag {
                     ast: body,
                     renderer: renderer,
                     context: context,
-                    worker: parsed.worker
+                    on: parsed.eventLoop
                 )
                 serializer.serialize().do { rendered in
                     dict[key] = .data(rendered)

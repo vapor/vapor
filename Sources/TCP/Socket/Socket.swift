@@ -1,10 +1,9 @@
-import Bits
 import Async
 import Dispatch
 import libc
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public final class Socket {
+public struct TCPSocket {
     /// The file descriptor related to this socket
     public let descriptor: Int32
 
@@ -19,12 +18,6 @@ public final class Socket {
     
     /// A read source that's used to check when the connection is readable
     internal var readSource: DispatchSourceRead?
-    
-    /// A handler that gets called when closing the socket
-    public typealias CloseHandler = (()->())
-    
-    /// Will be triggered before closing the socket, as part of the cleanup process
-    public var didClose: CloseHandler? = nil
     
     /// A write source that's used to check when the connection is open
     internal var writeSource: DispatchSourceWrite?
@@ -43,7 +36,7 @@ public final class Socket {
     }
     
     /// Creates a new TCP socket
-    public convenience init(
+    public init(
         isNonBlocking: Bool = true,
         shouldReuseAddress: Bool = true
     ) throws {
@@ -74,11 +67,19 @@ public final class Socket {
             address: nil
         )
     }
+    
+    public func disablePipeSignal() {
+        signal(SIGPIPE, SIG_IGN)
+        
+        #if !os(Linux)
+            var n = 1
+            setsockopt(self.descriptor, SOL_SOCKET, SO_NOSIGPIPE, &n, numericCast(MemoryLayout<Int>.size))
+        #endif
+    }
 
     /// Closes the socket
     public func close() {
         libc.close(descriptor)
-        didClose?()
     }
     
     /// Returns a boolean describing if the socket is still healthy and open
@@ -87,9 +88,5 @@ public final class Socket {
         getsockopt(descriptor, SOL_SOCKET, SO_ERROR, &error, nil)
         
         return error == 0
-    }
-
-    deinit {
-        close()
     }
 }

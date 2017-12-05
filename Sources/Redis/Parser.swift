@@ -4,20 +4,11 @@ import Foundation
 
 /// A streaming Redis value parser
 final class DataParser: Async.Stream {
-    /// See `InputStream.Input`
+    /// See InputStream.Input
     typealias Input = ByteBuffer
     
-    /// See `OutputStream.RedisData`
+    /// See OutputStream.RedisData
     typealias Output = RedisData
-    
-    /// See `BaseStream.errorStream`
-    var errorStream: ErrorHandler?
-    
-    /// See `OutputStream.OutputHandler`
-    var outputStream: OutputHandler?
-    
-    /// A set of promises awaiting a response
-    var responseQueue = [Promise<RedisData>]()
     
     /// The currently accumulated data from the socket
     var responseBuffer = Data()
@@ -27,20 +18,43 @@ final class DataParser: Async.Stream {
     
     /// The maximum size of a response RedisData
     var maximumResponseSize = 10_000_000
+
+    /// Use a basic output stream to implement server output stream.
+    private var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new ValueParser
     init() {}
-    
-    /// Accepts input binary and processes it to a RedisData
-    func inputStream(_ input: ByteBuffer) {
+
+    /// InputStream.onInput
+    func onInput(_ input: ByteBuffer) {
         responseBuffer.append(contentsOf: Data(input))
-        
+
         do {
             try parseBuffer()
         } catch {
             self.parsingValue = nil
-            errorStream?(error)
+            onError(error)
         }
+    }
+
+    /// InputStream.onError
+    func onError(_ error: Error) {
+        outputStream.onError(error)
+    }
+
+    /// See OutputStream.onOutput
+    func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.onOutput(input)
+    }
+
+    /// See CloseableStream.close
+    func close() {
+        outputStream.close()
+    }
+
+    /// See CloseableStream.onClose
+    func onClose(_ onClose: ClosableStream) {
+        outputStream.onClose(onClose)
     }
     
     /// Parses a basic String (no \r\n's) `String` starting at the current position
@@ -137,9 +151,14 @@ final class DataParser: Async.Stream {
                 return nil
             }
             
+            // Negative bulk strings are `null`
+            if size < 0 {
+                return (.parsed(.null), true)
+            }
+            
             // Parse the following length in data
             guard
-                size >= -1,
+                size > -1,
                 size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
             else {
                 throw RedisError(.parsingError)
@@ -209,17 +228,7 @@ final class DataParser: Async.Stream {
         }
         
         parsingValue = nil
-        
-        if outputStream != nil {
-            output(data)
-            return
-        }
-        
-        assert(responseQueue.count > 0, "ResponseQueue received a response and wasn't checked")
-        
-        let completion = responseQueue.removeFirst()
-        
-        completion.complete(data)
+        outputStream.onInput(data)
     }
     
     fileprivate func continueParsing(partialValues values: [PartialRedisData]) throws -> Bool {

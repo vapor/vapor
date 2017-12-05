@@ -18,7 +18,7 @@ extension RedisClient {
         
         let command = RedisData.array(["SUBSCRIBE"] + channels)
         
-        dataSerializer.inputStream(command)
+        dataSerializer.onInput(command)
         
         // Mark this client as being subscribed
         // The client cannot be used for other commands now

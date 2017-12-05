@@ -1,6 +1,6 @@
 import Async
 
-public final class IfElse: Tag {
+public final class IfElse: LeafTag {
     public init() {}
 
     public func render(parsed: ParsedTag, context: inout LeafData, renderer: LeafRenderer) throws -> Future<LeafData?> {
@@ -9,12 +9,12 @@ public final class IfElse: Tag {
         let expr = parsed.parameters[0]
 
         let promise = Promise(LeafData?.self)
-        if expr.bool != false {
+        if expr.bool == true || (expr.bool == nil && !expr.isNull) {
             let serializer = Serializer(
                 ast: body,
                 renderer: renderer,
                 context: context,
-                worker: parsed.worker
+                on: parsed.eventLoop
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))

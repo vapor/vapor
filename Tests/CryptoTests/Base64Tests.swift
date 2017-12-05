@@ -3,11 +3,7 @@ import Async
 import Bits
 import Crypto
 
-class Base64Tests : XCTestCase {
-    static var allTests = [
-        ("testEncoding", testEncoding)
-    ]
-    
+class Base64Tests: XCTestCase {
     func encMatch(_ string: String, toMatch match: String) throws {
         let result = Base64Encoder.encode(string: string)
         
@@ -26,7 +22,7 @@ class Base64Tests : XCTestCase {
         
         input.stream(to: encoder).drain { string in
             buffer += String(bytes: string, encoding: .utf8)!
-        }
+        }.catch { err in fatalError("\(err)") }
         
         Data("tes".utf8).withUnsafeBytes { (pointer: BytesPointer) in
             input.emit(ByteBuffer(start: pointer, count: 1))
@@ -50,4 +46,8 @@ class Base64Tests : XCTestCase {
         try encMatch("test", toMatch: "dGVzdA==")
         try encMatch("test1", toMatch: "dGVzdDE=")
     }
+
+    static var allTests = [
+        ("testEncoding", testEncoding)
+    ]
 }

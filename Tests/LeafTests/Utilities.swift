@@ -1,38 +1,42 @@
 import Async
+import Bits
 import Core
 import Dispatch
 import Foundation
 import Leaf
 import libc
 
-extension Renderer {
-    static func makeTestRenderer() -> Renderer {
-        return Renderer(tags: defaultTags) { queue in
+extension LeafRenderer {
+    static func makeTestRenderer(eventLoop: EventLoop) -> LeafRenderer {
+        let config = LeafConfig { _ in
             return TestFiles()
         }
+        return LeafRenderer(config: config, on: eventLoop)
     }
 }
 
 final class TestFiles: FileReader, FileCache {
+    func fileExists(at path: String) -> Bool {
+        return false
+    }
+
 
     init() {}
 
-    func getFile<H: Hashable>(hash: H) -> Future<Data?> {
-        return Future(nil)
+    func getCachedFile(at path: String) -> Data? {
+        return nil
     }
 
-    func setFile<H: Hashable>(file: Data?, hash: H) {
+    func setCachedFile(file: Data?, at path: String) {
         // nothing
     }
 
-    func read(at path: String) -> Future<Data> {
+    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == ByteBuffer {
         let data = """
-            Test file name: "\(path)"
-            """.data(using: .utf8)!
-
-        let promise = Promise(Data.self)
-        promise.complete(data)
-        return promise.future
+        Test file name: "\(path)"
+        """.data(using: .utf8)!
+        data.withByteBuffer(stream.onInput)
+        stream.close()
     }
 }
 
@@ -42,39 +46,24 @@ final class PreloadedFiles: FileReader, FileCache {
         files = [:]
     }
 
-    func getFile<H: Hashable>(hash: H) -> Future<Data?> {
-        return Future(nil)
+    func getCachedFile(at path: String) -> Data? {
+        return nil
     }
 
-    func setFile<H: Hashable>(file: Data?, hash: H) {
+    func setCachedFile(file: Data?, at path: String) {
         // nothing
     }
 
-    func read(at path: String) -> Future<Data> {
-        let promise = Promise(Data.self)
-
+    func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == ByteBuffer {
         if let data = files[path] {
-            promise.complete(data)
+            data.withByteBuffer(stream.onInput)
         } else {
-            promise.fail("Could not find file")
+            stream.onError("Could not find file")
         }
-
-        return promise.future
+        stream.close()
     }
-}
 
-import Service
-
-final class BasicContainer: Container {
-    var config: Config
-    var environment: Environment
-    var services: Services
-    var extend: Extend
-
-    init(services: Services) {
-        self.config = Config()
-        self.environment = .development
-        self.services = services
-        self.extend = Extend()
+    func fileExists(at path: String) -> Bool {
+        return false
     }
 }

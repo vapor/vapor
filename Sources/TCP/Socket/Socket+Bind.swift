@@ -1,7 +1,7 @@
 import libc
 import Foundation
 
-extension Socket {
+extension TCPSocket {
     /// bind - bind a name to a socket
     /// http://man7.org/linux/man-pages/man2/bind.2.html
     public func bind(hostname: String = "0.0.0.0", port: UInt16) throws {
@@ -61,7 +61,7 @@ extension Socket {
 
     /// accept, accept4 - accept a connection on a socket
     /// http://man7.org/linux/man-pages/man2/accept.2.html
-    public func accept() throws -> Socket {
+    public func accept() throws -> TCPSocket {
         let (clientfd, address) = try Address.withSockaddrPointer { address -> Int32 in
             var size = socklen_t(MemoryLayout<sockaddr>.size)
             
@@ -74,7 +74,7 @@ extension Socket {
             return descriptor
         }
         
-        let socket = Socket(
+        let socket = TCPSocket(
             established: clientfd,
             isNonBlocking: isNonBlocking,
             shouldReuseAddress: shouldReuseAddress,

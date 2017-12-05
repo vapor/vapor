@@ -119,7 +119,7 @@ private let xcrunFindPath: String? = {
     var end = output.startIndex
     var contentsEnd = output.startIndex
     output.getLineStart(&start, end: &end, contentsEnd: &contentsEnd, for: start..<start)
-    let xcrunFindSwiftPath = output.substring(with: start..<contentsEnd)
+    let xcrunFindSwiftPath = String(output[start..<contentsEnd])
     guard xcrunFindSwiftPath.hasSuffix("/usr/bin/swift") else {
         return nil
     }

@@ -10,6 +10,9 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
+        // Auth
+        .library(name: "Authentication", targets: ["Authentication"]),
+
         // Core
         .library(name: "Bits", targets: ["Bits"]),
         .library(name: "Core", targets: ["Core"]),
@@ -30,7 +33,11 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
+
+        // FormURLEncoded
+        .library(name: "FormURLEncoded", targets: ["Bits"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
@@ -46,10 +53,14 @@ let package = Package(
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
+        .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
         .library(name: "Random", targets: ["Random"]),
+
+        // Redis
+        .library(name: "Redis", targets: ["Redis"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -77,12 +88,19 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async", .exact("1.0.0-alpha.1")),
+        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
 
         /// SourceKit C API module map for Swift
         .package(url: "https://github.com/tanner0101/csourcekit.git", from: "0.0.0"),
     ],
     targets: [
+        .target(name: "Authentication", dependencies: [
+            "Async", "Bits", "Crypto", "Debugging", "Fluent", "HTTP", "Service", "Vapor"
+        ]),
+        .testTarget(name: "AuthenticationTests", dependencies: [
+            "Authentication", "FluentSQLite", "Vapor"
+        ]),
+
         // Bits
         .target(name: "Bits"),
 
@@ -96,7 +114,7 @@ let package = Package(
         .testTarget(name: "CodeTests", dependencies: ["Code"]),
 
         // Core
-        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "Bits", "libc", "Debugging"]),
         .target(name: "libc"),
 
         // Console
@@ -115,13 +133,18 @@ let package = Package(
         .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
 
         // Fluent
-        // FIXME: FluentRouting and FluentHTTP packages?
-        .target(name: "Fluent", dependencies: ["Async", "Core", "HTTP", "Routing", "Service"]),
+        .target(name: "Fluent", dependencies: ["Async", "Core", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
+        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
+
+        // FormURLEncoded
+        .target(name: "FormURLEncoded", dependencies: ["Bits", "Debugging"]),
+        .testTarget(name: "FormURLEncodedTests", dependencies: ["FormURLEncoded"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
@@ -136,7 +159,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // MySQL
@@ -147,11 +170,20 @@ let package = Package(
         .target(name: "CHTTP"),
         .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
-        .target(name: "TCP", dependencies: ["Debugging", "Async", "libc"]),
+        .target(name: "TCP", dependencies: ["Async", "Debugging", "libc", "Service"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
+        
+        // HTTP/2
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
+        // Random crypto
         .target(name: "Random", dependencies: ["Core"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
+        
+        // Compression
+        .target(name: "Pufferfish"),
+        .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
         .target(name: "Routing", dependencies: ["Core", "Debugging", "HTTP", "WebSocket"]),
@@ -192,8 +224,10 @@ let package = Package(
             "Console",
             "Core",
             "Debugging",
+            "FormURLEncoded",
             "HTTP",
             "Leaf",
+            "Logging",
             "Routing",
             "Service",
             "TCP",
@@ -210,10 +244,10 @@ let package = Package(
 )
 
 #if os(macOS) || os(iOS)
-    package.targets.append(
+   package.targets.append(
         .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
     )
-    
+
     package.products.append(
         .library(name: "AppleSSL", targets: ["AppleSSL"])
     )

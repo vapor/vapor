@@ -1,5 +1,6 @@
-import Foundation
 import Async
+import Core
+import Foundation
 import HTTP
 import Leaf
 import Vapor
@@ -16,17 +17,17 @@ final class TestUser: Codable {
 
 extension TestUser: Model {
     /// Database ID
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
 
     /// See Model.idKey
     static var idKey = \TestUser.id
 
     /// See Model.keyFieldMap
-    static var keyFieldMap: KeyFieldMap {
+    static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.name): field("name"),
-            key(\.age): field("age"),
+            key(\.id): "id",
+            key(\.name): "name",
+            key(\.age): "age",
         ]
     }
 }
@@ -53,34 +54,34 @@ struct TestSiblings: Migration {
 
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         let owner = User(name: "Tanner", age: 23)
-        return owner.save(on: connection).then {
+        return owner.save(on: connection).then { () -> Future<Void> in
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
             let toy = Toy(name: "Rubber Band")
 
             return [
                 pet.save(on: connection),
                 toy.save(on: connection)
-            ].flatten().then {
+            ].then {
                 return pet.toys.attach(toy, on: connection)
             }
         }
     }
 
     static func revert(on connection: SQLiteConnection) -> Future<Void> {
-        return Future(())
+        return .done
     }
 }
 
 final class User: Model, Content {
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.age): field("age"),
+    static let database = beta
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.name): "name",
+        key(\.age): "age",
     ]
     static var idKey = \User.id
 
-    var id: Int?
+    var id: UUID?
     var name: String
     var age: Double
 //    var child: User?

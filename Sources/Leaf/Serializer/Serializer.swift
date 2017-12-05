@@ -7,14 +7,14 @@ public final class Serializer {
     let ast: [Syntax]
     var context: LeafData
     let renderer: LeafRenderer
-    let worker: Worker
+    let eventLoop: EventLoop
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, worker: Worker) {
+    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, on eventLoop: EventLoop) {
         self.ast = ast
         self.context = context
         self.renderer = renderer
-        self.worker = worker
+        self.eventLoop = eventLoop
     }
 
     /// Serializes the AST into Bytes.
@@ -33,37 +33,30 @@ public final class Serializer {
                     body: body,
                     chained: chained,
                     source: syntax.source
-                ).do { context in
-                    guard let context = context else {
-                        promise.complete(Data())
-                        return
-                    }
+                    ).do { context in
+                        guard let context = context else {
+                            promise.complete(Data())
+                            return
+                        }
 
-                    guard let data = context.data else {
-                        promise.fail(SerializerError.unexpectedSyntax(syntax)) // FIXME: unexpected context type
-                        return
-                    }
+                        guard let data = context.data else {
+                            promise.fail(SerializerError.unexpectedTagData(name: name, source: syntax.source))
+                            return
+                        }
 
-                    promise.complete(data)
-                }.catch { error in
-                    promise.fail(error)
+                        promise.complete(data)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             default:
                 promise.fail(SerializerError.unexpectedSyntax(syntax))
             }
             parts.append(promise.future)
         }
-        
-        let promise = Promise(Data.self)
 
-        parts.orderedFlatten().do { data in
-            let serialized = Data(data.joined())
-            promise.complete(serialized)
-        }.catch { error in
-            promise.fail(error)
+        return parts.map { data in
+            return Data(data.joined())
         }
-        
-        return promise.future
     }
 
     // MARK: private
@@ -75,74 +68,57 @@ public final class Serializer {
         body: [Syntax]?,
         chained: Syntax?,
         source: Source
-    ) -> Future<LeafData?> {
-        let promise = Promise(LeafData?.self)
-
-        guard let tag = renderer.tags[name] else {
-            promise.fail(SerializerError.unknownTag(name: name, source: source))
-            return promise.future
-        }
-
-        var inputFutures: [Future<LeafData>] = []
-
-        for parameter in parameters {
-            let inputPromise = Promise(LeafData.self)
-            resolveSyntax(parameter).do { input in
-                inputPromise.complete(input ?? .null)
-            }.catch { error in
-                inputPromise.fail(error)
+        ) -> Future<LeafData?> {
+        return then { () -> Future<LeafData?> in
+            guard let tag = self.renderer.tags[name] else {
+                throw SerializerError.unknownTag(name: name, source: source)
             }
-            inputFutures.append(inputPromise.future)
-        }
 
-        inputFutures.orderedFlatten().do { inputs in
-            do {
+            let inputFutures: [Future<LeafData>] = parameters.map { parameter in
+                let inputPromise = Promise(LeafData.self)
+                self.resolveSyntax(parameter).do { input in
+                    inputPromise.complete(input ?? .null)
+                    }.catch { error in
+                        inputPromise.fail(error)
+                }
+                return inputPromise.future
+            }
+
+            return inputFutures.then { inputs -> Future<LeafData?> in
                 let parsed = ParsedTag(
                     name: name,
                     parameters: inputs,
                     body: body,
                     source: source,
-                    worker: self.worker
+                    on: self.eventLoop
                 )
-                print("render tag")
-                try tag.render(
+
+                return try tag.render(
                     parsed: parsed,
                     context: &self.context,
                     renderer: self.renderer
-                ).do { data in
-                    if let data = data {
-                        promise.complete(data)
-                    } else if let chained = chained {
-                        switch chained.kind {
-                        case .tag(let name, let params, let body, let c):
-                            self.renderTag(
-                                name: name,
-                                parameters: params,
-                                body: body,
-                                chained: c,
-                                source: chained.source
-                            ).do { data in
-                                promise.complete(data)
-                            }.catch { error in
-                                promise.fail(error)
+                    ).then { data -> Future<LeafData?> in
+                        if let data = data {
+                            return Future(data)
+                        } else if let chained = chained {
+                            switch chained.kind {
+                            case .tag(let name, let params, let body, let c):
+                                return self.renderTag(
+                                    name: name,
+                                    parameters: params,
+                                    body: body,
+                                    chained: c,
+                                    source: chained.source
+                                )
+                            default:
+                                throw SerializerError.unexpectedSyntax(chained)
                             }
-                        default:
-                            promise.fail(SerializerError.unexpectedSyntax(chained))
+                        } else {
+                            return Future(nil)
                         }
-                    } else {
-                        promise.complete(nil)
-                    }
-                }.catch { error in
-                    promise.fail(error)
                 }
-            } catch {
-                promise.fail(error)
             }
-        }.catch { error in
-            promise.fail(error)
         }
-
-        return promise.future
     }
 
     // resolves a constant to data
@@ -160,12 +136,12 @@ public final class Serializer {
                 ast: ast,
                 renderer: renderer,
                 context: context,
-                worker: self.worker
+                on: eventLoop
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         }
         return promise.future
@@ -189,31 +165,31 @@ public final class Serializer {
             l.do { l in
                 r.do { r in
                     promise.complete(.bool(l != r))
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         case .and:
             l.do { l in
                 r.do { r in
                     promise.complete(.bool(l?.bool != false && r?.bool != false))
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         case .or:
             r.do { r in
                 l.do { l in
                     promise.complete(.bool(l?.bool != false || r?.bool != false))
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         default:
             l.do { l in
@@ -238,11 +214,11 @@ public final class Serializer {
                     } else {
                         promise.complete(.bool(false))
                     }
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         }
 
@@ -257,20 +233,20 @@ public final class Serializer {
         case .constant(let constant):
             resolveConstant(constant).do { data in
                 promise.complete(data)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .expression(let op, let left, let right):
             resolveExpression(op, left: left, right: right).do { data in
                 promise.complete(data)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .identifier(let id):
             contextFetch(path: id).do { value in
                 promise.complete(value ?? .null)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .tag(let name, let parameters, let body, let chained):
             return renderTag(
@@ -286,8 +262,8 @@ public final class Serializer {
                 let promise = Promise(LeafData?.self)
                 contextFetch(path: id).do { data in
                     promise.complete(.bool(data?.bool == true))
-                }.catch { error in
-                    promise.fail(error)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             case .constant(let c):
                 switch c {
@@ -334,8 +310,8 @@ public final class Serializer {
                 fut.do { value in
                     current = value
                     handle(path)
-                }.catch { error in
-                    promise.fail(error)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             default:
                 promise.complete(nil)
@@ -351,4 +327,3 @@ public final class Serializer {
         return promise.future
     }
 }
-

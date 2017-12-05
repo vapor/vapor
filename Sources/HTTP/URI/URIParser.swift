@@ -69,7 +69,7 @@ public final class URIParser {
             userInfo: info,
             hostname: data.string(for: hostname),
             port: p,
-            pathData: data.data(for: path),
+            pathBytes: Array(data.data(for: path)),
             query: data.string(for: query),
             fragment: data.string(for: fragment)
         )

@@ -117,10 +117,10 @@ public struct JSONWebSignature<C: Codable>: Codable {
         let payloadData = try JSONEncoder().encode(payload)
         let encodedPayload = Base64Encoder.encode(data: payloadData)
         
-        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + [0x2e] + encodedPayload), with: secret)
+        let signature = try usedHeader.algorithm.sign(Data(encodedHeader + Data([0x2e]) + encodedPayload), with: secret)
         let encodedSignature = Base64Encoder.encode(data: signature)
         
-        return encodedHeader + [0x2e] + encodedPayload + [0x2e] + encodedSignature
+        return encodedHeader + Data([0x2e]) + encodedPayload + Data([0x2e]) + encodedSignature
     }
     
     /// Creates a new JSON Web Signature from predefined data

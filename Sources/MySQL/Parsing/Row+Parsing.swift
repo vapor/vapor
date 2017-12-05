@@ -1,10 +1,16 @@
 import Foundation
+import libc
+import Bits
 
 extension Packet {
     /// Reads this packet as a row containing the data related to the provided columns
-    func makeRow(columns: [Field], binary: Bool) throws -> Row {
+    func makeRow(columns: [Field], binary: Bool, reserveCapacity: Int? = nil) throws -> Row {
         let parser = Parser(packet: self)
         var row = Row()
+        
+        if let reserveCapacity = reserveCapacity {
+            row.reserveCapacity(reserveCapacity)
+        }
         
         // Binary packets have a bit more data to carry `null`s  and a header
         if binary {
@@ -35,7 +41,7 @@ extension Packet {
                     
                     try row.append(value, forField: field)
                 } else {
-                    let value = try parser.parseLenEncString()
+                    let value = try parser.parseLenEncBytes()
                     
                     try row.append(value, forField: field)
                 }
@@ -99,7 +105,39 @@ extension Parser {
             case .int24: throw MySQLError(.unsupported)
             case .date: throw MySQLError(.unsupported)
             case .time: throw MySQLError(.unsupported)
-            case .datetime: throw MySQLError(.unsupported)
+            case .datetime:
+                let format = try byte()
+                
+                let year = try parseUInt16()
+                let month = try byte()
+                let day = try byte()
+                let hour = try byte()
+                let minute = try byte()
+                let second = try byte()
+                var microseconds: UInt32 = 0
+                
+                if format == 11 {
+                    microseconds = try parseUInt32()
+                }
+                
+                let calendar = Calendar(identifier: .gregorian)
+                
+                guard let date = calendar.date(from:
+                    DateComponents(
+                        calendar: calendar,
+                        year: numericCast(year),
+                        month: numericCast(month),
+                        day: numericCast(day),
+                        hour: numericCast(hour),
+                        minute: numericCast(minute),
+                        second: numericCast(second),
+                        nanosecond: numericCast(microseconds * 1000)
+                    )
+                ) else {
+                    throw MySQLError(.invalidPacket)
+                }
+                
+                return .datetime(date)
             case .year: throw MySQLError(.unsupported)
             case .newdate: throw MySQLError(.unsupported)
             case .varchar:
@@ -147,93 +185,108 @@ extension Row {
     }
     
     /// Decodes the value's Data as a text expressed type from the provided field
-    mutating func append(_ value: String, forField field: Field) throws {
+    mutating func append(_ value: ByteBuffer, forField field: Field) throws {
+        func makeString() -> String {
+            return String(data: Data(value), encoding: .utf8) ?? ""
+        }
+        
         switch field.fieldType {
-        case .varString:
-            append(.varString(value), forField: field)
+        case .varString, .string:
+            append(.varString(makeString()), forField: field)
         case .null:
             append(.null, forField: field)
-        case .string:
-            append(.string(value), forField: field)
         case .longlong:
             // `longlong` is an (U)Int64 being either signed or unsigned
-            if field.flags.contains(.unsigned) {
-                guard let int = UInt64(value) else {
-                    throw MySQLError(.parsingError)
+            value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                if field.flags.contains(.unsigned) {
+                    let i = strtouq(pointer, nil, 10)
+                    
+                    append(.uint64(i), forField: field)
+                } else {
+                    let i = strtoq(pointer, nil, 10)
+                    
+                    append(.int64(i), forField: field)
                 }
-                
-                append(.uint64(int), forField: field)
-            } else {
-                guard let int = Int64(value) else {
-                    throw MySQLError(.parsingError)
-                }
-                
-                append(.int64(int), forField: field)
             }
         case .int24:
             // `int24` is represented as (U)Int32 being either signed or unsigned
             fallthrough
         case .long:
             // `long` is an (U)Int32 being either signed or unsigned
-            if field.flags.contains(.unsigned) {
-                guard let int = UInt32(value) else {
-                    throw MySQLError(.parsingError)
-                }
+            value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                let i = atoi(pointer)
                 
-                append(.uint32(int), forField: field)
-            } else {
-                guard let int = Int32(value) else {
-                    throw MySQLError(.parsingError)
+                if field.flags.contains(.unsigned) {
+                    append(.uint32(numericCast(i)), forField: field)
+                } else {
+                    append(.int32(numericCast(i)), forField: field)
                 }
-                
-                append(.int32(int), forField: field)
             }
         case .short:
             // `long` is an (U)Int16 being either signed or unsigned
-            if field.flags.contains(.unsigned) {
-                guard let int = UInt16(value) else {
-                    throw MySQLError(.parsingError)
-                }
+            try value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                let int = atoi(pointer)
                 
-                append(.uint16(int), forField: field)
-            } else {
-                guard let int = Int16(value) else {
-                    throw MySQLError(.parsingError)
+                if field.flags.contains(.unsigned) {
+                    guard int >= 0, int <= numericCast(UInt16.max) else {
+                        throw MySQLError(.parsingError)
+                    }
+                    
+                    append(.uint16(numericCast(int)), forField: field)
+                } else {
+                    guard int >= Int16.min, int <= numericCast(Int16.max) else {
+                        throw MySQLError(.parsingError)
+                    }
+                    
+                    append(.int16(numericCast(int)), forField: field)
                 }
-                
-                append(.int16(int), forField: field)
             }
         case .tiny:
             // `tiny` is an (U)Int8 being either signed or unsigned
-            if field.flags.contains(.unsigned) {
-                guard let int = UInt8(value) else {
-                    throw MySQLError(.parsingError)
-                }
+            try value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                let int = atoi(pointer)
                 
-                append(.uint8(int), forField: field)
-            } else {
-                guard let int = Int8(value) else {
-                    throw MySQLError(.parsingError)
+                if field.flags.contains(.unsigned) {
+                    guard int >= 0, int <= numericCast(UInt8.max) else {
+                        throw MySQLError(.parsingError)
+                    }
+                    
+                    append(.uint8(numericCast(int)), forField: field)
+                } else {
+                    guard int >= Int8.min, int <= numericCast(Int8.max) else {
+                        throw MySQLError(.parsingError)
+                    }
+                    
+                    append(.int8(numericCast(int)), forField: field)
                 }
-                
-                append(.int8(int), forField: field)
             }
         case .double:
             // Decodes this string as a Double
-            guard let double = Double(value) else {
-                throw MySQLError(.parsingError)
+            value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                let double = strtod(pointer, nil)
+                append(.double(double), forField: field)
             }
-            
-            append(.double(double), forField: field)
         case .float:
             // Decodes this string as a Float
-            guard let float = Float(value) else {
+            value.baseAddress!.withMemoryRebound(to: Int8.self, capacity: value.count) { pointer in
+                let float = strtof(pointer, nil)
+                append(.float(float), forField: field)
+            }
+        case .datetime:
+            guard let date = mysqlFormatter.date(from: makeString()) else {
                 throw MySQLError(.parsingError)
             }
             
-            append(.float(float), forField: field)
+            append(.datetime(date), forField: field)
         default:
             throw MySQLError(.unsupported)
         }
     }
 }
+
+fileprivate let mysqlFormatter: DateFormatter = {
+    var formatter = DateFormatter()
+    formatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+    
+    return formatter
+}()

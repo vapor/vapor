@@ -1,15 +1,16 @@
+import Core
 import FluentSQLite
 import Foundation
 import Vapor
 
 final class Pet: Model {
-    static let keyFieldMap: KeyFieldMap = [
-        key(\.id): field("id"),
-        key(\.name): field("name"),
-        key(\.ownerID): field("ownerID")
+    static let keyStringMap: KeyStringMap = [
+        key(\.id): "id",
+        key(\.name): "name",
+        key(\.ownerID): "ownerID"
     ]
 
-    static let database: DatabaseIdentifier<SQLiteDatabase> = .beta
+    static let database = beta
     static let idKey = \Pet.id
 
     var id: UUID?

@@ -6,23 +6,18 @@ import Service
 
 /// Used to configure Leaf renderer.
 public struct LeafConfig {
-    let tags: [String: Tag]
+    let tags: [String: LeafTag]
+    let viewsDir: String
     let fileFactory: LeafRenderer.FileFactory
 
     public init(
-        tags: [String: Tag],
-        fileFactory: @escaping LeafRenderer.FileFactory
+        tags: [String: LeafTag] = defaultTags,
+        viewsDir: String = "/",
+        fileFactory: @escaping LeafRenderer.FileFactory = File.init
     ) {
         self.tags = tags
+        self.viewsDir = viewsDir
         self.fileFactory = fileFactory
-    }
-
-    public static func `default`() -> LeafConfig {
-        return LeafConfig(
-            tags: defaultTags
-        ) { queue in
-            return File(queue: queue)
-        }
     }
 }
 
@@ -37,13 +32,14 @@ public final class LeafProvider: Provider {
         services.register(ViewRenderer.self) { container -> LeafRenderer in
             let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
             return LeafRenderer(
-                tags: config.tags,
-                fileFactory: config.fileFactory
+                config: config,
+                on: container
             )
         }
 
-        services.register { container in
-            return LeafConfig.default()
+        services.register { container -> LeafConfig in
+            let dir = try container.make(DirectoryConfig.self, for: LeafRenderer.self)
+            return LeafConfig(viewsDir: dir.workDir + "Resources/Views")
         }
     }
 
@@ -78,5 +74,14 @@ public struct View: Codable {
 
 
 public protocol ViewRenderer {
-    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
+    /// Renders a view using the supplied encodable context and worker.
+    func make<E>(_ path: String, _ context: E) throws -> Future<View>
+    where E: Encodable
+}
+
+extension ViewRenderer {
+    /// Create a view with null context.
+    public func make(_ path: String) throws -> Future<View> {
+        return try make(path, nil as String?)
+    }
 }

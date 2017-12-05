@@ -5,86 +5,113 @@ import Foundation
 
 extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSupporting {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws {
-        try test(conn.enableReferences())
-
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Future<Void> {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
-        try test(tanner.save(on: conn))
-
-        let ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
-        try test(ziz.save(on: conn))
-
-        // create w/ bad id
-        do {
-            let foo = Pet<Database>(name: "Foo", ownerID: UUID())
-            try foo.save(on: conn).blockingAwait()
-            fail("should not have saved")
-        } catch {
-            // should fail
-        }
-
-        // test pet attached
-        if try test(tanner.pets.query(on: conn).count()) != 1 {
-            fail("count should have been 1")
-        }
-        if try test(ziz.owner.get(on: conn)).name != "Tanner" {
-            fail("pet owner's name wrong")
-        }
-
-        // create toys
+        var ziz: Pet<Database>!
+        let foo = Pet<Database>(name: "Foo", ownerID: UUID())
         let plasticBag = Toy<Database>(name: "Plastic Bag")
-        try test(plasticBag.save(on: conn))
-
         let oldBologna = Toy<Database>(name: "Old Bologna")
-        try test(oldBologna.save(on: conn))
-
-        // attach toys
-        try test(ziz.toys.attach(plasticBag, on: conn))
-        try test(oldBologna.pets.attach(ziz, on: conn))
-
-        // test toys attached
-        if try test(ziz.toys.query(on: conn).count()) != 2 {
-            fail("count should have been 2")
+        
+        let promise = Promise<Int>()
+        
+        conn.enableReferences().then {
+            return tanner.save(on: conn)
+        }.then { _ -> Future<Void> in
+            ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
+            return ziz.save(on: conn)
+        }.then {
+            return foo.save(on: conn)
+        }.addAwaiter { response in
+            if response.error == nil {
+                self.fail("should not have saved")
+            }
+            
+            do {
+                try tanner.pets.query(on: conn).count().do(promise.complete).catch(promise.fail)
+            } catch {
+                promise.fail(error)
+            }
         }
-        if try test(oldBologna.pets.query(on: conn).count()) != 1 {
-            fail("count should have been 1")
-        }
-        if try test(plasticBag.pets.query(on: conn).count()) != 1 {
-            fail("count should have been 1")
-        }
-
-        if try test(ziz.toys.isAttached(plasticBag, on: conn)) == false {
-            fail("should be attached")
-        }
-
-        // test detach toy
-        try test(ziz.toys.detach(plasticBag, on: conn))
-        if try test(ziz.toys.isAttached(plasticBag, on: conn)) == true {
-            fail("should be detached")
+            
+        return promise.future.then { count -> Future<User<Database>> in
+            if count != 1 {
+                self.fail("count should have been 1")
+            }
+            
+            return ziz.owner.get(on: conn)
+        }.then { user -> Future<Void> in
+            if user.name != "Tanner" {
+                self.fail("pet owner's name wrong")
+            }
+            
+            return plasticBag.save(on: conn)
+        }.then { _ -> Future<Void> in
+            return oldBologna.save(on: conn)
+        }.then { _ -> Future<Void> in
+            return ziz.toys.attach(plasticBag, on: conn)
+        }.then { _ -> Future<Void> in
+            return oldBologna.pets.attach(ziz, on: conn)
+        }.then { _ -> Future<Int> in
+            return try ziz.toys.query(on: conn).count()
+        }.then { count -> Future<Int> in
+            if count != 2 {
+                self.fail("count should have been 2")
+            }
+            
+            return try oldBologna.pets.query(on: conn).count()
+        }.then { count -> Future<Int> in
+            if count != 1 {
+                self.fail("count should have been 1")
+            }
+            
+            return try plasticBag.pets.query(on: conn).count()
+        }.then { count -> Future<Bool> in
+            if count != 1 {
+                self.fail("count should have been 1")
+            }
+            
+            return try ziz.toys.isAttached(plasticBag, on: conn)
+        }.then { _ -> Future<Void> in
+            return try ziz.toys.detach(plasticBag, on: conn)
+        }.then { _ -> Future<Bool> in
+            return try ziz.toys.isAttached(plasticBag, on: conn)
+        }.map { bool in
+            if bool {
+                self.fail("should be detached")
+            }
         }
     }
 
     /// Benchmark fluent relations.
-    public func benchmarkRelations() throws {
-        let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
-        let conn = try test(database.makeConnection(on: worker))
-        try _benchmark(on: conn)
+    public func benchmarkRelations() throws -> Future<Void> {
+        return pool.requestConnection().then { conn in
+            return try self._benchmark(on: conn).map {
+                self.pool.releaseConnection(conn)
+            }
+        }
     }
 }
 
 extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporting & ReferenceSupporting {
     /// Benchmark fluent relations.
     /// The schema will be prepared first.
-    public func benchmarkRelations_withSchema() throws {
-        let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
-        let conn = try test(database.makeConnection(on: worker))
-        try test(conn.enableReferences())
-        try test(UserMigration<Database>.prepare(on: conn))
-        try test(PetMigration<Database>.prepare(on: conn))
-        try test(ToyMigration<Database>.prepare(on: conn))
-        try test(PetToyMigration<Database>.prepare(on: conn))
-        try _benchmark(on: conn)
+    public func benchmarkRelations_withSchema() throws -> Future<Void> {
+        return pool.requestConnection().then { conn in
+            return conn.enableReferences().then {
+                return UserMigration<Database>.prepare(on: conn)
+            }.then {
+                return PetMigration<Database>.prepare(on: conn)
+            }.then {
+                return ToyMigration<Database>.prepare(on: conn)
+            }.then {
+                return PetToyMigration<Database>.prepare(on: conn)
+            }.then {
+                return try self._benchmark(on: conn)
+            }.map {
+                self.pool.releaseConnection(conn)
+            }
+        }
     }
 }
 

@@ -50,7 +50,7 @@ public final class BoundStatement {
     ///     1    read only
     ///     2    cursor for update
     ///     4    scrollable cursor
-    func execute() throws {
+    func send() throws {
         guard boundParameters == statement.parameters.count else {
             throw MySQLError(.notEnoughParametersBound)
         }
@@ -74,48 +74,106 @@ public final class BoundStatement {
     
     /// Executes the bound statement and returns all decoded results in a future array
     public func all<D: Decodable>(_ type: D.Type) -> Future<[D]> {
-        let promise = Promise<[D]>()
         var results = [D]()
+        return self.forEach(D.self) { res in
+            results.append(res)
+        }.map { _ -> [D] in
+            return results
+        }
+    }
+    
+    public func execute() throws -> Future<Void> {
+        let promise = Promise<Void>()
         
         // Set up a parser
-        let resultBuilder = ModelStream<D>(mysql41: statement.connection.mysql41, binary: true)
-        
-        statement.connection.receivePackets(into: resultBuilder.inputStream)
-        
-        resultBuilder.onClose = {
-            promise.complete(results)
+        statement.connection.packetStream.drain { packet in
+            do {
+                if let (affectedRows, lastInsertID) = try packet.parseBinaryOK() {
+                    self.statement.connection.affectedRows = affectedRows
+                    self.statement.connection.lastInsertID = lastInsertID
+                }
+                
+                promise.complete()
+            } catch {
+                promise.fail(error)
+            }
+        }.catch { err in
+            promise.fail(err)
         }
-        
-        resultBuilder.errorStream = { error in
-            promise.fail(error)
-        }
-        
-        resultBuilder.drain { result in
-            results.append(result)
-        }
-        
+
         // Send the query
-        do {
-            try execute()
-            try getMore(count: UInt32.max)
-        } catch {
-            return Future(error: error)
-        }
+        try send()
         
         return promise.future
     }
-    
-    /// Executes the bound statement and returns all decoded results as a Stream
-    public func stream<D: Decodable>(_ type: D.Type) throws -> ModelStream<D> {
-        let stream = ModelStream<D>(mysql41: true, binary: true)
+
+    /// A simple callback closure
+    public typealias Callback<T> = (T) throws -> ()
+
+    /// Loops over all rows resulting from the query
+    ///
+    /// - parameter query: Fetches results using this query
+    /// - parameter handler: Executes the handler for each `Row`
+    /// - throws: Network error
+    /// - returns: A future that will be completed when all results have been processed by the handler
+    @discardableResult
+    internal func forEachRow(_ handler: @escaping Callback<Row>) -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in
+            self.statement.connection.affectedRows = affectedRows
+            self.statement.connection.lastInsertID = lastInsertID
+        }
         
-        // Set up a parser
-        statement.connection.receivePackets(into: stream.inputStream)
+        statement.connection.packetStream.stream(to: rowStream)
+            .drain(onInput: handler)
+            .catch(onError: promise.fail)
+            .finally(onClose: { promise.complete() })
+
+        do {
+            try send()
+        } catch {
+            promise.fail(error)
+        }
+
+        rowStream.onEOF = { flags in
+            try self.getMore(count: UInt32.max)
+        }
+
+        return promise.future
+    }
+
+    /// Loops over all rows resulting from the query
+    ///
+    /// - parameter type: Deserializes all rows to the provided `Decodable` `D`
+    /// - parameter query: Fetches results using this query
+    /// - parameter handler: Executes the handler for each deserialized result of type `D`
+    /// - throws: Network error
+    /// - returns: A future that will be completed when all results have been processed by the handler
+    @discardableResult
+    public func forEach<D>(_ type: D.Type, _ handler: @escaping Callback<D>) -> Future<Void>
+        where D: Decodable
+    {
+        return forEachRow { row in
+            let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+            try handler(D(from: decoder))
+        }
+    }
+}
+
+extension Packet {
+    func parseBinaryOK() throws -> (UInt64, UInt64)? {
+        let parser = Parser(packet: self)
+        let byte = try parser.byte()
         
-        // Send the query
-        try execute()
-        try getMore(count: UInt32.max)
+        if byte == 0x00 {
+            return (try parser.parseLenEnc(), try parser.parseLenEnc())
+        } else if byte == 0xfe {
+            return nil
+        } else if byte == 0xff {
+            throw MySQLError(packet: self)
+        }
         
-        return stream
+        return nil
     }
 }

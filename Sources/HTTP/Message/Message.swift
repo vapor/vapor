@@ -1,6 +1,7 @@
 import Async
 import Dispatch
 import Service
+import TCP
 
 /// An HTTP message.
 /// This is the basis of HTTP request and response,
@@ -29,42 +30,44 @@ import Service
 /// to add your own stored properties to requests and responses
 /// that can be accessed simply by importing the module that
 /// adds them. This is how much of Vapor's functionality is created.
-public protocol Message: Codable, CustomDebugStringConvertible, Worker, Extendable, HasContainer {
+public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
     /// The HTTP version of this message.
-    var version: Version { get set }
+    var version: HTTPVersion { get set }
     /// The HTTP headers.
-    var headers: Headers { get set }
+    var headers: HTTPHeaders { get set }
     /// The message body.
-    var body: Body { get set }
+    var body: HTTPBody { get set }
+    /// Closure to be called on upgrade
+    var onUpgrade: HTTPOnUpgrade? { get set }
 }
 
-/// MARK: Container
-extension Message {
-    /// See HasContainer.container
-    public var container: Container? {
-        return eventLoop.container
+/// An action that happens when the message is upgraded.
+public struct HTTPOnUpgrade: Codable {
+    /// Accepts a TCP client
+    public typealias Closure = (TCPClient) -> ()
+
+    /// Internal storage
+    public let closure: Closure
+
+    /// Create a new OnUpgrade action
+    public init(_ closure: @escaping Closure) {
+        self.closure = closure
     }
-}
 
-// MARK: Queue
+    /// See Encodable.encode
+    public func encode(to encoder: Encoder) throws {
+        // skip
+    }
 
-extension Message {
-    /// This message's event loop.
-    ///
-    /// All async tasks (such as completing or awaiting futures)
-    /// must be performed on this queue.
-    ///
-    /// Make sure not to block this queue as it will
-    /// block all other requests on the queue.
-    public var eventLoop: EventLoop {
-        get { return extend["http:eventLoop"] as? EventLoop ?? .default }
-        set { return extend["http:eventLoop"] = newValue }
+    /// See Decodable.init
+    public init(from decoder: Decoder) throws {
+        self.init { _ in }
     }
 }
 
 // MARK: Debug string
 
-extension Message {
+extension HTTPMessage {
     /// A debug description for this HTTP message.
     public var debugDescription: String {
         var desc: [String] = []

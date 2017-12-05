@@ -1,4 +1,5 @@
 import Async
+import Core
 import Fluent
 import Foundation
 
@@ -17,11 +18,11 @@ public final class Toy<D: Database>: Model {
     /// See Model.idKey
     public static var idKey: IDKey { return \.id }
 
-    /// See Model.keyFieldMap
-    public static var keyFieldMap: KeyFieldMap {
+    /// See Model.keyStringMap
+    public static var keyStringMap: KeyStringMap {
         return [
-            key(\.id): field("id"),
-            key(\.name): field("name")
+            key(\.id): "id",
+            key(\.name): "name"
         ]
     }
 

@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Dispatch
 import Foundation
 import libc
@@ -20,8 +21,13 @@ public final class File: FileReader, FileCache {
     }
 
     /// See FileReader.read
-    public func read(at path: String) -> Future<Data> {
-        let promise = Promise(Data.self)
+    public func read<S>(at path: String, into stream: S, chunkSize: Int = 2048)
+        where S: Async.InputStream, S.Input == ByteBuffer
+    {
+        func onError(_ error: Error) {
+            stream.onError(error)
+            stream.close()
+        }
 
         let file = DispatchIO(
             type: .stream,
@@ -34,44 +40,44 @@ public final class File: FileReader, FileCache {
                 // success
             } else {
                 let error = FileError(.readError(error, path: path))
-                promise.fail(error)
+                onError(error)
             }
         }
 
         if let file = file {
-            var buffer = DispatchData.empty
+            file.setLimit(highWater: chunkSize)
             file.read(offset: 0, length: size_t.max - 1, queue: queue) { done, data, error in
                 if done {
                     if error == 0 {
-                        let copied = Data(buffer)
-                        promise.complete(copied)
+                        stream.close()
                     } else {
-                        let error = FileError(.readError(error, path: path))
-                        promise.fail(error)
+                        onError(FileError(.readError(error, path: path)))
                     }
                 } else {
                     if let data = data {
-                        buffer.append(data)
+                        Data(data).withByteBuffer(stream.onInput)
                     } else {
-                        let error = FileError(.readError(error, path: path))
-                        promise.fail(error)
+                        onError(FileError(.readError(error, path: path)))
                     }
                 }
             }
         } else {
-            promise.fail(FileError(.invalidDescriptor))
+            onError(FileError(.invalidDescriptor))
         }
+    }
 
-        return promise.future;
+    /// See FileReader.fileExists
+    public func fileExists(at path: String) -> Bool {
+        return access(path, F_OK) != -1
     }
 
     /// See FileCache.getFile
-    public func getFile<H: Hashable>(hash: H) -> Future<Data?> {
-        return Future(cache[hash.hashValue])
+    public func getCachedFile(at path: String) -> Data? {
+        return cache[path.hashValue]
     }
 
     /// See FileCache.setFile
-    public func setFile<H: Hashable>(file: Data?, hash: H) {
-        cache[hash.hashValue] = file
+    public func setCachedFile(file: Data?, at path: String) {
+        cache[path.hashValue] = file
     }
 }
