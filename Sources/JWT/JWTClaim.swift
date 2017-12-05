@@ -14,6 +14,13 @@ public protocol JWTClaim: Codable {
     init(value: Value)
 }
 
+extension JWTClaim where Value == String, Self: ExpressibleByStringLiteral {
+    /// See ExpressibleByStringLiteral.init
+    public init(stringLiteral string: String) {
+        self.init(value: string)
+    }
+}
+
 extension JWTClaim {
     /// See Decodable.decode
     public init(from decoder: Decoder) throws {
@@ -31,7 +38,9 @@ extension JWTClaim {
 
 /// Identifies by which application a Claim is issued
 /// - id: iss
-public struct IssuerClaim: JWTClaim {
+public struct IssuerClaim: JWTClaim, ExpressibleByStringLiteral {
+    public typealias StringLiteralType = String
+
     /// The identifier (or URI) of the issuer of the token
     public var value: String
 
@@ -44,7 +53,7 @@ public struct IssuerClaim: JWTClaim {
 /// Identifies the subject of a claim
 /// such as the user in an authentication token
 /// - id: sub
-public struct SubjectClaim: JWTClaim {
+public struct SubjectClaim: JWTClaim, ExpressibleByStringLiteral {
     /// The claim's subject's identifier
     public var value: String
 
@@ -56,7 +65,7 @@ public struct SubjectClaim: JWTClaim {
 
 /// Identifies the destination application of the Claim
 /// - id: aud
-public struct AudienceClaim: JWTClaim {
+public struct AudienceClaim: JWTClaim, ExpressibleByStringLiteral {
     /// The identifier (or URI) of the destination application
     public var value: String
 
@@ -81,7 +90,7 @@ public struct IssuedAtClaim: JWTClaim {
 
 /// Identifies the date at which a Claim was issued
 /// - id: jti
-public struct IDClaim: JWTClaim {
+public struct IDClaim: JWTClaim, ExpressibleByStringLiteral {
     /// A unique identifier for this claim
     public var value: String
 

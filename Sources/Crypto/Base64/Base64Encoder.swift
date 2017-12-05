@@ -94,17 +94,16 @@ public final class Base64Encoder: Base64 {
                 // Output the created UInt2
                 pointer[outputPosition &+ 1] = byte(at: processedByte)
 
-                switch encoding {
-                case .base64url:
-                    // Return `true` for a finalized Base64 encoded string
-                    return (true, outputPosition &+ 2, inputPosition &+ 1)
-                case .base64:
+                if encoding.encodePadding {
                     // Append 2 '=' characters to finish off the 4-character chunk
                     pointer[outputPosition &+ 2] = 0x3d
                     pointer[outputPosition &+ 3] = 0x3d
 
                     // Return `true` for a finalized Base64 encoded string
                     return (true, outputPosition &+ 4, inputPosition &+ 1)
+                } else {
+                    // Return `true` for a finalized Base64 encoded string
+                    return (true, outputPosition &+ 2, inputPosition &+ 1)
                 }
             }
             
@@ -122,14 +121,13 @@ public final class Base64Encoder: Base64 {
                 // Write the character associated with the 4 bits number to the output
                 pointer[outputPosition &+ 2] = byte(at: processedByte)
 
-                switch encoding {
-                case .base64:
+                if encoding.encodePadding {
                     // Append an '=' for padding
                     pointer[outputPosition &+ 3] = 0x3d
                     
                     // Finish off the base64 string
                     return (true, outputPosition &+ 4, inputPosition &+ 2)
-                case .base64url:
+                } else {
                     // Finish off the base64 string
                     return (true, outputPosition &+ 3, inputPosition &+ 2)
                 }
