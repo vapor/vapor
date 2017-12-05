@@ -13,23 +13,17 @@ final class TestUser: Codable {
     var id: UUID?
     var name: String
     var age: Int
+
+    init(id: UUID? = nil, name: String, age: Int) {
+        self.id = id
+        self.name = name
+        self.age = age
+    }
 }
 
 extension TestUser: Model {
-    /// Database ID
     static let database = beta
-
-    /// See Model.idKey
     static var idKey = \TestUser.id
-
-    /// See Model.keyFieldMap
-    static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.age): "age",
-        ]
-    }
 }
 
 extension TestUser: Migration {
@@ -74,11 +68,6 @@ struct TestSiblings: Migration {
 
 final class User: Model, Content {
     static let database = beta
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name",
-        key(\.age): "age",
-    ]
     static var idKey = \User.id
 
     var id: UUID?

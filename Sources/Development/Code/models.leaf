@@ -4,17 +4,17 @@ import Fluent
 
 #for(type in types) {
     #if(contains(type.inheritedTypes, "Model") || contains(type.inheritedTypes, "KeyStringMappable")) {
-        extension #(type.name): Model {
-            /// See KeyStringMappable.keyFieldMap
+        extension #(type.name) \{
+            /// See KeyStringMappable.keyStringMap
             static var keyStringMap: KeyStringMap {
                 return [
                     #for(property in type.properties) {
                         #if(property.isInstance) {
-                            key(\\.#(property.name)): "#(property.name)",
+                            key(\.#(property.name)): "#(property.name)",
                         }
                     }
                 ]
-            \\}
-        \\}
+            \}
+        \}
     }
 }

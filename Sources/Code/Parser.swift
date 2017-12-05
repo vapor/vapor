@@ -16,8 +16,15 @@ public final class CodeParser {
 
     private func resolve(types: inout [String: Type], extensions: [String: Extension]) throws {
         for (name, `extension`) in extensions {
-            guard let type = types[name] else {
-                throw "did not find a type for extension on \(name)"
+            let type: Type
+            if let existing = types[name] {
+                type = existing
+
+            } else {
+                // throw "did not find a type for extension on \(name)"
+                // fixme: unknown type?
+                let c = Class.init(name: name, properties: [], methods: [], inheritedTypes: [], comment: nil)
+                type = .class(c)
             }
 
             switch type {

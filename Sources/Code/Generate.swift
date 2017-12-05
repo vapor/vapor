@@ -40,10 +40,7 @@ public final class Generate: Command {
             }
         }
 
-        var dir = try input.requireOption("dir")
-        if !dir.hasSuffix("/") {
-            dir += "/"
-        }
+        let dir = try input.requireOption("dir").finished(with: "/")
         try readFiles(dir: dir)
 
         let parser = CodeParser()
@@ -54,10 +51,10 @@ public final class Generate: Command {
         let renderer = LeafRenderer(config: config, on: queue)
         let context = try LeafEncoder().encode(["types": types])
 
-        //        let json = JSONEncoder()
-        //        json.outputFormatting = .prettyPrinted
-        //        let string = try String(data: json.encode(context), encoding: .utf8)!
-        //        print(string)
+        let json = JSONEncoder()
+        json.outputFormatting = .prettyPrinted
+        let string = try String(data: json.encode(["types": types]), encoding: .utf8)!
+        print(string)
 
         var generated = Data()
 
