@@ -37,10 +37,10 @@ public final class ResponseSerializer: Serializer {
     public func onInput(_ response: HTTPResponse) {
         var headers = response.headers
         
-        if let count = response.body.count {
-            headers[.contentLength] = count.description
-        } else if case .stream(_) = response.body.storage {
+        if case .stream(_) = response.body.storage {
             headers[.transferEncoding] = "chunked"
+        } else  {
+            headers[.contentLength] = response.body.count.description
         }
         
         self.upgradeHandler = response.onUpgrade
@@ -48,7 +48,7 @@ public final class ResponseSerializer: Serializer {
         let statusCode = [UInt8](response.status.code.description.utf8)
         
         // First line
-        let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes
+        let serialized = http1Prefix + statusCode + [.space] + response.status.messageBytes + crlf
         
         serialized.withUnsafeBufferPointer(write)
         headers.storage.withByteBuffer(write)

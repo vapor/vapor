@@ -2,12 +2,13 @@ import Bits
 import Foundation
 import Async
 import TCP
+import TLS
 import Dispatch
 
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
-    /// The TCP socket it's connected on
-    var socket: TCPSocket
+    /// The socket it's connected on
+    var socket: ClosableStream
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -21,9 +22,6 @@ public final class MySQLConnection {
     /// The state of the server's handshake
     var handshake: Handshake?
     
-    /// A dispatch source that reads on the provided queue
-    var source: DispatchSourceRead
-    
     /// The username to authenticate with
     let username: String
     
@@ -31,7 +29,7 @@ public final class MySQLConnection {
     let password: String?
     
     /// The database to select
-    let database: String?
+    let database: String
     
     /// A future promise
     var authenticated: Promise<Void>
@@ -50,15 +48,14 @@ public final class MySQLConnection {
     /// Basic stream to easily implement async stream.
     var packetStream: BasicStream<Packet>
     
+    /// The write function for the socket
+    let socketWrite: ((ByteBuffer) throws -> ())
+    
     /// The client's capabilities
     var capabilities: Capabilities {
-        var base: Capabilities = [
-            .protocol41, .longFlag, .secureConnection
+        let base: Capabilities = [
+            .longPassword, .protocol41, .longFlag, .secureConnection, .connectWithDB
         ]
-        
-        if database != nil {
-            base.update(with: .connectWithDB)
-        }
         
         return base
     }
@@ -72,50 +69,44 @@ public final class MySQLConnection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, on eventLoop: EventLoop) throws {
-        var socket = try TCPSocket()
-        
+    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String, on eventLoop: EventLoop) throws {
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
-        try socket.connect(hostname: hostname, port: port)
-        
         let parser = PacketParser()
+        self.authenticated = Promise<Void>()
         
-        let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor,
-            queue: eventLoop.queue
-        )
-        
-        self.source = source
+        if ssl {
+            let socket = try TLSClient(on: eventLoop)
+            
+            try socket.connect(hostname: hostname, port: port).catch(authenticated.fail)
+            socket.stream(to: parser)
+
+            self.socket = socket
+            self.socketWrite = socket.onInput
+        } else {
+            let socket = try TCPClient(on: eventLoop)
+            
+            try socket.connect(hostname: hostname, port: port).map { _ in
+                socket.start()
+            }.catch(authenticated.fail)
+            
+            socket.stream(to: parser)
+            
+            self.socket = socket
+            self.socketWrite = socket.onInput
+        }
         
         self.parser = parser
-        self.socket = socket
         self.queue = eventLoop.queue
         self.buffer = buffer
-        self.source = source
         self.username = user
         self.password = password
         self.database = database
         self.packetStream = .init()
         
-        self.authenticated = Promise<Void>()
-        
-        source.setEventHandler {
-            do {
-                let usedBufferSize = try socket.read(max: numericCast(UInt16.max), into: self.readBuffer)
-                
-                // Reuse existing pointer to data
-                let newBuffer = MutableByteBuffer(start: self.readBuffer, count: usedBufferSize)
-                
-                parser.onInput(newBuffer)
-            } catch {
-                socket.close()
-            }
-        }
-        source.resume()
-        
         self.parser.drain(onInput: self.handlePacket).catch { error in
             /// close the packet stream
+            self.authenticated.fail(error)
             self.packetStream.onError(error)
             self.close()
         }
@@ -125,17 +116,16 @@ public final class MySQLConnection {
     ///
     /// Handles the packet for the handshake
     internal func handlePacket(_ packet: Packet) {
+        if authenticated.future.isCompleted {
+            return
+        }
+        
         guard self.handshake != nil else {
             self.doHandshake(for: packet)
             return
         }
         
-        guard authenticated.future.isCompleted else {
-            finishAuthentication(for: packet, completing: authenticated)
-            return
-        }
-
-        // We're expecting nothing
+        finishAuthentication(for: packet, completing: authenticated)
     }
     
     /// Writes a packet's payload data to the socket
@@ -183,7 +173,7 @@ public final class MySQLConnection {
             memcpy(self.writeBuffer.advanced(by: 4), input.advanced(by: offset), dataSize)
             
             let buffer = ByteBuffer(start: self.writeBuffer, count: dataSize &+ 4)
-            _ = try self.socket.write(from: buffer)
+            _ = try self.socketWrite(buffer)
         }
         
         return
@@ -196,7 +186,8 @@ public final class MySQLConnection {
         readBuffer.deinitialize(count: Int(UInt16.max))
         readBuffer.deallocate(capacity: Int(UInt16.max))
 
-        self.close()
+        self.socket.close()
+        self.packetStream.close()
     }
     
     /// Closes the connection
@@ -215,15 +206,17 @@ extension MySQLConnection {
     public static func makeConnection(
         hostname: String,
         port: UInt16 = 3306,
+        ssl: Bool = false,
         user: String,
         password: String?,
-        database: String?,
+        database: String,
         on eventloop: EventLoop
     ) -> Future<MySQLConnection> {
         return then {
             let connection = try MySQLConnection(
                 hostname: hostname,
                 port: port,
+                ssl: ssl,
                 user: user,
                 password: password,
                 database: database,

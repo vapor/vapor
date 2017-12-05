@@ -9,19 +9,20 @@ final class ChunkEncoder: Async.Stream, ClosableStream {
     typealias Output = ByteBuffer
     
     /// An output stream of chunk encoded data
-    let stream = BasicStream<Output>()
+    let outputStream = BasicStream<Output>()
     
     /// See OutputStream.onOutput
     func close() {
         // An empty padding chunk
-        self.onInput(ByteBuffer(start: nil, count: 0))
-        
-        stream.close()
+        let header = Array(String.init(0, radix: 16, uppercase: true).utf8) + crlf
+        header.withUnsafeBufferPointer(outputStream.onInput)
+        crlf.withUnsafeBufferPointer(outputStream.onInput)
+        outputStream.close()
     }
     
     /// See ClosableStream.onClose
     func onClose(_ onClose: ClosableStream) {
-        stream.onClose(onClose)
+        outputStream.onClose(onClose)
     }
     
     /// See InputStream.onInput
@@ -29,19 +30,19 @@ final class ChunkEncoder: Async.Stream, ClosableStream {
         // - TODO: Improve performance
         let header = Array(String.init(input.count, radix: 16, uppercase: true).utf8) + crlf
         
-        header.withUnsafeBufferPointer(stream.onInput)
-        stream.onInput(input)
-        crlf.withUnsafeBufferPointer(stream.onInput)
+        header.withUnsafeBufferPointer(outputStream.onInput)
+        outputStream.onInput(input)
+        crlf.withUnsafeBufferPointer(outputStream.onInput)
     }
     
     /// See InputStream.onError
     func onError(_ error: Error) {
-        stream.onError(error)
+        outputStream.onError(error)
     }
     
     /// See OutputStream.onOutput
     func onOutput<I>(_ input: I) where I : Async.InputStream, ChunkEncoder.Output == I.Input {
-        stream.onOutput(input)
+        outputStream.onOutput(input)
     }
 }
 

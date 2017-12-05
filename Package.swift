@@ -100,7 +100,7 @@ let package = Package(
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // Core
-        .target(name: "Core", dependencies: ["Async", "libc", "Debugging"]),
+        .target(name: "Core", dependencies: ["Async", "Bits", "libc", "Debugging"]),
         .target(name: "libc"),
         
 
@@ -146,7 +146,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // MySQL
