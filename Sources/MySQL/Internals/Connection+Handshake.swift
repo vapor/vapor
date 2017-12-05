@@ -25,7 +25,7 @@ extension MySQLConnection {
         }
         
         if handshake.isGreaterThan4 {
-            let size = 32 + self.username.utf8.count + 1 + 1 + (password == nil ? 0 : 20) + (database?.count ?? -1) + 1
+            let size = 32 + self.username.utf8.count + 1 + 1 + (password == nil ? 0 : 20) + database.count + 1
             let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
             pointer.initialize(to: 0, count: size)
             
@@ -45,7 +45,7 @@ extension MySQLConnection {
                 UInt8((combinedCapabilities >> 1) & 0xff),
                 UInt8((combinedCapabilities >> 2) & 0xff),
                 UInt8((combinedCapabilities >> 3) & 0xff),
-                ], 4)
+            ], 4)
             
             writer += 4
             
@@ -67,7 +67,7 @@ extension MySQLConnection {
             if let password = password {
                 let hashedPassword = SHA1.hash(password)
                 let doublePasswordHash = SHA1.hash(hashedPassword)
-                var hash = Array(SHA1.hash(handshake.randomSeed + doublePasswordHash))
+                var hash = SHA1.hash(handshake.randomSeed + doublePasswordHash)
                 
                 for i in 0..<20 {
                     hash[i] = hash[i] ^ hashedPassword[i]
@@ -78,19 +78,19 @@ extension MySQLConnection {
                 writer += 1
                 
                 // SHA1 is always 20 long
-                memcpy(writer, hash, 20)
+                hash.withByteBuffer { buffer in
+                    _ = memcpy(writer, buffer.baseAddress!, 20)
+                }
                 writer += 20
             } else {
                 writer.pointee = 0
                 writer += 1
             }
             
-            if let database = database {
-                let db = [UInt8](database.utf8) + [0]
-                
-                memcpy(writer, db, db.count)
-                writer += database.count
-            }
+            let db = [UInt8](database.utf8) + [0]
+            
+            memcpy(writer, db, db.count)
+            writer += database.count
             
             let data = ByteBuffer(start: pointer, count: size)
             

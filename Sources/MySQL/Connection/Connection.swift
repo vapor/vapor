@@ -29,7 +29,7 @@ public final class MySQLConnection {
     let password: String?
     
     /// The database to select
-    let database: String?
+    let database: String
     
     /// A future promise
     var authenticated: Promise<Void>
@@ -53,13 +53,9 @@ public final class MySQLConnection {
     
     /// The client's capabilities
     var capabilities: Capabilities {
-        var base: Capabilities = [
-            .protocol41, .longFlag, .secureConnection
+        let base: Capabilities = [
+            .protocol41, .longFlag, .secureConnection, .connectWithDB, .pluginAuth
         ]
-        
-        if database != nil {
-            base.update(with: .connectWithDB)
-        }
         
         return base
     }
@@ -73,7 +69,7 @@ public final class MySQLConnection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String?, on eventLoop: EventLoop) throws {
+    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String, on eventLoop: EventLoop) throws {
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
         let parser = PacketParser()
@@ -214,7 +210,7 @@ extension MySQLConnection {
         ssl: Bool = false,
         user: String,
         password: String?,
-        database: String?,
+        database: String,
         on eventloop: EventLoop
     ) -> Future<MySQLConnection> {
         return then {
