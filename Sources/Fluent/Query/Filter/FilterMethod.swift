@@ -26,4 +26,23 @@ extension QueryBuilder {
         let filter = QueryFilter(entity: Model.entity, method: value)
         return addFilter(filter)
     }
+
+    @discardableResult
+    public func filter(
+        _ value: ModelFilterMethod<Model>
+    ) -> Self {
+        let filter = QueryFilter(entity: Model.entity, method: value.method)
+        return addFilter(filter)
+    }
+}
+
+/// Typed wrapper around query filter methods.
+public struct ModelFilterMethod<M> where M: Model {
+    /// The wrapped query filter method.
+    public let method: QueryFilterMethod
+
+    /// Creates a new model filter method.
+    public init(method: QueryFilterMethod) {
+        self.method = method
+    }
 }

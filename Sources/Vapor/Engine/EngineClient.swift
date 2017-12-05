@@ -1,6 +1,6 @@
 import Async
 import HTTP
-import HTTP2
+/*import HTTP2*/
 import TCP
 import TLS
 
@@ -17,7 +17,7 @@ public final class EngineClient: Client {
     /// See Responder.respond
     public func respond(to req: Request) -> Future<Response> {
         let ssl = req.http.uri.scheme == "https" ? true : false
-        if ssl {
+        /*if ssl {
             /// if using ssl, try to connect with http/2 first
             /// it will fallback to http/1 automatically
             return HTTP2Client.connect(
@@ -32,7 +32,7 @@ public final class EngineClient: Client {
                     return res
                 }
             }
-        } else {
+        } else {*/
             /// if using cleartext, just use http/1.
             return HTTPClient.connect(
                 to: req.http.uri.hostname ?? "",
@@ -46,7 +46,7 @@ public final class EngineClient: Client {
                     return res
                 }
             }
-        }
+        /*}*/
     }
 }
 

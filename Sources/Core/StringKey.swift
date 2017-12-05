@@ -30,3 +30,30 @@ public struct BasicKey: CodingKey {
         self.stringValue = intValue.description
     }
 }
+
+/// Capable of being represented by a coding key.
+public protocol BasicKeyRepresentable {
+    /// Makes a coding key representation.
+    func makeBasicKey() -> BasicKey
+}
+
+extension String: BasicKeyRepresentable {
+    /// See BasicKeyRepresentable.makeBasicKey
+    public func makeBasicKey() -> BasicKey {
+        return BasicKey(self)
+    }
+}
+
+extension Int: BasicKeyRepresentable {
+    /// See BasicKeyRepresentable.makeBasicKey
+    public func makeBasicKey() -> BasicKey {
+        return BasicKey(self)
+    }
+}
+
+extension Array where Element == BasicKeyRepresentable {
+    /// Converts an array of CodingKeyRepresentable to [CodingKey]
+    public func makeBasicKeys() -> [BasicKey] {
+        return map { $0.makeBasicKey() }
+    }
+}

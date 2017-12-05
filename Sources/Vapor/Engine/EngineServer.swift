@@ -129,7 +129,7 @@ fileprivate final class TCPHTTPPeer: Async.Stream, HTTPStartable, HTTPUpgradable
 }
 
 extension Logger {
-    fileprivate func reportError(_ error: Error, as label: String) {
+    func reportError(_ error: Error, as label: String) {
         var string = "\(label): "
         if let debuggable = error as? Debuggable {
             string += debuggable.fullIdentifier

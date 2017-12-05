@@ -225,7 +225,7 @@ router.get("run") { req -> Future<String> in
 }
 
 router.get("all") { req -> Future<String> in
-    return try User.query(on: req).filter(\User.name == "Vapor").all().then { _ -> String in
+    return try User.query(on: req).filter(\.name == "Vapor").all().then { _ -> String in
         return "done"
     }
 }

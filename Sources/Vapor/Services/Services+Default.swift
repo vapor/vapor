@@ -45,7 +45,7 @@ extension Services {
         }
         
         services.register { worker in
-            return ErrorMiddleware(environment: worker.environment)
+            return try ErrorMiddleware(environment: worker.environment, log: worker.make(for: ErrorMiddleware.self))
         }
 
         // register router

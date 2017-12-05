@@ -15,6 +15,15 @@ extension Encodable {
 
 /// MARK: .equals
 
+/// Model.field == value
+public func == <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .equality(.equals), .value(rhs))
+    )
+}
+
 /// field == value
 public func == <
     Field: QueryFieldRepresentable,
@@ -32,6 +41,15 @@ public func == <
 }
 
 /// MARK: .notEquals
+
+/// Model.field != value
+public func != <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .equality(.notEquals), .value(rhs))
+    )
+}
 
 /// field != value
 public func != <
@@ -83,6 +101,17 @@ public enum OrderedComparison {
 }
 
 /// .greaterThan
+
+/// Model.field > value
+public func > <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .order(.greaterThan), .value(rhs))
+    )
+}
+
+/// field > value
 public func > <
     Field: QueryFieldRepresentable,
     Value: Encodable & Comparable
@@ -90,7 +119,26 @@ public func > <
     return try .compare(lhs.makeQueryField(), .order(.greaterThan), .value(rhs))
 }
 
+/// field > field
+public func > <
+    A: QueryFieldRepresentable,
+    B: QueryFieldRepresentable
+>(lhs: A, rhs: B) throws -> QueryFilterMethod {
+    return try .compare(lhs.makeQueryField(), .order(.greaterThan), .field(rhs.makeQueryField()))
+}
+
 /// .lessThan
+
+/// Model.field > value
+public func < <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .order(.lessThan), .value(rhs))
+    )
+}
+
+/// field < value
 public func < <
     Field: QueryFieldRepresentable,
     Value: Encodable & Comparable
@@ -98,7 +146,26 @@ public func < <
     return try .compare(lhs.makeQueryField(), .order(.lessThan), .value(rhs))
 }
 
+/// field > field
+public func < <
+    A: QueryFieldRepresentable,
+    B: QueryFieldRepresentable
+>(lhs: A, rhs: B) throws -> QueryFilterMethod {
+    return try .compare(lhs.makeQueryField(), .order(.lessThan), .field(rhs.makeQueryField()))
+}
+
 /// .greaterThanOrEquals
+
+/// Model.field >= value
+public func >= <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .order(.greaterThanOrEquals), .value(rhs))
+    )
+}
+
+/// field >= value
 public func >= <
     Field: QueryFieldRepresentable,
     Value: Encodable & Comparable
@@ -106,7 +173,26 @@ public func >= <
     return try .compare(lhs.makeQueryField(), .order(.greaterThanOrEquals), .value(rhs))
 }
 
+/// field >= field
+public func >= <
+    A: QueryFieldRepresentable,
+    B: QueryFieldRepresentable
+>(lhs: A, rhs: B) throws -> QueryFilterMethod {
+    return try .compare(lhs.makeQueryField(), .order(.greaterThanOrEquals), .field(rhs.makeQueryField()))
+}
+
 /// .lessThanOrEquals
+
+/// Model.field <= value
+public func <= <Model, Value>(lhs: ReferenceWritableKeyPath<Model, Value>, rhs: Value) throws -> ModelFilterMethod<Model>
+    where Model: Fluent.Model, Value: Encodable & Equatable
+{
+    return try ModelFilterMethod<Model>(
+        method: .compare(lhs.makeQueryField(), .order(.lessThanOrEquals), .value(rhs))
+    )
+}
+
+/// field <= value
 public func <= <
     Field: QueryFieldRepresentable,
     Value: Encodable & Comparable
@@ -114,32 +200,10 @@ public func <= <
     return try .compare(lhs.makeQueryField(), .order(.lessThanOrEquals), .value(rhs))
 }
 
-/// Field
-
-/// .greaterThan
-public func > <
-    Field: QueryFieldRepresentable
->(lhs: Field, rhs: QueryField) throws -> QueryFilterMethod {
-    return try .compare(lhs.makeQueryField(), .order(.greaterThan), .field(rhs))
-}
-
-/// .lessThan
-public func < <
-    Field: QueryFieldRepresentable
->(lhs: Field, rhs: QueryField) throws -> QueryFilterMethod {
-    return try .compare(lhs.makeQueryField(), .order(.lessThan), .field(rhs))
-}
-
-/// .greaterThanOrEquals
-public func >= <
-    Field: QueryFieldRepresentable
->(lhs: Field, rhs: QueryField) throws -> QueryFilterMethod {
-    return try .compare(lhs.makeQueryField(), .order(.greaterThanOrEquals), .field(rhs))
-}
-
-/// .lessThanOrEquals
+/// field <= field
 public func <= <
-    Field: QueryFieldRepresentable
->(lhs: Field, rhs: QueryField) throws -> QueryFilterMethod {
-    return try .compare(lhs.makeQueryField(), .order(.lessThanOrEquals), .field(rhs))
+    A: QueryFieldRepresentable,
+    B: QueryFieldRepresentable
+    >(lhs: A, rhs: B) throws -> QueryFilterMethod {
+    return try .compare(lhs.makeQueryField(), .order(.lessThanOrEquals), .field(rhs.makeQueryField()))
 }
