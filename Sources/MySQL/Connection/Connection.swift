@@ -126,6 +126,8 @@ public final class MySQLConnection {
         
         guard authenticated.future.isCompleted else {
             finishAuthentication(for: packet, completing: authenticated)
+            /// start streaming to packet stream now
+            parser.stream(to: packetStream)
             return
         }
 
