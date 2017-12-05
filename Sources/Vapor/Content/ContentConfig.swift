@@ -4,10 +4,10 @@ import FormURLEncoded
 /// Configures which encoders/decoders to use for a given media type.
 public struct ContentConfig {
     /// Configured encoders.
-    var encoders: [MediaType: DataEncoder]
+    var encoders: [MediaType: BodyEncoder]
 
     /// Configured decoders.
-    var decoders: [MediaType: DataDecoder]
+    var decoders: [MediaType: BodyDecoder]
 
     /// Create a new content config.
     public init() {
@@ -16,17 +16,17 @@ public struct ContentConfig {
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use(encoder: DataEncoder, for mediaType: MediaType) {
+    public mutating func use(encoder: BodyEncoder, for mediaType: MediaType) {
         self.encoders[mediaType] = encoder
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use(decoder: DataDecoder, for mediaType: MediaType) {
+    public mutating func use(decoder: BodyDecoder, for mediaType: MediaType) {
         self.decoders[mediaType] = decoder
     }
 
     /// Returns an encoder for the specified media type or throws an error.
-    func requireEncoder(for mediaType: MediaType) throws -> DataEncoder {
+    func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
         guard let encoder = encoders[mediaType] else {
             throw "no encoder for \(mediaType)"
         }
@@ -35,7 +35,7 @@ public struct ContentConfig {
     }
 
     /// Returns a decoder for the specified media type or throws an error.
-    func requireDecoder(for mediaType: MediaType) throws -> DataDecoder {
+    func requireDecoder(for mediaType: MediaType) throws -> BodyDecoder {
         guard let decoder = decoders[mediaType] else {
             throw "no decoder for \(mediaType)"
         }
@@ -66,5 +66,5 @@ extension ContentConfig {
     }
 }
 
-extension FormURLEncoder: DataEncoder {}
-extension FormURLDecoder: DataDecoder {}
+extension FormURLEncoder: BodyEncoder {}
+extension FormURLDecoder: BodyDecoder {}

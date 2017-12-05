@@ -13,7 +13,7 @@ extension ContentContainer {
     public func encode<C: Content>(_ content: C) throws {
         let coders = try container.superContainer.make(ContentConfig.self, for: ContentContainer.self)
         let encoder = try coders.requireEncoder(for: C.defaultMediaType)
-        let body = try HTTPBody(encoder.encode(content))
+        let body = try encoder.encodeBody(from: content)
         update(body, C.defaultMediaType)
     }
 
@@ -22,7 +22,7 @@ extension ContentContainer {
     public func encode<E: Encodable>(_ encodable: E, as mediaType: MediaType) throws {
         let coders = try container.superContainer.make(ContentConfig.self, for: ContentContainer.self)
         let encoder = try coders.requireEncoder(for: mediaType)
-        let body = try HTTPBody(encoder.encode(encodable))
+        let body = try encoder.encodeBody(from: encodable)
         update(body, mediaType)
     }
     
@@ -32,11 +32,9 @@ extension ContentContainer {
         guard let mediaType = mediaType else {
             throw "no media type"
         }
-        guard let data = body.data else {
-            throw "no body data"
-        }
+        
         let encoder = try coders.requireDecoder(for: mediaType)
-        return try encoder.decode(D.self, from: data)
+        return try encoder.decode(D.self, from: body)
     }
 }
 
@@ -45,6 +43,6 @@ extension QueryContainer {
     public func decode<D: Decodable>(_ decodable: D.Type) throws -> D {
         let coders = try container.superContainer.make(ContentConfig.self, for: QueryContainer.self)
         let encoder = try coders.requireDecoder(for: .urlEncodedForm)
-        return try encoder.decode(D.self, from: Data(query.utf8))
+        return try encoder.decode(D.self, from: HTTPBody(string: query))
     }
 }
