@@ -106,6 +106,7 @@ public final class MySQLConnection {
         
         self.parser.drain(onInput: self.handlePacket).catch { error in
             /// close the packet stream
+            self.authenticated.fail(error)
             self.packetStream.onError(error)
             self.close()
         }
