@@ -88,7 +88,9 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable) throws -> Future<View> {
+    public func make<E>(_ path: String, _ context: E) throws -> Future<View>
+        where E: Encodable
+    {
         return try render(
             path: path,
             context: LeafContext(data: LeafEncoder().encode(context))

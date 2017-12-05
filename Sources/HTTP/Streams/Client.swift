@@ -81,6 +81,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
             let promise = Promise(HTTPResponse.self)
             self.inFlight = promise
             self.serializer.onInput(request)
+            
             return promise.future
         }
     }

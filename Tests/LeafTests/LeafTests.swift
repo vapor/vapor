@@ -355,7 +355,7 @@ class LeafTests: XCTestCase {
             var name = "test"
         }
         let rendered = try view.make(
-            "foo", context: TestContext()
+            "foo", TestContext()
         ).blockingAwait()
 
         let expected = """

@@ -145,6 +145,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
                 
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
+                    self.writeSource?.suspend()
                     return
                 }
                 
@@ -246,7 +247,10 @@ public final class TCPClient: Async.Stream, ClosableStream {
         }
         
         readSource = nil
-        writeSource = nil
+        
+        // TODO: This crashes on Linux
+        // writeSource = nil
+        
         socket.close()
         // important! it's common for a client to drain into itself
         // we need to make sure to break that reference cycle

@@ -64,11 +64,9 @@ public final class EngineServer: Server {
                 .drain { data in
                     client.onInput(data)
                     serializer.upgradeHandler?.closure(client.tcp)
-                }.catch { err in
-                    logger.reportError(err, as: "Uncaught error")
+                }.catch { error in
+                    logger.reportError(error, as: "Uncaught error")
                     client.close()
-                }.finally {
-                    // client closed
                 }
 
             client.tcp.start()

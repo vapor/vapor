@@ -25,7 +25,14 @@ extension MySQLConnection {
         }
         
         if handshake.isGreaterThan4 {
-            let size = 32 + self.username.utf8.count + 1 + 1 + (password == nil ? 0 : 20) + (database?.count ?? -1) + 1
+            var size = 32 + self.username.utf8.count + 1 + database.utf8.count + 1
+            
+            if let password = self.password, handshake.capabilities.contains(.secureConnection) {
+                size += 21
+            } else {
+                size += 1
+            }
+            
             let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
             pointer.initialize(to: 0, count: size)
             
@@ -45,7 +52,7 @@ extension MySQLConnection {
                 UInt8((combinedCapabilities >> 1) & 0xff),
                 UInt8((combinedCapabilities >> 2) & 0xff),
                 UInt8((combinedCapabilities >> 3) & 0xff),
-                ], 4)
+            ], 4)
             
             writer += 4
             
@@ -65,32 +72,24 @@ extension MySQLConnection {
             writer += username.count + 1
             
             if let password = password {
-                let hashedPassword = SHA1.hash(password)
-                let doublePasswordHash = SHA1.hash(hashedPassword)
-                var hash = Array(SHA1.hash(handshake.randomSeed + doublePasswordHash))
-                
-                for i in 0..<20 {
-                    hash[i] = hash[i] ^ hashedPassword[i]
-                }
+                let hash = sha1Encrypted(from: password, seed: handshake.randomSeed)
                 
                 // SHA1.digestSize == 20
                 writer.pointee = 20
                 writer += 1
                 
                 // SHA1 is always 20 long
-                memcpy(writer, hash, 20)
+                hash.withByteBuffer { buffer in
+                    _ = memcpy(writer, buffer.baseAddress!, 20)
+                }
                 writer += 20
             } else {
                 writer.pointee = 0
                 writer += 1
             }
             
-            if let database = database {
-                let db = [UInt8](database.utf8) + [0]
-                
-                memcpy(writer, db, db.count)
-                writer += database.count
-            }
+            memcpy(writer, database, database.utf8.count)
+            writer += database.count + 1
             
             let data = ByteBuffer(start: pointer, count: size)
             
@@ -100,24 +99,78 @@ extension MySQLConnection {
         }
     }
     
+    func sha1Encrypted(from password: String, seed: [UInt8]) -> Data {
+        let hashedPassword = SHA1.hash(password)
+        let doublePasswordHash = SHA1.hash(hashedPassword)
+        var hash = SHA1.hash(seed + doublePasswordHash)
+        
+        for i in 0..<20 {
+            hash[i] = hash[i] ^ hashedPassword[i]
+        }
+        
+        return hash
+    }
+    
     /// Parse the authentication request
     func finishAuthentication(for packet: Packet, completing: Promise<Void>) {
         do {
-            let response = try packet.parseResponse(mysql41: self.mysql41)
-            
-            switch response {
-            case .error(_):
-                completing.fail(MySQLError(.invalidCredentials))
-                // Unauthenticated
-                self.socket.close()
-                return
+            switch packet.payload.first {
+            case 0xfe:
+                if packet.payload.count == 0 {
+                    completing.fail(MySQLError(.invalidHandshake))
+                } else {
+                    var offset = 1
+                    
+                    while offset < packet.payload.count, packet.payload[offset] != 0x00 {
+                        offset = offset &+ 1
+                    }
+                    
+                    guard
+                        offset < packet.payload.count,
+                        let password = self.password,
+                        let mechanism = String(bytes: packet.payload[1..<offset], encoding: .utf8)
+                    else {
+                        completing.fail(MySQLError(.invalidHandshake))
+                        return
+                    }
+                    
+                    switch mechanism {
+                    case "mysql_native_password":
+                        guard offset &+ 2 < packet.payload.count else {
+                            completing.fail(MySQLError(.invalidHandshake))
+                            return
+                        }
+                        
+                        let hash = sha1Encrypted(from: password, seed: Array(packet.payload[(offset &+ 1)...]))
+                        
+                        try self.write(packetFor: hash)
+                    case "mysql_clear_password":
+                        try self.write(packetFor: Data(password.utf8))
+                    default:
+                        completing.fail(MySQLError(.invalidHandshake))
+                    }
+                }
+            case 0xff:
+                completing.fail(MySQLError(packet: packet))
             default:
                 // auth is finished, have the parser stream to the packet stream now
                 parser.stream(to: packetStream)
                 completing.complete()
+            }
+            
+            let response = try packet.parseResponse(mysql41: self.mysql41)
+            
+            switch response {
+            case .error(let error):
+                completing.fail(error)
+                // Unauthenticated
+                self.socket.close()
+                return
+            default:
                 return
             }
         } catch {
+            self.authenticated.fail(error)
             self.socket.close()
         }
     }
