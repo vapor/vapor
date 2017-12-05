@@ -66,6 +66,7 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     public static let movedPermanently = HTTPStatus(code: 301, staticMessage: "Moved Permanently")
     public static let found = HTTPStatus(code: 302, staticMessage: "Found")
     public static let seeOther = HTTPStatus(code: 303, staticMessage: "See Other")
+    public static let notModified = HTTPStatus(code: 304, staticMessage: "Not modified")
     public static let temporaryRedirect = HTTPStatus(code: 307, staticMessage: "Temporary Redirect")
     
     // MARK - 4xx Client Error

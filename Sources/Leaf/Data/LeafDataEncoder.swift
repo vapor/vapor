@@ -7,7 +7,7 @@ public final class LeafEncoder {
     public init() {}
 
     /// Encode an encodable item to leaf data.
-    public func encode(_ encodable: Encodable) throws -> LeafData {
+    public func encode<E: Encodable>(_ encodable: E) throws -> LeafData {
         let encoder = _LeafEncoder()
         try encodable.encode(to: encoder)
         return encoder.partialData.context
@@ -49,7 +49,6 @@ internal final class _LeafEncoder: Encoder {
 
     /// See Encoder.singleValueContainer
     func singleValueContainer() -> SingleValueEncodingContainer {
-        print("\(#function):\(#file):\(#line)")
         return LeafSingleValueEncoder(
             codingPath: codingPath,
             partialData: partialData

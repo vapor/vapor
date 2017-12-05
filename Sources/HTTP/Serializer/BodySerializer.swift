@@ -4,7 +4,7 @@ import Foundation
 
 extension HTTPBody {
     /// Serialized a body to an outputstream
-    func serialize<S: Serializer>(into outputStream: S) {
+    func serialize<S>(into outputStream: S) where S: Serializer {
         switch self.storage {
         case .dispatchData(let data):
             Data(data).withByteBuffer(outputStream.write)
@@ -23,7 +23,7 @@ extension HTTPBody {
                 }
             }
         case .stream(let bodyStream):
-            bodyStream.stream(to: ChunkEncoder()).drain(onInput: outputStream.write).catch(onError: outputStream.onError)
+            bodyStream.stream(to: ChunkEncoder()).stream(to: outputStream.outputStream)
         }
     }
 }

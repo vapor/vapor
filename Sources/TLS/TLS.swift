@@ -21,7 +21,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
     let ssl: SSLStream
     
     /// The TCP that is used in the SSL Stream
-    let client: TCPClient
+    public let client: TCPClient
     
     /// A DispatchQueue on which this Client executes all operations
     let queue: DispatchQueue

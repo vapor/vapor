@@ -7,7 +7,7 @@ public final class Benchmarker<Database: Fluent.Database> {
     /// The database being benchmarked
     public let database: Database
     
-    let pool: DatabaseConnectionPool<Database>
+    public let pool: DatabaseConnectionPool<Database>
 
     /// Error handler
     public typealias OnFail = (String, StaticString, UInt) -> ()

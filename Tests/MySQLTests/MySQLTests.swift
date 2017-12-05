@@ -23,8 +23,8 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        on: DispatchQueue(label: "single")
-    ).blockingAwait(timeout: .seconds(3))
+        on: poolQueue
+    ).blockingAwait(timeout: .seconds(10))
 
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
@@ -40,6 +40,7 @@ class MySQLTests: XCTestCase {
     override func setUp() {
         _ = try? connection.dropTables(named: "users").blockingAwait(timeout: .seconds(3))
         _ = try? connection.dropTables(named: "complex").blockingAwait(timeout: .seconds(3))
+        _ = try? connection.dropTables(named: "test").blockingAwait(timeout: .seconds(3))
     }
 
     func testPreparedStatements() throws {
@@ -60,7 +61,7 @@ class MySQLTests: XCTestCase {
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")
      
-        table.schema.append(Table.Column(named: "id", type: .int8(length: nil), autoIncrement: true, primary: true, unique: true))
+        table.schema.append(Table.Column(named: "id", type: .int16(length: nil), autoIncrement: true, primary: true, unique: true))
      
         table.schema.append(Table.Column(named: "username", type: .varChar(length: 32, binary: false), autoIncrement: false, primary: false, unique: false))
      
@@ -79,6 +80,7 @@ class MySQLTests: XCTestCase {
         try testCreateUsersSchema()
         
         var results = [Future<Void>]()
+        results.reserveCapacity(100)
         
         MySQLTests.poolQueue.sync {
             for i in 0..<100 {
@@ -210,4 +212,9 @@ struct Complex: Decodable {
     var ui32: UInt32
     var i64: Int64
     var ui64: UInt64
+}
+
+struct Test: Decodable {
+    var id: Int
+    var num: Int
 }
