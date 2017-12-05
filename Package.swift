@@ -47,6 +47,9 @@ let package = Package(
 
         // MySQL
         .library(name: "MySQL", targets: ["MySQL"]),
+        
+        // Multipart
+        .library(name: "Multipart", targets: ["Multipart"]),
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
@@ -149,7 +152,7 @@ let package = Package(
         .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
-        // MySQL
+        // Multipart
         .target(name: "Multipart", dependencies: ["Core", "Debugging", "HTTP"]),
         .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
 
