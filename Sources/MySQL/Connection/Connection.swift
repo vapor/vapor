@@ -115,19 +115,16 @@ public final class MySQLConnection {
     ///
     /// Handles the packet for the handshake
     internal func handlePacket(_ packet: Packet) {
+        if authenticated.future.isCompleted {
+            return
+        }
+        
         guard self.handshake != nil else {
             self.doHandshake(for: packet)
             return
         }
         
-        guard authenticated.future.isCompleted else {
-            finishAuthentication(for: packet, completing: authenticated)
-            /// start streaming to packet stream now
-            parser.stream(to: packetStream)
-            return
-        }
-
-        // We're expecting nothing
+        finishAuthentication(for: packet, completing: authenticated)
     }
     
     /// Writes a packet's payload data to the socket
