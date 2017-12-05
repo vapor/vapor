@@ -22,7 +22,7 @@ class LeafTests: XCTestCase {
     func testPrint() throws {
         let template = "Hello, #(name)!"
         let data = LeafData.dictionary(["name": .string("Tanner")])
-        try XCTAssertEqual(renderer.render(template, context: data).blockingAwait(), "Hello, Tanner!")
+        try XCTAssertEqual(renderer.render(template, context: data.context).blockingAwait(), "Hello, Tanner!")
     }
 
     func testConstant() throws {
@@ -35,7 +35,7 @@ class LeafTests: XCTestCase {
         <p>#("foo: #(foo)")</p>
         """
         let data = LeafData.dictionary(["foo": .string("bar")])
-        try XCTAssertEqual(renderer.render(template, context: data).blockingAwait(), "<p>foo: bar</p>")
+        try XCTAssertEqual(renderer.render(template, context: data.context).blockingAwait(), "<p>foo: bar</p>")
     }
 
     func testNested() throws {
@@ -43,7 +43,7 @@ class LeafTests: XCTestCase {
         <p>#(embed(foo))</p>
         """
         let data = LeafData.dictionary(["foo": .string("bar")])
-        try XCTAssertEqual(renderer.render(template, context: data).blockingAwait(), "<p>Test file name: &quot;/bar.leaf&quot;</p>")
+        try XCTAssertEqual(renderer.render(template, context: data.context).blockingAwait(), "<p>Test file name: &quot;/bar.leaf&quot;</p>")
     }
 
     func testExpression() throws {
@@ -51,8 +51,8 @@ class LeafTests: XCTestCase {
 
         let young = LeafData.dictionary(["age": .int(21)])
         let old = LeafData.dictionary(["age": .int(150)])
-        try XCTAssertEqual(renderer.render(template, context: young).blockingAwait(), "false")
-        try XCTAssertEqual(renderer.render(template, context: old).blockingAwait(), "true")
+        try XCTAssertEqual(renderer.render(template, context: young.context).blockingAwait(), "false")
+        try XCTAssertEqual(renderer.render(template, context: old.context).blockingAwait(), "true")
     }
 
     func testBody() throws {
@@ -61,8 +61,8 @@ class LeafTests: XCTestCase {
         """
         let noShow = LeafData.dictionary(["show": .bool(false)])
         let yesShow = LeafData.dictionary(["show": .bool(true)])
-        try XCTAssertEqual(renderer.render(template, context: noShow).blockingAwait(), "")
-        try XCTAssertEqual(renderer.render(template, context: yesShow).blockingAwait(), "hi")
+        try XCTAssertEqual(renderer.render(template, context: noShow.context).blockingAwait(), "")
+        try XCTAssertEqual(renderer.render(template, context: yesShow.context).blockingAwait(), "hi")
     }
 
     func testRuntime() throws {
@@ -72,7 +72,7 @@ class LeafTests: XCTestCase {
             Runtime: #(foo)
         """
 
-        let res = try renderer.render(template, context: .dictionary([:])).blockingAwait()
+        let res = try renderer.render(template, context: .null).blockingAwait()
         print(res)
         XCTAssert(res.contains("Runtime: bar"))
     }
@@ -154,7 +154,7 @@ class LeafTests: XCTestCase {
             </ul>
         </p>
         """
-        try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expect)
+        try XCTAssertEqual(renderer.render(template, context: context.context).blockingAwait(), expect)
     }
 
     func testIfSugar() throws {
@@ -210,7 +210,7 @@ class LeafTests: XCTestCase {
                 didAccess = true
                 return .string("hi")
             })
-        ])
+        ]).context
 
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), "")
         XCTAssertEqual(didAccess, false)
@@ -233,7 +233,7 @@ class LeafTests: XCTestCase {
                 "isAdmin": .bool(true),
                 "name": .string("Tanner")
             ])
-        ])
+        ]).context
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), "Hello, Tanner!")
     }
 
@@ -247,7 +247,7 @@ class LeafTests: XCTestCase {
                 "id": .int(42),
                 "name": .string("Tanner")
             ])
-        ])
+        ]).context
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), "User 42!")
     }
 
@@ -307,7 +307,7 @@ class LeafTests: XCTestCase {
             "items": .array([.string("foo"), .string("bar"), .string("baz")])
         ])
 
-        try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
+        try XCTAssertEqual(renderer.render(template, context: context.context).blockingAwait(), expected)
     }
 
     func testAsyncExport() throws {
@@ -334,7 +334,7 @@ class LeafTests: XCTestCase {
             return preloaded
         }
         let renderer = LeafRenderer(config: config, on: queue)
-        try XCTAssertEqual(renderer.render(template, context: .dictionary([:])).blockingAwait(), expected)
+        try XCTAssertEqual(renderer.render(template, context: .null).blockingAwait(), expected)
     }
 
     func testService() throws {
@@ -372,22 +372,23 @@ class LeafTests: XCTestCase {
         let expected = """
         count: 4
         """
-        let context = LeafData.dictionary(["array": .array([.null, .null, .null, .null])])
+        let context = LeafData.dictionary(["array": .array([.null, .null, .null, .null])]).context
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
     }
 
     func testNestedSet() throws {
         let template = """
         #if(a) {
-            #set("title") { "A" }
+            #set("title") {A}
         }
         title: #get(title)
         """
         let expected = """
+
         title: A
         """
 
-        let context = LeafData.dictionary(["a": .bool(true)])
+        let context = LeafData.dictionary(["a": .bool(true)]).context
         try XCTAssertEqual(renderer.render(template, context: context).blockingAwait(), expected)
     }
 
@@ -415,5 +416,14 @@ class LeafTests: XCTestCase {
         ("testAsyncExport", testAsyncExport),
         ("testService", testService),
         ("testCount", testCount),
+        ("testNestedSet", testNestedSet),
     ]
+}
+
+extension LeafData {
+    var context: LeafContext { return LeafContext(data: self) }
+}
+
+extension LeafContext {
+    static var null: LeafContext { return LeafContext(data: .null) }
 }

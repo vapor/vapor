@@ -2,6 +2,17 @@ import Async
 import Dispatch
 import Foundation
 
+/// A reference wrapper around leaf data.
+public final class LeafContext {
+    /// The wrapped data
+    public var data: LeafData
+
+    /// Create a new LeafContext
+    public init(data: LeafData) {
+        self.data = data
+    }
+}
+
 /// Data structure for passing data
 /// into Leaf templates as a context.
 public enum LeafData {
