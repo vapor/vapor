@@ -1,4 +1,5 @@
 import Async
+import Bits
 import Console
 import Core
 import Debugging
@@ -43,36 +44,24 @@ public final class EngineServer: Server {
         let tcp = try TCPServer(eventLoops: eventLoops.map { $0.queue })
 
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-        let server = HTTPServer(socket: tcp)
+
+        let mapStream = MapStream<TCPClient, TCPHTTPPeer>(map: TCPHTTPPeer.init)
+        let server = HTTPServer<TCPHTTPPeer>(socket: tcp.stream(to: mapStream))
 
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
         
         // setup the server pipeline
-        server.drain { client in
-            let eventLoop = eventLoopsIterator.next()!
-            let parser = HTTP.RequestParser(maxSize: 10_000_000)
-            let responderStream = ResponderStream(
+        server.start {
+            return ResponderStream(
                 responder: responder,
-                using: eventLoop
+                using: eventLoopsIterator.next()!
             )
-            let serializer = HTTP.ResponseSerializer()
-            
-            client.stream(to: parser)
-                .stream(to: responderStream)
-                .stream(to: serializer)
-                .drain { data in
-                    client.onInput(data)
-                    serializer.upgradeHandler?.closure(client.tcp)
-                }.catch { error in
-                    logger.reportError(error, as: "Uncaught error")
-                    client.close()
-                }
-
-            client.tcp.start()
         }.catch { err in
             logger.reportError(err, as: "Server error")
             debugPrint(err)
+        }.finally {
+            // on close
         }
         
         console.print("Server starting on ", newLine: false)
@@ -91,8 +80,56 @@ public final class EngineServer: Server {
     }
 }
 
+fileprivate final class TCPHTTPPeer: Async.Stream, HTTPStartable, HTTPUpgradable {
+    typealias Input = HTTPResponse
+    typealias Output = HTTPRequest
+
+    let tcp: TCPClient
+    let serializer: ResponseSerializer
+    let parser: RequestParser
+    var byteStream: BasicStream<ByteBuffer>
+
+    init(tcp: TCPClient) {
+        self.tcp = tcp
+        serializer = .init()
+        parser = .init(maxSize: 10_000_000)
+
+        byteStream = BasicStream<ByteBuffer>.init(
+            onInput: tcp.onInput,
+            onError: tcp.onError,
+            onClose: tcp.close
+        )
+        serializer.stream(to: tcp)
+        tcp.stream(to: parser)
+    }
+
+    func onInput(_ input: Input) {
+        serializer.onInput(input)
+    }
+
+    func onError(_ error: Error) {
+        tcp.onError(error)
+    }
+
+    func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
+        parser.onOutput(input)
+    }
+
+    func close() {
+        tcp.close()
+    }
+
+    func start() {
+        tcp.start()
+    }
+
+    func onClose(_ onClose: ClosableStream) {
+        tcp.onClose(onClose)
+    }
+}
+
 extension Logger {
-    fileprivate func reportError(_ error: Error, as label: String) {
+    func reportError(_ error: Error, as label: String) {
         var string = "\(label): "
         if let debuggable = error as? Debuggable {
             string += debuggable.fullIdentifier

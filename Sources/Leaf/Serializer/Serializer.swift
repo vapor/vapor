@@ -5,12 +5,12 @@ import Foundation
 /// Serializes parsed Leaf ASTs into view bytes.
 public final class Serializer {
     let ast: [Syntax]
-    var context: LeafData
+    var context: LeafContext
     let renderer: LeafRenderer
     let eventLoop: EventLoop
 
     /// Creates a new Serializer.
-    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafData, on eventLoop: EventLoop) {
+    public init(ast: [Syntax], renderer: LeafRenderer,  context: LeafContext, on eventLoop: EventLoop) {
         self.ast = ast
         self.context = context
         self.renderer = renderer
@@ -95,7 +95,7 @@ public final class Serializer {
                 
                 return try tag.render(
                     parsed: parsed,
-                    context: &self.context,
+                    context: self.context,
                     renderer: self.renderer
                 ).then { data -> Future<LeafData?> in
                     if let data = data {
@@ -290,7 +290,7 @@ public final class Serializer {
     private func contextFetch(path: [String]) -> Future<LeafData?> {
         var promise = Promise(LeafData?.self)
 
-        var current = context
+        var current = context.data
         var iterator = path.makeIterator()
 
         func handle(_ path: String) {

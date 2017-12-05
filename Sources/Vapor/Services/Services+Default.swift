@@ -23,6 +23,16 @@ extension Services {
             return EngineServerConfig()
         }
 
+        services.register(Client.self) { container -> EngineClient in
+            if let sub = container as? SubContainer {
+                /// if a request is creating a client, we should
+                /// use the event loop as the container
+                return EngineClient(container: sub.superContainer)
+            } else {
+                return EngineClient(container: container)
+            }
+        }
+
         // register middleware
         services.register { container -> MiddlewareConfig in
             var config = MiddlewareConfig()
@@ -42,7 +52,7 @@ extension Services {
         }
         
         services.register { worker in
-            return ErrorMiddleware(environment: worker.environment)
+            return try ErrorMiddleware(environment: worker.environment, log: worker.make(for: ErrorMiddleware.self))
         }
 
         // register router

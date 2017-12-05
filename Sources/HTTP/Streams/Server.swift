@@ -1,26 +1,33 @@
 import Async
+import Bits
 import TCP
 import Service
 
 /// HTTP server wrapped around TCP server
-public final class HTTPServer: Async.OutputStream, ClosableStream {
+public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream where
+    HTTPPeer: Async.Stream,
+    HTTPPeer.Input == HTTPResponse,
+    HTTPPeer.Output == HTTPRequest,
+    HTTPPeer: HTTPStartable,
+    HTTPPeer: HTTPUpgradable
+{
     /// See OutputStream.Output
     public typealias Output = HTTPPeer
 
     /// The wrapped Client Stream
     private let socket: ClosableStream
 
-    /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    /// Internal output stream
+    private let outputStream: BasicStream<Output>
 
     /// Creates a new HTTP Server from a Client stream
-    public init<TCPClientStream>(socket: TCPClientStream)
-        where TCPClientStream: OutputStream,
-        TCPClientStream.Output == TCPClient
+    public init<HTTPPeerStream>(socket: HTTPPeerStream)
+        where HTTPPeerStream: OutputStream,
+        HTTPPeerStream.Output == HTTPPeer
     {
         self.socket = socket
-        let map = MapStream<TCPClient, HTTPPeer>(map: HTTPPeer.init)
-        socket.stream(to: map).stream(to: outputStream)
+        self.outputStream = .init()
+        socket.stream(to: outputStream)
     }
 
     /// See OutputStream.onOutput
@@ -33,9 +40,41 @@ public final class HTTPServer: Async.OutputStream, ClosableStream {
         outputStream.onClose(onClose)
     }
 
+    /// Starts the server, draining the stream of peers
+    /// into the supplied responder stream.
+    /// Errors thrown by clients will be routed to the
+    /// server's error stream.
+    public func start<Responder>(using responder: @escaping () -> (Responder)) -> BasicStream<HTTPPeer>
+        where Responder: Async.Stream,
+        Responder.Input == HTTPRequest,
+        Responder.Output == HTTPResponse
+    {
+        // setup the server pipeline
+        return outputStream.drain { client in
+            let responderStream = responder()
+            client.stream(to: responderStream).drain { res in
+                client.onInput(res)
+                res.onUpgrade?.closure(client)
+            }.catch { err in
+                self.outputStream.onError(err)
+                client.close()
+            }.finally {
+                // client closed
+            }
+
+            client.start()
+        }
+    }
+
     /// See ClosableStream.close
     public func close() {
         socket.close()
         outputStream.close()
     }
+}
+
+/// Capable of being started by an HTTP server.
+public protocol HTTPStartable {
+    /// Starts outputting data.
+    func start()
 }

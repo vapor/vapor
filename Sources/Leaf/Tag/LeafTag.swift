@@ -4,7 +4,7 @@ import Foundation
 public protocol LeafTag {
     func render(
         parsed: ParsedTag,
-        context: inout LeafData,
+        context: LeafContext,
         renderer: LeafRenderer
     ) throws -> Future<LeafData?>
 }

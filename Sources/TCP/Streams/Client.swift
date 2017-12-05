@@ -239,7 +239,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
         // for some reason you can't cancel a suspended write source
         // if you remove this line, your life will be ruined forever!!!
         if self.inputBuffer.count == 0 {
-            writeSource?.resume()
+            /// FIXME: this crashes for client?
+            // writeSource?.resume()
         }
         
         for waiter in readableWaiters + writableWaiters {

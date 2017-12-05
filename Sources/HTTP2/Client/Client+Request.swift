@@ -4,12 +4,12 @@ import HTTP
 extension HTTP2Client {
     /// Sends a request and receives a response
     /// TODO: Disconnected connection during the request cascading here
-    public func send(request: HTTPRequest) throws -> Future<HTTPResponse> {
-        do {
+    public func send(request: HTTPRequest) -> Future<HTTPResponse> {
+        return then {
             let promise = Promise<HTTPResponse>()
             
             // Open an HTTP/2 stream
-            let stream = openStream()
+            let stream = self.openStream()
             
             // Create a response to build up
             var response = HTTPResponse()
@@ -58,8 +58,6 @@ extension HTTP2Client {
             // TODO: Send the body
             
             return promise.future
-        } catch {
-            return Future(error: error)
         }
     }
 }

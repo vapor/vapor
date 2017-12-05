@@ -8,9 +8,13 @@ public final class ErrorMiddleware: Middleware {
     /// The environment to respect when presenting errors.
     let environment: Environment
 
+    /// Log destination
+    let log: Logger
+
     /// Create a new ErrorMiddleware for the supplied environment.
-    public init(environment: Environment) {
+    public init(environment: Environment, log: Logger) {
         self.environment = environment
+        self.log = log
     }
 
     /// See `Middleware.respond`
@@ -18,8 +22,6 @@ public final class ErrorMiddleware: Middleware {
         let promise = Promise(Response.self)
 
         func handleError(_ error: Swift.Error) {
-            // TODO: Don't log on production?
-
             let reason: String
             let status: HTTPStatus
 
@@ -33,6 +35,8 @@ public final class ErrorMiddleware: Middleware {
                     reason = "Something went wrong."
                 }
             default:
+                log.reportError(error, as: "Error")
+
                 if let debuggable = error as? Debuggable {
                     reason = debuggable.reason
                 } else if let abort = error as? AbortError {
@@ -46,12 +50,6 @@ public final class ErrorMiddleware: Middleware {
                 } else {
                     status = .internalServerError
                 }
-            }
-
-            if let debuggable = error as? Debuggable {
-                print(debuggable.debuggableHelp(format: .long))
-            } else {
-                debugPrint(error)
             }
 
             let res = req.makeResponse()
