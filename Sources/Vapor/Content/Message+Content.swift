@@ -13,7 +13,7 @@ extension ContentContainer {
     /// Uses the Content's default media type if none is supplied.
     public func encode<C: Content>(_ content: C) throws {
         let encoder = try requireEncoder(for: C.defaultMediaType)
-        let body = try HTTPBody(encoder.encode(content))
+        let body = try encoder.encodeBody(from: content)
         update(body, C.defaultMediaType)
     }
 
@@ -21,7 +21,7 @@ extension ContentContainer {
     /// Uses the Content's default media type if none is supplied.
     public func encode<E: Encodable>(_ encodable: E, as mediaType: MediaType) throws {
         let encoder = try requireEncoder(for: mediaType)
-        let body = try HTTPBody(encoder.encode(encodable))
+        let body = try encoder.encodeBody(from: encodable)
         update(body, mediaType)
     }
     
