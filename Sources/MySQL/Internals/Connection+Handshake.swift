@@ -33,10 +33,6 @@ extension MySQLConnection {
                 size += 1
             }
             
-            if let scheme = handshake.authenticationScheme, handshake.capabilities.contains(.pluginAuth) {
-                size += scheme.utf8.count + 1
-            }
-            
             let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
             pointer.initialize(to: 0, count: size)
             
@@ -94,11 +90,6 @@ extension MySQLConnection {
             
             memcpy(writer, database, database.utf8.count)
             writer += database.count + 1
-            
-            if let scheme = handshake.authenticationScheme, handshake.capabilities.contains(.pluginAuth) {
-                memcpy(writer, scheme, scheme.utf8.count)
-                writer += scheme.utf8.count + 1
-            }
             
             let data = ByteBuffer(start: pointer, count: size)
             

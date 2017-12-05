@@ -54,7 +54,7 @@ public final class MySQLConnection {
     /// The client's capabilities
     var capabilities: Capabilities {
         let base: Capabilities = [
-            .protocol41, .longFlag, .secureConnection, .connectWithDB, .pluginAuth
+            .longPassword, .protocol41, .longFlag, .secureConnection, .connectWithDB
         ]
         
         return base
