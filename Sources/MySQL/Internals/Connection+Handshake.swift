@@ -126,6 +126,7 @@ extension MySQLConnection {
                     }
                     
                     guard
+                        offset < packet.payload.count,
                         let password = self.password,
                         let mechanism = String(bytes: packet.payload[1..<offset], encoding: .utf8)
                     else {
@@ -135,7 +136,7 @@ extension MySQLConnection {
                     
                     switch mechanism {
                     case "mysql_native_password":
-                        guard offset &+ 1 < packet.payload.count else {
+                        guard offset &+ 2 < packet.payload.count else {
                             completing.fail(MySQLError(.invalidHandshake))
                             return
                         }
