@@ -25,7 +25,7 @@ extension JSONEncoder: BodyEncoder {
 extension JSONDecoder: BodyDecoder {
     public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> T where T : Decodable {
         guard let data = body.data else {
-            throw VaporError(identifier: "body-error", reason: "JSONDecodes doesn't support streaming bodies")
+            throw VaporError(identifier: "streamingUnsupported", reason: "JSONDecodes doesn't support streaming bodies")
         }
         
         return try self.decode(T.self, from: data)
@@ -34,10 +34,10 @@ extension JSONDecoder: BodyDecoder {
 
 // MARK: Single Value
 
-extension DataDecoder {
+extension BodyDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [BasicKey], from data: Data) throws -> D where D: Decodable {
-        let unwrapper = try self.decode(DecoderUnwrapper.self, from: data)
+    func get<D>(at keyPath: [BasicKey], from body: HTTPBody) throws -> D where D: Decodable {
+        let unwrapper = try self.decode(DecoderUnwrapper.self, from: body)
         var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
 
         var keys = Array(keyPath.reversed())

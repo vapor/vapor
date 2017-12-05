@@ -28,20 +28,17 @@ extension ContentContainer {
     /// Parses the supplied content from the mesage.
     public func decode<D: Decodable>(_ content: D.Type) throws -> D {
         let decoder = try requireDecoder()
-        guard let data = body.data else {
-            throw "no body data"
-        }
-        return try decoder.decode(D.self, from: data)
+        return try decoder.decode(D.self, from: body)
     }
 
     /// Creates a data encoder from the content config or throws.
-    private func requireEncoder(for mediaType: MediaType) throws -> DataEncoder {
+    private func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
         let coders = try container.superContainer.make(ContentConfig.self, for: ContentContainer.self)
         return try coders.requireEncoder(for: mediaType)
     }
 
     /// Creates a data decoder from the content config or throws.
-    private func requireDecoder() throws -> DataDecoder {
+    private func requireDecoder() throws -> BodyDecoder {
         let coders = try container.superContainer.make(ContentConfig.self, for: ContentContainer.self)
         guard let mediaType = mediaType else {
             throw "no media type"
@@ -78,11 +75,7 @@ extension ContentContainer {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        guard let data = body.data else {
-            throw "body data required"
-        }
-
         let decoder = try requireDecoder()
-        return try decoder.get(at: keyPath.makeBasicKeys(), from: data)
+        return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
     }
 }

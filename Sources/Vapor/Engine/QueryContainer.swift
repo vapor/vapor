@@ -9,11 +9,11 @@ public struct QueryContainer {
 extension QueryContainer {
     /// Parses the supplied content from the mesage.
     public func decode<D: Decodable>(_ decodable: D.Type) throws -> D {
-        return try requireDecoder().decode(D.self, from: Data(query.utf8))
+        return try requireDecoder().decode(D.self, from: HTTPBody(string: query))
     }
 
     /// Gets the query decoder or throws an error
-    fileprivate func requireDecoder() throws -> DataDecoder {
+    fileprivate func requireDecoder() throws -> BodyDecoder {
         let coders = try container.superContainer.make(ContentConfig.self, for: QueryContainer.self)
         return try coders.requireDecoder(for: .urlEncodedForm)
     }
@@ -47,9 +47,6 @@ extension QueryContainer {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        guard let data = query.data(using: .utf8) else {
-            throw "could not convert query string to data"
-        }
-        return try requireDecoder().get(at: keyPath.makeBasicKeys(), from: data)
+        return try requireDecoder().get(at: keyPath.makeBasicKeys(), from: HTTPBody(string: query))
     }
 }

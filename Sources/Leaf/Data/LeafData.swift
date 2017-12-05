@@ -89,6 +89,20 @@ extension LeafData {
         }
     }
 
+    /// Attempts to convert to int or returns nil.
+    public var int: Int? {
+        switch self {
+        case .int(let i):
+            return i
+        case .string(let s):
+            return Int(s)
+        case .lazy(let lazy):
+            return lazy().int
+        default:
+            return nil
+        }
+    }
+
     /// Returns dictionary if context contains one.
     public var dictionary: [String: LeafData]? {
         switch self {

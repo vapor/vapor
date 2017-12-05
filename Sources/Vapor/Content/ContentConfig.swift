@@ -54,8 +54,9 @@ extension ContentConfig {
         config.use(encoder: JSONEncoder(), for: .json)
         config.use(decoder: JSONDecoder(), for: .json)
 
-        // html
-        config.use(encoder: HTMLEncoder(), for: .html)
+        // data
+        config.use(encoder: DataEncoder(), for: .plainText)
+        config.use(encoder: DataEncoder(), for: .plainText)
 
 
         // form-urlencoded

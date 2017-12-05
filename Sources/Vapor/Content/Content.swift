@@ -47,14 +47,14 @@ extension Content {
 extension String: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
-        return .html
+        return .plainText
     }
 }
 
 extension Int: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
-        return .html
+        return .plainText
     }
 }
 

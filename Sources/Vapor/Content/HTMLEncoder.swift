@@ -2,15 +2,36 @@ import Core
 import Foundation
 import HTTP
 
-public final class HTMLEncoder: Encoder {
+/// Encodes encodable items to data.
+public final class DataEncoder {
+    fileprivate let encoder: _DataEncoder
+
+    /// Creates a new data encoder
+    public init() {
+        encoder = .init()
+    }
+
+    /// Encodes the object to data
+    public func encode<E>(_ encodable: E) throws -> Data
+        where E: Encodable
+    {
+        try encodable.encode(to: encoder)
+        guard let data = encoder.data else {
+            throw "no data"
+        }
+        return data
+    }
+}
+
+fileprivate final class _DataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
-    public var html: Data?
+    public var data: Data?
 
     public init() {
         self.codingPath = []
         self.userInfo = [:]
-        self.html = nil
+        self.data = nil
     }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
@@ -22,45 +43,45 @@ public final class HTMLEncoder: Encoder {
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        return HTMLEncodingContainer(encoder: self)
+        return DataEncodingContainer(encoder: self)
     }
 }
 
 /// MARK: Container
 
-internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
+fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
     var codingPath: [CodingKey] {
         return encoder.codingPath
     }
 
-    let encoder: HTMLEncoder
-    init(encoder: HTMLEncoder) {
+    let encoder: _DataEncoder
+    init(encoder: _DataEncoder) {
         self.encoder = encoder
     }
 
     func encodeNil() throws {
-        encoder.html = nil
+        encoder.data = nil
     }
 
     func encode(_ value: Bool) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.data = value.description.data(using: .utf8)
     }
 
     func encode(_ value: Int) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.data = value.description.data(using: .utf8)
     }
 
     func encode(_ value: Double) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.data = value.description.data(using: .utf8)
     }
 
     func encode(_ value: String) throws {
-        encoder.html = value.description.data(using: .utf8)
+        encoder.data = value.description.data(using: .utf8)
     }
 
     func encode<T: Encodable>(_ value: T) throws {
         if let data = value as? Data {
-            encoder.html = data
+            encoder.data = data
         } else {
             try value.encode(to: encoder)
         }
@@ -69,13 +90,10 @@ internal final class HTMLEncodingContainer: SingleValueEncodingContainer {
 
 /// MARK: Content
 
-extension HTMLEncoder: BodyEncoder {
+extension DataEncoder: BodyEncoder {
     /// See BodyEncoder.encode
     public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T: Encodable {
-        try encodable.encode(to: self)
-        guard let html = self.html else {
-            throw "no html encoded"
-        }
-        return HTTPBody(html)
+        let data = try encode(encodable)
+        return HTTPBody(data)
     }
 }
