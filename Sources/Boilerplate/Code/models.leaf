@@ -1,0 +1,18 @@
+/// MARK: Model
+
+#for(type in types) {
+    #if(contains(type.inheritedTypes, "Model")) {
+        extension #(type.name): Model {
+            /// See Model.keyFieldMap
+            static var keyFieldMap: KeyFieldMap {
+                return [
+                    #for(property in type.properties) {
+                        #if(property.isInstance) {
+                            key(\\.#(property.name)): field("#(property.name)"),
+                        }
+                    }
+                ]
+            \\}
+        \\}
+    }
+}

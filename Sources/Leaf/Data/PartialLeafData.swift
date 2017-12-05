@@ -63,7 +63,7 @@ internal final class PartialLeafData {
             } else if let child = child {
                 context = .dictionary([
                     end.stringValue: child
-                ])
+                    ])
             }
         }
     }

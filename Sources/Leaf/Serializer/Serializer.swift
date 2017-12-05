@@ -53,7 +53,7 @@ public final class Serializer {
             }
             parts.append(promise.future)
         }
-        
+
         return parts.map { data in
             return Data(data.joined())
         }
@@ -92,7 +92,7 @@ public final class Serializer {
                     source: source,
                     on: self.eventLoop
                 )
-                
+
                 return try tag.render(
                     parsed: parsed,
                     context: &self.context,
@@ -140,8 +140,8 @@ public final class Serializer {
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         }
         return promise.future
@@ -165,8 +165,8 @@ public final class Serializer {
             l.do { l in
                 r.do { r in
                     promise.complete(.bool(l != r))
-                }.catch { error in
-                    promise.fail(error)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             }.catch { error in
                 promise.fail(error)
@@ -175,21 +175,21 @@ public final class Serializer {
             l.do { l in
                 r.do { r in
                     promise.complete(.bool(l?.bool != false && r?.bool != false))
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         case .or:
             r.do { r in
                 l.do { l in
                     promise.complete(.bool(l?.bool != false || r?.bool != false))
+                    }.catch { error in
+                        promise.fail(error)
+                }
                 }.catch { error in
                     promise.fail(error)
-                }
-            }.catch { error in
-                promise.fail(error)
             }
         default:
             l.do { l in
@@ -233,20 +233,20 @@ public final class Serializer {
         case .constant(let constant):
             resolveConstant(constant).do { data in
                 promise.complete(data)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .expression(let op, let left, let right):
             resolveExpression(op, left: left, right: right).do { data in
                 promise.complete(data)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .identifier(let id):
             contextFetch(path: id).do { value in
                 promise.complete(value ?? .null)
-            }.catch { error in
-                promise.fail(error)
+                }.catch { error in
+                    promise.fail(error)
             }
         case .tag(let name, let parameters, let body, let chained):
             return renderTag(
@@ -262,8 +262,8 @@ public final class Serializer {
                 let promise = Promise(LeafData?.self)
                 contextFetch(path: id).do { data in
                     promise.complete(.bool(data?.bool == true))
-                }.catch { error in
-                    promise.fail(error)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             case .constant(let c):
                 switch c {
@@ -310,8 +310,8 @@ public final class Serializer {
                 fut.do { value in
                     current = value
                     handle(path)
-                }.catch { error in
-                    promise.fail(error)
+                    }.catch { error in
+                        promise.fail(error)
                 }
             default:
                 promise.complete(nil)
@@ -327,4 +327,3 @@ public final class Serializer {
         return promise.future
     }
 }
-

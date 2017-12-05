@@ -71,7 +71,7 @@ extension _LeafEncoder: FutureEncoder {
             try encodable.encode(to: encoder)
             return encoder.context
         }
-        
+
         self.partialData.set(to: .future(future), at: codingPath)
     }
 }

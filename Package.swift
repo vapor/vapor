@@ -18,6 +18,9 @@ let package = Package(
         .library(name: "Core", targets: ["Core"]),
         .library(name: "libc", targets: ["libc"]),
 
+        // Code
+        .library(name: "Code", targets: ["Code"]),
+
         // Console
         .library(name: "Console", targets: ["Console"]),
         .library(name: "Command", targets: ["Command"]),
@@ -70,6 +73,9 @@ let package = Package(
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
+
+        // SourceKit
+        .library(name: "SourceKit", targets: ["SourceKit"]),
         
         // TLS/SSL
         .library(name: "TLS", targets: ["TLS"]),
@@ -83,6 +89,9 @@ let package = Package(
     dependencies: [
         // Swift Promises, Futures, and Streams.
         .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
+
+        /// SourceKit C API module map for Swift
+        .package(url: "https://github.com/tanner0101/csourcekit.git", from: "0.0.0"),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [
@@ -99,10 +108,14 @@ let package = Package(
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
+        // Code
+        .target(name: "Code", dependencies: ["Bits", "Console", "Leaf", "SourceKit"]),
+        .target(name: "CodeRun", dependencies: ["Code", "Command", "Console", "Core", "Leaf"]),
+        .testTarget(name: "CodeTests", dependencies: ["Code"]),
+
         // Core
         .target(name: "Core", dependencies: ["Async", "Bits", "libc", "Debugging"]),
         .target(name: "libc"),
-        
 
         // Console
         .target(name: "Console", dependencies: ["Async", "Core"]),
@@ -186,6 +199,10 @@ let package = Package(
         
         // Security
         .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
+
+        // SourceKit
+        .target(name: "SourceKit", dependencies: ["Bits"]),
+        .testTarget(name: "SourceKitTests", dependencies: ["SourceKit"]),
        
         // TLS
         .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),

@@ -76,7 +76,7 @@ public struct View: Codable {
 public protocol ViewRenderer {
     /// Renders a view using the supplied encodable context and worker.
     func make<E>(_ path: String, _ context: E) throws -> Future<View>
-        where E: Encodable
+    where E: Encodable
 }
 
 extension ViewRenderer {
