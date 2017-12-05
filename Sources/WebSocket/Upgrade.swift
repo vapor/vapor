@@ -4,7 +4,7 @@ import Crypto
 // MARK: Convenience
 
 extension WebSocket {
-    public typealias OnUpgradeClosure = (HTTPRequest, WebSocket) throws -> Void
+    public typealias OnUpgradeClosure = (WebSocket) throws -> Void
 
     /// Returns true if this request should upgrade to websocket protocol
     ///
@@ -49,7 +49,7 @@ extension WebSocket {
             // Does it make sense to be defined here? If someone calls the above method, the websocket won't be set according to the given settings.
             try? settings.apply(on: websocket, request: request, response: response)
 
-            try? onUpgrade(request, websocket)
+            try? onUpgrade(websocket)
         }
 
         return response
@@ -61,8 +61,8 @@ extension WebSocket {
             let key = req.headers[.secWebSocketKey],
             let secWebsocketVersion = req.headers[.secWebSocketVersion],
             let version = Int(secWebsocketVersion)
-            else {
-                throw WebSocketError(.invalidRequest)
+        else {
+            throw WebSocketError(.invalidRequest)
         }
 
         let data = Base64Encoder.encode(data: SHA1.hash(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))

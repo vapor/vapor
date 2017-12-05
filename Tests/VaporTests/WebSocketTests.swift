@@ -101,17 +101,17 @@ final class WebSocketApplication: Responder {
             return promise.future
         }
 
-        let http = try WebSocket.upgradeResponse(for: req.http, with: WebSocketSettings()) { request, websocket in
+        let http = try WebSocket.upgradeResponse(for: req.http, with: WebSocketSettings()) { websocket in
             let id = UUID()
 
             websocket.onText { text in
                 let rev = String(text.reversed())
                 websocket.send(rev)
-                }.catch(onError: promise.fail)
+            }.catch(onError: promise.fail)
 
             websocket.onBinary { buffer in
                 websocket.send(buffer)
-                }.catch(onError: promise.fail)
+            }.catch(onError: promise.fail)
 
             self.sockets[id] = websocket
 
