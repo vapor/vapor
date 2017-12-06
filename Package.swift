@@ -202,23 +202,7 @@ let package = Package(
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Validation
-        .target(name: "Validation", dependencies: [
-            "Command",
-            "Console",
-            "COperatingSystem",
-            "Debugging",
-            "FormURLEncoded",
-            "HTTP",
-            "JunkDrawer",
-            "Leaf",
-            "Logging",
-            "Routing",
-            "Service",
-            "TCP",
-            "TLS",
-            "ServerSecurity",
-            "WebSocket",
-        ]),
+        .target(name: "Validation", dependencies: ["JunkDrawer"]),
         .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
 
         // Vapor
