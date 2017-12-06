@@ -11,7 +11,7 @@ extension Request {
             return []
         }
         
-        return acceptLanguageString.characters.split(separator: ",").flatMap { acceptLanguageSlice in
+        return acceptLanguageString.toCharacterSequence().split(separator: ",").flatMap { acceptLanguageSlice in
             let pieces = acceptLanguageSlice.split(separator: ";")
             guard let languageRange = pieces.first.flatMap({ String($0).trimmingCharacters(in: .whitespaces) }) else { return nil }
             

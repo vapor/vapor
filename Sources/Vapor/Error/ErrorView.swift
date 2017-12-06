@@ -8,7 +8,7 @@ internal final class ErrorView {
     let tail: Bytes
 
     init() {
-        var path = #file.characters.split(separator: "/").dropLast().map({ String($0) })
+        var path = #file.toCharacterSequence().split(separator: "/").dropLast().map({ String($0) })
         path.append("error.html")
 
         let file = "/" + path.joined(separator: "/")
