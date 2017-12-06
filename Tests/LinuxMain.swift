@@ -13,11 +13,8 @@ import XCTest
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
-<<<<<<< HEAD
 @testable import PostgreSQLTests
-=======
 @testable import PufferfishTests
->>>>>>> beta
 @testable import RandomTests
 @testable import RedisTests
 @testable import RoutingTests
@@ -70,15 +67,12 @@ XCTMain([
     // MySQL
     testCase(MySQLTests.allTests),
 
-<<<<<<< HEAD
     // PostgreSQL
     testCase(PostgreSQLTests.allTests),
 
-=======
     // Pufferfish
     testCase(PufferfishTests.allTests),
   
->>>>>>> beta
     // Random
     testCase(RandomTests.allTests),
 
