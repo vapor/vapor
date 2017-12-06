@@ -5,9 +5,9 @@ import Dispatch
 /// An automatically managed pool of connections to a server.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
-public class ConnectionPool {
+public final class MySQLConnectionPool {
     /// The queue on which connections will be created
-    let worker: Worker
+    let eventLoop: EventLoop
     
     /// The hostname to which connections will be connected
     let hostname: String
@@ -22,7 +22,7 @@ public class ConnectionPool {
     let password: String?
     
     /// The database to select
-    let database: String?
+    let database: String
     
     /// A list of all currently active connections
     var pool = [ConnectionPair]()
@@ -35,10 +35,10 @@ public class ConnectionPool {
     public var maxConnections = 10
     
     class ConnectionPair {
-        let connection: Connection
+        let connection: MySQLConnection
         var reserved = false
         
-        init(connection: Connection) {
+        init(connection: MySQLConnection) {
             self.connection = connection
         }
     }
@@ -48,8 +48,15 @@ public class ConnectionPool {
     /// All connections in this pool will use this queue
     ///
     /// This pool is not threadsafe. Use one pool per thread
-    public init(hostname: String, port: UInt16 = 3306, user: String, password: String?, database: String?, worker: Worker) {
-        self.worker = worker
+    public init(
+        hostname: String,
+        port: UInt16 = 3306,
+        user: String,
+        password: String?,
+        database: String,
+        on eventLoop: EventLoop
+    ) {
+        self.eventLoop = eventLoop
         self.hostname = hostname
         self.port = port
         self.user = user
@@ -72,7 +79,7 @@ public class ConnectionPool {
     /// Retained connections can only be used for a single query at a time
     ///
     ///
-    public func retain<T>(_ handler: @escaping ((Connection) -> Future<T>)) -> Future<T> {
+    public func retain<T>(_ handler: @escaping ((MySQLConnection) -> Future<T>)) -> Future<T> {
         let promise = Promise<ConnectionPair>()
         
         let future = promise.future.flatMap { pair -> Future<T> in
@@ -107,7 +114,13 @@ public class ConnectionPool {
             return future
         }
         
-        Connection.makeConnection(hostname: hostname, user: user, password: password, database: database, on: worker).do { connection in
+        MySQLConnection.makeConnection(
+            hostname: hostname,
+            user: user,
+            password: password,
+            database: database,
+            on: eventLoop
+        ).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true
             

@@ -4,6 +4,12 @@ import Bits
 
 /// Any MySQL packet
 internal class Packet {
+    /// Keeps track of the mutability of the buffer so it can be deallocated
+    enum Buffer {
+        case mutable(MutableByteBuffer)
+        case immutable(ByteBuffer)
+    }
+    
     // Maximum payload size
     static let maxPayloadSize: Int = 16_777_216
     
@@ -12,16 +18,31 @@ internal class Packet {
     var sequenceId: UInt8
     
     /// The payload contains the packet's data
-    var payload: MutableByteBuffer
+    var payload: ByteBuffer {
+        switch buffer {
+        case .immutable(let buffer): return buffer
+        case .mutable(let buffer): return ByteBuffer(start: buffer.baseAddress, count: buffer.count)
+        }
+    }
+    
+    var buffer: Buffer
+    
+    /// Creates a new packet
+    init(sequenceId: UInt8, payload: ByteBuffer) {
+        self.sequenceId = sequenceId
+        self.buffer = .immutable(payload)
+    }
     
     /// Creates a new packet
     init(sequenceId: UInt8, payload: MutableByteBuffer) {
         self.sequenceId = sequenceId
-        self.payload = payload
+        self.buffer = .mutable(payload)
     }
     
     deinit {
-        // Deallocates the MySQL buffer
-        payload.baseAddress?.deallocate(capacity: payload.count)
+        if case .mutable(let buffer) = buffer {
+            // Deallocates the MySQL buffer
+            buffer.baseAddress?.deallocate(capacity: buffer.count)
+        }
     }
 }

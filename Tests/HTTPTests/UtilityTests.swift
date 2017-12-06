@@ -21,8 +21,8 @@ class UtilityTests : XCTestCase {
     }
     
     func testMethod() {
-        XCTAssertEqual(Method.get, "GET")
-        XCTAssertEqual(Method.post, Method("post"))
+        XCTAssertEqual(HTTPMethod.get, "GET")
+        XCTAssertEqual(HTTPMethod.post, HTTPMethod("post"))
     }
     
     func testCookie() {

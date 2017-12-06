@@ -10,21 +10,21 @@ import Core
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
     
-    let pool = ConnectionPool(
+    let pool = MySQLConnectionPool(
         hostname: "localhost",
         user: "root",
         password: nil,
         database: "vapor_test",
-        worker: MySQLTests.poolQueue
+        on: MySQLTests.poolQueue
     )
     
-    let connection = try! Connection.makeConnection(
+    let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
         user: "root",
         password: nil,
         database: "vapor_test",
-        on: DispatchQueue(label: "single")
-    ).blockingAwait(timeout: .seconds(3))
+        on: poolQueue
+    ).blockingAwait(timeout: .seconds(10))
 
     static let allTests = [
         ("testPreparedStatements", testPreparedStatements),
@@ -40,6 +40,7 @@ class MySQLTests: XCTestCase {
     override func setUp() {
         _ = try? connection.dropTables(named: "users").blockingAwait(timeout: .seconds(3))
         _ = try? connection.dropTables(named: "complex").blockingAwait(timeout: .seconds(3))
+        _ = try? connection.dropTables(named: "test").blockingAwait(timeout: .seconds(3))
     }
 
     func testPreparedStatements() throws {
@@ -51,7 +52,7 @@ class MySQLTests: XCTestCase {
             return try statement.bind { binding in
                 try binding.bind("Joannis")
             }.all(User.self)
-        }.blockingAwait(timeout: .seconds(150))
+        }.blockingAwait(timeout: .seconds(15))
         
         XCTAssertEqual(users.count, 1)
         XCTAssertEqual(users.first?.username, "Joannis")
@@ -60,7 +61,7 @@ class MySQLTests: XCTestCase {
     func testCreateUsersSchema() throws {
         let table = Table(named: "users")
      
-        table.schema.append(Table.Column(named: "id", type: .int8(length: nil), autoIncrement: true, primary: true, unique: true))
+        table.schema.append(Table.Column(named: "id", type: .int16(length: nil), autoIncrement: true, primary: true, unique: true))
      
         table.schema.append(Table.Column(named: "username", type: .varChar(length: 32, binary: false), autoIncrement: false, primary: false, unique: false))
      
@@ -79,6 +80,7 @@ class MySQLTests: XCTestCase {
         try testCreateUsersSchema()
         
         var results = [Future<Void>]()
+        results.reserveCapacity(100)
         
         MySQLTests.poolQueue.sync {
             for i in 0..<100 {
@@ -116,7 +118,6 @@ class MySQLTests: XCTestCase {
         var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
      
         let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(3))
-     
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
         }
@@ -131,7 +132,7 @@ class MySQLTests: XCTestCase {
         var count = 0
         let promise = Promise<Int>()
      
-        connection.stream(User.self, in: "SELECT * FROM users").drain { user in
+        connection.forEach(User.self, in: "SELECT * FROM users") { user in
             XCTAssertEqual(user.username, iterator.next())
             count += 1
             
@@ -211,4 +212,9 @@ struct Complex: Decodable {
     var ui32: UInt32
     var i64: Int64
     var ui64: UInt64
+}
+
+struct Test: Decodable {
+    var id: Int
+    var num: Int
 }

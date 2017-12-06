@@ -70,10 +70,12 @@ enum Response {
 struct Capabilities : OptionSet, ExpressibleByIntegerLiteral {
     var rawValue: UInt32
     
-    static let protocol41: Capabilities = 0x0200
-    static let longFlag: Capabilities = 0x0004
-    static let connectWithDB: Capabilities = 0x0008
-    static let secureConnection: Capabilities = 0x8000
+    static let longPassword: Capabilities = 1
+    static let longFlag: Capabilities = 4
+    static let connectWithDB: Capabilities = 8
+    static let protocol41: Capabilities = 512
+    static let ssl: Capabilities = 2048
+    static let secureConnection: Capabilities = 32_768
     
     init(rawValue: UInt32) {
         self.rawValue = rawValue

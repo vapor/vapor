@@ -1,6 +1,6 @@
 import Foundation
 
-public class HMAC<Variant: Hash> {
+public final class HMAC<Variant: Hash> {
     /// Authenticates a message using the provided `Hash` algorithm
     ///
     /// - parameter message: The message to authenticate

@@ -15,20 +15,22 @@ public final class LeafRenderer {
     /// Create a file reader & cache for the supplied queue
     public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
     private let fileFactory: FileFactory
+    
+    let eventLoop: EventLoop
 
     /// Views base directory.
     public let viewsDir: String
 
     /// Create a new Leaf renderer.
     public init(
-        tags: [String: LeafTag] = defaultTags,
-        viewsDir: String = "/",
-        fileFactory: @escaping FileFactory = File.init
+        config: LeafConfig,
+        on eventLoop: EventLoop
     ) {
-        self.tags = tags
+        self.tags = config.tags
         self._files = [:]
-        self.fileFactory = fileFactory
-        self.viewsDir = viewsDir.finished(with: "/")
+        self.fileFactory = config.fileFactory
+        self.eventLoop = eventLoop
+        self.viewsDir = config.viewsDir.finished(with: "/")
     }
 
     // ASTs only need to be parsed once
@@ -36,7 +38,7 @@ public final class LeafRenderer {
 
     /// Renders the supplied template bytes into a view
     /// using the supplied context.
-    public func render(template: Data, context: LeafData, on worker: Worker) -> Future<Data> {
+    public func render(template: Data, context: LeafContext) -> Future<Data> {
         let hash = template.hashValue
 
         let promise = Promise(Data.self)
@@ -63,7 +65,7 @@ public final class LeafRenderer {
             ast: ast,
             renderer: self,
             context: context,
-            worker: worker
+            on: eventLoop
         )
 
         serializer.serialize().do { data in
@@ -86,11 +88,12 @@ public final class LeafRenderer {
 
 extension LeafRenderer: ViewRenderer {
     /// See ViewRenderer.make
-    public func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View> {
+    public func make<E>(_ path: String, _ context: E) throws -> Future<View>
+        where E: Encodable
+    {
         return try render(
             path: path,
-            context: LeafEncoder().encode(context),
-            on: worker
+            context: LeafContext(data: LeafEncoder().encode(context))
         ).map { data in
             return View(data: data)
         }
@@ -101,7 +104,7 @@ extension LeafRenderer: ViewRenderer {
 
 extension LeafRenderer {
     /// Loads the leaf template from the supplied path.
-    public func render(path: String, context: LeafData, on worker: Worker) -> Future<Data> {
+    public func render(path: String, context: LeafContext) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let fullPath: String
         if path.hasSuffix("/") {
@@ -113,15 +116,15 @@ extension LeafRenderer {
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
-        if let existing = _files[worker.eventLoop.queue.label.hashValue] {
+        if let existing = _files[eventLoop.queue.label.hashValue] {
             file = existing
         } else {
-            file = fileFactory(worker.eventLoop.queue)
-            _files[worker.eventLoop.queue.label.hashValue] = file
+            file = fileFactory(eventLoop.queue)
+            _files[eventLoop.queue.label.hashValue] = file
         }
 
         file.cachedRead(at: fullPath).do { view in
-            self.render(template: view, context: context, on: worker).do { data in
+            self.render(template: view, context: context).do { data in
                 promise.complete(data)
             }.catch { error in
                 if var error = error as? RenderError {
@@ -139,7 +142,7 @@ extension LeafRenderer {
     }
 
     /// Renders a string template and returns a string.
-    public func render(_ view: String, context: LeafData, on worker: Worker) -> Future<String> {
+    public func render(_ view: String, context: LeafContext) -> Future<String> {
         let promise = Promise(String.self)
 
         do {
@@ -150,7 +153,7 @@ extension LeafRenderer {
                 )
             }
 
-            render(template: data, context: context, on: worker).do { rendered in
+            render(template: data, context: context).do { rendered in
                 do {
                     guard let string = String(data: rendered, encoding: .utf8) else {
                         throw RenderError(

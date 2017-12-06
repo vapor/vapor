@@ -115,7 +115,7 @@ extension Hash {
             lastBlocks = Array(buffer)
         }
         
-        lastBlocks = lastBlocks + [0x80] + Data(repeating: 0, count: zeroes) + length
+        lastBlocks = lastBlocks + [0x80] + [UInt8](repeating: 0, count: zeroes) + length
         
         var offset = 0
         

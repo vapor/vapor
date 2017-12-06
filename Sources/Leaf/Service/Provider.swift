@@ -32,9 +32,8 @@ public final class LeafProvider: Provider {
         services.register(ViewRenderer.self) { container -> LeafRenderer in
             let config = try container.make(LeafConfig.self, for: LeafRenderer.self)
             return LeafRenderer(
-                tags: config.tags,
-                viewsDir: config.viewsDir,
-                fileFactory: config.fileFactory
+                config: config,
+                on: container
             )
         }
 
@@ -75,5 +74,14 @@ public struct View: Codable {
 
 
 public protocol ViewRenderer {
-    func make(_ path: String, context: Encodable, on worker: Worker) throws -> Future<View>
+    /// Renders a view using the supplied encodable context and worker.
+    func make<E>(_ path: String, _ context: E) throws -> Future<View>
+        where E: Encodable
+}
+
+extension ViewRenderer {
+    /// Create a view with null context.
+    public func make(_ path: String) throws -> Future<View> {
+        return try make(path, nil as String?)
+    }
 }

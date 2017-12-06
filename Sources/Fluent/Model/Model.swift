@@ -7,7 +7,7 @@ import Service
 ///
 /// Types conforming to this protocol provide the basis
 /// fetching and saving data to/from Fluent.
-public protocol Model: AnyModel, EphemeralWorkerFindable {
+public protocol Model: AnyModel, ContainerFindable {
     /// The type of database this model can be queried on.
     associatedtype Database: Fluent.Database
     /// This model's database
@@ -57,18 +57,30 @@ public protocol AnyModel: class, Codable, KeyStringMappable {
 
 extension Model where ID: StringDecodable {
     /// See EphemeralWorkerFindable.find
-    public static func find(identifier: String, for worker: EphemeralWorker) throws -> Future<Self> {
+    public static func find(identifier: String, using container: Container) throws -> Future<Self> {
         guard let id = ID.decode(from: identifier) else {
             throw "could not convert parameter \(identifier) to type `\(ID.self)`"
         }
 
-        return worker.makeConnection(to: database).then { conn in
-            return self.find(id, on: conn).map { pet in
-                guard let pet = pet else {
-                    throw "no model id \(id) was found"
-                }
+        if let ephemeral = container as? EphemeralContainer {
+            return ephemeral.connect(to: database).then { conn in
+                return self.find(id, on: conn).map { pet in
+                    guard let pet = pet else {
+                        throw "no model id \(id) was found"
+                    }
 
-                return pet
+                    return pet
+                }
+            }
+        } else {
+            return container.withConnection(to: database) { conn in
+                return self.find(id, on: conn).map { pet in
+                    guard let pet = pet else {
+                        throw "no model id \(id) was found"
+                    }
+
+                    return pet
+                }
             }
         }
     }
@@ -76,13 +88,13 @@ extension Model where ID: StringDecodable {
 
 extension Model {
     /// Creates a query for this model on the supplied connection.
-    public func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(to: Self.database))
+    public func query(on conn: DatabaseConnectable) -> QueryBuilder<Self> {
+        return .init(on: conn.connect(to: Self.database))
     }
 
     /// Creates a query for this model on the supplied connection.
-    public static func query(on conn: ConnectionRepresentable) -> QueryBuilder<Self> {
-        return .init(on: conn.makeConnection(to: database))
+    public static func query(on conn: DatabaseConnectable) -> QueryBuilder<Self> {
+        return .init(on: conn.connect(to: database))
     }
 }
 
@@ -143,32 +155,32 @@ extension Model {
     /// Calls `create` if the ID is `nil`, and `update` if it exists.
     /// If you need to create a model with a pre-existing ID,
     /// call `create` instead.
-    public func save(on conn: ConnectionRepresentable) -> Future<Void> {
+    public func save(on conn: DatabaseConnectable) -> Future<Void> {
         return query(on: conn).save(self)
     }
 
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
-    public func create(on conn: ConnectionRepresentable) -> Future<Void> {
+    public func create(on conn: DatabaseConnectable) -> Future<Void> {
         return query(on: conn).create(self)
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
-    public func update(on conn: ConnectionRepresentable) -> Future<Void> {
+    public func update(on conn: DatabaseConnectable) -> Future<Void> {
         return query(on: conn).update(self)
     }
 
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func delete(on conn: ConnectionRepresentable) -> Future<Void> {
+    public func delete(on conn: DatabaseConnectable) -> Future<Void> {
         return query(on: conn).delete(self)
     }
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(_ id: Self.ID, on conn: ConnectionRepresentable) -> Future<Self?> {
+    public static func find(_ id: Self.ID, on conn: DatabaseConnectable) -> Future<Self?> {
         return then {
             return try query(on: conn)
                 .filter(idKey == id)

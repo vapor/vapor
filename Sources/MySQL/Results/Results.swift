@@ -13,6 +13,7 @@ enum Column {
     case uint8(UInt8)
     case int8(Int8)
     case double(Double)
+    case datetime(Date)
     case float(Float)
     case null
     case tinyBlob(Data)
@@ -36,5 +37,13 @@ struct Row {
     
     /// All column data associated with the field
     var columns = [Column]()
+    
+    init() {}
+    
+    mutating func reserveCapacity(_ n: Int) {
+        fields.reserveCapacity(n)
+        fieldNames.reserveCapacity(n)
+        columns.reserveCapacity(n)
+    }
 }
 

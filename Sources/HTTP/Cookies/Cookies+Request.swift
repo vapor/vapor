@@ -1,4 +1,4 @@
-extension Request {
+extension HTTPRequest {
     /// Sets and extracts `Cookies` from the `Request`
     public var cookies: Cookies {
         get {
@@ -9,12 +9,12 @@ extension Request {
             return Cookies(response: cookies) ?? []
         }
         set(cookies) {
-            cookies.serialize(into: self)
+            cookies.serialize(into: &self)
         }
     }
 }
 
-extension Response {
+extension HTTPResponse {
     /// Sets and extracts `Cookies` from the `Response`
     public var cookies: Cookies {
         get {
@@ -25,7 +25,7 @@ extension Response {
             return Cookies(response: cookies) ?? []
         }
         set(cookies) {
-            cookies.serialize(into: self)
+            cookies.serialize(into: &self)
         }
     }
 }

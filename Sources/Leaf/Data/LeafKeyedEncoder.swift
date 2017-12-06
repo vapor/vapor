@@ -17,13 +17,14 @@ internal final class LeafKeyedEncoder<K>: KeyedEncodingContainerProtocol
     }
 
     func encodeNil(forKey key: K) throws {
-        partialData.set(to: .null, at: codingPath)
+        partialData.set(to: .null, at: codingPath + [key])
     }
 
     func nestedContainer<NestedKey>(
         keyedBy keyType: NestedKey.Type, forKey key: K
     ) -> KeyedEncodingContainer<NestedKey>
-        where NestedKey : CodingKey {
+        where NestedKey : CodingKey
+    {
         let container = LeafKeyedEncoder<NestedKey>(codingPath: codingPath + [key], partialData: partialData)
         return KeyedEncodingContainer(container)
     }

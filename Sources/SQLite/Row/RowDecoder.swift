@@ -20,6 +20,6 @@ public final class SQLiteRowDecoder: Decoder {
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return DecodingContainer<StringKey>(decoder: self)
+        return DecodingContainer<BasicKey>(decoder: self)
     }
 }

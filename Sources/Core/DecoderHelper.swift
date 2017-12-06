@@ -22,6 +22,7 @@ public protocol DecoderHelper : Decoder {
     func decode(_ wrapped: Value) throws -> UInt
     func decode(_ wrapped: Value) throws -> Double
     func decode(_ wrapped: Value) throws -> Float
+    func decode<D: Decodable>(_ type: D.Type, from wrapped: Value) throws -> D
     
     func integers(for value: Value) throws -> Integers?
     
@@ -694,19 +695,10 @@ extension KeyedDecodingContainerProtocolHelper where D.Keyed : KeyedDecodingHelp
             throw DecodingError.incorrectValue
         }
         
-        let newDecoder = try D(any: value, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings)
-        
-        return try T(from: newDecoder)
+        return try decoder.decode(T.self, from: value)
     }
 
     public func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey> where NestedKey : CodingKey {
-//        guard let keyed = try decoder.either.getKeyed().value(forKey: key.stringValue) as? D.Keyed else {
-//            throw DecodingError.incorrectValue
-//        }
-//
-//        let decoder = try D(keyed: keyed)
-//        fatalError()
-        
         guard let keyed = try decoder.either.getKeyed().value(forKey: key.stringValue) as? D.Keyed else {
             throw DecodingError.incorrectValue
         }
@@ -804,3 +796,4 @@ extension SingleValueDecodingContainerHelper {
 public enum DecodingError : Error {
     case failedLossyIntegerConversion, invalidContext, incorrectValue, unimplemented
 }
+

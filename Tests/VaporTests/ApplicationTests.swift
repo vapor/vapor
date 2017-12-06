@@ -1,69 +1,107 @@
 import Async
 import Bits
+import Dispatch
 import HTTP
 import Routing
-import Vapor
+@testable import Vapor
 import TCP
 import XCTest
 
 class ApplicationTests: XCTestCase {
-    func testCORSMiddleware() throws {
+    func testAnyResponse() throws {
+        let response = "hello"
         let app = try Application()
-        let cors = CORSMiddleware()
+        var result = Response(using: app)
+        let req = Request(using: app)
         
-        let router = try app.make(Router.self).grouped(cors)
-        
-        router.post("good") { req in
-            return try Response(
-                status: .ok,
-                body: "hello"
-            )
+        AnyResponse(response).map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.http.body.data, Data("hello".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
         }
         
-        var request = Request(
-            method: .options,
-            uri: "/good",
-            headers: [
-                .origin: "http://localhost:8090",
-                .accessControlRequestMethod: "POST",
-            ]
-        )
+        let response2: Future<String?> = Future(nil)
+        let response3: Future<String?> = Future("test")
         
-        let trieRouter = try app.make(TrieRouter.self)
-        
-        if let responder = trieRouter.fallbackResponder {
-            trieRouter.fallbackResponder = cors.makeResponder(chainedTo: responder)
+        AnyResponse(future: response2, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.http.body.data, Data("fail".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
         }
         
-        var response = try router.route(request: request)?.respond(to: request).blockingAwait()
-        
-//        XCTAssertEqual(response?.status, 200)
-        
-        response?.body.withUnsafeBytes { pointer in
-            let data = Array(ByteBuffer(start: pointer, count: response!.body.count))
-            XCTAssertNotEqual(data, Array("hello".utf8))
-        }
-        
-        request = Request(method: .get, uri: "/good")
-        response = try router.route(request: request)?.respond(to: request).blockingAwait()
-        
-        XCTAssertNotEqual(response?.status, 200)
-        response?.body.withUnsafeBytes { pointer in
-            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
-            XCTAssertNotEqual(data, Data("hello".utf8))
-        }
-        
-        request = Request(method: .post, uri: "/good")
-        response = try router.route(request: request)?.respond(to: request).blockingAwait()
-        
-        XCTAssertEqual(response?.status, 200)
-        response?.body.withUnsafeBytes { pointer in
-            let data = Data(ByteBuffer(start: pointer, count: response!.body.count))
-            XCTAssertEqual(data, Data("hello".utf8))
+        AnyResponse(future: response3, or: "fail").map { encodable in
+            try encodable.encode(to: &result, for: req).blockingAwait()
+            XCTAssertEqual(result.http.body.data, Data("test".utf8))
+        }.catch { error in
+            XCTFail("\(error)")
         }
     }
 
+    func testContent() throws {
+        let app = try Application()
+        let req = Request(using: app)
+        req.http.mediaType = .json
+        req.http.body = try """
+        {
+            "hello": "world"
+        }
+        """.makeBody()
+
+        XCTAssertEqual(req.content["hello"], "world")
+    }
+
+    func testComplexContent() throws {
+        // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
+        let complexJSON = """
+        {
+            "id": "0001",
+            "type": "donut",
+            "name": "Cake",
+            "ppu": 0.55,
+            "batters":
+                {
+                    "batter":
+                        [
+                            { "id": "1001", "type": "Regular" },
+                            { "id": "1002", "type": "Chocolate" },
+                            { "id": "1003", "type": "Blueberry" },
+                            { "id": "1004", "type": "Devil's Food" }
+                        ]
+                },
+            "topping":
+                [
+                    { "id": "5001", "type": "None" },
+                    { "id": "5002", "type": "Glazed" },
+                    { "id": "5005", "type": "Sugar" },
+                    { "id": "5007", "type": "Powdered Sugar" },
+                    { "id": "5006", "type": "Chocolate with Sprinkles" },
+                    { "id": "5003", "type": "Chocolate" },
+                    { "id": "5004", "type": "Maple" }
+                ]
+        }
+        """
+        let app = try Application()
+        let req = Request(using: app)
+        req.http.mediaType = .json
+        req.http.body = try complexJSON.makeBody()
+
+        XCTAssertEqual(req.content["batters", "batter", 1, "type"], "Chocolate")
+    }
+
+    func testQuery() throws {
+        let app = try Application()
+        let req = Request(using: app)
+        req.http.mediaType = .json
+        req.http.uri.query = "hello=world"
+        XCTAssertEqual(req.query["hello"], "world")
+    }
+
     static let allTests = [
-        ("testCORSMiddleware", testCORSMiddleware),
+        ("testAnyResponse", testAnyResponse),
+        ("testContent", testContent),
+        ("testComplexContent", testComplexContent),
+        ("testQuery", testQuery),
     ]
 }

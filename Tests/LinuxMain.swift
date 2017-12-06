@@ -6,12 +6,18 @@ import XCTest
 @testable import CryptoTests
 @testable import DebuggingTests
 @testable import FluentTests
+@testable import FluentMySQLTests
 @testable import HTTPTests
+@testable import HTTP2Tests
 @testable import JWTTests
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
+<<<<<<< HEAD
 @testable import PostgreSQLTests
+=======
+@testable import PufferfishTests
+>>>>>>> beta
 @testable import RandomTests
 @testable import RedisTests
 @testable import RoutingTests
@@ -40,11 +46,16 @@ XCTMain([
 
     // Fluent
     testCase(SQLiteBenchmarkTests.allTests),
+    testCase(FluentMySQLTests.allTests),
 
     // HTTP
     testCase(MiddlewareTests.allTests),
     testCase(ParserTests.allTests),
     testCase(SerializerTests.allTests),
+
+    // HTTP2
+    testCase(HTTP2Tests.allTests),
+    testCase(HPACKTests.allTests),
 
     // JWT
     testCase(JWSTests.allTests),
@@ -59,9 +70,15 @@ XCTMain([
     // MySQL
     testCase(MySQLTests.allTests),
 
+<<<<<<< HEAD
     // PostgreSQL
     testCase(PostgreSQLTests.allTests),
 
+=======
+    // Pufferfish
+    testCase(PufferfishTests.allTests),
+  
+>>>>>>> beta
     // Random
     testCase(RandomTests.allTests),
 

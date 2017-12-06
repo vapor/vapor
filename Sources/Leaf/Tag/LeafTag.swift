@@ -4,7 +4,7 @@ import Foundation
 public protocol LeafTag {
     func render(
         parsed: ParsedTag,
-        context: inout LeafData,
+        context: LeafContext,
         renderer: LeafRenderer
     ) throws -> Future<LeafData?>
 }
@@ -15,16 +15,15 @@ public var defaultTags: [String: LeafTag] {
     return [
         "": Print(),
         "ifElse": IfElse(),
-        "var": Var(),
-        "embed": Embed(),
         "loop": Loop(),
         "comment": Comment(),
         "contains": Contains(),
         "lowercase": Lowercase(),
+        "uppercase": Uppercase(),
+        "capitalize": Capitalize(),
         "count": Count(),
-        "raw": Raw(),
-        // import/export
-        "export": Var(),
-        "import": Embed()
+        "set": Var(),
+        "get": Raw(),
+        "embed": Embed(),
     ]
 }

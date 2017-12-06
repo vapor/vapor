@@ -21,96 +21,50 @@ import Foundation
 ///     let res = Response(status: .ok, body: "hello")
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/)
-public final class Response: Message {
-    /// See EphemeralWorker.onInit
-    public static var onInit: LifecycleHook?
-
-    /// See EphemeralWorker.onDeinit
-    public static var onDeinit: LifecycleHook?
-
+public struct HTTPResponse: HTTPMessage {
     /// See Message.version
-    public var version: Version
+    public var version: HTTPVersion
 
     /// HTTP response status code.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
-    public var status: Status
+    public var status: HTTPStatus
 
     /// See Message.headers
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: Headers
+    public var headers: HTTPHeaders
 
     /// See Message.body
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: Body
+    public var body: HTTPBody
 
-    /// See Extendable.extend
-    public var extend: Extend
+    /// See Message.onUpgrade
+    public var onUpgrade: HTTPOnUpgrade?
 
     /// Create a new HTTP response.
     public init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: Body = Body()
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBody = HTTPBody()
     ) {
         self.version = version
         self.status = status
         self.headers = headers
         self.body = body
-        self.extend = Extend()
-        Response.onInit?(self)
-    }
-
-    /// Called when request is deinitializing
-    deinit {
-        Response.onDeinit?(self)
     }
 }
 
-extension Response {
+extension HTTPResponse {
     /// Create a new HTTP response using something BodyRepresentable.
-    public convenience init(
-        version: Version = Version(major: 1, minor: 1),
-        status: Status = .ok,
-        headers: Headers = Headers(),
-        body: BodyRepresentable
+    public init(
+        version: HTTPVersion = HTTPVersion(major: 1, minor: 1),
+        status: HTTPStatus = .ok,
+        headers: HTTPHeaders = HTTPHeaders(),
+        body: HTTPBodyRepresentable
     ) throws {
         try self.init(version: version, status: status, headers: headers, body: body.makeBody())
     }
-}
-
-/// Can be converted from a response.
-///
-/// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responseinitializable)
-public protocol ResponseDecodable {
-    static func decode(from res: Response, for req: Request) throws -> Future<Self>
-}
-
-/// Can be converted to a response
-///
-/// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responserepresentable)
-public protocol ResponseEncodable {
-    /// Makes a response using the context provided by the Request
-    func encode(to res: inout Response, for req: Request) throws -> Future<Void>
-}
-
-/// Can be converted from and to a response
-public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
-
-// MARK: Response Conformance
-
-extension Response: ResponseEncodable {
-    /// See `ResponseRepresentable.makeResponse`
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
-        res = self
-        return .done
-    }
-}
-
-/// Makes `Response` a drop-in replacement for `Future<Response>
-extension Response: FutureType {
-    public typealias Expectation = Response
 }

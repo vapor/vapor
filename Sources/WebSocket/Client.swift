@@ -17,7 +17,7 @@ extension WebSocket {
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/client/#connecting-a-websocket-client)
     public static func connect(
         to uri: URI,
-        worker: Worker
+        on eventLoop: EventLoop
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
@@ -39,7 +39,7 @@ extension WebSocket {
         let id = OSRandom().data(count: 16).base64EncodedString()
         
         // Create a basic HTTP Request, requesting an upgrade
-        let request = Request(method: .get, uri: uri, headers: [
+        let request = HTTPRequest(method: .get, uri: uri, headers: [
             "Host": uri.hostname ?? "",
             "Connection": "Upgrade",
             "Sec-WebSocket-Key": id,
@@ -47,13 +47,13 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-            let client = try TLSClient(on: worker)
+            let client = try TLSClient(on: eventLoop)
             
-            parser = client.stream(to: ResponseParser(maxBodySize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
-            try client.connect(hostname: hostname, port: port).do {
+            try client.connect(hostname: hostname, port: port).do { _ in 
                 // Send the initial request
-                serializer.serialize(request).withByteBuffer(client.onInput)
+                serializer.stream(to: client)
             }.catch(promise.fail)
             
             WebSocket.complete(to: promise, with: parser, id: id) {
@@ -61,26 +61,28 @@ extension WebSocket {
             }
         } else {
             // Create a new socket to the host
-            let socket = try TCPSocket()
+            var socket = try TCPSocket()
             try socket.connect(hostname: hostname, port: port)
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
-            let client = TCPClient(socket: socket, worker: worker)
+            let client = TCPClient(socket: socket, on: eventLoop)
             
-            parser = client.stream(to: ResponseParser(maxBodySize: 50_000))
+            parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
-            client.socket.writable(queue: worker.eventLoop.queue).do {
+            client.writable().do {
                 // Start reading in the client
                 client.start()
                 
                 // Send the initial request
-                serializer.serialize(request).withByteBuffer(client.onInput)
+                serializer.stream(to: client)
             }.catch(promise.fail)
             
             WebSocket.complete(to: promise, with: parser, id: id) {
                 return WebSocket(socket: client, serverSide: false)
             }
         }
+        
+        serializer.onInput(request)
         
         return promise.future
     }

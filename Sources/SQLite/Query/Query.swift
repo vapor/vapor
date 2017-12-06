@@ -145,7 +145,7 @@ public final class SQLiteQuery: Async.OutputStream {
             }
 
             // return to event loop
-            self.connection.worker.eventLoop.queue.async {
+            self.connection.eventLoop.queue.async {
                 self.outputStream.onInput(row)
             }
         }
@@ -170,12 +170,12 @@ public final class SQLiteQuery: Async.OutputStream {
                 try self.blockingExecute()
 
                 // return to event loop
-                self.connection.worker.eventLoop.queue.async {
+                self.connection.eventLoop.queue.async {
                     promise.complete()
                 }
             } catch {
                 // return to event loop
-                self.connection.worker.eventLoop.queue.async {
+                self.connection.eventLoop.queue.async {
                     promise.fail(error)
                 }
             }

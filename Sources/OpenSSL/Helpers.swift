@@ -18,73 +18,37 @@ extension SSLStream {
             }
         }
         
-        var result = retry()
-        var code = SSL_get_error(ssl, result)
-        
-        // If the success is immediate
-        if result == 0 {
-            return Future(())
-        }
-        
-        // Otherwise set up a readsource
-        let readSource = DispatchSource.makeReadSource(fileDescriptor: self.descriptor, queue: self.queue)
         let promise = Promise<Void>()
         
-        func tryAgain() {
-            // On input, continue the handshake
-            result = retry()
-            code = SSL_get_error(ssl, result)
-            
-            if result == -1 && (
+        var result: Int32 = 0
+        var code: Int32 = 0
+        
+        func attemptInstantiation() {
+            repeat {
+                result = retry()
+                code = SSL_get_error(ssl, result)
+            } while result == -1 && (
                 code == SSL_ERROR_WANT_READ ||
                 code == SSL_ERROR_WANT_WRITE ||
-                code == SSL_ERROR_WANT_CONNECT ||
-                code == SSL_ERROR_WANT_ACCEPT
-            ) {
-                return
-            }
+                code == SSL_ERROR_WANT_READ ||
+                code == SSL_ERROR_WANT_CONNECT
+            )
             
-            // If it's not blocking and not a success, it's an error
-            guard result > 0 else {
-                readSource.cancel()
-                promise.fail(OpenSSLError(.sslError(result)))
-                return
-            }
-            
-            if accepted {
-                readSource.cancel()
-                promise.complete(())
-            } else {
+            if case .server = side, !accepted {
                 accepted = true
-                tryAgain()
+                return attemptInstantiation()
+            }
+            
+            if result == -1 {
+                promise.fail(OpenSSLError(.sslError(result)))
+            } else {
+                promise.complete(())
             }
         }
         
-        // Listen for input
-        readSource.setEventHandler {
-            tryAgain()
-        }
+        attemptInstantiation()
         
-        // Now that the async stuff's et up, let's start your engines
-        readSource.resume()
-        
-        let future = promise.future
-        
-        future.addAwaiter { _ in
-            self.readSource = nil
-        }
-        
-        self.readSource = readSource
-        
-        return future
-    }
-    
-    func setCertificate(certificatePath: String) throws {
-        guard let context = context else {
-            throw OpenSSLError(.noSSLContext)
-        }
-        
-        SSL_CTX_load_verify_locations(context, certificatePath, nil)
+        return promise.future
     }
     
     /// This is mandatory for SSL Servers to work. Optional for Clients.
@@ -116,12 +80,7 @@ extension SSLStream {
     
     /// Starts receiving data from the client, reads on the provided queue
     public func start() {
-        let source = DispatchSource.makeReadSource(
-            fileDescriptor: self.descriptor,
-            queue: self.queue
-        )
-        
-        source.setEventHandler {
+        readSource.setEventHandler {
             let read: Int
             do {
                 read = try self.read(into: self.outputBuffer)
@@ -147,11 +106,41 @@ extension SSLStream {
             self.outputStream.onInput(bufferView)
         }
         
-        source.setCancelHandler {
+        readSource.setCancelHandler {
             self.close()
         }
         
-        source.resume()
-        self.readSource = source
+        readSource.resume()
+        self.reading = true
+        
+        writeSource.setEventHandler {
+            guard self.writeQueue.count > 0 else {
+                if self.writing {
+                    self.writeSource.suspend()
+                }
+                
+                return
+            }
+            
+            let data = self.writeQueue[0]
+            
+            data.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
+                
+                do {
+                    try self.write(from: buffer)
+                    _ = self.writeQueue.removeFirst()
+                } catch {
+                    self.onError(error)
+                }
+            }
+            
+            guard self.writeQueue.count > 0 else {
+                self.writeSource.suspend()
+                self.writing = false
+                return
+            }
+        }
+        self.writing = true
     }
 }

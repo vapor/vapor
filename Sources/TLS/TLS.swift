@@ -6,7 +6,6 @@
 
 import Async
 import Bits
-import Core
 import Dispatch
 import TCP
 
@@ -22,7 +21,7 @@ public final class TLSClient: Async.Stream, ClosableStream {
     let ssl: SSLStream
     
     /// The TCP that is used in the SSL Stream
-    let client: TCPClient
+    public let client: TCPClient
     
     /// A DispatchQueue on which this Client executes all operations
     let queue: DispatchQueue
@@ -30,27 +29,39 @@ public final class TLSClient: Async.Stream, ClosableStream {
     /// The certificate used by the client, if any
     public var clientCertificatePath: String? = nil
     
+    public var protocols = [String]() {
+        didSet {
+            preferences = ALPNPreferences(array: protocols)
+        }
+    }
+    
+    var preferences: ALPNPreferences = []
+    
     /// Creates a new `TLSClient` by specifying a queue.
     ///
     /// Can throw an error if the initialization phase fails
-    public init(on worker: Worker) throws {
+    public init(on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
-        self.queue = worker.eventLoop.queue
-        self.client = TCPClient(socket: socket, worker: worker)
+        self.queue = eventLoop.queue
+        self.client = TCPClient(socket: socket, on: eventLoop)
         self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
     }
     
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        try client.socket.connect(hostname: hostname, port: port)
-        
-        // Continues setting up SSL after the socket becomes writable (successful connection)
-        return client.socket.writable(queue: queue).flatMap {
-            return try self.ssl.initializeClient(hostname: hostname, signedBy: self.clientCertificatePath)
-        }.map {
-            self.ssl.start()
-        }
+        return try client.connect(hostname: hostname, port: port).flatMap {
+            var options = [SSLOption]()
+            
+            options.append(.peerDomainName(hostname))
+            
+            if self.protocols.count > 0 {
+                options.append(.alpn(protocols: self.preferences))
+            }
+            
+            return try self.ssl.initializeClient(options: options)
+            // Continues setting up SSL after the socket becomes writable (successful connection)
+        }.map(self.ssl.start)
     }
 
     /// See InputStream.onInput

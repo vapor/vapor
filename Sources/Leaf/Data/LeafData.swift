@@ -2,6 +2,17 @@ import Async
 import Dispatch
 import Foundation
 
+/// A reference wrapper around leaf data.
+public final class LeafContext {
+    /// The wrapped data
+    public var data: LeafData
+
+    /// Create a new LeafContext
+    public init(data: LeafData) {
+        self.data = data
+    }
+}
+
 /// Data structure for passing data
 /// into Leaf templates as a context.
 public enum LeafData {
@@ -89,6 +100,20 @@ extension LeafData {
         }
     }
 
+    /// Attempts to convert to int or returns nil.
+    public var int: Int? {
+        switch self {
+        case .int(let i):
+            return i
+        case .string(let s):
+            return Int(s)
+        case .lazy(let lazy):
+            return lazy().int
+        default:
+            return nil
+        }
+    }
+
     /// Returns dictionary if context contains one.
     public var dictionary: [String: LeafData]? {
         switch self {
@@ -118,8 +143,18 @@ extension LeafData {
             return s.data(using: .utf8)
         case .lazy(let lazy):
             return lazy().data
+        case .int(let i):
+            return i.description.data(using: .utf8)
         default:
             return nil
+        }
+    }
+
+    /// Returns true if the data is null.
+    public var isNull: Bool {
+        switch self {
+        case .null: return true
+        default: return false
         }
     }
 }

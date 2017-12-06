@@ -7,6 +7,10 @@ public struct SerializerError: Error {
         return SerializerError(source: syntax.source, reason: "Unexpected \(syntax.kind.name).")
     }
 
+    static func unexpectedTagData(name: String, source: Source) -> SerializerError {
+        return SerializerError(source: source, reason: "Could not convert data returned by tag \(name) to Data.")
+    }
+
     static func unknownTag(name: String, source: Source) -> SerializerError {
         return SerializerError(source: source, reason: "Unknown tag `\(name)`.")
     }
