@@ -94,3 +94,9 @@ public final class File: FileReader, FileCache {
         cache[path.hashValue] = file
     }
 }
+
+#if os(Linux)
+    extension Bool {
+        fileprivate var boolValue: Bool { return self }
+    }
+#endif
