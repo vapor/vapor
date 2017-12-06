@@ -13,6 +13,7 @@ import XCTest
 @testable import LeafTests
 @testable import MultipartTests
 @testable import MySQLTests
+@testable import PostgreSQLTests
 @testable import PufferfishTests
 @testable import RandomTests
 @testable import RedisTests
@@ -65,6 +66,9 @@ XCTMain([
 
     // MySQL
     testCase(MySQLTests.allTests),
+
+    // PostgreSQL
+    testCase(PostgreSQLTests.allTests),
 
     // Pufferfish
     testCase(PufferfishTests.allTests),
