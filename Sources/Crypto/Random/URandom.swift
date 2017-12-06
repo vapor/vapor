@@ -1,6 +1,6 @@
 import Foundation
-import Core
-import libc
+import JunkDrawer
+import COperatingSystem
 
 /// URandom represents a file connection to /dev/urandom on Unix systems.
 /// /dev/urandom is a cryptographically secure random generator provided by the OS.

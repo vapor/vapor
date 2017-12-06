@@ -1,10 +1,10 @@
 import Async
 import Bits
-import Core
+import COperatingSystem
 import Dispatch
 import Foundation
+import JunkDrawer
 import Leaf
-import libc
 
 extension LeafRenderer {
     static func makeTestRenderer(eventLoop: EventLoop) -> LeafRenderer {
@@ -20,6 +20,9 @@ final class TestFiles: FileReader, FileCache {
         return false
     }
 
+    func directoryExists(at path: String) -> Bool {
+        return false
+    }
 
     init() {}
 
@@ -61,6 +64,10 @@ final class PreloadedFiles: FileReader, FileCache {
             stream.onError("Could not find file")
         }
         stream.close()
+    }
+
+    func directoryExists(at path: String) -> Bool {
+        return false
     }
 
     func fileExists(at path: String) -> Bool {

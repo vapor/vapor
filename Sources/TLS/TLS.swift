@@ -50,18 +50,16 @@ public final class TLSClient: Async.Stream, ClosableStream {
     
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        return try client.connect(hostname: hostname, port: port).flatMap {
-            var options = [SSLOption]()
-            
-            options.append(.peerDomainName(hostname))
-            
-            if self.protocols.count > 0 {
-                options.append(.alpn(protocols: self.preferences))
-            }
-            
-            return try self.ssl.initializeClient(options: options)
-            // Continues setting up SSL after the socket becomes writable (successful connection)
-        }.map(self.ssl.start)
+    try client.connect(hostname: hostname, port: port)
+        var options = [SSLOption]()
+
+        options.append(.peerDomainName(hostname))
+
+        if self.protocols.count > 0 {
+            options.append(.alpn(protocols: self.preferences))
+        }
+
+        return try self.ssl.initializeClient(options: options).map(ssl.start)
     }
 
     /// See InputStream.onInput

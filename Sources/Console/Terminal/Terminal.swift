@@ -1,7 +1,7 @@
 import Async
-import libc
+import COperatingSystem
 import Foundation
-import Core
+import JunkDrawer
 
 /// global static array of running PIDs.
 /// unfortunately we must keep track of processes that
@@ -33,7 +33,7 @@ public final class Terminal: Console {
     public init() {
         func kill(sig: Int32) {
             for pid in _pids {
-                _ = libc.kill(pid, sig)
+                _ = COperatingSystem.kill(pid, sig)
             }
             exit(sig)
         }

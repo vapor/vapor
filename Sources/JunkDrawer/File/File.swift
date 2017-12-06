@@ -1,8 +1,8 @@
 import Async
 import Bits
+import COperatingSystem
 import Dispatch
 import Foundation
-import libc
 
 public final class File: FileReader, FileCache {
     /// Cached data.
@@ -68,7 +68,20 @@ public final class File: FileReader, FileCache {
 
     /// See FileReader.fileExists
     public func fileExists(at path: String) -> Bool {
-        return access(path, F_OK) != -1
+        var isDirectory: ObjCBool = false
+        if !FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) {
+            return false
+        }
+        return !isDirectory.boolValue
+    }
+
+    /// See FileReader.directoryExists
+    public func directoryExists(at path: String) -> Bool {
+        var isDirectory: ObjCBool = false
+        if !FileManager.default.fileExists(atPath: path, isDirectory: &isDirectory) {
+            return false
+        }
+        return isDirectory.boolValue
     }
 
     /// See FileCache.getFile
@@ -81,3 +94,9 @@ public final class File: FileReader, FileCache {
         cache[path.hashValue] = file
     }
 }
+
+#if os(Linux)
+    extension Bool {
+        fileprivate var boolValue: Bool { return self }
+    }
+#endif

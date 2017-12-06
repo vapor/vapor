@@ -56,7 +56,7 @@ extension ContentConfig {
 
         // data
         config.use(encoder: DataEncoder(), for: .plainText)
-        config.use(encoder: DataEncoder(), for: .plainText)
+        config.use(encoder: DataEncoder(), for: .html)
 
 
         // form-urlencoded

@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Fluent
 import Foundation
 
@@ -69,14 +69,8 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
         return connection.create(Toy<Database>.self) { builder in
-            try builder.field(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
-                for: \Toy<Database>.id
-            )
-            try builder.field(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
-                for: \Toy<Database>.name
-            )
+            try builder.field(for: \Toy<Database>.id)
+            try builder.field(for: \Toy<Database>.name)
         }
     }
 

@@ -2,7 +2,7 @@ import XCTest
 import Dispatch
 import Async
 import TCP
-import Core
+import JunkDrawer
 @testable import Redis
 
 class RedisTests: XCTestCase {
@@ -20,7 +20,7 @@ class RedisTests: XCTestCase {
         return try RedisClient.connect(
             hostname: "localhost",
             on: queue
-        ).blockingAwait(timeout: .seconds(5))
+        )
     }
     
     func testCRUD() throws {
@@ -30,7 +30,7 @@ class RedisTests: XCTestCase {
         
         let result = try! connection.set("world", forKey: "hello").flatMap {
             return connection.getData(forKey: "hello")
-        }.blockingAwait(timeout: .seconds(1))
+        }.blockingAwait(timeout: .seconds(2))
         
         let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
         

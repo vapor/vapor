@@ -3,7 +3,7 @@ import Bits
 import Async
 import Dispatch
 import Foundation
-import libc
+import COperatingSystem
 import Service
 
 /// TCP client stream.
@@ -37,14 +37,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Stores read event source.
     var readSource: DispatchSourceRead?
 
-    /// All promises waiting for this client to become readable
-    var readableWaiters = [Promise<Void>]()
-    
     /// Stores write event source.
     var writeSource: DispatchSourceWrite?
-    
-    /// All promises waiting for this client to become writeable
-    var writableWaiters = [Promise<Void>]()
 
     /// Keeps track of the writesource's active status so it's not resumed too often
     var isWriting = false
@@ -63,6 +57,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
         let size = 65_507
         let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
         self.outputBuffer = MutableByteBuffer(start: pointer, count: size)
+        start()
     }
     
     public convenience init(on eventLoop: EventLoop) throws {
@@ -137,12 +132,6 @@ public final class TCPClient: Async.Stream, ClosableStream {
             )
             
             source.setEventHandler {
-                for waiter in self.writableWaiters {
-                    waiter.complete()
-                }
-                
-                self.writableWaiters = []
-                
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
                     self.writeSource?.suspend()
@@ -190,7 +179,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     /// Starts receiving data from the client
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    public func start() {
+    private func start() {
         let source = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
             queue: eventLoop.queue
@@ -243,10 +232,6 @@ public final class TCPClient: Async.Stream, ClosableStream {
             // writeSource?.resume()
         }
         
-        for waiter in readableWaiters + writableWaiters {
-            waiter.fail(TCPError(identifier: "socket-closed", reason: "The socket closed before triggering the required notification"))
-        }
-        
         readSource = nil
         
         // TODO: This crashes on Linux
@@ -263,32 +248,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
     }
     
     /// Attempts to connect to a server on the provided hostname and port
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+    public func connect(hostname: String, port: UInt16) throws {
         try self.socket.connect(hostname: hostname, port: port)
-        return writable()
-    }
-    
-    /// Gets called when the connection becomes readable.
-    ///
-    /// This operation *must* once at a time.
-    public func readable() -> Future<Void> {
-        let promise = Promise<Void>()
-        
-        self.readableWaiters.append(promise)
-        
-        return promise.future
-    }
-    
-    /// Gets called when the connection becomes writable.
-    ///
-    /// This operation *must* once at a time.
-    public func writable() -> Future<Void> {
-        let promise = Promise<Void>()
-        
-        self.writableWaiters.append(promise)
-        ensureWriteSourceResumed()
-        
-        return promise.future
     }
 
     /// Deallocated the pointer buffer

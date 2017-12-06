@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 
 /// Converts encodable objects to LeafData.
 public final class LeafEncoder {

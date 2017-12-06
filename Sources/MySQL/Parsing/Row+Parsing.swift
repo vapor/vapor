@@ -1,5 +1,5 @@
 import Foundation
-import libc
+import COperatingSystem
 import Bits
 
 extension Packet {

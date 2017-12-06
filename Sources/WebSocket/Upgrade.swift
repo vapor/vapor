@@ -65,7 +65,7 @@ extension WebSocket {
             throw WebSocketError(.invalidRequest)
         }
 
-        let data = Base64Encoder.encode(data: SHA1.hash(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
+        let data = Base64Encoder().encode(data: SHA1.hash(key + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"))
         let hash = String(bytes: data, encoding: .utf8) ?? ""
 
         var headers: HTTPHeaders = [

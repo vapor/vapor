@@ -1,4 +1,5 @@
 import Async
+import Foundation
 
 // MARK: Protocols
 
@@ -19,26 +20,18 @@ public protocol SchemaFieldType {
 
     /// Default schema field types Fluent must know
     /// how to make for migrations and tests.
-    static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> Self
+    static func makeSchemaFieldType<T>(for type: T.Type) -> Self?
 }
 
-/// Fluent's basic schema field types.
-public enum BasicSchemaFieldType {
-    case uuid
-    case string
-    case int
-    case date
-    case double
-}
+extension SchemaFieldType {
+    /// Returns the schema field type for a given type or throws and error
+    public static func requireSchemaFieldType<T>(for type: T.Type) throws -> Self {
+        guard let type = makeSchemaFieldType(for: T.self) else {
+            throw "type for \(T.self) required"
+        }
 
-/// A type that is capable of being represented by a SchemaFieldType.
-/// This is used to implement convenience methods on the SchemaBuilder.
-public protocol SchemaFieldTypeRepresentable {
-    /// The field type that can be represented by this type.
-    associatedtype FieldType: SchemaFieldType
-
-    /// Converts this type into a schema field type.
-    static func makeSchemaFieldType() -> FieldType
+        return type
+    }
 }
 
 // MARK: Convenience

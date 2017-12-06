@@ -1,6 +1,6 @@
 import Async
 import Console
-import Core
+import JunkDrawer
 
 final class TestConsole: Console {
     var output: String

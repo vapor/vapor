@@ -48,44 +48,17 @@ extension SQLiteFieldType: SchemaFieldType {
     }
 
     /// See SchemaFieldType.makeSchemaField
-    public static func makeSchemaFieldType(for basicFieldType: BasicSchemaFieldType) -> SQLiteFieldType {
-        switch basicFieldType {
-        case .date: return Date.makeSchemaFieldType()
-        case .double: return Double.makeSchemaFieldType()
-        case .int: return Int.makeSchemaFieldType()
-        case .string: return String.makeSchemaFieldType()
-        case .uuid: return UUID.makeSchemaFieldType()
+    public static func makeSchemaFieldType<T>(for type: T.Type) -> SQLiteFieldType? {
+        switch id(T.self) {
+        case id(Date.self), id(Double.self), id(Float.self): return .real
+        case id(Int.self), id(UInt.self): return .integer
+        case id(String.self): return .text
+        case id(UUID.self), id(Data.self): return .blob
+        default: return nil
         }
     }
 }
 
-extension String: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SQLiteFieldType {
-        return .text
-    }
+fileprivate func id<T>(_ type: T.Type) -> ObjectIdentifier {
+    return ObjectIdentifier(T.self)
 }
-
-extension Int: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SQLiteFieldType {
-        return .integer
-    }
-}
-
-extension Date: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SQLiteFieldType {
-        return .real
-    }
-}
-
-extension Double: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SQLiteFieldType {
-        return .real
-    }
-}
-
-extension UUID: SchemaFieldTypeRepresentable {
-    public static func makeSchemaFieldType() -> SQLiteFieldType {
-        return .blob
-    }
-}
-

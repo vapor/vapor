@@ -1,7 +1,7 @@
 import Async
-import Core
+import JunkDrawer
 import Dispatch
-import libc
+import COperatingSystem
 import Service
 
 /// A server socket can accept peers. Each accepted peer get's it own socket after accepting.

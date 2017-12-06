@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Foundation
 
 /// Represents a migration that has succesfully ran.
@@ -64,26 +64,11 @@ final class MigrationLogMigration<
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
             return connection.create(MigrationLog<Database>.self) { builder in
-                try builder.field(
-                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
-                    for: \MigrationLog<D>.id
-                )
-                try builder.field(
-                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
-                    for: \MigrationLog<D>.name
-                )
-                try builder.field(
-                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
-                    for: \MigrationLog<D>.batch
-                )
-                try builder.field(
-                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
-                    for: \MigrationLog<D>.createdAt
-                )
-                try builder.field(
-                    type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
-                    for: \MigrationLog<D>.updatedAt
-                )
+                try builder.field(for: \MigrationLog<D>.id)
+                try builder.field(for: \MigrationLog<D>.name)
+                try builder.field(for: \MigrationLog<D>.batch)
+                try builder.field(for: \MigrationLog<D>.createdAt)
+                try builder.field(for: \MigrationLog<D>.updatedAt)
             }
     }
 

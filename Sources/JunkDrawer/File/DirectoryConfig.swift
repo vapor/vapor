@@ -1,4 +1,4 @@
-import libc
+import COperatingSystem
 
 /// Contains a configured working directory.
 public struct DirectoryConfig {

@@ -1,6 +1,6 @@
 import Debugging
 import Foundation
-import libc
+import COperatingSystem
 
 /// Errors that can be thrown while working with Multipart.
 public struct MultipartError: Traceable, Debuggable, Swift.Error {

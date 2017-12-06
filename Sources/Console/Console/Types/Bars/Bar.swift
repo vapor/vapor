@@ -1,4 +1,4 @@
-import libc
+import COperatingSystem
 
 public class Bar {
     let console: OutputConsole & ClearableConsole

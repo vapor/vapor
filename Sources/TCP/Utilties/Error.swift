@@ -1,5 +1,5 @@
 import Debugging
-import libc
+import COperatingSystem
 
 /// Errors that can be thrown while working with TCP sockets.
 public struct TCPError: Traceable, Debuggable, Helpable, Swift.Error, Encodable {
@@ -47,7 +47,7 @@ public struct TCPError: Traceable, Debuggable, Helpable, Swift.Error, Encodable 
         line: UInt = #line,
         column: UInt = #column
     ) -> TCPError {
-        let message = libc.strerror(errno)
+        let message = COperatingSystem.strerror(errno)
         let string = String(cString: message!, encoding: .utf8) ?? "unknown"
         return TCPError(
             identifier: identifier,

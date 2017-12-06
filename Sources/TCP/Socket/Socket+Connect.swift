@@ -1,6 +1,6 @@
 import Async
 import Dispatch
-import libc
+import COperatingSystem
 
 extension TCPSocket {
     /// connect - initiate a connection on a socket
@@ -35,7 +35,7 @@ extension TCPSocket {
             throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
         
-        res = libc.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = COperatingSystem.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 || (isNonBlocking && errno == EINPROGRESS) else {
             throw TCPError.posix(errno, identifier: "connect")
         }

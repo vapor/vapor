@@ -10,8 +10,11 @@ public protocol FileReader {
     func read<S>(at path: String, into stream: S, chunkSize: Int)
         where S: Async.InputStream, S.Input == ByteBuffer
 
-    /// Returns true if the file exists at supplied path.
+    /// Returns true if the file exists at the supplied path.
     func fileExists(at path: String) -> Bool
+
+    /// Returns true if a directory exists at the supplied path.
+    func directoryExists(at path: String) -> Bool
 }
 
 extension FileReader {

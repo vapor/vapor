@@ -73,12 +73,8 @@ extension HTTPClient {
                 }
             } else {
                 let client = try TCPClient(on: eventLoop)
-
-                return try client.connect(hostname: hostname, port: port).map {
-                    client.start()
-
-                    return HTTPClient(socket: client)
-                }
+                try client.connect(hostname: hostname, port: port)
+                return Future(HTTPClient(socket: client))
             }
         }
     }

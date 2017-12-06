@@ -67,9 +67,7 @@ extension SchemaBuilder where Model.Database.Connection: ReferenceSupporting {
         for key: KeyPath<Model, T>,
         referencing: KeyPath<Other, T>
     ) throws
-        where T: SchemaFieldTypeRepresentable,
-            T.FieldType == Connection.FieldType,
-            Other: Fluent.Model
+        where Other: Fluent.Model
     {
         let base = try field(for: key)
         let reference = try SchemaReference(base: base, referenced: referencing.makeQueryField())
@@ -82,9 +80,7 @@ extension SchemaBuilder where Model.Database.Connection: ReferenceSupporting {
         for key: KeyPath<Model, T>,
         referencing: KeyPath<Other, Optional<T>>
     ) throws
-        where T: SchemaFieldTypeRepresentable,
-            T.FieldType == Connection.FieldType,
-            Other: Fluent.Model
+        where Other: Fluent.Model
     {
         let base = try field(for: key)
         let reference = try SchemaReference(base: base, referenced: referencing.makeQueryField())
@@ -97,9 +93,7 @@ extension SchemaBuilder where Model.Database.Connection: ReferenceSupporting {
         for key: KeyPath<Model, Optional<T>>,
         referencing: KeyPath<Other, T>
     ) throws
-        where T: SchemaFieldTypeRepresentable,
-            T.FieldType == Connection.FieldType,
-            Other: Fluent.Model
+        where Other: Fluent.Model
     {
         let base = try field(for: key)
         let reference = try SchemaReference(base: base, referenced: referencing.makeQueryField())
@@ -112,9 +106,7 @@ extension SchemaBuilder where Model.Database.Connection: ReferenceSupporting {
         for key: KeyPath<Model, Optional<T>>,
         referencing: KeyPath<Other, Optional<T>>
     ) throws
-        where T: SchemaFieldTypeRepresentable,
-            T.FieldType == Connection.FieldType,
-            Other: Fluent.Model
+        where Other: Fluent.Model
     {
         let base = try field(for: key)
         let reference = try SchemaReference(base: base, referenced: referencing.makeQueryField())
@@ -127,9 +119,7 @@ extension SchemaBuilder where Model.Database.Connection: ReferenceSupporting {
         for key: KeyPath<Model, Optional<T>>,
         referencing: KeyPath<Other, Optional<T>>
     ) throws
-        where T: SchemaFieldTypeRepresentable,
-        T.FieldType == Connection.FieldType,
-        Other: Fluent.Model
+        where Other: Fluent.Model
     {
         let base = try field(for: key)
         let reference = try SchemaReference(base: base, referenced: referencing.makeQueryField())

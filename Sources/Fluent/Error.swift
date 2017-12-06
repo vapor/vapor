@@ -1,6 +1,6 @@
 import Debugging
 import Foundation
-import libc
+import COperatingSystem
 
 /// Errors that can be thrown while working with Fluent.
 public struct FluentError: Traceable, Debuggable, Swift.Error, Encodable {

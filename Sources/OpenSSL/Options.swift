@@ -1,4 +1,4 @@
-import libc
+import COperatingSystem
 import COpenSSL
 
 public final class ALPNPreferences: ExpressibleByArrayLiteral {

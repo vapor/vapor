@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Fluent
 import Foundation
 
@@ -49,16 +49,9 @@ internal struct LogMessageMigration<D: Database>: Migration where D.Connection: 
 
     static func prepare(on connection: D.Connection) -> Future<Void> {
         return connection.create(LogMessage<D>.self) { builder in
-            try builder.field(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
-                for: \LogMessage<Database>.id,
-                isIdentifier: true
-            )
+            try builder.field(for: \LogMessage<Database>.id)
 
-            try builder.field(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
-                for: \LogMessage<Database>.message
-            )
+            try builder.field(for: \LogMessage<Database>.message)
         }
     }
 
