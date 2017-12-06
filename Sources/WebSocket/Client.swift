@@ -68,14 +68,9 @@ extension WebSocket {
             let client = TCPClient(socket: socket, on: eventLoop)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
-            
-            client.writable().do {
-                // Start reading in the client
-                client.start()
-                
-                // Send the initial request
-                serializer.stream(to: client)
-            }.catch(promise.fail)
+
+            // Send the initial request
+            serializer.stream(to: client)
             
             WebSocket.complete(to: promise, with: parser, id: id) {
                 return WebSocket(socket: client, serverSide: false)

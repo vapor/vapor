@@ -20,7 +20,7 @@ class RedisTests: XCTestCase {
         return try RedisClient.connect(
             hostname: "localhost",
             on: queue
-        ).blockingAwait(timeout: .seconds(5))
+        )
     }
     
     func testCRUD() throws {

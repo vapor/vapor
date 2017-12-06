@@ -8,7 +8,6 @@ public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream wher
     HTTPPeer: Async.Stream,
     HTTPPeer.Input == HTTPResponse,
     HTTPPeer.Output == HTTPRequest,
-    HTTPPeer: HTTPStartable,
     HTTPPeer: HTTPUpgradable
 {
     /// See OutputStream.Output
@@ -61,8 +60,6 @@ public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream wher
             }.finally {
                 // client closed
             }
-
-            client.start()
         }
     }
 
@@ -71,10 +68,4 @@ public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream wher
         socket.close()
         outputStream.close()
     }
-}
-
-/// Capable of being started by an HTTP server.
-public protocol HTTPStartable {
-    /// Starts outputting data.
-    func start()
 }

@@ -85,11 +85,7 @@ public final class MySQLConnection {
             self.socketWrite = socket.onInput
         } else {
             let socket = try TCPClient(on: eventLoop)
-            
-            try socket.connect(hostname: hostname, port: port).map { _ in
-                socket.start()
-            }.catch(authenticated.fail)
-            
+            try socket.connect(hostname: hostname, port: port)
             socket.stream(to: parser)
             
             self.socket = socket

@@ -69,6 +69,8 @@ final class SubProtocolMatcherTests : XCTestCase {
     }
 
     func testIfSearchForTheMatchingSubProtocolIsOptimal() throws {
+        // uncomment to test performance
+        /*
         var tonsOfProtocols = [String]()
 
         let lastIndex = 1_000_000
@@ -81,6 +83,7 @@ final class SubProtocolMatcherTests : XCTestCase {
         self.measure {
             _ = try? matcher.matching()
         }
+        */
     }
 }
 

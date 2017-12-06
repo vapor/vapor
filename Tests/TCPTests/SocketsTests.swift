@@ -14,8 +14,6 @@ class SocketsTests: XCTestCase {
                 XCTAssertEqual(String(bytes: buffer, encoding: .utf8), "hello")
                 promise.complete(())
             }.catch(onError: promise.fail)
-            
-            client.start()
         }.catch(onError: promise.fail)
         
         try clientHello(port: 8338)
