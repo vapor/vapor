@@ -1,8 +1,8 @@
 import Async
 import Bits
+import COperatingSystem
 import Dispatch
 import Foundation
-import libc
 
 public final class File: FileReader, FileCache {
     /// Cached data.

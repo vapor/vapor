@@ -2,7 +2,7 @@ import XCTest
 import Dispatch
 import Async
 import TCP
-import Core
+import JunkDrawer
 @testable import Redis
 
 class RedisTests: XCTestCase {

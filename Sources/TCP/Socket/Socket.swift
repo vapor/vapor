@@ -1,6 +1,6 @@
 import Async
 import Dispatch
-import libc
+import COperatingSystem
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
 public struct TCPSocket {
@@ -79,7 +79,7 @@ public struct TCPSocket {
 
     /// Closes the socket
     public func close() {
-        libc.close(descriptor)
+        COperatingSystem.close(descriptor)
     }
     
     /// Returns a boolean describing if the socket is still healthy and open

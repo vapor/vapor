@@ -1,6 +1,6 @@
 import Async
 import Foundation
-import Core
+import JunkDrawer
 
 extension MySQLConnection {
     /// Writes a query to the connection

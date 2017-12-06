@@ -1,6 +1,6 @@
 import Bits
 import Foundation
-import libc
+import COperatingSystem
 
 extension TCPSocket {
     /// Writes all data from the pointer's position with the length specified to this socket.

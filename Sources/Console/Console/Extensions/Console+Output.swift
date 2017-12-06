@@ -1,4 +1,4 @@
-import libc
+import COperatingSystem
 
 extension BaseConsole {
     public func blockingWait(seconds: Double) {

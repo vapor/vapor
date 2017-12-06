@@ -3,7 +3,7 @@ import Bits
 import Async
 import Dispatch
 import Foundation
-import libc
+import COperatingSystem
 import Service
 
 /// TCP client stream.

@@ -1,6 +1,6 @@
 import Debugging
 import Foundation
-import libc
+import COperatingSystem
 
 /// Errors that can be thrown while working with Vapor Sessions Cookies.
 public struct SessionsError: Traceable, Helpable, Debuggable, Swift.Error, Encodable {

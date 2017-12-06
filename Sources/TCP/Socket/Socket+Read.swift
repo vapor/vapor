@@ -1,13 +1,13 @@
 import Bits
 import Dispatch
 import Foundation
-import libc
+import COperatingSystem
 
 extension TCPSocket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     public func read(max: Int, into pointer: MutableBytesPointer) throws -> Int {
-        let receivedBytes = libc.read(descriptor, pointer, max)
+        let receivedBytes = COperatingSystem.read(descriptor, pointer, max)
         
         guard receivedBytes != -1 else {
             switch errno {

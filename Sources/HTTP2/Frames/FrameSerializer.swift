@@ -1,6 +1,6 @@
 import Async
 import Bits
-import libc
+import COperatingSystem
 
 /// Serializes input frames and outputs them
 final class FrameSerializer: Async.Stream {

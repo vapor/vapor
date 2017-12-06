@@ -1,4 +1,4 @@
-import Core
+import JunkDrawer
 import HTTP
 
 /// A route. When registered to a router, replies to `Request`s using the `Responder`.

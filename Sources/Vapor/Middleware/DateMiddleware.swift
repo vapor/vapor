@@ -1,6 +1,6 @@
 import Async
 import HTTP
-import libc
+import COperatingSystem
 
 fileprivate let DAY_NAMES = [
     "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
@@ -23,7 +23,7 @@ fileprivate let NUMBERS = [
     "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
 ]
 
-fileprivate var cachedTimeComponents: (key: time_t, components: libc.tm)?
+fileprivate var cachedTimeComponents: (key: time_t, components: COperatingSystem.tm)?
 
 let secondsInDay = 60 * 60 * 24
 
@@ -45,7 +45,7 @@ public final class DateMiddleware: Middleware {
     }
     
     fileprivate func getDate() -> String {
-        var date = libc.time(nil)
+        var date = COperatingSystem.time(nil)
         
         // generate a key used for caching.
         // this key is a unique id for each day

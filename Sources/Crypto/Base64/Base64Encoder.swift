@@ -1,6 +1,6 @@
 import Bits
 import Async
-import libc
+import COperatingSystem
 import Foundation
 
 /// A base64 encoder. Works as both a step in streams as well as a big-chunk encoder

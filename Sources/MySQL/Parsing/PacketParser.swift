@@ -1,6 +1,6 @@
 import Async
 import Bits
-import libc
+import COperatingSystem
 
 /// Parses buffers into packets
 internal final class PacketParser: Async.Stream {

@@ -1,4 +1,4 @@
-import Core
+import JunkDrawer
 import Foundation
 
 /// Types conforming to this protocol may be used

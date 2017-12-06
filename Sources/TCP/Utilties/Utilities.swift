@@ -1,7 +1,7 @@
 import Foundation
 
 #if os(Linux)
-import libc
+import COperatingSystem
 
 // fix some constants on linux
 let SOCK_STREAM = Int32(libc.SOCK_STREAM.rawValue)

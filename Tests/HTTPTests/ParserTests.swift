@@ -1,8 +1,8 @@
 import Async
 import Bits
-import Core
 import Dispatch
 import HTTP
+import JunkDrawer
 import XCTest
 
 class ParserTests : XCTestCase {
