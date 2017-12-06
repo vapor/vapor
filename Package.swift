@@ -1,12 +1,6 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-#if os(macOS) || os(iOS)
-    let ssl: Target.Dependency = "AppleSSL"
-#else
-    let ssl: Target.Dependency = "OpenSSL"
-#endif
-
 let package = Package(
     name: "Vapor",
     products: [
@@ -73,6 +67,9 @@ let package = Package(
 
         // SQLite
         .library(name: "SQLite", targets: ["SQLite"]),
+        
+        // TLS/SSL
+        .library(name: "TLS", targets: ["TLS"]),
         
         // TLS/SSL
         .library(name: "TLS", targets: ["TLS"]),
@@ -164,7 +161,7 @@ let package = Package(
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Service", "Pufferfish"]),
         .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
@@ -191,7 +188,7 @@ let package = Package(
         .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
        
         // TLS
-        .target(name: "TLS", dependencies: ["Core", ssl, "TCP"]),
+        .target(name: "TLS", dependencies: ["Async", "Bits"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL
@@ -231,7 +228,7 @@ let package = Package(
 
 #if os(macOS) || os(iOS)
    package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
+        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging", "TLS"])
     )
 
     package.products.append(
@@ -243,7 +240,7 @@ let package = Package(
     )
     
     package.targets.append(
-        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
+        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging", "TLS"])
     )
     
     package.products.append(

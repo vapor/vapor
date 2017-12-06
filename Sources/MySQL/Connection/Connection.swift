@@ -1,4 +1,5 @@
 import Bits
+import Service
 import Foundation
 import Async
 import TCP
@@ -69,14 +70,14 @@ public final class MySQLConnection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String, on eventLoop: EventLoop) throws {
+    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String, using container: Container) throws {
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
         let parser = PacketParser()
         self.authenticated = Promise<Void>()
         
         if ssl {
-            let socket = try TLSClient(on: eventLoop)
+            let socket = try TLSConnection(on: eventLoop)
             
             try socket.connect(hostname: hostname, port: port).catch(authenticated.fail)
             socket.stream(to: parser)
@@ -210,7 +211,7 @@ extension MySQLConnection {
         user: String,
         password: String?,
         database: String,
-        on eventloop: EventLoop
+        using container: Container
     ) -> Future<MySQLConnection> {
         return then {
             let connection = try MySQLConnection(
@@ -220,7 +221,7 @@ extension MySQLConnection {
                 user: user,
                 password: password,
                 database: database,
-                on: eventloop
+                using: container
             )
 
             return connection.authenticated.future.map { _ in

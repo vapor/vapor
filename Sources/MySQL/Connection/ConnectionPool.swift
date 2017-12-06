@@ -1,4 +1,5 @@
 import Core
+import Service
 import Async
 import Dispatch
 
@@ -7,7 +8,7 @@ import Dispatch
 /// [Learn More →](https://docs.vapor.codes/3.0/mysql/setup/#connecting)
 public final class MySQLConnectionPool {
     /// The queue on which connections will be created
-    let eventLoop: EventLoop
+    let container: Container
     
     /// The hostname to which connections will be connected
     let hostname: String
@@ -54,9 +55,9 @@ public final class MySQLConnectionPool {
         user: String,
         password: String?,
         database: String,
-        on eventLoop: EventLoop
+        using container: Container
     ) {
-        self.eventLoop = eventLoop
+        self.container = container
         self.hostname = hostname
         self.port = port
         self.user = user
@@ -119,7 +120,7 @@ public final class MySQLConnectionPool {
             user: user,
             password: password,
             database: database,
-            on: eventLoop
+            using: container
         ).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true

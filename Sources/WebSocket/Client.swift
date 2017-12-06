@@ -1,4 +1,5 @@
 import Async
+import Service
 import Crypto
 import Dispatch
 import Foundation
@@ -17,7 +18,7 @@ extension WebSocket {
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/client/#connecting-a-websocket-client)
     public static func connect(
         to uri: URI,
-        on eventLoop: EventLoop
+        using container: Container
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
@@ -47,7 +48,7 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-            let client = try TLSClient(on: eventLoop)
+            let client = try container.make(TLSConnection.self, for: WebSocket.self)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
@@ -65,7 +66,7 @@ extension WebSocket {
             try socket.connect(hostname: hostname, port: port)
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
-            let client = TCPClient(socket: socket, on: eventLoop)
+            let client = TCPClient(socket: socket, on: container)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             

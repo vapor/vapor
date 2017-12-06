@@ -1,4 +1,5 @@
 import Async
+import Service
 import Bits
 import TLS
 
@@ -21,22 +22,18 @@ extension HTTP2Client {
         to hostname: String,
         port: UInt16? = nil,
         settings: HTTP2Settings = HTTP2Settings(),
-        on eventLoop: EventLoop
+        on container: Container
     ) -> Future<HTTP2Client> {
         return then {
-            let tlsClient = try TLSClient(on: eventLoop)
-            tlsClient.protocols = ["h2", "http/1.1"]
+            let tlsClient = try container.make(ALPNSupporting.self, for: HTTP2Client.self)
+            tlsClient.ALPNprotocols = ["h2", "http/1.1"]
 
-            let client = HTTP2Client(upgrading: tlsClient)
+            let client = HTTP2Client(client: tlsClient)
 
             // Connect the TLS client
             return try tlsClient.connect(hostname: hostname, port: port ?? 443).map { _ -> HTTP2Client in
                 // On successful connection, send the preface
-                Constants.staticPreface.withUnsafeBytes { (pointer: BytesPointer) in
-                    let buffer = ByteBuffer(start: pointer, count: Constants.staticPreface.count)
-
-                    tlsClient.onInput(buffer)
-                }
+                Constants.staticPreface.withByteBuffer(tlsClient.onInput)
 
                 // Send the settings, next
                 client.updateSettings(to: settings)
