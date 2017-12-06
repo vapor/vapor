@@ -6,6 +6,13 @@ import HTTP
 import Foundation
 import Routing
 import Service
+import TLS
+
+#if os(Linux)
+    import OpenSSL
+#else
+    import AppleSSL
+#endif
 
 extension Services {
     /// The default Services included in the framework.
@@ -21,6 +28,21 @@ extension Services {
         }
         services.register { container in
             return EngineServerConfig()
+        }
+        
+        services.register(TLSClientSettings.self) { _ in
+            return TLSClientSettings()
+        }
+        
+        services.register(BasicTLSClient.self) { container -> BasicTLSClient in
+            let client = try AppleSSLClient(
+                settings: try container.make(for: AppleSSLClient.self),
+                on: container
+            )
+            
+            client.start()
+            
+            return BasicTLSClient(boxing: client)
         }
 
         services.register(Client.self) { container -> EngineClient in

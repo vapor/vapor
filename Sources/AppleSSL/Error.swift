@@ -1,11 +1,23 @@
+import Foundation
+import Security
+
 /// An SSL Error related to Apple's Security libraries
-public struct AppleSSLError: Swift.Error {
+public struct AppleSSLError: Swift.Error, CustomStringConvertible {
     /// The reason for this error
     let reason: Reason
     
     /// Creates a new error
     init(_ reason: Reason) {
         self.reason = reason
+    }
+    
+    public var description: String {
+        switch reason {
+        case .sslError(let error):
+            return String(describing: SecCopyErrorMessageString(error, nil))
+        default:
+            return "\(reason)"
+        }
     }
     
     /// These reasons are internal so they cannot be caught publically.

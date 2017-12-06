@@ -52,14 +52,17 @@ extension WebSocket {
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
-            try client.connect(hostname: hostname, port: port).do { _ in 
-                // Send the initial request
+            try client.connect(hostname: hostname, port: port).do {
+                client.finally {
+                    promise.fail(WebSocketError(.cannotConnect))
+                }
+                
                 serializer.stream(to: client)
+                
+                WebSocket.complete(to: promise, with: parser, id: id) {
+                    return WebSocket(socket: client, serverSide: false)
+                }
             }.catch(promise.fail)
-            
-            WebSocket.complete(to: promise, with: parser, id: id) {
-                return WebSocket(socket: client, serverSide: false)
-            }
         } else {
             // Create a new socket to the host
             var socket = try TCPSocket()
@@ -69,6 +72,10 @@ extension WebSocket {
             let client = TCPClient(socket: socket, on: container)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
+            
+            client.finally {
+                promise.fail(WebSocketError(.cannotConnect))
+            }
 
             // Send the initial request
             serializer.stream(to: client)

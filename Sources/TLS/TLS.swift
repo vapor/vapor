@@ -25,13 +25,14 @@ public enum TLSSide {
 }
 
 public protocol TLSSocket: ClosableStream {
-    var peerDomainName: String? { get set }
     
-    func connect(hostname: String, port: UInt16) throws -> Future<Void>
 }
 
 public protocol TLSClient: TLSSocket {
     var settings: TLSClientSettings { get set }
+    var peerDomainName: String? { get set }
+    
+    func connect(hostname: String, port: UInt16) throws -> Future<Void>
 }
 
 public protocol TLSServer: TLSSocket {
@@ -43,23 +44,25 @@ public protocol ALPNSupporting: TLSSocket {
     var selectedProtocol: String? { get }
 }
 
-public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {
-    /// Input will be passed here as it is received.
-    func onInput(_ input: ByteBuffer)
-    
-    /// Errors will be passed here as it is received.
-    func onError(_ error: Error)
-    
-    /// Send output to the provided input stream.
-    func onOutput<I: InputStream>(_ input: I) where I.Input == ByteBuffer
-}
+public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
 
-public protocol BasicTLSUpgrader {
+public protocol BasicTLSClientUpgrader {
     func upgrade(socket: TCPSocket) throws -> Future<BasicTLSClient>
 }
 
+//public protocol BasicTLSPeerUpgrader {
+//    func upgrade(socket: TCPSocket) throws -> Future<BasicTLSPeer>
+//}
+
 public final class BasicTLSClient: TLSClient, TLSStream {
-    public var settings: TLSClientSettings
+    public var settings: TLSClientSettings {
+        get {
+            return client.settings
+        }
+        set {
+            client.settings = newValue
+        }
+    }
     
     let client: TLSClient
     public let alpnSupporting: ALPNSupporting?
@@ -95,10 +98,9 @@ public final class BasicTLSClient: TLSClient, TLSStream {
         return try client.connect(hostname: hostname, port: port)
     }
     
-    public init<Socket: TLSStream & TLSClient>(boxing socket: Socket, settings: TLSClientSettings) {
+    public init<Socket: TLSStream & TLSClient>(boxing socket: Socket) {
         self.client = socket
         self.process = socket.onInput
-        self.settings = settings
         self.alpnSupporting = socket as? ALPNSupporting
     }
 }

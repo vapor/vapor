@@ -164,7 +164,7 @@ public final class MySQLConnection {
             try self.write(packetFor: buffer)
         }
         
-        let tlsUpgrader = try self.container.make(BasicTLSUpgrader.self, for: MySQLConnection.self)
+        let tlsUpgrader = try self.container.make(BasicTLSClientUpgrader.self, for: MySQLConnection.self)
         try tlsUpgrader.upgrade(socket: self.socket.socket).map { client in
             client.stream(to: self.parser)
             self.socketWrite = client.onInput

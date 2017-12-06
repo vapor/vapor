@@ -45,24 +45,24 @@ class SSLTests: XCTestCase {
         server.drain { client in
             do {
                 let tlsClient = try! SSLStream(socket: client, descriptor: client.socket.descriptor, queue: peerQueue)
-                
+         
                 tlsClient.drain { received in
                     count += 1
                     XCTAssertEqual(Data(received), message)
                     receivedFuture.complete(())
                     client.close()
                 }
-                
+         
                 #if os(macOS) && !OPENSSL
                     let cert = "\(workDir)public.der"
                     try tlsClient.initializePeer(signedBy: cert).blockingAwait(timeout: .seconds(2))
                 #else
                     let cert = "\(workDir)public.pem"
                     let key = "\(workDir)private.pem"
-                    
+         
                     try tlsClient.initializePeer(certificate: cert, key: key).blockingAwait(timeout: .seconds(2))
                 #endif
-                
+         
                 tlsClient.start()
                 peers.append(tlsClient)
             } catch {

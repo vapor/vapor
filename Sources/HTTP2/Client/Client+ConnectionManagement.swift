@@ -24,9 +24,9 @@ extension HTTP2Client {
         settings: HTTP2Settings = HTTP2Settings(),
         on container: Container
     ) -> Future<HTTP2Client> {
-        return then {
+        do {
             let tlsClient = try container.make(BasicTLSClient.self, for: HTTP2Client.self)
-                
+            
             guard let alpnSupporting = tlsClient.alpnSupporting else {
                 // TODO: Fallback to HTTP/1.1
                 return Future(error: HTTP2Error(.alpnNotSupported))
@@ -35,16 +35,19 @@ extension HTTP2Client {
             alpnSupporting.ALPNprotocols = ["h2", "http/1.1"]
             
             let client = HTTP2Client(client: tlsClient)
-
+            
             // Connect the TLS client
-            return try tlsClient.connect(hostname: hostname, port: port ?? 443).map { _ -> HTTP2Client in
+            return try tlsClient.connect(hostname: hostname, port: port ?? 443).map {
                 // On successful connection, send the preface
                 Constants.staticPreface.withByteBuffer(tlsClient.onInput)
-
+                
                 // Send the settings, next
                 client.updateSettings(to: settings)
+                
                 return client
             }
+        } catch {
+            return Future(error: error)
         }
     }
     
