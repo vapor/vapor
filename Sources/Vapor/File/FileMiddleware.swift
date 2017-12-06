@@ -24,7 +24,7 @@ public final class FileMiddleware: Middleware {
             var path = request.uri.path
             guard !path.contains("../") else { throw HTTP.Status.forbidden }
             if path.hasPrefix("/") {
-                path = String(path.characters.dropFirst())
+                path = String(path.toCharacterSequence().dropFirst())
             }
             let filePath = publicDir + path
             let ifNoneMatch = request.headers["If-None-Match"]

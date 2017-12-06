@@ -118,7 +118,7 @@ public final class RouteList: Command {
         rows.forEach { labels in
             labels.enumerated().forEach { idx, label in
                 while columnWidths.count <= idx { columnWidths.append(0) }
-                let length = label.characters.count
+                let length = label.toCharacterSequence().count
                 let existing = columnWidths[idx]
                 guard length > existing else { return }
                 columnWidths[idx] = length
@@ -142,7 +142,7 @@ extension String {
     /// Create a dashed line of given length, ie: 3 => ---
     fileprivate static func dashedLine(length: Int) -> String {
         var line = ""
-        while line.characters.count < length {
+        while line.toCharacterSequence().count < length {
             line += "-"
         }
         return line
@@ -151,7 +151,7 @@ extension String {
     /// Pad the string with spaces on the end
     fileprivate func padded(length: Int) -> String {
         var new = self
-        while new.characters.count < length {
+        while new.toCharacterSequence().count < length {
             new += " "
         }
         return new

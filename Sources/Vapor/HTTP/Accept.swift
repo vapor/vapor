@@ -33,7 +33,7 @@ extension Request {
             return []
         }
 
-        let accepts: [Accept] = acceptString.characters.split(separator: ",").flatMap { acceptSlice in
+        let accepts: [Accept] = acceptString.toCharacterSequence().split(separator: ",").flatMap { acceptSlice in
             let pieces = acceptSlice.split(separator: ";")
             guard let mediaType = pieces.first.flatMap({ String($0) }) else { return nil }
 
