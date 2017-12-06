@@ -3,13 +3,13 @@ import Transport
 import Sockets
 import TLS
 
-/// TCP and TLS clients from engine
-/// wrapped to conform to ClientProtocol.
+/// TCP and TLS servers from engine
+/// wrapped to conform to ServerProtocol.
 public final class ServerFactory<S: ServerProtocol>: ServerFactoryProtocol {
-    /// Create a new ClientFactory
+    /// Create a new ServerFactory
     public init() {}
     
-    /// Creates a new client with the supplied connection info
+    /// Creates a new server with the supplied connection info
     public func makeServer(
         hostname: String,
         port: Port,
