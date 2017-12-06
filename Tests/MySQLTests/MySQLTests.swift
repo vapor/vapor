@@ -1,4 +1,5 @@
 import Async
+import Service
 import Dispatch
 import XCTest
 import Async
@@ -9,21 +10,22 @@ import Core
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
+    static let container: BasicContainer = BasicContainer(config: .init(), environment: .detect(), services: .init(), on: poolQueue)
     
     let pool = MySQLConnectionPool(
         hostname: "localhost",
-        user: "root",
-        password: nil,
+        user: "til",
+        password: "password",
         database: "vapor_test",
-        on: MySQLTests.poolQueue
+        using: MySQLTests.container
     )
     
     let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
-        user: "root",
-        password: nil,
+        user: "til",
+        password: "password",
         database: "vapor_test",
-        on: poolQueue
+        using: MySQLTests.container
     ).blockingAwait(timeout: .seconds(10))
 
     static let allTests = [

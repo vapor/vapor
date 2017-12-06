@@ -41,15 +41,13 @@ public final class FluentProvider: Provider {
     public func boot(_ container: Container) throws {
         let migrations = try container.make(MigrationConfig.self, for: FluentProvider.self)
         let databases = try container.make(Databases.self, for: FluentProvider.self)
-
-        let migrationQueue = DispatchQueue(label: "codes.vapor.fluent.migration")
-
+        
         // FIXME: should this be nonblocking?
-        try migrations.storage.map { (uid, container) in
+        try migrations.storage.map { (uid, migration) in
             return {
                 // FIXME: use console protocol, once we have it
                 print("Migrating \(uid) DB")
-                return container.migrate(using: databases, on: migrationQueue)
+                return migration.migrate(using: databases, using: container)
             }
         }.syncFlatten().blockingAwait()
 

@@ -48,7 +48,7 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-            let client = try container.make(TLSConnection.self, for: WebSocket.self)
+            let client = try container.make(BasicTLSClient.self, for: WebSocket.self)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             

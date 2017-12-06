@@ -1,4 +1,5 @@
 import Async
+import Service
 import Dispatch
 
 /// Pools database connections for re-use.
@@ -6,8 +7,8 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
     /// The database to use to generate new connections.
     public let database: Database
 
-    /// The queue for this pool
-    public let eventLoop: EventLoop
+    /// The container for this pool
+    public let container: Container
 
     /// The maximum number of connections this pool should hold.
     public let max: UInt
@@ -22,9 +23,9 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
     private var waiters: [(Database.Connection) -> ()]
 
     /// Create a new Queue pool
-    public init(max: UInt, database: Database, on eventLoop: EventLoop) {
+    public init(max: UInt, database: Database, using container: Container) {
         self.database = database
-        self.eventLoop = eventLoop
+        self.container = container
         self.max = max
         self.active = 0
         self.available = []
@@ -38,7 +39,7 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
         if let ready = self.available.popLast() {
             promise.complete(ready)
         } else if self.active < self.max {
-            self.database.makeConnection(on: eventLoop).do { connection in
+            self.database.makeConnection(using: container).do { connection in
                 self.active += 1
                 if let references = connection as? _ReferenceSupporting {
                     references.enableReferences().do {

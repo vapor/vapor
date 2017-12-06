@@ -1,4 +1,5 @@
 import Async
+import Service
 import Fluent
 import Dispatch
 
@@ -23,7 +24,7 @@ public final class Benchmarker<Database: Fluent.Database> {
         self.database = database
         self.onFail = onFail
         self.logs = []
-        self.pool = self.database.makeConnectionPool(max: 20, on: DispatchQueue(label: "fluent-bench"))
+        self.pool = self.database.makeConnectionPool(max: 20, using: BasicContainer(config: .init(), environment: .detect(), services: .init(), on: DispatchQueue(label: "fluent-bench")))
 
         if let logSupporting = database as? LogSupporting {
             let logger = DatabaseLogger { log in

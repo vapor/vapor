@@ -255,5 +255,3 @@ extension SQLiteData {
     }
 }
 
-extension String: Error { }
-

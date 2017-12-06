@@ -67,7 +67,7 @@ public final class HTTP2Client {
     }
     
     /// Upgrades an existing TLSClient to use HTTP/2
-    init<Client: ALPNSupporting>(client: Client) {
+    init<Client: TLSStream & TLSClient>(client: Client) {
         self.client = client
         self.context = ConnectionContext(
             parser: FrameParser(maxFrameSize: settings.maxFrameSize),

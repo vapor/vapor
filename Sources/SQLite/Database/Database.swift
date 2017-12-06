@@ -1,4 +1,5 @@
 import Async
+import Service
 import CSQLite
 import Dispatch
 
@@ -22,7 +23,7 @@ public final class SQLiteDatabase {
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
     public func makeConnection(
-        on eventLoop: EventLoop
+        using container: Container
     ) -> Future<SQLiteConnection> {
         let promise = Promise(SQLiteConnection.self)
         let background = DispatchQueue(label: "sqlite.connection.background")
@@ -31,7 +32,7 @@ public final class SQLiteDatabase {
             let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
             var raw: SQLiteConnection.Raw?
             guard sqlite3_open_v2(self.storage.path, &raw, options, nil) == SQLITE_OK else {
-                eventLoop.queue.async {
+                container.queue.async {
                     promise.fail(
                         SQLiteError(
                             problem: .error,
@@ -43,7 +44,7 @@ public final class SQLiteDatabase {
             }
 
             guard let r = raw else {
-                eventLoop.queue.async {
+                container.queue.async {
                     promise.fail(
                         SQLiteError(
                             problem: .error,
@@ -56,11 +57,11 @@ public final class SQLiteDatabase {
 
             let connection = SQLiteConnection(
                 raw: r,
-                eventLoop: eventLoop,
+                eventLoop: container,
                 background: background,
                 database: self
             )
-            eventLoop.queue.async {
+            container.queue.async {
                 promise.complete(connection)
             }
         }

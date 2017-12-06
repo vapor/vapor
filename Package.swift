@@ -188,7 +188,7 @@ let package = Package(
         .target(name: "ServerSecurity", dependencies: ["TCP", "libc"]),
        
         // TLS
-        .target(name: "TLS", dependencies: ["Async", "Bits"]),
+        .target(name: "TLS", dependencies: ["Async", "Bits", "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL

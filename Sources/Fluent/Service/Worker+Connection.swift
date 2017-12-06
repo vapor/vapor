@@ -35,7 +35,7 @@ extension Container {
                 throw "no database with id '\(database)' configured"
             }
 
-            return db.makeConnection(on: self)
+            return db.makeConnection(using: self)
         }
     }
 }
@@ -170,11 +170,11 @@ internal final class ActiveConnectionCache {
 internal final class ConnectionPoolCache {
     let databases: Databases
     var cache: [String: Any]
-    let eventLoop: EventLoop
+    let container: Container
 
-    init(databases: Databases, on eventLoop: EventLoop) {
+    init(databases: Databases, on container: Container) {
         self.databases = databases
-        self.eventLoop = eventLoop
+        self.container = container
         self.cache = [:]
     }
 
@@ -187,7 +187,7 @@ internal final class ConnectionPoolCache {
                 throw "invalid db"
             }
 
-            let new = database.makeConnectionPool(max: 2, on: eventLoop)
+            let new = database.makeConnectionPool(max: 2, using: container)
             cache[id.uid] = new
             return new
         }

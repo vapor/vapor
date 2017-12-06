@@ -10,8 +10,8 @@ class FluentMySQLTests: XCTestCase {
     override func setUp() {
         let database = MySQLDatabase(
             hostname: "localhost",
-            user: "root",
-            password: nil,
+            user: "til",
+            password: "password",
             database: "vapor_test"
         )
         

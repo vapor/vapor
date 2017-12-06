@@ -1,4 +1,5 @@
 import Async
+import Service
 
 /// Helper struct for configuring Fluent migrations.
 public struct MigrationConfig {
@@ -49,5 +50,5 @@ public struct MigrationConfig {
 /// We need this protocol because we lose some database type
 /// info in our MigrationConfig storage.
 internal protocol MigrationRunnable {
-    func migrate(using databases: Databases, on eventLoop: EventLoop) -> Future<Void>
+    func migrate(using databases: Databases, using container: Container) -> Future<Void>
 }

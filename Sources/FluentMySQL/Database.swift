@@ -1,4 +1,5 @@
 import Async
+import Service
 import MySQL
 import Fluent
 
@@ -37,14 +38,14 @@ public final class MySQLDatabase : LogSupporting {
 
 extension MySQLDatabase : Database {
     /// Creates a new connection to the database
-    public func makeConnection(on eventloop: EventLoop) -> Future<FluentMySQLConnection> {
+    public func makeConnection(using container: Container) -> Future<FluentMySQLConnection> {
         return MySQLConnection.makeConnection(
             hostname: hostname,
             port: port,
             user: user,
             password: password,
             database: database,
-            on: eventloop
+            using: container
         ).map { connection in
             return FluentMySQLConnection(connection: connection, logger: self.logger)
         }

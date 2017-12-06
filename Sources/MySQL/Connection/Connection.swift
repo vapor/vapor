@@ -9,7 +9,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
     /// The socket it's connected on
-    var socket: ClosableStream
+    var socket: TCPSocket
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -45,12 +45,21 @@ public final class MySQLConnection {
     
     /// Amount of affected rows in the last successful query
     public var affectedRows: UInt64?
+    
+    /// This container is used for fabricating TLS helpers
+    var container: Container
+    
+    /// Indicates if this socket should be upgraded to SSL
+    var ssl: Bool
+    
+    /// Indicates that the SSL handshake has been sent
+    var sslSettingsSent = false
 
     /// Basic stream to easily implement async stream.
     var packetStream: BasicStream<Packet>
     
     /// The write function for the socket
-    let socketWrite: ((ByteBuffer) throws -> ())
+    var socketWrite: ((ByteBuffer) throws -> ())
     
     /// The client's capabilities
     var capabilities: Capabilities {
@@ -76,34 +85,26 @@ public final class MySQLConnection {
         let parser = PacketParser()
         self.authenticated = Promise<Void>()
         
-        if ssl {
-            let socket = try TLSConnection(on: eventLoop)
-            
-            try socket.connect(hostname: hostname, port: port).catch(authenticated.fail)
-            socket.stream(to: parser)
-
-            self.socket = socket
-            self.socketWrite = socket.onInput
-        } else {
-            let socket = try TCPClient(on: eventLoop)
-            
-            try socket.connect(hostname: hostname, port: port).map { _ in
-                socket.start()
-            }.catch(authenticated.fail)
-            
-            socket.stream(to: parser)
-            
-            self.socket = socket
-            self.socketWrite = socket.onInput
-        }
+        let socket = try TCPClient(on: container)
+        
+        try socket.connect(hostname: hostname, port: port).map { _ in
+            socket.start()
+        }.catch(authenticated.fail)
+        
+        socket.stream(to: parser)
+        
+        self.socket = socket.socket
+        self.socketWrite = socket.onInput
+        self.ssl = ssl
         
         self.parser = parser
-        self.queue = eventLoop.queue
+        self.queue = container.queue
         self.buffer = buffer
         self.username = user
         self.password = password
         self.database = database
         self.packetStream = .init()
+        self.container = container
         
         self.parser.drain(onInput: self.handlePacket).catch { error in
             /// close the packet stream
@@ -121,12 +122,59 @@ public final class MySQLConnection {
             return
         }
         
+        if ssl {
+            guard sslSettingsSent else {
+                do {
+                    try self.upgradeSSL(for: packet)
+                } catch {
+                    self.authenticated.fail(error)
+                    self.close()
+                }
+                
+                return
+            }
+        }
+        
         guard self.handshake != nil else {
             self.doHandshake(for: packet)
             return
         }
         
         finishAuthentication(for: packet, completing: authenticated)
+    }
+    
+    func upgradeSSL(for packet: Packet) throws {
+        let handshake = try packet.parseHandshake()
+        self.handshake = handshake
+        
+        var data = Data(repeating: 0, count: 32)
+        
+        data.withUnsafeMutableBytes { (pointer: MutableBytesPointer) in
+            let combinedCapabilities = self.capabilities.rawValue & handshake.capabilities.rawValue
+            
+            memcpy(pointer, [
+                UInt8((combinedCapabilities) & 0xff),
+                UInt8((combinedCapabilities >> 1) & 0xff),
+                UInt8((combinedCapabilities >> 2) & 0xff),
+                UInt8((combinedCapabilities >> 3) & 0xff),
+            ], 4)
+            
+            pointer.advanced(by: 8).pointee = handshake.defaultCollation
+            
+            // the rest is reserved
+        }
+        
+        try data.withByteBuffer { buffer in
+            try self.write(packetFor: buffer)
+        }
+        
+        let tlsUpgrader = try self.container.make(BasicTLSUpgrader.self, for: MySQLConnection.self)
+        try tlsUpgrader.upgrade(socket: self.socket).map { client in
+            client.stream(to: self.parser)
+            self.socketWrite = client.onInput
+            
+            try self.sendHandshake()
+        }.catch(self.authenticated.fail)
     }
     
     /// Writes a packet's payload data to the socket
