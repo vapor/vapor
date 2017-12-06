@@ -42,7 +42,7 @@ extension Node {
 
     private static func parseInput(_ arg: String) -> (key: String, value: String)? {
         let info = arg
-            .characters
+            .toCharacterSequence()
             .split(separator: "=",
                    maxSplits: 1,
                    omittingEmptySubsequences: true)
@@ -59,7 +59,7 @@ extension Node {
         // --config:drop.port
         // expect [--config, drop.port]
         let path = key
-            .characters
+            .toCharacterSequence()
             .split(separator: ":",
                    maxSplits: 1,
                    omittingEmptySubsequences: true)
@@ -73,4 +73,16 @@ extension Node {
             }
         }
     }
+}
+
+extension String {
+    #if swift(>=4.0)
+    internal func toCharacterSequence() -> String {
+        return self
+    }
+    #else
+    internal func toCharacterSequence() -> CharacterView {
+        return self.characters
+    }
+    #endif  
 }
