@@ -48,6 +48,9 @@ let package = Package(
         // MySQL
         .library(name: "MySQL", targets: ["MySQL"]),
 
+        // Multipart
+        .library(name: "Multipart", targets: ["Multipart"]),
+
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "HTTP2", targets: ["HTTP2"]),
@@ -73,6 +76,9 @@ let package = Package(
         
         // TLS/SSL
         .library(name: "TLS", targets: ["TLS"]),
+
+        // Validation
+        .library(name: "Validation", targets: ["Validation"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -150,7 +156,7 @@ let package = Package(
         .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
-        // MySQL
+        // Multipart
         .target(name: "Multipart", dependencies: ["JunkDrawer", "Debugging", "HTTP"]),
         .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
 
