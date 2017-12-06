@@ -24,7 +24,7 @@ public struct CommandConfig {
         _ command: Runnable,
         named name: String,
         isDefault: Bool = false
-    ) {
+        ) {
         commands[name] = { _ in command }
         if isDefault {
             defaultRunnable = { _ in command }
@@ -36,7 +36,7 @@ public struct CommandConfig {
         _ command: R.Type,
         named name: String,
         isDefault: Bool = false
-    ) where R: Runnable {
+        ) where R: Runnable {
         commands[name] = { try $0.make(R.self, for: CommandConfig.self) }
         if isDefault {
             defaultRunnable = { try $0.make(R.self, for: CommandConfig.self) }
@@ -53,18 +53,63 @@ public struct CommandConfig {
 
     /// Converts the config into a command group.
     internal func makeCommandGroup(for container: Container) throws -> BasicCommandGroup {
-        let commands = try self.commands.mapValues { try $0(container) }
+        let commands = try self.commands.mapValues { lazy -> Runnable in
+            let runnable = try lazy(container)
+            if let command = runnable as? Command {
+                return VaporCommandWrapper(command)
+            } else {
+                return runnable
+            }
+        }
         return BasicCommandGroup(
             commands: commands,
-            options: [],
+            options: [envOption],
             help: ["Runs your Vapor application's commands"]
         ) { console, input in
-            if let def = self.defaultRunnable {
-                try def(container).run(using: console, with: input)
+            if let lazy = self.defaultRunnable {
+                try lazy(container).run(using: console, with: input)
             } else {
                 throw "No default command"
             }
         }
+    }
+}
+
+let envOption = Option(name: "env", help: [
+    "Changes the environment (if Environment.detect() is being used)",
+    "Ex: prod, dev, test, my-custom-env"
+], default: nil)
+
+/// Wraps all vapor commands and adds support
+/// for the `--env` flag which is resolved outside
+/// of this module
+internal struct VaporCommandWrapper: Command {
+    /// The wrapped command
+    var subCommand: Command
+
+    /// See Command.arguments
+    var arguments: [Argument] {
+        return subCommand.arguments
+    }
+
+    /// See Runnable.options
+    var options: [Option] {
+        return subCommand.options + [envOption]
+    }
+
+    /// See Runnable.help
+    var help: [String] {
+        return subCommand.help
+    }
+
+    /// Creates a new vapor command wrapper around a subcommand
+    init(_ subCommand: Command) {
+        self.subCommand = subCommand
+    }
+
+    /// See Runnable.run
+    func run(using console: Console, with input: Input) throws {
+        try subCommand.run(using: console, with: input)
     }
 }
 
@@ -88,3 +133,4 @@ internal struct BasicCommandGroup: Group {
         try onRun(console, input)
     }
 }
+

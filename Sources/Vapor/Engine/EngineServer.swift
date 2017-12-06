@@ -80,7 +80,7 @@ public final class EngineServer: Server {
     }
 }
 
-fileprivate final class TCPHTTPPeer: Async.Stream, HTTPStartable, HTTPUpgradable {
+fileprivate final class TCPHTTPPeer: Async.Stream, HTTPUpgradable {
     typealias Input = HTTPResponse
     typealias Output = HTTPRequest
 
@@ -117,10 +117,6 @@ fileprivate final class TCPHTTPPeer: Async.Stream, HTTPStartable, HTTPUpgradable
 
     func close() {
         tcp.close()
-    }
-
-    func start() {
-        tcp.start()
     }
 
     func onClose(_ onClose: ClosableStream) {
