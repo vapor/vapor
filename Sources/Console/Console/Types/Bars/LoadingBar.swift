@@ -1,6 +1,6 @@
-import libc
-import Core
+import COperatingSystem
 import Dispatch
+import JunkDrawer
 
 /// A loading bar that indicates ongoing activity.
 ///

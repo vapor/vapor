@@ -1,6 +1,6 @@
 import Async
 import MySQL
-import Core
+import JunkDrawer
 
 /// A table specification a helper, used for creating tables
 ///

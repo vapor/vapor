@@ -1,7 +1,7 @@
 import Async
 import Bits
 import Crypto
-import Core
+import JunkDrawer
 import Foundation
 
 extension MySQLConnection {

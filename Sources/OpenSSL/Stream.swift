@@ -3,7 +3,7 @@ import Bits
 import COpenSSL
 import Dispatch
 import Foundation
-import libc
+import COperatingSystem
 
 enum SSLSettings {
     internal static var initialized: Bool = {

@@ -2,7 +2,7 @@ import XCTest
 import Dispatch
 import Async
 import TCP
-import Core
+import JunkDrawer
 @testable import Redis
 
 class RedisTests: XCTestCase {
@@ -20,7 +20,7 @@ class RedisTests: XCTestCase {
         return try RedisClient.connect(
             hostname: "localhost",
             on: queue
-        ).blockingAwait(timeout: .seconds(5))
+        )
     }
     
     func testCRUD() throws {

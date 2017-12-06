@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Foundation
 
 /// Represents a migration that has succesfully ran.

@@ -9,7 +9,7 @@ import Dispatch
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
     /// The socket it's connected on
-    var socket: TCPSocket
+    var socket: TCPClient
     
     /// The queue on which the TCP socket is reading
     let queue: DispatchQueue
@@ -86,14 +86,10 @@ public final class MySQLConnection {
         self.authenticated = Promise<Void>()
         
         let socket = try TCPClient(on: container)
-        
-        try socket.connect(hostname: hostname, port: port).map { _ in
-            socket.start()
-        }.catch(authenticated.fail)
-        
+        try socket.connect(hostname: hostname, port: port)
         socket.stream(to: parser)
         
-        self.socket = socket.socket
+        self.socket = socket
         self.socketWrite = socket.onInput
         self.ssl = ssl
         
@@ -169,7 +165,7 @@ public final class MySQLConnection {
         }
         
         let tlsUpgrader = try self.container.make(BasicTLSUpgrader.self, for: MySQLConnection.self)
-        try tlsUpgrader.upgrade(socket: self.socket).map { client in
+        try tlsUpgrader.upgrade(socket: self.socket.socket).map { client in
             client.stream(to: self.parser)
             self.socketWrite = client.onInput
             

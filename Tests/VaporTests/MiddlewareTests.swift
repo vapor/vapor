@@ -1,6 +1,6 @@
 import Async
 import Bits
-import Core
+import JunkDrawer
 import Dispatch
 import HTTP
 import TCP

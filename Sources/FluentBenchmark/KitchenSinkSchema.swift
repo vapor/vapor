@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Fluent
 
 final class KitchenSink<D: Database>: Model {

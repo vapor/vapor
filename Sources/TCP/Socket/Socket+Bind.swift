@@ -1,4 +1,4 @@
-import libc
+import COperatingSystem
 import Foundation
 
 extension TCPSocket {
@@ -44,7 +44,7 @@ extension TCPSocket {
             throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
-        res = libc.bind(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = COperatingSystem.bind(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         guard res == 0 else {
             throw TCPError.posix(errno, identifier: "bind")
         }
@@ -53,7 +53,7 @@ extension TCPSocket {
     /// listen - listen for connections on a socket
     /// http://man7.org/linux/man-pages/man2/listen.2.html
     public func listen(backlog: Int32 = 4096) throws {
-        let res = libc.listen(descriptor, backlog)
+        let res = COperatingSystem.listen(descriptor, backlog)
         guard res == 0 else {
             throw TCPError.posix(errno, identifier: "listen")
         }
@@ -65,7 +65,7 @@ extension TCPSocket {
         let (clientfd, address) = try Address.withSockaddrPointer { address -> Int32 in
             var size = socklen_t(MemoryLayout<sockaddr>.size)
             
-            let descriptor = libc.accept(self.descriptor, address, &size)
+            let descriptor = COperatingSystem.accept(self.descriptor, address, &size)
             
             guard descriptor > 0 else {
                 throw TCPError.posix(errno, identifier: "accept")

@@ -1,5 +1,5 @@
 import Async
-import Core
+import JunkDrawer
 import Foundation
 import HTTP
 import Leaf
@@ -13,6 +13,7 @@ final class TestUser: Codable {
     var id: UUID?
     var name: String
     var age: Int
+    var child: TestUser
 }
 
 extension TestUser: Model {
@@ -28,6 +29,7 @@ extension TestUser: Model {
             key(\.id): "id",
             key(\.name): "name",
             key(\.age): "age",
+            key(\.child.id): "foo"
         ]
     }
 }

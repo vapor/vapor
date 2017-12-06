@@ -5,7 +5,7 @@ import XCTest
 import Async
 import TCP
 @testable import MySQL
-import Core
+import JunkDrawer
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {

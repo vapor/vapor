@@ -1,7 +1,7 @@
-import libc
+import COperatingSystem
 import HTTP
 import Bits
-import Core
+import JunkDrawer
 import Foundation
 import Dispatch
 

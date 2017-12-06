@@ -4,27 +4,27 @@ import Dispatch
 import TCP
 import Bits
 import TLS
+//
+//#if os(macOS) && !OPENSSL
+//    import AppleSSL
+//
+//    typealias SSL = AppleSSL.SSLStream
+//#else
+//    import OpenSSL
+//    
+//    typealias SSLStream = OpenSSL.SSLStream
+//#endif
+//
+//#if Xcode
+//    private var workDir: String {
+//        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+//        let path = "/\(parent)/"
+//        return path
+//    }
+//#else
+//    private let workDir = "./Tests/TLSTests/"
+//#endif
 
-#if os(macOS) && !OPENSSL
-    import AppleSSL
-    
-    typealias SSL = AppleSSL.SSLStream
-#else
-    import OpenSSL
-    
-    typealias SSLStream = OpenSSL.SSLStream
-#endif
-
-#if Xcode
-    private var workDir: String {
-        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-        let path = "/\(parent)/"
-        return path
-    }
-#else
-    private let workDir = "./Tests/TLSTests/"
-#endif
-    
 class SSLTests: XCTestCase {
     func testSSL() throws {
         // FIXME: @joannis, this is failing on macOS

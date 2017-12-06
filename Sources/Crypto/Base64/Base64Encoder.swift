@@ -1,10 +1,7 @@
 import Bits
 import Async
-import libc
+import COperatingSystem
 import Foundation
-
-/// the encoding table
-fileprivate let encodeTable = Data("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/".utf8)
 
 /// A base64 encoder. Works as both a step in streams as well as a big-chunk encoder
 ///
@@ -36,6 +33,9 @@ public final class Base64Encoder: Base64 {
     /// The bytes that couldn't be parsed from the previous buffer
     var remainder = Data()
 
+    /// base64 or base64 url
+    let encoding: Base64Encoding
+
     /// Use a basic stream to easily implement our output stream.
     var outputStream: BasicStream<Output> = .init()
     
@@ -46,7 +46,7 @@ public final class Base64Encoder: Base64 {
     /// - parameter capacity: The capacity of the output pointer
     /// - parameter finish: If `true`, this base64 string will be completed
     /// - returns: If the base64 encoded string is complete. The capacity of the pointer used, and the amount of input bytes consumed
-    internal static func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) -> (complete: Bool, filled: Int, consumed: Int) {
+    internal func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) -> (complete: Bool, filled: Int, consumed: Int) {
         // If the buffer is empty, ignore the buffer
         guard let input = buffer.baseAddress else {
             return (true, 0, 0)
@@ -59,7 +59,7 @@ public final class Base64Encoder: Base64 {
         
         // Fetches the byte at the given position from the encodingTable
         func byte(at pos: UInt8) -> UInt8 {
-            return encodeTable[numericCast(pos)]
+            return encoding.encodingTable[numericCast(pos)]
         }
         
         // Returns `true` the stream can continue without breaking the base64 final bytes
@@ -93,13 +93,18 @@ public final class Base64Encoder: Base64 {
             guard inputPosition &+ 1 < buffer.count else {
                 // Output the created UInt2
                 pointer[outputPosition &+ 1] = byte(at: processedByte)
-                
-                // Append 2 '=' characters to finish off the 4-character chunk
-                pointer[outputPosition &+ 2] = 0x3d
-                pointer[outputPosition &+ 3] = 0x3d
-                
-                // Return `true` for a finalized Base64 encoded string
-                return (true, outputPosition &+ 4, inputPosition &+ 1)
+
+                if encoding.encodePadding {
+                    // Append 2 '=' characters to finish off the 4-character chunk
+                    pointer[outputPosition &+ 2] = 0x3d
+                    pointer[outputPosition &+ 3] = 0x3d
+
+                    // Return `true` for a finalized Base64 encoded string
+                    return (true, outputPosition &+ 4, inputPosition &+ 1)
+                } else {
+                    // Return `true` for a finalized Base64 encoded string
+                    return (true, outputPosition &+ 2, inputPosition &+ 1)
+                }
             }
             
             // Combine the next first 4 bits of the second byte to create a UInt6
@@ -115,12 +120,17 @@ public final class Base64Encoder: Base64 {
             guard inputPosition &+ 2 < buffer.count else {
                 // Write the character associated with the 4 bits number to the output
                 pointer[outputPosition &+ 2] = byte(at: processedByte)
-                
-                // Append an '=' for padding
-                pointer[outputPosition &+ 3] = 0x3d
-                
-                // Finish off the base64 string
-                return (true, outputPosition &+ 4, inputPosition &+ 2)
+
+                if encoding.encodePadding {
+                    // Append an '=' for padding
+                    pointer[outputPosition &+ 3] = 0x3d
+                    
+                    // Finish off the base64 string
+                    return (true, outputPosition &+ 4, inputPosition &+ 2)
+                } else {
+                    // Finish off the base64 string
+                    return (true, outputPosition &+ 3, inputPosition &+ 2)
+                }
             }
             
             // Take the first 2 bits of the last byte to create a new UInt6
@@ -139,7 +149,8 @@ public final class Base64Encoder: Base64 {
     /// Creates a new Base64 encoder
     ///
     /// - parameter allocatedCapacity: The expected (maximum) size of each buffer inputted into this stream
-    public init(bufferCapacity: Int = 65_507) {
+    public init(encoding: Base64Encoding, bufferCapacity: Int = 65_507) {
+        self.encoding = encoding
         self.allocatedCapacity = (bufferCapacity / 3) * 4 &+ ((bufferCapacity % 3 > 0) ? 1 : 0)
         self.pointer = MutableBytesPointer.allocate(capacity: self.allocatedCapacity)
         self.pointer.initialize(to: 0, count: self.allocatedCapacity)
@@ -155,7 +166,7 @@ public final class Base64Encoder: Base64 {
     ///
     /// - parameter data: The data to encode
     /// - returns: A base64 encoded string as Data
-    public static func encode(data bytes: Data) -> Data {
+    public func encode(data bytes: Data) -> Data {
         return Array(bytes).withUnsafeBytes { input -> Data in
             guard let input = input.baseAddress?.assumingMemoryBound(to: UInt8.self) else {
                 return Data()
@@ -179,7 +190,7 @@ public final class Base64Encoder: Base64 {
     ///
     /// - parameter data: The string of which the UTF-8 representation will be encoded
     /// - returns: A base64 encoded string
-    public static func encode(string: String) -> String {
+    public func encode(string: String) -> String {
         let bytes = [UInt8](string.utf8)
         
         let pointer = MutableBytesPointer.allocate(capacity: bytes.count)
@@ -206,13 +217,13 @@ public final class Base64Encoder: Base64 {
     ///
     /// - parameter buffer: The buffer to encode
     /// - parameter handle: The closure to execute with the Base64 encoded buffer
-    public static func encode<T>(buffer: ByteBuffer, _ handle: ((MutableByteBuffer) throws -> (T))) rethrows -> T {
+    public func encode<T>(buffer: ByteBuffer, _ handle: ((MutableByteBuffer) throws -> (T))) rethrows -> T {
         let allocatedCapacity = ((buffer.count / 3) * 4) &+ ((buffer.count % 3 > 0) ? 4 : 0)
         
         let pointer = MutableBytesPointer.allocate(capacity: allocatedCapacity)
         pointer.initialize(to: 0, count: allocatedCapacity)
         
-        let result = Base64Encoder.process(buffer, toPointer: pointer, capacity: allocatedCapacity, finish: true)
+        let result = process(buffer, toPointer: pointer, capacity: allocatedCapacity, finish: true)
         
         defer {
             pointer.deinitialize(count: allocatedCapacity)
