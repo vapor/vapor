@@ -28,7 +28,7 @@ public final class OSRandom: DataGenerator, EmptyInitializable {
         #if os(Linux)
             // will always be initialized
             guard randomInitialized else { fatalError() }
-            return Int(libc.random() % top) + min
+            return Int(COperatingSystem.random() % top) + min
         #else
             return Int(arc4random_uniform(UInt32(top))) + min
         #endif
@@ -47,7 +47,7 @@ extension Int {
         /// not existing and still guarantee thread safety
         let current = Date().timeIntervalSinceReferenceDate
         let salt = current.truncatingRemainder(dividingBy: 1) * 100000000
-        libc.srand(UInt32(current + salt))
+        COperatingSystem.srand(UInt32(current + salt))
         return true
     }()
 #endif

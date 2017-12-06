@@ -62,7 +62,7 @@ func randomMask() -> [UInt8] {
     var number: UInt32
     
     #if os(Linux)
-        number = numericCast(libc.random() % Int(UInt32.max))
+        number = numericCast(COperatingSystem.random() % Int(UInt32.max))
     #else
         number = arc4random_uniform(UInt32.max)
     #endif
