@@ -104,5 +104,13 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     
     public static let internalServerError = HTTPStatus(code: 500, staticMessage: "Internal Server Error")
     public static let notImplemented = HTTPStatus(code: 501, staticMessage: "Not Implemented")
+    public static let badGateway = HTTPStatus(code: 502, staticMessage: "Bad Gateway")
     public static let serviceUnavailable = HTTPStatus(code: 503, staticMessage: "Service Unavailable")
+    public static let gatewayTimeout = HTTPStatus(code: 504, staticMessage: "Gateway Timeout")
+    public static let httpVersionNotSupported = HTTPStatus(code: 505, staticMessage: "HTTP Version Not Supported")
+    public static let variantAlsoNegotiates = HTTPStatus(code: 506, staticMessage: "Variant Also Negotiates")
+    public static let insufficientStorage = HTTPStatus(code: 507, staticMessage: "Insufficient Storage")
+    public static let loopDetected = HTTPStatus(code: 508, staticMessage: "Loop Detected")
+    public static let notExtended = HTTPStatus(code: 510, staticMessage: "Not Extended")
+    public static let networkAuthenticationRequired = HTTPStatus(code: 511, staticMessage: "Network Authentication Required")
 }
