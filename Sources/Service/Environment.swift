@@ -1,3 +1,5 @@
+import Foundation
+
 public enum Environment {
     case production
     case development
@@ -40,6 +42,13 @@ extension Environment: Equatable {
 private let commandLineKey = "--env="
 
 extension Environment {
+    /// Gets a key from the process environment
+    public static func get(_ key: String) -> String? {
+         return ProcessInfo.processInfo.environment[key]
+    }
+
+    /// Detects the environment from command line arguments
+    /// or returns development if none was passed.
     public static func detect(arguments: [String] = CommandLine.arguments) -> Environment {
         var env: Environment = .development
 

@@ -27,11 +27,9 @@ public struct SchemaField {
 extension SchemaBuilder {
     /// Adds a field to the schema.
     @discardableResult
-    public func field<T>(for key: KeyPath<Model, Optional<T>>) throws -> SchemaField
-        where T: SchemaFieldTypeRepresentable, T.FieldType == Connection.FieldType
-    {
+    public func field<T>(for key: KeyPath<Model, Optional<T>>) throws -> SchemaField {
         return try field(
-            type: T.makeSchemaFieldType(),
+            type: Connection.FieldType.requireSchemaFieldType(for: T.self),
             for: key,
             isOptional: true,
             isIdentifier: key == Model.idKey
@@ -40,11 +38,9 @@ extension SchemaBuilder {
 
     /// Adds a field to the schema.
     @discardableResult
-    public func field<T>(for key: KeyPath<Model, T>) throws -> SchemaField
-        where T: SchemaFieldTypeRepresentable, T.FieldType == Connection.FieldType
-    {
+    public func field<T>(for key: KeyPath<Model, T>) throws -> SchemaField {
         return try field(
-            type: T.makeSchemaFieldType(),
+            type: Connection.FieldType.requireSchemaFieldType(for: T.self),
             for: key,
             isOptional: false,
             isIdentifier: false
