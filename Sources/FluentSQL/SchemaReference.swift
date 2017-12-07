@@ -7,7 +7,9 @@ extension SchemaReference {
         return SchemaForeignKey(
             name: "",
             local: DataColumn(table: nil, name: base.name),
-            foreign: referenced.makeDataColumn()
+            foreign: referenced.makeDataColumn(),
+            onUpdate: onUpdate.rawValue,
+            onDelete: onDelete.rawValue
         )
     }
 }

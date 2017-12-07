@@ -14,7 +14,7 @@ public struct Parent<Child: Model, Parent: Model>
     public var child: Child
 
     /// Key referencing property storing parent's ID
-    public typealias ParentForeignIDKey = KeyPath<Child, Parent.ID>
+    public typealias ParentForeignIDKey = KeyPath<Child, Optional<Parent.ID>>
 
     /// Reference to the parent's ID
     public var parentForeignIDKey: ParentForeignIDKey

@@ -57,7 +57,7 @@ extension SQLSerializer {
     }
 
     public func serialize(foreignKey: SchemaForeignKey) -> String {
-        // FOREIGN KEY(trackartist) REFERENCES artist(artistid)
+        // FOREIGN KEY(trackartist) REFERENCES artist(artistid) ON UPDATE action ON DELETE action
         var sql: [String] = []
 
         sql.append("FOREIGN KEY")
@@ -73,6 +73,7 @@ extension SQLSerializer {
             sql.append(makeEscapedString(from: table))
         }
         sql.append("(" + makeEscapedString(from: foreignKey.foreign.name) + ")")
+        sql.append("ON UPDATE \(foreignKey.onUpdate) ON DELETE \(foreignKey.onDelete)")
 
         return sql.joined(separator: " ")
     }

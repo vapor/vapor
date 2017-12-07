@@ -39,7 +39,7 @@ public final class Pet<D: Database>: Model {
     var name: String
 
     /// Age int
-    var ownerID: User<Database>.ID
+    var ownerID: User<Database>.ID?
 
     /// Create a new foo
     init(id: ID? = nil, name: String, ownerID: User<Database>.ID) {
@@ -86,7 +86,7 @@ internal struct PetMigration<D: Database>: Migration
         return connection.create(Pet<Database>.self) { builder in
             try builder.field(for: \Pet<Database>.id)
             try builder.field(for: \Pet<Database>.name)
-            try builder.field(for: \Pet<Database>.ownerID, referencing: \User<Database>.id)
+            try builder.field(for: \Pet<Database>.ownerID, referencing: \User<Database>.id, onDelete: .setNull)
         }
     }
 
