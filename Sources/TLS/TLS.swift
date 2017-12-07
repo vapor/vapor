@@ -25,7 +25,9 @@ public enum TLSSide {
 }
 
 public protocol TLSSocket: ClosableStream {
-    
+    func onError(_ error: Error)
+    func onInput(_ input: ByteBuffer)
+    func onOutput<I>(_ input: I) where I : InputStream, I.Input == ByteBuffer
 }
 
 public protocol TLSClient: TLSSocket {
@@ -69,29 +71,28 @@ public final class BasicTLSClient: TLSClient, TLSStream {
     public var peerDomainName: String?
     
     let outputStream = BasicStream<ByteBuffer>()
-    var process: ((ByteBuffer) -> ())
     
     public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
     
     public func onInput(_ input: ByteBuffer) {
-        process(input)
+        client.onInput(input)
     }
     
     public func onError(_ error: Error) {
-        outputStream.onError(error)
+        client.onError(error)
     }
     
     public func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
-        outputStream.onOutput(input)
+        client.onOutput(input)
     }
     
     public func close() {
-        outputStream.close()
+        client.close()
     }
     
     public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+        client.onClose(onClose)
     }
     
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
@@ -100,7 +101,6 @@ public final class BasicTLSClient: TLSClient, TLSStream {
     
     public init<Socket: TLSStream & TLSClient>(boxing socket: Socket) {
         self.client = socket
-        self.process = socket.onInput
         self.alpnSupporting = socket as? ALPNSupporting
     }
 }

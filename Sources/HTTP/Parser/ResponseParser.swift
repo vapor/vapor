@@ -1,4 +1,4 @@
-import CHTTP
+ import CHTTP
 import Async
 import Bits
 import Foundation
@@ -47,11 +47,11 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     /// Handles incoming stream data
     public func onInput(_ input: ByteBuffer) {
         do {
-            guard let request = try parse(from: input) else {
+            guard let response = try parse(from: input) else {
                 return
             }
             
-            outputStream.onInput(request)
+            outputStream.onInput(response)
         } catch {
             onError(error)
             reset(HTTP_RESPONSE)

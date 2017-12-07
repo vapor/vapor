@@ -21,22 +21,24 @@ extension AppleSSLStream {
         }
     }
     
+    func read(into buffer: MutableByteBuffer) throws -> Int {
+        var processed = 0
+        SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
+        return processed
+    }
+    
     /// Writes to AppleSSL using the provided buffer
     ///
     /// If `allowWouldBlock` is true, when a "would block" occurs, the data will be appended to the writeQueue
     /// Otherwise an error will be thrown
     @discardableResult
-    func write(from buffer: ByteBuffer, allowWouldBlock: Bool) throws -> Int {
+    func write(from buffer: ByteBuffer, allowWouldBlock: Bool = true) throws -> Int {
         var processed = 0
         
         let status = SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
         
-        guard status > 0 else {
-            // Clean close
-            if status == 0 {
-                self.close()
-                return 0
-            } else if status == errSSLWouldBlock {
+        guard status == 0 else {
+            if status == errSSLWouldBlock {
                 writeQueue.append(Data(buffer))
                 
                 // Wasn't already running
@@ -58,7 +60,7 @@ extension AppleSSLStream {
 /// Fileprivate helper that reads from the SSL connection
 fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
     // Reads the provided descriptor
-    let socket = ref.assumingMemoryBound(to: UnsafeMutablePointer<Int32>.self).pointee.pointee
+    let socket = ref.assumingMemoryBound(to: Int32.self).pointee
     
     let lengthRequested = length.pointee
     

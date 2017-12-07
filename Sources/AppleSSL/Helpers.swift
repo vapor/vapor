@@ -14,11 +14,15 @@ extension AppleSSLStream {
         }
         
         // Otherwise set up a readsource
-        let readSource = DispatchSource.makeReadSource(fileDescriptor: self.socket.descriptor, queue: self.queue)
+        let source = DispatchSource.makeReadSource(fileDescriptor: self.socket.descriptor, queue: self.queue)
         let promise = Promise<DispatchSourceRead>()
         
         // Listen for input
-        readSource.setEventHandler {
+        source.setEventHandler {
+            guard !self.handshakeComplete else {
+                return
+            }
+            
             // On input, continue the handshake
             result = SSLHandshake(context)
             
@@ -28,17 +32,19 @@ extension AppleSSLStream {
             
             // If it's not blocking and not a success, it's an error
             guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
-                readSource.cancel()
+                source.cancel()
+                self.handshakeComplete = true
                 promise.fail(AppleSSLError(.sslError(result)))
                 return
             }
             
-            readSource.cancel()
-            promise.complete(readSource)
+            source.cancel()
+            self.handshakeComplete = true
+            promise.complete(source)
         }
         
-        // Now that the async stuff's et up, let's start your engines
-        readSource.resume()
+        // Now that the async stuff's set up, let's start your engines
+        source.resume()
         
         return promise.future.map { _ in }
     }

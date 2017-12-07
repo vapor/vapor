@@ -69,9 +69,18 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
         
         self.descriptor = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
-        self.descriptor.initialize(to: self.socket.descriptor)
+        self.descriptor.pointee = self.socket.descriptor
         
         self.writeSource.setEventHandler {
+            guard self.handshakeComplete else {
+                self.handshake(for: context).do {
+                    self.readSource.resume()
+                    self.connected.complete()
+                    self.handshakeComplete = true
+                }.catch(self.connected.fail)
+                return
+            }
+            
             guard self.writeQueue.count > 0 else {
                 self.writeSource.suspend()
                 return
@@ -79,15 +88,19 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
             
             let data = self.writeQueue[0]
             
-            data.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
+            
+            let (status, processed) = data.withUnsafeBytes { (pointer: BytesPointer) -> (OSStatus, Int) in
+                var processed = 0
                 
-                do {
-                    try self.write(from: buffer, allowWouldBlock: false)
-                    _ = self.writeQueue.removeFirst()
-                } catch {
-                    self.onError(error)
-                }
+                let status = SSLWrite(context, pointer, data.count, &processed)
+                
+                return (status, processed)
+            }
+            
+            if status == 0, processed == data.count {
+                _ = self.writeQueue.removeFirst()
+            } else {
+                self.writeQueue[0].removeFirst(processed)
             }
             
             guard self.writeQueue.count > 0 else {
@@ -119,6 +132,7 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
                 start: self.outputBuffer.baseAddress,
                 count: read
             )
+            
             self.outputStream.onInput(bufferView)
         }
         
@@ -127,23 +141,12 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
             
             self.close()
         }
+        
+        try self.initialize()
     }
     
-    @discardableResult
-    public func start() -> Future<Void> {
-        do {
-            try self.initialize()
-            
-            handshake(for: context).map {
-                self.readSource.resume()
-                }.do{
-                    self.connected.complete()
-                    self.readSource.resume()
-                }.catch(connected.fail)
-            
-        } catch {
-            connected.fail(error)
-        }
+    func start() -> Future<Void> {
+        self.writeSource.resume()
         
         return connected.future
     }

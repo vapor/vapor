@@ -70,20 +70,6 @@ extension AppleSSLStream {
         outputStream.onClose(onClose)
     }
     
-    /// Writes the buffer to this SSL socket
-    @discardableResult
-    public func write(from buffer: ByteBuffer) throws -> Int {
-        return try self.write(from: buffer, allowWouldBlock: true)
-    }
-    
-    /// Reads from this SSL socket
-    @discardableResult
-    public func read(into buffer: MutableByteBuffer) throws -> Int {
-        var processed = 0
-        SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
-        return processed
-    }
-    
     /// Closes the connection
     public func close() {
         socket.close()

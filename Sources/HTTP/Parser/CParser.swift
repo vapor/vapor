@@ -174,6 +174,7 @@ extension CParser {
 
         // called when chunks of the body have been read
         settings.on_body = { parser, chunk, length in
+            print("body")
             guard
                 let results = CParseResults.get(from: parser),
                 let chunk = chunk
@@ -191,6 +192,7 @@ extension CParser {
 
         // called when the message is finished parsing
         settings.on_message_complete = { parser in
+            print("message end")
             guard
                 let parser = parser,
                 let results = CParseResults.get(from: parser)

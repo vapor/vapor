@@ -89,16 +89,6 @@ class ApplicationTests: XCTestCase {
 
         XCTAssertEqual(req.content["batters", "batter", 1, "type"], "Chocolate")
     }
-    
-    func testHTTPSClient() throws {
-        let container = BasicContainer(config: .default(), environment: .detect(), services: .default(), on: DispatchQueue(label: "test-https-clietn"))
-        
-        let response = try HTTPClient.connect(to: "google.com", ssl: true, using: container).then { client in
-            return client.send(request: HTTPRequest(method: .get, uri: "/"))
-        }.blockingAwait()
-        
-        XCTAssert(response.status == 304)
-    }
 
     func testQuery() throws {
         let app = try Application()

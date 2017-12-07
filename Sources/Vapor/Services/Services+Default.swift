@@ -40,8 +40,6 @@ extension Services {
                 on: container
             )
             
-            client.start()
-            
             return BasicTLSClient(boxing: client)
         }
 
