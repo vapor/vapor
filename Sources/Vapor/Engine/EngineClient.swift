@@ -39,12 +39,12 @@ public final class EngineClient: Client {
             port: req.http.uri.port,
             ssl: ssl,
             using: req
-            ).then { client in
-                return client.send(request: req.http).then { httpRes -> Response in
-                    let res = req.makeResponse()
-                    res.http = httpRes
-                    return res
-                }
+        ).then { client in
+            return client.send(request: req.http).then { httpRes -> Response in
+                let res = req.makeResponse()
+                res.http = httpRes
+                return res
+            }
         }
         /*}*/
     }

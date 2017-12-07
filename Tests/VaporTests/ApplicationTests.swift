@@ -103,6 +103,5 @@ class ApplicationTests: XCTestCase {
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
-        ("testHTTPSClient", testHTTPSClient),
     ]
 }
