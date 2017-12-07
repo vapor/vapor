@@ -18,7 +18,6 @@ import TCP
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
 protocol AppleSSLStream: TLSStream {
-    /// Used to give reference/pointer access to the descriptor to SSL
     var socket: TCPSocket { get set }
     
     var descriptor: UnsafeMutablePointer<Int32> { get }

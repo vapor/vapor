@@ -10,8 +10,10 @@ import TLS
 
 #if os(Linux)
     import OpenSSL
+    let defaultTLSClient = OpenSSLClient.self
 #else
     import AppleSSL
+    let defaultTLSClient = AppleSSLClient.self
 #endif
 
 extension Services {
@@ -26,6 +28,7 @@ extension Services {
                 container: container
             )
         }
+        
         services.register { container in
             return EngineServerConfig()
         }
@@ -35,8 +38,8 @@ extension Services {
         }
         
         services.register(BasicTLSClient.self) { container -> BasicTLSClient in
-            let client = try AppleSSLClient(
-                settings: try container.make(for: AppleSSLClient.self),
+            let client = try OpenSSLClient(
+                settings: try container.make(for: defaultTLSClient),
                 on: container
             )
             
