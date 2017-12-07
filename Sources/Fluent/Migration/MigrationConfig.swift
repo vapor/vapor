@@ -10,6 +10,23 @@ public struct MigrationConfig {
     public init() {
         self.storage = [:]
     }
+    
+    /// Adds a migration to the config.
+    public mutating func add<Migration: Fluent.Migration & Fluent.Model, Database> (
+        model: Migration.Type
+        ) where Migration.Database == Database {
+        var config: QueryMigrationConfig<Database>
+        let database = Migration.database
+        
+        if let existing = storage[database.uid] as? QueryMigrationConfig<Database> {
+            config = existing
+        } else {
+            config = .init(database: database)
+        }
+        
+        config.add(migration: Migration.self)
+        storage[database.uid] = config
+    }
 
     /// Adds a migration to the config.
     public mutating func add<Migration: Fluent.Migration, Database> (
