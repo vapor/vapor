@@ -10,10 +10,10 @@ import TLS
 
 #if os(Linux)
     import OpenSSL
-    let defaultTLSClient = OpenSSLClient.self
+    let defaultSSLClient = OpenSSLClient.self
 #else
     import AppleSSL
-    let defaultTLSClient = AppleSSLClient.self
+    let defaultSSLClient = AppleSSLClient.self
 #endif
 
 extension Services {
@@ -33,17 +33,17 @@ extension Services {
             return EngineServerConfig()
         }
         
-        services.register(TLSClientSettings.self) { _ in
-            return TLSClientSettings()
+        services.register(SSLClientSettings.self) { _ in
+            return SSLClientSettings()
         }
         
-        services.register(BasicTLSClient.self) { container -> BasicTLSClient in
-            let client = try defaultTLSClient.init(
-                settings: try container.make(for: TLSClientSettings.self),
+        services.register(BasicSSLClient.self) { container -> BasicSSLClient in
+            let client = try defaultSSLClient.init(
+                settings: try container.make(for: SSLClientSettings.self),
                 on: container
             )
             
-            return BasicTLSClient(boxing: client)
+            return BasicSSLClient(boxing: client)
         }
 
         services.register(Client.self) { container -> EngineClient in

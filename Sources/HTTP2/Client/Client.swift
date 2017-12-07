@@ -66,8 +66,8 @@ public final class HTTP2Client {
         return promise.future
     }
     
-    /// Upgrades an existing TLSClient to use HTTP/2
-    init<Client: TLSStream & TLSClient>(client: Client) {
+    /// Upgrades an existing SSLClient to use HTTP/2
+    init<Client: TLSStream & SSLClient>(client: Client) {
         self.client = client
         self.context = ConnectionContext(
             parser: FrameParser(maxFrameSize: settings.maxFrameSize),

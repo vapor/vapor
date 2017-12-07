@@ -32,7 +32,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     let outputBuffer: MutableByteBuffer
     
     /// Data being fed into the client stream is stored here.
-    var inputBuffer = [Data]()
+    var inputBuffer: [Data]
 
     /// Stores read event source.
     var readSource: DispatchSourceRead?
@@ -52,6 +52,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
         self.eventLoop = eventLoop
+        self.inputBuffer = []
 
         // Allocate one TCP packet
         let size = 65_507

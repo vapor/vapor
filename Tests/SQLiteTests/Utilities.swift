@@ -10,7 +10,7 @@ extension SQLiteConnection {
             let sqlite = SQLiteDatabase(
                 storage: .file(path: "/tmp/test_database.sqlite")
             )
-            let container = BasicContainer(config: .init(), environment: .detect(), services: .init(), on: queue)
+            let container = BasicContainer(config: .init(), environment: .testing, services: .init(), on: queue)
             
             return try sqlite.makeConnection(using: container).blockingAwait()
         } catch {

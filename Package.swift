@@ -76,9 +76,6 @@ let package = Package(
         
         // TLS/SSL
         .library(name: "TLS", targets: ["TLS"]),
-        
-        // TLS/SSL
-        .library(name: "TLS", targets: ["TLS"]),
 
         // Vapor
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -195,7 +192,7 @@ let package = Package(
         .target(name: "ServerSecurity", dependencies: ["COperatingSystem", "TCP"]),
        
         // TLS
-        .target(name: "TLS", dependencies: ["Async", "Bits", "TCP"]),
+        .target(name: "TLS", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL

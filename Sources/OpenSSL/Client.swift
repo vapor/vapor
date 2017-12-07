@@ -37,7 +37,7 @@ enum Method {
     }
 }
 
-public final class OpenSSLClient: OpenSSLStream, TLSClient {
+public final class OpenSSLClient: OpenSSLStream, SSLClient {
     public typealias Output = ByteBuffer
     
     var descriptor: Int32
@@ -48,7 +48,7 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
     
     var socket: TCPSocket
     
-    var writeQueue = [Data]()
+    var writeQueue: [Data]
     
     /// The `SSL` context that manages this stream
     var ssl: UnsafeMutablePointer<SSL>
@@ -59,7 +59,7 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
     
     var readSource: DispatchSourceRead
     
-    public var settings: TLSClientSettings
+    public var settings: SSLClientSettings
     
     public var peerDomainName: String?
     
@@ -84,15 +84,16 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
         count: Int(UInt16.max)
     )
     
-    public convenience init(settings: TLSClientSettings, on eventLoop: EventLoop) throws {
+    public convenience init(settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    public init(upgrading socket: TCPSocket, settings: TLSClientSettings, on eventLoop: EventLoop) throws {
+    public init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
+        self.writeQueue = []
         
         let method = Method.ssl23.method(side: .client)
         

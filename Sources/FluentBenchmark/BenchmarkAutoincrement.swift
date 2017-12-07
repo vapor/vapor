@@ -46,6 +46,6 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
 
 extension EventLoop {
     var container: BasicContainer {
-        return BasicContainer(config: .init(), environment: .detect(), services: .init(), on: self)
+        return BasicContainer(config: .init(), environment: .testing, services: .init(), on: self)
     }
 }

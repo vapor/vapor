@@ -3,7 +3,7 @@ import TCP
 import Bits
 import Dispatch
 
-public struct TLSClientSettings {
+public struct SSLClientSettings {
     public init() {}
     
     public var clientCertificate: String?
@@ -20,7 +20,7 @@ public struct TLSServerSettings {
 }
 
 public enum TLSSide {
-    case client(TLSClientSettings)
+    case client(SSLClientSettings)
     case server(TLSServerSettings)
 }
 
@@ -30,8 +30,8 @@ public protocol TLSSocket: ClosableStream {
     func onOutput<I>(_ input: I) where I : InputStream, I.Input == ByteBuffer
 }
 
-public protocol TLSClient: TLSSocket {
-    var settings: TLSClientSettings { get set }
+public protocol SSLClient: TLSSocket {
+    var settings: SSLClientSettings { get set }
     var peerDomainName: String? { get set }
     
     func connect(hostname: String, port: UInt16) throws -> Future<Void>
@@ -48,16 +48,16 @@ public protocol ALPNSupporting: TLSSocket {
 
 public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
 
-public protocol BasicTLSClientUpgrader {
-    func upgrade(socket: TCPSocket) throws -> Future<BasicTLSClient>
+public protocol BasicSSLClientUpgrader {
+    func upgrade(socket: TCPSocket) throws -> Future<BasicSSLClient>
 }
 
 //public protocol BasicTLSPeerUpgrader {
 //    func upgrade(socket: TCPSocket) throws -> Future<BasicTLSPeer>
 //}
 
-public final class BasicTLSClient: TLSClient, TLSStream {
-    public var settings: TLSClientSettings {
+public final class BasicSSLClient: SSLClient, TLSStream {
+    public var settings: SSLClientSettings {
         get {
             return client.settings
         }
@@ -66,7 +66,7 @@ public final class BasicTLSClient: TLSClient, TLSStream {
         }
     }
     
-    let client: TLSClient
+    let client: SSLClient
     public let alpnSupporting: ALPNSupporting?
     public var peerDomainName: String?
     
@@ -99,7 +99,7 @@ public final class BasicTLSClient: TLSClient, TLSStream {
         return try client.connect(hostname: hostname, port: port)
     }
     
-    public init<Socket: TLSStream & TLSClient>(boxing socket: Socket) {
+    public init<Socket: TLSStream & SSLClient>(boxing socket: Socket) {
         self.client = socket
         self.alpnSupporting = socket as? ALPNSupporting
     }

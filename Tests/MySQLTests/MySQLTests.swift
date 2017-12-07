@@ -10,7 +10,7 @@ import JunkDrawer
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
-    static let container: BasicContainer = BasicContainer(config: .init(), environment: .detect(), services: .init(), on: poolQueue)
+    static let container: BasicContainer = BasicContainer(config: .init(), environment: .testing, services: .init(), on: poolQueue)
     
     let pool = MySQLConnectionPool(
         hostname: "localhost",

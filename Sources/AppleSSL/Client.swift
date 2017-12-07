@@ -6,7 +6,7 @@ import Dispatch
 import TLS
 import TCP
 
-public final class AppleSSLClient: AppleSSLStream, TLSClient {
+public final class AppleSSLClient: AppleSSLStream, SSLClient {
     public typealias Output = ByteBuffer
     
     var handshakeComplete = false
@@ -15,11 +15,11 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
     
     var socket: TCPSocket
     
-    var writeQueue = [Data]()
+    var writeQueue: [Data]
     
     var readSource: DispatchSourceRead
     
-    public var settings: TLSClientSettings
+    public var settings: SSLClientSettings
     
     public var peerDomainName: String?
     
@@ -49,15 +49,16 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         count: Int(UInt16.max)
     )
     
-    public convenience init(settings: TLSClientSettings, on eventLoop: EventLoop) throws {
+    public convenience init(settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    public init(upgrading socket: TCPSocket, settings: TLSClientSettings, on eventLoop: EventLoop) throws {
+    public init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
+        self.writeQueue = []
         
         guard let context = SSLCreateContext(nil, .clientSide, .streamType) else {
             throw AppleSSLError(.cannotCreateContext)

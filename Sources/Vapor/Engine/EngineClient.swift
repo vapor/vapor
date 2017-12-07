@@ -66,7 +66,7 @@ extension HTTPClient {
 
         do {
             if ssl {
-                let client = try container.make(BasicTLSClient.self, for: HTTPClient.self)
+                let client = try container.make(BasicSSLClient.self, for: HTTPClient.self)
 
                 return try client.connect(hostname: hostname, port: port).map {
                     return HTTPClient(socket: client)

@@ -25,7 +25,7 @@ extension HTTP2Client {
         on container: Container
     ) -> Future<HTTP2Client> {
         do {
-            let tlsClient = try container.make(BasicTLSClient.self, for: HTTP2Client.self)
+            let tlsClient = try container.make(BasicSSLClient.self, for: HTTP2Client.self)
             
             guard let alpnSupporting = tlsClient.alpnSupporting else {
                 // TODO: Fallback to HTTP/1.1
