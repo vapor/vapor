@@ -59,7 +59,9 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     public static let created = HTTPStatus(code: 201, staticMessage: "Created")
     public static let accepted = HTTPStatus(code: 202, staticMessage: "Accepted")
     public static let noContent = HTTPStatus(code: 204, staticMessage: "No Content")
-    
+    public static let resetContent = HTTPStatus(code:205, staticMessage: "Reset Content")
+    public static let partialContent = HTTPStatus(code: 206, staticMessage: "Partial Content")
+
     // MARK - 3xx Redirection
     
     public static let multipleChoices = HTTPStatus(code: 300, staticMessage: "Multiple Choices")
@@ -68,7 +70,7 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     public static let seeOther = HTTPStatus(code: 303, staticMessage: "See Other")
     public static let notModified = HTTPStatus(code: 304, staticMessage: "Not modified")
     public static let temporaryRedirect = HTTPStatus(code: 307, staticMessage: "Temporary Redirect")
-    
+
     // MARK - 4xx Client Error
     
     public static let badRequest = HTTPStatus(code: 400, staticMessage: "Bad Request")
