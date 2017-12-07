@@ -32,6 +32,8 @@ internal protocol OpenSSLStream: TLSStream {
     /// The queue to read on
     var queue: DispatchQueue { get }
     
+    var connected: Promise<Void> { get }
+    
     /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
     var readSource: DispatchSourceRead { get }
     
@@ -92,7 +94,7 @@ extension OpenSSLStream {
     func write(from buffer: ByteBuffer) throws -> Int {
         let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
         
-        guard written > 0 else {
+        guard written == buffer.count else {
             if written == 0 {
                 self.close()
                 return 0

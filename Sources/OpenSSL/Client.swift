@@ -129,12 +129,8 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
         
         self.writeSource.setEventHandler {
             guard self.handshakeComplete else {
-                self.handshake(for: ssl, side: .client).do { _ in
-                    self.readSource.resume()
-                    self.connected.complete()
-                    self.handshakeComplete = true
-                }.catch(self.connected.fail)
-                
+                self.writeSource.suspend()
+                self.handshake()
                 return
             }
             
@@ -162,13 +158,18 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
         }
         
         self.readSource.setEventHandler {
+            guard self.handshakeComplete else {
+                self.handshake()
+                return
+            }
+            
             let read: Int
+            
             do {
                 read = try self.read(into: self.outputBuffer)
             } catch {
-                // any errors that occur here cannot be thrown,
-                // so send them to stream error catcher.
                 self.onError(error)
+                self.close()
                 return
             }
             
@@ -191,12 +192,32 @@ public final class OpenSSLClient: OpenSSLStream, TLSClient {
         self.readSource.setCancelHandler {
             self.close()
         }
+        
+        self.readSource.resume()
+        self.writeSource.resume()
     }
     
-    func start() -> Future<Void> {
-        self.writeSource.resume()
+    /// Runs the SSL handshake, regardless of client or server
+    func handshake() {
+        let result = SSL_connect(ssl)
         
-        return connected.future
+        if result >= 0 {
+            self.connected.complete()
+            self.handshakeComplete = true
+            return
+        }
+        
+        let code = SSL_get_error(ssl, result)
+        
+        guard
+            code == SSL_ERROR_WANT_READ ||
+            code == SSL_ERROR_WANT_WRITE ||
+            code == SSL_ERROR_WANT_READ ||
+            code == SSL_ERROR_WANT_CONNECT
+        else {
+            self.connected.fail(OpenSSLError(.sslError(result)))
+            return
+        }
     }
     
     deinit {

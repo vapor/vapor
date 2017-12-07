@@ -72,15 +72,6 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         self.descriptor.pointee = self.socket.descriptor
         
         self.writeSource.setEventHandler {
-            guard self.handshakeComplete else {
-                self.handshake(for: context).do {
-                    self.readSource.resume()
-                    self.connected.complete()
-                    self.handshakeComplete = true
-                }.catch(self.connected.fail)
-                return
-            }
-            
             guard self.writeQueue.count > 0 else {
                 self.writeSource.suspend()
                 return
@@ -110,6 +101,15 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         }
         
         self.readSource.setEventHandler {
+            guard self.handshakeComplete else {
+                self.handshake(for: context).do {
+                    self.readSource.resume()
+                    self.connected.complete()
+                    self.handshakeComplete = true
+                }.catch(self.connected.fail)
+                return
+            }
+            
             let read: Int
             do {
                 read = try self.read(into: self.outputBuffer)
