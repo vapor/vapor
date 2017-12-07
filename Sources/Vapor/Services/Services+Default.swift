@@ -38,8 +38,8 @@ extension Services {
         }
         
         services.register(BasicTLSClient.self) { container -> BasicTLSClient in
-            let client = try OpenSSLClient(
-                settings: try container.make(for: defaultTLSClient),
+            let client = try defaultTLSClient.init(
+                settings: try container.make(for: TLSClientSettings.self),
                 on: container
             )
             
