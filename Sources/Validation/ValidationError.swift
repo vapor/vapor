@@ -4,8 +4,13 @@ import Debugging
 public struct BasicValidationError: ValidationError {
     /// See Debuggable.reason
     public var reason: String {
-        let path = keyPath.joined(separator: ".")
-        return "`\(path)` \(message)"
+        let path: String
+        if keyPath.count > 0 {
+            path = "`" + keyPath.joined(separator: ".") + "`"
+        } else {
+            path = "data"
+        }
+        return "\(path) \(message)"
     }
 
     /// The validation failure

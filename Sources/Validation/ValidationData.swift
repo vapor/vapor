@@ -1,7 +1,14 @@
+import Foundation
+
 /// Supported validation data.
 public enum ValidationData {
     case string(String)
     case int(Int)
+    case bool(Bool)
+    case data(Data)
+    case double(Double)
+    case array([ValidationData])
+    case dictionary([String: ValidationData])
     case validatable(Validatable)
     case null
 }
@@ -11,6 +18,13 @@ public enum ValidationData {
 public protocol ValidationDataRepresentable {
     /// Converts to validation data
     func makeValidationData() -> ValidationData
+}
+
+extension Bool: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .bool(self)
+    }
 }
 
 extension String: ValidationDataRepresentable {
@@ -24,6 +38,44 @@ extension Int: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         return .int(self)
+    }
+}
+
+extension Double: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .double(self)
+    }
+}
+
+extension Data: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .data(self)
+    }
+}
+
+extension Array: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        var items: [ValidationData] = []
+        for el in self {
+            // FIXME: conditional conformance
+            items.append((el as! ValidationDataRepresentable).makeValidationData())
+        }
+        return .array(items)
+    }
+}
+
+extension Dictionary: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        var items: [String: ValidationData] = [:]
+        for (key, el) in self {
+            // FIXME: conditional conformance
+            items[(key as! String)] = (el as! ValidationDataRepresentable).makeValidationData()
+        }
+        return .dictionary(items)
     }
 }
 

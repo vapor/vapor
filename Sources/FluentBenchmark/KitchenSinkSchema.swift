@@ -1,6 +1,7 @@
 import Async
 import JunkDrawer
 import Fluent
+import Foundation
 
 final class KitchenSink<D: Database>: Model {
     /// See Model.ID
@@ -30,24 +31,24 @@ internal struct KitchenSinkSchema<
     /// See Migration.prepare
     static func prepare(on connection: D.Connection) -> Future<Void> {
         return connection.create(KitchenSink<Database>.self) { builder in
-            builder.addField(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .uuid),
+            try builder.addField(
+                type: Database.Connection.FieldType.requireSchemaFieldType(for: UUID.self),
                 name: "id"
             )
-            builder.addField(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .string),
+            try builder.addField(
+                type: Database.Connection.FieldType.requireSchemaFieldType(for: String.self),
                 name: "string"
             )
-            builder.addField(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .int),
+            try builder.addField(
+                type: Database.Connection.FieldType.requireSchemaFieldType(for: Int.self),
                 name: "int"
             )
-            builder.addField(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .double),
+            try builder.addField(
+                type: Database.Connection.FieldType.requireSchemaFieldType(for: Double.self),
                 name: "double"
             )
-            builder.addField(
-                type: Database.Connection.FieldType.makeSchemaFieldType(for: .date),
+            try builder.addField(
+                type: Database.Connection.FieldType.requireSchemaFieldType(for: Date.self),
                 name: "date"
             )
         }

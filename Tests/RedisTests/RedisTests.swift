@@ -30,7 +30,7 @@ class RedisTests: XCTestCase {
         
         let result = try! connection.set("world", forKey: "hello").flatMap {
             return connection.getData(forKey: "hello")
-        }.blockingAwait(timeout: .seconds(1))
+        }.blockingAwait(timeout: .seconds(2))
         
         let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
         

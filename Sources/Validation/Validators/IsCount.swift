@@ -80,4 +80,3 @@ public struct IsCount: Validator {
         }
     }
 }
-
