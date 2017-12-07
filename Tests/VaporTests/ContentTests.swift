@@ -24,6 +24,9 @@ class ContentTests: XCTestCase {
         ("testFormURLEncoded", testFormURLEncoded),
         ("testFormURLEncodedEdge", testFormURLEncodedEdge),
         ("testFormURLEncodedDict", testFormURLEncodedDict),
+        ("testFormURLEncodedNestedDict", testFormURLEncodedNestedDict),
+        ("testFormURLEncodedNestedDictArray", testFormURLEncodedNestedDictArray),
+        ("testFormURLEncodedNestedDictImplicitArray", testFormURLEncodedNestedDictImplicitArray),
         ("testSplitString", testSplitString),
         ("testEmptyQuery", testEmptyQuery),
     ]
@@ -74,9 +77,8 @@ class ContentTests: XCTestCase {
 
     func testParse() {
         let string = "value=123&emptyString=&isTrue"
-
         let data = Node(formURLEncoded: string.makeBytes(), allowEmptyValues: true)
-        print(data)
+
         XCTAssertEqual(data["value"]?.int, 123, "Request did not parse correctly")
         XCTAssertEqual(data["emptyString"]?.string, "")
         XCTAssertEqual(data["isTrue"]?.bool, true)
@@ -84,9 +86,8 @@ class ContentTests: XCTestCase {
 
     func testFormURLEncoded() {
         let body = "first=value&arr[]=foo+bar&arr[]=b%3Daz"
-
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
-        print(data)
+
         XCTAssert(data["first"]?.string == "value", "Request key first did not parse correctly")
         XCTAssert(data["arr", 0]?.string == "foo bar", "Request key arr did not parse correctly")
         XCTAssert(data["arr", 1]?.string == "b=az", "Request key arr did not parse correctly")
@@ -94,7 +95,6 @@ class ContentTests: XCTestCase {
 
     func testFormURLEncodedEdge() {
         let body = "singleKeyArray[]=value&implicitArray=1&implicitArray=2"
-
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
 
         XCTAssert(data["singleKeyArray", 0]?.string == "value", "singleKeyArray did not parse correctly")
@@ -105,16 +105,47 @@ class ContentTests: XCTestCase {
     func testFormURLEncodedDict() {
         let body = "obj[foo]=bar&obj[soo]=car"
         let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
-        let foo = try! data.converted(to: JSON.self).makeBytes().makeString()
-        print(foo)
+
         XCTAssertEqual(data["obj.foo"], "bar")
         XCTAssertEqual(data["obj.foo"], "bar")
     }
 
+    func testFormURLEncodedNestedDict() {
+        let body="datatable[pagination][total]=1044&datatable[pagination][page]=1&datatable[pagination][perpage]=10&datatable[pagination][field]=name&datatable[pagination][sort]=asc&datatable[pagination][pages]=105&datatable[sort][field]=name&datatable[sort][sort]=asc&datatable[query][test]=test"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+
+        XCTAssertEqual(data["datatable.pagination.total"], "1044")
+        XCTAssertEqual(data["datatable.pagination.page"], "1")
+        XCTAssertEqual(data["datatable.pagination.perpage"], "10")
+        XCTAssertEqual(data["datatable.pagination.field"], "name")
+        XCTAssertEqual(data["datatable.pagination.sort"], "asc")
+        XCTAssertEqual(data["datatable.pagination.pages"], "105")
+        XCTAssertEqual(data["datatable.sort.field"], "name")
+        XCTAssertEqual(data["datatable.sort.sort"], "asc")
+        XCTAssertEqual(data["datatable.query.test"], "test")
+    }
+
+    func testFormURLEncodedNestedDictArray() {
+        let body="datatable[pagination][]=1044&datatable[pagination][]=1"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+
+        XCTAssertEqual(data["datatable", "pagination", 0], "1044")
+        XCTAssertEqual(data["datatable", "pagination", 1], "1")
+    }
+
+    func testFormURLEncodedNestedDictImplicitArray() {
+        let body="datatable[pagination]=1044&datatable[pagination]=1&datatable[foo]=bar"
+        let data = Node(formURLEncoded: body.makeBytes(), allowEmptyValues: true)
+
+        XCTAssertEqual(data["datatable", "pagination", 0], "1044")
+        XCTAssertEqual(data["datatable", "pagination", 1], "1")
+        XCTAssertEqual(data["datatable", "foo"], "bar")
+    }
+
     func testSplitString() {
         let input = "multipart/form-data; boundary=----WebKitFormBoundaryAzXMX6nUkSI9kQbq"
-        let val = input.components(separatedBy: "boundary=")
-        print("succeeded w/ \(val) because didn't crash")
+        let _ = input.components(separatedBy: "boundary=")
+        //print("succeeded w/ \(val) because didn't crash")
     }
 
     func testContent() throws {
