@@ -81,5 +81,5 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     
     public static let internalServerError = HTTPStatus(code: 500, staticMessage: "Internal Server Error")
     public static let notImplemented = HTTPStatus(code: 501, staticMessage: "Not Implemented")
-    public static let serviceUnavailable = HTTPStatus(code: 500, staticMessage: "Service Unavailable")
+    public static let serviceUnavailable = HTTPStatus(code: 503, staticMessage: "Service Unavailable")
 }
