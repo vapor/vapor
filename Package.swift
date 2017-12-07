@@ -1,6 +1,12 @@
 // swift-tools-version:4.0
 import PackageDescription
 
+#if os(macOS) || os(iOS)
+    let ssl: Target.Dependency = "AppleSSL"
+#else
+    let ssl: Target.Dependency = "OpenSSL"
+#endif
+
 let package = Package(
     name: "Vapor",
     products: [
@@ -239,6 +245,7 @@ let package = Package(
             "TLS",
             "ServerSecurity",
             "WebSocket",
+            ssl,
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
