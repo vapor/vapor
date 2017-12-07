@@ -21,7 +21,7 @@ extension AppleSSLStream {
         }
     }
     
-    func read(into buffer: MutableByteBuffer) throws -> Int {
+    func read(into buffer: MutableByteBuffer) -> Int {
         var processed = 0
         SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
         return processed

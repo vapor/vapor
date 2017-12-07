@@ -34,6 +34,8 @@ protocol AppleSSLStream: TLSStream {
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
     var writeSource: DispatchSourceWrite { get }
     
+    var connected: Promise<Void> { get }
+    
     /// A buffer of all data that still needs to be written
     var writeQueue: [Data] { get set }
     

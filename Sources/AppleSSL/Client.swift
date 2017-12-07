@@ -29,7 +29,12 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
     
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try socket.connect(hostname: hostname, port: port)
-        return self.start()
+        
+        try self.initialize()
+        self.readSource.resume()
+        self.writeSource.resume()
+        
+        return connected.future
     }
     
     var descriptor: UnsafeMutablePointer<Int32>
@@ -72,6 +77,12 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         self.descriptor.pointee = self.socket.descriptor
         
         self.writeSource.setEventHandler {
+            guard self.handshakeComplete else {
+                self.writeSource.suspend()
+                self.handshake()
+                return
+            }
+            
             guard self.writeQueue.count > 0 else {
                 self.writeSource.suspend()
                 return
@@ -102,23 +113,11 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
         
         self.readSource.setEventHandler {
             guard self.handshakeComplete else {
-                self.handshake(for: context).do {
-                    self.readSource.resume()
-                    self.connected.complete()
-                    self.handshakeComplete = true
-                }.catch(self.connected.fail)
+                self.handshake()
                 return
             }
             
-            let read: Int
-            do {
-                read = try self.read(into: self.outputBuffer)
-            } catch {
-                // any errors that occur here cannot be thrown,
-                // so send them to stream error catcher.
-                self.onError(error)
-                return
-            }
+            let read = self.read(into: self.outputBuffer)
             
             guard read > 0 else {
                 // need to close!!! gah
@@ -141,14 +140,6 @@ public final class AppleSSLClient: AppleSSLStream, TLSClient {
             
             self.close()
         }
-        
-        try self.initialize()
-    }
-    
-    func start() -> Future<Void> {
-        self.writeSource.resume()
-        
-        return connected.future
     }
     
     deinit {

@@ -5,48 +5,20 @@ import Security
 
 extension AppleSSLStream {
     /// Runs the SSL handshake, regardless of client or server
-    func handshake(for context: SSLContext) -> Future<Void> {
-        var result = SSLHandshake(context)
+    func handshake() {
+        let result = SSLHandshake(context)
         
         // If the success is immediate
         if result == errSecSuccess || result == errSSLPeerAuthCompleted {
-            return Future(())
-        }
-        
-        // Otherwise set up a readsource
-        let source = DispatchSource.makeReadSource(fileDescriptor: self.socket.descriptor, queue: self.queue)
-        let promise = Promise<DispatchSourceRead>()
-        
-        // Listen for input
-        source.setEventHandler {
-            guard !self.handshakeComplete else {
-                return
-            }
-            
-            // On input, continue the handshake
-            result = SSLHandshake(context)
-            
-            if result == errSSLWouldBlock {
-                return
-            }
-            
-            // If it's not blocking and not a success, it's an error
-            guard result == errSecSuccess || result == errSSLPeerAuthCompleted else {
-                source.cancel()
-                self.handshakeComplete = true
-                promise.fail(AppleSSLError(.sslError(result)))
-                return
-            }
-            
-            source.cancel()
+            self.connected.complete()
             self.handshakeComplete = true
-            promise.complete(source)
+            return
         }
         
-        // Now that the async stuff's set up, let's start your engines
-        source.resume()
-        
-        return promise.future.map { _ in }
+        guard result == errSSLWouldBlock else {
+            self.connected.fail(AppleSSLError(.sslError(result)))
+            return
+        }
     }
     
     /// Sets the certificate regardless of Client/Server.
