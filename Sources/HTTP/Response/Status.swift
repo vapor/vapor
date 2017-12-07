@@ -69,6 +69,8 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     public static let found = HTTPStatus(code: 302, staticMessage: "Found")
     public static let seeOther = HTTPStatus(code: 303, staticMessage: "See Other")
     public static let notModified = HTTPStatus(code: 304, staticMessage: "Not modified")
+    public static let useProxy = HTTPStatus(code: 305, staticMessage: "Use Proxy")
+    public static let switchProxy = HTTPStatus(code: 306, staticMessage: "Switch Proxy")
     public static let temporaryRedirect = HTTPStatus(code: 307, staticMessage: "Temporary Redirect")
     public static let permanentRedirect = HTTPStatus(code: 308, staticMessage: "Permanent Redirect")
 
