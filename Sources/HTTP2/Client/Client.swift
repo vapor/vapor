@@ -21,6 +21,8 @@ public final class HTTP2Client {
     /// A shorthand that helps keep track of the stream ID
     fileprivate var _nextStreamID: Int32 = 3
     
+    internal var http1Client: HTTPClient? = nil
+    
     var nextStreamID: Int32 {
         defer {
             _nextStreamID = _nextStreamID &+ 2

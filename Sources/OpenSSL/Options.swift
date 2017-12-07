@@ -4,6 +4,8 @@ import COpenSSL
 public final class ALPNPreferences: ExpressibleByArrayLiteral {
     var protocols: [String]
     
+    public internal(set) var selectedProtocol: String? = nil
+    
     public init(arrayLiteral elements: String...) {
         self.protocols = elements
     }
