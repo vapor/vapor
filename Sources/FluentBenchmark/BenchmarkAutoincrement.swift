@@ -15,11 +15,11 @@ extension Benchmarker  {
 
         return message.save(on: conn).map {
             if conn.lastAutoincrementID == nil {
-                throw "The last auto increment was not set"
+                throw FluentBenchmarkError(identifier: "autoincrement", reason: "The last auto increment was not set")
             }
             
             if conn.lastAutoincrementID != message.id {
-                throw "The model ID was incorrectly set to \(message.id?.description ?? "nil") instead of \(conn.lastAutoincrementID?.description ?? "nil")"
+                throw FluentBenchmarkError(identifier: "model-autoincrement-mismatch", reason: "The model ID was incorrectly set to \(message.id?.description ?? "nil") instead of \(conn.lastAutoincrementID?.description ?? "nil")")
             }
         }
     }

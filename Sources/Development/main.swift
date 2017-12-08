@@ -49,6 +49,7 @@ do {
     // middlewareConfig.use(FluentMiddleware.self)
     // services.register(middlewareConfig)
 
+    
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
     services.register(dir)
 
@@ -56,6 +57,30 @@ do {
 
     let router = try app.make(Router.self)
 
+    router.get("example") { req -> Future<Response> in
+        let client = try req.make(Client.self, for: Request.self)
+        
+        return client.send(.get, to: "http://www.zombo.com/")
+    }
+    
+    router.get("example1") { req -> Future<Response> in
+        let client = try req.make(Client.self, for: Request.self)
+        
+        return client.send(.get, to: "http://www.romansgohome.com")
+    }
+    
+    router.get("example2") { req -> Future<Response> in
+        let client = try req.make(Client.self, for: Request.self)
+        
+        return client.send(.get, to: "http://example.com")
+    }
+    
+    router.get("example3") { req -> Future<Response> in
+        let client = try req.make(Client.self, for: Request.self)
+        
+        return client.send(.get, to: "https://www.apache.org/foundation/press/kit/asf_logo.png")
+    }
+    
     router.get("hello") { req -> [User] in
         let user = User(name: "Vapor", age: 3);
         return [user]

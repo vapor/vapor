@@ -19,10 +19,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
 
     /// The maxiumum possible body size
     /// larger sizes will result in an error
-    private let maxSize: Int
-    
-    /// The currently parsing response's size
-    private var currentSize = 0
+    internal let maxSize: Int
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
@@ -60,7 +57,18 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     
     /// See ClosableStream.close
     public func close() {
-        self.outputStream.close()
+        defer {
+            self.outputStream.close()
+        }
+        
+        // TODO: Closed connections could use closing as an EOF
+        
+//        guard let results = getResults(), let headers = results.headers else {
+//            return
+//        }
+//        if headers[.connection]?.lowercased() == "close" {
+//
+//        }
     }
     
     /// See ClosableStream.onClose
@@ -88,29 +96,37 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         }
     }
     
-    /// Parses a Request from the stream.
-    public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
-        currentSize += buffer.count
-        
-        guard currentSize < maxSize else {
-            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
+    func makeResponse(from results: CParseResults) throws -> HTTPResponse {
+        // require a version to have been parsed
+        guard
+            let version = results.version,
+            let headers = results.headers
+        else {
+            throw HTTPError.invalidMessage()
         }
         
-        let results: CParseResults
+        /// get response status
+        let status = HTTPStatus(code: Int(parser.status_code))
         
-        switch state {
-        case .ready:
-            // create a new results object and set
-            // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
-            results = newResults
-            state = .parsing
-        case .parsing:
-            // get the current parse results object
-            guard let existingResults = CParseResults.get(from: &parser) else {
-                return nil
-            }
-            results = existingResults
+        // create the request
+        return HTTPResponse(
+            version: version,
+            status: status,
+            headers: headers,
+            body: results.body
+        )
+    }
+    
+    /// Parses a Request from the stream.
+    public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
+        guard let results = getResults() else {
+            return nil
+        }
+        
+        results.currentSize += buffer.count
+        
+        guard results.currentSize < results.maxSize else {
+            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
         }
         
         /// parse the message using the C HTTP parser.
@@ -124,28 +140,8 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         // for a new request to come in
         state = .ready
         CParseResults.remove(from: &parser)
-
-        /// get response status
-        let status = HTTPStatus(code: Int(parser.status_code))
-
-        // require a version to have been parsed
-        guard let version = results.version else {
-            throw HTTPError.invalidMessage()
-        }
         
-        let body = HTTPBody(results.body)
-        
-        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
-        
-        currentSize = 0
-        
-        // create the request
-        return HTTPResponse(
-            version: version,
-            status: status,
-            headers: headers,
-            body: body
-        )
+        return try makeResponse(from: results)
     }
 }
 

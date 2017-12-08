@@ -3,6 +3,7 @@ import Service
 import MySQL
 import Fluent
 
+/// A reference to a MySQL database
 public final class MySQLDatabase : LogSupporting {
     /// The hostname to which connections will be connected
     let hostname: String

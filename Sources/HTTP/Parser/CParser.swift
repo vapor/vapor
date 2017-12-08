@@ -16,6 +16,8 @@ enum HeaderState {
 internal protocol CParser: Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
+    var maxSize: Int { get }
+    var state: CHTTPParserState { get set }
 }
 
 enum CHTTPParserState {
@@ -32,7 +34,8 @@ extension CParser {
 
         // if the parsed count does not equal the bytes passed
         // to the parser, it is signaling an error
-        guard parsedCount == max else {
+        // - 1 to allow room for filtering a possibly final \r\n which I observed the parser does
+        guard parsedCount >= max - 2, parsedCount <= max else {
             throw HTTPError.invalidMessage()
         }
     }
@@ -44,6 +47,27 @@ extension CParser {
 }
 
 extension CParser {
+    func getResults() -> CParseResults? {
+        let results: CParseResults
+        
+        switch state {
+        case .ready:
+            // create a new results object and set
+            // a reference to it on the parser
+            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
+            results = newResults
+            state = .parsing
+        case .parsing:
+            // get the current parse results object
+            guard let existingResults = CParseResults.get(from: &parser) else {
+                return nil
+            }
+            results = existingResults
+        }
+        
+        return results
+    }
+    
     /// Initializes the http parser settings with appropriate callbacks.
     func initialize(_ settings: inout http_parser_settings) {
         // called when chunks of the url have been read
@@ -164,6 +188,17 @@ extension CParser {
                 results.headersIndexes.append(index)
                 results.headersData.append(.carriageReturn)
                 results.headersData.append(.newLine)
+                let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
+                
+                if let contentLength = headers[.contentLength], let length = Int(contentLength) {
+                    guard length < results.maxSize &- results.currentSize else {
+                        return 1
+                    }
+                    
+                    results.bodyData.reserveCapacity(length)
+                }
+                
+                results.headers = headers
             default:
                 // no other cases need to be handled.
                 break
@@ -182,11 +217,11 @@ extension CParser {
                 return 1
             }
 
-            chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer in
-                results.body.append(pointer, count: length)
-            }
+            return chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer -> Int32 in
+                results.bodyData.append(pointer, count: length)
                 
-            return 0
+                return 0
+            }
         }
 
         // called when the message is finished parsing
@@ -206,7 +241,7 @@ extension CParser {
             let major = Int(parser.pointee.http_major)
             let minor = Int(parser.pointee.http_minor)
             results.version = HTTPVersion(major: major, minor: minor)
-
+            
             return 0
         }
     }

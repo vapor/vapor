@@ -104,7 +104,6 @@ public final class MySQLConnection {
         self.authenticated = Promise<Void>()
         
         let socket = try TCPClient(on: eventLoop)
-        try socket.connect(hostname: hostname, port: port)
         socket.stream(to: parser)
         
         self.socket = socket
@@ -119,6 +118,8 @@ public final class MySQLConnection {
         self.database = database
         self.packetStream = .init()
         self.eventLoop = eventLoop
+        
+        try socket.connect(hostname: hostname, port: port).catch(authenticated.fail)
         
         self.parser.drain(onInput: self.handlePacket).catch { error in
             /// close the packet stream

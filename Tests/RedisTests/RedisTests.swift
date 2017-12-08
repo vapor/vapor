@@ -14,7 +14,7 @@ class RedisTests: XCTestCase {
     
     var clientCount = 0
     
-    func makeClient() throws -> RedisClient {
+    func makeClient() throws -> Future<RedisClient> {
         let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
         clientCount += 1
         return try RedisClient.connect(
@@ -24,7 +24,7 @@ class RedisTests: XCTestCase {
     }
     
     func testCRUD() throws {
-        let connection = try makeClient()
+        let connection = try makeClient().blockingAwait()
       
         _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(2))
         
@@ -42,13 +42,13 @@ class RedisTests: XCTestCase {
     func testPubSub() throws {
         let promise = Promise<RedisData>()
         
-        let listener = try makeClient()
+        let listener = try makeClient().blockingAwait()
         
         listener.subscribe(to: ["test", "test2"]).drain { data in
             promise.complete(data.message)
         }.catch(onError: promise.fail)
         
-        let publisher = try makeClient()
+        let publisher = try makeClient().blockingAwait()
         let listeners = try publisher.publish("hello", to: "test").blockingAwait(timeout: .seconds(1))
         
         XCTAssertEqual(listeners, 1)
@@ -62,7 +62,7 @@ class RedisTests: XCTestCase {
     }
     
     func testPipeline() throws {
-        let connection = try makeClient()
+        let connection = try makeClient().blockingAwait()
         _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
         
         let pipeline = connection.makePipeline()

@@ -2,7 +2,7 @@ import CSQLite
 import Debugging
 
 /// Errors that can be thrown while using SQLite
-public struct SQLiteError: Swift.Error, Debuggable, Traceable {
+struct SQLiteError: Swift.Error, Debuggable, Traceable {
     let problem: Problem
     public let reason: String
     public var file: String
