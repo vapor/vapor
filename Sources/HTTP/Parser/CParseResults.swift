@@ -21,8 +21,15 @@ internal final class CParseResults {
     var headersIndexes: [HTTPHeaders.Index]
     var headersData = Data()
     
+    var currentSize: Int = 0
+    var maxSize: Int
+    
     var headers: HTTPHeaders?
-    var body: HTTPBody?
+    var bodyData = Data()
+    
+    var body: HTTPBody {
+        return HTTPBody(bodyData)
+    }
     
     var url = Data()
 
@@ -33,6 +40,7 @@ internal final class CParseResults {
         headersData.reserveCapacity(4096)
         headersIndexes.reserveCapacity(64)
         url.reserveCapacity(128)
+        self.maxSize = maxSize
         
         self.headerState = .none
     }

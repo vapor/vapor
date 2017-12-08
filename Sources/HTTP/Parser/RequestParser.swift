@@ -20,9 +20,6 @@ public final class RequestParser: CParser {
     /// The maxiumum possible body size
     /// larger sizes will result in an error
     internal let maxSize: Int
-    
-    /// The currently parsing request's size
-    private var currentSize = 0
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
@@ -86,8 +83,7 @@ public final class RequestParser: CParser {
         // require a version to have been parsed
         guard
             let version = results.version,
-            let headers = results.headers,
-            let body = results.body
+            let headers = results.headers
         else {
             throw HTTPError.invalidMessage()
         }
@@ -128,26 +124,18 @@ public final class RequestParser: CParser {
             uri.scheme = "http"
         }
         
-        currentSize = 0
-        
         // create the request
         return HTTPRequest(
             method: method,
             uri: uri,
             version: version,
             headers: headers,
-            body: body
+            body: results.body
         )
     }
 
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> HTTPRequest? {
-        currentSize += buffer.count
-        
-        guard currentSize < maxSize else {
-            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
-        }
-        
         let results: CParseResults
 
         switch state {
@@ -165,6 +153,12 @@ public final class RequestParser: CParser {
             results = existingResults
         }
 
+        results.currentSize += buffer.count
+        
+        guard results.currentSize < results.maxSize else {
+            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
+        }
+        
         /// parse the message using the C HTTP parser.
         try executeParser(max: buffer.count, from: buffer)
 

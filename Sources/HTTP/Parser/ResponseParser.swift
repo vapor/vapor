@@ -20,9 +20,6 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     /// The maxiumum possible body size
     /// larger sizes will result in an error
     internal let maxSize: Int
-    
-    /// The currently parsing response's size
-    private var currentSize = 0
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>
@@ -102,8 +99,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         // require a version to have been parsed
         guard
             let version = results.version,
-            let headers = results.headers,
-            let body = results.body
+            let headers = results.headers
         else {
             throw HTTPError.invalidMessage()
         }
@@ -111,25 +107,17 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         /// get response status
         let status = HTTPStatus(code: Int(parser.status_code))
         
-        currentSize = 0
-        
         // create the request
         return HTTPResponse(
             version: version,
             status: status,
             headers: headers,
-            body: body
+            body: results.body
         )
     }
     
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
-        currentSize += buffer.count
-        
-        guard currentSize < maxSize else {
-            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
-        }
-        
         guard let results = getResults() else {
             return nil
         }

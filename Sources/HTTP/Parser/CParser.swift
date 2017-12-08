@@ -34,7 +34,8 @@ extension CParser {
 
         // if the parsed count does not equal the bytes passed
         // to the parser, it is signaling an error
-        guard parsedCount == max else {
+        // - 1 to allow room for filtering a possibly final \r\n which I observed the parser does
+        guard parsedCount >= max - 2, parsedCount <= max else {
             throw HTTPError.invalidMessage()
         }
     }
@@ -187,7 +188,17 @@ extension CParser {
                 results.headersIndexes.append(index)
                 results.headersData.append(.carriageReturn)
                 results.headersData.append(.newLine)
-                results.headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
+                let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
+                
+                if let contentLength = headers[.contentLength], let length = Int(contentLength) {
+                    guard length < results.maxSize &- results.currentSize else {
+                        return 1
+                    }
+                    
+                    results.bodyData.reserveCapacity(length)
+                }
+                
+                results.headers = headers
             default:
                 // no other cases need to be handled.
                 break
@@ -200,7 +211,6 @@ extension CParser {
         settings.on_body = { parser, chunk, length in
             guard
                 let results = CParseResults.get(from: parser),
-                let body = results.body,
                 let chunk = chunk
             else {
                 // signal an error
@@ -208,23 +218,7 @@ extension CParser {
             }
 
             return chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer -> Int32 in
-                switch body.storage {
-                case .data(var data):
-                    data.append(pointer, count: length)
-                    results.body = HTTPBody(data)
-                case .dispatchData(var dispatchData):
-                    dispatchData.append(ByteBuffer(start: pointer, count: length))
-                    results.body = HTTPBody(dispatchData)
-                case .string(let base):
-                    guard let extra = String(data: Data(bytes: pointer, count: length), encoding: .utf8) else {
-                        return 1
-                    }
-                    results.body = HTTPBody(string: base + extra)
-                case .staticString(_):
-                    results.body = HTTPBody(Data(bytes: pointer, count: length))
-                case .stream(let stream):
-                    stream.onInput(ByteBuffer(start: pointer, count: length))
-                }
+                results.bodyData.append(pointer, count: length)
                 
                 return 0
             }
@@ -248,10 +242,6 @@ extension CParser {
             let minor = Int(parser.pointee.http_minor)
             results.version = HTTPVersion(major: major, minor: minor)
             
-            if results.body == nil {
-                results.body = HTTPBody()
-            }
-
             return 0
         }
     }
