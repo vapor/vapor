@@ -14,7 +14,7 @@ public struct MigrationConfig {
     /// Adds a migration to the config.
     public mutating func add<Migration: Fluent.Migration & Fluent.Model, Database> (
         model: Migration.Type
-        ) where Migration.Database == Database {
+    ) where Migration.Database == Database {
         var config: QueryMigrationConfig<Database>
         let database = Migration.database
         
