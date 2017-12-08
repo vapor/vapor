@@ -20,7 +20,7 @@ internal struct QueryMigrationConfig<Database: Fluent.Database>: MigrationRunnab
     internal func migrate(using databases: Databases, using container: Container) -> Future<Void> {
         return then {
             guard let database = databases.storage[self.database.uid] as? Database else {
-                throw "no database \(self.database.uid) was found for migrations"
+                throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
             
             let config = try container.make(Database.Connection.Config.self, for: Database.Connection.self)

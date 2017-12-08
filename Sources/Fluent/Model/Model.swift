@@ -59,14 +59,14 @@ extension Model where ID: StringDecodable {
     /// See EphemeralWorkerFindable.find
     public static func find(identifier: String, using container: Container) throws -> Future<Self> {
         guard let id = ID.decode(from: identifier) else {
-            throw "could not convert parameter \(identifier) to type `\(ID.self)`"
+            throw FluentError(identifier: "incorrect-model-identifier", reason: "could not convert parameter \(identifier) to type `\(ID.self)`")
         }
 
         if let ephemeral = container as? EphemeralContainer {
             return ephemeral.connect(to: database).then { conn in
                 return self.find(id, on: conn).map { pet in
                     guard let pet = pet else {
-                        throw "no model id \(id) was found"
+                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
                     }
 
                     return pet
@@ -76,7 +76,7 @@ extension Model where ID: StringDecodable {
             return container.withConnection(to: database) { conn in
                 return self.find(id, on: conn).map { pet in
                     guard let pet = pet else {
-                        throw "no model id \(id) was found"
+                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
                     }
 
                     return pet
@@ -141,7 +141,7 @@ extension Model {
     /// Throws an error if the model doesn't have an ID.
     public func requireID() throws -> ID {
         guard let id = self.fluentID else {
-            throw "no id"
+            throw FluentError(identifier: "no-id", reason: "This model didn't have an identifier")
         }
 
         return id

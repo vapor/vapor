@@ -32,7 +32,7 @@ extension Container {
             let databases = try self.make(Databases.self, for: Self.self)
 
             guard let db = databases.storage[database.uid] as? Database else {
-                throw "no database with id '\(database)' configured"
+                throw FluentError(identifier: "database-not-configured", reason: "no database with id '\(database)' configured")
             }
 
             return try db.makeConnection(from: self.make(for: Database.Connection.self), on: self)
@@ -184,7 +184,7 @@ internal final class ConnectionPoolCache {
             return existing
         } else {
             guard let database = databases.storage[id.uid] as? D else {
-                throw "invalid db"
+                fatalError("no database")
             }
 
             let new = try database.makeConnectionPool(max: 2, using: container.make(for: D.Connection.self), on: container)

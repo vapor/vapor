@@ -36,7 +36,7 @@ public final class QueryBuilder<Model: Fluent.Model> {
                 !self.query.withSoftDeleted
             {
                 guard let deletedAtKey = type.keyStringMap[type.anyDeletedAtKey] else {
-                    throw "no deleted at field in key map"
+                    throw FluentError(identifier: "deletedAt-field-missing", reason: "no deleted at field exists in key map")
                 }
 
                 let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey)
