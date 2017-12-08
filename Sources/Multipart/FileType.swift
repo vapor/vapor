@@ -1,19 +1,26 @@
+import HTTP
+import Foundation
+
 /// Any entity that is initializable by a Multipart Part
 public protocol MultipartInitializable {
     init(part: Part) throws
 }
 
+/// A basic Multipart file
 public struct MultipartFile: MultipartInitializable {
-    var filename: String?
-    var mimeType: String?
-    var encoding: TransferEncoding
+    /// The uploaded file's name
+    public var filename: String?
     
-    var data: Data
+    /// The uploaded file's content type
+    public var mimeType: MediaType?
     
+    /// The file data
+    public var data: Data
+    
+    /// Creates a new Multipart file
     public init(part: Part) throws {
-        self.mimeType = part.headers[.contentType]
-        
-        TransferEncoding.enc
-        self.encoding = part.headers[.contentTransferEncoding]
+        self.mimeType = MediaType(string: part.headers[.contentType] ?? "")
+        self.filename = part.headers[.contentDisposition, "filename"]
+        self.data = part.data
     }
 }
