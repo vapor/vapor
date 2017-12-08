@@ -92,6 +92,7 @@ public final class BasicSSLClient: SSLClient, TLSStream {
     }
     
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        client.peerDomainName = hostname
         return try client.connect(hostname: hostname, port: port)
     }
     

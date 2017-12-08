@@ -27,7 +27,18 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
     
     var outputStream = BasicStream<ByteBuffer>()
     
+    /// Internal helper that asserts the success of an operation
+    fileprivate func assert(status: OSStatus) throws {
+        guard status == 0 else {
+            throw AppleSSLError(.sslError(status))
+        }
+    }
+    
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        if let peerDomainName = peerDomainName {
+            try assert(status: SSLSetPeerDomainName(context, peerDomainName, peerDomainName.count))
+        }
+        
         try socket.connect(hostname: hostname, port: port)
         
         try self.initialize()
