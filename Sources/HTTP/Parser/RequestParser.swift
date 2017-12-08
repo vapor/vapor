@@ -82,10 +82,9 @@ public final class RequestParser: CParser {
         }
     }
     
-    func makeRequest() throws -> HTTPRequest {
+    func makeRequest(from results: CParseResults) throws -> HTTPRequest {
         // require a version to have been parsed
         guard
-            let results = getResults(),
             let version = results.version,
             let headers = results.headers,
             let body = results.body
@@ -115,8 +114,8 @@ public final class RequestParser: CParser {
             guard
                 let pointer = http_method_str(http_method(parser.method)),
                 let string = String(validatingUTF8: pointer)
-                else {
-                    throw HTTPError.invalidMessage()
+            else {
+                throw HTTPError.invalidMessage()
             }
             method = HTTPMethod(string)
         }
@@ -133,7 +132,12 @@ public final class RequestParser: CParser {
         
         // create the request
         return HTTPRequest(
-            method: method, uri: uri, version: version, headers: headers, body: body)
+            method: method,
+            uri: uri,
+            version: version,
+            headers: headers,
+            body: body
+        )
     }
 
     /// Parses a Request from the stream.
@@ -173,7 +177,7 @@ public final class RequestParser: CParser {
         state = .ready
         CParseResults.remove(from: &parser)
         
-        return try makeRequest()
+        return try makeRequest(from: results)
     }
 }
 

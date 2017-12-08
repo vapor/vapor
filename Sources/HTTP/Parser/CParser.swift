@@ -247,6 +247,10 @@ extension CParser {
             let major = Int(parser.pointee.http_major)
             let minor = Int(parser.pointee.http_minor)
             results.version = HTTPVersion(major: major, minor: minor)
+            
+            if results.body == nil {
+                results.body = HTTPBody()
+            }
 
             return 0
         }

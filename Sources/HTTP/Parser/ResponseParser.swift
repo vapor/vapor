@@ -98,10 +98,9 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         }
     }
     
-    func makeResponse() throws -> HTTPResponse {
+    func makeResponse(from results: CParseResults) throws -> HTTPResponse {
         // require a version to have been parsed
         guard
-            let results = getResults(),
             let version = results.version,
             let headers = results.headers,
             let body = results.body
@@ -147,7 +146,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         state = .ready
         CParseResults.remove(from: &parser)
         
-        return try makeResponse()
+        return try makeResponse(from: results)
     }
 }
 
