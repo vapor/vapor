@@ -32,13 +32,16 @@ public final class TCPClient: Async.Stream, ClosableStream {
     let outputBuffer: MutableByteBuffer
     
     /// Data being fed into the client stream is stored here.
-    var inputBuffer = [Data]()
+    var inputBuffer: [Data]
 
     /// Stores read event source.
     var readSource: DispatchSourceRead?
 
     /// Stores write event source.
     var writeSource: DispatchSourceWrite?
+    
+    /// will be completed on connection or error
+    var connected = Promise<Void>()
 
     /// Keeps track of the writesource's active status so it's not resumed too often
     var isWriting = false
@@ -52,6 +55,7 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
         self.eventLoop = eventLoop
+        self.inputBuffer = []
 
         // Allocate one TCP packet
         let size = 65_507
@@ -134,6 +138,10 @@ public final class TCPClient: Async.Stream, ClosableStream {
             source.setEventHandler {
                 // grab input buffer
                 guard self.inputBuffer.count > 0 else {
+                    // Indicated a successful connection
+                    // TODO: Move up above the guard if messages are sent before connection is successful
+                    self.connected.complete()
+                    
                     self.writeSource?.suspend()
                     return
                 }
@@ -248,8 +256,12 @@ public final class TCPClient: Async.Stream, ClosableStream {
     }
     
     /// Attempts to connect to a server on the provided hostname and port
-    public func connect(hostname: String, port: UInt16) throws {
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try self.socket.connect(hostname: hostname, port: port)
+        
+        ensureWriteSourceResumed()
+        
+        return self.connected.future
     }
 
     /// Deallocated the pointer buffer

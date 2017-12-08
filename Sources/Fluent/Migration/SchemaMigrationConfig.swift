@@ -1,4 +1,5 @@
 import Async
+import Service
 
 /// Internal struct containing migrations for a single database.
 /// note: This struct is important for maintaining database connection type info.
@@ -18,13 +19,13 @@ internal struct SchemaMigrationConfig<
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, on eventLoop: EventLoop) -> Future<Void> {
+    internal func migrate(using databases: Databases, using container: Container) -> Future<Void> {
         return then {
             guard let database = databases.storage[self.database.uid] as? Database else {
-                throw "no database \(self.database.uid) was found for migrations"
+                throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
 
-            return database.makeConnection(on: eventLoop).then { conn in
+            return try database.makeConnection(from: container.make(for: Database.Connection.self), on: container).then { conn in
                 self.prepareForMigration(on: conn)
             }
         }

@@ -26,7 +26,7 @@ extension KeyPath: QueryFieldRepresentable {
     /// See QueryFieldRepresentable.makeQueryField()
     public func makeQueryField() throws -> QueryField {
         guard let model = Root.self as? AnyModel.Type else {
-            throw "`Can't create query field. \(Root.self)` does not conform to `AnyModel`."
+            throw FluentError(identifier: "invalid-root-type", reason: "`Can't create query field. \(Root.self)` does not conform to `AnyModel`.")
         }
 
         let key = try model.keyStringMap.requireString(for: self)

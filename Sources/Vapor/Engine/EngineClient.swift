@@ -34,18 +34,19 @@ public final class EngineClient: Client {
             }
         } else {*/
             /// if using cleartext, just use http/1.
-            return HTTPClient.connect(
-                to: req.http.uri.hostname ?? "",
-                port: req.http.uri.port,
-                ssl: ssl,
-                on: req.eventLoop
-            ).then { client in
-                return client.send(request: req.http).then { httpRes -> Response in
-                    let res = req.makeResponse()
-                    res.http = httpRes
-                    return res
-                }
+        return HTTPClient.connect(
+            to: req.http.uri.hostname ?? "",
+            port: req.http.uri.port,
+            ssl: ssl,
+            using: req
+        ).then { client -> Future<Response> in
+            req.http.headers[.host] = req.http.uri.hostname
+            return client.send(request: req.http).then { httpRes -> Response in
+                let res = req.makeResponse()
+                res.http = httpRes
+                return res
             }
+        }
         /*}*/
     }
 }
@@ -61,21 +62,25 @@ extension HTTPClient {
     ///     )
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
-    public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, on eventLoop: EventLoop) -> Future<HTTPClient> {
-        return then {
-            let port = port ?? (ssl ? 443 : 80)
+    public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, using container: Container) -> Future<HTTPClient> {
+        let port = port ?? (ssl ? 443 : 80)
 
+        do {
             if ssl {
-                let client = try TLSClient(on: eventLoop)
+                let client = try container.make(BasicSSLClient.self, for: HTTPClient.self)
 
-                return try client.connect(hostname: hostname, port: port).map {_ in
+                return try client.connect(hostname: hostname, port: port).map {
                     return HTTPClient(socket: client)
                 }
             } else {
-                let client = try TCPClient(on: eventLoop)
-                try client.connect(hostname: hostname, port: port)
-                return Future(HTTPClient(socket: client))
+                let client = try TCPClient(on: container)
+                
+                return try client.connect(hostname: hostname, port: port).map {
+                    return HTTPClient(socket: client)
+                }
             }
+        } catch {
+            return Future(error: error)
         }
     }
 }

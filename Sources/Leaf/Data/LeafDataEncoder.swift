@@ -61,7 +61,7 @@ extension _LeafEncoder: FutureEncoder {
     func encodeFuture<E>(_ future: Future<E>) throws {
         let future: Future<LeafData> = future.map { any in
             guard let encodable = any as? Encodable else {
-                throw "not encodable!"
+                throw LeafError(identifier: "not-encodable", reason: "The future found in data provided to Leaf's for rendering was not Encodable")
             }
 
             let encoder = _LeafEncoder(

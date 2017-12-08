@@ -1,7 +1,6 @@
 import Async
 import Bits
 import TCP
-import Service
 
 /// HTTP server wrapped around TCP server
 public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream where

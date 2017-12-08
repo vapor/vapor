@@ -27,7 +27,7 @@ extension SchemaFieldType {
     /// Returns the schema field type for a given type or throws and error
     public static func requireSchemaFieldType<T>(for type: T.Type) throws -> Self {
         guard let type = makeSchemaFieldType(for: T.self) else {
-            throw "type for \(T.self) required"
+            throw FluentError(identifier: "scema-type-not-supported", reason: "Type for \(T.self) required, a matching database type could not be found")
         }
 
         return type

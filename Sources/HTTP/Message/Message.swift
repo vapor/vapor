@@ -1,7 +1,6 @@
 import Async
 import Bits
 import Dispatch
-import Service
 import TCP
 
 /// An HTTP message.

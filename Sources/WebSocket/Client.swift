@@ -1,4 +1,5 @@
 import Async
+import Service
 import Crypto
 import Dispatch
 import Foundation
@@ -17,7 +18,7 @@ extension WebSocket {
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/client/#connecting-a-websocket-client)
     public static func connect(
         to uri: URI,
-        on eventLoop: EventLoop
+        using container: Container
     ) throws -> Future<WebSocket> {
         guard
             uri.scheme == "ws" || uri.scheme == "wss",
@@ -47,27 +48,34 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-            let client = try TLSClient(on: eventLoop)
+            let client = try container.make(BasicSSLClient.self, for: WebSocket.self)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
             
-            try client.connect(hostname: hostname, port: port).do { _ in 
-                // Send the initial request
+            try client.connect(hostname: hostname, port: port).do {
+                client.finally {
+                    promise.fail(WebSocketError(.cannotConnect))
+                }
+                
                 serializer.stream(to: client)
+                
+                WebSocket.complete(to: promise, with: parser, id: id) {
+                    return WebSocket(socket: client, serverSide: false)
+                }
             }.catch(promise.fail)
-            
-            WebSocket.complete(to: promise, with: parser, id: id) {
-                return WebSocket(socket: client, serverSide: false)
-            }
         } else {
             // Create a new socket to the host
             var socket = try TCPSocket()
             try socket.connect(hostname: hostname, port: port)
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
-            let client = TCPClient(socket: socket, on: eventLoop)
+            let client = TCPClient(socket: socket, on: container)
             
             parser = client.stream(to: ResponseParser(maxSize: 50_000))
+            
+            client.finally {
+                promise.fail(WebSocketError(.cannotConnect))
+            }
 
             // Send the initial request
             serializer.stream(to: client)

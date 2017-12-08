@@ -30,7 +30,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
                             self.fail("count should be 101")
                         }
                         
-                        throw "rollback"
+                        throw FluentBenchmarkError(identifier: "test", reason: "rollback")
                     }
                 }
             }

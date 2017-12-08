@@ -47,6 +47,9 @@ let package = Package(
 
         // MySQL
         .library(name: "MySQL", targets: ["MySQL"]),
+        
+        // Multipart
+        .library(name: "Multipart", targets: ["Multipart"]),
 
         // Multipart
         .library(name: "Multipart", targets: ["Multipart"]),
@@ -162,13 +165,13 @@ let package = Package(
 
         // Net
         .target(name: "CHTTP"),
-        .target(name: "HTTP", dependencies: ["CHTTP", "Service", "TCP"]),
+        .target(name: "HTTP", dependencies: ["CHTTP", "TCP"]),
         .testTarget(name: "HTTPTests", dependencies: ["HTTP"]),
         .target(name: "TCP", dependencies: ["Async", "COperatingSystem", "Debugging", "Service"]),
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Service", "Pufferfish"]),
         .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
@@ -195,7 +198,7 @@ let package = Package(
         .target(name: "ServerSecurity", dependencies: ["COperatingSystem", "TCP"]),
        
         // TLS
-        .target(name: "TLS", dependencies: ["JunkDrawer", ssl, "TCP"]),
+        .target(name: "TLS", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
         .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL
@@ -229,6 +232,7 @@ let package = Package(
             "TLS",
             "ServerSecurity",
             "WebSocket",
+            ssl,
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
@@ -240,7 +244,7 @@ let package = Package(
 
 #if os(macOS) || os(iOS)
    package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
+        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging", "TLS"])
     )
 
     package.products.append(
@@ -252,7 +256,7 @@ let package = Package(
     )
     
     package.targets.append(
-        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
+        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging", "TLS"])
     )
     
     package.products.append(
