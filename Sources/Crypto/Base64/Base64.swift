@@ -85,7 +85,7 @@ public struct Base64Encoding {
     }
 }
 
-protocol Base64: Async.Stream {
+public protocol Base64: Async.Stream {
     func process(
         _ buffer: ByteBuffer,
         toPointer pointer: MutableBytesPointer,

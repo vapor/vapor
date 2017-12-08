@@ -6,10 +6,12 @@ import Foundation
 import COperatingSystem
 import Service
 
-/// TCP client stream.
+/// Read and write byte buffers from a TCPClient.
+///
+/// These are usually created as output by a TCPServer.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/)
-public final class TCPClient: Async.Stream, ClosableStream {
+public final class TCPClient: Async.Stream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
@@ -22,239 +24,283 @@ public final class TCPClient: Async.Stream, ClosableStream {
     public let eventLoop: EventLoop
 
     /// The client stream's underlying socket.
-    public private(set) var socket: TCPSocket
+    private var socket: TCPSocket
+
+    /// Handles close events
+    public typealias WillClose = () -> ()
     
     /// Will be triggered before closing the socket, as part of the cleanup process
-    public var didClose: BasicStream.OnClose = { }
+    public var willClose: WillClose?
 
     /// Bytes from the socket are read into this buffer.
     /// Views into this buffer supplied to output streams.
-    let outputBuffer: MutableByteBuffer
+    private let outputBuffer: MutableByteBuffer
     
     /// Data being fed into the client stream is stored here.
-    var inputBuffer = [Data]()
+    private var inputBuffer: ByteBuffer?
 
     /// Stores read event source.
-    var readSource: DispatchSourceRead?
+    private var readSource: DispatchSourceRead?
 
     /// Stores write event source.
-    var writeSource: DispatchSourceWrite?
-
-    /// Keeps track of the writesource's active status so it's not resumed too often
-    var isWriting = false
+    private var writeSource: DispatchSourceWrite?
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    private var outputStream: BasicStream<Output>?
 
-    /// Creates a new Remote Client from the a socket
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#creating-and-connecting-a-socket)
+    /// The amount of requested output remaining
+    private var requestedOutputRemaining: UInt
+
+    /// The current request controlling incoming write data
+    private var outputRequest: OutputRequest?
+
+    /// Creates a new TCPClient from an existing TCPSocket.
     public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
         self.eventLoop = eventLoop
 
         // Allocate one TCP packet
         let size = 65_507
-        let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
-        self.outputBuffer = MutableByteBuffer(start: pointer, count: size)
+        self.outputBuffer = MutableByteBuffer(start: .allocate(capacity: size), count: size)
+        self.requestedOutputRemaining = 0
+        self.inputBuffer = nil
+
+        /// starts the client immediately upon init
+        /// we may decide to remove this at some point for
+        /// parity with the tcp server api
         start()
     }
-    
+
+    /// Creates a new TCPClient
     public convenience init(on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         socket.disablePipeSignal()
         self.init(socket: socket, on: eventLoop)
     }
 
-    /// See InputStream.onInput
-    public func onInput(_ input: ByteBuffer) {
-        do {
-            let count = try socket.write(from: input)
-            
-            guard count == input.count else {
-                let data = Data(input[input.count...])
-                
-                inputBuffer.append(data)
-                ensureWriteSourceResumed()
-                return
-            }
-        } catch {
-            inputBuffer.append(Data(input))
-            ensureWriteSourceResumed()
-        }
-    }
-
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        /// pass the error on to our output stream
-        outputStream.onError(error)
-    }
-
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, TCPClient.Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
-    }
-    
-    /// Handles DispatchData input
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    public func onInput(_ input: DispatchData) {
-        inputBuffer.append(Data(input))
-        ensureWriteSourceResumed()
-    }
-    
-    /// Handles Data input
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    public func onInput(_ input: Data) {
-        inputBuffer.append(input)
-        ensureWriteSourceResumed()
-    }
-    
-    private func ensureWriteSourceResumed() {
-        if !isWriting {
-            ensureWriteSource().resume()
-            isWriting = true
-        }
-    }
-    
-    /// Creates a new WriteSource is there is no write source yet
-    private func ensureWriteSource() -> DispatchSourceWrite {
-        guard let source = writeSource else {
-            let source = DispatchSource.makeWriteSource(
-                fileDescriptor: socket.descriptor,
-                queue: eventLoop.queue
-            )
-            
-            source.setEventHandler {
-                // grab input buffer
-                guard self.inputBuffer.count > 0 else {
-                    self.writeSource?.suspend()
-                    return
-                }
-                
-                let data = self.inputBuffer.removeFirst()
-                
-                if self.inputBuffer.count == 0 {
-                    // important: make sure to suspend or else writeable
-                    // will keep calling.
-                    self.writeSource?.suspend()
-                    
-                    self.isWriting = false
-                }
-                
-                data.withUnsafeBytes { (pointer: BytesPointer) in
-                    let buffer = ByteBuffer(start: pointer, count: data.count)
-                    
-                    do {
-                        let length = try self.socket.write(from: buffer)
-                        
-                        if length < buffer.count {
-                            self.inputBuffer.insert(Data(buffer[length...]), at: 0)
-                        }
-                    } catch {
-                        // any errors that occur here cannot be thrown,
-                        // so send them to stream error catcher.
-                        self.onError(error)
-                    }
-                }
-            }
-            
-            source.setCancelHandler {
-                self.close()
-            }
-            
-            writeSource = source
-            return source
-        }
-        
-        return source
-    }
-
     /// Starts receiving data from the client
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-client/#communicating)
-    private func start() {
-        let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor,
-            queue: eventLoop.queue
-        )
+    public func start() {
+        /// initialize the internal output stream
+        let outputStream = BasicStream<ByteBuffer>()
 
-        source.setEventHandler {
-            let read: Int
-            do {
-                read = try self.socket.read(
-                    max: self.outputBuffer.count,
-                    into: self.outputBuffer.baseAddress!
-                )
-            } catch {
-                // any errors that occur here cannot be thrown,
-                //selfso send them to stream error catcher.
-                self.outputStream.onError(error)
-                return
-            }
+        /// handle downstream requesting data
+        outputStream.onRequestClosure = resumeReading
 
-            guard read > 0 else {
-                // need to close!!! gah
-                source.cancel()
-                return
-            }
+        /// handle downstream canceling output requests
+        outputStream.onCancelClosure = stop
 
-            // create a view into our internal buffer and
-            // send to the output stream
-            let bufferView = ByteBuffer(
-                start: self.outputBuffer.baseAddress,
-                count: read
-            )
-            self.outputStream.onInput(bufferView)
-        }
-
-        source.setCancelHandler {
-            self.close()
-        }
-
-        source.resume()
-        readSource = source
+        self.outputStream = outputStream
     }
 
-    /// Closes the client.
-    public func close() {
-        // important!!!!!!
-        // for some reason you can't cancel a suspended write source
-        // if you remove this line, your life will be ruined forever!!!
-        if self.inputBuffer.count == 0 {
-            /// FIXME: this crashes for client?
-            // writeSource?.resume()
-        }
-        
-        readSource = nil
-        
-        // TODO: This crashes on Linux
-        // writeSource = nil
-        
+    /// Stops the client
+    public func stop() {
+        willClose?()
         socket.close()
-        // important! it's common for a client to drain into itself
-        // we need to make sure to break that reference cycle
-        // FIXME: more performant way to do this?
-        // possible make the reference weak?
-        outputStream.close()
-        outputStream = .init()
-        didClose()
+        onClose()
+        outputStream = nil
+        if requestedOutputRemaining == 0 {
+            /// dispatch sources must be resumed before
+            /// deinitializing
+            readSource?.resume()
+        }
+        readSource = nil
+        if inputBuffer == nil {
+            /// dispatch sources must be resumed before
+            /// deinitializing
+            writeSource?.resume()
+        }
+        writeSource = nil
     }
-    
+
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws {
         try self.socket.connect(hostname: hostname, port: port)
     }
 
+    /// See InputStream.onInput
+    public func onInput(_ input: ByteBuffer) {
+        /// detect if the upstream is overproducing data
+        guard inputBuffer == nil else {
+            fatalError("\(#function) was called while inputBuffer is not nil")
+        }
+
+        inputBuffer = input
+        resumeWriting()
+    }
+
+    /// See InputStream.onOutput
+    public func onOutput(_ outputRequest: OutputRequest) {
+        self.outputRequest = outputRequest
+    }
+
+    /// See InputStream.onError
+    public func onError(_ error: Error) {
+        outputStream?.onError(error)
+    }
+
+    /// See InputStream.onClose
+    public func onClose() {
+        outputStream?.onClose()
+    }
+
+    /// See OutputStream.output
+    public func output<S>(to inputStream: S) where S: Async.InputStream, TCPClient.Output == S.Input {
+        /// it should be impossible to call this function when the
+        /// outputStream is nil. fatalError here may help catch bugs.
+        guard let outputStream = self.outputStream else {
+            fatalError("\(#function) called while outputStream is nil")
+        }
+
+        outputStream.output(to: inputStream)
+    }
+
+    /// Resumes reading data.
+    private func resumeReading(_ reading: UInt) {
+        /// We must add checks to this method since it is
+        /// called everytime downstream requests more data.
+        /// Not checking counts would result in over resuming
+        /// the dispatch source.
+        let isSuspended = requestedOutputRemaining == 0
+        requestedOutputRemaining += reading
+
+        /// ensure was suspended and output has actually
+        /// been requested
+        if isSuspended && requestedOutputRemaining > 0 {
+            ensureReadSource().resume()
+        }
+    }
+
+    /// Suspends reading data.
+    private func suspendReading() {
+        ensureReadSource().suspend()
+        /// must be zero or resume will fail
+        requestedOutputRemaining = 0
+    }
+
+    /// Resumes writing data
+    private func resumeWriting() {
+        ensureWriteSource().resume()
+    }
+
+    /// Suspends writing data
+    private func suspendWriting() {
+        ensureWriteSource().suspend()
+    }
+
+    /// Reads data and outputs to the output stream
+    /// important: the socket _must_ be ready to read data
+    /// as indicated by a read source.
+    private func readData() {
+        /// it should be impossible to call this function when the
+        /// outputStream is nil. fatalError here may help catch bugs.
+        guard let outputStream = self.outputStream else {
+            fatalError("\(#function) called while outputStream is nil")
+        }
+
+        let read: Int
+        do {
+            read = try socket.read(
+                max: outputBuffer.count,
+                into: outputBuffer.baseAddress!
+            )
+        } catch {
+            // any errors that occur here cannot be thrown,
+            //selfso send them to stream error catcher.
+            outputStream.onError(error)
+            return
+        }
+
+        guard read > 0 else {
+            stop() // used to be source.cancel
+            return
+        }
+
+        // create a view into our internal buffer and
+        // send to the output stream
+        let bufferView = ByteBuffer(
+            start: outputBuffer.baseAddress,
+            count: read
+        )
+        outputStream.onInput(bufferView)
+
+        /// decrement remaining and check if
+        /// we need to suspend accepting
+        self.requestedOutputRemaining -= 1
+        if self.requestedOutputRemaining == 0 {
+            suspendReading()
+        }
+    }
+
+    /// Writes the buffered data to the socket.
+    private func writeData() {
+        guard let input = inputBuffer else {
+            fatalError("\(#function) called while inputBuffer is nil")
+        }
+
+        do {
+            let count = try socket.write(from: input)
+            if count == input.count {
+                inputBuffer = nil
+                suspendWriting()
+                outputRequest?.requestOutput()
+            } else {
+                /// let data = Data(input[input.count...])
+                /// FIXME:
+                fatalError("not all data was written")
+            }
+        } catch {
+            onError(error)
+        }
+    }
+
+    /// Returns the existing read source or creates
+    /// and stores a new one
+    private func ensureReadSource() -> DispatchSourceRead {
+        guard let existing = readSource else {
+            /// create a new read source
+            let source = DispatchSource.makeReadSource(
+                fileDescriptor: socket.descriptor,
+                queue: eventLoop.queue
+            )
+
+            /// handle socket ready to read
+            source.setEventHandler(handler: readData)
+
+            /// handle a cancel event
+            source.setCancelHandler(handler: stop)
+
+            readSource = source
+            return source
+        }
+
+        return existing
+    }
+
+    /// Creates a new WriteSource if there is no write source yet
+    private func ensureWriteSource() -> DispatchSourceWrite {
+        guard let source = writeSource else {
+            /// create a new write source
+            let source = DispatchSource.makeWriteSource(
+                fileDescriptor: socket.descriptor,
+                queue: eventLoop.queue
+            )
+
+            /// handle socket ready to write
+            source.setEventHandler(handler: writeData)
+
+            /// handle a cancel event
+            source.setCancelHandler(handler: stop)
+
+            writeSource = source
+            return source
+        }
+
+        return source
+    }
+
     /// Deallocated the pointer buffer
     deinit {
-        close()
+        stop()
         outputBuffer.baseAddress.unsafelyUnwrapped.deallocate(capacity: outputBuffer.count)
         outputBuffer.baseAddress.unsafelyUnwrapped.deinitialize()
     }

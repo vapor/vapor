@@ -21,12 +21,12 @@ public final class File: FileReader, FileCache {
     }
 
     /// See FileReader.read
-    public func read<S>(at path: String, into stream: S, chunkSize: Int = 2048)
+    public func read<S>(at path: String, into stream: S)
         where S: Async.InputStream, S.Input == ByteBuffer
     {
         func onError(_ error: Error) {
             stream.onError(error)
-            stream.close()
+            stream.onClose()
         }
 
         let file = DispatchIO(
@@ -45,11 +45,10 @@ public final class File: FileReader, FileCache {
         }
 
         if let file = file {
-            file.setLimit(highWater: chunkSize)
             file.read(offset: 0, length: size_t.max - 1, queue: queue) { done, data, error in
                 if done {
                     if error == 0 {
-                        stream.close()
+                        stream.onClose()
                     } else {
                         onError(FileError(.readError(error, path: path)))
                     }

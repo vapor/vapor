@@ -7,7 +7,7 @@ import Foundation
 public protocol FileReader {
     /// Reads the file at the supplied path
     /// Supply a queue to complete the future on.
-    func read<S>(at path: String, into stream: S, chunkSize: Int)
+    func read<S>(at path: String, into stream: S)
         where S: Async.InputStream, S.Input == ByteBuffer
 
     /// Returns true if the file exists at the supplied path.
@@ -24,7 +24,7 @@ extension FileReader {
         let stream = BasicStream(ByteBuffer.self)
         var data = Data()
 
-        stream.drain { new in
+        stream.drain(.max) { new, req in
             data.append(contentsOf: new)
         }.catch { err in
             promise.fail(err)
@@ -32,7 +32,7 @@ extension FileReader {
             promise.complete(data)
         }
 
-        self.read(at: path, into: stream, chunkSize: 2048)
+        self.read(at: path, into: stream)
         return promise.future
     }
 }

@@ -4,8 +4,14 @@ import Dispatch
 import COperatingSystem
 import Service
 
-/// A server socket can accept peers. Each accepted peer get's it own socket after accepting.
-public final class TCPServer: Async.OutputStream, ClosableStream {
+/// Accepts client connections to a socket.
+///
+/// Uses Async.OutputStream API to deliver accepted clients
+/// with back pressure support. If overwhelmed, input streams
+/// can cause the TCP server to suspend accepting new connections.
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/sockets/tcp-server/)
+public final class TCPServer: Async.OutputStream {
     /// See OutputStream.Output
     public typealias Output = TCPClient
 
@@ -20,14 +26,12 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
     /// A closure that can dictate if a client will be accepted
     ///
     /// `true` for accepted, `false` for not accepted
-    public typealias AcceptHandler = (TCPClient) -> (Bool)
+    public typealias WillAccept = (TCPClient) -> (Bool)
 
     /// Controls whether or not to accept a client
     ///
     /// Useful for security purposes
-    public var willAccept: AcceptHandler = { _ in
-        return true
-    }
+    public var willAccept: WillAccept?
 
     /// This server's TCP socket.
     private let socket: TCPSocket
@@ -36,76 +40,155 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
     private var eventLoopsIterator: LoopIterator<[EventLoop]>
 
     /// Keep a reference to the read source so it doesn't deallocate
-    private var readSource: DispatchSourceRead?
+    private var acceptSource: DispatchSourceRead?
 
     /// Use a basic output stream to implement server output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    private var outputStream: BasicStream<TCPClient>?
 
-    /// Creates a TCP server from an existing TCP socket.
-    public init(socket: TCPSocket, eventLoops: [EventLoop]) {
+    /// The amount of requested output remaining
+    private var requestedOutputRemaining: UInt
+
+    /// Creates a TCPServer from an existing TCPSocket.
+    public init(socket: TCPSocket, eventLoops: [EventLoop]) throws {
         self.socket = socket
         self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server", qos: .background)
         self.eventLoops = eventLoops
-        self.eventLoopsIterator = LoopIterator(collection: eventLoops)
+        self.eventLoopsIterator = try LoopIterator(eventLoops)
+        self.requestedOutputRemaining = 0
     }
 
-    /// Creates a new socket
+    /// Creates a TCPServer.
     public convenience init(eventLoops: [EventLoop]) throws {
         try self.init(socket: .init(), eventLoops: eventLoops)
     }
 
     /// Starts listening for peers asynchronously
-    ///
-    /// - parameter maxIncomingConnections: The maximum backlog of incoming connections. Defaults to 4096.
-    public func start(hostname: String = "0.0.0.0", port: UInt16, backlog: Int32 = 4096) throws {
+    public func start(hostname: String = "0.0.0.0", port: UInt16, backlog: Int32 = 128) throws {
+        /// bind the socket and start listening
         try socket.bind(hostname: hostname, port: port)
         try socket.listen(backlog: backlog)
 
-        let source = DispatchSource.makeReadSource(
-            fileDescriptor: socket.descriptor,
-            queue: queue
-        )
-        
-        source.setEventHandler {
-            let socket: TCPSocket
-            do {
-                socket = try self.socket.accept()
-            } catch {
-                self.outputStream.onError(error)
-                return
-            }
+        /// initialize the internal output stream
+        let outputStream = BasicStream<TCPClient>()
 
-            let eventLoop = self.eventLoopsIterator.next()!
-            /// FIXME: pass worker
-            let client = TCPClient(socket: socket, on: eventLoop)
-            
-            guard self.willAccept(client) else {
-                client.close()
-                return
-            }
+        /// handle downstream requesting data
+        /// suspend will be called automatically if the
+        /// remaining requested output count ever
+        /// reaches zero.
+        /// the downstream is expected to continue
+        /// requesting additional output as it is ready.
+        /// the server will automatically resume if
+        /// additional clients are requested after
+        /// suspend has been called
+        outputStream.onRequestClosure = { count in self.queue.async { self.resume(count) } }
 
-            self.outputStream.onInput(client)
-        }
-        
-        source.resume()
-        readSource = source
+        /// handle downstream canceling output requests
+        outputStream.onCancelClosure =  { self.queue.async { self.stop() } }
+
+        self.outputStream = outputStream
+
     }
 
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.onOutput(input)
+    /// See OutputStream.output
+    public func output<S>(to inputStream: S) where S: InputStream, TCPServer.Output == S.Input {
+        outputStream?.output(to: inputStream)
     }
 
-    /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
-    }
-
-    /// See CloseableStream.close
-    public func close() {
+    /// Stops the server
+    public func stop() {
         socket.close()
-        outputStream.close()
-        /// reinit output stream to clear any ref cycles
-        outputStream = .init()
+        outputStream?.onClose()
+        outputStream = nil
+        if requestedOutputRemaining == 0 {
+            /// dispatch sources must be resumed before
+            /// deinitializing
+            acceptSource?.resume()
+        }
+        acceptSource = nil
+    }
+
+    /// Resumes accepting clients if currently suspended
+    /// and count is greater than 0
+    private func resume(_ accepting: UInt) {
+        let isSuspended = requestedOutputRemaining == 0
+        requestedOutputRemaining += accepting
+
+        if isSuspended && requestedOutputRemaining > 0 {
+            ensureAcceptSource().resume()
+        }
+    }
+
+    /// Suspends accepting clients.
+    private func suspend() {
+        print("suspending accept")
+        ensureAcceptSource().suspend()
+        requestedOutputRemaining = 0
+    }
+
+    /// Returns the existing accept source or creates
+    /// and stores a new one
+    private func ensureAcceptSource() -> DispatchSourceRead {
+        guard let existing = acceptSource else {
+            /// create a new accept source
+            let source = DispatchSource.makeReadSource(
+                fileDescriptor: socket.descriptor,
+                queue: queue
+            )
+
+            /// handle a new accept
+            source.setEventHandler(handler: acceptClient)
+
+            /// handle a cancel event
+            source.setCancelHandler(handler: stop)
+
+            acceptSource = source
+            return source
+        }
+
+        /// return the existing source
+        return existing
+    }
+
+    /// Accepts a client and outputs to the output stream
+    /// important: the socket _must_ be ready to accept a client
+    /// as indicated by a read source.
+    private func acceptClient() {
+        /// it should be impossible to call this function when the
+        /// outputStream is nil. fatalError here may help catch bugs.
+        guard let outputStream = self.outputStream else {
+            fatalError("\(#function) called while outputStream is nil")
+        }
+
+        let accepted: TCPSocket
+
+        /// accept the new connection or throw an error
+        do {
+            accepted = try socket.accept()
+        } catch {
+            outputStream.onError(error)
+            return
+        }
+
+        /// init a tcp client with the socket and assign it an event loop
+        let client = TCPClient(
+            socket: accepted,
+            on: eventLoopsIterator.next()
+        )
+
+        /// check the will accept closure to approve this connection
+        if let shouldAccept = willAccept, !shouldAccept(client) {
+            client.stop()
+            return
+        }
+
+        /// output the client
+        outputStream.onInput(client)
+
+        /// decrement remaining and check if
+        /// we need to suspend accepting
+        self.requestedOutputRemaining -= 1
+        if self.requestedOutputRemaining == 0 {
+            suspend()
+        }
     }
 }

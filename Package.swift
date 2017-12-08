@@ -75,7 +75,7 @@ let package = Package(
         .library(name: "SQLite", targets: ["SQLite"]),
         
         // TLS/SSL
-        .library(name: "TLS", targets: ["TLS"]),
+        // .library(name: "TLS", targets: ["TLS"]),
 
         // Validation
         .library(name: "Validation", targets: ["Validation"]),
@@ -88,7 +88,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
+        .package(url: "https://github.com/vapor/async.git", .branch("reactive-streams")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [
@@ -153,7 +153,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
+        .target(name: "MySQL", dependencies: ["TCP", /*"TLS",*/ "Crypto"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Multipart
@@ -168,7 +168,7 @@ let package = Package(
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        .target(name: "HTTP2", dependencies: ["HTTP", /*"TLS",*/ "Pufferfish"]),
         .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
@@ -195,8 +195,8 @@ let package = Package(
         .target(name: "ServerSecurity", dependencies: ["COperatingSystem", "TCP"]),
        
         // TLS
-        .target(name: "TLS", dependencies: ["JunkDrawer", ssl, "TCP"]),
-        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
+        // .target(name: "TLS", dependencies: ["JunkDrawer", ssl, "TCP"]),
+        // .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL
         .target(name: "SQL"),
@@ -226,36 +226,36 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            "TLS",
+            // "TLS",
             "ServerSecurity",
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", "TLS", "HTTP", "Crypto"]),
+        .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
         .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
 
-#if os(macOS) || os(iOS)
-   package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
-    )
+// #if os(macOS) || os(iOS)
+//    package.targets.append(
+//         .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging"])
+//     )
 
-    package.products.append(
-        .library(name: "AppleSSL", targets: ["AppleSSL"])
-    )
-#else
-    package.dependencies.append(
-        .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
-    )
+//     package.products.append(
+//         .library(name: "AppleSSL", targets: ["AppleSSL"])
+//     )
+// #else
+//     package.dependencies.append(
+//         .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
+//     )
     
-    package.targets.append(
-        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
-    )
+//     package.targets.append(
+//         .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging"])
+//     )
     
-    package.products.append(
-        .library(name: "OpenSSL", targets: ["OpenSSL"])
-    )
-#endif
+//     package.products.append(
+//         .library(name: "OpenSSL", targets: ["OpenSSL"])
+//     )
+// #endif

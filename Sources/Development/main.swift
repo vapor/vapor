@@ -17,7 +17,6 @@ let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
 extension Request: DatabaseConnectable {}
 
 do {
-
     var services = Services.default()
 
     services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
