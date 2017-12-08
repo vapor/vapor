@@ -33,7 +33,7 @@ public final class MySQLProvider: Provider {
     public func register(_ services: inout Services) throws {
         services.register(FluentMySQLConfig())
         services.register(MySQLDatabase.self) { container -> SQLiteDatabase in
-            let database = MySQLDatabase(hostname: hostname, port: port, user: user, password: password, database: database)
+            return MySQLDatabase(hostname: hostname, port: port, user: user, password: password, database: database)
         }
     }
     
