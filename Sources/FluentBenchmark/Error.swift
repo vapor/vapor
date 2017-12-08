@@ -1,10 +1,8 @@
 import Debugging
-import Foundation
-import COperatingSystem
 
-/// Errors that can be thrown while working with Leaf.
-public struct LeafError: Traceable, Debuggable, Swift.Error, Encodable {
-    public static let readableName = "Leaf Error"
+/// Errors that can be thrown while working with Fluent Benchmarks.
+public struct FluentBenchmarkError: Traceable, Debuggable, Swift.Error, Encodable {
+    public static let readableName = "Fluent Benchmark Error"
     public let identifier: String
     public var reason: String
     public var file: String
@@ -20,14 +18,14 @@ public struct LeafError: Traceable, Debuggable, Swift.Error, Encodable {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column
-        ) {
+    ) {
         self.identifier = identifier
         self.reason = reason
         self.file = file
         self.function = function
         self.line = line
         self.column = column
-        self.stackTrace = LeafError.makeStackTrace()
+        self.stackTrace = FluentBenchmarkError.makeStackTrace()
     }
 }
 
