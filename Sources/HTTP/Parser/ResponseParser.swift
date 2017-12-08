@@ -109,6 +109,9 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
             throw HTTPError.invalidMessage()
         }
         
+        /// get response status
+        let status = HTTPStatus(code: Int(parser.status_code))
+        
         currentSize = 0
         
         // create the request
@@ -143,9 +146,6 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         // for a new request to come in
         state = .ready
         CParseResults.remove(from: &parser)
-
-        /// get response status
-        let status = HTTPStatus(code: Int(parser.status_code))
         
         return try makeResponse()
     }
