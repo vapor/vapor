@@ -14,7 +14,7 @@ class RedisTests: XCTestCase {
     
     var clientCount = 0
     
-    func makeClient() throws -> RedisClient {
+    func makeClient() throws -> Future<RedisClient> {
         let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
         clientCount += 1
         return try RedisClient.connect(

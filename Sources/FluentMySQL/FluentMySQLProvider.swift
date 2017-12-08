@@ -1,5 +1,4 @@
 import Service
-import SQLite
 
 /// Registers and boots MySQL services.
 public final class MySQLProvider: Provider {
@@ -32,8 +31,14 @@ public final class MySQLProvider: Provider {
     /// See Provider.register
     public func register(_ services: inout Services) throws {
         services.register(FluentMySQLConfig())
-        services.register(MySQLDatabase.self) { container -> SQLiteDatabase in
-            return MySQLDatabase(hostname: hostname, port: port, user: user, password: password, database: database)
+        services.register(MySQLDatabase.self) { container -> MySQLDatabase in
+            return MySQLDatabase(
+                hostname: self.hostname,
+                port: self.port,
+                user: self.user,
+                password: self.password,
+                database: self.database
+            )
         }
     }
     

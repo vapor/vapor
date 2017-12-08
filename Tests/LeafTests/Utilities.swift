@@ -43,7 +43,7 @@ final class TestFiles: FileReader, FileCache {
     }
 }
 
-final class PreloadedFiles: FileReader, FileCache {†
+final class PreloadedFiles: FileReader, FileCache {
     var files: [String: Data]
     init() {
         files = [:]
@@ -72,7 +72,7 @@ final class PreloadedFiles: FileReader, FileCache {†
 
     func fileExists(at path: String) -> Bool {
         return false
-    }∂
+    }
 }
 
 extension String: Error {}
