@@ -61,13 +61,14 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
             self.outputStream.close()
         }
         
-        guard let results = getResults(), let headers = results.headers else {
-            return
-        }
+        // TODO: Closed connections could use closing as an EOF
         
-        if headers[.connection]?.lowercased() == "close" {
-            
-        }
+//        guard let results = getResults(), let headers = results.headers else {
+//            return
+//        }
+//        if headers[.connection]?.lowercased() == "close" {
+//
+//        }
     }
     
     /// See ClosableStream.onClose
@@ -120,6 +121,12 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
         guard let results = getResults() else {
             return nil
+        }
+        
+        results.currentSize += buffer.count
+        
+        guard results.currentSize < results.maxSize else {
+            throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
         }
         
         /// parse the message using the C HTTP parser.

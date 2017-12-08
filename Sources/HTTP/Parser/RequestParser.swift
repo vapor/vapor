@@ -136,21 +136,8 @@ public final class RequestParser: CParser {
 
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> HTTPRequest? {
-        let results: CParseResults
-
-        switch state {
-        case .ready:
-            // create a new results object and set
-            // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
-            results = newResults
-            state = .parsing
-        case .parsing:
-            // get the current parse results object
-            guard let existingResults = CParseResults.get(from: &parser) else {
-                return nil
-            }
-            results = existingResults
+        guard let results = getResults() else {
+            return nil
         }
 
         results.currentSize += buffer.count
