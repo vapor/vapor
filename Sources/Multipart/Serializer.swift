@@ -21,9 +21,7 @@ public final class MultipartSerializer {
         }
         
         body.reserveCapacity(reserved + 512)
-        let boundary = form.boundary + [.hyphen, .hyphen]
-        
-        body.append(contentsOf: boundary)
+        let boundary =  [.hyphen, .hyphen] + form.boundary
         
         for part in form.parts {
             body.append(contentsOf: boundary)
@@ -33,7 +31,7 @@ public final class MultipartSerializer {
                 body.append(buffer)
             }
             
-            body.append(contentsOf: [.carriageReturn, .newLine, .carriageReturn, .newLine])
+            body.append(contentsOf: [.carriageReturn, .newLine])
             body.append(part.data)
             body.append(contentsOf: [.carriageReturn, .newLine])
         }

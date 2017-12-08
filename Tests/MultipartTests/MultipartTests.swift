@@ -33,6 +33,7 @@ class MultipartTests: XCTestCase {
         \r
         \(multinamed)\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
+        
         """
         
         let data = Data(string.utf8)
@@ -67,6 +68,7 @@ class MultipartTests: XCTestCase {
         \r
         \(multinamed)\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
+        
         """
         
         let data = Data(string.utf8)
