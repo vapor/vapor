@@ -20,7 +20,10 @@ internal final class CParseResults {
     var version: HTTPVersion?
     var headersIndexes: [HTTPHeaders.Index]
     var headersData = Data()
-    var body = Data()
+    
+    var headers: HTTPHeaders?
+    var body: HTTPBody?
+    
     var url = Data()
 
     /// Creates a new results object
@@ -29,7 +32,6 @@ internal final class CParseResults {
         self.headersIndexes = []
         headersData.reserveCapacity(4096)
         headersIndexes.reserveCapacity(64)
-        body.reserveCapacity(4096)
         url.reserveCapacity(128)
         
         self.headerState = .none

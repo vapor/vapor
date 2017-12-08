@@ -45,7 +45,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode(_ type: Int.Type, forKey key: K) throws -> Int {
         guard let int = decoder.row[key.stringValue]?.fuzzyInt else {
-            throw "No int found at key `\(key.stringValue)`"
+            fatalError("No int found at key `\(key.stringValue)`")
         }
 
         return int
@@ -93,7 +93,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode(_ type: Double.Type, forKey key: K) throws -> Double {
         guard let double = decoder.row[key.stringValue]?.fuzzyDouble else {
-            throw "No double found at key `\(key.stringValue)`"
+            fatalError("No double found at key `\(key.stringValue)`")
         }
 
         return double
@@ -101,7 +101,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode(_ type: String.Type, forKey key: K) throws -> String {
         guard let string = decoder.row[key.stringValue]?.fuzzyString else {
-            throw "No string found at key `\(key.stringValue)`"
+            fatalError("No string found at key `\(key.stringValue)`")
         }
 
         return string
@@ -109,7 +109,7 @@ internal final class DecodingContainer<K: CodingKey>:
 
     func decode<T: Decodable>(_ type: T.Type, forKey key: K) throws -> T {
         guard let data = decoder.row[key.stringValue] else {
-            throw "no data at key"
+            fatalError("no data at key")
         }
 
         let d = SQLiteDataDecoder(data: data)

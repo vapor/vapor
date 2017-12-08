@@ -19,7 +19,7 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
 
     /// The maxiumum possible body size
     /// larger sizes will result in an error
-    private let maxSize: Int
+    internal let maxSize: Int
     
     /// The currently parsing response's size
     private var currentSize = 0
@@ -60,7 +60,17 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
     
     /// See ClosableStream.close
     public func close() {
-        self.outputStream.close()
+        defer {
+            self.outputStream.close()
+        }
+        
+        guard let results = getResults(), let headers = results.headers else {
+            return
+        }
+        
+        if headers[.connection]?.lowercased() == "close" {
+            
+        }
     }
     
     /// See ClosableStream.onClose
@@ -88,6 +98,28 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         }
     }
     
+    func makeResponse() throws -> HTTPResponse {
+        // require a version to have been parsed
+        guard
+            let results = getResults(),
+            let version = results.version,
+            let headers = results.headers,
+            let body = results.body
+        else {
+            throw HTTPError.invalidMessage()
+        }
+        
+        currentSize = 0
+        
+        // create the request
+        return HTTPResponse(
+            version: version,
+            status: status,
+            headers: headers,
+            body: body
+        )
+    }
+    
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> HTTPResponse? {
         currentSize += buffer.count
@@ -96,21 +128,8 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
             throw HTTPError(identifier: "too-large-response", reason: "The response's size was not an acceptable size")
         }
         
-        let results: CParseResults
-        
-        switch state {
-        case .ready:
-            // create a new results object and set
-            // a reference to it on the parser
-            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
-            results = newResults
-            state = .parsing
-        case .parsing:
-            // get the current parse results object
-            guard let existingResults = CParseResults.get(from: &parser) else {
-                return nil
-            }
-            results = existingResults
+        guard let results = getResults() else {
+            return nil
         }
         
         /// parse the message using the C HTTP parser.
@@ -127,25 +146,8 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
 
         /// get response status
         let status = HTTPStatus(code: Int(parser.status_code))
-
-        // require a version to have been parsed
-        guard let version = results.version else {
-            throw HTTPError.invalidMessage()
-        }
         
-        let body = HTTPBody(results.body)
-        
-        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
-        
-        currentSize = 0
-        
-        // create the request
-        return HTTPResponse(
-            version: version,
-            status: status,
-            headers: headers,
-            body: body
-        )
+        return try makeResponse()
     }
 }
 

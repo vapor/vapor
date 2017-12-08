@@ -1,29 +1,40 @@
 import Debugging
 
-public enum ServiceError: Error, Debuggable, Encodable {
-    case multipleInstances(
-        type: Any.Type
-    )
-    case disambiguationRequired(
-        key: String,
-        available: [String],
-        type: Any.Type
-    )
-    case unknownService(
-        available: [String],
-        type: Any.Type
-    )
-    case incorrectType(
-        type: Any.Type,
-        desired: Any.Type
-    )
-    case noneAvailable(type: Any.Type)
-    case unknown(Error)
+public struct ServiceError: Error, Debuggable, Encodable {
+    var problem: Problem
+    
+    init(_ problem: Problem) {
+        self.problem = problem
+    }
+    
+    enum Problem {
+        case other(identifier: String, reason: String)
+        case multipleInstances(
+            type: Any.Type
+        )
+        case disambiguationRequired(
+            key: String,
+            available: [String],
+            type: Any.Type
+        )
+        case unknownService(
+            available: [String],
+            type: Any.Type
+        )
+        case incorrectType(
+            type: Any.Type,
+            desired: Any.Type
+        )
+        case noneAvailable(type: Any.Type)
+        case unknown(Error)
+    }
 }
 
 extension ServiceError {
     public var reason: String {
-        switch self {
+        switch self.problem {
+        case .other(_, let reason):
+            return reason
         case .multipleInstances(let type):
             return "Multiple instances available for '\(type)'. Unable to disambiguate."
         case .noneAvailable(let type):
@@ -40,7 +51,9 @@ extension ServiceError {
     }
 
     public var identifier: String {
-        switch self {
+        switch self.problem {
+        case .other(let identifier, _):
+            return identifier
         case .multipleInstances:
             return "multipleInstances"
         case .noneAvailable:
@@ -57,7 +70,9 @@ extension ServiceError {
     }
 
     public var possibleCauses: [String] {
-        switch self {
+        switch self.problem {
+        case .other(_):
+            return []
         case .multipleInstances:
             return []
         case .noneAvailable:
@@ -76,7 +91,9 @@ extension ServiceError {
     }
 
     public var suggestedFixes: [String] {
-        switch self {
+        switch self.problem {
+        case .other(_):
+            return []
         case .multipleInstances:
             return [
                 "Register instances as service types instead, so they can be disambiguated using config."

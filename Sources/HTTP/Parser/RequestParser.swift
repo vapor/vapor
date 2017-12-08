@@ -19,7 +19,7 @@ public final class RequestParser: CParser {
     var state:  CHTTPParserState
     /// The maxiumum possible body size
     /// larger sizes will result in an error
-    private let maxSize: Int
+    internal let maxSize: Int
     
     /// The currently parsing request's size
     private var currentSize = 0
@@ -81,6 +81,60 @@ public final class RequestParser: CParser {
             return try parse(from: buffer)
         }
     }
+    
+    func makeRequest() throws -> HTTPRequest {
+        // require a version to have been parsed
+        guard
+            let results = getResults(),
+            let version = results.version,
+            let headers = results.headers,
+            let body = results.body
+        else {
+            throw HTTPError.invalidMessage()
+        }
+        
+        /// switch on the C method type from the parser
+        let method: HTTPMethod
+        switch http_method(parser.method) {
+        case HTTP_DELETE:
+            method = .delete
+        case HTTP_GET:
+            method = .get
+        case HTTP_POST:
+            method = .post
+        case HTTP_PUT:
+            method = .put
+        case HTTP_OPTIONS:
+            method = .options
+        case HTTP_PATCH:
+            method = .patch
+        default:
+            /// custom method detected,
+            /// convert the method into a string
+            /// and use Engine's other type
+            guard
+                let pointer = http_method_str(http_method(parser.method)),
+                let string = String(validatingUTF8: pointer)
+                else {
+                    throw HTTPError.invalidMessage()
+            }
+            method = HTTPMethod(string)
+        }
+        
+        // parse the uri from the url bytes.
+        var uri = URIParser.shared.parse(data: results.url)
+        
+        // if there is no scheme, use http by default
+        if uri.scheme?.isEmpty == true {
+            uri.scheme = "http"
+        }
+        
+        currentSize = 0
+        
+        // create the request
+        return HTTPRequest(
+            method: method, uri: uri, version: version, headers: headers, body: body)
+    }
 
     /// Parses a Request from the stream.
     public func parse(from buffer: ByteBuffer) throws -> HTTPRequest? {
@@ -118,64 +172,8 @@ public final class RequestParser: CParser {
         // for a new request to come in
         state = .ready
         CParseResults.remove(from: &parser)
-
-
-        /// switch on the C method type from the parser
-        let method: HTTPMethod
-        switch http_method(parser.method) {
-        case HTTP_DELETE:
-            method = .delete
-        case HTTP_GET:
-            method = .get
-        case HTTP_POST:
-            method = .post
-        case HTTP_PUT:
-            method = .put
-        case HTTP_OPTIONS:
-            method = .options
-        case HTTP_PATCH:
-            method = .patch
-        default:
-            /// custom method detected,
-            /// convert the method into a string
-            /// and use Engine's other type
-            guard
-                let pointer = http_method_str(http_method(parser.method)),
-                let string = String(validatingUTF8: pointer)
-            else {
-                throw HTTPError.invalidMessage()
-            }
-            method = HTTPMethod(string)
-        }
-
-        // parse the uri from the url bytes.
-        var uri = URIParser.shared.parse(data: results.url)
-
-        // if there is no scheme, use http by default
-        if uri.scheme?.isEmpty == true {
-            uri.scheme = "http"
-        }
-
-        // require a version to have been parsed
-        guard let version = results.version else {
-            throw HTTPError.invalidMessage()
-        }
-
-        let body = HTTPBody(results.body)
         
-        let headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
-
-        // create the request
-        let request = HTTPRequest(
-            method: method,
-            uri: uri,
-            version: version,
-            headers: headers,
-            body: body
-        )
-
-        currentSize = 0
-        return request
+        return try makeRequest()
     }
 }
 

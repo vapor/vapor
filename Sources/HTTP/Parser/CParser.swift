@@ -16,6 +16,8 @@ enum HeaderState {
 internal protocol CParser: Async.Stream {
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
+    var maxSize: Int { get }
+    var state: CHTTPParserState { get set }
 }
 
 enum CHTTPParserState {
@@ -44,6 +46,27 @@ extension CParser {
 }
 
 extension CParser {
+    func getResults() -> CParseResults? {
+        let results: CParseResults
+        
+        switch state {
+        case .ready:
+            // create a new results object and set
+            // a reference to it on the parser
+            let newResults = CParseResults.set(on: &parser, maxSize: maxSize)
+            results = newResults
+            state = .parsing
+        case .parsing:
+            // get the current parse results object
+            guard let existingResults = CParseResults.get(from: &parser) else {
+                return nil
+            }
+            results = existingResults
+        }
+        
+        return results
+    }
+    
     /// Initializes the http parser settings with appropriate callbacks.
     func initialize(_ settings: inout http_parser_settings) {
         // called when chunks of the url have been read
@@ -164,6 +187,7 @@ extension CParser {
                 results.headersIndexes.append(index)
                 results.headersData.append(.carriageReturn)
                 results.headersData.append(.newLine)
+                results.headers = HTTPHeaders(storage: results.headersData, indexes: results.headersIndexes)
             default:
                 // no other cases need to be handled.
                 break
@@ -176,17 +200,34 @@ extension CParser {
         settings.on_body = { parser, chunk, length in
             guard
                 let results = CParseResults.get(from: parser),
+                let body = results.body,
                 let chunk = chunk
             else {
                 // signal an error
                 return 1
             }
 
-            chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer in
-                results.body.append(pointer, count: length)
-            }
+            return chunk.withMemoryRebound(to: UInt8.self, capacity: length) { pointer -> Int32 in
+                switch body.storage {
+                case .data(var data):
+                    data.append(pointer, count: length)
+                    results.body = HTTPBody(data)
+                case .dispatchData(var dispatchData):
+                    dispatchData.append(ByteBuffer(start: pointer, count: length))
+                    results.body = HTTPBody(dispatchData)
+                case .string(let base):
+                    guard let extra = String(data: Data(bytes: pointer, count: length), encoding: .utf8) else {
+                        return 1
+                    }
+                    results.body = HTTPBody(string: base + extra)
+                case .staticString(_):
+                    results.body = HTTPBody(Data(bytes: pointer, count: length))
+                case .stream(let stream):
+                    stream.onInput(ByteBuffer(start: pointer, count: length))
+                }
                 
-            return 0
+                return 0
+            }
         }
 
         // called when the message is finished parsing
