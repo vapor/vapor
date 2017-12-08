@@ -10,7 +10,7 @@ final class SQLiteBenchmarkTests: XCTestCase {
 
     override func setUp() {
         let database = SQLiteDatabase(storage: .memory)
-        benchmarker = Benchmarker(database, onFail: XCTFail)
+        benchmarker = Benchmarker(database, config: .init(), onFail: XCTFail)
     }
 
     func testSchema() throws {
@@ -38,7 +38,7 @@ final class SQLiteBenchmarkTests: XCTestCase {
     }
 
     func testAutoincrement() throws {
-        try benchmarker.benchmarkAutoincrement_withSchema()
+        try benchmarker.benchmarkAutoincrement_withSchema().blockingAwait(timeout: .seconds(60))
     }
 
     static let allTests = [

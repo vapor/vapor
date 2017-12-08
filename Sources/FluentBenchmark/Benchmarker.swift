@@ -15,16 +15,20 @@ public final class Benchmarker<Database: Fluent.Database> {
 
     /// Failure handler
     private let onFail: OnFail
+    
+    /// Container to make configurations from
+    internal let config: Database.Connection.Config
 
     /// Logs collected
     private var logs: [DatabaseLog]
 
     /// Create a new benchmarker
-    public init(_ database: Database, onFail: @escaping OnFail) {
+    public init(_ database: Database, config: Database.Connection.Config, onFail: @escaping OnFail) {
         self.database = database
         self.onFail = onFail
         self.logs = []
-        self.pool = self.database.makeConnectionPool(max: 20, on: DispatchQueue(label: "fluent-bench"))
+        self.config = config
+        self.pool = self.database.makeConnectionPool(max: 20, using: config, on: DispatchQueue(label: "fluent-bench"))
 
         if let logSupporting = database as? LogSupporting {
             let logger = DatabaseLogger { log in

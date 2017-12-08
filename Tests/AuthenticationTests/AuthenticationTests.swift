@@ -7,10 +7,9 @@ import XCTest
 class AuthenticationTests: XCTestCase {
     func testPassword() throws {
         let queue = DispatchQueue(label: "test.auth")
-        let container = BasicContainer(config: .init(), environment: .testing, services: .init(), on: queue)
         
         let database = SQLiteDatabase(storage: .memory)
-        let conn = try database.makeConnection(using: container).blockingAwait()
+        let conn = try database.makeConnection(on: queue).blockingAwait()
 
         try User.prepare(on: conn).blockingAwait()
         let user = User(name: "Tanner", email: "tanner@vapor.codes", password: "foo")

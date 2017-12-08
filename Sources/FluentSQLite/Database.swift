@@ -4,6 +4,10 @@ import SQLite
 
 extension SQLiteDatabase: Database {
     public typealias Connection = SQLiteConnection
+    
+    public func makeConnection(from config: SQLiteConfig, on eventloop: EventLoop) -> Future<SQLiteConnection> {
+        return self.makeConnection(on: eventloop)
+    }
 }
 
 public struct SQLiteConfig {
