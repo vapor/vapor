@@ -9,15 +9,21 @@ class SocketsTests: XCTestCase {
             DispatchQueue(label: "codes.vapor.test.server")
         ])
         try server.start(port: 8338)
-        
+
+        /// 128 will be the max in flight clients
         server.drain(128) { client, serverReq in
             client.drain { buffer, clientReq in
                 client.onInput(buffer)
+                /// after we write data, we are ready to read more
+                /// note: important that we start reading here
+                /// or else the source will not be active to detect
+                /// the socket closing
                 clientReq.requestOutput()
             }.catch { err in
                 XCTFail("\(err)")
             }.finally {
-                // closed
+                /// once the socket is closed, we are ready to tell
+                /// the server to give us another client
                 serverReq.requestOutput()
             }
         }.catch { err in
