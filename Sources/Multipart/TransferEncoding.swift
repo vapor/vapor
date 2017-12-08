@@ -39,7 +39,7 @@ extension TransferDecoder {
 }
 
 /// An encoding registery
-public enum TransferEncoding {
+enum TransferEncoding {
     public typealias TransferEncoderBuilder = ((HTTPHeaders) throws -> (TransferEncoder))
     public typealias TransferDecoderBuilder = ((HTTPHeaders) throws -> (TransferDecoder))
     

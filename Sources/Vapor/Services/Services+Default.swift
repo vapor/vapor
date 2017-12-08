@@ -87,6 +87,11 @@ extension Services {
         services.register { container in
             return ContentConfig.default()
         }
+        
+        // register transfer encodings
+        services.register { container in
+            return TransferEncodingConfig.default()
+        }
 
         services.register([FileReader.self, FileCache.self]) { container in
             return File(queue: container.queue)
