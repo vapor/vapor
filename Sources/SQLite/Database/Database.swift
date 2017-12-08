@@ -1,5 +1,4 @@
 import Async
-import Service
 import CSQLite
 import Dispatch
 
