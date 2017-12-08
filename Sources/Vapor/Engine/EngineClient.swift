@@ -39,7 +39,8 @@ public final class EngineClient: Client {
             port: req.http.uri.port,
             ssl: ssl,
             using: req
-        ).then { client in
+        ).then { client -> Future<Response> in
+            req.http.headers[.host] = req.http.uri.hostname
             return client.send(request: req.http).then { httpRes -> Response in
                 let res = req.makeResponse()
                 res.http = httpRes
@@ -73,8 +74,10 @@ extension HTTPClient {
                 }
             } else {
                 let client = try TCPClient(on: container)
-                try client.connect(hostname: hostname, port: port)
-                return Future(HTTPClient(socket: client))
+                
+                return try client.connect(hostname: hostname, port: port).map {
+                    return HTTPClient(socket: client)
+                }
             }
         } catch {
             return Future(error: error)

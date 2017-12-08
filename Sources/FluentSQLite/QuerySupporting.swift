@@ -84,7 +84,7 @@ extension SQLiteDataEncoder {
         case .wildcard(let wildcard):
             // FIXME: fuzzy string
             guard let string = data.text else {
-                throw "could not convert value with wildcards to string: \(data)"
+                throw FluentSQLiteError(identifier: "incorrect-string", reason: "could not convert value with wildcards to string: \(data)")
             }
 
             switch wildcard {

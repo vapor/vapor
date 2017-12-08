@@ -40,7 +40,7 @@ public struct Parent<Child: Model, Parent: Model>
         return then {
             try self.query(on: conn).first().map { first in
                 guard let parent = first else {
-                    throw "Parent not found"
+                    throw FluentError(identifier: "parent-not-found", reason: "This parent relationship could not be resolved")
                 }
                 return parent
             }
