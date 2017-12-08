@@ -33,9 +33,7 @@ public class HPACKTests: XCTestCase {
             .cookie: "foo"
         ], body: HTTPBody())
         let encoder = HPACKEncoder()
-        let data = try! encoder.encode(request: request, chunksOf: 4000, streamID: 0)
-
-        print(Array(data.first?.payload.data ?? Data()))
+        _ = try! encoder.encode(request: request, chunksOf: 4000, streamID: 0)
     }
     
     /// http://httpwg.org/specs/rfc7541.html#rfc.section.C.1.1

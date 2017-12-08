@@ -28,7 +28,7 @@ public struct ContentConfig {
     /// Returns an encoder for the specified media type or throws an error.
     func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
         guard let encoder = encoders[mediaType] else {
-            throw "no encoder for \(mediaType)"
+            throw VaporError(identifier: "encoder-missing", reason: "There is no known encoder for \(mediaType)")
         }
 
         return encoder
@@ -37,7 +37,7 @@ public struct ContentConfig {
     /// Returns a decoder for the specified media type or throws an error.
     func requireDecoder(for mediaType: MediaType) throws -> BodyDecoder {
         guard let decoder = decoders[mediaType] else {
-            throw "no decoder for \(mediaType)"
+            throw VaporError(identifier: "encoder-missing", reason: "There is no known decoder for \(mediaType)")
         }
 
         return decoder

@@ -1,7 +1,9 @@
 import Async
+import Service
 import MySQL
 import Fluent
 
+/// A reference to a MySQL database
 public final class MySQLDatabase : LogSupporting {
     /// The hostname to which connections will be connected
     let hostname: String
@@ -36,11 +38,17 @@ public final class MySQLDatabase : LogSupporting {
 }
 
 extension MySQLDatabase : Database {
+    public typealias Connection = FluentMySQLConnection
+    
     /// Creates a new connection to the database
-    public func makeConnection(on eventloop: EventLoop) -> Future<FluentMySQLConnection> {
+    public func makeConnection(
+        from config: FluentMySQLConnection.Config,
+        on eventloop: EventLoop
+    ) -> Future<FluentMySQLConnection> {
         return MySQLConnection.makeConnection(
             hostname: hostname,
             port: port,
+            ssl: config.ssl,
             user: user,
             password: password,
             database: database,

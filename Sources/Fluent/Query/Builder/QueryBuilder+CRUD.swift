@@ -26,7 +26,8 @@ extension QueryBuilder {
                 case .autoincrementing: break
                 case .generated(let factory):
                     model.fluentID = factory()
-                case .supplied: throw "model id type is `supplied`, but no id was supplied"
+                case .supplied:
+                    throw FluentError(identifier: "no-id-supplied", reason: "model id type is `supplied`, but no id was supplied")
                 }
             }
 
@@ -55,7 +56,7 @@ extension QueryBuilder {
             self.query.data = model
 
             guard let id = model.fluentID else {
-                throw "id required for update"
+                throw FluentError(identifier: "missing-id", reason: "No ID was set on updated model, it is required for updating.")
             }
 
             // update record w/ matching id
@@ -96,7 +97,7 @@ extension QueryBuilder {
         return connection.then { conn in
             return try model.willDelete(on: conn).then { _ -> Future<Void> in
                 guard let id = model.fluentID else {
-                    throw "model does not have an id"
+                    throw FluentError(identifier: "missing-id", reason: "Model does not have an identifier, it is necessary for removing it")
                 }
 
                 try self.filter(Model.idKey == id)

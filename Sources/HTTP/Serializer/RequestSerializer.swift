@@ -36,7 +36,13 @@ public final class RequestSerializer: Serializer {
         serialized.reserveCapacity(request.headers.storage.count + 256)
         
         serialized.append(.space)
+        
+        if request.uri.pathBytes.first != .forwardSlash {
+            serialized.append(.forwardSlash)
+        }
+        
         serialized.append(contentsOf: request.uri.pathBytes)
+        
         serialized.append(contentsOf: http1newLine)
         
         var headers = request.headers

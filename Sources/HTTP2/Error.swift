@@ -14,6 +14,7 @@ struct HTTP2Error: Swift.Error {
         case invalidSettingsFrame(Frame)
         case invalidPrefixSize(Int)
         case invalidUTF8String
+        case alpnNotSupported
         case invalidUpgrade
         case clientError
         case tooManyConnectionReuses

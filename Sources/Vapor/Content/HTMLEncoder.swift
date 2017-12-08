@@ -17,7 +17,7 @@ public final class DataEncoder {
     {
         try encodable.encode(to: encoder)
         guard let data = encoder.data else {
-            throw "no data"
+            throw VaporError(identifier: "encoding-failed", reason: "An unknown error caused the data not to be encoded")
         }
         return data
     }

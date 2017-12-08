@@ -55,7 +55,7 @@ extension Container {
         } else if available.count == 0 {
             // no services are available matching
             // the type requested.
-            throw ServiceError.noneAvailable(type: interface)
+            throw ServiceError(.noneAvailable(type: interface))
         } else {
             // only one service matches, no need to disambiguate.
             // let's use it!

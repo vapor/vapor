@@ -3,21 +3,9 @@ import Security
 import Foundation
 import Dispatch
 
-extension SSLStream {
+extension AppleSSLStream {
     /// A helper that initializes SSL as either the client or server side
-    func initialize(side: SSLProtocolSide) throws -> SSLContext {
-        // We currently don't support renegotiation of SSL connections
-        guard context == nil else {
-            throw AppleSSLError(.contextAlreadyCreated)
-        }
-        
-        // Creates a new context
-        guard let context = SSLCreateContext(nil, side, .streamType) else {
-            throw AppleSSLError(.cannotCreateContext)
-        }
-        
-        self.context = context
-        
+    func initialize() throws {
         // Sets the read/write functions
         var status = SSLSetIOFuncs(context, readSSL, writeSSL)
         
@@ -26,13 +14,17 @@ extension SSLStream {
         }
         
         // Adds the file descriptor to this connection
-        status = SSLSetConnection(context, &self.descriptor)
+        status = SSLSetConnection(context, self.descriptor)
         
         guard status == 0 else {
             throw AppleSSLError(.sslError(status))
         }
-        
-        return context
+    }
+    
+    func read(into buffer: MutableByteBuffer) -> Int {
+        var processed = 0
+        SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
+        return processed
     }
     
     /// Writes to AppleSSL using the provided buffer
@@ -40,22 +32,13 @@ extension SSLStream {
     /// If `allowWouldBlock` is true, when a "would block" occurs, the data will be appended to the writeQueue
     /// Otherwise an error will be thrown
     @discardableResult
-    func write(from buffer: ByteBuffer, allowWouldBlock: Bool) throws -> Int {
-        guard let context = self.context else {
-            close()
-            throw AppleSSLError(.noSSLContext)
-        }
-        
+    func write(from buffer: ByteBuffer, allowWouldBlock: Bool = true) throws -> Int {
         var processed = 0
         
         let status = SSLWrite(context, buffer.baseAddress, buffer.count, &processed)
         
-        guard status > 0 else {
-            // Clean close
-            if status == 0 {
-                self.close()
-                return 0
-            } else if status == errSSLWouldBlock {
+        guard status == 0 else {
+            if status == errSSLWouldBlock {
                 writeQueue.append(Data(buffer))
                 
                 // Wasn't already running
@@ -120,11 +103,11 @@ fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer
 /// Fileprivate helper that writes to the SSL connection
 fileprivate func writeSSL(ref: SSLConnectionRef, pointer: UnsafeRawPointer, length: UnsafeMutablePointer<Int>) -> OSStatus {
     // Reads the provided descriptor
-    let context = ref.bindMemory(to: Int32.self, capacity: 1).pointee
+    let socket = ref.assumingMemoryBound(to: Int32.self).pointee
     let toWrite = length.pointee
     
     // Sends the encrypted data
-    var writeCount = Darwin.send(context, pointer, toWrite, 0)
+    var writeCount = Darwin.send(socket, pointer, toWrite, 0)
     
     // Updates the written byte count
     length.initialize(to: writeCount)

@@ -1,4 +1,5 @@
 import Async
+import Service
 import Dispatch
 import XCTest
 import Async
@@ -23,7 +24,7 @@ class MySQLTests: XCTestCase {
         user: "root",
         password: nil,
         database: "vapor_test",
-        on: poolQueue
+        on: MySQLTests.poolQueue
     ).blockingAwait(timeout: .seconds(10))
 
     static let allTests = [

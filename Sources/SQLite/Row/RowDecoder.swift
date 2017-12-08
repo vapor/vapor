@@ -16,7 +16,7 @@ public final class SQLiteRowDecoder: Decoder {
     }
 
     public func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        throw "not supported"
+        fatalError("unsupported")
     }
 
     public func singleValueContainer() throws -> SingleValueDecodingContainer {

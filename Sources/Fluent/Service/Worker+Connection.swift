@@ -32,10 +32,10 @@ extension Container {
             let databases = try self.make(Databases.self, for: Self.self)
 
             guard let db = databases.storage[database.uid] as? Database else {
-                throw "no database with id '\(database)' configured"
+                throw FluentError(identifier: "database-not-configured", reason: "no database with id '\(database)' configured")
             }
 
-            return db.makeConnection(on: self)
+            return try db.makeConnection(from: self.make(for: Database.Connection.self), on: self)
         }
     }
 }
@@ -53,7 +53,7 @@ extension Container {
         closure: @escaping (Database.Connection) throws -> F
     ) -> Future<F.Expectation> where F: FutureType {
         return then {
-            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
@@ -72,7 +72,7 @@ extension Container {
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
         return then {
-            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
@@ -96,7 +96,7 @@ extension Container {
     internal func requireConnectionPool<Database>(
         to database: DatabaseIdentifier<Database>
     ) throws -> DatabaseConnectionPool<Database> {
-        let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+        let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
         return try cache.pool(for: database)
     }
 }
@@ -170,11 +170,11 @@ internal final class ActiveConnectionCache {
 internal final class ConnectionPoolCache {
     let databases: Databases
     var cache: [String: Any]
-    let eventLoop: EventLoop
+    let container: Container
 
-    init(databases: Databases, on eventLoop: EventLoop) {
+    init(databases: Databases, on container: Container) {
         self.databases = databases
-        self.eventLoop = eventLoop
+        self.container = container
         self.cache = [:]
     }
 
@@ -184,10 +184,10 @@ internal final class ConnectionPoolCache {
             return existing
         } else {
             guard let database = databases.storage[id.uid] as? D else {
-                throw "invalid db"
+                fatalError("no database")
             }
 
-            let new = database.makeConnectionPool(max: 2, on: eventLoop)
+            let new = try database.makeConnectionPool(max: 2, using: container.make(for: D.Connection.self), on: container)
             cache[id.uid] = new
             return new
         }

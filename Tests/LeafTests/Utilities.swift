@@ -74,3 +74,5 @@ final class PreloadedFiles: FileReader, FileCache {
         return false
     }
 }
+
+extension String: Error {}
