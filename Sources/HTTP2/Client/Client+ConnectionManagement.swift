@@ -24,6 +24,7 @@ extension HTTP2Client {
         settings: HTTP2Settings = HTTP2Settings(),
         on container: Container
     ) -> Future<HTTP2Client> {
+        // TODO: Don't require Container
         do {
             let tlsClient = try container.make(BasicSSLClient.self, for: HTTP2Client.self)
             
