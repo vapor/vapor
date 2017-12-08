@@ -2,9 +2,17 @@ import Async
 import Fluent
 import SQLite
 
-extension SQLiteDatabase: Database { }
+extension SQLiteDatabase: Database {
+    public typealias Connection = SQLiteConnection
+}
+
+public struct SQLiteConfig {
+    public init() {}
+}
 
 extension SQLiteConnection: DatabaseConnection {
+    public typealias Config = SQLiteConfig
+    
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         return then {
             guard let sqlite = self as? D.Connection else {

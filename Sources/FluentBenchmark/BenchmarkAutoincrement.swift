@@ -28,7 +28,7 @@ extension Benchmarker  {
     /// Benchmark the Timestampable protocol
     public func benchmarkAutoincrement() throws {
         let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
-        let conn = try test(database.makeConnection(using: worker.container))
+        let conn = try test(database.makeConnection(on: worker))
         try _benchmark(on: conn)
     }
 }
@@ -38,14 +38,8 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
     /// The schema will be prepared first.
     public func benchmarkAutoincrement_withSchema() throws {
         let worker = DispatchQueue(label: "codes.vapor.fluent.benchmark.models")
-        let conn = try test(database.makeConnection(using: worker.container))
+        let conn = try test(database.makeConnection(on: worker))
         try test(LogMessageMigration<Database>.prepare(on: conn))
         try _benchmark(on: conn)
-    }
-}
-
-extension EventLoop {
-    var container: BasicContainer {
-        return BasicContainer(config: .init(), environment: .testing, services: .init(), on: self)
     }
 }

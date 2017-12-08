@@ -6,6 +6,17 @@ import TCP
 import TLS
 import Dispatch
 
+/// Contains settings that MySQL uses to upgrade
+public struct MySQLSSLConfig {
+    var upgrader: BasicSSLClientUpgrader
+    var settings: SSLClientSettings
+    
+    public init(upgrader: BasicSSLClientUpgrader, settings: SSLClientSettings) {
+        self.upgrader = upgrader
+        self.settings = settings
+    }
+}
+
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
     /// The socket it's connected on
@@ -47,10 +58,10 @@ public final class MySQLConnection {
     public var affectedRows: UInt64?
     
     /// This container is used for fabricating TLS helpers
-    var container: Container
+    var eventLoop: EventLoop
     
-    /// Indicates if this socket should be upgraded to SSL
-    var ssl: Bool
+    /// Indicates if this socket should be upgraded to SSL and how to upgrade
+    var ssl: MySQLSSLConfig?
     
     /// Indicates that the SSL handshake has been sent
     var sslSettingsSent = false
@@ -79,13 +90,21 @@ public final class MySQLConnection {
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
-    init(hostname: String, port: UInt16 = 3306, ssl: Bool = false, user: String, password: String?, database: String, using container: Container) throws {
+    init(
+        hostname: String,
+        port: UInt16 = 3306,
+        ssl: MySQLSSLConfig? = nil,
+        user: String,
+        password: String?,
+        database: String,
+        on eventLoop: EventLoop
+    ) throws {
         let buffer = MutableByteBuffer(start: readBuffer, count: Int(UInt16.max))
         
         let parser = PacketParser()
         self.authenticated = Promise<Void>()
         
-        let socket = try TCPClient(on: container)
+        let socket = try TCPClient(on: eventLoop)
         try socket.connect(hostname: hostname, port: port)
         socket.stream(to: parser)
         
@@ -94,13 +113,13 @@ public final class MySQLConnection {
         self.ssl = ssl
         
         self.parser = parser
-        self.queue = container.queue
+        self.queue = eventLoop.queue
         self.buffer = buffer
         self.username = user
         self.password = password
         self.database = database
         self.packetStream = .init()
-        self.container = container
+        self.eventLoop = eventLoop
         
         self.parser.drain(onInput: self.handlePacket).catch { error in
             /// close the packet stream
@@ -118,10 +137,10 @@ public final class MySQLConnection {
             return
         }
         
-        if ssl {
+        if let ssl = ssl {
             guard sslSettingsSent else {
                 do {
-                    try self.upgradeSSL(for: packet)
+                    try self.upgradeSSL(for: packet, using: ssl)
                 } catch {
                     self.authenticated.fail(error)
                     self.close()
@@ -139,7 +158,7 @@ public final class MySQLConnection {
         finishAuthentication(for: packet, completing: authenticated)
     }
     
-    func upgradeSSL(for packet: Packet) throws {
+    func upgradeSSL(for packet: Packet, using config: MySQLSSLConfig) throws {
         let handshake = try packet.parseHandshake()
         self.handshake = handshake
         
@@ -164,8 +183,10 @@ public final class MySQLConnection {
             try self.write(packetFor: buffer)
         }
         
-        let tlsUpgrader = try self.container.make(BasicSSLClientUpgrader.self, for: MySQLConnection.self)
-        try tlsUpgrader.upgrade(socket: self.socket.socket).map { client in
+        try config.upgrader.upgrade(
+            socket: self.socket.socket,
+            settings: config.settings
+        ).map { client in
             client.stream(to: self.parser)
             self.socketWrite = client.onInput
             
@@ -251,11 +272,11 @@ extension MySQLConnection {
     public static func makeConnection(
         hostname: String,
         port: UInt16 = 3306,
-        ssl: Bool = false,
+        ssl: MySQLSSLConfig? = nil,
         user: String,
         password: String?,
         database: String,
-        using container: Container
+        on eventLoop: EventLoop
     ) -> Future<MySQLConnection> {
         return then {
             let connection = try MySQLConnection(
@@ -265,7 +286,7 @@ extension MySQLConnection {
                 user: user,
                 password: password,
                 database: database,
-                using: container
+                on: eventLoop
             )
 
             return connection.authenticated.future.map { _ in

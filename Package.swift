@@ -207,7 +207,7 @@ let package = Package(
 
         // SQLite
         .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["JunkDrawer", "CSQLite", "Service", "Debugging", "Random"]),
+        .target(name: "SQLite", dependencies: ["JunkDrawer", "CSQLite", "Debugging", "Random"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Validation

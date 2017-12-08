@@ -22,8 +22,10 @@ internal struct QueryMigrationConfig<Database: Fluent.Database>: MigrationRunnab
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw "no database \(self.database.uid) was found for migrations"
             }
+            
+            let config = try container.make(Database.Connection.Config.self, for: Database.Connection.self)
 
-            return database.makeConnection(using: container).then { conn in
+            return database.makeConnection(from: config, on: container).then { conn in
                 self.migrateBatch(on: conn)
             }
         }

@@ -25,7 +25,7 @@ internal struct SchemaMigrationConfig<
                 throw "no database \(self.database.uid) was found for migrations"
             }
 
-            return database.makeConnection(using: container).then { conn in
+            return try database.makeConnection(from: container.make(for: Database.Connection.self), on: container).then { conn in
                 self.prepareForMigration(on: conn)
             }
         }

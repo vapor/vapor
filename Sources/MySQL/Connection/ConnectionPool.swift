@@ -120,7 +120,7 @@ public final class MySQLConnectionPool {
             user: user,
             password: password,
             database: database,
-            using: container
+            on: container
         ).do { connection in
             let pair = ConnectionPair(connection: connection)
             pair.reserved = true

@@ -3,6 +3,8 @@ import Async
 /// Types conforming to this protocol can be used
 /// as a Fluent database connection for executing queries.
 public protocol DatabaseConnection: QuerySupporting, DatabaseConnectable {
+    associatedtype Config
+    
     /// Closes the database connection when finished.
     func close()
 }

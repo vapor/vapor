@@ -37,15 +37,21 @@ public final class MySQLDatabase : LogSupporting {
 }
 
 extension MySQLDatabase : Database {
+    public typealias Connection = FluentMySQLConnection
+    
     /// Creates a new connection to the database
-    public func makeConnection(using container: Container) -> Future<FluentMySQLConnection> {
+    public func makeConnection(
+        from config: FluentMySQLConnection.Config,
+        on eventloop: EventLoop
+    ) -> Future<FluentMySQLConnection> {
         return MySQLConnection.makeConnection(
             hostname: hostname,
             port: port,
+            ssl: config.ssl,
             user: user,
             password: password,
             database: database,
-            using: container
+            on: eventloop
         ).map { connection in
             return FluentMySQLConnection(connection: connection, logger: self.logger)
         }

@@ -35,7 +35,7 @@ extension Container {
                 throw "no database with id '\(database)' configured"
             }
 
-            return db.makeConnection(using: self)
+            return try db.makeConnection(from: self.make(for: Database.Connection.self), on: self)
         }
     }
 }
@@ -53,7 +53,7 @@ extension Container {
         closure: @escaping (Database.Connection) throws -> F
     ) -> Future<F.Expectation> where F: FutureType {
         return then {
-            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
@@ -72,7 +72,7 @@ extension Container {
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
         return then {
-            let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+            let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
@@ -96,7 +96,7 @@ extension Container {
     internal func requireConnectionPool<Database>(
         to database: DatabaseIdentifier<Database>
     ) throws -> DatabaseConnectionPool<Database> {
-        let cache = try self.make(ConnectionPoolCache.self, for: Any.self)
+        let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
         return try cache.pool(for: database)
     }
 }
@@ -187,7 +187,7 @@ internal final class ConnectionPoolCache {
                 throw "invalid db"
             }
 
-            let new = database.makeConnectionPool(max: 2, using: container)
+            let new = try database.makeConnectionPool(max: 2, using: container.make(for: D.Connection.self), on: container)
             cache[id.uid] = new
             return new
         }

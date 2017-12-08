@@ -49,12 +49,8 @@ public protocol ALPNSupporting: TLSSocket {
 public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
 
 public protocol BasicSSLClientUpgrader {
-    func upgrade(socket: TCPSocket) throws -> Future<BasicSSLClient>
+    func upgrade(socket: TCPSocket, settings: SSLClientSettings) throws -> Future<BasicSSLClient>
 }
-
-//public protocol BasicTLSPeerUpgrader {
-//    func upgrade(socket: TCPSocket) throws -> Future<BasicTLSPeer>
-//}
 
 public final class BasicSSLClient: SSLClient, TLSStream {
     public var settings: SSLClientSettings {
