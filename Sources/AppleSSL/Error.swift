@@ -1,17 +1,28 @@
+import Foundation
+import Debugging
+import Security
+
 /// An SSL Error related to Apple's Security libraries
-public struct AppleSSLError: Swift.Error {
-    /// The reason for this error
-    let reason: Reason
+public struct AppleSSLError: Swift.Error, Debuggable {
+    public var reason: String {
+        return "An error occurred when setting up the SSL connection"
+    }
+    
+    public var identifier: String {
+        return "\(reason)"
+    }
+    
+    let problem: Problem
     
     /// Creates a new error
-    init(_ reason: Reason) {
-        self.reason = reason
+    init(_ problem: Problem) {
+        self.problem = problem
     }
     
     /// These reasons are internal so they cannot be caught publically.
     ///
     /// This allows adding extra error reasons
-    enum Reason {
+    enum Problem {
         /// Creating the SSL context failed
         case cannotCreateContext
         

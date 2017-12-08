@@ -15,7 +15,7 @@ class FluentMySQLTests: XCTestCase {
             database: "vapor_test"
         )
         
-        benchmarker = Benchmarker(database, onFail: XCTFail)
+        benchmarker = Benchmarker(database, config: .init(), onFail: XCTFail)
         
         try! benchmarker.pool.requestConnection().then { conn -> Future<Void> in
             return conn.disableReferences().then { _ -> Future<Void> in

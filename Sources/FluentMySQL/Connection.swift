@@ -15,6 +15,8 @@ struct InvalidConnectionType: Error{}
 
 /// A Fluent wrapper around a MySQL connection that can log
 public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, ReferenceSupporting {
+    public typealias Config = FluentMySQLConfig
+    
     public func close() {
         self.connection.close()
     }

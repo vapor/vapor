@@ -1,4 +1,6 @@
 import Async
+import TCP
+import TLS
 import Bits
 import COpenSSL
 import Dispatch
@@ -15,134 +17,37 @@ enum SSLSettings {
     }()
 }
 
-public final class SSLStream: Async.Stream, ClosableStream {
-    /// See OutputStream.Output
-    public typealias Output = ByteBuffer
-    
-    /// See InputStream.Input
-    public typealias Input = ByteBuffer
+internal protocol OpenSSLStream: TLSStream {
+    var socket: TCPSocket { get set }
     
     /// The `SSL` context that manages this stream
-    var ssl: UnsafeMutablePointer<SSL>?
+    var ssl: UnsafeMutablePointer<SSL> { get }
     
     /// The `SSL` context that manages this stream
-    var context: UnsafeMutablePointer<SSL_CTX>?
+    var context: UnsafeMutablePointer<SSL_CTX> { get }
     
     /// The file descriptor to write to/from
-    var descriptor: Int32
-    
-    /// The underlying TCP socket
-    let socket: ClosableStream
+    var descriptor: Int32 { get set }
     
     /// The queue to read on
-    let queue: DispatchQueue
+    var queue: DispatchQueue { get }
+    
+    var connected: Promise<Void> { get }
     
     /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
-    let readSource: DispatchSourceRead
-    
-    /// Keeps track of if the readSource is activated
-    var reading = false
+    var readSource: DispatchSourceRead { get }
     
     /// A buffer of all data that still needs to be written
-    var writeQueue = [Data]()
+    var writeQueue: [Data] { get set }
     
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
-    let writeSource: DispatchSourceWrite
-    
-    /// Keeps track of if the writeSource is activated
-    var writing = false
-    
-    /// A buffer storing all deciphered data received from the remote
-    let outputBuffer = MutableByteBuffer(start: .allocate(capacity: Int(UInt16.max)), count: Int(UInt16.max))
+    var writeSource: DispatchSourceWrite { get }
     
     /// Use a basic output stream to implement server output stream.
-    internal var outputStream: BasicStream<Output> = .init()
+    var outputStream: BasicStream<Output> { get }
+}
 
-    deinit {
-        outputBuffer.baseAddress?.deallocate(capacity: outputBuffer.count)
-    }
-    
-    /// Creates a new SSLStream on top of a socket
-    public init<ByteStream>(socket: ByteStream, descriptor: Int32, queue: DispatchQueue) throws where
-        ByteStream: Async.Stream,
-        ByteStream.Output == ByteBuffer,
-        ByteStream.Input == ByteBuffer
-    {
-        self.socket = socket
-        self.descriptor = descriptor
-        self.queue = queue
-        
-        self.readSource = DispatchSource.makeReadSource(fileDescriptor: descriptor, queue: queue)
-        self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: descriptor, queue: queue)
-        
-        self.writeSource.setEventHandler {
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-            
-            let data = self.writeQueue[0]
-            
-            data.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = UnsafeBufferPointer(start: pointer, count: data.count)
-                
-                do {
-                    try self.write(from: buffer)
-                    _ = self.writeQueue.removeFirst()
-                } catch {
-                    self.onError(error)
-                }
-            }
-            
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-        }
-    }
-    
-    /// Writes the buffer to this SSL socket
-    @discardableResult
-    public func write(from buffer: ByteBuffer) throws -> Int {
-        guard let ssl = ssl else {
-            close()
-            throw OpenSSLError(.noSSLContext)
-        }
-        
-        let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
-        
-        guard written > 0 else {
-            if written == 0 {
-                self.close()
-                return 0
-            } else {
-                throw OpenSSLError(.sslError(SSL_get_error(ssl, written)))
-            }
-        }
-        
-        return numericCast(written)
-    }
-    
-    /// Reads from this SSL socket
-    @discardableResult
-    public func read(into buffer: MutableByteBuffer) throws -> Int {
-        guard let ssl = ssl else {
-            close()
-            throw OpenSSLError(.noSSLContext)
-        }
-        
-        let read = SSL_read(ssl, buffer.baseAddress!, Int32(buffer.count))
-        
-        if read == 0 {
-            self.close()
-            return 0
-        } else if read < 0 {
-            throw OpenSSLError(.sslError(SSL_get_error(ssl, read)))
-        }
-        
-        return numericCast(read)
-    }
-
+extension OpenSSLStream {
     /// See InputStream.onInput
     public func onInput(_ input: ByteBuffer) {
         do {
@@ -159,7 +64,7 @@ public final class SSLStream: Async.Stream, ClosableStream {
     }
 
     /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, SSLStream.Output == I.Input {
+    public func onOutput<I>(_ input: I) where I: Async.InputStream, I.Input == ByteBuffer {
         outputStream.onOutput(input)
     }
 
@@ -177,12 +82,42 @@ public final class SSLStream: Async.Stream, ClosableStream {
     }
     
     public func close() {
-        guard reading else {
-            socket.close()
-            return
+        readSource.cancel()
+        self.socket.close()
+        outputStream.close()
+    }
+}
+
+extension OpenSSLStream {
+    /// Writes the buffer to this SSL socket
+    @discardableResult
+    func write(from buffer: ByteBuffer) throws -> Int {
+        let written = SSL_write(ssl, buffer.baseAddress, Int32(buffer.count))
+        
+        guard written == buffer.count else {
+            if written == 0 {
+                self.close()
+                return 0
+            } else {
+                throw OpenSSLError(.sslError(SSL_get_error(ssl, written)))
+            }
         }
         
-        readSource.cancel()
-        outputStream.close()
+        return numericCast(written)
+    }
+    
+    /// Reads from this SSL socket
+    @discardableResult
+    func read(into buffer: MutableByteBuffer) throws -> Int {
+        let read = SSL_read(ssl, buffer.baseAddress!, Int32(buffer.count))
+        
+        if read == 0 {
+            self.close()
+            return 0
+        } else if read < 0 {
+            throw OpenSSLError(.sslError(SSL_get_error(ssl, read)))
+        }
+        
+        return numericCast(read)
     }
 }

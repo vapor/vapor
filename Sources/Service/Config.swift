@@ -1,5 +1,3 @@
-extension String: Error { }
-
 /// Types conforming to this protocol can be used by
 /// the service container to disambiguate situations where
 /// multiple services are available for a given `.make()` request.
@@ -44,7 +42,7 @@ public struct Config {
         let specific = ServiceIdentifier(interface: interface, client: client)
         let all = ServiceIdentifier(interface: interface, client: nil)
         guard let preference = preferences[specific] ?? preferences[all] else {
-            throw "Please choose which \(interface) you prefer, multiple are available: \(available.readable)"
+            throw ServiceError(.other(identifier: "invalid-interface", reason: "Please choose which \(interface) you prefer, multiple are available: \(available.readable)"))
         }
 
         let chosen = available.filter { factory in
@@ -59,9 +57,9 @@ public struct Config {
 
         guard chosen.count == 1 else {
             if chosen.count < 1 {
-                throw "No service \(preference.type) (\(preference.tag ?? "*")) has been registered for \(interface)."
+                throw ServiceError(.other(identifier: "invalid-tag", reason: "No service \(preference.type) (\(preference.tag ?? "*")) has been registered for \(interface)."))
             } else {
-                throw "Too many services were found"
+                throw ServiceError(.other(identifier: "multiple-matching-tag", reason: "Too many services were found mathcing this tag"))
             }
 
         }
@@ -82,12 +80,12 @@ public struct Config {
         }
 
         guard requirement.type == chosen.serviceType else {
-            throw "\(interface) \(chosen.serviceType) is not required type \(requirement.type)."
+            throw ServiceError(.other(identifier: "type-not-required", reason: "\(interface) \(chosen.serviceType) is not required type \(requirement.type)."))
         }
 
         if let tag = requirement.tag {
             guard chosen.serviceTag == tag else {
-                throw "\(chosen.serviceType) tag \(chosen.serviceTag ?? "none") does not equal \(tag)"
+                throw ServiceError(.other(identifier: "tag-not-matching", reason: "\(chosen.serviceType) tag \(chosen.serviceTag ?? "none") does not equal \(tag)"))
             }
         }
     }

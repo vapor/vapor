@@ -22,6 +22,9 @@ public final class HTTPClient: Async.Stream, ClosableStream {
 
     /// Serializes the inputted `Request`s
     private let serializer: RequestSerializer
+    
+    /// Keeps track of whether the client is closed
+    private var isClosed = false
 
     /// Use a basic stream to easily implement our output stream.
     private let outputStream: BasicStream<Output>
@@ -43,6 +46,11 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         self.serializer = RequestSerializer()
         self.outputStream = .init()
         self.socket = socket
+        
+        socket.finally {
+            self.isClosed = true
+            self.inFlight?.fail(HTTPError(identifier: "stream-closed", reason: "The stream was closed before a response was received"))
+        }
 
         /// FIXME: is there a way to support end users
         /// setting an output stream as well?
@@ -67,7 +75,11 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         if let inFlight = self.inFlight {
             /// complete the current in flight request
             /// before sending the next one
-            return inFlight.future.then { _ in
+            return inFlight.future.then { _ -> Future<HTTPResponse> in
+                if self.isClosed {
+                    return Future(error: HTTPError(identifier: "socket-closed", reason: "The socket was closed before the request was sent"))
+                }
+                
                 return self._send(request: request)
             }
         } else {

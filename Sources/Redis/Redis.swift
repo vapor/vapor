@@ -127,9 +127,10 @@ extension RedisClient {
         hostname: String = "localhost",
         port: UInt16 = 6379,
         on eventLoop: EventLoop
-    ) throws -> RedisClient {
+    ) throws -> Future<RedisClient> {
         let client = try TCPClient(on: eventLoop)
-        try client.connect(hostname: hostname, port: port)
-        return RedisClient(socket: client)
+        return try client.connect(hostname: hostname, port: port).map {
+            return RedisClient(socket: client)
+        }
     }
 }

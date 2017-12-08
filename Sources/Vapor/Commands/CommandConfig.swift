@@ -69,7 +69,7 @@ public struct CommandConfig {
             if let lazy = self.defaultRunnable {
                 try lazy(container).run(using: console, with: input)
             } else {
-                throw "No default command"
+                throw VaporError(identifier: "no-default-command", reason: "There is no default command in Vapor")
             }
         }
     }

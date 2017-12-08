@@ -58,6 +58,7 @@ public final class TCPClient: Async.Stream {
     public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
         self.eventLoop = eventLoop
+        self.inputBuffer = []
 
         // Allocate one TCP packet
         let size = 65_507
@@ -113,8 +114,9 @@ public final class TCPClient: Async.Stream {
     }
 
     /// Attempts to connect to a server on the provided hostname and port
-    public func connect(hostname: String, port: UInt16) throws {
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try self.socket.connect(hostname: hostname, port: port)
+        return self.connected.future
     }
 
     /// See InputStream.onInput
@@ -293,7 +295,7 @@ public final class TCPClient: Async.Stream {
 
             writeSource = source
             return source
-        }
+        
 
         return source
     }

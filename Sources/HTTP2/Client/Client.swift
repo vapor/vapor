@@ -13,7 +13,7 @@ enum Constants {
 /// An HTTP/2 client is similar to an HTTP/1 client, only using another protocol with a slightly different set of features
 public final class HTTP2Client {
     /// HTTP/2 only runs over TLS
-    let client: TLSClient
+    let client: ClosableStream
     
     /// All streams share the connection and it's context
     let context: ConnectionContext
@@ -66,8 +66,8 @@ public final class HTTP2Client {
         return promise.future
     }
     
-    /// Upgrades an existing TLSClient to use HTTP/2
-    init(upgrading client: TLSClient) {
+    /// Upgrades an existing SSLClient to use HTTP/2
+    init<Client: TLSStream & SSLClient>(client: Client) {
         self.client = client
         self.context = ConnectionContext(
             parser: FrameParser(maxFrameSize: settings.maxFrameSize),

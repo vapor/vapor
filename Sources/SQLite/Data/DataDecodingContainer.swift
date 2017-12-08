@@ -18,7 +18,7 @@ internal final class DataDecodingContainer: SingleValueDecodingContainer {
 
     func decode(_ type: Int.Type) throws -> Int {
         guard let int = decoder.data.fuzzyInt else {
-            throw "could not get itn"
+            fatalError("todo")
         }
         return int
     }
@@ -65,14 +65,14 @@ internal final class DataDecodingContainer: SingleValueDecodingContainer {
 
     func decode(_ type: Double.Type) throws -> Double {
         guard let double = decoder.data.fuzzyDouble else {
-            throw "could not get double"
+            fatalError("todo")
         }
         return double
     }
 
     func decode(_ type: String.Type) throws -> String {
         guard let string = decoder.data.fuzzyString else {
-            throw "could not get string"
+            fatalError("todo")
         }
         return string
     }

@@ -12,7 +12,7 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
     public func execute(schema: DatabaseSchema) -> Future<Void> {
         return then {
             guard schema.removeReferences.count <= 0 else {
-                throw "SQLite does not support deleting foreign keys"
+                throw FluentSQLiteError(identifier: "foreignkeys-unsupported", reason: "SQLite does not support deleting foreign keys")
             }
 
             let schemaQuery = schema.makeSchemaQuery()

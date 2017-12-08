@@ -1,4 +1,5 @@
 import Async
+import Service
 
 /// Helper struct for configuring Fluent migrations.
 public struct MigrationConfig {
@@ -8,6 +9,23 @@ public struct MigrationConfig {
     /// Create a new migration config helper.
     public init() {
         self.storage = [:]
+    }
+    
+    /// Adds a migration to the config.
+    public mutating func add<Migration: Fluent.Migration & Fluent.Model, Database> (
+        model: Migration.Type
+    ) where Migration.Database == Database {
+        var config: QueryMigrationConfig<Database>
+        let database = Migration.database
+        
+        if let existing = storage[database.uid] as? QueryMigrationConfig<Database> {
+            config = existing
+        } else {
+            config = .init(database: database)
+        }
+        
+        config.add(migration: Migration.self)
+        storage[database.uid] = config
     }
 
     /// Adds a migration to the config.
@@ -49,5 +67,5 @@ public struct MigrationConfig {
 /// We need this protocol because we lose some database type
 /// info in our MigrationConfig storage.
 internal protocol MigrationRunnable {
-    func migrate(using databases: Databases, on eventLoop: EventLoop) -> Future<Void>
+    func migrate(using databases: Databases, using container: Container) -> Future<Void>
 }

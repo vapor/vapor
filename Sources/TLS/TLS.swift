@@ -1,89 +1,103 @@
-#if (os(macOS) || os(iOS)) && !OPENSSL
-    import AppleSSL
-#else
-    import OpenSSL
-#endif
-
 import Async
+import TCP
 import Bits
 import Dispatch
-import TCP
 
-/// A Client (used for connecting to servers) that uses the platform specific SSL library.
-public final class TLSClient: Async.Stream, ClosableStream {
-    /// See OutputStream.Output
+public struct SSLClientSettings {
+    public init() {}
+    
+    public var clientCertificate: String?
+    public var trustedCAFilePaths = [String]()
+    public var peerDomainName: String?
+}
+
+public struct TLSServerSettings {
+    public init(serverCertificate: String) {
+        self.serverCertificate = serverCertificate
+    }
+    
+    public var serverCertificate: String
+}
+
+public enum TLSSide {
+    case client(SSLClientSettings)
+    case server(TLSServerSettings)
+}
+
+public protocol TLSSocket: ClosableStream {
+    func onError(_ error: Error)
+    func onInput(_ input: ByteBuffer)
+    func onOutput<I>(_ input: I) where I : InputStream, I.Input == ByteBuffer
+}
+
+public protocol SSLClient: TLSSocket {
+    var settings: SSLClientSettings { get set }
+    var peerDomainName: String? { get set }
+    
+    func connect(hostname: String, port: UInt16) throws -> Future<Void>
+}
+
+public protocol TLSServer: TLSSocket {
+    var settings: TLSServerSettings { get set }
+}
+
+public protocol ALPNSupporting: TLSSocket {
+    var ALPNprotocols: [String] { get set }
+    var selectedProtocol: String? { get }
+}
+
+public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
+
+public protocol BasicSSLClientUpgrader {
+    func upgrade(socket: TCPSocket, settings: SSLClientSettings) throws -> Future<BasicSSLClient>
+}
+
+public final class BasicSSLClient: SSLClient, TLSStream {
+    public var settings: SSLClientSettings {
+        get {
+            return client.settings
+        }
+        set {
+            client.settings = newValue
+        }
+    }
+    
+    let client: SSLClient
+    public let alpnSupporting: ALPNSupporting?
+    public var peerDomainName: String?
+    
+    let outputStream = BasicStream<ByteBuffer>()
+    
+    public typealias Input = ByteBuffer
     public typealias Output = ByteBuffer
     
-    /// See InputStream.Input
-    public typealias Input = ByteBuffer
-    
-    /// The AppleSSL (macOS/iOS) or OpenSSL (Linux) stream
-    let ssl: SSLStream
-    
-    /// The TCP that is used in the SSL Stream
-    public let client: TCPClient
-    
-    /// A DispatchQueue on which this Client executes all operations
-    let queue: DispatchQueue
-    
-    /// The certificate used by the client, if any
-    public var clientCertificatePath: String? = nil
-    
-    public var protocols = [String]() {
-        didSet {
-            preferences = ALPNPreferences(array: protocols)
-        }
-    }
-    
-    var preferences: ALPNPreferences = []
-    
-    /// Creates a new `TLSClient` by specifying a queue.
-    ///
-    /// Can throw an error if the initialization phase fails
-    public init(on eventLoop: EventLoop) throws {
-        let socket = try TCPSocket()
-        
-        self.queue = eventLoop.queue
-        self.client = TCPClient(socket: socket, on: eventLoop)
-        self.ssl = try SSLStream(socket: self.client, descriptor: socket.descriptor, queue: queue)
-    }
-    
-    /// Attempts to connect to a server on the provided hostname and port
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-    try client.connect(hostname: hostname, port: port)
-        var options = [SSLOption]()
-
-        options.append(.peerDomainName(hostname))
-
-        if self.protocols.count > 0 {
-            options.append(.alpn(protocols: self.preferences))
-        }
-
-        return try self.ssl.initializeClient(options: options).map(ssl.start)
-    }
-
-    /// See InputStream.onInput
     public func onInput(_ input: ByteBuffer) {
-        ssl.onInput(input)
+        client.onInput(input)
     }
-
-    /// See InputStream.onError
+    
     public func onError(_ error: Error) {
-        ssl.onError(error)
+        client.onError(error)
     }
-
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, TLSClient.Output == I.Input {
-        ssl.onOutput(input)
+    
+    public func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
+        client.onOutput(input)
     }
-
-    /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        ssl.onClose(onClose)
-    }
-
-    /// See CloseableStream.close
+    
     public func close() {
-        ssl.close()
+        client.close()
+    }
+    
+    public func onClose(_ onClose: ClosableStream) {
+        client.onClose(onClose)
+    }
+    
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        client.peerDomainName = hostname
+        return try client.connect(hostname: hostname, port: port)
+    }
+    
+    public init<Socket: TLSStream & SSLClient>(boxing socket: Socket) {
+        self.client = socket
+        self.alpnSupporting = socket as? ALPNSupporting
     }
 }
