@@ -70,7 +70,7 @@ fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer
     let lengthRequested = length.pointee
     
     // read encrypted data
-    var readCount = Darwin.recv(socket, pointer, lengthRequested, 0)
+    var readCount = Darwin.read(socket, pointer, lengthRequested)
     
     // The length pointer needs to be updated to indicate the received bytes
     length.initialize(to: readCount)

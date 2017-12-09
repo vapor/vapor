@@ -6,7 +6,7 @@ import Dispatch
 import TLS
 import TCP
 
-public final class AppleSSLClient: AppleSSLStream, SSLClient {
+public final class AppleSSLPeer: AppleSSLStream, SSLPeer {
     public typealias Output = ByteBuffer
     
     var handshakeComplete = false
@@ -19,9 +19,7 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
     
     var readSource: DispatchSourceRead
     
-    public var settings: SSLClientSettings
-    
-    public var peerDomainName: String?
+    public var settings: SSLServerSettings
     
     let connected = Promise<Void>()
     
@@ -39,30 +37,21 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
     
     var outputStream = BasicStream<ByteBuffer>()
     
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        if let peerDomainName = peerDomainName {
-            try assert(status: SSLSetPeerDomainName(context, peerDomainName, peerDomainName.count))
-        }
-        
-        try socket.connect(hostname: hostname, port: port)
-        
-        try self.initialize()
-        
-        return connected.future
-    }
-    
-    public convenience init(settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    public convenience init(settings: SSLServerSettings, on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    public init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    public init(upgrading socket: TCPSocket, settings: SSLServerSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
         self.writeQueue = []
         
-        guard let context = SSLCreateContext(nil, .clientSide, .streamType) else {
+        self.descriptor = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
+        self.descriptor.pointee = self.socket.descriptor
+        
+        guard let context = SSLCreateContext(nil, .serverSide, .streamType) else {
             throw AppleSSLError(.cannotCreateContext)
         }
         
@@ -76,16 +65,17 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         
         self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
         
-        self.descriptor = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
-        self.descriptor.pointee = self.socket.descriptor
-        
-        if let clientCertificate = settings.clientCertificate {
-            try self.setCertificate(to: clientCertificate, for: context)
-        }
-        
         self.initializeDispatchSources()
         
-        self.readSource.resume()
+        defer {
+            // Required, cannot deinitialize a non-running readsource
+            self.readSource.resume()
+        }
+        
+        try self.setCertificate(to: settings.serverCertificate, for: context)
+        
+        try self.initialize()
+        
         self.writeSource.resume()
     }
     

@@ -255,6 +255,12 @@ public final class TCPClient: Async.Stream, ClosableStream {
         didClose()
     }
     
+    public func disableReadSource() {
+        print("suspend")
+        self.readSource?.cancel()
+        self.readSource?.suspend()
+    }
+    
     /// Attempts to connect to a server on the provided hostname and port
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         try self.socket.connect(hostname: hostname, port: port)

@@ -42,16 +42,16 @@ public final class TCPServer: Async.OutputStream, ClosableStream {
     private var outputStream: BasicStream<Output> = .init()
 
     /// Creates a TCP server from an existing TCP socket.
-    public init(socket: TCPSocket, eventLoops: [EventLoop]) {
+    public init(socket: TCPSocket, eventLoops: [EventLoop], acceptQueue: DispatchQueue) {
         self.socket = socket
-        self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server", qos: .background)
+        self.queue = acceptQueue
         self.eventLoops = eventLoops
         self.eventLoopsIterator = LoopIterator(collection: eventLoops)
     }
 
     /// Creates a new socket
-    public convenience init(eventLoops: [EventLoop]) throws {
-        try self.init(socket: .init(), eventLoops: eventLoops)
+    public convenience init(eventLoops: [EventLoop], acceptQueue: DispatchQueue) throws {
+        try self.init(socket: .init(), eventLoops: eventLoops, acceptQueue: acceptQueue)
     }
 
     /// Starts listening for peers asynchronously

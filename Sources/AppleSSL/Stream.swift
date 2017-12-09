@@ -44,6 +44,8 @@ protocol AppleSSLStream: TLSStream {
     
     /// Use a basic output stream to implement server output stream.
     var outputStream: BasicStream<Output> { get }
+    
+    var outputBuffer: MutableByteBuffer { get }
 }
 
 extension AppleSSLStream {
@@ -76,5 +78,71 @@ extension AppleSSLStream {
         socket.close()
         
         outputStream.close()
+    }
+    
+    func initializeDispatchSources() {
+        self.writeSource.setEventHandler {
+            guard self.connected.future.isCompleted else {
+                self.handshake()
+                self.writeSource.suspend()
+                return
+            }
+            
+            guard self.writeQueue.count > 0 else {
+                self.writeSource.suspend()
+                return
+            }
+            
+            let data = self.writeQueue[0]
+            
+            let (status, processed) = data.withUnsafeBytes { (pointer: BytesPointer) -> (OSStatus, Int) in
+                var processed = 0
+                
+                let status = SSLWrite(self.context, pointer, data.count, &processed)
+                
+                return (status, processed)
+            }
+            
+            if status == 0, processed == data.count {
+                _ = self.writeQueue.removeFirst()
+            } else {
+                self.writeQueue[0].removeFirst(processed)
+            }
+            
+            guard self.writeQueue.count > 0 else {
+                self.writeSource.suspend()
+                return
+            }
+        }
+        
+        self.readSource.setEventHandler {
+            guard self.connected.future.isCompleted else {
+                self.handshake()
+                return
+            }
+            
+            let read = self.read(into: self.outputBuffer)
+            
+            guard read > 0 else {
+                // need to close!!! gah
+                self.close()
+                return
+            }
+            
+            // create a view into the internal buffer and
+            // send to the output stream
+            let bufferView = ByteBuffer(
+                start: self.outputBuffer.baseAddress,
+                count: read
+            )
+            
+            self.outputStream.onInput(bufferView)
+        }
+        
+        self.readSource.setCancelHandler {
+            SSLClose(self.context)
+            
+            self.close()
+        }
     }
 }

@@ -1,4 +1,5 @@
 import Async
+import TLS
 import JunkDrawer
 import Dispatch
 import Fluent
@@ -17,13 +18,18 @@ let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
 extension Request: DatabaseConnectable {}
 
 do {
-
     var services = Services.default()
 
     services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
     try services.register(LeafProvider())
     try services.register(FluentProvider())
     try services.register(SQLiteProvider())
+    
+    var engineConfig = EngineServerConfig()
+    engineConfig.ssl = EngineServerSSLConfig(settings: SSLServerSettings(serverCertificate: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.der"))
+    engineConfig.ssl?.port = 8081
+    
+    services.register(engineConfig)
 
     var databaseConfig = DatabaseConfig()
     databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
