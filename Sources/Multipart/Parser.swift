@@ -15,7 +15,7 @@ public final class MultipartParser {
     fileprivate let fullBoundary: [UInt8]
     
     /// The multipart form data to parse
-    fileprivate let data: ByteBuffer
+    fileprivate let data: Data
     
     /// The current position, used for parsing
     var position = 0
@@ -24,8 +24,8 @@ public final class MultipartParser {
     var multipart: MultipartForm
     
     /// Creates a new parser for a Multipart form
-    public init(buffer: ByteBuffer, boundary: [UInt8]) {
-        self.data = buffer
+    public init(body: HTTPBody, boundary: [UInt8]) {
+        self.data = body.data ?? Data()
         self.boundary = boundary
         self.multipart = MultipartForm(parts: [], boundary: boundary)
         self.fullBoundary = [.carriageReturn, .newLine, .hyphen, .hyphen] + boundary
@@ -132,8 +132,12 @@ public final class MultipartParser {
         contentSeek: while true {
             try require(fullBoundary.count)
             
+            let matches = data.withByteBuffer { buffer in
+                return buffer[base] == fullBoundary[0] && buffer[base &+ 1] == fullBoundary[1] && memcmp(fullBoundary, buffer.baseAddress!.advanced(by: base), fullBoundary.count) == 0
+            }
+            
             // The first 2 bytes match, check if a boundary is hit
-            if data[base] == fullBoundary[0], data[base &+ 1] == fullBoundary[1], memcmp(fullBoundary, data.baseAddress!.advanced(by: base), fullBoundary.count) == 0 {
+            if matches {
                 defer { position = base }
                 return Data(data[position..<base])
             }
@@ -170,8 +174,12 @@ public final class MultipartParser {
             // skip '--'
             position = position &+ 2
             
+            let matches = data.withByteBuffer { buffer in
+                return memcmp(buffer.baseAddress!.advanced(by: position), boundary, boundary.count) == 0
+            }
+            
             // check boundary
-            guard memcmp(data.baseAddress!.advanced(by: position), boundary, boundary.count) == 0 else {
+            guard matches else {
                 throw MultipartError(identifier: "multipart:boundary", reason: "Wrong boundary")
             }
             

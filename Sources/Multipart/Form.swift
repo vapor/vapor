@@ -30,7 +30,7 @@ public struct MultipartForm {
     public var parts: [Part]
     
     /// The multipart's boundary
-    var boundary: [UInt8]
+    public var boundary: [UInt8]
     
     /// Gets the `String` associated with the `name`. Throws an error if there is no `String` encoded as UTF-8
     ///
