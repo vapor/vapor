@@ -3,9 +3,12 @@ import TCP
 import Security
 import TLS
 
+/// Upgrades TCP Sockets to a BasicSSLClient reliant on the Apple Secure Transport libraries
 public final class AppleSSLClientUpgrader: SSLClientUpgrader {
+    /// Creates a new upgrader
     public init() {}
     
+    /// Upgrades a client socket
     public func upgrade(socket: TCPSocket, settings: SSLClientSettings, eventLoop: EventLoop) throws -> Future<BasicSSLClient> {
         let client = try AppleSSLClient(upgrading: socket, settings: settings, on: eventLoop)
         
@@ -19,9 +22,12 @@ public final class AppleSSLClientUpgrader: SSLClientUpgrader {
     }
 }
 
+/// Upgrades TCP Sockets to a BasicSSLPeer reliant on the Apple Secure Transport libraries
 public final class AppleSSLPeerUpgrader: SSLPeerUpgrader {
+    /// Creates a new upgrader
     public init() {}
     
+    /// Upgrades a remote peer socket
     public func upgrade(socket: TCPSocket, settings: SSLServerSettings, eventLoop: EventLoop) throws -> Future<BasicSSLPeer> {
         let peer = try AppleSSLPeer(upgrading: socket, settings: settings, on: eventLoop)
         
