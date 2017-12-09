@@ -6,27 +6,35 @@ import Dispatch
 import TLS
 import TCP
 
+/// An SSL server-side connection that makes use of Apple's Security libraries
 public final class AppleSSLPeer: AppleSSLStream, SSLPeer {
     public typealias Output = ByteBuffer
     
-    var handshakeComplete = false
-    
-    var writeSource: DispatchSourceWrite
-    
+    /// The underlying socket
     var socket: TCPSocket
     
+    /// A buffer of all data that still needs to be written
     var writeQueue: [Data]
     
+    /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
+    var writeSource: DispatchSourceWrite
+    
+    /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
     var readSource: DispatchSourceRead
     
+    /// The SSL server side connection's settings
     public var settings: SSLServerSettings
     
+    /// Keeps track of the successful or unsuccessful handshake and connection phase
     let connected = Promise<Void>()
     
+    /// A pointer to the descriptor to be used for the SSLContext
     var descriptor: UnsafeMutablePointer<Int32>
     
+    /// The `SSLContext` that manages this stream
     let context: SSLContext
     
+    /// The queue to read on
     var queue: DispatchQueue
     
     /// A buffer storing all deciphered data received from the remote
@@ -35,15 +43,11 @@ public final class AppleSSLPeer: AppleSSLStream, SSLPeer {
         count: Int(UInt16.max)
     )
     
+    /// Use a basic output stream to implement socket output stream.
     var outputStream = BasicStream<ByteBuffer>()
     
-    public convenience init(settings: SSLServerSettings, on eventLoop: EventLoop) throws {
-        let socket = try TCPSocket()
-        
-        try self.init(upgrading: socket, settings: settings, on: eventLoop)
-    }
-    
-    public init(upgrading socket: TCPSocket, settings: SSLServerSettings, on eventLoop: EventLoop) throws {
+    /// Upgrades an existing TCP socket
+    init(upgrading socket: TCPSocket, settings: SSLServerSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
         self.writeQueue = []

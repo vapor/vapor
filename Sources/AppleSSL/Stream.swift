@@ -18,22 +18,22 @@ import TCP
 ///
 /// https://developer.apple.com/documentation/security/secure_transport
 protocol AppleSSLStream: TLSStream {
+    /// The underlying socket
     var socket: TCPSocket { get set }
     
+    /// A pointer to the descriptor to be used for the SSLContext
     var descriptor: UnsafeMutablePointer<Int32> { get }
 
     /// The `SSLContext` that manages this stream
     var context: SSLContext { get }
     
-    /// Indicates the handshake is completed and normal socket operations can work
-    var handshakeComplete: Bool { get set }
-
     /// The queue to read on
     var queue: DispatchQueue { get }
     
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
     var writeSource: DispatchSourceWrite { get }
     
+    /// Keeps track of the successful or unsuccessful handshake and connection phase
     var connected: Promise<Void> { get }
     
     /// A buffer of all data that still needs to be written
@@ -42,9 +42,10 @@ protocol AppleSSLStream: TLSStream {
     /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
     var readSource: DispatchSourceRead { get }
     
-    /// Use a basic output stream to implement server output stream.
+    /// Use a basic output stream to implement socket output stream.
     var outputStream: BasicStream<Output> { get }
     
+    /// A buffer storing all deciphered data received from the remote
     var outputBuffer: MutableByteBuffer { get }
 }
 

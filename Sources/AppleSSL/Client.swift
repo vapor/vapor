@@ -6,29 +6,38 @@ import Dispatch
 import TLS
 import TCP
 
+/// An SSL Client connection that makes use of Apple's Security libraries
 public final class AppleSSLClient: AppleSSLStream, SSLClient {
     public typealias Output = ByteBuffer
     
-    var handshakeComplete = false
-    
-    var writeSource: DispatchSourceWrite
-    
+    /// The underlying socket
     var socket: TCPSocket
     
+    /// A buffer of all data that still needs to be written
     var writeQueue: [Data]
     
+    /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
+    var writeSource: DispatchSourceWrite
+    
+    /// Keeps a strong reference to the DispatchSourceRead so it keeps reading
     var readSource: DispatchSourceRead
     
+    /// The SSL client's settings
     public var settings: SSLClientSettings
     
+    /// The remote peer's domain name
     public var peerDomainName: String?
     
+    /// Keeps track of the successful or unsuccessful handshake and connection phase
     let connected = Promise<Void>()
     
+    /// A pointer to the descriptor to be used for the SSLContext
     var descriptor: UnsafeMutablePointer<Int32>
     
+    /// The `SSLContext` that manages this stream
     let context: SSLContext
     
+    /// The queue to read on
     var queue: DispatchQueue
     
     /// A buffer storing all deciphered data received from the remote
@@ -37,8 +46,10 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         count: Int(UInt16.max)
     )
     
+    /// Use a basic output stream to implement socket output stream.
     var outputStream = BasicStream<ByteBuffer>()
     
+    /// Connects and handshakes to the remote server
     public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
         if let peerDomainName = peerDomainName {
             try assert(status: SSLSetPeerDomainName(context, peerDomainName, peerDomainName.count))
@@ -51,13 +62,15 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         return connected.future
     }
     
+    /// Creates a new SSL connection
     public convenience init(settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    public init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    /// Upgrades an existing TCP socket
+    init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
         self.writeQueue = []
