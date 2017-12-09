@@ -255,8 +255,8 @@ public final class TCPClient: Async.Stream, ClosableStream {
         didClose()
     }
     
+    /// Disables the read source so that another read source (such as for SSL) can take over
     public func disableReadSource() {
-        print("suspend")
         self.readSource?.cancel()
         self.readSource?.suspend()
     }
