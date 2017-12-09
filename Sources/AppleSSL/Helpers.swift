@@ -9,14 +9,14 @@ extension AppleSSLStream {
         let result = SSLHandshake(context)
         
         // If the success is immediate
-        if result == errSecSuccess || result == errSSLPeerAuthCompleted {
+        if result == errSecSuccess {
             self.connected.complete()
-            self.handshakeComplete = true
             return
         }
         
         guard result == errSSLWouldBlock else {
             self.connected.fail(AppleSSLError(.sslError(result)))
+            self.close()
             return
         }
     }

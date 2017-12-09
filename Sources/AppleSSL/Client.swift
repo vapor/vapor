@@ -42,8 +42,6 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         try socket.connect(hostname: hostname, port: port)
         
         try self.initialize()
-        self.readSource.resume()
-        self.writeSource.resume()
         
         return connected.future
     }
@@ -87,10 +85,12 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         
         self.descriptor = UnsafeMutablePointer<Int32>.allocate(capacity: 1)
         self.descriptor.pointee = self.socket.descriptor
+        var handshakeSent = false
         
         self.writeSource.setEventHandler {
-            guard self.handshakeComplete else {
+            guard handshakeSent else {
                 self.writeSource.suspend()
+                handshakeSent = true
                 self.handshake()
                 return
             }
@@ -101,7 +101,6 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
             }
             
             let data = self.writeQueue[0]
-            
             
             let (status, processed) = data.withUnsafeBytes { (pointer: BytesPointer) -> (OSStatus, Int) in
                 var processed = 0
@@ -124,7 +123,7 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         }
         
         self.readSource.setEventHandler {
-            guard self.handshakeComplete else {
+            guard self.connected.future.isCompleted else {
                 self.handshake()
                 return
             }
@@ -152,6 +151,9 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
             
             self.close()
         }
+        
+        self.readSource.resume()
+        self.writeSource.resume()
     }
     
     deinit {
