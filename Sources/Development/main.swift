@@ -26,7 +26,14 @@ do {
     try services.register(SQLiteProvider())
     
     var engineConfig = EngineServerConfig()
-    engineConfig.ssl = EngineServerSSLConfig(settings: SSLServerSettings(serverCertificate: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.der"))
+    engineConfig.ssl = EngineServerSSLConfig(settings:
+        SSLServerSettings(
+            hostname: "localhost",
+            publicKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.pem",
+            privateKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/private.pem"
+        )
+    )
+    
     engineConfig.ssl?.port = 8081
     
     services.register(engineConfig)

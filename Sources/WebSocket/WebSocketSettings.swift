@@ -47,6 +47,12 @@ public struct WebSocketSettings {
     }
 }
 
+extension String {
+    var isSecure: Bool {
+        return self == "https" || self == "wss"
+    }
+}
+
 extension WebSocketSettings: ExpressibleByArrayLiteral {
     public typealias ArrayLiteralElement = String
 

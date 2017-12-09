@@ -12,11 +12,15 @@ public struct SSLClientSettings {
 }
 
 public struct SSLServerSettings {
-    public init(serverCertificate: String) {
-        self.serverCertificate = serverCertificate
+    public init(hostname: String, publicKey: String, privateKey: String) {
+        self.hostname = hostname
+        self.publicKey = publicKey
+        self.privateKey = privateKey
     }
     
-    public var serverCertificate: String
+    public var hostname: String
+    public var privateKey: String
+    public var publicKey: String
 }
 
 public protocol TLSSocket: ClosableStream {
