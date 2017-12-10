@@ -61,8 +61,8 @@ public final class EngineServer: Server {
         
         tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
-        let mapStream = MapStream<TCPClient, HTTPPeer<TCPClient>>(map: HTTPPeer.init)
-        let server = HTTPServer<HTTPPeer<TCPClient>>(socket: tcp.stream(to: mapStream))
+        let mapStream = MapStream<TCPClient, HTTPPeer>(map: HTTPPeer.init)
+        let server = HTTPServer<HTTPPeer>(socket: tcp.stream(to: mapStream))
         
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
@@ -109,9 +109,9 @@ public final class EngineServer: Server {
             }
         }
         
-        let peerStream = tcp.stream(to: sslStream).map(HTTPPeer<BasicSSLPeer>.init)
+        let peerStream = tcp.stream(to: sslStream).map(HTTPPeer.init)
         
-        let server = HTTPServer<HTTPPeer<BasicSSLPeer>>(socket: peerStream)
+        let server = HTTPServer<HTTPPeer>(socket: peerStream)
         
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
@@ -146,27 +146,19 @@ public final class EngineServer: Server {
     }
 }
 
-fileprivate final class HTTPPeer<Socket: Async.Stream>: Async.Stream, HTTPUpgradable
-    where Socket.Input == ByteBuffer, Socket.Output == ByteBuffer
-{
+fileprivate final class HTTPPeer: Async.Stream, HTTPUpgradable {
     typealias Input = HTTPResponse
     typealias Output = HTTPRequest
-
-    let socket: Socket
+    
     let serializer: ResponseSerializer
     let parser: RequestParser
-    var byteStream: BasicStream<ByteBuffer>
+    var byteStream: DuplexByteStream
 
-    init(socket: Socket) {
-        self.socket = socket
+    init<Socket: Async.Stream>(socket: Socket) where Socket.Input == ByteBuffer, Socket.Output == ByteBuffer {
         serializer = .init()
         parser = .init(maxSize: 10_000_000)
 
-        byteStream = BasicStream<ByteBuffer>.init(
-            onInput: socket.onInput,
-            onError: socket.onError,
-            onClose: socket.close
-        )
+        byteStream = DuplexByteStream(socket)
         serializer.stream(to: socket)
         socket.stream(to: parser)
     }
@@ -176,7 +168,7 @@ fileprivate final class HTTPPeer<Socket: Async.Stream>: Async.Stream, HTTPUpgrad
     }
 
     func onError(_ error: Error) {
-        socket.onError(error)
+        byteStream.onError(error)
     }
 
     func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
@@ -184,11 +176,11 @@ fileprivate final class HTTPPeer<Socket: Async.Stream>: Async.Stream, HTTPUpgrad
     }
 
     func close() {
-        socket.close()
+        byteStream.close()
     }
 
     func onClose(_ onClose: ClosableStream) {
-        socket.onClose(onClose)
+        byteStream.onClose(onClose)
     }
 }
 

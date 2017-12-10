@@ -52,7 +52,10 @@ public final class HTTPServer<HTTPPeer>: Async.OutputStream, ClosableStream wher
             let responderStream = responder()
             client.stream(to: responderStream).drain { res in
                 client.onInput(res)
-                res.onUpgrade?.closure(client)
+                
+                if let onUpgrade = res.onUpgrade {
+                    onUpgrade.closure(client.byteStream)
+                }
             }.catch { err in
                 self.outputStream.onError(err)
                 client.close()
