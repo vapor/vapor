@@ -8,7 +8,7 @@ import Routing
 import Service
 import TLS
 
-#if !os(Linux)
+#if os(Linux)
     import OpenSSL
     let defaultSSLClient = OpenSSLClient.self
     let defaultSSLClientUpgrader = OpenSSLClientUpgrader.self

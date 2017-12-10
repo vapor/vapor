@@ -76,7 +76,7 @@ public final class AppleSSLPeer: AppleSSLStream, SSLPeer {
             self.readSource.resume()
         }
         
-        try self.setCertificate(to: settings.serverCertificate, for: context)
+        try self.setCertificate(to: settings.publicKey, for: context)
         
         try self.initialize()
         
