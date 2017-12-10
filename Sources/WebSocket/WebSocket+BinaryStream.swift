@@ -43,7 +43,7 @@ final class BinaryStream : Async.Stream {
         outputStream.onError(error)
     }
 
-    func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
+    func onOutput<I>(_ input: I) where I : Async.InputStream, Output == I.Input {
         outputStream.onOutput(input)
     }
 
