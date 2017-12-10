@@ -1,4 +1,5 @@
 import Async
+import Foundation
 import Bits
 
 /// A stream of incoming and outgoing binary  between 2 parties over WebSockets
@@ -58,11 +59,18 @@ final class BinaryStream : Async.Stream {
 }
 
 extension WebSocket {
-    /// Sends a string to the server
+    /// Sends binary data to the server
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
     public func send(_ buffer: ByteBuffer) {
         self.binaryStream.onInput(buffer)
+    }
+    
+    /// Send binary data to the server
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/websocket/binary-stream/)
+    public func send(_ data: Data) {
+        data.withByteBuffer(self.send)
     }
     
     /// Drains the TextStream into this closure.
