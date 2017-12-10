@@ -64,6 +64,10 @@ public final class HTTPClient: Async.Stream, ClosableStream {
                 inFlight.fail(err)
                 self.inFlight = nil
             }
+        }.finally {
+            if let inFlight = self.inFlight {
+                inFlight.fail(HTTPError(identifier: "stream-closed", reason: "The stream was closed before a response was received"))
+            }
         }
 
         serializer.stream(to: socket)
