@@ -79,6 +79,7 @@ public final class MySQLConnectionPool {
     /// Retained connections can only be used for a single query at a time
     ///
     ///
+    @discardableResult
     public func retain<T>(_ handler: @escaping ((MySQLConnection) -> Future<T>)) -> Future<T> {
         let promise = Promise<ConnectionPair>()
         
