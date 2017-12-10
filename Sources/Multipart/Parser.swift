@@ -39,7 +39,7 @@ public final class MultipartParser {
             data[0] == .hyphen,
             data[1] == .hyphen
         else {
-            throw MultipartError(identifier: "no-boundary", reason: "No possibly boundary could be found")
+            throw MultipartError(identifier: "no-boundary", reason: "No possible boundary could be found")
         }
         
         return Array(data[2..<index])
