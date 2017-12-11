@@ -64,9 +64,7 @@ final class RowDecoder : DecoderHelper {
     
     /// Decodes a column to a String
     func decode(_ type: Column) throws -> String {
-        let value = try either.getValue()
-        
-        if case .varString(let string) = value {
+        if case .varString(let string) = type {
             return string
         } else {
             throw DecodingError.incorrectValue
@@ -75,11 +73,9 @@ final class RowDecoder : DecoderHelper {
     
     /// Decodes a column to a Bool, int8/uint8 is used here
     func decode(_ type: Column) throws -> Bool {
-        let value = try either.getValue()
-        
-        if case .int8(let num) = value {
+        if case .int8(let num) = type {
             return num == 1
-        } else if case .uint8(let num) = value {
+        } else if case .uint8(let num) = type {
             return num == 1
         } else {
             throw DecodingError.incorrectValue
@@ -200,21 +196,34 @@ fileprivate struct ColumnContainer: SingleValueDecodingContainerHelper {
     
     /// Decodes a generic decodable
     func decode<T>(_ type: T.Type) throws -> T where T : Decodable {
-        let value = try decoder.either.getValue()
+        let value = try singleValue()
         
         let d = try D(value: value, lossyIntegers: decoder.lossyIntegers, lossyStrings: decoder.lossyStrings)
         
         return try T(from: d)
     }
     
+    func singleValue() throws -> Column {
+        switch decoder.either {
+        case .value(let column): return column
+        case .unkeyed(_): throw MySQLError(.decodingError)
+        case .keyed(let row):
+            guard row.columns.count == 1 else {
+                throw MySQLError(.decodingError)
+            }
+            
+            return row.columns[0]
+        }
+    }
+    
     /// Decodes this column as a string
     func decode(_ type: String.Type) throws -> String {
-        return try decoder.decode(try decoder.either.getValue())
+        return try decoder.decode(try singleValue())
     }
     
     /// Checks if this value is `nil`
     func decodeNil() -> Bool {
-        guard let value = try? decoder.either.getValue() else {
+        guard let value = try? singleValue() else {
             return true
         }
         
