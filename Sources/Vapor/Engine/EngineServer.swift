@@ -160,7 +160,7 @@ fileprivate final class HTTPPeer: Async.Stream, HTTPUpgradable {
 
         byteStream = DuplexByteStream(socket)
         serializer.stream(to: socket)
-        socket.stream(to: parser)
+        byteStream.stream(to: parser)
     }
 
     func onInput(_ input: Input) {
