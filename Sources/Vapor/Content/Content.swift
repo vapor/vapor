@@ -58,6 +58,83 @@ extension Int: Content {
     }
 }
 
+extension Int8: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int16: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int32: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int64: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt8: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt16: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt32: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt64: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Double: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Float: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
 extension Array: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
