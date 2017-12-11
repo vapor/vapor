@@ -139,8 +139,8 @@ public final class Terminal: Console {
         let terminator = newLine ? "\n" : ""
 
         let output: String
-        if let color = style.terminalColor, applyStyle {
-            output = string.terminalColorize(color)
+        if let (color, bg) = style.terminalColor, applyStyle {
+            output = string.terminalColorize(color, background: bg)
         } else {
             output = string
         }
@@ -169,12 +169,13 @@ public final class Terminal: Console {
 extension ConsoleStyle {
     /// Returns the terminal console color
     /// for the ConsoleStyle.
-    fileprivate var terminalColor: ConsoleColor? {
-        let color: ConsoleColor?
+    fileprivate var terminalColor: (ConsoleColor, background: ConsoleColor?)? {
+        let color: ConsoleColor
+        var bg: ConsoleColor? = nil
 
         switch self {
         case .plain:
-            color = nil
+            return nil
         case .info:
             color = .cyan
         case .warning:
@@ -185,9 +186,12 @@ extension ConsoleStyle {
             color = .green
         case .custom(let c):
             color = c
+        case .customWithBackground(let c, let b):
+            color = c
+            bg = b
         }
 
-        return color
+        return (color, background: bg)
     }
 }
 

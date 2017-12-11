@@ -9,4 +9,5 @@ public enum ConsoleStyle {
     case warning
     case error
     case custom(ConsoleColor)
+    case customWithBackground(ConsoleColor, background: ConsoleColor)
 }
