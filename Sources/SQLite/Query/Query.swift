@@ -34,13 +34,34 @@ public final class SQLiteQuery: Async.OutputStream {
     public var binds: [SQLiteData]
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    private var outputStream: BasicStream<Output>
+
+    private enum QueryState {
+        case ready
+        case executing(SQLiteQuery.Raw, [SQLiteColumn])
+        case done
+    }
+
+    private var state: QueryState
 
     /// Create a new SQLite statement with a supplied query string and database.
     internal init(string: String, connection: SQLiteConnection) {
         self.connection = connection
         self.string = string
         self.binds = []
+        self.outputStream = .init()
+        self.state = .ready
+        outputStream.onRequestClosure = { count in
+            connection.background.async {
+                do {
+                    try self.blockingFetch(count)
+                } catch {
+                    connection.eventLoop.queue.async {
+                        self.outputStream.onError(error)
+                    }
+                }
+            }
+        }
     }
 
     public func reset(_ statementPointer: OpaquePointer) {
@@ -48,25 +69,66 @@ public final class SQLiteQuery: Async.OutputStream {
         sqlite3_clear_bindings(statementPointer)
     }
 
+    private func blockingFetch(_ count: UInt) throws {
+        switch state {
+        case .ready:
+            let (raw, columns) = try blockingExecute()
+            state = .executing(raw, columns)
+            try blockingFetch(count)
+        case .executing(let raw, let columns):
+            var count = count
+
+            // step over the query, this will continue to return SQLITE_ROW
+            // for as long as there are new rows to be fetched
+            while sqlite3_step(raw) == SQLITE_ROW {
+                var row = SQLiteRow()
+
+                // iterator over column count again and create a field
+                // for each column. Use the column we have already initialized.
+                for i in 0..<Int32(columns.count) {
+                    let col = columns[Int(i)]
+                    let field = try SQLiteField(query: raw, offset: i)
+                    row.fields[col] = field
+                }
+
+                // return to event loop
+                self.connection.eventLoop.queue.async {
+                    self.outputStream.onInput(row)
+                }
+
+                count -= 1
+                if count == 0 {
+                    /// return early, downstream doesn't want
+                    /// any more output
+                    return
+                }
+            }
+
+            // cleanup
+            let ret = sqlite3_finalize(raw)
+            guard ret == SQLITE_OK else {
+                throw SQLiteError(statusCode: ret, connection: self.connection)
+            }
+
+            // return to event loop
+            self.connection.eventLoop.queue.async {
+                self.outputStream.onClose()
+            }
+
+            state = .done
+        case .done: break
+        }
+    }
+
     // MARK: Execute
 
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    public func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    /// See OutputStream.output
+    public func output<S>(to inputStream: S) where S: Async.InputStream, SQLiteQuery.Output == S.Input {
+        outputStream.output(to: inputStream)
     }
 
     /// Executes the query, blocking until complete.
-    public func blockingExecute() throws {
+    public func blockingExecute() throws -> (SQLiteQuery.Raw, [SQLiteColumn]) {
         var columns: [SQLiteColumn] = []
 
         var raw: Raw?
@@ -74,7 +136,7 @@ public final class SQLiteQuery: Async.OutputStream {
         // log before anything happens, in case there's an error
         try connection.database.logger?.log(query: self).blockingAwait()
 
-        var ret = sqlite3_prepare_v2(connection.raw, string, -1, &raw, nil)
+        let ret = sqlite3_prepare_v2(connection.raw, string, -1, &raw, nil)
         guard ret == SQLITE_OK else {
             throw SQLiteError(statusCode: ret, connection: connection)
         }
@@ -131,37 +193,11 @@ public final class SQLiteQuery: Async.OutputStream {
         }
 
 
-        // step over the query, this will continue to return SQLITE_ROW
-        // for as long as there are new rows to be fetched
-        while sqlite3_step(r) == SQLITE_ROW {
-            var row = SQLiteRow()
-
-            // iterator over column count again and create a field
-            // for each column. Use the column we have already initialized.
-            for i in 0..<count {
-                let col = columns[Int(i)]
-                let field = try SQLiteField(query: r, offset: i)
-                row.fields[col] = field
-            }
-
-            // return to event loop
-            self.connection.eventLoop.queue.async {
-                self.outputStream.onInput(row)
-            }
-        }
-
-        // cleanup
-        ret = sqlite3_finalize(r)
-        guard ret == SQLITE_OK else {
-            throw SQLiteError(statusCode: ret, connection: self.connection)
-        }
+        return (r, columns)
     }
 
     /// Starts executing the statement.
-    public func execute() -> Future<Void> {
-        // will alert when done
-        let promise = Promise(Void.self)
-
+    public func execute() {
         // sqlite may block at anytime, so we need to run everything
         // on a separate background queue
         connection.background.async {
@@ -169,19 +205,18 @@ public final class SQLiteQuery: Async.OutputStream {
                 // blocking execute now that we're on the background thread
                 try self.blockingExecute()
 
-                // return to event loop
-                self.connection.eventLoop.queue.async {
-                    promise.complete()
-                }
             } catch {
                 // return to event loop
                 self.connection.eventLoop.queue.async {
-                    promise.fail(error)
+                    self.outputStream.onError(error)
                 }
             }
-        }
 
-        return promise.future
+            // return to event loop
+            self.connection.eventLoop.queue.async {
+                self.outputStream.onClose()
+            }
+        }
     }
 
     /// Convenience for gathering all rows into a single array.
@@ -192,17 +227,13 @@ public final class SQLiteQuery: Async.OutputStream {
         var rows: [SQLiteRow] = []
 
         // drain the stream of results
-        drain { row in
+        drain { row, req in
             rows.append(row)
+            req.requestOutput()
         }.catch { error in
             promise.fail(error)
-        }
-
-        // start the statement's output stream
-        execute().do {
+        }.finally {
             promise.complete(rows)
-        }.catch { error in
-            promise.fail(error)
         }
 
         return promise.future
