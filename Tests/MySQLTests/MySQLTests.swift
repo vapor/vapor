@@ -13,16 +13,16 @@ class MySQLTests: XCTestCase {
     
     let pool = MySQLConnectionPool(
         hostname: "localhost",
-        user: "vapor",
-        password: "vapor3",
+        user: "root",
+        password: nil,
         database: "vapor_test",
         on: MySQLTests.poolQueue
     )
     
     let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
-        user: "vapor",
-        password: "vapor3",
+        user: "root",
+        password: nil,
         database: "vapor_test",
         on: MySQLTests.poolQueue
     ).blockingAwait(timeout: .seconds(10))
