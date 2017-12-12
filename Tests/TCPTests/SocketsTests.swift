@@ -7,7 +7,7 @@ class SocketsTests: XCTestCase {
     func testServer() throws {
         let server = try TCPServer(eventLoops: [
             DispatchQueue(label: "codes.vapor.test.server")
-        ])
+        ], acceptQueue: DispatchQueue(label: "accept"))
         try server.start(port: 8338)
 
         /// 128 will be the max in flight clients

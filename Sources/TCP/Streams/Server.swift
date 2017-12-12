@@ -49,17 +49,17 @@ public final class TCPServer: Async.OutputStream {
     private var requestedOutputRemaining: UInt
 
     /// Creates a TCPServer from an existing TCPSocket.
-    public init(socket: TCPSocket, eventLoops: [EventLoop]) throws {
+    public init(socket: TCPSocket, eventLoops: [EventLoop], acceptQueue: DispatchQueue) {
         self.socket = socket
-        self.queue = DispatchQueue(label: "codes.vapor.net.tcp.server", qos: .background)
+        self.queue = acceptQueue
         self.eventLoops = eventLoops
         self.eventLoopsIterator = try LoopIterator(eventLoops)
         self.requestedOutputRemaining = 0
     }
 
-    /// Creates a TCPServer.
-    public convenience init(eventLoops: [EventLoop]) throws {
-        try self.init(socket: .init(), eventLoops: eventLoops)
+    /// Creates a new TCPServer.
+    public convenience init(eventLoops: [EventLoop], acceptQueue: DispatchQueue) throws {
+        try self.init(socket: .init(), eventLoops: eventLoops, acceptQueue: acceptQueue)
     }
 
     /// Starts listening for peers asynchronously

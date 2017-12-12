@@ -7,10 +7,10 @@ import Dispatch
 
 /// Contains settings that MySQL uses to upgrade
 public struct MySQLSSLConfig {
-    var upgrader: BasicSSLClientUpgrader
+    var upgrader: SSLClientUpgrader
     var settings: SSLClientSettings
     
-    public init(upgrader: BasicSSLClientUpgrader, settings: SSLClientSettings) {
+    public init(upgrader: SSLClientUpgrader, settings: SSLClientSettings) {
         self.upgrader = upgrader
         self.settings = settings
     }
@@ -185,7 +185,8 @@ public final class MySQLConnection {
         
         try config.upgrader.upgrade(
             socket: self.socket.socket,
-            settings: config.settings
+            settings: config.settings,
+            eventLoop: self.socket.eventLoop
         ).map { client in
             client.stream(to: self.parser)
             self.socketWrite = client.onInput

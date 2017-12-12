@@ -6,7 +6,7 @@ import Dispatch
 import Bits
 import COpenSSL
 
-public final class OpenSSLClient: OpenSSLStream, SSLClient {
+public final class OpenSSLPeer: OpenSSLStream, SSLPeer {
     public typealias Output = ByteBuffer
     
     var descriptor: Int32
@@ -25,25 +25,13 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
     /// The `SSL` context that manages this stream
     var context: UnsafeMutablePointer<SSL_CTX>
     
-    
     var readSource: DispatchSourceRead
     
-    public var settings: SSLClientSettings
-    
-    public var peerDomainName: String?
+    public var settings: SSLServerSettings
     
     let connected = Promise<Void>()
     
     var outputStream = BasicStream<ByteBuffer>()
-    
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        var hostname = hostname
-        SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
-        
-        try socket.connect(hostname: hostname, port: port)
-        
-        return connected.future
-    }
     
     var queue: DispatchQueue
     
@@ -53,13 +41,13 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
         count: Int(UInt16.max)
     )
     
-    public convenience init(settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    public convenience init(settings: SSLServerSettings, on eventLoop: EventLoop) throws {
         let socket = try TCPSocket()
         
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    init(upgrading socket: TCPSocket, settings: SSLServerSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
         self.writeQueue = []
@@ -90,12 +78,23 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
         self.descriptor = socket.descriptor
         self.queue = eventLoop.queue
         
+        // Set up the certificate
+        var hostname = settings.hostname
+        SSL_ctrl(ssl, SSL_CTRL_SET_TLSEXT_HOSTNAME, Int(TLSEXT_NAMETYPE_host_name), &hostname)
+        
+        try assert(SSL_CTX_use_certificate_file(context, settings.publicKey, SSL_FILETYPE_PEM))
+        
+        try assert(SSL_CTX_use_PrivateKey_file(context, settings.privateKey, SSL_FILETYPE_PEM))
+        
+        SSL_set_accept_state(ssl)
+        
         self.readSource = DispatchSource.makeReadSource(
             fileDescriptor: socket.descriptor,
             queue: eventLoop.queue
         )
         
         self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
+        self.initializeDispatchSources()
         
         self.readSource.resume()
         self.writeSource.resume()
@@ -103,11 +102,12 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
     
     /// Runs the SSL handshake, regardless of client or server
     func handshake() {
-        let result = SSL_connect(ssl)
+        let result = SSL_accept(ssl)
         
-        if result >= 0 {
+        if result == 1 {
             self.connected.complete()
             self.handshakeComplete = true
+            
             return
         }
         

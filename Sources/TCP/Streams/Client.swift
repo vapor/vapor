@@ -44,6 +44,9 @@ public final class TCPClient: Async.Stream {
 
     /// Stores write event source.
     private var writeSource: DispatchSourceWrite?
+    
+    /// will be completed on connection or error
+    var connected = Promise<Void>()
 
     /// Use a basic stream to easily implement our output stream.
     private var outputStream: BasicStream<Output>?
@@ -58,7 +61,6 @@ public final class TCPClient: Async.Stream {
     public init(socket: TCPSocket, on eventLoop: EventLoop) {
         self.socket = socket
         self.eventLoop = eventLoop
-        self.inputBuffer = []
 
         // Allocate one TCP packet
         let size = 65_507
@@ -277,26 +279,17 @@ public final class TCPClient: Async.Stream {
 
         return existing
     }
-
-    /// Creates a new WriteSource if there is no write source yet
-    private func ensureWriteSource() -> DispatchSourceWrite {
-        guard let source = writeSource else {
-            /// create a new write source
-            let source = DispatchSource.makeWriteSource(
-                fileDescriptor: socket.descriptor,
-                queue: eventLoop.queue
-            )
-
-            /// handle socket ready to write
-            source.setEventHandler(handler: writeData)
-
-            /// handle a cancel event
-            source.setCancelHandler(handler: stop)
-
-            writeSource = source
-            return source
+    
+    /// Disables the read source so that another read source (such as for SSL) can take over
+    public func disableReadSource() {
+        self.readSource?.cancel()
+        self.readSource?.suspend()
+    }
+    
+    /// Attempts to connect to a server on the provided hostname and port
+    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+        try self.socket.connect(hostname: hostname, port: port)
         
-
         return source
     }
 

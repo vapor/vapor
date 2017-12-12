@@ -43,8 +43,13 @@ internal protocol OpenSSLStream: TLSStream {
     /// Keeps a strong reference to the DispatchSourceWrite so it can keep writing
     var writeSource: DispatchSourceWrite { get }
     
+    /// A buffer storing all deciphered data received from the remote
+    var outputBuffer: MutableByteBuffer { get }
+    
     /// Use a basic output stream to implement server output stream.
     var outputStream: BasicStream<Output> { get }
+    
+    func handshake()
 }
 
 extension OpenSSLStream {

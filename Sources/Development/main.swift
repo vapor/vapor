@@ -1,4 +1,5 @@
 import Async
+import TLS
 import JunkDrawer
 import Dispatch
 import Fluent
@@ -23,6 +24,19 @@ do {
     try services.register(LeafProvider())
     try services.register(FluentProvider())
     try services.register(SQLiteProvider())
+    
+    var engineConfig = EngineServerConfig()
+    engineConfig.ssl = EngineServerSSLConfig(settings:
+        SSLServerSettings(
+            hostname: "localhost",
+            publicKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.pem",
+            privateKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/private.pem"
+        )
+    )
+    
+    engineConfig.ssl?.port = 8081
+    
+    services.register(engineConfig)
 
     var databaseConfig = DatabaseConfig()
     databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
@@ -256,6 +270,12 @@ do {
     router.get("all") { req -> Future<String> in
         return try User.query(on: req).filter(\.name == "Vapor").all().then { _ -> String in
             return "done"
+        }
+    }
+    
+    router.websocket("foo") { (req, ws) in
+        for _ in 1...1000 {
+            ws.send("TEST: \(Date())")
         }
     }
 

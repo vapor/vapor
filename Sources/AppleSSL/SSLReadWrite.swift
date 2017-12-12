@@ -24,6 +24,11 @@ extension AppleSSLStream {
     func read(into buffer: MutableByteBuffer) -> Int {
         var processed = 0
         SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
+        
+        if processed == 0 {
+            self.close()
+        }
+        
         return processed
     }
     
@@ -65,7 +70,7 @@ fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer
     let lengthRequested = length.pointee
     
     // read encrypted data
-    var readCount = Darwin.recv(socket, pointer, lengthRequested, 0)
+    var readCount = Darwin.read(socket, pointer, lengthRequested)
     
     // The length pointer needs to be updated to indicate the received bytes
     length.initialize(to: readCount)
@@ -97,7 +102,7 @@ fileprivate func readSSL(ref: SSLConnectionRef, pointer: UnsafeMutableRawPointer
     length.initialize(to: readCount)
     
     // No errors, requested data
-    return noErr
+    return readCount == lengthRequested ? errSecSuccess : errSSLWouldBlock
 }
 
 /// Fileprivate helper that writes to the SSL connection

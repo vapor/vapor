@@ -51,9 +51,6 @@ let package = Package(
         // Multipart
         .library(name: "Multipart", targets: ["Multipart"]),
 
-        // Multipart
-        .library(name: "Multipart", targets: ["Multipart"]),
-
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
         .library(name: "HTTP2", targets: ["HTTP2"]),
@@ -226,13 +223,14 @@ let package = Package(
             "JunkDrawer",
             "Leaf",
             "Logging",
+            "Multipart",
             "Routing",
             "Service",
             "TCP",
             // "TLS",
             "ServerSecurity",
-            "WebSocket",
             ssl,
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 

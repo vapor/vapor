@@ -38,6 +38,10 @@ public struct HTTPHeaders: Codable {
     var headerIndexes = [HTTPHeaders.Index]()
     var storage: Data
     
+    public func withByteBuffer<T>(_ run: (ByteBuffer) throws -> T) rethrows -> T {
+        return try storage.withByteBuffer(run)
+    }
+    
     public init() {
         self.storage = Data()
         self.storage.reserveCapacity(4096)
