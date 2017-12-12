@@ -11,6 +11,27 @@ public struct KeyStringMap: ExpressibleByDictionaryLiteral {
 
     /// See ExpressibleByDictionaryLiteral
     public init(dictionaryLiteral elements: (Key, String)...) {
+        self.init(keys: elements)
+    }
+
+    /// When there are too much keys, Swift won't be able to infer dictionary literal as KeyStringMap.
+    ///
+    /// When Swift fails to infer it, the error looks like:
+    /// "Expression was too complex to be solved in reasonable time; consider breaking up the expression into distinct sub-expressions"
+    ///
+    /// Example:
+    ///
+    /// ```
+    /// static var keyStringMap: KeyStringMap {
+    ///   let keys: [(Key, String)] = [
+    ///       (key(\.id), "id"),
+    ///       // ... other keys
+    ///   ]
+    ///
+    ///   return KeyStringMap(keys: keys)
+    /// }
+    /// ```
+    public init(keys elements: [(Key, String)]) {
         self.storage = [:]
         for (key, string) in elements {
             storage[key.path] = KeyString(key: key, string: string)
