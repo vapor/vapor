@@ -4,12 +4,6 @@ import Foundation
 import Vapor
 
 final class Pet: Model {
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name",
-        key(\.ownerID): "ownerID"
-    ]
-
     static let database = beta
     static let idKey = \Pet.id
 

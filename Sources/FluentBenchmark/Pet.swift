@@ -18,15 +18,6 @@ public final class Pet<D: Database>: Model {
     /// See Model.idKey
     public static var idKey: IDKey { return \.id }
 
-    /// See Model.keyStringMap
-    public static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.ownerID): "ownerID"
-        ]
-    }
-
     /// See Model.database
     public static var database: DatabaseIdentifier<D> {
         return .init("test")

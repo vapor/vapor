@@ -26,15 +26,6 @@ public final class PetToy<D: Database>: ModifiablePivot {
     /// See Pivot.rightIDKey
     public static var rightIDKey: RightIDKey { return \.toyID }
 
-    /// See Model.keyStringMap
-    public static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.petID): "petID",
-            key(\.toyID): "toyID"
-        ]
-    }
-
     /// See Model.database
     public static var database: DatabaseIdentifier<D> {
         return .init("test")

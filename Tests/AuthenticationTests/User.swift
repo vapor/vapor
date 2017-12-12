@@ -8,14 +8,7 @@ let test = DatabaseIdentifier<SQLiteDatabase>("test")
 
 final class User: Model, Migration, PasswordAuthenticatable {
     typealias Database = SQLiteDatabase
-
-    static var keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name",
-        key(\.email): "email",
-        key(\.password): "password",
-    ]
-
+    
     static let idKey = \User.id
     static let usernameKey = \User.email
     static let passwordKey = \User.password

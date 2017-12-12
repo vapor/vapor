@@ -7,11 +7,6 @@ final class KitchenSink<D: Database>: Model {
     /// See Model.ID
     typealias ID = String
 
-    /// See Model.keyStringMap
-    static var keyStringMap: KeyStringMap {
-        return [key(\.id): "id"]
-    }
-
     /// See Model.idKey
     static var idKey: IDKey { return \.id }
 

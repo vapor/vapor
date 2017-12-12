@@ -56,7 +56,7 @@ internal struct OrValidatorError: ValidationError {
     }
 
     /// See ValidationError.keyPath
-    var keyPath: [String]
+    var keyPath: [CodingKey]
 
     /// Creates a new or validator error
     init(_ left: ValidationError, _ right: ValidationError) {
