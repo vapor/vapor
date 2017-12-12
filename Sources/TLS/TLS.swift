@@ -11,17 +11,16 @@ public struct SSLClientSettings {
     public var peerDomainName: String?
 }
 
-public struct TLSServerSettings {
-    public init(serverCertificate: String) {
-        self.serverCertificate = serverCertificate
+public struct SSLServerSettings {
+    public init(hostname: String, publicKey: String, privateKey: String) {
+        self.hostname = hostname
+        self.publicKey = publicKey
+        self.privateKey = privateKey
     }
     
-    public var serverCertificate: String
-}
-
-public enum TLSSide {
-    case client(SSLClientSettings)
-    case server(TLSServerSettings)
+    public var hostname: String
+    public var privateKey: String
+    public var publicKey: String
 }
 
 public protocol TLSSocket: ClosableStream {
@@ -37,8 +36,8 @@ public protocol SSLClient: TLSSocket {
     func connect(hostname: String, port: UInt16) throws -> Future<Void>
 }
 
-public protocol TLSServer: TLSSocket {
-    var settings: TLSServerSettings { get set }
+public protocol SSLPeer: TLSSocket {
+    var settings: SSLServerSettings { get set }
 }
 
 public protocol ALPNSupporting: TLSSocket {
@@ -48,56 +47,10 @@ public protocol ALPNSupporting: TLSSocket {
 
 public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
 
-public protocol BasicSSLClientUpgrader {
-    func upgrade(socket: TCPSocket, settings: SSLClientSettings) throws -> Future<BasicSSLClient>
+public protocol SSLClientUpgrader {
+    func upgrade(socket: TCPSocket, settings: SSLClientSettings, eventLoop: EventLoop) throws -> Future<BasicSSLClient>
 }
 
-public final class BasicSSLClient: SSLClient, TLSStream {
-    public var settings: SSLClientSettings {
-        get {
-            return client.settings
-        }
-        set {
-            client.settings = newValue
-        }
-    }
-    
-    let client: SSLClient
-    public let alpnSupporting: ALPNSupporting?
-    public var peerDomainName: String?
-    
-    let outputStream = BasicStream<ByteBuffer>()
-    
-    public typealias Input = ByteBuffer
-    public typealias Output = ByteBuffer
-    
-    public func onInput(_ input: ByteBuffer) {
-        client.onInput(input)
-    }
-    
-    public func onError(_ error: Error) {
-        client.onError(error)
-    }
-    
-    public func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
-        client.onOutput(input)
-    }
-    
-    public func close() {
-        client.close()
-    }
-    
-    public func onClose(_ onClose: ClosableStream) {
-        client.onClose(onClose)
-    }
-    
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        client.peerDomainName = hostname
-        return try client.connect(hostname: hostname, port: port)
-    }
-    
-    public init<Socket: TLSStream & SSLClient>(boxing socket: Socket) {
-        self.client = socket
-        self.alpnSupporting = socket as? ALPNSupporting
-    }
+public protocol SSLPeerUpgrader {
+    func upgrade(socket: TCPSocket, settings: SSLServerSettings, eventLoop: EventLoop) throws -> Future<BasicSSLPeer>
 }

@@ -91,6 +91,19 @@ public struct URI: Codable {
         self.query = query
         self.fragment = fragment
     }
+    
+    /// Decodes URI from a String
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        
+        self.init(stringLiteral: try container.decode(String.self))
+    }
+    
+    /// Encodes URI to a String
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.rawValue)
+    }
 }
 
 extension URI {
@@ -108,8 +121,7 @@ extension URI {
 
 extension URI.UserInfo: CustomStringConvertible {
     public var description: String {
-        var d = ""
-        d += username
+        var d = username
         if let info = info {
             d += ":\(info)"
         }
@@ -138,9 +150,47 @@ extension URI {
     }
 }
 
-extension String {
-    public var isSecure: Bool {
-        return self == "https" || self == "wss"
+extension URI: RawRepresentable, CustomStringConvertible {
+    public typealias RawValue = String
+
+    public init?(rawValue: String) {
+        self = .init(stringLiteral: rawValue)
+    }
+    
+    public var rawValue: String {
+        var uri = ""
+        
+        if let scheme = scheme {
+            uri += scheme + "://"
+        }
+        
+        if let userInfo = userInfo {
+            uri += userInfo.description + "@"
+        }
+        
+        if let hostname = hostname {
+            uri += hostname
+        }
+        
+        if let port = port {
+            uri += ":" + port.description
+        }
+        
+        uri += path
+        
+        if let query = query {
+            uri += "?" + query
+        }
+        
+        if let fragment = fragment {
+            uri += "#" + fragment
+        }
+        
+        return uri
+    }
+
+    public var description: String {
+        return self.rawValue
     }
 }
 
@@ -152,4 +202,5 @@ extension URI: ExpressibleByStringLiteral {
         self = URIParser().parse(data: Data(value.utf8))
     }
 }
+
 

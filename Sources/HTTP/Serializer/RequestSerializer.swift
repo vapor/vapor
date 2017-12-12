@@ -43,6 +43,16 @@ public final class RequestSerializer: Serializer {
         
         serialized.append(contentsOf: request.uri.pathBytes)
         
+        if let query = request.uri.query {
+            serialized.append(.questionMark)
+            serialized.append(contentsOf: query.utf8)
+        }
+        
+        if let fragment = request.uri.fragment {
+            serialized.append(.numberSign)
+            serialized.append(contentsOf: fragment.utf8)
+        }
+        
         serialized.append(contentsOf: http1newLine)
         
         var headers = request.headers

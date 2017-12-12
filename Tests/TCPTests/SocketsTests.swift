@@ -5,7 +5,7 @@ import XCTest
 
 class SocketsTests: XCTestCase {
     func testServer() throws {
-        let server = try TCPServer(eventLoops: [DispatchQueue.global()])
+        let server = try TCPServer(eventLoops: [DispatchQueue.global()], acceptQueue: DispatchQueue(label: "accept"))
         try server.start(port: 8338)
         let promise = Promise<Void>()
         
