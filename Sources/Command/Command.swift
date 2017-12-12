@@ -24,7 +24,7 @@ public protocol Runnable {
 
     /// Text that will be displayed when `--help` is passed.
     var help: [String] { get }
-
+    
     /// Runs the command against the supplied input.
     func run(using console: Console, with input: Input) throws
 }

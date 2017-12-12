@@ -9,6 +9,15 @@ class CommandTests: XCTestCase {
 
         try! console.run(group, arguments: ["vapor", "sub", "test", "--help"])
         print(console.output)
+        
+        try! console.run(group, arguments: ["vapor", "--autocomplete"])
+        print(console.output)
+        
+        try! console.run(group, arguments: ["vapor", "sub", "--autocomplete"])
+        print(console.output)
+        
+        try! console.run(group, arguments: ["vapor", "sub", "test", "--autocomplete"])
+        print(console.output)
     }
 
     static var allTests = [
