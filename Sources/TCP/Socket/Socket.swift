@@ -75,6 +75,8 @@ public struct TCPSocket {
             var n = 1
             setsockopt(self.descriptor, SOL_SOCKET, SO_NOSIGPIPE, &n, numericCast(MemoryLayout<Int>.size))
         #endif
+        
+//         TODO: setsockopt(self.descriptor, SOL_TCP, TCP_NODELAY, &n, numericCast(MemoryLayout<Int>.size)) ?
     }
 
     /// Closes the socket

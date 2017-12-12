@@ -63,12 +63,13 @@ public final class ResponseParser: CParser, Async.Stream, ClosableStream {
         
         // TODO: Closed connections could use closing as an EOF
         
-//        guard let results = getResults(), let headers = results.headers else {
-//            return
-//        }
-//        if headers[.connection]?.lowercased() == "close" {
-//
-//        }
+        guard let results = getResults(), let headers = results.headers else {
+            return
+        }
+        
+        if headers[.connection]?.lowercased() == "close", let response = try? makeResponse(from: results) {
+            self.outputStream.onInput(response)
+        }
     }
     
     /// See ClosableStream.onClose

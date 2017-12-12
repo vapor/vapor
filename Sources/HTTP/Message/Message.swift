@@ -44,7 +44,7 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
     /// Accepts a TCP client
-    public typealias Closure = (HTTPUpgradable) -> ()
+    public typealias Closure = (DuplexByteStream) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -68,7 +68,7 @@ public struct HTTPOnUpgrade: Codable {
 /// Capable of being upgraded using the HTTP upgrade mechanism.
 public protocol HTTPUpgradable {
     /// Raw byte stream
-    var byteStream: BasicStream<ByteBuffer> { get }
+    var byteStream: DuplexByteStream { get }
 }
 
 // MARK: Debug string

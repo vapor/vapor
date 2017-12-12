@@ -174,7 +174,10 @@ extension CParser {
 
         // called when header parsing has completed
         settings.on_headers_complete = { parser in
-            guard let results = CParseResults.get(from: parser) else {
+            guard
+                let parser = parser,
+                let results = CParseResults.get(from: parser)
+            else {
                 // signal an error
                 return 1
             }
@@ -203,6 +206,11 @@ extension CParser {
                 // no other cases need to be handled.
                 break
             }
+            
+            // parse version
+            let major = Int(parser.pointee.http_major)
+            let minor = Int(parser.pointee.http_minor)
+            results.version = HTTPVersion(major: major, minor: minor)
 
             return 0
         }
@@ -236,11 +244,6 @@ extension CParser {
 
             // mark the results as complete
             results.isComplete = true
-
-            // parse version
-            let major = Int(parser.pointee.http_major)
-            let minor = Int(parser.pointee.http_minor)
-            results.version = HTTPVersion(major: major, minor: minor)
             
             return 0
         }

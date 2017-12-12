@@ -101,7 +101,7 @@ public struct HTTPStatus: Codable, ExpressibleByIntegerLiteral, Equatable {
     public static let locked = HTTPStatus(code: 423, staticMessage: "Locked")
     public static let failedDependency = HTTPStatus(code: 424, staticMessage: "Failed Dependency")
     public static let upgradeRequired = HTTPStatus(code: 426, staticMessage: "Upgrade Required")
-    public static let preconditionRequired = HTTPStatus(code: 428, staticMessage: "PreconditionR equired")
+    public static let preconditionRequired = HTTPStatus(code: 428, staticMessage: "Precondition Required")
     public static let tooManyRequests = HTTPStatus(code: 429, staticMessage: "Too Many Requests")
     public static let requestHeaderFieldsTooLarge = HTTPStatus(code: 431, staticMessage: "Request Header Fields Too Large")
     public static let unavailableForLegalReasons = HTTPStatus(code: 451, staticMessage: "Unavailable For Legal Reasons")
