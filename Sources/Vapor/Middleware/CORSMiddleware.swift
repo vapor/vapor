@@ -29,7 +29,7 @@ public final class CORSMiddleware: Middleware {
         let response = request.isPreflight
             ? Future(request.makeResponse()) : try next.respond(to: request)
         
-        return response.map { response in
+        return response.map(to: Response.self) { response in
             // Modify response headers based on CORS settings
             response.http.headers[.accessControlAllowOrigin] = self.configuration.allowedOrigin.header(forRequest: request)
             response.http.headers[.accessControlAllowHeaders] = self.configuration.allowedHeaders

@@ -27,14 +27,14 @@ final class Toy: Model {
 }
 
 extension Toy: Migration {
-    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+    static func prepare(on connection: SQLiteConnection) -> Completable {
         return connection.create(self) { schema in
             try schema.field(for: \.id)
             try schema.field(for: \.name)
         }
     }
 
-    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+    static func revert(on connection: SQLiteConnection) -> Completable {
         return connection.delete(self)
     }
 

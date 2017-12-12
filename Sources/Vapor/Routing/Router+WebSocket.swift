@@ -13,12 +13,12 @@ extension Router {
         with settings: WebSocketSettings = WebSocketSettings(),
         onUpgrade closure: @escaping OnWebsocketUpgradeClosure) -> Route<Responder> {
 
-        let responder = RouteResponder { (request: Request) -> Response in
+        let responder = RouteResponder<Response> { request in
             let http = try WebSocket.upgradeResponse(for: request.http, with: settings) { websocket in
                 try closure(request, websocket)
             }
             
-            return Response(http: http, using: request.superContainer)
+            return Future(Response(http: http, using: request.superContainer))
         }
         let route = Route<Responder>(
             path: [.constants([.bytes(HTTPMethod.get.bytes)])] + path,

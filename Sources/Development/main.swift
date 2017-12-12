@@ -81,9 +81,9 @@ do {
         return client.send(.get, to: "https://www.apache.org/foundation/press/kit/asf_logo.png")
     }
     
-    router.get("hello") { req -> [User] in
+    router.get("hello") { req -> Future<[User]> in
         let user = User(name: "Vapor", age: 3);
-        return [user]
+        return Future([user])
     }
 
     struct LoginRequest: Content {
@@ -94,18 +94,19 @@ do {
     let helloRes = try! HTTPResponse(headers: [
         .contentType: "text/plain; charset=utf-8"
     ], body: "Hello, world!")
+    
     router.grouped(DateMiddleware()).get("plaintext") { req in
-        return helloRes
+        return Future(helloRes)
     }
 
 
-    router.post("login") { req -> Response in
+    router.post("login") { req -> Future<Response> in
         let loginRequest = try req.content.decode(LoginRequest.self)
 
         print(loginRequest.email) // user@vapor.codes
         print(loginRequest.password) // don't look!
 
-        return req.makeResponse()
+        return Future(req.makeResponse())
     }
 
     router.get("leaf") { req -> Future<View> in
@@ -124,7 +125,7 @@ do {
     final class FooController {
         func foo(_ req: Request) -> Future<Response> {
             return req.withConnection(to: alpha) { db in
-                return req.makeResponse()
+                return Future(req.makeResponse())
             }
         }
     }
@@ -183,7 +184,7 @@ do {
         }
 
         let user = try JSONDecoder().decode(User.self, from: data)
-        return user.save(on: req).map { user }
+        return user.save(on: req).transform(user)
     }
 
     router.get("builder") { req -> Future<[User]> in
@@ -201,23 +202,21 @@ do {
                     user.save(on: db),
                     message.save(on: db)
                 ].flatten()
-            }.map {
-                return "Done"
-            }
+            }.transform("done")
         }
     }
 
     router.get("pets", Pet.parameter, "toys") { req in
-        return try req.parameter(Pet.self).then { pet in
+        return try req.parameter(Pet.self).flatMap(to: [Toy].self) { pet in
             return try pet.toys.query(on: req).all()
         }
     }
 
-    router.get("string", String.parameter) { req -> String in
-        return try req.parameter(String.self)
+    router.get("string", String.parameter) { req -> Future<String> in
+        return Future(try req.parameter(String.self))
     }
 
-    router.get("error") { req -> String in
+    router.get("error") { req -> Future<String> in
         throw Abort(.internalServerError, reason: "Test error")
     }
 
@@ -228,20 +227,17 @@ do {
         return [
             marie.save(on: req),
             charles.save(on: req)
-        ].map {
-            return req.makeResponse()
-        }
+        ].flatten().map(to: Response.self, req.makeResponse)
     }
 
-    router.get("fast") { req -> Response in
+    router.get("fast") { req -> Future<Response> in
         let res = req.makeResponse()
         res.http.body = HTTPBody(string: "123")
-        return res
+        return Future(res)
     }
 
-    router.get("123") { req -> String in
-        print("123")
-        return "123"
+    router.get("123") { req -> Future<String> in
+        return Future("123")
     }
 
     router.get("hello") { req in
@@ -249,19 +245,15 @@ do {
     }
 
     router.get("run") { req -> Future<String> in
-        return User.query(on: req).run(into: { _ in }).then { _ -> String in
-            return "done"
-        }
+        return User.query(on: req).run(into: { _ in }).transform("done")
     }
 
     router.get("all") { req -> Future<String> in
-        return try User.query(on: req).filter(\.name == "Vapor").all().then { _ -> String in
-            return "done"
-        }
+        return try User.query(on: req).filter(\.name == "Vapor").all().transform("done")
     }
 
     router.get("first") { req -> Future<User> in
-        return try User.query(on: req).filter(\User.name == "Vapor").first().then { user -> User in
+        return try User.query(on: req).filter(\User.name == "Vapor").first().map(to: User.self) { user in
             guard let user = user else {
                 throw Abort(.notFound)
             }
@@ -271,29 +263,24 @@ do {
 
     router.get("asyncusers") { req -> Future<User> in
         let user = User(name: "Bob", age: 1)
-        return user.save(on: req).map {
-            return user
-        }
+        return user.save(on: req).transform(user)
     }
 
     router.get("vapor") { req -> Future<String> in
-        return try req.make(Client.self).send(.get, to: "https://vapor.codes").then { res -> String in
-            print(res.http.headers)
-            return "done!"
-        }
+        return try req.make(Client.self).send(.get, to: "https://vapor.codes").transform("done!")
     }
                                                                          
-    router.get("query") { req -> String in
+    router.get("query") { req -> Future<String> in
         struct Hello: Decodable {
             var name: String?
             var flag: Bool?
         }
         let hello = try req.query.decode(Hello.self)
         print(hello.flag ?? false)
-        return hello.name ?? "none"
+        return Future(hello.name ?? "none")
     }
 
-    router.get("redirect") { req in
+    router.get("redirect") { req -> Future<Response> in
         return req.redirect(to: "http://google.com")
     }
 

@@ -32,7 +32,10 @@ extension RedisClient {
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#publishing)
     @discardableResult
     public func publish(_ message: RedisData, to channel: String) -> Future<Int> {
-        return run(command: "PUBLISH", arguments: [.bulkString(channel), message]).map { reply in
+        return run(
+            command: "PUBLISH",
+            arguments: [.bulkString(channel), message]
+        ).map(to: Int.self) { reply in
             guard let receivers = reply.int else {
                 throw RedisError(.unexpectedResult(reply))
             }

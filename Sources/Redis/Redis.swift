@@ -129,7 +129,7 @@ extension RedisClient {
         on eventLoop: EventLoop
     ) throws -> Future<RedisClient> {
         let client = try TCPClient(on: eventLoop)
-        return try client.connect(hostname: hostname, port: port).map {
+        return try client.connect(hostname: hostname, port: port).map(to: RedisClient.self) {
             return RedisClient(socket: client)
         }
     }

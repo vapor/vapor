@@ -80,7 +80,7 @@ class MySQLTests: XCTestCase {
     func testManyQueries() throws {
         try testCreateUsersSchema()
         
-        var results = [Future<Void>]()
+        var results = [Completable]()
         results.reserveCapacity(100)
         
         MySQLTests.poolQueue.sync {

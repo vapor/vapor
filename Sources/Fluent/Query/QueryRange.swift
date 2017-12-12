@@ -26,12 +26,12 @@ extension QueryBuilder {
 
     /// Limits the query to a max number of results.
     public func range(_ range: PartialRangeThrough<Int>) -> Self {
-        return self.range(upper: range.upperBound)
+        return self.range(upper: range.upperBound + 1)
     }
 
     /// Limits the query to a max number of results.
     public func range(_ range: PartialRangeUpTo<Int>) -> Self {
-        return self.range(upper: range.upperBound - 1)
+        return self.range(upper: range.upperBound)
     }
 
     /// Offsets the query by the supplied index.

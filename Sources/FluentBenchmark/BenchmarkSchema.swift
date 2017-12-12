@@ -5,11 +5,11 @@ import Foundation
 
 extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the basic schema creations.
-    public func benchmarkSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return KitchenSinkSchema<Database>.prepare(on: conn).then {
+    public func benchmarkSchema() throws -> Completable {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return KitchenSinkSchema<Database>.prepare(on: conn).flatMap(to: Void.self) {
                 return KitchenSinkSchema<Database>.revert(on: conn)
-            }.map {
+            }.always {
                 self.pool.releaseConnection(conn)
             }
         }

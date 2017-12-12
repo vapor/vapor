@@ -19,7 +19,7 @@ extension SQLiteConnection: DatabaseConnection {
     public typealias Config = SQLiteConfig
     
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        return then {
+        return then(to: D.Connection.self) {
             guard let sqlite = self as? D.Connection else {
                 throw FluentSQLiteError(identifier: "invalid-connection-type", reason: "The provided connection was not an SQLite connection")
             }
@@ -38,7 +38,7 @@ extension SQLiteDatabase: LogSupporting {
 
 extension DatabaseLogger: SQLiteLogger {
     /// See SQLiteLogger.log
-    public func log(query: SQLiteQuery) -> Future<Void> {
+    public func log(query: SQLiteQuery) -> Completable {
         let log = DatabaseLog(
             query: query.string,
             values: query.binds.map { $0.description }

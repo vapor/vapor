@@ -62,7 +62,7 @@ final class MigrationLogMigration<
     public typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: Database.Connection) -> Future<Void> {
+    static func prepare(on connection: Database.Connection) -> Completable {
             return connection.create(MigrationLog<Database>.self) { builder in
                 try builder.field(for: \MigrationLog<D>.id)
                 try builder.field(for: \MigrationLog<D>.name)
@@ -73,7 +73,7 @@ final class MigrationLogMigration<
     }
 
     /// See Migration.revert
-    static func revert(on connection: Database.Connection) -> Future<Void> {
+    static func revert(on connection: Database.Connection) -> Completable {
         return connection.delete(MigrationLog<Database>.self)
     }
 
@@ -85,13 +85,13 @@ extension MigrationLog {
     /// Returns the latest batch number.
     /// note: returns 0 if no batches have run yet.
     internal static func latestBatch(on conn: Database.Connection) -> Future<Int> {
-        return then {
+        return then(to: Int.self) {
             return try conn.query(MigrationLog<Database>.self)
                 .sort(\MigrationLog.batch, .descending)
                 .first()
-                .map { log in
+                .map(to: Int.self) { log in
                     return log?.batch ?? 0
-            }
+                }
         }
     }
 }
@@ -100,7 +100,7 @@ extension MigrationLogMigration {
     /// Prepares the connection for storing migration logs.
     /// note: this is unlike other migrations since we are checking
     /// for an error instead of asking if the migration has already prepared.
-    internal static func prepareMetadata(on conn: Database.Connection) -> Future<Void> {
+    internal static func prepareMetadata(on conn: Database.Connection) -> Completable {
         let promise = Promise(Void.self)
 
         conn.query(MigrationLog<Database>.self).count().do { count in
@@ -115,7 +115,7 @@ extension MigrationLogMigration {
 
     /// For parity, reverts the migration metadata.
     /// This simply calls the migration revert function.
-    internal static func revertMetadata(on connection: Database.Connection) -> Future<Void> {
+    internal static func revertMetadata(on connection: Database.Connection) -> Completable {
         return self.revert(on: connection)
     }
 }

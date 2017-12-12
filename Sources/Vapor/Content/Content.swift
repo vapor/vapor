@@ -5,7 +5,7 @@ import Foundation
 import Service
 
 /// Representable as content in an HTTP message.
-public protocol Content: Codable, ResponseCodable, RequestCodable, FutureType {
+public protocol Content: Codable, ResponseCodable, RequestCodable {
     /// The default media type to use when _encoding_ this
     /// content. This can be overridden at the encode call.
     static var defaultMediaType: MediaType { get }
@@ -18,13 +18,13 @@ extension Content {
     }
 
     /// See RequestEncodable.encode
-    public func encode(to req: inout Request) throws -> Future<Void> {
+    public func encode(to req: inout Request) throws -> Completable {
         try req.content.encode(self)
         return .done
     }
 
     /// See ResponseEncodable.encode
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(to res: inout Response, for req: Request) throws -> Completable {
         try res.content.encode(self)
         return .done
     }

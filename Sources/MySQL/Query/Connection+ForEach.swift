@@ -12,7 +12,7 @@ extension MySQLConnection {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    internal func forEachRow(in query: MySQLQuery, _ handler: @escaping Callback<Row>) -> Future<Void> {
+    internal func forEachRow(in query: MySQLQuery, _ handler: @escaping Callback<Row>) -> Completable {
         let promise = Promise(Void.self)
 
         let rowStream = RowStream(mysql41: self.mysql41)
@@ -39,7 +39,7 @@ extension MySQLConnection {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    public func forEach<D>(_ type: D.Type, in query: MySQLQuery, _ handler: @escaping Callback<D>) -> Future<Void>
+    public func forEach<D>(_ type: D.Type, in query: MySQLQuery, _ handler: @escaping Callback<D>) -> Completable
         where D: Decodable
     {
         return forEachRow(in: query) { row in

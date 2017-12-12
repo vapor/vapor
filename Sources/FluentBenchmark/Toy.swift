@@ -67,7 +67,7 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
     typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: Database.Connection) -> Future<Void> {
+    static func prepare(on connection: Database.Connection) -> Completable {
         return connection.create(Toy<Database>.self) { builder in
             try builder.field(for: \Toy<Database>.id)
             try builder.field(for: \Toy<Database>.name)
@@ -75,7 +75,7 @@ internal struct ToyMigration<D: Database>: Migration where D.Connection: SchemaS
     }
 
     /// See Migration.revert
-    static func revert(on connection: Database.Connection) -> Future<Void> {
+    static func revert(on connection: Database.Connection) -> Completable {
         return connection.delete(Toy<Database>.self)
     }
 }

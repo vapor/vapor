@@ -7,11 +7,10 @@ public protocol Responder {
 /// MARK: Route
 
 /// A basic, closure-based responder.
-public struct RouteResponder<F: FutureType>: Responder
-    where F.Expectation: ResponseEncodable
+public struct RouteResponder<RE>: Responder where RE: ResponseEncodable
 {
     /// Responder closure
-    public typealias Closure = (Request) throws -> F
+    public typealias Closure = (Request) throws -> Future<RE>
 
     /// The stored responder closure.
     public let closure: Closure
@@ -23,11 +22,9 @@ public struct RouteResponder<F: FutureType>: Responder
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try closure(req).then { rep -> Future<Response> in
+        return try closure(req).flatMap(to: Response.self) { rep in
             var res = req.makeResponse()
-            return try rep.encode(to: &res, for: req).map {
-                return res
-            }
+            return try rep.encode(to: &res, for: req).transform(res)
         }
     }
 }

@@ -82,7 +82,7 @@ public final class MySQLConnectionPool {
     public func retain<T>(_ handler: @escaping ((MySQLConnection) -> Future<T>)) -> Future<T> {
         let promise = Promise<ConnectionPair>()
         
-        let future = promise.future.flatMap { pair -> Future<T> in
+        let future = promise.future.flatMap(to: T.self) { pair in
             pair.reserved = true
             
             // Runs the handler with the connection

@@ -35,7 +35,7 @@ final class Pet: Model {
 extension Pet: Parameter {}
 
 extension Pet: Migration {
-    static func prepare(on connection: SQLiteConnection) -> Future<Void> {
+    static func prepare(on connection: SQLiteConnection) -> Completable {
         return connection.create(self) { schema in
             try schema.field(for: \.id)
             try schema.field(for: \.name)
@@ -43,7 +43,7 @@ extension Pet: Migration {
         }
     }
     
-    static func revert(on connection: SQLiteConnection) -> Future<Void> {
+    static func revert(on connection: SQLiteConnection) -> Completable {
         return connection.delete(self)
     }
     

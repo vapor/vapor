@@ -12,7 +12,7 @@ public struct AnyResponse: FutureType {
         var encodable: ResponseEncodable
         
         /// Encodes the response
-        public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+        public func encode(to res: inout Response, for req: Request) throws -> Completable {
             return try encodable.encode(to: &res, for: req)
         }
     }
@@ -33,13 +33,13 @@ public struct AnyResponse: FutureType {
     }
     
     /// Wraps a future response encodable type
-    public init<F: FutureType>(future encodable: F) where F.Expectation : ResponseEncodable {
-        wrapped = encodable.map(AnyResponseType.init)
+    public init<R: ResponseEncodable>(future encodable: Future<R>) {
+        wrapped = encodable.map(to: AnyResponseType.self, AnyResponseType.init)
     }
     
     /// Wraps a future response encodable type
-    public init<F: FutureType, RE>(future encodable: F, or other: ResponseEncodable) where F.Expectation == Optional<RE>, RE: ResponseEncodable {
-        wrapped = encodable.map { encodable in
+    public init<R: ResponseEncodable>(future encodable: Future<R?>, or other: ResponseEncodable) {
+        wrapped = encodable.map(to: AnyResponseType.self) { encodable in
             AnyResponseType(encodable: encodable ?? other)
         }
     }

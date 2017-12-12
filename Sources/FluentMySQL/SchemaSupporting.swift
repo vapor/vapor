@@ -7,10 +7,10 @@ import MySQL
 
 extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
     /// Runs a transaction on the MySQL connection
-    public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Future<Void> {
+    public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Completable {
         let promise = Promise<Void>()
         
-        connection.administrativeQuery("START TRANSACTION").then {
+        connection.administrativeQuery("START TRANSACTION").flatMap(to: Void.self) {
             return transaction.run(on: self)
         }.addAwaiter { result in
             if let error = result.error {
@@ -31,7 +31,7 @@ extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
     public typealias FieldType = ColumnType
     
     /// Executes the schema query
-    public func execute(schema: DatabaseSchema) -> Future<Void> {
+    public func execute(schema: DatabaseSchema) -> Completable {
         let query = schema.makeSchemaQuery()
         _ = self.logger?.log(query: query)
         

@@ -19,13 +19,15 @@ internal struct SchemaMigrationConfig<
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, using container: Container) -> Future<Void> {
-        return then {
+    internal func migrate(using databases: Databases, using container: Container) -> Completable {
+        return then(to: Void.self) {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
+            
+            let config: Database.Connection.Config = try container.make(for: Database.Connection.self)
 
-            return try database.makeConnection(from: container.make(for: Database.Connection.self), on: container).then { conn in
+            return database.makeConnection(from: config, on: container).flatMap(to: Void.self) { conn in
                 self.prepareForMigration(on: conn)
             }
         }
@@ -33,9 +35,9 @@ internal struct SchemaMigrationConfig<
 
     /// Prepares the connection for migrations by ensuring
     /// the migration log model is ready for use.
-    internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
-        return MigrationLogMigration<Database>.prepareMetadata(on: conn).then { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch -> Future<Void> in
+    internal func prepareForMigration(on conn: Database.Connection) -> Completable {
+        return MigrationLogMigration<Database>.prepareMetadata(on: conn).flatMap(to: Void.self) { _ in
+            return MigrationLog<Database>.latestBatch(on: conn).flatMap(to: Void.self) { lastBatch in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }
@@ -43,7 +45,7 @@ internal struct SchemaMigrationConfig<
 
     /// Migrates this configs migrations under the current batch.
     /// Migrations that have already been prepared will be skipped.
-    internal func migrateBatch(on conn: Database.Connection, batch: Int) -> Future<Void> {
+    internal func migrateBatch(on conn: Database.Connection, batch: Int) -> Completable {
         return migrations.map { migration in
             return { migration.prepareIfNeeded(batch: batch, on: conn) }
         }.syncFlatten()

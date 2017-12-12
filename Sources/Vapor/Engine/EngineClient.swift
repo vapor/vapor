@@ -39,9 +39,9 @@ public final class EngineClient: Client {
             port: req.http.uri.port,
             ssl: ssl,
             using: req
-        ).then { client -> Future<Response> in
+        ).flatMap(to: Response.self) { client in
             req.http.headers[.host] = req.http.uri.hostname
-            return client.send(request: req.http).then { httpRes -> Response in
+            return client.send(request: req.http).map(to: Response.self) { httpRes in
                 let res = req.makeResponse()
                 res.http = httpRes
                 return res
@@ -63,24 +63,22 @@ extension HTTPClient {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
     public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, using container: Container) -> Future<HTTPClient> {
-        let port = port ?? (ssl ? 443 : 80)
-
-        do {
+        return then(to: HTTPClient.self) {
+            let port = port ?? (ssl ? 443 : 80)
+            
             if ssl {
                 let client = try container.make(BasicSSLClient.self, for: HTTPClient.self)
 
-                return try client.connect(hostname: hostname, port: port).map {
+                return try client.connect(hostname: hostname, port: port).map(to: HTTPClient.self) {
                     return HTTPClient(socket: client)
                 }
             } else {
                 let client = try TCPClient(on: container)
                 
-                return try client.connect(hostname: hostname, port: port).map {
+                return try client.connect(hostname: hostname, port: port).map(to: HTTPClient.self) {
                     return HTTPClient(socket: client)
                 }
             }
-        } catch {
-            return Future(error: error)
         }
     }
 }

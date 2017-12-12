@@ -5,14 +5,14 @@ import Async
 /// any errors are thrown.
 public struct DatabaseTransaction<Connection: DatabaseConnection> {
     /// Closure for performing the transaction.
-    public typealias Closure = (Connection) throws -> Future<Void>
+    public typealias Closure = (Connection) throws -> Completable
 
     /// Contains the transaction's work.
     public let closure: Closure
 
     /// Runs the transaction on a connection.
-    public func run(on conn: Connection) -> Future<Void> {
-        return then {
+    public func run(on conn: Connection) -> Completable {
+        return then(to: Void.self) {
             return try self.closure(conn)
         }
     }

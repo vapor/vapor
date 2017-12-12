@@ -30,11 +30,10 @@ public final class ResponderStream: Async.Stream {
         do {
             // dispatches the incoming request to the responder.
             // the response is awaited on the responder stream's queue.
-            try responder.respond(to: req)
-                .map { res in
-                    return res.http
-                }
-                .stream(to: outputStream)
+            try responder.respond(to: req).map(to: HTTPResponse.self) { res in
+                return res.http
+            }
+            .stream(to: outputStream)
         } catch {
             self.onError(error)
         }

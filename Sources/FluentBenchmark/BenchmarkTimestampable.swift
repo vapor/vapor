@@ -5,14 +5,14 @@ import Foundation
 
 extension Benchmarker {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Future<Void> {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         if tanner.createdAt != nil || tanner.updatedAt != nil {
             self.fail("timestamps should have been nil")
         }
 
-        return tanner.save(on: conn).then { _ -> Future<Date> in
+        return tanner.save(on: conn).flatMap(to: Date.self) {
             if tanner.createdAt?.isWithin(seconds: 1, of: Date()) != true {
                 self.fail("timestamps should be current")
             }
@@ -21,18 +21,14 @@ extension Benchmarker {
                 self.fail("timestamps should be current")
             }
             
-            let updated = tanner.updatedAt!
-            
-            return tanner.save(on: conn).map {
-                return updated
-            }
-        }.then { originalUpdatedAt -> Future<User<Database>?> in
+            return tanner.save(on: conn).transform(tanner.updatedAt!)
+        }.flatMap(to: User<Database>?.self) { originalUpdatedAt in
             if tanner.updatedAt! <= originalUpdatedAt {
                 self.fail("new updated at should be greater")
             }
             
             return try conn.query(User<Database>.self).filter(\User<Database>.name == "Tanner").first()
-        }.map { fetched in
+        }.map(to: Void.self) { fetched in
             guard let fetched = fetched else {
                 self.fail("could not fetch user")
                 return
@@ -46,9 +42,9 @@ extension Benchmarker {
     }
 
     /// Benchmark the Timestampable protocol
-    public func benchmarkTimestampable() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
+    public func benchmarkTimestampable() throws -> Completable {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
             }
         }
@@ -58,12 +54,12 @@ extension Benchmarker {
 extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the Timestampable protocol
     /// The schema will be prepared first.
-    public func benchmarkTimestampable_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return UserMigration<Database>.prepare(on: conn).then { _ in
-                return try self._benchmark(on: conn).map { _ in
-                    self.pool.releaseConnection(conn)
-                }
+    public func benchmarkTimestampable_withSchema() throws -> Completable {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return UserMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
+                return try self._benchmark(on: conn)
+            }.always {
+                self.pool.releaseConnection(conn)
             }
         }
     }

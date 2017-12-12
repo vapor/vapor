@@ -18,7 +18,7 @@ public final class DatabaseLogger {
     }
 
     /// Closure for handling logs.
-    public typealias LogHandler = (DatabaseLog) -> Future<Void>
+    public typealias LogHandler = (DatabaseLog) -> Completable
 
     /// Current database log handler.
     public var handler: LogHandler
@@ -33,7 +33,7 @@ public final class DatabaseLogger {
     }
 
     /// Records a database log to the current handler.
-    public func record(log: DatabaseLog) -> Future<Void> {
+    public func record(log: DatabaseLog) -> Completable {
         var log = log
         log.dbID = dbID
         return handler(log)

@@ -31,7 +31,7 @@ public final class RedisPipeline {
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pipeline/#enqueuing-commands)
     @discardableResult
     public func execute() throws -> Future<[RedisData]> {
-        return then {
+        return then(to: [RedisData].self) {
             defer {
                 self.commands = []
             }

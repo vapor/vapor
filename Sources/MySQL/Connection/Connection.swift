@@ -186,7 +186,7 @@ public final class MySQLConnection {
         try config.upgrader.upgrade(
             socket: self.socket.socket,
             settings: config.settings
-        ).map { client in
+        ).map(to: Void.self) { client in
             client.stream(to: self.parser)
             self.socketWrite = client.onInput
             
@@ -278,7 +278,7 @@ extension MySQLConnection {
         database: String,
         on eventLoop: EventLoop
     ) -> Future<MySQLConnection> {
-        return then {
+        return then(to: MySQLConnection.self) {
             let connection = try MySQLConnection(
                 hostname: hostname,
                 port: port,
@@ -289,9 +289,7 @@ extension MySQLConnection {
                 on: eventLoop
             )
 
-            return connection.authenticated.future.map { _ in
-                return connection
-            }
+            return connection.authenticated.future.transform(connection)
         }
     }
 }
