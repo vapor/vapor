@@ -1,7 +1,7 @@
 import COperatingSystem
 
 /// A socket address
-public struct Address {
+public struct TCPAddress {
     /// The raw underlying storage
     let storage: sockaddr_storage
     
@@ -23,7 +23,7 @@ public struct Address {
     
     static func withSockaddrPointer<T>(
         do closure: ((UnsafeMutablePointer<sockaddr>) throws -> (T))
-    ) rethrows -> (T, Address) {
+    ) rethrows -> (T, TCPAddress) {
         var addressStorage = sockaddr_storage()
         
         let other = try withUnsafeMutablePointer(to: &addressStorage) { pointer in
@@ -32,15 +32,15 @@ public struct Address {
             }
         }
         
-        let address = Address(storage: addressStorage)
+        let address = TCPAddress(storage: addressStorage)
         
         return (other, address)
     }
 }
 
-extension Address: Equatable {
+extension TCPAddress: Equatable {
     /// Compares 2 addresses to be equal
-    public static func ==(lhs: Address, rhs: Address) -> Bool {
+    public static func ==(lhs: TCPAddress, rhs: TCPAddress) -> Bool {
         let lhs = lhs.storage
         let rhs = rhs.storage
         
@@ -72,7 +72,7 @@ extension Address: Equatable {
     
 }
 
-extension Address {
+extension TCPAddress {
     /// The remote peer's connection's port
     public var port: UInt16 {
         var copy = self.storage

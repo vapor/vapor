@@ -4,16 +4,37 @@ import TCP
 import XCTest
 
 class SocketsTests: XCTestCase {
-    func testServer() throws {
-        let server = try TCPServer(eventLoops: [
-            DispatchQueue(label: "codes.vapor.test.server")
-        ])
-        try server.start(port: 8338)
+    func testServer() {
+        do {
+            try _testServer()
+        } catch {
+            XCTFail("\(error)")
+        }
+    }
+    func _testServer() throws {
+        let serverSocket = try TCPSocket(isNonBlocking: true)
+        let server = try TCPServer(socket: serverSocket)
 
         /// 128 will be the max in flight clients
-        server.stream(on: DispatchQueue(label: "accept")).drain(128) { client, serverReq in
-            client.drain { buffer, clientReq in
-                client.onInput(buffer)
+        let serverStream = server.stream(
+            on: DispatchQueue(label: "codes.vapor.test.server"),
+            assigning: [
+                DispatchQueue(label: "codes.vapor.test.worker.1"),
+                DispatchQueue(label: "codes.vapor.test.worker.2"),
+                DispatchQueue(label: "codes.vapor.test.worker.3"),
+                DispatchQueue(label: "codes.vapor.test.worker.4"),
+                DispatchQueue(label: "codes.vapor.test.worker.5"),
+                DispatchQueue(label: "codes.vapor.test.worker.6"),
+                DispatchQueue(label: "codes.vapor.test.worker.7"),
+                DispatchQueue(label: "codes.vapor.test.worker.8"),
+            ]
+        )
+
+        serverStream.drain(.max) { client, serverReq in
+            let clientStream = client.0.stream(on: client.1)
+            clientStream.drain { buffer, clientReq in
+                /// simple echo server
+                clientStream.onInput(buffer)
                 /// after we write data, we are ready to read more
                 /// note: important that we start reading here
                 /// or else the source will not be active to detect
@@ -24,41 +45,35 @@ class SocketsTests: XCTestCase {
             }.finally {
                 /// once the socket is closed, we are ready to tell
                 /// the server to give us another client
-                serverReq.requestOutput()
+
+                // we requested .max, so we will never run out
+                // serverReq.requestOutput()
             }
         }.catch { err in
             XCTFail("\(err)")
         }.finally {
             // closed
         }
+        try server.start(port: 8338)
+        let exp = expectation(description: "all requests complete")
 
-        let promise = Promise(Void.self)
-
-        var completed = 0
-        for _ in 0..<512 {
-            let client = try TCPClient(on: DispatchQueue(label: "codes.vapor.test.client"))
+        var num = 1024
+        for _ in 0..<num {
+            let clientSocket = try TCPSocket(isNonBlocking: false)
+            let client = try TCPClient(socket: clientSocket)
             try client.connect(hostname: "localhost", port: 8338)
-            let data = Data("hello".utf8)
-            client.onInput(data.withByteBuffer { $0 })
-            client.drain { buffer, req in
-                completed += 1
-                if completed == 512 {
-                    DispatchQueue.global().async {
-                        promise.complete()
-                    }
-                }
-                client.stop()
-            }.catch { err in
-                XCTFail("\(err)")
-            }.finally {
-                // closed
+            let write = Data("hello".utf8)
+            _ = try client.socket.write(write)
+            let read = try client.socket.read(max: 512)
+            client.close()
+            XCTAssertEqual(read, write)
+            num -= 1
+            if num == 0 {
+                exp.fulfill()
             }
         }
 
-        try DispatchQueue.global().sync {
-            try promise.future.blockingAwait(timeout: .seconds(2))
-        }
-
+        waitForExpectations(timeout: 5)
         server.stop()
     }
 

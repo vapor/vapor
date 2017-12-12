@@ -1,34 +1,45 @@
 import Async
 import Dispatch
+import JunkDrawer
 
 /// Stream representation of a TCP server.
-public final class TCPServerStream: OutputStream {
+public final class TCPClientStream: OutputStream {
     /// See OutputStream.Output
-    public typealias Output = TCPClient
+    public typealias Output = (TCPClient, EventLoop)
 
     /// The server being streamed
     public var server: TCPServer
 
-    /// The dispatch queue that peers are accepted on.
+    /// This stream's event loop
     public let eventLoop: EventLoop
 
     /// Use a basic output stream to implement server output stream.
-    private let outputStream: BasicStream<TCPClient>
+    private let outputStream: BasicStream<Output>
 
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt
 
+    /// This server's event loops.
+    /// Configuring these using the eventLoopCount at init.
+    /// These will be supplied to requests at they arrive.
+    public let eventLoops: [EventLoop]
+
     /// Keep a reference to the read source so it doesn't deallocate
     private var acceptSource: DispatchSourceRead?
 
+    /// A round robin view into the event loop array.
+    private var eventLoopsIterator: LoopIterator<[EventLoop]>
+
     /// Use TCPServer.stream to create
-    internal init(server: TCPServer, on eventLoop: EventLoop) {
-        self.server = server
+    internal init(server: TCPServer, on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) {
         self.eventLoop = eventLoop
+        self.server = server
         self.requestedOutputRemaining = 0
+        self.eventLoops = eventLoops
+        self.eventLoopsIterator = try! LoopIterator(eventLoops)
 
         /// initialize the internal output stream
-        self.outputStream = BasicStream<TCPClient>()
+        self.outputStream = BasicStream<Output>()
 
         /// handle downstream requesting data
         /// suspend will be called automatically if the
@@ -46,7 +57,7 @@ public final class TCPServerStream: OutputStream {
     }
 
     /// See OutputStream.output
-    public func output<S>(to inputStream: S) where S: InputStream, S.Input == TCPClient {
+    public func output<S>(to inputStream: S) where S: InputStream, S.Input == Output {
         outputStream.output(to: inputStream)
     }
 
@@ -54,7 +65,11 @@ public final class TCPServerStream: OutputStream {
     /// and count is greater than 0
     private func request(_ accepting: UInt) {
         let isSuspended = requestedOutputRemaining == 0
-        requestedOutputRemaining += accepting
+        if accepting == .max {
+            requestedOutputRemaining = .max
+        } else {
+            requestedOutputRemaining += accepting
+        }
 
         if isSuspended && requestedOutputRemaining > 0 {
             ensureAcceptSource().resume()
@@ -76,16 +91,22 @@ public final class TCPServerStream: OutputStream {
     /// Accepts a client and outputs to the stream
     private func accept() {
         do {
-            let client = try server.accept()
-            outputStream.onInput(client)
+            guard let client = try server.accept() else {
+                // the client was rejected
+                return
+            }
+
+            let eventLoop = eventLoopsIterator.next()
+            outputStream.onInput((client, eventLoop))
 
             /// decrement remaining and check if
             /// we need to suspend accepting
-            self.requestedOutputRemaining -= 1
-            if self.requestedOutputRemaining == 0 {
-                print("suspending accept")
-                ensureAcceptSource().suspend()
-                requestedOutputRemaining = 0
+            if requestedOutputRemaining != .max {
+                requestedOutputRemaining -= 1
+                if requestedOutputRemaining == 0 {
+                    ensureAcceptSource().suspend()
+                    requestedOutputRemaining = 0
+                }
             }
         } catch {
             outputStream.onError(error)
@@ -119,7 +140,9 @@ public final class TCPServerStream: OutputStream {
 
 extension TCPServer {
     /// Create a stream for this TCP server.
-    public func stream(on eventLoop: EventLoop) -> TCPServerStream {
-        return TCPServerStream(server: self, on: eventLoop)
+    /// - parameter on: the event loop to accept clients on
+    /// - parameter assigning: the event loops to assign to incoming clients
+    public func stream(on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) -> TCPClientStream {
+        return .init(server: self, on: eventLoop, assigning: eventLoops)
     }
 }
