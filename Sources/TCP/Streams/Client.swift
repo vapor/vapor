@@ -279,18 +279,33 @@ public final class TCPClient: Async.Stream {
 
         return existing
     }
+
+    /// Creates a new WriteSource if there is no write source yet
+    private func ensureWriteSource() -> DispatchSourceWrite {
+        guard let source = writeSource else {
+            /// create a new write source
+            let source = DispatchSource.makeWriteSource(
+                fileDescriptor: socket.descriptor,
+                queue: eventLoop.queue
+            )
+
+            /// handle socket ready to write
+            source.setEventHandler(handler: writeData)
+
+            /// handle a cancel event
+            source.setCancelHandler(handler: stop)
+
+            writeSource = source
+            return source
+        }
+
+        return source
+    }
     
     /// Disables the read source so that another read source (such as for SSL) can take over
     public func disableReadSource() {
         self.readSource?.cancel()
         self.readSource?.suspend()
-    }
-    
-    /// Attempts to connect to a server on the provided hostname and port
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
-        try self.socket.connect(hostname: hostname, port: port)
-        
-        return source
     }
 
     /// Deallocated the pointer buffer

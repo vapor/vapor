@@ -7,11 +7,11 @@ class SocketsTests: XCTestCase {
     func testServer() throws {
         let server = try TCPServer(eventLoops: [
             DispatchQueue(label: "codes.vapor.test.server")
-        ], acceptQueue: DispatchQueue(label: "accept"))
+        ])
         try server.start(port: 8338)
 
         /// 128 will be the max in flight clients
-        server.drain(128) { client, serverReq in
+        server.stream(on: DispatchQueue(label: "accept")).drain(128) { client, serverReq in
             client.drain { buffer, clientReq in
                 client.onInput(buffer)
                 /// after we write data, we are ready to read more
