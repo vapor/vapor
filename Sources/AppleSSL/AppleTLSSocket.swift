@@ -8,8 +8,8 @@ import TLS
 
 /// Apple Security implemented TLS socket.
 public final class AppleTLSSocket: TLSSocket {
-    /// See DispatchSocket.fileDescriptor
-    public var fileDescriptor: Int32 {
+    /// See DispatchSocket.descriptor
+    public var descriptor: Int32 {
         return tcp.descriptor
     }
 

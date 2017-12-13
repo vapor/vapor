@@ -5,7 +5,7 @@ import Dispatch
 /// A dispatch source compatible socket.
 public protocol DispatchSocket {
     /// The file descriptor.
-    var fileDescriptor: Int32 { get }
+    var descriptor: Int32 { get }
 
     /// Reads a maxiumum of `max` bytes into the supplied mutable buffer.
     /// Returns the actual number of bytes read.
@@ -253,7 +253,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
         guard let existing = readSource else {
             /// create a new read source
             let source = DispatchSource.makeReadSource(
-                fileDescriptor: socket.fileDescriptor,
+                fileDescriptor: socket.descriptor,
                 queue: eventLoop.queue
             )
 
@@ -275,7 +275,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
         guard let source = writeSource else {
             /// create a new write source
             let source = DispatchSource.makeWriteSource(
-                fileDescriptor: socket.fileDescriptor,
+                fileDescriptor: socket.descriptor,
                 queue: eventLoop.queue
             )
 

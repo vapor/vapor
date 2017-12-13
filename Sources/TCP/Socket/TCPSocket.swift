@@ -1,9 +1,10 @@
 import Bits
 import Dispatch
 import COperatingSystem
+import JunkDrawer
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public struct TCPSocket {
+public struct TCPSocket: DispatchSocket {
     /// The file descriptor related to this socket
     public let descriptor: Int32
 
