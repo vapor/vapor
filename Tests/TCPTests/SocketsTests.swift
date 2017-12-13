@@ -15,7 +15,6 @@ class SocketsTests: XCTestCase {
         let serverSocket = try TCPSocket(isNonBlocking: true)
         let server = try TCPServer(socket: serverSocket)
 
-        /// 128 will be the max in flight clients
         let serverStream = server.stream(
             on: DispatchQueue(label: "codes.vapor.test.server"),
             assigning: [
@@ -30,6 +29,7 @@ class SocketsTests: XCTestCase {
             ]
         )
 
+        /// set up the server stream
         serverStream.drain(.max) { client, serverReq in
             let clientStream = client.0.stream(on: client.1)
             clientStream.drain { buffer, clientReq in
@@ -54,9 +54,11 @@ class SocketsTests: XCTestCase {
         }.finally {
             // closed
         }
-        try server.start(port: 8338)
-        let exp = expectation(description: "all requests complete")
 
+        // beyblades let 'er rip
+        try server.start(port: 8338)
+
+        let exp = expectation(description: "all requests complete")
         var num = 1024
         for _ in 0..<num {
             let clientSocket = try TCPSocket(isNonBlocking: false)

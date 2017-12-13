@@ -7,56 +7,47 @@ import Async
 /// When done hashing the stream, call `complete` to receive the hash and reset the hash to it's original state
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/crypto/hash/#streaming-hashes-async)
-public final class ByteStreamHasher<H, O> : Async.Stream where H: Hash {
+public final class ByteStreamHasher<Hash>: Async.InputStream where Hash: Crypto.Hash {
     /// ByteStreamHasher accepts byte streams
     public typealias Input = ByteBuffer
 
-    /// See OutputStream.Output
-    public typealias Output = O
-
     /// The hash context
-    let context = H()
+    private let context = Hash()
 
-    /// Use a basic stream to easily implement our output stream.
-    var outputStream: BasicStream<O>
+    /// Any errors that have arisen while hashing
+    private var error: Error?
+
+    /// The current output request
+    private var outputRequest: OutputRequest?
     
     /// Creates a new ByteStreamHasher that can hash a stream of bytes
-    public required init() {
-        self.outputStream = .init()
-    }
+    public init() {}
 
     /// Completes the hash and returns the result
     public func complete() -> Data {
-        defer {
-            context.reset()
-        }
-
+        defer { onClose() }
         context.finalize()
         return context.hash
+    }
+
+    /// See InputStream.onOutput
+    public func onOutput(_ outputRequest: OutputRequest) {
+        self.outputRequest = outputRequest
     }
 
     /// See InputStream.onInput
     public func onInput(_ input: ByteBuffer) {
         context.update(input)
+        outputRequest?.requestOutput()
     }
 
     /// See InputStream.onError
     public func onError(_ error: Error) {
-        outputStream.onError(error)
+        self.error = error
     }
 
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, O == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    public func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    /// See InputStsream.onClose
+    public func onClose() {
+        context.reset()
     }
 }

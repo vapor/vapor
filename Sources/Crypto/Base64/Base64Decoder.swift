@@ -11,15 +11,9 @@ public final class Base64Decoder: Base64 {
     
     /// The pointer for containing the base64 encoded data
     public let pointer: MutableBytesPointer
-    
-    /// The bytes that couldn't be parsed from the previous buffer
-    public var remainder = Data()
 
     /// base64 or base64 url
     let encoding: Base64Encoding
-
-    /// Use a basic stream to easily implement our output stream.
-    public var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new Base64 encoder
     ///

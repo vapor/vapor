@@ -18,11 +18,16 @@ class Base64Tests: XCTestCase {
         let input = EmitterStream<ByteBuffer>()
         var buffer = ""
         
-        let encoder = Base64Encoder(bufferCapacity: 100)
+        let encoderStream = Base64Encoder(bufferCapacity: 100).stream()
         
-        input.stream(to: encoder).drain { string in
-            buffer += String(bytes: string, encoding: .utf8)!
-        }.catch { err in fatalError("\(err)") }
+        input.stream(to: encoderStream).drain(1) { bytes, req in
+            buffer += String(bytes: bytes, encoding: .utf8)!
+            req.requestOutput()
+        }.catch { err in
+            XCTFail("\(err)")
+        }.finally {
+            // done
+        }
         
         Data("tes".utf8).withUnsafeBytes { (pointer: BytesPointer) in
             input.emit(ByteBuffer(start: pointer, count: 1))
@@ -34,7 +39,7 @@ class Base64Tests: XCTestCase {
             input.emit(ByteBuffer(start: pointer.advanced(by: 1), count: 1))
         }
         
-        encoder.close()
+        input.close()
         
         XCTAssertEqual(buffer, "dGVzdDE=")
     }

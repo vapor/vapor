@@ -48,7 +48,6 @@ public final class TCPDataStream: Stream {
         self.outputRequest = nil
         self.outputStream = .init()
 
-
         /// handle downstream requesting data
         self.outputStream.onRequestClosure = request
 
