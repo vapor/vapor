@@ -7,16 +7,7 @@ extension QueryBuilder {
     /// The resulting array or an error will be resolved
     /// in the returned future.
     public func all() -> Future<[Model]> {
-        let promise = Promise([Model].self)
-        var models: [Model] = []
-
-        run { model in
-            models.append(model)
-        }.do {
-            promise.complete(models)
-        }.catch(promise.fail)
-
-        return promise.future
+        return run().all()
     }
 
     /// Returns a future with the first result of the query.
@@ -28,12 +19,22 @@ extension QueryBuilder {
     /// Runs a delete operation.
     public func delete() -> Future<Void> {
         query.action = .delete
-        return run()
+        return execute()
     }
 
-    /// Runs the query, discarding any results.
-    public func run() -> Future<Void> {
-        return run { _ in }
+    /// Runs the query, ignoring output.
+    public func execute() -> Future<Void> {
+        let promise = Promise(Void.self)
+
+        run().drain(.max) { model, req in
+            // ignore output
+        }.catch { err in
+            promise.fail(err)
+        }.finally {
+            promise.complete()
+        }
+
+        return promise.future
     }
 }
 
@@ -50,6 +51,7 @@ extension QueryBuilder {
         return chunk(decoding: Model.self, max: max, closure: closure)
     }
 
+    /// FIXME: move this to async
     /// Run the query, grouping the results into chunks before calling closure.
     public func chunk<T: Decodable>(
         decoding type: T.Type = T.self,
@@ -58,18 +60,54 @@ extension QueryBuilder {
         var partial: [T] = []
         partial.reserveCapacity(max)
 
-        return run(decoding: T.self) { model in
-            partial.append(model)
+        let promise = Promise(Void.self)
+
+        // drain the stream of results
+        run(decoding: T.self).drain(1) { row, req in
+            partial.append(row)
             if partial.count >= max {
                 try closure(partial)
                 partial = []
             }
-        }.then { _ -> Future<Void> in 
+            req.requestOutput()
+        }.catch { error in
+            promise.fail(error)
+        }.finally {
             if partial.count > 0 {
-                try closure(partial)
+                do {
+                    try closure(partial)
+                } catch {
+                    promise.fail(error)
+                }
             }
-
-            return .done
+            promise.complete()
         }
+
+        return promise.future
     }
 }
+
+/// FIXME: move this to async
+
+extension OutputStream {
+    /// Convenience for gathering all rows into a single array.
+    public func all() -> Future<[Output]> {
+        let promise = Promise([Output].self)
+
+        // cache the rows
+        var rows: [Output] = []
+
+        // drain the stream of results
+        drain(1) { row, req in
+            rows.append(row)
+            req.requestOutput()
+        }.catch { error in
+            promise.fail(error)
+        }.finally {
+            promise.complete(rows)
+        }
+
+        return promise.future
+    }
+}
+

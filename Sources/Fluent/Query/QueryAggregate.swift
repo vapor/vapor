@@ -69,16 +69,16 @@ extension QueryBuilder {
         
         var result: D? = nil
 
-        run(decoding: AggregateResult<D>.self) { res in
+        run(decoding: AggregateResult<D>.self).drain(1) { res, req in
             result = res.fluentAggregate
-        }.do {
+        }.catch { err in
+            promise.fail(err)
+        }.finally {
             if let result = result {
                 promise.complete(result)
             } else {
                 promise.fail(FluentError(identifier: "driver-error", reason: "The driver closed successfully without a result"))
             }
-        }.catch { err in
-            promise.fail(err)
         }
 
         return promise.future

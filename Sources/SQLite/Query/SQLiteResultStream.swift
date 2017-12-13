@@ -61,14 +61,14 @@ extension SQLiteResults {
 
 extension OutputStream {
     /// Convenience for gathering all rows into a single array.
-    public func all() throws -> Future<[Output]> {
+    public func all() -> Future<[Output]> {
         let promise = Promise([Output].self)
 
         // cache the rows
         var rows: [Output] = []
 
         // drain the stream of results
-        drain { row, req in
+        drain(1) { row, req in
             rows.append(row)
             req.requestOutput()
         }.catch { error in

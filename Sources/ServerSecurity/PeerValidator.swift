@@ -4,10 +4,10 @@ import Dispatch
 
 /// Helper that keeps track of a connection counter for an `Address`
 fileprivate final class RemoteAddress {
-    let address: Address
+    let address: TCPAddress
     var count = 0
     
-    init(address: Address) {
+    init(address: TCPAddress) {
         self.address = address
     }
 }
@@ -54,27 +54,25 @@ public final class PeerValidator {
         }
         
         // Cleans up be decreasing the counter
-        client.didClose = {
-            client.eventLoop.queue.async {
-                guard let currentRemote = currentRemote else {
-                    return
-                }
-                
-                currentRemote.count -= 1
-                
-                // Return if there are still connections open
-                guard currentRemote.count <= 0 else {
-                    return
-                }
-                
-                // Otherwise, remove the remote address
-                if let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
-                    self.remotes.remove(at: index)
-                }
-                
-                // Prevent memory leak
-                client.didClose = {}
+        client.willClose = {
+            guard let currentRemote = currentRemote else {
+                return
             }
+
+            currentRemote.count -= 1
+
+            // Return if there are still connections open
+            guard currentRemote.count <= 0 else {
+                return
+            }
+
+            // Otherwise, remove the remote address
+            if let index = self.remotes.index(where: { $0.address == currentRemoteAddress }) {
+                self.remotes.remove(at: index)
+            }
+
+            // Prevent memory leak
+            client.willClose = {}
         }
         
         return true

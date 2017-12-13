@@ -1,103 +1,43 @@
-import XCTest
-import Async
-import Dispatch
-import TCP
+import AppleSSL
 import Bits
+import TCP
 import TLS
-//
-//#if os(macOS) && !OPENSSL
-//    import AppleSSL
-//
-//    typealias SSL = AppleSSL.SSLStream
-//#else
-//    import OpenSSL
-//    
-//    typealias SSLStream = OpenSSL.SSLStream
-//#endif
-//
-//#if Xcode
-//    private var workDir: String {
-//        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-//        let path = "/\(parent)/"
-//        return path
-//    }
-//#else
-//    private let workDir = "./Tests/TLSTests/"
-//#endif
+import XCTest
 
 class SSLTests: XCTestCase {
-    func testSSL() throws {
-        // FIXME: @joannis, this is failing on macOS
-        /*
-        let server = try TCP.Server()
-        
-        var peers = [SSLStream<TCPClient>]()
-        var clients = [TLSClient]()
-        
-        let peerQueue = DispatchQueue(label: "test.peer")
-        
-        let message = Data("Hello world".utf8)
-        
-        var count = 0
-        
-        let receivedFuture = Promise<Void>()
-        
-        server.drain { client in
-            do {
-                let tlsClient = try! SSLStream(socket: client, descriptor: client.socket.descriptor, queue: peerQueue)
-         
-                tlsClient.drain { received in
-                    count += 1
-                    XCTAssertEqual(Data(received), message)
-                    receivedFuture.complete(())
-                    client.close()
-                }
-         
-                #if os(macOS) && !OPENSSL
-                    let cert = "\(workDir)public.der"
-                    try tlsClient.initializePeer(signedBy: cert).blockingAwait(timeout: .seconds(2))
-                #else
-                    let cert = "\(workDir)public.pem"
-                    let key = "\(workDir)private.pem"
-         
-                    try tlsClient.initializePeer(certificate: cert, key: key).blockingAwait(timeout: .seconds(2))
-                #endif
-         
-                tlsClient.start()
-                peers.append(tlsClient)
-            } catch {
-                client.close()
-            }
+    func testClient() {
+        do {
+            try _testClient()
+        } catch {
+            XCTFail("\(error)")
         }
-        
-        try server.start(port: 8432)
-        let clientQueue = DispatchQueue(label: "test.client")
+    }
 
-
-        let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(worker: EventLoop(queue: clientQueue))
-
-            clients.append(client)
-
-            return try client.connect(hostname: "localhost", port: 8432).map {
-                message.withUnsafeBytes { (pointer: BytesPointer) in
-                    let buffer = ByteBuffer(start: pointer, count: message.count)
-
-                    client.inputStream(buffer)
-                }
-            }
-        }
-        
-        try future.blockingAwait(timeout: .seconds(1))
-        try receivedFuture.future.blockingAwait()
-        
-        XCTAssertEqual(count, 1)
-        XCTAssertEqual(peers.count, 1)
-        XCTAssertEqual(clients.count, 1)
-        */
+    func _testClient() throws {
+        let tcpSocket = try TCPSocket(isNonBlocking: false)
+        let tcpClient = try TCPClient(socket: tcpSocket)
+        let tlsSettings = TLSClientSettings()
+        let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
+        print("connecting...")
+        try tlsClient.connect(hostname: "vapor.codes", port: 443)
+        print("initializing...")
+        try tlsClient.socket.initialize()
+        print("handshaking...")
+        //
+        try tlsClient.socket.handshake()
+        print(tlsClient)
+//        print("writing...")
+//        let req = "GET / HTTP/1.1\r\nContent-Length: 0\r\nHost: httpbin.org\r\n\r\n".data(using: .utf8)!
+//        try tlsClient.socket.write(max: req.count, from: req.withByteBuffer { $0 })
+//
+//        print("reading...")
+//        var res = Data.init(count: 4096)
+//        var buffer = MutableByteBuffer(start: res.withUnsafeMutableBytes { $0 }, count: 4096)
+//        try tlsClient.socket.read(max: res.count, into: buffer)
+//        print(res)
     }
 
     static let allTests = [
-        ("testSSL", testSSL)
+        ("testClient", testClient)
     ]
 }

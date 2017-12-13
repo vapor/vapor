@@ -37,6 +37,7 @@ public final class SQLiteQuery {
         self.binds = []
     }
 
+    /// Resets the query.
     public func reset(_ statementPointer: OpaquePointer) {
         sqlite3_reset(statementPointer)
         sqlite3_clear_bindings(statementPointer)
@@ -53,10 +54,10 @@ public final class SQLiteQuery {
         connection.background.async {
             do {
                 // blocking execute now that we're on the background thread
-                let stream = try self.blockingExecute()
+                let results = try self.blockingExecute()
                 // return to event loop
                 self.connection.eventLoop.queue.async {
-                    promise.complete(stream)
+                    promise.complete(results)
                 }
             } catch {
                 // return to event loop to output error
@@ -134,11 +135,11 @@ public final class SQLiteQuery {
             columns.append(column)
         }
 
-        let step = sqlite3_step(raw)
+        let step = sqlite3_step(r)
         switch step {
         case SQLITE_DONE:
             // no results
-            let ret = sqlite3_finalize(raw)
+            let ret = sqlite3_finalize(r)
             guard ret == SQLITE_OK else {
                 throw SQLiteError(statusCode: ret, connection: connection)
             }

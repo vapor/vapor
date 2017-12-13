@@ -10,14 +10,14 @@ import TLS
 
 #if os(Linux)
     import OpenSSL
-    let defaultSSLClient = OpenSSLClient.self
-    let defaultSSLClientUpgrader = OpenSSLClientUpgrader.self
-    let defaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
+    public typealias DefaultSSLClient = OpenSSLClient.self
+    public typealias DefaultSSLClientUpgrader = OpenSSLClientUpgrader.self
+    public typealias DefaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
 #else
     import AppleSSL
-    let defaultSSLClient = AppleSSLClient.self
-    let defaultSSLClientUpgrader = AppleSSLClientUpgrader.self
-    let defaultSSLPeerUpgrader = AppleSSLPeerUpgrader.self
+    public typealias DefaultSSLClient = AppleSSLClient.self
+    public typealias DefaultSSLClientUpgrader = AppleSSLClientUpgrader.self
+    public typealias DefaultSSLPeerUpgrader = AppleSSLClientUpgrader.self
 #endif
 
 extension Services {
@@ -37,19 +37,19 @@ extension Services {
             return EngineServerConfig()
         }
         
-        services.register(SSLClientSettings.self) { _ in
+        services.register { container in
             return SSLClientSettings()
         }
         
         services.register(SSLClientUpgrader.self) { _ in
-            return defaultSSLClientUpgrader.init()
+            return DefaultSSLClientUpgrader()
         }
         
         services.register(SSLPeerUpgrader.self) { _ in
-            return defaultSSLPeerUpgrader.init()
+            return DefaultSSLPeerUpgrader()
         }
         
-        services.register(BasicSSLClient.self) { container -> BasicSSLClient in
+        services.register(SSLClient.self) { container -> DefaultSSLClient in
             let client = try defaultSSLClient.init(
                 settings: try container.make(for: SSLClientSettings.self),
                 on: container

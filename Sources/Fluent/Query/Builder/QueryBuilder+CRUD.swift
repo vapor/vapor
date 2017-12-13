@@ -39,8 +39,8 @@ extension QueryBuilder {
             }
 
             return try model.willCreate(on: conn)
-                .then {
-                    return self.run().then { _ -> Future<Void> in
+                .then { _ -> Future<Void> in
+                    return self.execute().then { _ -> Future<Void> in
                         try model.parseID(from: conn)
                         return .done
                     }
@@ -70,7 +70,7 @@ extension QueryBuilder {
 
 
             return try model.willUpdate(on: conn)
-                .then { self.run() }
+                .then { self.execute() }
                 .then { try model.didUpdate(on: conn) }
         }
     }
@@ -102,7 +102,7 @@ extension QueryBuilder {
 
                 try self.filter(Model.idKey == id)
                 self.query.action = .delete
-                return self.run().then { try model.didDelete(on: conn) }
+                return self.execute().then { try model.didDelete(on: conn) }
             }
         }
     }
