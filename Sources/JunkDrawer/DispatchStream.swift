@@ -17,6 +17,20 @@ public protocol DispatchSocket {
 
     /// Closes the socket.
     func close()
+
+    /// True if the socket is ready for normal use
+    var isPrepared: Bool { get }
+
+    /// Prepares the socket, called if isPrepared is false.
+    func prepareSocket() throws
+}
+
+extension DispatchSocket {
+    /// See DispatchSocket.isPrepared
+    public var isPrepared: Bool { return true }
+
+    /// See DispatchSocket.prepareSocket
+    public func prepareSocket() throws {}
 }
 
 /// Data stream wrapper for a dispatch socket.
@@ -160,7 +174,15 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
     /// important: the socket _must_ be ready to read data
     /// as indicated by a read source.
     private func readData() {
-        print("socket ready to read")
+        guard socket.isPrepared else {
+            do {
+                try socket.prepareSocket()
+            } catch {
+                outputStream.onError(error)
+            }
+            return
+        }
+
         let read: Int
         do {
             read = try socket.read(
@@ -197,7 +219,15 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
 
     /// Writes the buffered data to the socket.
     private func writeData() {
-        print("socket ready to write")
+        guard socket.isPrepared else {
+            do {
+                try socket.prepareSocket()
+            } catch {
+                outputStream.onError(error)
+            }
+            return
+        }
+
         guard let input = inputBuffer else {
             fatalError("\(#function) called while inputBuffer is nil")
         }
@@ -210,10 +240,6 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
                 inputBuffer = nil
                 suspendWriting()
                 outputRequest?.requestOutput()
-            case 0:
-                // wrote nothing, don't suspend so write gets
-                // called again
-                break
             default: print("not all data was written: \(count)/\(input.count)")
             }
         } catch {

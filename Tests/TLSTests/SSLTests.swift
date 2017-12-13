@@ -28,7 +28,6 @@ class SSLTests: XCTestCase {
             let res = Data(buffer)
             print(String(data: res, encoding: .utf8)!)
             exp.fulfill()
-            req.requestOutput()
         }.catch { err in
             XCTFail("\(err)")
         }.finally {
@@ -38,7 +37,6 @@ class SSLTests: XCTestCase {
         let source = EmitterStream(ByteBuffer.self)
         source.output(to: tlsStream)
 
-        print("writing...")
         let req = "GET /robots.txt HTTP/1.1\r\nContent-Length: 0\r\nHost: www.google.com\r\nUser-Agent: hi\r\n\r\n".data(using: .utf8)!
         source.emit(req.withByteBuffer { $0 })
 

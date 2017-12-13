@@ -25,6 +25,8 @@ public final class AppleTLSSocket: TLSSocket {
     /// True if the handshake has completed
     private var handshakeCompleted: Bool
 
+    private var initCompleted: Bool
+
     /// Creates an SSL socket
     public init(tcp: TCPSocket, protocolSide: SSLProtocolSide) throws {
         guard let context = SSLCreateContext(nil, protocolSide, .streamType) else {
@@ -37,12 +39,11 @@ public final class AppleTLSSocket: TLSSocket {
         ref.pointee = tcp.descriptor
         self.ref = ref
         self.handshakeCompleted = false
+        self.initCompleted = false
     }
 
     /// See TLSSocket.read
     public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
-        if !handshakeCompleted { try handshake() }
-
         var processed = 0
         SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
         if processed == 0 {
@@ -53,17 +54,12 @@ public final class AppleTLSSocket: TLSSocket {
 
     /// See TLSSocket.write
     public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
-        guard handshakeCompleted else {
-            try handshake()
-            return 0
-        }
-
         var processed: Int = 0
         let status = SSLWrite(self.context, buffer.baseAddress!, max, &processed)
         switch status {
         case 0: break
         case errSSLWouldBlock:
-            print("errSSLWouldBlock")
+            print("write: errSSLWouldBlock")
         default: throw AppleTLSError.secError(status)
         }
 
@@ -73,26 +69,36 @@ public final class AppleTLSSocket: TLSSocket {
     /// See TLSSocket.close
     public func close() {
         SSLClose(context)
+        tcp.close()
+    }
+
+    /// See DispatchSocket.isPrepared
+    public var isPrepared: Bool {
+        return handshakeCompleted
+    }
+
+    /// See DispatchSocket.prepareSocket
+    public func prepareSocket() throws {
+        try handshake()
     }
 
     /// Runs the SSL handshake, regardless of client or server
-    public func handshake() throws {
-        print("handshake")
-        try initialize()
-        let result = SSLHandshake(context)
+    private func handshake() throws {
+        if !initCompleted {
+            try initialize()
+            initCompleted = true
+        }
 
+        let result = SSLHandshake(context)
         switch result {
-        case errSecSuccess: break
-        case errSSLWouldBlock:
-            if !tcp.isNonBlocking {
-                print("Unexpected would block error on a blocking socket.")
-            }
+        case errSecSuccess:
+            handshakeCompleted = true
+        case errSSLWouldBlock: break
         default:
             self.close()
             throw AppleTLSError.secError(result)
         }
 
-        handshakeCompleted = true
     }
 
     /// A helper that initializes SSL as either the client or server side
