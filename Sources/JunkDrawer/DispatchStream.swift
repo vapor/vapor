@@ -204,14 +204,17 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
 
         do {
             let count = try socket.write(max: input.count, from: input)
-            if count == input.count {
+            switch count {
+            case input.count:
+                // wrote everything, suspend until we get more data to write
                 inputBuffer = nil
                 suspendWriting()
                 outputRequest?.requestOutput()
-            } else {
-                /// let data = Data(input[input.count...])
-                /// FIXME:
-                print("not all data was written: \(count)/\(input.count)")
+            case 0:
+                // wrote nothing, don't suspend so write gets
+                // called again
+                break
+            default: print("not all data was written: \(count)/\(input.count)")
             }
         } catch {
             onError(error)
