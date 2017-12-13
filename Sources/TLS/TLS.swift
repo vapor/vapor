@@ -2,8 +2,9 @@ import Async
 import TCP
 import Bits
 import Dispatch
+import JunkDrawer
 
-public protocol TLSSocket {
+public protocol TLSSocket: DispatchSocket {
     func read(max: Int, into buffer: MutableByteBuffer) throws -> Int
     func write(max: Int, from buffer: ByteBuffer) throws -> Int
     func close()
@@ -14,23 +15,8 @@ public protocol TLSClient {
     func connect(hostname: String, port: UInt16) throws
 }
 
-// replace with TLSDataStream
-// public protocol TLSStream: TLSSocket, Async.Stream where Input == ByteBuffer, Output == ByteBuffer {}
-
-/// MARK: Peer
-
-public protocol TLSPeer: TLSSocket {
-    var settings: TLSServerSettings { get set }
-}
-
-/// MARK: Upgraders
-
-public protocol TLSClientUpgrader {
-    func upgrade(socket: TCPSocket, settings: TLSClientSettings, eventLoop: EventLoop) throws -> Future<TLSClient>
-}
-
-public protocol TLSPeerUpgrader {
-    func upgrade(socket: TCPSocket, settings: TLSServerSettings, eventLoop: EventLoop) throws -> Future<TLSPeer>
+public protocol TLSServer {
+    var settings: TLSServerSettings { get }
 }
 
 /// MARK: Settings

@@ -81,7 +81,9 @@ extension TCPSocket {
             case EINTR:
                 // the connection will now be made async regardless of socket type
                 // http://www.madore.org/~david/computers/connect-intr.html
-                break
+                if !isNonBlocking {
+                    print("EINTR on a blocking socket")
+                }
             case EINPROGRESS:
                 if !isNonBlocking {
                     fatalError("EINPROGRESS on a blocking socket")

@@ -3,13 +3,6 @@ import Bits
 import Foundation
 import Security
 
-/// Internal helper that asserts the success of an operation
-func assert(status: OSStatus) throws {
-    guard status == 0 else {
-        throw AppleTLSError.secError(status)
-    }
-}
-
 extension SSLContext {
     /// Sets the certificate regardless of Client/Server.
     ///
@@ -34,7 +27,13 @@ extension SSLContext {
         var ref: SecIdentity?
         
         // Applies the certificate
-        try assert(status: SecIdentityCreateWithCertificate(nil, certificate, &ref))
-        try assert(status: SSLSetCertificate(self, [ref as Any, certificate] as CFArray))
+        var status = SecIdentityCreateWithCertificate(nil, certificate, &ref)
+        guard status == 0 else {
+            throw AppleTLSError.secError(status)
+        }
+        status = SSLSetCertificate(self, [ref as Any, certificate] as CFArray)
+        guard status == 0 else {
+            throw AppleTLSError.secError(status)
+        }
     }
 }
