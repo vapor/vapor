@@ -5,14 +5,14 @@ import Foundation
 
 extension Benchmarker where Database.Connection: TransactionSupporting {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Signal {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         let promise = Promise<Void>()
         
         tanner.save(on: conn).flatMap(to: Void.self) {
             return conn.transaction { conn in
-                var future = Completable(())
+                var future = Signal(())
                 
                 /// create 100 users
                 for i in 1...100 {
@@ -53,7 +53,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
     }
 
     /// Benchmark fluent transactions.
-    public func benchmarkTransactions() throws -> Completable {
+    public func benchmarkTransactions() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
@@ -65,7 +65,7 @@ extension Benchmarker where Database.Connection: TransactionSupporting {
 extension Benchmarker where Database.Connection: TransactionSupporting & SchemaSupporting {
     /// Benchmark fluent transactions.
     /// The schema will be prepared first.
-    public func benchmarkTransactions_withSchema() throws -> Completable {
+    public func benchmarkTransactions_withSchema() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return UserMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
                 return try self._benchmark(on: conn)

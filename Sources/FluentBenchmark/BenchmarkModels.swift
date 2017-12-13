@@ -5,7 +5,7 @@ import Foundation
 
 extension Benchmarker {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Signal {
         // create
         let a = Foo<Database>(bar: "asdf", baz: 42)
         let b = Foo<Database>(bar: "asdf", baz: 42)
@@ -42,7 +42,7 @@ extension Benchmarker {
     }
 
     /// Benchmark the basic model CRUD.
-    public func benchmarkModels() throws -> Completable {
+    public func benchmarkModels() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
@@ -54,7 +54,7 @@ extension Benchmarker {
 extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the basic model CRUD.
     /// The schema will be prepared first.
-    public func benchmarkModels_withSchema() throws -> Completable {
+    public func benchmarkModels_withSchema() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return FooMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
                 return try self._benchmark(on: conn).always {

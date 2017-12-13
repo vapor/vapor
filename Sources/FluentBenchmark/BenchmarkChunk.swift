@@ -6,11 +6,11 @@ import Foundation
 
 extension Benchmarker {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Signal {
         var fetched64: [User<Database>] = []
         var fetched2047: [User<Database>] = []
         
-        var future = Completable(())
+        var future = Signal(())
         
         for i in 1...512 {
             let user = User<Database>(name: "User \(i)", age: i)
@@ -46,7 +46,7 @@ extension Benchmarker {
     }
 
     /// Benchmark result chunking
-    public func benchmarkChunking() throws -> Completable {
+    public func benchmarkChunking() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
@@ -58,7 +58,7 @@ extension Benchmarker {
 extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark result chunking
     /// The schema will be prepared first.
-    public func benchmarkChunking_withSchema() throws -> Completable {
+    public func benchmarkChunking_withSchema() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             let promise = Promise<Void>()
             

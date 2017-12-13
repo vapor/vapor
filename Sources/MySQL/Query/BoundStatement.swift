@@ -82,7 +82,7 @@ public final class BoundStatement {
         }
     }
     
-    public func execute() throws -> Completable {
+    public func execute() throws -> Signal {
         let promise = Promise<Void>()
         
         // Set up a parser
@@ -117,7 +117,7 @@ public final class BoundStatement {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    internal func forEachRow(_ handler: @escaping Callback<Row>) -> Completable {
+    internal func forEachRow(_ handler: @escaping Callback<Row>) -> Signal {
         let promise = Promise(Void.self)
 
         let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in
@@ -151,7 +151,7 @@ public final class BoundStatement {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    public func forEach<D>(_ type: D.Type, _ handler: @escaping Callback<D>) -> Completable
+    public func forEach<D>(_ type: D.Type, _ handler: @escaping Callback<D>) -> Signal
         where D: Decodable
     {
         return forEachRow { row in

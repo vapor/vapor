@@ -19,8 +19,8 @@ internal struct SchemaMigrationConfig<
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, using container: Container) -> Completable {
-        return then(to: Void.self) {
+    internal func migrate(using databases: Databases, using container: Container) -> Signal {
+        return Signal {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
@@ -35,7 +35,7 @@ internal struct SchemaMigrationConfig<
 
     /// Prepares the connection for migrations by ensuring
     /// the migration log model is ready for use.
-    internal func prepareForMigration(on conn: Database.Connection) -> Completable {
+    internal func prepareForMigration(on conn: Database.Connection) -> Signal {
         return MigrationLogMigration<Database>.prepareMetadata(on: conn).flatMap(to: Void.self) { _ in
             return MigrationLog<Database>.latestBatch(on: conn).flatMap(to: Void.self) { lastBatch in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
@@ -45,7 +45,7 @@ internal struct SchemaMigrationConfig<
 
     /// Migrates this configs migrations under the current batch.
     /// Migrations that have already been prepared will be skipped.
-    internal func migrateBatch(on conn: Database.Connection, batch: Int) -> Completable {
+    internal func migrateBatch(on conn: Database.Connection, batch: Int) -> Signal {
         return migrations.map { migration in
             return { migration.prepareIfNeeded(batch: batch, on: conn) }
         }.syncFlatten()

@@ -47,7 +47,7 @@ public final class LogMessage<D: Database>: Model {
 internal struct LogMessageMigration<D: Database>: Migration where D.Connection: SchemaSupporting {
     typealias Database = D
 
-    static func prepare(on connection: D.Connection) -> Completable {
+    static func prepare(on connection: D.Connection) -> Signal {
         return connection.create(LogMessage<D>.self) { builder in
             try builder.field(for: \LogMessage<Database>.id)
 
@@ -55,7 +55,7 @@ internal struct LogMessageMigration<D: Database>: Migration where D.Connection: 
         }
     }
 
-    static func revert(on connection: D.Connection) -> Completable {
+    static func revert(on connection: D.Connection) -> Signal {
         return connection.delete(LogMessage<Database>.self)
     }
 }

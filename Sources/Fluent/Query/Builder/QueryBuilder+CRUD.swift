@@ -6,7 +6,7 @@ extension QueryBuilder {
     /// Calls `create` if the ID is `nil`, and `update` if it exists.
     /// If you need to create a model with a pre-existing ID,
     /// call `create` instead.
-    public func save(_ model: Model) -> Completable {
+    public func save(_ model: Model) -> Signal {
         if model.fluentID != nil {
             return update(model)
         } else {
@@ -16,7 +16,7 @@ extension QueryBuilder {
 
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
-    public func create(_ model: Model) -> Completable {
+    public func create(_ model: Model) -> Signal {
         query.data = model
         query.action = .create
         return connection.flatMap(to: Void.self) { conn in
@@ -50,7 +50,7 @@ extension QueryBuilder {
 
     /// Updates the model. This requires that
     /// the model has its ID set.
-    public func update(_ model: Model) -> Completable {
+    public func update(_ model: Model) -> Signal {
         return connection.flatMap(to: Void.self) { conn in
             self.query.data = model
 
@@ -76,7 +76,7 @@ extension QueryBuilder {
 
     /// Deletes the supplied model.
     /// Throws an error if the mdoel did not have an id.
-    internal func delete(_ model: Model) -> Completable {
+    internal func delete(_ model: Model) -> Signal {
         if let type = Model.self as? AnySoftDeletable.Type
         {
             /// model is soft deletable
@@ -92,7 +92,7 @@ extension QueryBuilder {
     /// Deletes the supplied model.
     /// Throws an error if the mdoel did not have an id.
     /// note: does NOT respect soft deletable.
-    internal func _delete(_ model: Model) -> Completable {
+    internal func _delete(_ model: Model) -> Signal {
         return connection.flatMap(to: Void.self) { conn in
             return try model.willDelete(on: conn).flatMap(to: Void.self) {
                 guard let id = model.fluentID else {

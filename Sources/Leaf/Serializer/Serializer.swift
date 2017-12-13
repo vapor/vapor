@@ -69,7 +69,7 @@ public final class Serializer {
         chained: Syntax?,
         source: Source
     ) -> Future<LeafData?> {
-        return then(to: LeafData?.self) {
+        return Future<LeafData?> {
             guard let tag = self.renderer.tags[name] else {
                 throw SerializerError.unknownTag(name: name, source: source)
             }

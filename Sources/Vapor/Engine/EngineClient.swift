@@ -63,7 +63,7 @@ extension HTTPClient {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
     public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, using container: Container) -> Future<HTTPClient> {
-        return then(to: HTTPClient.self) {
+        return Future<HTTPClient> {
             let port = port ?? (ssl ? 443 : 80)
             
             if ssl {

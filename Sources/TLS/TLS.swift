@@ -34,7 +34,7 @@ public protocol SSLClient: TLSSocket {
     var settings: SSLClientSettings { get set }
     var peerDomainName: String? { get set }
     
-    func connect(hostname: String, port: UInt16) throws -> Completable
+    func connect(hostname: String, port: UInt16) throws -> Signal
 }
 
 public protocol TLSServer: TLSSocket {
@@ -91,7 +91,7 @@ public final class BasicSSLClient: SSLClient, TLSStream {
         client.onClose(onClose)
     }
     
-    public func connect(hostname: String, port: UInt16) throws -> Completable {
+    public func connect(hostname: String, port: UInt16) throws -> Signal {
         client.peerDomainName = hostname
         return try client.connect(hostname: hostname, port: port)
     }

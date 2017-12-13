@@ -67,5 +67,5 @@ public struct MigrationConfig {
 /// We need this protocol because we lose some database type
 /// info in our MigrationConfig storage.
 internal protocol MigrationRunnable {
-    func migrate(using databases: Databases, using container: Container) -> Completable
+    func migrate(using databases: Databases, using container: Container) -> Signal
 }

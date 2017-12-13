@@ -51,7 +51,7 @@ extension QueryBuilder {
         field: F?,
         as type: D.Type = D.self
     ) -> Future<D> {
-        return then(to: D.self) {
+        return Future<D> {
             let aggregate = try QueryAggregate(field: field?.makeQueryField(), method: method)
             return self.aggregate(aggregate)
         }

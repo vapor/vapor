@@ -37,7 +37,7 @@ public struct Parent<Child: Model, Parent: Model>
     public func get(
         on conn: DatabaseConnectable
     ) -> Future<Parent> {
-        return then(to: Parent.self) {
+        return Future<Parent> {
             try self.query(on: conn).first().map(to: Parent.self) { first in
                 guard let parent = first else {
                     throw FluentError(identifier: "parent-not-found", reason: "This parent relationship could not be resolved")

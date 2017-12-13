@@ -28,21 +28,21 @@ public protocol Model: AnyModel, ContainerFindable {
 
     /// Called before a model is created when saving.
     /// Throwing will cancel the save.
-    func willCreate(on connection: Database.Connection)  throws -> Completable
+    func willCreate(on connection: Database.Connection)  throws -> Signal
     /// Called after the model is created when saving.
-    func didCreate(on connection: Database.Connection) throws -> Completable
+    func didCreate(on connection: Database.Connection) throws -> Signal
 
     /// Called before a model is updated when saving.
     /// Throwing will cancel the save.
-    func willUpdate(on connection: Database.Connection) throws -> Completable
+    func willUpdate(on connection: Database.Connection) throws -> Signal
     /// Called after the model is updated when saving.
-    func didUpdate(on connection: Database.Connection) throws -> Completable
+    func didUpdate(on connection: Database.Connection) throws -> Signal
 
     /// Called before a model is deleted.
     /// Throwing will cancel the deletion.
-    func willDelete(on connection: Database.Connection) throws -> Completable
+    func willDelete(on connection: Database.Connection) throws -> Signal
     /// Called after the model is deleted.
-    func didDelete(on connection: Database.Connection) throws -> Completable
+    func didDelete(on connection: Database.Connection) throws -> Signal
 }
 
 /// Type-erased model.
@@ -119,19 +119,19 @@ extension Model {
     }
 
     /// Seee Model.willCreate()
-    public func willCreate(on connection: Database.Connection) throws -> Completable { return .done }
+    public func willCreate(on connection: Database.Connection) throws -> Signal { return .done }
     /// See Model.didCreate()
-    public func didCreate(on connection: Database.Connection) throws -> Completable { return .done }
+    public func didCreate(on connection: Database.Connection) throws -> Signal { return .done }
 
     /// See Model.willUpdate()
-    public func willUpdate(on connection: Database.Connection) throws -> Completable { return .done }
+    public func willUpdate(on connection: Database.Connection) throws -> Signal { return .done }
     /// See Model.didUpdate()
-    public func didUpdate(on connection: Database.Connection) throws -> Completable { return .done }
+    public func didUpdate(on connection: Database.Connection) throws -> Signal { return .done }
 
     /// See Model.willDelete()
-    public func willDelete(on connection: Database.Connection) throws -> Completable { return .done }
+    public func willDelete(on connection: Database.Connection) throws -> Signal { return .done }
     /// See Model.didDelete()
-    public func didDelete(on connection: Database.Connection) throws -> Completable { return .done }
+    public func didDelete(on connection: Database.Connection) throws -> Signal { return .done }
 }
 
 /// MARK: Convenience
@@ -155,26 +155,26 @@ extension Model {
     /// Calls `create` if the ID is `nil`, and `update` if it exists.
     /// If you need to create a model with a pre-existing ID,
     /// call `create` instead.
-    public func save(on conn: DatabaseConnectable) -> Completable {
+    public func save(on conn: DatabaseConnectable) -> Signal {
         return query(on: conn).save(self)
     }
 
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
-    public func create(on conn: DatabaseConnectable) -> Completable {
+    public func create(on conn: DatabaseConnectable) -> Signal {
         return query(on: conn).create(self)
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
-    public func update(on conn: DatabaseConnectable) -> Completable {
+    public func update(on conn: DatabaseConnectable) -> Signal {
         return query(on: conn).update(self)
     }
 
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func delete(on conn: DatabaseConnectable) -> Completable {
+    public func delete(on conn: DatabaseConnectable) -> Signal {
         return query(on: conn).delete(self)
     }
 
@@ -183,7 +183,7 @@ extension Model {
     public static func find(_ id: Self.ID, on conn: DatabaseConnectable) -> Future<Self?> {
         typealias FindResult = Self?
         
-        return then(to: FindResult.self) {
+        return Future<FindResult> {
             return try query(on: conn)
                 .filter(idKey == id)
                 .first()

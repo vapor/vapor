@@ -8,10 +8,10 @@ internal struct MigrationContainer<D: Database> {
     typealias Database = D
 
     /// the closure for performing the migration
-    var prepare: (Database.Connection) -> Completable
+    var prepare: (Database.Connection) -> Signal
 
     /// the closure for reverting the migration
-    var revert: (Database.Connection) -> Completable
+    var revert: (Database.Connection) -> Signal
 
     /// this migration's unique name
     var name: String
@@ -30,7 +30,7 @@ internal struct MigrationContainer<D: Database> {
     internal func prepareIfNeeded(
         batch: Int,
         on connection: Database.Connection
-    ) -> Completable {
+    ) -> Signal {
         return hasPrepared(on: connection).flatMap(to: Void.self) { hasPrepared in
             if hasPrepared {
                 return .done
@@ -47,7 +47,7 @@ internal struct MigrationContainer<D: Database> {
 
     /// reverts this migration only if it hasn't previous run.
     /// if reverted, the migration log is deleted.
-    internal func revertIfNeeded(on connection: Database.Connection) -> Completable {
+    internal func revertIfNeeded(on connection: Database.Connection) -> Signal {
         return hasPrepared(on: connection).flatMap(to: Void.self) { hasPrepared in
             if hasPrepared {
                 return self.revert(connection).flatMap(to: Void.self) {
@@ -64,7 +64,7 @@ internal struct MigrationContainer<D: Database> {
 
     /// returns true if the migration has already been prepared.
     internal func hasPrepared(on connection: Database.Connection) -> Future<Bool> {
-        return then(to: Bool.self) {
+        return Future<Bool> {
             return try QueryBuilder(MigrationLog<Database>.self, on: Future(connection))
                 .filter(\MigrationLog<Database>.name == self.name)
                 .first()

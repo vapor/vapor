@@ -34,7 +34,7 @@ public final class PreparedStatement {
     /// Resets this prepared statement to it's prepared state (rather than fetching/executed)
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    public func reset() -> Completable {
+    public func reset() -> Signal {
         return connection.resetPreparedStatement(self)
     }
     

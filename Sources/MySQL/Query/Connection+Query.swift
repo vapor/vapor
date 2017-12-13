@@ -31,7 +31,7 @@ extension MySQLConnection {
     
     /// An internal function that shoots a raw query without expecting a real answer
     @discardableResult
-    public func administrativeQuery(_ query: MySQLQuery) -> Completable {
+    public func administrativeQuery(_ query: MySQLQuery) -> Signal {
         let promise = Promise<Void>()
         
         self.packetStream.drain { packet in

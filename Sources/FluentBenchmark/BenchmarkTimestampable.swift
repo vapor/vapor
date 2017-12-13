@@ -5,7 +5,7 @@ import Foundation
 
 extension Benchmarker {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Signal {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         if tanner.createdAt != nil || tanner.updatedAt != nil {
@@ -42,7 +42,7 @@ extension Benchmarker {
     }
 
     /// Benchmark the Timestampable protocol
-    public func benchmarkTimestampable() throws -> Completable {
+    public func benchmarkTimestampable() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
@@ -54,7 +54,7 @@ extension Benchmarker {
 extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the Timestampable protocol
     /// The schema will be prepared first.
-    public func benchmarkTimestampable_withSchema() throws -> Completable {
+    public func benchmarkTimestampable_withSchema() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return UserMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
                 return try self._benchmark(on: conn)

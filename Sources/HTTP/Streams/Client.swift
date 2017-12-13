@@ -89,7 +89,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
 
     /// Sends a request, not regarding any inflight requests.
     private func _send(request: HTTPRequest) -> Future<HTTPResponse> {
-        return then(to: HTTPResponse.self) {
+        return Future<HTTPResponse> {
             let promise = Promise(HTTPResponse.self)
             self.inFlight = promise
             self.serializer.onInput(request)

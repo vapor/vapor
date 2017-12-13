@@ -7,7 +7,7 @@ extension RedisClient {
     ///
     /// - returns: A future that will be completed (or failed) when the key is stored or failed to be stored
     @discardableResult
-    public func set(_ value: RedisData, forKey key: String) -> Completable {
+    public func set(_ value: RedisData, forKey key: String) -> Signal {
         return self.run(command: "SET", arguments: [RedisData(bulk: key), value]).map(to: Void.self) { result in
             if case .error(let error) = result.storage {
                 throw error

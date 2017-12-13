@@ -17,8 +17,8 @@ internal struct QueryMigrationConfig<Database: Fluent.Database>: MigrationRunnab
     }
 
     /// See MigrationRunnable.migrate
-    internal func migrate(using databases: Databases, using container: Container) -> Completable {
-        return then(to: Void.self) {
+    internal func migrate(using databases: Databases, using container: Container) -> Signal {
+        return Signal {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
@@ -31,7 +31,7 @@ internal struct QueryMigrationConfig<Database: Fluent.Database>: MigrationRunnab
 
     /// Migrates this configs migrations under the current batch.
     /// Migrations that have already been prepared will be skipped.
-    internal func migrateBatch(on conn: Database.Connection) -> Completable {
+    internal func migrateBatch(on conn: Database.Connection) -> Signal {
         return MigrationLog<Database>.latestBatch(on: conn).flatMap(to: Void.self) { lastBatch in
             return self.migrations.map { migration in
                 return {

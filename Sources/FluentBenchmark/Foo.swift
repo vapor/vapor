@@ -52,7 +52,7 @@ internal struct FooMigration<D: Database>: Migration where D.Connection: SchemaS
     typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: Database.Connection) -> Completable {
+    static func prepare(on connection: Database.Connection) -> Signal {
         return connection.create(Foo<Database>.self) { builder in
             try builder.field(for: \Foo<Database>.id)
             try builder.field(for: \Foo<Database>.bar)
@@ -61,7 +61,7 @@ internal struct FooMigration<D: Database>: Migration where D.Connection: SchemaS
     }
 
     /// See Migration.revert
-    static func revert(on connection: Database.Connection) -> Completable {
+    static func revert(on connection: Database.Connection) -> Signal {
         return connection.delete(Foo<Database>.self)
     }
 }

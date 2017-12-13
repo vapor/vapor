@@ -85,7 +85,7 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
         }
         
         // Prepares the statement for binding
-        connection.withPreparation(statement: sqlString) { context -> Completable in
+        connection.withPreparation(statement: sqlString) { context -> Signal in
             do {
                 // Binds the model and other values
                 let bound = try context.bind { binding in
@@ -127,12 +127,12 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
     }
     
     /// ReferenceSupporting.enableReferences
-    public func enableReferences() -> Completable {
+    public func enableReferences() -> Signal {
         return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=1;")
     }
 
     /// ReferenceSupporting.disableReferences
-    public func disableReferences() -> Completable {
+    public func disableReferences() -> Signal {
         return connection.administrativeQuery("SET FOREIGN_KEY_CHECKS=0;")
     }
     

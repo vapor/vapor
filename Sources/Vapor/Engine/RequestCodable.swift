@@ -5,7 +5,7 @@ public protocol RequestDecodable {
 
 /// Can be converted to a request
 public protocol RequestEncodable {
-    func encode(to req: inout Request) throws -> Completable
+    func encode(to req: inout Request) throws -> Signal
 }
 
 /// Can be converted from and to a request
@@ -14,7 +14,7 @@ public typealias RequestCodable = RequestDecodable & RequestEncodable
 // MARK: Request Conformance
 
 extension Request: RequestEncodable {
-    public func encode(to req: inout Request) throws -> Completable {
+    public func encode(to req: inout Request) throws -> Signal {
         req = self
         return .done
     }

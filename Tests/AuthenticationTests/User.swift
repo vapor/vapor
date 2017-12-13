@@ -32,7 +32,7 @@ final class User: Model, Migration, PasswordAuthenticatable {
         self.password = password
     }
 
-    static func prepare(on connection: SQLiteDatabase.Connection) -> Completable {
+    static func prepare(on connection: SQLiteDatabase.Connection) -> Signal {
         return connection.create(self) { table in
             try table.field(for: \.id)
             try table.field(for: \.name)
@@ -41,7 +41,7 @@ final class User: Model, Migration, PasswordAuthenticatable {
         }
     }
 
-    static func revert(on connection: SQLiteDatabase.Connection) -> Completable {
+    static func revert(on connection: SQLiteDatabase.Connection) -> Signal {
         return connection.delete(self)
     }
 }

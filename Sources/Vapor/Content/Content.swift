@@ -18,13 +18,13 @@ extension Content {
     }
 
     /// See RequestEncodable.encode
-    public func encode(to req: inout Request) throws -> Completable {
+    public func encode(to req: inout Request) throws -> Signal {
         try req.content.encode(self)
         return .done
     }
 
     /// See ResponseEncodable.encode
-    public func encode(to res: inout Response, for req: Request) throws -> Completable {
+    public func encode(to res: inout Response, for req: Request) throws -> Signal {
         try res.content.encode(self)
         return .done
     }

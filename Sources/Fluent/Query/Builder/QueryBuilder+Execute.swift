@@ -26,13 +26,13 @@ extension QueryBuilder {
     }
 
     /// Runs a delete operation.
-    public func delete() -> Completable {
+    public func delete() -> Signal {
         query.action = .delete
         return run()
     }
 
     /// Runs the query, discarding any results.
-    public func run() -> Completable {
+    public func run() -> Signal {
         return run { _ in }
     }
 }
@@ -46,7 +46,7 @@ extension QueryBuilder {
     /// Convenience for chunking model results.
     public func chunk(
         max: Int, closure: @escaping ChunkClosure<Model>
-    ) -> Completable {
+    ) -> Signal {
         return chunk(decoding: Model.self, max: max, closure: closure)
     }
 
@@ -54,7 +54,7 @@ extension QueryBuilder {
     public func chunk<T: Decodable>(
         decoding type: T.Type = T.self,
         max: Int, closure: @escaping ChunkClosure<T>
-    ) -> Completable {
+    ) -> Signal {
         var partial: [T] = []
         partial.reserveCapacity(max)
 

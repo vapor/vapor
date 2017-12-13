@@ -5,7 +5,7 @@ import Foundation
 
 extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSupporting {
     /// The actual benchmark.
-    fileprivate func _benchmark(on conn: Database.Connection) throws -> Completable {
+    fileprivate func _benchmark(on conn: Database.Connection) throws -> Signal {
         // create
         let tanner = User<Database>(name: "Tanner", age: 23)
         var ziz: Pet<Database>!
@@ -84,7 +84,7 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
     }
 
     /// Benchmark fluent relations.
-    public func benchmarkRelations() throws -> Completable {
+    public func benchmarkRelations() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return try self._benchmark(on: conn).always {
                 self.pool.releaseConnection(conn)
@@ -96,7 +96,7 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
 extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporting & ReferenceSupporting {
     /// Benchmark fluent relations.
     /// The schema will be prepared first.
-    public func benchmarkRelations_withSchema() throws -> Completable {
+    public func benchmarkRelations_withSchema() throws -> Signal {
         return pool.requestConnection().flatMap(to: Void.self) { conn in
             return conn.enableReferences().flatMap(to: Void.self) {
                 return UserMigration<Database>.prepare(on: conn)

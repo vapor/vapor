@@ -36,7 +36,7 @@ extension TestUser: Model {
 
 extension TestUser: Migration {
     /// See Migration.prepare
-    static func prepare(on connection: SQLiteConnection) -> Completable {
+    static func prepare(on connection: SQLiteConnection) -> Signal {
         return connection.create(self) { builder in
             try builder.field(for: \.id)
             try builder.field(for: \.name)
@@ -45,7 +45,7 @@ extension TestUser: Migration {
     }
 
     /// See Migration.revert
-    static func revert(on connection: SQLiteConnection) -> Completable {
+    static func revert(on connection: SQLiteConnection) -> Signal {
         return connection.delete(self)
     }
 }
@@ -54,7 +54,7 @@ extension TestUser: Migration {
 struct TestSiblings: Migration {
     typealias Database = SQLiteDatabase
 
-    static func prepare(on connection: SQLiteConnection) -> Completable {
+    static func prepare(on connection: SQLiteConnection) -> Signal {
         let owner = User(name: "Tanner", age: 23)
         return owner.save(on: connection).flatMap(to: Void.self) {
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
@@ -69,7 +69,7 @@ struct TestSiblings: Migration {
         }
     }
 
-    static func revert(on connection: SQLiteConnection) -> Completable {
+    static func revert(on connection: SQLiteConnection) -> Signal {
         return .done
     }
 }
@@ -100,7 +100,7 @@ final class User: Model, Content {
 }
 
 extension User: Migration {
-    static func prepare(on conn: SQLiteConnection) -> Completable {
+    static func prepare(on conn: SQLiteConnection) -> Signal {
         return conn.create(User.self) { user in
             try user.field(for: \.id)
             try user.field(for: \.name)
@@ -108,7 +108,7 @@ extension User: Migration {
         }
     }
 
-    static func revert(on conn: SQLiteConnection) -> Completable {
+    static func revert(on conn: SQLiteConnection) -> Signal {
         return conn.delete(User.self)
     }
 }
@@ -116,7 +116,7 @@ extension User: Migration {
 struct AddUsers: Migration {
     typealias Database = SQLiteDatabase
     
-    static func prepare(on conn: SQLiteConnection) -> Completable {
+    static func prepare(on conn: SQLiteConnection) -> Signal {
         let bob = User(name: "Bob", age: 42)
         let vapor = User(name: "Vapor", age: 3)
 
@@ -126,7 +126,7 @@ struct AddUsers: Migration {
         ].flatten()
     }
 
-    static func revert(on conn: SQLiteConnection) -> Completable {
+    static func revert(on conn: SQLiteConnection) -> Signal {
         return Future(())
     }
 }

@@ -27,7 +27,7 @@ extension Container {
     public func makeConnection<Database>(
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        return then(to: Database.Connection.self) {
+        return Future<Database.Connection> {
             let databases = try self.make(Databases.self, for: Self.self)
 
             guard let db = databases.storage[database.uid] as? Database else {
@@ -51,7 +51,7 @@ extension Container {
         to database: DatabaseIdentifier<Database>,
         closure: @escaping (Database.Connection) throws -> Future<F>
     ) -> Future<F> {
-        return then(to: F.self) {
+        return Future<F> {
             let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
@@ -69,7 +69,7 @@ extension Container {
     public func requestPooledConnection<Database>(
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        return then(to: Database.Connection.self) {
+        return Future<Database.Connection> {
             let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
@@ -105,7 +105,7 @@ extension Container {
 extension EphemeralContainer {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        return then(to: D.Connection.self) {
+        return Future<D.Connection> {
             let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
             if let current = connections.cache[database.uid]?.connection as? Future<D.Connection> {
                 return current

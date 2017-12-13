@@ -9,7 +9,7 @@ public protocol SchemaSupporting: DatabaseConnection {
     associatedtype FieldType: SchemaFieldType
 
     /// Executes the supplied schema on the database connection.
-    func execute(schema: DatabaseSchema) -> Completable
+    func execute(schema: DatabaseSchema) -> Signal
 }
 
 /// Capable of being a schema field type.
@@ -42,9 +42,9 @@ extension SchemaSupporting {
 
     /// Convenience for creating a closure that accepts a schema creator
     /// for the supplied model type on this schema executor.
-    public func create<Model>(_ model: Model.Type, closure: @escaping CreateClosure<Model>) -> Completable {
+    public func create<Model>(_ model: Model.Type, closure: @escaping CreateClosure<Model>) -> Signal {
         let creator = SchemaCreator(Model.self, on: self)
-        return then(to: Void.self) {
+        return Signal {
             try closure(creator)
             return self.execute(schema: creator.schema)
         }
@@ -55,16 +55,16 @@ extension SchemaSupporting {
 
     /// Convenience for creating a closure that accepts a schema updater
     /// for the supplied model type on this schema executor.
-    public func update<Model>(_ model: Model.Type, closure: @escaping UpdateClosure<Model>) -> Completable {
+    public func update<Model>(_ model: Model.Type, closure: @escaping UpdateClosure<Model>) -> Signal {
         let updater = SchemaUpdater(Model.self, on: self)
-        return then(to: Void.self){
+        return Signal{
             try closure(updater)
             return self.execute(schema: updater.schema)
         }
     }
 
     /// Convenience for deleting the schema for the supplied model type.
-    public func delete<Model: Fluent.Model>(_ model: Model.Type) -> Completable {
+    public func delete<Model: Fluent.Model>(_ model: Model.Type) -> Signal {
         var schema = DatabaseSchema(entity: Model.entity)
         schema.action = .delete
         return execute(schema: schema)

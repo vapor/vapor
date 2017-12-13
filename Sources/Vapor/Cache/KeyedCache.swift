@@ -10,8 +10,8 @@ public protocol KeyedCache {
     /// Sets the value to `entity` stored associated with the `key`
     ///
     /// Returns an empty future that triggers on successful storage
-    func set<E: Encodable>(_ entity: E, forKey key: String) throws -> Completable
+    func set<E: Encodable>(_ entity: E, forKey key: String) throws -> Signal
     
     /// Removes the value associated with the `key`
-    func remove(_ key: String) throws -> Completable
+    func remove(_ key: String) throws -> Signal
 }

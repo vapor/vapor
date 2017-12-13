@@ -97,7 +97,7 @@ extension Siblings {
     public func detach(
         _ model: Related,
         on conn: DatabaseConnectable
-    ) throws -> Completable {
+    ) throws -> Signal {
         return try Through.query(on: conn)
             .filter(basePivotField == base.requireID())
             .filter(relatedPivotField == model.requireID())
@@ -111,7 +111,7 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Base, Through
     public func attach(
         _ model: Related,
         on conn: DatabaseConnectable
-    ) -> Completable {
+    ) -> Signal {
         do {
             let pivot = try Through(base, model)
             return pivot.save(on: conn)
@@ -127,7 +127,7 @@ extension Siblings where Through: ModifiablePivot, Through.Left == Related, Thro
     public func attach(
         _ model: Related,
         on conn: DatabaseConnectable
-    ) -> Completable {
+    ) -> Signal {
         do {
             let pivot = try Through(model, base)
             return pivot.save(on: conn)

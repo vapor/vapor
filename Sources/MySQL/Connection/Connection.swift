@@ -278,7 +278,7 @@ extension MySQLConnection {
         database: String,
         on eventLoop: EventLoop
     ) -> Future<MySQLConnection> {
-        return then(to: MySQLConnection.self) {
+        return Future<MySQLConnection> {
             let connection = try MySQLConnection(
                 hostname: hostname,
                 port: port,

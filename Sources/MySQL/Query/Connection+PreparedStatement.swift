@@ -76,7 +76,7 @@ extension MySQLConnection {
     /// Resets a prepared statement so it can be re-used for another binding + execution
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/databases/mysql/prepared-statements/)
-    func resetPreparedStatement(_ statement: PreparedStatement) -> Completable {
+    func resetPreparedStatement(_ statement: PreparedStatement) -> Signal {
         var data = Data(repeating: 0x1a, count: 5)
         
         data.withUnsafeMutableBytes { (pointer: MutableBytesPointer) in
