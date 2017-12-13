@@ -24,7 +24,7 @@ public struct RouteResponder<RE>: Responder where RE: ResponseEncodable
     public func respond(to req: Request) throws -> Future<Response> {
         return try closure(req).flatMap(to: Response.self) { rep in
             var res = req.makeResponse()
-            return try rep.encode(to: &res, for: req).transform(res)
+            return try rep.encode(to: &res, for: req).transform(to: res)
         }
     }
 }

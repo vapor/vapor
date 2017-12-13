@@ -184,7 +184,7 @@ do {
         }
 
         let user = try JSONDecoder().decode(User.self, from: data)
-        return user.save(on: req).transform(user)
+        return user.save(on: req).transform(to: user)
     }
 
     router.get("builder") { req -> Future<[User]> in
@@ -202,7 +202,7 @@ do {
                     user.save(on: db),
                     message.save(on: db)
                 ].flatten()
-            }.transform("done")
+            }.transform(to: "done")
         }
     }
 
@@ -245,11 +245,11 @@ do {
     }
 
     router.get("run") { req -> Future<String> in
-        return User.query(on: req).run(into: { _ in }).transform("done")
+        return User.query(on: req).run(into: { _ in }).transform(to: "done")
     }
 
     router.get("all") { req -> Future<String> in
-        return try User.query(on: req).filter(\.name == "Vapor").all().transform("done")
+        return try User.query(on: req).filter(\.name == "Vapor").all().transform(to: "done")
     }
 
     router.get("first") { req -> Future<User> in
@@ -263,11 +263,11 @@ do {
 
     router.get("asyncusers") { req -> Future<User> in
         let user = User(name: "Bob", age: 1)
-        return user.save(on: req).transform(user)
+        return user.save(on: req).transform(to: user)
     }
 
     router.get("vapor") { req -> Future<String> in
-        return try req.make(Client.self).send(.get, to: "https://vapor.codes").transform("done!")
+        return try req.make(Client.self).send(.get, to: "https://vapor.codes").transform(to: "done!")
     }
                                                                          
     router.get("query") { req -> Future<String> in

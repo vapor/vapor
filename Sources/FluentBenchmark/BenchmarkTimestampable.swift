@@ -21,7 +21,7 @@ extension Benchmarker {
                 self.fail("timestamps should be current")
             }
             
-            return tanner.save(on: conn).transform(tanner.updatedAt!)
+            return tanner.save(on: conn).transform(to: tanner.updatedAt!)
         }.flatMap(to: User<Database>?.self) { originalUpdatedAt in
             if tanner.updatedAt! <= originalUpdatedAt {
                 self.fail("new updated at should be greater")

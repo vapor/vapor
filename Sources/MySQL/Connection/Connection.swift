@@ -289,7 +289,7 @@ extension MySQLConnection {
                 on: eventLoop
             )
 
-            return connection.authenticated.future.transform(connection)
+            return connection.authenticated.future.transform(to: connection)
         }
     }
 }
