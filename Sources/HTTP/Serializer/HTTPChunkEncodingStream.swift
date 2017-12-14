@@ -15,19 +15,12 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     private var upstream: OutputRequest?
 
     /// Remaining requested output
-    private var remainingOutputRequested: UInt
+    private var remainingOutputRequested: UInt {
+        didSet { print("remaining: \(remainingOutputRequested)") }
+    }
 
-    /// Capable of handling an encoded chunk
-    typealias ChunkHandler = (ByteBuffer) -> ()
-
-    /// Closure for handling encoded chunks
-    var chunkHandler: ChunkHandler?
-
-    /// Capable of handling a close event
-    typealias CloseHandler = () -> ()
-
-    /// Closure for handling a close event
-    var closeHandler: CloseHandler?
+    /// The downstream input stream.
+    private var downstream: AnyInputStream?
 
     /// If true, the chunk encoder has been closed.
     var isClosed: Bool
@@ -41,7 +34,6 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     /// See OutputRequest.requestOutput
     func requestOutput(_ count: UInt) {
         print(count)
-        print(remainingOutputRequested)
         let isSuspended = remainingOutputRequested == 0
         remainingOutputRequested += count
         if isSuspended { update() }
@@ -52,9 +44,8 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
             if isClosed {
                 print("final chunk")
                 // send empty chunk to close stream
-                remainingOutputRequested = 0
                 Data().withByteBuffer(onInput)
-                closeHandler?()
+                downstream?.onClose()
             } else {
                 upstream?.requestOutput()
             }
@@ -67,8 +58,8 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
         // FIXME: Improve performance
         let hexNumber = String(input.count, radix: 16, uppercase: true).data(using: .utf8)!
         let chunk = hexNumber + crlf + Data(input) + crlf
+        chunk.withByteBuffer { downstream?.unsafeOnInput($0) }
         remainingOutputRequested -= 1
-        chunk.withByteBuffer { chunkHandler?($0) }
         update()
     }
 
@@ -87,6 +78,7 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     func onClose() {
         print("chunk on close")
         isClosed = true
+        update()
     }
     
     /// See InputStream.onError
@@ -96,8 +88,7 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     
     /// See OutputStream.output(to:)
     func output<I>(to inputStream: I) where I : Async.InputStream, Output == I.Input {
-        chunkHandler = inputStream.onInput
-        closeHandler = inputStream.onClose
+        downstream = inputStream
         inputStream.onOutput(self)
     }
 }

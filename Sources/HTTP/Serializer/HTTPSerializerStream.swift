@@ -117,6 +117,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
                     }
                 }
             case .outputStream(let closure):
+                self.remainingByteBuffersRequested -= 1
                 closure(HTTPChunkEncodingStream()).drain(1) { buffer, req in
                     self.bufferHandler?(buffer)
                     self.state = .bodyStreaming(req)
