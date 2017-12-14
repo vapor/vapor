@@ -29,13 +29,19 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     /// Closure for handling a close event
     var closeHandler: CloseHandler?
 
+    /// If true, the chunk encoder has been closed.
+    var isClosed: Bool
+
     /// Create a new chunk encoding stream
     init() {
         remainingOutputRequested = 0
+        isClosed = false
     }
 
     /// See OutputRequest.requestOutput
     func requestOutput(_ count: UInt) {
+        print(count)
+        print(remainingOutputRequested)
         let isSuspended = remainingOutputRequested == 0
         remainingOutputRequested += count
         if isSuspended { update() }
@@ -43,7 +49,15 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
 
     func update() {
         if remainingOutputRequested > 0 {
-            upstream?.requestOutput()
+            if isClosed {
+                print("final chunk")
+                // send empty chunk to close stream
+                remainingOutputRequested = 0
+                Data().withByteBuffer(onInput)
+                closeHandler?()
+            } else {
+                upstream?.requestOutput()
+            }
         }
     }
 
@@ -53,8 +67,8 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
         // FIXME: Improve performance
         let hexNumber = String(input.count, radix: 16, uppercase: true).data(using: .utf8)!
         let chunk = hexNumber + crlf + Data(input) + crlf
-        chunk.withByteBuffer { chunkHandler?($0) }
         remainingOutputRequested -= 1
+        chunk.withByteBuffer { chunkHandler?($0) }
         update()
     }
 
@@ -65,24 +79,14 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
 
     /// See InputStream.onOutput
     func onOutput(_ outputRequest: OutputRequest) {
+        isClosed = false
         self.upstream = outputRequest
     }
 
     /// See InputStream.onClose
     func onClose() {
-        /// FIXME: call close
-        closeHandler?()
-    }
-
-    /// See OutputStream.onOutput
-    func close() {
-//        // An empty padding chunk
-//        let header = Array(String.init(0, radix: 16, uppercase: true).utf8) + crlf
-//        /// FIXME: need to combine this
-//        /// FIXME: close can't just output another packet
-//        header.withUnsafeBufferPointer(outputStream.onInput)
-//        crlf.withUnsafeBufferPointer(outputStream.onInput)
-//        onClose()
+        print("chunk on close")
+        isClosed = true
     }
     
     /// See InputStream.onError
