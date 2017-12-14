@@ -43,19 +43,23 @@ public final class HTTPResponseSerializer: HTTPSerializer {
         let num = remaining > max ? max : remaining
         data.copyBytes(to: buffer.baseAddress!, from: dataOffset..<dataOffset + num)
         dataOffset = dataOffset + num
+        if dataOffset == data.count {
+            message = nil
+        }
         return num
     }
 
     private func serialize(_ response: HTTPResponse) -> Data {
         var data = Data()
         var headers = response.headers
-        
-        if case .stream(_) = response.body.storage {
+
+        switch response.body.storage {
+        case .outputStream:
             headers[.transferEncoding] = "chunked"
-        } else  {
+        case .data, .dispatchData, .staticString, .string:
             headers[.contentLength] = response.body.count.description
         }
-        
+
         let statusCode = [UInt8](response.status.code.description.utf8)
         
         // First line

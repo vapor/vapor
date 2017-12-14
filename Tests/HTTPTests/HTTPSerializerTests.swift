@@ -54,6 +54,57 @@ class HTTPSerializerTests: XCTestCase {
         XCTAssertEqual(output.count, 41)
         XCTAssertEqual(expected, String(data: output, encoding: .utf8))
     }
+
+    func testResponse() throws {
+        let response = try HTTPResponse(
+            status: .ok,
+            body: "<vapor>"
+        )
+
+        let serializer = HTTPResponseSerializer()
+        serializer.message = response
+
+        let expected = """
+        HTTP/1.1 200 OK\r
+        Content-Length: 7\r
+        \r
+
+        """
+
+        var buffer = Data(count: 4096)
+        let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+        XCTAssertNil(serializer.message)
+        XCTAssertEqual(serialized, 38)
+        let chunk = Data(buffer[0..<serialized])
+        XCTAssertEqual(expected, String(data: chunk, encoding: .utf8))
+    }
+
+    func testResponseChunked() throws {
+        let response = try HTTPResponse(
+            status: .ok,
+            body: "<vapor>"
+        )
+
+        let serializer = HTTPResponseSerializer()
+        serializer.message = response
+
+        let expected = """
+        HTTP/1.1 200 OK\r
+        Content-Length: 7\r
+        \r
+
+        """
+
+        var buffer = Data(count: 8) // small size here so we require multiple runs
+        var output = Data()
+        while serializer.message != nil {
+            let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+            output += Data(buffer[0..<serialized])
+        }
+        XCTAssertNil(serializer.message)
+        XCTAssertEqual(output.count, 38)
+        XCTAssertEqual(expected, String(data: output, encoding: .utf8))
+    }
     
 //    func testChunkEncoder() {
 //        let encoder = ChunkEncoder()
@@ -83,5 +134,7 @@ class HTTPSerializerTests: XCTestCase {
     static let allTests = [
         ("testRequest", testRequest),
         ("testRequestChunked", testRequestChunked),
+        ("testResponse", testResponse),
+        ("testResponseChunked", testResponseChunked),
     ]
 }

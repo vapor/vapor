@@ -78,9 +78,10 @@ public final class HTTPRequestSerializer: HTTPSerializer {
         serialized.append(contentsOf: http1newLine)
 
         var headers = request.headers
-        if case .stream(_) = request.body.storage {
+        switch request.body.storage {
+        case .outputStream:
             headers[.transferEncoding] = "chunked"
-        } else  {
+        case .data, .dispatchData, .staticString, .string:
             headers[.contentLength] = request.body.count.description
         }
 

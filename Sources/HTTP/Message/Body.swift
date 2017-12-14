@@ -18,7 +18,7 @@ public struct HTTPBody: Codable {
         case staticString(StaticString)
         case dispatchData(DispatchData)
         case string(String)
-        case stream(BodyStream)
+        case outputStream(OutputStreamClosure)
         
         func encode(to encoder: Encoder) throws {
             switch self {
@@ -30,7 +30,9 @@ public struct HTTPBody: Codable {
                 try Data(bytes: string.utf8Start, count: string.utf8CodeUnitCount).encode(to: encoder)
             case .string(let string):
                 try string.encode(to: encoder)
-            case .stream(_): return
+            case .outputStream(_):
+                /// FIXME: properly encode stream
+                return
             }
         }
         
@@ -45,7 +47,9 @@ public struct HTTPBody: Codable {
             case .dispatchData(let data): return data.count
             case .staticString(let staticString): return staticString.utf8CodeUnitCount
             case .string(let string): return string.utf8.count
-            case .stream(_): return 0
+            case .outputStream(_):
+                /// FIXME: convert to data then return count?
+                return 0
             }
         }
         
@@ -62,7 +66,7 @@ public struct HTTPBody: Codable {
                 return try string.withCString { pointer in
                     return try pointer.withMemoryRebound(to: UInt8.self, capacity: self.count, run)
                 }
-            case .stream(_):
+            case .outputStream(_):
                 throw HTTPError(identifier: "invalid-stream-acccess", reason: "A BodyStream was being accessed as a sequential byte buffer, which is impossible.")
             }
         }
@@ -97,10 +101,14 @@ public struct HTTPBody: Codable {
         
         self.storage = .data(data)
     }
-    
+
+    /// Output the body stream to the chunk encoding stream
+    /// When supplied in this closure
+    typealias OutputStreamClosure  = (HTTPChunkEncodingStream) -> (HTTPChunkEncodingStream)
+
     /// A chunked body stream
-    public init(chunked stream: BodyStream) {
-        self.storage = .stream(stream)
+    public init<S>(chunked stream: S) where S: Async.OutputStream, S.Output == ByteBuffer {
+        self.storage = .outputStream(stream.stream)
     }
     
     /// Decodes a body from from a Decoder
@@ -126,7 +134,8 @@ public struct HTTPBody: Codable {
             return nil
         case .string(let string):
             return Data(string.utf8)
-        case .stream(_):
+        case .outputStream(_):
+            /// FIXME: collect output stream into data?
             return nil
         }
     }

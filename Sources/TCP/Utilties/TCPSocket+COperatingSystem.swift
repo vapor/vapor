@@ -1,5 +1,11 @@
 import Foundation
 
+extension Int {
+    public static var maxTCPPacketSize: Int {
+        return 65535
+    }
+}
+
 #if os(Linux)
 import COperatingSystem
 
