@@ -77,12 +77,12 @@ public final class BoundStatement {
         var results = [D]()
         return self.forEach(D.self) { res in
             results.append(res)
-        }.map { _ -> [D] in
+        }.map(to: [D].self) {
             return results
         }
     }
     
-    public func execute() throws -> Future<Void> {
+    public func execute() throws -> Signal {
         let promise = Promise<Void>()
         
         // Set up a parser
@@ -117,7 +117,7 @@ public final class BoundStatement {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    internal func forEachRow(_ handler: @escaping Callback<Row>) -> Future<Void> {
+    internal func forEachRow(_ handler: @escaping Callback<Row>) -> Signal {
         let promise = Promise(Void.self)
 
         let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in
@@ -151,7 +151,7 @@ public final class BoundStatement {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    public func forEach<D>(_ type: D.Type, _ handler: @escaping Callback<D>) -> Future<Void>
+    public func forEach<D>(_ type: D.Type, _ handler: @escaping Callback<D>) -> Signal
         where D: Decodable
     {
         return forEachRow { row in

@@ -22,17 +22,17 @@ extension QueryBuilder {
     /// Returns a future with the first result of the query.
     /// `nil` if no results were returned.
     public func first() -> Future<Model?> {
-        return range(...1).all().map { $0.first }
+        return range(...1).all().map(to: Model?.self) { $0.first }
     }
 
     /// Runs a delete operation.
-    public func delete() -> Future<Void> {
+    public func delete() -> Signal {
         query.action = .delete
         return run()
     }
 
     /// Runs the query, discarding any results.
-    public func run() -> Future<Void> {
+    public func run() -> Signal {
         return run { _ in }
     }
 }
@@ -46,7 +46,7 @@ extension QueryBuilder {
     /// Convenience for chunking model results.
     public func chunk(
         max: Int, closure: @escaping ChunkClosure<Model>
-    ) -> Future<Void> {
+    ) -> Signal {
         return chunk(decoding: Model.self, max: max, closure: closure)
     }
 
@@ -54,7 +54,7 @@ extension QueryBuilder {
     public func chunk<T: Decodable>(
         decoding type: T.Type = T.self,
         max: Int, closure: @escaping ChunkClosure<T>
-    ) -> Future<Void> {
+    ) -> Signal {
         var partial: [T] = []
         partial.reserveCapacity(max)
 
@@ -64,7 +64,7 @@ extension QueryBuilder {
                 try closure(partial)
                 partial = []
             }
-        }.then { _ -> Future<Void> in 
+        }.flatMap(to: Void.self) { 
             if partial.count > 0 {
                 try closure(partial)
             }

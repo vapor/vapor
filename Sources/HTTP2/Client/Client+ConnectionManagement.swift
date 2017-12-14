@@ -38,7 +38,7 @@ extension HTTP2Client {
             let client = HTTP2Client(client: tlsClient)
             
             // Connect the TLS client
-            return try tlsClient.connect(hostname: hostname, port: port ?? 443).map {
+            return try tlsClient.connect(hostname: hostname, port: port ?? 443).map(to: HTTP2Client.self) {
                 // On successful connection, send the preface
                 Constants.staticPreface.withByteBuffer(tlsClient.onInput)
                 

@@ -158,7 +158,7 @@ public final class SQLiteQuery: Async.OutputStream {
     }
 
     /// Starts executing the statement.
-    public func execute() -> Future<Void> {
+    public func execute() -> Signal {
         // will alert when done
         let promise = Promise(Void.self)
 

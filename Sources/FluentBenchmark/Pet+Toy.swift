@@ -61,7 +61,7 @@ internal struct PetToyMigration<D: Database>: Migration where D.Connection: Sche
     typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: Database.Connection) -> Future<Void> {
+    static func prepare(on connection: Database.Connection) -> Signal {
         return connection.create(PetToy<Database>.self) { builder in
             try builder.field(for: \PetToy<Database>.id)
             try builder.field(for: \PetToy<Database>.petID)
@@ -70,7 +70,7 @@ internal struct PetToyMigration<D: Database>: Migration where D.Connection: Sche
     }
 
     /// See Migration.revert
-    static func revert(on connection: Database.Connection) -> Future<Void> {
+    static func revert(on connection: Database.Connection) -> Signal {
         return connection.delete(PetToy<Database>.self)
     }
 }

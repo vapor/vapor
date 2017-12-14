@@ -75,7 +75,7 @@ internal struct UserMigration<D: Database>: Migration
     typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: Database.Connection) -> Future<Void> {
+    static func prepare(on connection: Database.Connection) -> Signal {
         return connection.create(User<Database>.self) { builder in
             try builder.field(for: \User<Database>.id)
             try builder.field(for: \User<Database>.name)
@@ -86,7 +86,7 @@ internal struct UserMigration<D: Database>: Migration
     }
 
     /// See Migration.revert
-    static func revert(on connection: Database.Connection) -> Future<Void> {
+    static func revert(on connection: Database.Connection) -> Signal {
         return connection.delete(User<Database>.self)
     }
 }

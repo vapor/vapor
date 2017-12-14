@@ -34,7 +34,7 @@ public final class AppleSSLClient: AppleSSLStream, SSLClient {
         }
     }
     
-    public func connect(hostname: String, port: UInt16) throws -> Future<Void> {
+    public func connect(hostname: String, port: UInt16) throws -> Signal {
         if let peerDomainName = peerDomainName {
             try assert(status: SSLSetPeerDomainName(context, peerDomainName, peerDomainName.count))
         }

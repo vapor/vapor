@@ -91,7 +91,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
+        .package(url: "https://github.com/vapor/async.git", .revision("future-inferrence")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [

@@ -22,7 +22,7 @@ public final class InMemoryKeyedCache: KeyedCache {
     }
     
     /// Sets a new value in the cache
-    public func set<E>(_ entity: E, forKey key: String) throws -> Future<Void> where E : Encodable {
+    public func set<E>(_ entity: E, forKey key: String) throws -> Signal where E : Encodable {
         queue.sync {
             storage[key] = entity
         }
@@ -31,7 +31,7 @@ public final class InMemoryKeyedCache: KeyedCache {
     }
     
     /// Removes a value from the cache
-    public func remove(_ key: String) throws -> Future<Void> {
+    public func remove(_ key: String) throws -> Signal {
         queue.sync {
             storage[key] = nil
         }

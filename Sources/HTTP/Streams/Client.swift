@@ -75,7 +75,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
         if let inFlight = self.inFlight {
             /// complete the current in flight request
             /// before sending the next one
-            return inFlight.future.then { _ -> Future<HTTPResponse> in
+            return inFlight.future.flatMap(to: HTTPResponse.self) { _ in
                 if self.isClosed {
                     return Future(error: HTTPError(identifier: "socket-closed", reason: "The socket was closed before the request was sent"))
                 }
@@ -89,7 +89,7 @@ public final class HTTPClient: Async.Stream, ClosableStream {
 
     /// Sends a request, not regarding any inflight requests.
     private func _send(request: HTTPRequest) -> Future<HTTPResponse> {
-        return then {
+        return Future<HTTPResponse> {
             let promise = Promise(HTTPResponse.self)
             self.inFlight = promise
             self.serializer.onInput(request)

@@ -53,7 +53,7 @@ extension MySQLDatabase : Database {
             password: password,
             database: database,
             on: eventloop
-        ).map { connection in
+        ).map(to: FluentMySQLConnection.self) { connection in
             return FluentMySQLConnection(connection: connection, logger: self.logger)
         }
     }

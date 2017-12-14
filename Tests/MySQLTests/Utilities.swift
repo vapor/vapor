@@ -176,7 +176,7 @@ public final class Table {
 
 extension MySQLConnection {
     /// Creates a table from the provided specification
-    public func createTable(_ table: Table) -> Future<Void> {
+    public func createTable(_ table: Table) -> Signal {
         let temporary = table.temporary ? "TEMPORARY" : ""
         
         var query = "CREATE \(temporary) TABLE \(table.name) ("
@@ -199,14 +199,14 @@ extension MySQLConnection {
     }
     
     /// Drops the table in the current database with the provided name
-    public func dropTable(named name: String) -> Future<Void> {
+    public func dropTable(named name: String) -> Signal {
         let query = "DROP TABLE \(name)"
         
         return self.administrativeQuery(query)
     }
     
     /// Drops all tables from the current database with a name inside the provided list
-    public func dropTables(named name: String...) -> Future<Void> {
+    public func dropTables(named name: String...) -> Signal {
         let query = "DROP TABLE \(name.joined(separator: ","))"
         
         return self.administrativeQuery(query)

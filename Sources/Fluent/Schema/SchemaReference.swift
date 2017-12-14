@@ -3,20 +3,20 @@ import Async
 /// Defines database types that support references
 public protocol ReferenceSupporting: SchemaSupporting, _ReferenceSupporting {
     /// Enables references errors.
-    func enableReferences() -> Future<Void>
+    func enableReferences() -> Signal
 
     /// Disables reference errors.
-    func disableReferences() -> Future<Void>
+    func disableReferences() -> Signal
 }
 
 /// Internal type-erasing protocol.
 /// Note: do not use this type externally.
 public protocol _ReferenceSupporting {
     /// Enables references errors.
-    func enableReferences() -> Future<Void>
+    func enableReferences() -> Signal
 
     /// Disables reference errors.
-    func disableReferences() -> Future<Void>
+    func disableReferences() -> Signal
 }
 
 /// A reference / foreign key is a field (or collection of fields) in one table

@@ -20,11 +20,11 @@ extension Request {
     public func redirect(
         to location: String,
         type: RedirectType = .normal
-    ) -> Response {
+    ) -> Future<Response> {
         let res = makeResponse()
         res.http.status = type.status
         res.http.headers["Location"] = location
-        return res
+        return Future(res)
     }
 }
 

@@ -5,7 +5,7 @@ extension HTTP2Client {
     /// Sends a request and receives a response
     /// TODO: Disconnected connection during the request cascading here
     public func send(request: HTTPRequest) -> Future<HTTPResponse> {
-        return then {
+        return Future<HTTPResponse> {
             let promise = Promise<HTTPResponse>()
             
             // Open an HTTP/2 stream

@@ -29,7 +29,7 @@ internal struct KitchenSinkSchema<
     typealias Database = D
 
     /// See Migration.prepare
-    static func prepare(on connection: D.Connection) -> Future<Void> {
+    static func prepare(on connection: D.Connection) -> Signal {
         return connection.create(KitchenSink<Database>.self) { builder in
             try builder.addField(
                 type: Database.Connection.FieldType.requireSchemaFieldType(for: UUID.self),
@@ -55,7 +55,7 @@ internal struct KitchenSinkSchema<
     }
 
     /// See Migration.revert
-    static func revert(on connection: D.Connection) -> Future<Void> {
+    static func revert(on connection: D.Connection) -> Signal {
         return connection.delete(KitchenSink<Database>.self)
     }
 }

@@ -9,8 +9,8 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
     public typealias FieldType = SQLiteFieldType
 
     /// See SchemaExecutor.execute()
-    public func execute(schema: DatabaseSchema) -> Future<Void> {
-        return then {
+    public func execute(schema: DatabaseSchema) -> Signal {
+        return Signal {
             guard schema.removeReferences.count <= 0 else {
                 throw FluentSQLiteError(identifier: "foreignkeys-unsupported", reason: "SQLite does not support deleting foreign keys")
             }
@@ -25,12 +25,12 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
     }
     
     /// ReferenceSupporting.enableReferences
-    public func enableReferences() -> Future<Void> {
+    public func enableReferences() -> Signal {
         return query(string: "PRAGMA foreign_keys = ON;").execute()
     }
 
     /// ReferenceSupporting.disableReferences
-    public func disableReferences() -> Future<Void> {
+    public func disableReferences() -> Signal {
         return query(string: "PRAGMA foreign_keys = OFF;").execute()
     }
 }

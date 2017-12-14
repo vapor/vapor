@@ -10,7 +10,7 @@ public protocol ResponseDecodable {
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responserepresentable)
 public protocol ResponseEncodable {
     /// Makes a response using the context provided by the HTTPRequest
-    func encode(to res: inout Response, for req: Request) throws -> Future<Void>
+    func encode(to res: inout Response, for req: Request) throws -> Signal
 }
 
 /// Can be converted from and to a response
@@ -20,25 +20,20 @@ public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 
 extension Response: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(to res: inout Response, for req: Request) throws -> Signal {
         res = self
         return .done
     }
 }
 
-extension HTTPResponse: ResponseEncodable, FutureType {
+extension HTTPResponse: ResponseEncodable {
     public typealias Expectation = HTTPResponse
 
     /// See ResponseRepresentable.makeResponse
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(to res: inout Response, for req: Request) throws -> Signal {
         let new = req.makeResponse()
         new.http = self
         res = new
         return .done
     }
-}
-
-/// Makes `Response` a drop-in replacement for `Future<Response>
-extension Response: FutureType {
-    public typealias Expectation = Response
 }

@@ -54,7 +54,7 @@ public final class Serializer {
             parts.append(promise.future)
         }
         
-        return parts.map { data in
+        return parts.map(to: Data.self) { data in
             return Data(data.joined())
         }
     }
@@ -69,7 +69,7 @@ public final class Serializer {
         chained: Syntax?,
         source: Source
     ) -> Future<LeafData?> {
-        return then { () -> Future<LeafData?> in
+        return Future<LeafData?> {
             guard let tag = self.renderer.tags[name] else {
                 throw SerializerError.unknownTag(name: name, source: source)
             }
@@ -84,7 +84,7 @@ public final class Serializer {
                 return inputPromise.future
             }
 
-            return inputFutures.then { inputs -> Future<LeafData?> in
+            return inputFutures.flatMap(to: LeafData?.self) { inputs in
                 let parsed = ParsedTag(
                     name: name,
                     parameters: inputs,
@@ -97,7 +97,7 @@ public final class Serializer {
                     parsed: parsed,
                     context: self.context,
                     renderer: self.renderer
-                ).then { data -> Future<LeafData?> in
+                ).flatMap(to: LeafData?.self) { data in
                     if let data = data {
                         return Future(data)
                     } else if let chained = chained {
@@ -156,8 +156,8 @@ public final class Serializer {
 
         switch op {
         case .equal:
-            return l.then { l in
-                return r.map { r in
+            return l.flatMap(to: LeafData.self) { l in
+                return r.map(to: LeafData.self) { r in
                     return .bool(l == r)
                 }
             }

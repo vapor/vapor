@@ -27,8 +27,8 @@ public final class QueryBuilder<Model: Fluent.Model> {
     public func run<T: Decodable>(
         decoding type: T.Type,
         into outputStream: @escaping (T) throws -> ()
-    ) -> Future<Void> {
-        return connection.then { conn -> Future<Void> in
+    ) -> Signal {
+        return connection.flatMap(to: Void.self) { conn in
             /// if the model is soft deletable, and soft deleted
             /// models were not requested, then exclude them
             if
@@ -67,8 +67,8 @@ public final class QueryBuilder<Model: Fluent.Model> {
     /// type is autoincrement.
     public func run(
         into outputStream: @escaping BasicStream<Model>.OnInput = { _ in }
-    ) -> Future<Void> {
-        return connection.then { conn in
+    ) -> Signal {
+        return connection.flatMap(to: Void.self) { conn in
             return self.run(decoding: Model.self) { output in
                 switch self.query.action {
                 case .create:

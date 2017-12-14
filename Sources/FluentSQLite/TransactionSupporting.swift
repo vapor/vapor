@@ -4,7 +4,7 @@ import SQLite
 
 extension SQLiteConnection: TransactionSupporting {
     /// See TransactionExecutor.execute
-    public func execute(transaction: DatabaseTransaction<SQLiteConnection>) -> Future<Void> {
+    public func execute(transaction: DatabaseTransaction<SQLiteConnection>) -> Signal {
         let promise = Promise(Void.self)
 
         query(string: "BEGIN TRANSACTION").execute().do {
