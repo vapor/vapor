@@ -13,19 +13,61 @@ enum HeaderState {
 
 
 /// Internal CHTTP parser protocol
-internal protocol CParser: Async.Stream {
+internal protocol CHTTPParser: HTTPParser {
+    static var parserType: http_parser_type { get }
     var parser: http_parser { get set }
     var settings: http_parser_settings { get set }
     var maxSize: Int { get }
     var state: CHTTPParserState { get set }
+    func makeMessage(from results: CParseResults) throws -> Message
 }
+
 
 enum CHTTPParserState {
     case ready
     case parsing
 }
 
-extension CParser {
+/// MARK: HTTPParser conformance
+
+extension CHTTPParser {
+    /// Parses a Request from the stream.
+    public func parse(max: Int, from buffer: ByteBuffer) throws -> Int {
+        guard let results = getResults() else {
+            return 0
+        }
+
+        results.currentSize += max
+        guard results.currentSize < results.maxSize else {
+            throw HTTPError(identifier: "messageTooLarge", reason: "The HTTP message's size exceeded set maximum: \(maxSize)")
+        }
+
+        /// parse the message using the C HTTP parser.
+        try executeParser(max: max, from: buffer)
+
+        guard results.isComplete else {
+            return max
+        }
+
+        // the results have completed, so we are ready
+        // for a new request to come in
+        state = .ready
+        CParseResults.remove(from: &parser)
+
+        message = try makeMessage(from: results)
+        return max
+    }
+
+    /// Resets the parser
+    public func reset() {
+        reset(Self.parserType)
+    }
+
+}
+
+/// MARK: CHTTP integration
+
+extension CHTTPParser {
     /// Parses a generic CHTTP message, filling the
     /// ParseResults object attached to the C praser.
     internal func executeParser(max: Int, from buffer: ByteBuffer) throws {
@@ -46,7 +88,7 @@ extension CParser {
     }
 }
 
-extension CParser {
+extension CHTTPParser {
     func getResults() -> CParseResults? {
         let results: CParseResults
         

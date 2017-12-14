@@ -32,8 +32,8 @@ final class DataSerializer: Async.Stream {
     }
 
     /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.onOutput(input)
+    public func output<I>(to input: I) where I: Async.InputStream, Output == I.Input {
+        outputStream.output(to: input)
     }
 
     /// See CloseableStream.close
