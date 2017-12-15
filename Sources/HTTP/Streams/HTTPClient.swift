@@ -39,7 +39,7 @@ public final class HTTPClient {
         let promise = Promise(HTTPResponse.self)
         clientStream.requestQueue.insert(request, at: 0)
         clientStream.responseQueue.insert(promise, at: 0)
-        clientStream.upstream.requestOutput()
+        clientStream.upstream?.request()
         clientStream.update()
         return promise.future
     }

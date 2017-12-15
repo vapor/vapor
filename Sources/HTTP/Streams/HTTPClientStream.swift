@@ -2,7 +2,7 @@ import Async
 
 /// An inverse client stream accepting responses and outputting requests.
 /// Used to implement HTTPClient. Should be kept internal
-internal final class HTTPClientStream: Stream, OutputRequest {
+internal final class HTTPClientStream: Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = HTTPResponse
 
@@ -16,7 +16,7 @@ internal final class HTTPClientStream: Stream, OutputRequest {
     var requestQueue: [HTTPRequest]
 
     /// Accepts serialized requests
-    var downstream: AnyInputStream!
+    var downstream: AnyInputStream<Output>?
 
     /// Serialized requests
     var remainingDownstreamRequests: UInt {
@@ -24,7 +24,7 @@ internal final class HTTPClientStream: Stream, OutputRequest {
     }
 
     /// Parsed responses
-    var upstream: OutputRequest!
+    var upstream: ConnectionContext?
 
     /// Creates a new HTTP client stream
     init() {
@@ -41,54 +41,40 @@ internal final class HTTPClientStream: Stream, OutputRequest {
         }
         while let request = requestQueue.popLast() {
             remainingDownstreamRequests -= 1
-            downstream.unsafeOnInput(request)
+            downstream?.next(request)
         }
     }
 
-    /// MARK: OutputRequest
-
-    /// See OutputRequest.requestOutput
-    func requestOutput(_ count: UInt) {
-        let isSuspended = remainingDownstreamRequests == 0
-        remainingDownstreamRequests += count
-        if isSuspended { update() }
+    /// See ConnectionContext.connection
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .request(let count):
+            let isSuspended = remainingDownstreamRequests == 0
+            remainingDownstreamRequests += count
+            if isSuspended { update() }
+        case .cancel:
+            /// FIXME: better cancel support
+            remainingDownstreamRequests = 0
+        }
     }
 
-    /// See OutputRequest.cancelOutput
-    func cancelOutput() {
-        /// FIXME: better cancel support
-        remainingDownstreamRequests = 0
-    }
-
-    /// MARK: OutputStream
-
-    /// See OutputStream.output(to:)
+    /// See OutputStream.output
     func output<S>(to inputStream: S) where S : InputStream, S.Input == HTTPRequest {
-        downstream = inputStream
-        inputStream.onOutput(self)
+        downstream = AnyInputStream(wrapped: inputStream)
+        inputStream.connect(to: self)
     }
 
-    /// MARK: InputStream
-
-    /// See InputStream.onInput
-    func onInput(_ input: HTTPResponse) {
-        let promise = responseQueue.popLast()!
-        promise.complete(input)
-        update()
-    }
-
-    /// See InputStream.onOutput
-    func onOutput(_ outputRequest: OutputRequest) {
-        upstream = outputRequest
-    }
-
-    /// See InputStream.onError
-    func onError(_ error: Error) {
-        downstream.onError(error)
-    }
-
-    /// See InputStream.onClose
-    func onClose() {
-        downstream.onClose()
+    /// See InputStream.input
+    func input(_ event: InputEvent<HTTPResponse>) {
+        switch event {
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .next(let input):
+            let promise = responseQueue.popLast()!
+            promise.complete(input)
+            update()
+        case .error(let error): downstream?.error(error)
+        case .close: downstream?.close()
+        }
     }
 }

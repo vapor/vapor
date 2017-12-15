@@ -3,7 +3,7 @@ import Bits
 import Foundation
 
 /// Applies HTTP/1 chunk encoding to a stream of data
-final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
+final class HTTPChunkEncodingStream: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = ByteBuffer
 
@@ -12,7 +12,7 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
 
     /// Current upstream output request
     /// This should be called when more output is desired.
-    private var upstream: OutputRequest?
+    private var upstream: ConnectionContext?
 
     /// Remaining requested output
     private var remainingOutputRequested: UInt {
@@ -20,7 +20,7 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
     }
 
     /// The downstream input stream.
-    private var downstream: AnyInputStream?
+    private var downstream: AnyInputStream<ByteBuffer>?
 
     /// If true, the chunk encoder has been closed.
     var isClosed: Bool
@@ -31,65 +31,57 @@ final class HTTPChunkEncodingStream: Async.Stream, OutputRequest {
         isClosed = false
     }
 
-    /// See OutputRequest.requestOutput
-    func requestOutput(_ count: UInt) {
-        print(count)
-        let isSuspended = remainingOutputRequested == 0
-        remainingOutputRequested += count
-        if isSuspended { update() }
-    }
-
-    func update() {
-        if remainingOutputRequested > 0 {
-            if isClosed {
-                print("final chunk")
-                // send empty chunk to close stream
-                Data().withByteBuffer(onInput)
-                downstream?.onClose()
-            } else {
-                upstream?.requestOutput()
-            }
+    /// See ConnectionContext.connection
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .request(let count):
+            let isSuspended = remainingOutputRequested == 0
+            remainingOutputRequested += count
+            if isSuspended { update() }
+        case .cancel:
+            // FIXME: cancel the output
+            break
         }
     }
 
-    /// See InputStream.onInput
-    func onInput(_ input: ByteBuffer) {
-        print("chunking input...")
-        // FIXME: Improve performance
-        let hexNumber = String(input.count, radix: 16, uppercase: true).data(using: .utf8)!
-        let chunk = hexNumber + crlf + Data(input) + crlf
-        chunk.withByteBuffer { downstream?.unsafeOnInput($0) }
-        remainingOutputRequested -= 1
-        update()
+    /// See InputStream.input
+    func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .connect(let upstream):
+            isClosed = false
+            self.upstream = upstream
+        case .next(let input):
+            // FIXME: Improve performance
+            let hexNumber = String(input.count, radix: 16, uppercase: true).data(using: .utf8)!
+            let chunk = hexNumber + crlf + Data(input) + crlf
+            chunk.withByteBuffer { downstream?.next($0) }
+            remainingOutputRequested -= 1
+            update()
+        case .error(let error):
+            downstream?.error(error)
+        case .close:
+            isClosed = true
+            update()
+        }
     }
 
-    /// See OutputRequest.cancelOutput
-    func cancelOutput() {
-        // FIXME: cancel the output
-    }
-
-    /// See InputStream.onOutput
-    func onOutput(_ outputRequest: OutputRequest) {
-        isClosed = false
-        self.upstream = outputRequest
-    }
-
-    /// See InputStream.onClose
-    func onClose() {
-        print("chunk on close")
-        isClosed = true
-        update()
-    }
-    
-    /// See InputStream.onError
-    func onError(_ error: Error) {
-        /// FIXME: handle error
-    }
-    
     /// See OutputStream.output(to:)
     func output<I>(to inputStream: I) where I : Async.InputStream, Output == I.Input {
-        downstream = inputStream
-        inputStream.onOutput(self)
+        downstream = AnyInputStream(wrapped: inputStream)
+        inputStream.connect(to: self)
+    }
+
+    /// Update the chunk encoders state
+    private func update() {
+        if remainingOutputRequested > 0 {
+            if isClosed {
+                // send empty chunk to close stream
+                Data().withByteBuffer { input(.next($0)) }
+                downstream?.close()
+            } else {
+                upstream?.request()
+            }
+        }
     }
 }
 
