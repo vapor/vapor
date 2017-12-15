@@ -170,7 +170,7 @@ public struct EngineServerConfig {
         hostname: String = "localhost",
         port: UInt16 = 8080,
         backlog: Int32 = 4096,
-        workerCount: Int = 8,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
         maxConnectionsPerIP: Int = 128
     ) {
         self.hostname = hostname
