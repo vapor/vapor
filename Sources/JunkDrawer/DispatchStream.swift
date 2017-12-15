@@ -95,14 +95,16 @@ public final class DispatchSocketStream<Socket>: Stream, ConnectionContext
         case .connect(let connection):
             upstream = connection
             connection.request()
-        case .close: downstream?.close()
+        case .close:
+            /// don't propogate to downstream or we will have an infinite loop
+            close()
         case .error(let e): downstream?.error(e)
         }
     }
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: Async.InputStream, S.Input == ByteBuffer {
-        downstream = AnyInputStream(wrapped: inputStream)
+        downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 
@@ -129,7 +131,6 @@ public final class DispatchSocketStream<Socket>: Stream, ConnectionContext
     /// Cancels reading
     public func close() {
         socket.close()
-        downstream?.close()
         if requestedOutputRemaining == 0 {
             /// dispatch sources must be resumed before
             /// deinitializing

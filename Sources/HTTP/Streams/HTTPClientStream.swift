@@ -6,8 +6,7 @@ import Bits
 internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
     where ByteStream: Stream,
     ByteStream.Input == ByteBuffer,
-    ByteStream.Output == ByteBuffer,
-    ByteStream: HTTPUpgradable
+    ByteStream.Output == ByteBuffer
 {
     /// See InputStream.Input
     typealias Input = HTTPResponse
@@ -25,9 +24,7 @@ internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
     var downstream: AnyInputStream<Output>?
 
     /// Serialized requests
-    var remainingDownstreamRequests: UInt {
-        didSet { print("remainingDownstreamRequests: \(remainingDownstreamRequests)") }
-    }
+    var remainingDownstreamRequests: UInt
 
     /// Parsed responses
     var upstream: ConnectionContext?
@@ -79,7 +76,7 @@ internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
 
     /// See OutputStream.output
     func output<S>(to inputStream: S) where S : InputStream, S.Input == HTTPRequest {
-        downstream = AnyInputStream(wrapped: inputStream)
+        downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 
@@ -92,7 +89,7 @@ internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
             let promise = responseQueue.popLast()!
             promise.complete(input)
             if let onUpgrade = input.onUpgrade {
-                onUpgrade.closure(byteStream)
+                onUpgrade.closure(AnyStream(byteStream))
             }
             update()
         case .error(let error): downstream?.error(error)

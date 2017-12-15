@@ -71,7 +71,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
 
     /// See OutputStream.onOutput
     public func output<I>(to inputStream: I) where I: Async.InputStream, Output == I.Input {
-        downstream = AnyInputStream(wrapped: inputStream)
+        downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 

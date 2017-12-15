@@ -18,36 +18,28 @@ public final class ByteStreamHasher<Hash>: Async.InputStream where Hash: Crypto.
     private var error: Error?
 
     /// The current output request
-    private var outputRequest: OutputRequest?
+    private var upstream: ConnectionContext?
     
     /// Creates a new ByteStreamHasher that can hash a stream of bytes
     public init() {}
 
     /// Completes the hash and returns the result
     public func complete() -> Data {
-        defer { onClose() }
+        defer { close() }
         context.finalize()
         return context.hash
     }
 
-    /// See InputStream.onOutput
-    public func onOutput(_ outputRequest: OutputRequest) {
-        self.outputRequest = outputRequest
-    }
-
-    /// See InputStream.onInput
-    public func onInput(_ input: ByteBuffer) {
-        context.update(input)
-        outputRequest?.requestOutput()
-    }
-
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        self.error = error
-    }
-
-    /// See InputStsream.onClose
-    public func onClose() {
-        context.reset()
+    public func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close: context.reset()
+        case .connect(let upstream):
+            self.upstream = upstream
+            upstream.request()
+        case .error(let error): self.error = error
+        case .next(let input):
+            context.update(input)
+            upstream?.request()
+        }
     }
 }

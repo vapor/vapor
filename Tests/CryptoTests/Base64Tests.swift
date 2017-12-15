@@ -19,10 +19,14 @@ class Base64Tests: XCTestCase {
         var buffer = ""
         
         let encoderStream = Base64Encoder(bufferCapacity: 100).stream()
-        
-        input.stream(to: encoderStream).drain(1) { bytes, req in
+
+        var upstream: ConnectionContext?
+        input.stream(to: encoderStream).drain { req in
+            upstream = req
+            req.request()
+        }.output { bytes in
             buffer += String(bytes: bytes, encoding: .utf8)!
-            req.requestOutput()
+            upstream!.request()
         }.catch { err in
             XCTFail("\(err)")
         }.finally {

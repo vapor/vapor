@@ -15,9 +15,7 @@ final class HTTPChunkEncodingStream: Async.Stream, ConnectionContext {
     private var upstream: ConnectionContext?
 
     /// Remaining requested output
-    private var remainingOutputRequested: UInt {
-        didSet { print("remaining: \(remainingOutputRequested)") }
-    }
+    private var remainingOutputRequested: UInt
 
     /// The downstream input stream.
     private var downstream: AnyInputStream<ByteBuffer>?
@@ -67,7 +65,7 @@ final class HTTPChunkEncodingStream: Async.Stream, ConnectionContext {
 
     /// See OutputStream.output(to:)
     func output<I>(to inputStream: I) where I : Async.InputStream, Output == I.Input {
-        downstream = AnyInputStream(wrapped: inputStream)
+        downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 

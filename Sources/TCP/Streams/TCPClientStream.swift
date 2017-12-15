@@ -41,7 +41,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: InputStream, S.Input == Output {
-        downstream = AnyInputStream(wrapped: inputStream)
+        downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 

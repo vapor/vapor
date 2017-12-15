@@ -81,9 +81,9 @@ public final class HTTPParserStream<Parser>: Stream, ConnectionContext where Par
     }
 
     /// See OutputStream.output
-    public func output<I>(to input: I) where I: InputStream, Output == I.Input {
-        downstream = AnyInputStream(wrapped: input)
-        input.connect(to: self)
+    public func output<I>(to inputStream: I) where I: InputStream, Output == I.Input {
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
 }
 

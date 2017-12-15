@@ -12,8 +12,7 @@ import JunkDrawer
 public final class HTTPClient<ByteStream>
     where ByteStream: Stream,
     ByteStream.Input == ByteBuffer,
-    ByteStream.Output == ByteBuffer,
-    ByteStream: HTTPUpgradable
+    ByteStream.Output == ByteBuffer
 {
     /// Serializes requests into byte buffers.
     private let serializerStream: HTTPSerializerStream<HTTPRequestSerializer>

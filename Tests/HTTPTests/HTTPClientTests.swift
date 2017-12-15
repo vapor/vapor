@@ -43,7 +43,7 @@ class HTTPClientTests: XCTestCase {
                 }
             },
             onOutput: { stream in
-                parserStream = AnyInputStream(wrapped: stream)
+                parserStream = AnyInputStream(stream)
             },
             onConnection: { event in
                 print(event)
@@ -72,9 +72,4 @@ class HTTPClientTests: XCTestCase {
         ("testTCP", testTCP),
         ("testStream", testStream),
     ]
-}
-
-import JunkDrawer
-extension ClosureStream: HTTPUpgradable {
-    public var socket: DispatchSocket { fatalError() }
 }

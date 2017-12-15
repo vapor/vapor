@@ -42,27 +42,10 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
     var onUpgrade: HTTPOnUpgrade? { get set }
 }
 
-///// Protocol that matches Stream where Input == ByteBuffer, Output == ByteBuffer
-///// FIXME: Change to type restricted protocol extending Stream if/when Swift
-///// restricts away assoc types
-//public protocol ByteStream {
-//    /// See InputStream.onInput
-//    func onInput(_ input: ByteBuffer)
-//    /// See InputStream.onOutput
-//    func onOutput(_ outputRequest: OutputRequest)
-//    /// See InputStream.onError
-//    func onError(_ error: Error)
-//    /// See InputStream.onClose
-//    func onClose()
-//    /// See OutputStream.output(to:)
-//    func output<S>(to inputStream: S) where S: InputStream, S.Input == ByteBuffer
-//}
-
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
-    /// Accepts a TCP client
-    /// FIXME: bytes stream
-    public typealias Closure = (HTTPUpgradable) -> ()
+    /// Accepts the byte stream underlying the HTTP connection.
+    public typealias Closure = (AnyStream<ByteBuffer, ByteBuffer>) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -81,17 +64,6 @@ public struct HTTPOnUpgrade: Codable {
     public init(from decoder: Decoder) throws {
         self.init { _ in }
     }
-}
-
-/// Capable of being upgraded using the HTTP upgrade mechanism.
-public protocol HTTPUpgradable {
-    /// Raw byte stream
-    var socket: DispatchSocket { get }
-}
-
-extension DispatchSocketStream: HTTPUpgradable {
-    /// See HTTPUpgradable.socket
-    public var socket: DispatchSocket  { return socket }
 }
 
 // MARK: Debug string

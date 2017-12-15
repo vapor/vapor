@@ -2,7 +2,7 @@ import Async
 import Bits
 import Foundation
 
-public final class Base64Stream: Async.Stream {
+public final class Base64Stream: Async.Stream, ConnectionContext {
     /// Accepts Base64 encoded byte streams
     public typealias Input = ByteBuffer
 
@@ -12,14 +12,14 @@ public final class Base64Stream: Async.Stream {
     /// The underlying coder
     private var base64: Base64
 
-    /// Use to implement output stream
-    private let outputStream: BasicStream<ByteBuffer>
+    /// Downstream input stream accepting byte buffers
+    private var downstream: AnyInputStream<ByteBuffer>?
 
     /// The bytes that couldn't be parsed from the previous buffer
     private var remainder: Data
 
-    /// Current output request
-    private var outputRequest: OutputRequest?
+    /// Upstream output stream outputting byte buffers
+    private var upstream: ConnectionContext?
 
     /// Current state
     private var state: Base64StreamState
@@ -30,81 +30,65 @@ public final class Base64Stream: Async.Stream {
     /// Creates a Base64 coder with default buffer size and encoding
     init(base64: Base64) {
         self.base64 = base64
-        outputStream = .init()
         remainder = .init()
-        outputRequest = nil
         state = .open
         remainingOutputRequested = 0
         self.remainder.reserveCapacity(4)
-        /// handle downstream requesting data
-        self.outputStream.onRequestClosure = request
-        /// handle downstream canceling output requests
-        self.outputStream.onCancelClosure = cancel
     }
 
-    /// Resumes reading data.
-    private func request(_ reading: UInt) {
-        let isSuspended = remainingOutputRequested == 0
-        remainingOutputRequested += reading
-        if isSuspended {
-            update()
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            upstream?.cancel()
+            remainingOutputRequested = 0
+        case .request(let count):
+            let isSuspended = remainingOutputRequested == 0
+            remainingOutputRequested += count
+            if isSuspended { update() }
         }
     }
 
-    /// Cancels reading
-    private func cancel() {
-        outputRequest?.cancelOutput()
-        remainingOutputRequested = 0
-    }
-
-    /// See InputStream.onOutput
-    public func onOutput(_ outputRequest: OutputRequest) {
-        self.outputRequest = outputRequest
-    }
-
-    /// See InputStream.onInput
-    public func onInput(_ input: ByteBuffer) {
-        do {
-            try processIncludingRemainder(input: input)
-            update()
-        } catch {
-            onError(error)
+    public func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close:
+            do {
+                try complete()
+                update()
+            } catch {
+                downstream?.error(error)
+            }
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error): downstream?.error(error)
+        case .next(let input):
+            do {
+                try processIncludingRemainder(input: input)
+                update()
+            } catch {
+                downstream?.error(error)
+            }
         }
-    }
-
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        outputStream.onError(error)
     }
 
     /// See OutputStream.onOutput
-    public func output<I>(to input: I) where I: Async.InputStream, ByteBuffer == I.Input {
-        outputStream.output(to: input)
+    public func output<I>(to inputStream: I) where I: Async.InputStream, ByteBuffer == I.Input {
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
 
-    /// See ClosableStream.onClose
-    public func onClose() {
-        do {
-            try complete()
-            update()
-            outputRequest?.cancelOutput()
-            outputStream.onClose()
-        } catch {
-            onError(error)
-        }
-    }
 
     private func update() {
         // if we have reminaing output, request more.
         // otherwise, suspend
         if remainingOutputRequested > 0 {
             switch state {
-            case .open: outputRequest?.requestOutput()
+            case .open: upstream!.request()
             case .closing(let buffer):
-                outputStream.onInput(buffer)
+                downstream?.next(buffer)
                 remainingOutputRequested -= 1
                 state = .closed
-            case .closed: break
+            case .closed:
+                downstream?.close()
             }
         }
     }
@@ -154,7 +138,7 @@ public final class Base64Stream: Async.Stream {
 
         // Write the output buffer to the output stream
         if writeBuffer.count > 0 {
-            outputStream.onInput(writeBuffer)
+            downstream?.next(writeBuffer)
             remainingOutputRequested -= 1
         }
 
