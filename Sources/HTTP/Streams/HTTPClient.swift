@@ -9,7 +9,12 @@ import JunkDrawer
 /// Multiple requests at the same time are subject to unknown behaviour
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
-public final class HTTPClient {
+public final class HTTPClient<ByteStream>
+    where ByteStream: Stream,
+    ByteStream.Input == ByteBuffer,
+    ByteStream.Output == ByteBuffer,
+    ByteStream: HTTPUpgradable
+{
     /// Serializes requests into byte buffers.
     private let serializerStream: HTTPSerializerStream<HTTPRequestSerializer>
 
@@ -17,21 +22,16 @@ public final class HTTPClient {
     private let parserStream: HTTPParserStream<HTTPResponseParser>
 
     /// Inverse stream, takes in responses and outputs requests
-    private let clientStream: HTTPClientStream
+    private let clientStream: HTTPClientStream<ByteStream>
 
     /// Creates a new Client wrapped around a `TCP.Client`
-    public init<ByteStream>(byteStream: ByteStream, maxResponseSize: Int = 10_000_000)
-        where ByteStream: Stream, ByteStream.Input == ByteBuffer, ByteStream.Output == ByteBuffer
-    {
+    public init(byteStream: ByteStream, maxResponseSize: Int = 10_000_000) {
         self.serializerStream = HTTPRequestSerializer().stream()
         self.parserStream = HTTPResponseParser(maxSize: maxResponseSize).stream()
-        self.clientStream = .init()
-
-        byteStream
-            .stream(to: parserStream)
-            .stream(to: clientStream)
-            .stream(to: serializerStream)
-            .output(to: byteStream)
+        self.clientStream = HTTPClientStream<ByteStream>(
+            byteStream: byteStream,
+            maxResponseSize: maxResponseSize
+        )
     }
 
     /// Sends an HTTP request.

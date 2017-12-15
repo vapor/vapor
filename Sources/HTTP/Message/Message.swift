@@ -62,7 +62,7 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
 public struct HTTPOnUpgrade: Codable {
     /// Accepts a TCP client
     /// FIXME: bytes stream
-    public typealias Closure = (DispatchSocket) -> ()
+    public typealias Closure = (HTTPUpgradable) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -87,6 +87,11 @@ public struct HTTPOnUpgrade: Codable {
 public protocol HTTPUpgradable {
     /// Raw byte stream
     var socket: DispatchSocket { get }
+}
+
+extension DispatchSocketStream: HTTPUpgradable {
+    /// See HTTPUpgradable.socket
+    public var socket: DispatchSocket  { return socket }
 }
 
 // MARK: Debug string

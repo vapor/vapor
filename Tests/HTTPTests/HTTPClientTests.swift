@@ -73,3 +73,8 @@ class HTTPClientTests: XCTestCase {
         ("testStream", testStream),
     ]
 }
+
+import JunkDrawer
+extension ClosureStream: HTTPUpgradable {
+    public var socket: DispatchSocket { fatalError() }
+}

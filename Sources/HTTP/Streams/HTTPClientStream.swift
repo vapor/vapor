@@ -1,8 +1,14 @@
 import Async
+import Bits
 
 /// An inverse client stream accepting responses and outputting requests.
 /// Used to implement HTTPClient. Should be kept internal
-internal final class HTTPClientStream: Stream, ConnectionContext {
+internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
+    where ByteStream: Stream,
+    ByteStream.Input == ByteBuffer,
+    ByteStream.Output == ByteBuffer,
+    ByteStream: HTTPUpgradable
+{
     /// See InputStream.Input
     typealias Input = HTTPResponse
 
@@ -26,11 +32,24 @@ internal final class HTTPClientStream: Stream, ConnectionContext {
     /// Parsed responses
     var upstream: ConnectionContext?
 
+    /// The source bytestream
+    let byteStream: ByteStream
+
     /// Creates a new HTTP client stream
-    init() {
+    init(byteStream: ByteStream, maxResponseSize: Int = 10_000_000) {
         self.responseQueue = []
         self.requestQueue = []
         self.remainingDownstreamRequests = 0
+        self.byteStream = byteStream
+
+        let serializerStream = HTTPRequestSerializer().stream()
+        let parserStream = HTTPResponseParser(maxSize: maxResponseSize).stream()
+
+        byteStream
+            .stream(to: parserStream)
+            .stream(to: self)
+            .stream(to: serializerStream)
+            .output(to: byteStream)
     }
 
     /// Updates the stream's state. If there are outstanding
@@ -72,6 +91,9 @@ internal final class HTTPClientStream: Stream, ConnectionContext {
         case .next(let input):
             let promise = responseQueue.popLast()!
             promise.complete(input)
+            if let onUpgrade = input.onUpgrade {
+                onUpgrade.closure(byteStream)
+            }
             update()
         case .error(let error): downstream?.error(error)
         case .close: downstream?.close()
