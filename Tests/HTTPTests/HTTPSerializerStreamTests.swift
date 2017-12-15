@@ -49,14 +49,14 @@ class HTTPSerializerStreamTests: XCTestCase {
 
     func testResponseStreamingBody() throws {
         /// output and output request for later in test
-        var output: [ByteBuffer] = []
+        var output: [Data] = []
         var outputRequest: OutputRequest?
         var closed = false
 
         /// setup the mock app
         let mockApp = EmitterStream(HTTPResponse.self)
         mockApp.stream(to: HTTPResponseSerializer().stream()).drain(1) { buffer, req in
-            output.append(buffer)
+            output.append(Data(buffer))
             outputRequest = req
         }.catch { err in
             XCTFail("\(err)")
@@ -99,7 +99,7 @@ class HTTPSerializerStreamTests: XCTestCase {
         let a = "hello".data(using: .utf8)!
         a.withByteBuffer(bodyEmitter.emit)
         if output.count == 2 {
-            let message = String(bytes: output[1], encoding: .utf8)
+            let message = String(data: output[1], encoding: .utf8)
             XCTAssertEqual(message, "5\r\nhello\r\n")
         } else {
             XCTFail("Invalid output count: \(output.count)")
@@ -110,7 +110,7 @@ class HTTPSerializerStreamTests: XCTestCase {
         let b = "test".data(using: .utf8)!
         b.withByteBuffer(bodyEmitter.emit)
         if output.count == 3 {
-            let message = String(bytes: output[2], encoding: .utf8)
+            let message = String(data: output[2], encoding: .utf8)
             XCTAssertEqual(message, "4\r\ntest\r\n")
         } else {
             XCTFail("Invalid output count: \(output.count)")
@@ -120,13 +120,27 @@ class HTTPSerializerStreamTests: XCTestCase {
         XCTAssertEqual(output.count, 3)
         bodyEmitter.close()
         if output.count == 4 {
-            let message = String(bytes: output[3], encoding: .utf8)
+            let message = String(data: output[3], encoding: .utf8)
             XCTAssertEqual(message, "0\r\n\r\n")
         } else {
             XCTFail("Invalid output count: \(output.count)")
         }
         /// parsing stream should remain open, just ready for another message
         XCTAssertTrue(!closed)
+
+        /// emit response 2
+        let response2 = try HTTPResponse(
+            status: .ok,
+            body: "hello"
+        )
+        outputRequest?.requestOutput(1)
+        mockApp.emit(response2)
+        if output.count == 5 {
+            let message = String(data: output[4], encoding: .utf8)
+            XCTAssertEqual(message, "HTTP/1.1 200 OK\r\nContent-Length: 5\r\n\r\n")
+        } else {
+            XCTFail("Invalid output count: \(output.count)")
+        }
     }
 
     static let allTests = [

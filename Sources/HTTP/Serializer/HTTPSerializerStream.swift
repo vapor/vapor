@@ -20,7 +20,9 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
     private var messageOutputRequest: OutputRequest?
 
     /// Amount of requested output remaining
-    private var remainingByteBuffersRequested: UInt
+    private var remainingByteBuffersRequested: UInt {
+        didSet { print("remainingByteBuffersRequested: \(remainingByteBuffersRequested)") }
+    }
 
     /// The serializer's state
     private var state: HTTPSerializerStreamState<Serializer.Message>
@@ -72,6 +74,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
         guard remainingByteBuffersRequested > 0 else {
             return
         }
+        print(state)
 
         switch state {
         case .ready:
@@ -85,6 +88,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
             /// continue streaming the message until
             /// the serializer indicates it is done
             let serialized = try! serializer.serialize(max: writeBuffer.count, into: writeBuffer)
+            print(serialized)
             let frame = ByteBuffer(start: writeBuffer.baseAddress, count: serialized)
             bufferHandler!(frame)
             remainingByteBuffersRequested -= 1
@@ -101,13 +105,19 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
             case .dispatchData(let data):
                 Data(data).withByteBuffer(bufferHandler!)
                 remainingByteBuffersRequested -= 1
+                state = .ready
+                update()
             case .data(let data):
                 data.withByteBuffer(bufferHandler!)
                 remainingByteBuffersRequested -= 1
+                state = .ready
+                update()
             case .staticString(let string):
                 let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
                 bufferHandler!(buffer)
                 remainingByteBuffersRequested -= 1
+                state = .ready
+                update()
             case .string(let string):
                 let size = string.utf8.count
                 string.withCString { pointer in
@@ -116,6 +126,8 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
                         self.remainingByteBuffersRequested -= 1
                     }
                 }
+                state = .ready
+                update()
             case .outputStream(let closure):
                 self.remainingByteBuffersRequested -= 1
                 closure(HTTPChunkEncodingStream()).drain(1) { buffer, req in

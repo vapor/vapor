@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Dispatch
+import JunkDrawer
 import TCP
 
 /// An HTTP message.
@@ -41,13 +42,27 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
     var onUpgrade: HTTPOnUpgrade? { get set }
 }
 
-/// Describe a byte stream
-public typealias ByteStream = BasicStream<ByteBuffer>
+///// Protocol that matches Stream where Input == ByteBuffer, Output == ByteBuffer
+///// FIXME: Change to type restricted protocol extending Stream if/when Swift
+///// restricts away assoc types
+//public protocol ByteStream {
+//    /// See InputStream.onInput
+//    func onInput(_ input: ByteBuffer)
+//    /// See InputStream.onOutput
+//    func onOutput(_ outputRequest: OutputRequest)
+//    /// See InputStream.onError
+//    func onError(_ error: Error)
+//    /// See InputStream.onClose
+//    func onClose()
+//    /// See OutputStream.output(to:)
+//    func output<S>(to inputStream: S) where S: InputStream, S.Input == ByteBuffer
+//}
 
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
     /// Accepts a TCP client
-    public typealias Closure = (ByteStream) -> ()
+    /// FIXME: bytes stream
+    public typealias Closure = (DispatchSocket) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -71,7 +86,7 @@ public struct HTTPOnUpgrade: Codable {
 /// Capable of being upgraded using the HTTP upgrade mechanism.
 public protocol HTTPUpgradable {
     /// Raw byte stream
-    var byteStream: ByteStream { get }
+    var socket: DispatchSocket { get }
 }
 
 // MARK: Debug string
