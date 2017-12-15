@@ -11,10 +11,13 @@ extension Benchmarker {
         let b = Foo<Database>(bar: "asdf", baz: 42)
         
         return a.save(on: conn).then { () -> Future<Void> in
+            print(#line)
             return b.save(on: conn)
         }.then { _ -> Future<Int> in
+            print(#line)
             return conn.query(Foo<Database>.self).count()
         }.then { count -> Future<Void> in
+            print(#line)
             if count != 2 {
                 self.fail("count should have been 2")
             }
@@ -24,8 +27,10 @@ extension Benchmarker {
             
             return b.save(on: conn)
         }.then { _ -> Future<Foo<Database>?> in
+            print(#line)
             return try Foo<Database>.find(b.requireID(), on: conn)
         }.then { fetched -> Future<Void> in
+            print(#line)
             // read
             if fetched?.bar != "fdsa" {
                 self.fail("b.bar should have been updated")
@@ -33,8 +38,10 @@ extension Benchmarker {
             
             return b.delete(on: conn)
         }.then { _ -> Future<Int> in
+            print(#line)
             return conn.query(Foo<Database>.self).count()
         }.map { count in
+            print(#line)
             if count != 1 {
                 self.fail("count should have been 1")
             }

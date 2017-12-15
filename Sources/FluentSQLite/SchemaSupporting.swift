@@ -20,18 +20,24 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
             let string = SQLiteSQLSerializer()
                 .serialize(schema: schemaQuery)
 
-            return self.query(string: string).execute()
+            return self.query(string: string).execute().map { results in
+                assert(results == nil)
+            }
         }
     }
     
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        return query(string: "PRAGMA foreign_keys = ON;").execute()
+        return query(string: "PRAGMA foreign_keys = ON;").execute().map { results in
+            assert(results == nil)
+        }
     }
 
     /// ReferenceSupporting.disableReferences
     public func disableReferences() -> Future<Void> {
-        return query(string: "PRAGMA foreign_keys = OFF;").execute()
+        return query(string: "PRAGMA foreign_keys = OFF;").execute().map { results in
+            assert(results == nil)
+        }
     }
 }
 

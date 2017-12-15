@@ -26,7 +26,10 @@ extension QueryBuilder {
     public func execute() -> Future<Void> {
         let promise = Promise(Void.self)
 
-        run().drain(.max) { model, req in
+        run().drain { req in
+            /// request fire hose
+            req.request(count: .max)
+        }.output { model in
             // ignore output
         }.catch { err in
             promise.fail(err)
@@ -63,13 +66,14 @@ extension QueryBuilder {
         let promise = Promise(Void.self)
 
         // drain the stream of results
-        run(decoding: T.self).drain(1) { row, req in
+        run(decoding: T.self).drain { upstream in
+            upstream.request(count: .max)
+        }.output { row in
             partial.append(row)
             if partial.count >= max {
                 try closure(partial)
                 partial = []
             }
-            req.requestOutput()
         }.catch { error in
             promise.fail(error)
         }.finally {
@@ -98,9 +102,10 @@ extension OutputStream {
         var rows: [Output] = []
 
         // drain the stream of results
-        drain(1) { row, req in
+        drain { upstream in
+            upstream.request(count: .max)
+        }.output { row in
             rows.append(row)
-            req.requestOutput()
         }.catch { error in
             promise.fail(error)
         }.finally {

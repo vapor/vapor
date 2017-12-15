@@ -148,7 +148,8 @@ public final class SQLiteQuery {
         case SQLITE_ROW:
             /// there are results, lets fetch them
             return SQLiteResults(raw: r, columns: columns, on: connection)
-        default: fatalError("unsupported `sqlite3_step` return: \(step)")
+        default:
+            throw SQLiteError(statusCode: step, connection: connection)
         }
     }
 }

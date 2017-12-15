@@ -69,7 +69,9 @@ extension QueryBuilder {
         
         var result: D? = nil
 
-        run(decoding: AggregateResult<D>.self).drain(1) { res, req in
+        run(decoding: AggregateResult<D>.self).drain { upstream in
+            upstream.request(count: .max)
+        }.output { res in
             result = res.fluentAggregate
         }.catch { err in
             promise.fail(err)

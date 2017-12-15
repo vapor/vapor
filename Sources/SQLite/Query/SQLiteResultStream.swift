@@ -1,7 +1,7 @@
 import Async
 import CSQLite
 
-public final class SQLiteResultStream: OutputStream {
+public final class SQLiteResultStream: OutputStream, ConnectionContext {
     // See OutputStream.Output
     public typealias Output = SQLiteRow
 
@@ -9,42 +9,41 @@ public final class SQLiteResultStream: OutputStream {
     private let results: SQLiteResults
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output>
+    private var downstream: AnyInputStream<Output>?
 
     /// Use `SQLiteResults.stream()` to create a `SQLiteResultStream`
     internal init(results: SQLiteResults) {
         self.results = results
-        self.outputStream = .init()
-        outputStream.onRequestClosure = request
-        outputStream.onCancelClosure = cancel
     }
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: Async.InputStream, S.Input == Output {
-        outputStream.output(to: inputStream)
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
 
-    /// Called when downstream asks for more output
-    private func request(count: UInt) {
-        guard count > 0 else {
-            return
-        }
-
-        results.fetchRow().do { row in
-            if let row = row {
-                self.outputStream.onInput(row)
-                self.request(count: count - 1)
-            } else {
-                self.outputStream.onClose()
+    /// See ConnectionContext.connection
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            /// FIXME: handle better
+            break
+        case .request(let count):
+            guard count > 0 else {
+                return
             }
-        }.catch { error in
-            self.outputStream.onError(error)
-        }
-    }
 
-    /// Called when downstream cancels output
-    private func cancel() {
-        self.outputStream.onClose()
+            results.fetchRow().do { row in
+                if let row = row {
+                    self.downstream?.next(row)
+                    self.request(count: count - 1)
+                } else {
+                    self.downstream?.close()
+                }
+            }.catch { error in
+                self.downstream?.error(error)
+            }
+        }
     }
 }
 
@@ -68,9 +67,10 @@ extension OutputStream {
         var rows: [Output] = []
 
         // drain the stream of results
-        drain(1) { row, req in
+        drain { upstream in
+            upstream.request(count: .max)
+        }.output { row in
             rows.append(row)
-            req.requestOutput()
         }.catch { error in
             promise.fail(error)
         }.finally {
