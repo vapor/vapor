@@ -21,17 +21,17 @@ extension FileReader {
     /// Reads data at the supplied path and combines into one Data.
     public func read(at path: String) -> Future<Data> {
         let promise = Promise(Data.self)
-        let stream = BasicStream(ByteBuffer.self)
+
         var data = Data()
-
-        stream.drain(.max) { new, req in
-            data.append(contentsOf: new)
-        }.catch { err in
-            promise.fail(err)
-        }.finally {
-            promise.complete(data)
-        }
-
+        let stream = ClosureStream<ByteBuffer>(
+            onInput: { data.append(contentsOf: $0) },
+            onError: { promise.fail($0) },
+            onClose: { promise.complete(data) },
+            onOutput: { $0.requestOutput(.max) },
+            onRequest: { _ in },
+            onCancel: { },
+            outputTo: { _ in }
+        )
         self.read(at: path, into: stream)
         return promise.future
     }

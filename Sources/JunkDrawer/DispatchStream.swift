@@ -34,7 +34,7 @@ extension DispatchSocket {
 }
 
 /// Data stream wrapper for a dispatch socket.
-public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSocket {
+public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Socket: DispatchSocket {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
@@ -61,13 +61,13 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
     private var writeSource: DispatchSourceWrite?
 
     /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output>
+    private var downstream: AnyInputStream?
+
+    /// The current request controlling incoming write data
+    private var upstream: OutputRequest?
 
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt
-
-    /// The current request controlling incoming write data
-    private var outputRequest: OutputRequest?
 
     internal init(socket: Socket, on eventLoop: EventLoop) {
         self.socket = socket
@@ -77,14 +77,6 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
         self.outputBuffer = MutableByteBuffer(start: .allocate(capacity: size), count: size)
         self.inputBuffer = nil
         self.requestedOutputRemaining = 0
-        self.outputRequest = nil
-        self.outputStream = .init()
-
-        /// handle downstream requesting data
-        self.outputStream.onRequestClosure = request
-
-        /// handle downstream canceling output requests
-        self.outputStream.onCancelClosure = cancel
     }
 
     /// See InputStream.onInput
@@ -100,33 +92,35 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
 
     /// See InputStream.onOutput
     public func onOutput(_ outputRequest: OutputRequest) {
-        self.outputRequest = outputRequest
+        self.upstream = outputRequest
+        /// always request an initial buffer since we have room to store it
         outputRequest.requestOutput()
     }
 
     /// See InputStream.onError
     public func onError(_ error: Error) {
-        outputStream.onError(error)
+        downstream?.onError(error)
     }
 
     /// See InputStream.onClose
     public func onClose() {
-        outputStream.onClose()
+        downstream?.onClose()
     }
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: Async.InputStream, S.Input == ByteBuffer {
-        outputStream.output(to: inputStream)
+        downstream = inputStream
+        inputStream.onOutput(self)
     }
 
     /// Resumes reading data.
-    private func request(_ reading: UInt) {
+    public func requestOutput(_ count: UInt) {
         /// We must add checks to this method since it is
         /// called everytime downstream requests more data.
         /// Not checking counts would result in over resuming
         /// the dispatch source.
         let isSuspended = requestedOutputRemaining == 0
-        requestedOutputRemaining += reading
+        requestedOutputRemaining += count
 
         /// ensure was suspended and output has actually
         /// been requested
@@ -136,7 +130,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
     }
 
     /// Cancels reading
-    private func cancel() {
+    public func cancelOutput() {
         socket.close()
         onClose()
         if requestedOutputRemaining == 0 {
@@ -178,7 +172,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
             do {
                 try socket.prepareSocket()
             } catch {
-                outputStream.onError(error)
+                downstream?.onError(error)
             }
             return
         }
@@ -192,12 +186,12 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
         } catch {
             // any errors that occur here cannot be thrown,
             //selfso send them to stream error catcher.
-            outputStream.onError(error)
+            downstream?.onError(error)
             return
         }
 
         guard read > 0 else {
-            cancel() // used to be source.cancel
+            cancelOutput() // used to be source.cancel
             return
         }
 
@@ -207,7 +201,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
             start: outputBuffer.baseAddress,
             count: read
         )
-        outputStream.onInput(bufferView)
+        downstream?.unsafeOnInput(bufferView)
 
         /// decrement remaining and check if
         /// we need to suspend accepting
@@ -223,7 +217,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
             do {
                 try socket.prepareSocket()
             } catch {
-                outputStream.onError(error)
+                downstream?.onError(error)
             }
             return
         }
@@ -239,7 +233,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
                 // wrote everything, suspend until we get more data to write
                 inputBuffer = nil
                 suspendWriting()
-                outputRequest?.requestOutput()
+                upstream?.requestOutput()
             default: print("not all data was written: \(count)/\(input.count)")
             }
         } catch {
@@ -261,7 +255,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
             source.setEventHandler(handler: readData)
 
             /// handle a cancel event
-            source.setCancelHandler(handler: cancel)
+            source.setCancelHandler(handler: cancelOutput)
 
             readSource = source
             return source
@@ -283,7 +277,7 @@ public final class DispatchSocketStream<Socket>: Stream where Socket: DispatchSo
             source.setEventHandler(handler: writeData)
 
             /// handle a cancel event
-            source.setCancelHandler(handler: cancel)
+            source.setCancelHandler(handler: cancelOutput)
 
             writeSource = source
             return source

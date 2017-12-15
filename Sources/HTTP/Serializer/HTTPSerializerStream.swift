@@ -30,23 +30,8 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
     /// A buffer used to store writes in temporarily
     private let writeBuffer: MutableByteBuffer
 
-    /// Capable of handling an serialized chunk
-    typealias BufferHandler = (ByteBuffer) -> ()
-
-    /// Closure for handling serialized chunks
-    private var bufferHandler: BufferHandler?
-
-    /// Capable of handling a close event
-    typealias CloseHandler = () -> ()
-
-    /// Closure for handling a close event
-    private var closeHandler: CloseHandler?
-
-    /// Capable of handling an error
-    typealias ErrorHandler = (Error) -> ()
-
-    /// Closure for handling an error event
-    private var errorHandler: ErrorHandler?
+    /// Downstream byte buffer input stream
+    private var downstream: AnyInputStream!
 
     /// Creates a new serializer stream. Use `HTTPSerializer.stream()` to call this method.
     internal init(serializer: Serializer, bufferSize: Int) {
@@ -90,7 +75,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
             let serialized = try! serializer.serialize(max: writeBuffer.count, into: writeBuffer)
             print(serialized)
             let frame = ByteBuffer(start: writeBuffer.baseAddress, count: serialized)
-            bufferHandler!(frame)
+            downstream.unsafeOnInput(frame)
             remainingByteBuffersRequested -= 1
 
             /// the serializer indicates it is done w/ this message
@@ -103,18 +88,18 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
         case .bodyReady(let body):
             switch body.storage {
             case .dispatchData(let data):
-                Data(data).withByteBuffer(bufferHandler!)
+                Data(data).withByteBuffer(downstream.unsafeOnInput)
                 remainingByteBuffersRequested -= 1
                 state = .ready
                 update()
             case .data(let data):
-                data.withByteBuffer(bufferHandler!)
+                data.withByteBuffer(downstream.unsafeOnInput)
                 remainingByteBuffersRequested -= 1
                 state = .ready
                 update()
             case .staticString(let string):
                 let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
-                bufferHandler!(buffer)
+                downstream.unsafeOnInput(buffer)
                 remainingByteBuffersRequested -= 1
                 state = .ready
                 update()
@@ -122,7 +107,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
                 let size = string.utf8.count
                 string.withCString { pointer in
                     pointer.withMemoryRebound(to: UInt8.self, capacity: size) { pointer in
-                        self.bufferHandler!(ByteBuffer(start: pointer, count: size))
+                        self.downstream.unsafeOnInput(ByteBuffer(start: pointer, count: size))
                         self.remainingByteBuffersRequested -= 1
                     }
                 }
@@ -130,9 +115,11 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
                 update()
             case .outputStream(let closure):
                 self.remainingByteBuffersRequested -= 1
-                closure(HTTPChunkEncodingStream()).drain(1) { buffer, req in
-                    self.bufferHandler?(buffer)
+                closure(HTTPChunkEncodingStream()).drain { req in
                     self.state = .bodyStreaming(req)
+                    req.requestOutput(1)
+                }.output { buffer in
+                    self.downstream.unsafeOnInput(buffer)
                     self.update()
                 }.catch { error in
                     self.onError(error)
@@ -161,20 +148,18 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, OutputRequest
 
     /// See InputStream.onError
     public func onError(_ error: Error) {
-        errorHandler?(error)
+        downstream.onError(error)
     }
 
     /// See OutputStream.onOutput
     public func output<I>(to inputStream: I) where I: Async.InputStream, Output == I.Input {
-        bufferHandler = inputStream.onInput
-        errorHandler = inputStream.onError
-        closeHandler = inputStream.onClose
+        downstream = inputStream
         inputStream.onOutput(self)
     }
 
     /// See InputStream.onClose
     public func onClose() {
-       closeHandler?()
+       downstream.onClose()
     }
 
     deinit {

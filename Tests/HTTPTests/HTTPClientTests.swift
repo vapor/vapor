@@ -28,7 +28,49 @@ class HTTPClientTests: XCTestCase {
         waitForExpectations(timeout: 5)
     }
 
+    func testStream() throws {
+        var dataRequest: OutputRequest?
+        var output: [Data] = []
+        var parserStream: AnyInputStream?
+
+        let byteStream = ClosureStream<ByteBuffer>(
+            onInput: { buffer in
+                output.append(Data(buffer))
+            },
+            onError: { error in
+                XCTFail("\(error)")
+            },
+            onClose: { print("close") },
+            onOutput: { req in
+                dataRequest = req
+            },
+            onRequest: { count in print("count: \(count)") },
+            onCancel: { print("cancel") },
+            outputTo: { stream in
+                parserStream = stream
+            }
+        )
+        let client = HTTPClient(byteStream: byteStream)
+        let req = HTTPRequest(method: .get, uri: "/html", headers: [.host: "httpbin.org"])
+        let futureRes = client.send(req)
+
+        XCTAssertEqual(output.count, 0)
+        XCTAssertNotNil(dataRequest)
+        dataRequest?.requestOutput()
+        if output.count == 1 {
+            let string = String(data: output[0], encoding: .utf8)!
+            XCTAssertEqual(string, "GET /html HTTP/1.1\r\nHost: httpbin.org\r\nContent-Length: 0\r\n\r\n")
+        } else {
+            XCTFail("Invalid output count: \(output.count)")
+        }
+
+        "HTTP/1.1 137 TEST\r\nContent-Length: 0\r\n\r\n".data(using: .utf8)!.withByteBuffer(parserStream!.unsafeOnInput)
+        let res = try futureRes.blockingAwait(timeout: .seconds(5))
+        XCTAssertEqual(res.status.code, 137)
+    }
+
     static let allTests = [
         ("testTCP", testTCP),
+        ("testStream", testStream),
     ]
 }

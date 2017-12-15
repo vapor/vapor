@@ -12,9 +12,10 @@ class HTTPSerializerStreamTests: XCTestCase {
 
         /// setup the mock app
         let mockApp = EmitterStream(HTTPResponse.self)
-        mockApp.stream(to: HTTPResponseSerializer().stream()).drain(1) { buffer, req in
-            output.append(buffer)
+        mockApp.stream(to: HTTPResponseSerializer().stream()).drain { req in
             outputRequest = req
+        }.output { buffer in
+            output.append(buffer)
         }.catch { err in
             XCTFail("\(err)")
         }.finally {
@@ -30,6 +31,8 @@ class HTTPSerializerStreamTests: XCTestCase {
             status: .ok,
             body: body
         )
+        XCTAssertEqual(output.count, 0)
+        outputRequest?.requestOutput(1)
         mockApp.emit(response)
 
         /// there should only be one buffer since we
@@ -55,9 +58,10 @@ class HTTPSerializerStreamTests: XCTestCase {
 
         /// setup the mock app
         let mockApp = EmitterStream(HTTPResponse.self)
-        mockApp.stream(to: HTTPResponseSerializer().stream()).drain(1) { buffer, req in
-            output.append(Data(buffer))
+        mockApp.stream(to: HTTPResponseSerializer().stream()).drain { req in
             outputRequest = req
+        }.output { buffer in
+            output.append(Data(buffer))
         }.catch { err in
             XCTFail("\(err)")
         }.finally {
@@ -75,6 +79,7 @@ class HTTPSerializerStreamTests: XCTestCase {
             status: .ok,
             body: HTTPBody(chunked: bodyEmitter)
         )
+        outputRequest?.requestOutput(1)
         mockApp.emit(response)
 
         /// there should only be one buffer since we
