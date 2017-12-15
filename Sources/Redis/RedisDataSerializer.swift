@@ -3,7 +3,7 @@ import Bits
 import Foundation
 
 /// A streaming Redis value serializer
-final class DataSerializer: Async.Stream {
+final class RedisDataSerializer: Async.Stream {
     /// See InputStream.Input
     typealias Input = RedisData
     
@@ -11,43 +11,39 @@ final class DataSerializer: Async.Stream {
     typealias Output = ByteBuffer
 
     /// Use a basic output stream to implement server output stream.
-    internal var outputStream: BasicStream<Output> = .init()
+    private var downstream: AnyInputStream<ByteBuffer>?
+
+    /// The upstream output stream supplying redis data
+    private var upstream: ConnectionContext?
 
     /// Creates a new ValueSerializer
     init() {}
 
-    /// See InputStream.onInput
-    public func onInput(_ input: RedisData) {
-        let message = input.serialize()
-
-        message.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: message.count)
-            outputStream.onInput(buffer)
+    /// See InputStream.input
+    func input(_ event: InputEvent<RedisData>) {
+        switch event {
+        case .close: downstream?.close()
+        case .error(let error): downstream?.error(error)
+        case .connect(let upstream):
+            self.upstream = upstream
+            downstream?.connect(to: upstream)
+        case .next(let input):
+            let message = input.serialize()
+            message.withUnsafeBytes { (pointer: BytesPointer) in
+                let buffer = ByteBuffer(start: pointer, count: message.count)
+                downstream?.next(buffer)
+            }
         }
     }
 
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        outputStream.onError(error)
-    }
-
-    /// See OutputStream.onOutput
-    public func output<I>(to input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.output(to: input)
-    }
-
-    /// See CloseableStream.close
-    func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    /// See OutputStream.output
+    func output<S>(to inputStream: S) where S: Async.InputStream, Output == S.Input {
+        downstream = AnyInputStream(inputStream)
+        upstream.flatMap(inputStream.connect)
     }
 }
 
-extension DataSerializer {
+extension RedisDataSerializer {
     /// Used for pipelining commands
     /// Concatenates commands to RedisData for the outputStream
     func onInput(_ input: [RedisData]) {
@@ -58,7 +54,7 @@ extension DataSerializer {
         }
         buffer.withUnsafeBytes { (pointer: BytesPointer) in
             let buffer = ByteBuffer(start: pointer, count: buffer.count)
-            outputStream.onInput(buffer)
+            downstream?.next(buffer)
         }
     }
     

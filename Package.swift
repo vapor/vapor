@@ -53,7 +53,7 @@ let package = Package(
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
-        .library(name: "HTTP2", targets: ["HTTP2"]),
+        // .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
@@ -168,8 +168,8 @@ let package = Package(
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
-        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
+        // .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        // .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
         .target(name: "Random", dependencies: ["JunkDrawer"]),

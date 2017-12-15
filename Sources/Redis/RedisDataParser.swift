@@ -3,7 +3,7 @@ import Bits
 import Foundation
 
 /// A streaming Redis value parser
-final class DataParser: Async.Stream {
+internal final class RedisDataParser: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = ByteBuffer
     
@@ -20,41 +20,41 @@ final class DataParser: Async.Stream {
     var maximumResponseSize = 10_000_000
 
     /// Use a basic output stream to implement server output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    private var downstream: AnyInputStream<Output>?
+
+    /// The upstream providing byte buffers
+    private var upstream: ConnectionContext?
     
     /// Creates a new ValueParser
     init() {}
 
     /// InputStream.onInput
-    func onInput(_ input: ByteBuffer) {
-        responseBuffer.append(contentsOf: Data(input))
-
-        do {
-            try parseBuffer()
-        } catch {
-            self.parsingValue = nil
-            onError(error)
+    func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close: downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+            // FIXME: handle
+        case .error(let error): downstream?.error(error)
+        case .next(let input):
+            responseBuffer.append(contentsOf: Data(input))
+            do {
+                /// FIXME: handle this better
+                try parseBuffer()
+            } catch {
+                self.parsingValue = nil
+                downstream?.error(error)
+            }
         }
     }
 
-    /// InputStream.onError
-    func onError(_ error: Error) {
-        outputStream.onError(error)
+    func connection(_ event: ConnectionEvent) {
+        fatalError("\(event)")
     }
 
-    /// See OutputStream.onOutput
-    func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    func output<S>(to inputStream: S) where S: Async.InputStream, Output == S.Input {
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
     
     /// Parses a basic String (no \r\n's) `String` starting at the current position
@@ -228,7 +228,7 @@ final class DataParser: Async.Stream {
         }
         
         parsingValue = nil
-        outputStream.onInput(data)
+        downstream?.next(data)
     }
     
     fileprivate func continueParsing(partialValues values: [PartialRedisData]) throws -> Bool {
