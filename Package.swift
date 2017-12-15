@@ -120,6 +120,7 @@ let package = Package(
         .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
         .testTarget(name: "CommandTests", dependencies: ["Command"]),
         .target(name: "ConsoleExample", dependencies: ["Console"]),
+        .target(name: "CommandExample", dependencies: ["Command"]),
 
         // Crypto
         .target(name: "Crypto", dependencies: ["Async", "Bits", "COperatingSystem", "Debugging", "JunkDrawer"]),

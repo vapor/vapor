@@ -28,6 +28,8 @@ extension Console {
 
         if input.options["help"]?.bool == true {
             try outputHelp(for: runnable, executable: input.executable)
+        } else if input.options["autocomplete"]?.bool == true {
+            try outputAutocomplete(for: runnable, executable: input.executable)
         } else {
             let arguments: [Argument]
             if let command = runnable as? Command {

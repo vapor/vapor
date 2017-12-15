@@ -26,7 +26,7 @@ public struct Option {
 
     /// The option's help text when `--help` is passed.
     public let help: [String]
-
+    
     /// The option's default value, if supplied
     public let `default`: String?
 
