@@ -25,8 +25,8 @@ public final class File: FileReader, FileCache {
         where S: Async.InputStream, S.Input == ByteBuffer
     {
         func onError(_ error: Error) {
-            stream.onError(error)
-            stream.onClose()
+            stream.error(error)
+            stream.close()
         }
 
         let file = DispatchIO(
@@ -48,13 +48,13 @@ public final class File: FileReader, FileCache {
             file.read(offset: 0, length: size_t.max - 1, queue: queue) { done, data, error in
                 if done {
                     if error == 0 {
-                        stream.onClose()
+                        stream.close()
                     } else {
                         onError(FileError(.readError(error, path: path)))
                     }
                 } else {
                     if let data = data {
-                        Data(data).withByteBuffer(stream.onInput)
+                        Data(data).withByteBuffer(stream.next)
                     } else {
                         onError(FileError(.readError(error, path: path)))
                     }

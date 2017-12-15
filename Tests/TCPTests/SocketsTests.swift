@@ -30,16 +30,22 @@ class SocketsTests: XCTestCase {
         )
 
         /// set up the server stream
-        serverStream.drain(.max) { client, serverReq in
-            let clientStream = client.0.stream(on: client.1)
-            clientStream.drain { buffer, clientReq in
+        serverStream.drain { req in
+            req.request(count: .max)
+        }.output { (client, eventLoop) in
+            let clientStream = client.stream(on: eventLoop)
+            var clientReq: ConnectionContext?
+            clientStream.drain { req in
+                clientReq = req
+                clientReq!.request()
+            }.output { buffer in
                 /// simple echo server
-                clientStream.onInput(buffer)
+                clientStream.next(buffer)
                 /// after we write data, we are ready to read more
                 /// note: important that we start reading here
                 /// or else the source will not be active to detect
                 /// the socket closing
-                clientReq.requestOutput()
+                clientReq!.request()
             }.catch { err in
                 XCTFail("\(err)")
             }.finally {

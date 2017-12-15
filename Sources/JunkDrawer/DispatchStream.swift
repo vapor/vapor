@@ -34,7 +34,9 @@ extension DispatchSocket {
 }
 
 /// Data stream wrapper for a dispatch socket.
-public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Socket: DispatchSocket {
+public final class DispatchSocketStream<Socket>: Stream, ConnectionContext
+    where Socket: DispatchSocket
+{
     /// See InputStream.Input
     public typealias Input = ByteBuffer
 
@@ -61,10 +63,10 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
     private var writeSource: DispatchSourceWrite?
 
     /// Use a basic stream to easily implement our output stream.
-    private var downstream: AnyInputStream?
+    private var downstream: AnyInputStream<ByteBuffer>?
 
     /// The current request controlling incoming write data
-    private var upstream: OutputRequest?
+    private var upstream: ConnectionContext?
 
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt
@@ -79,60 +81,55 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
         self.requestedOutputRemaining = 0
     }
 
-    /// See InputStream.onInput
-    public func onInput(_ input: ByteBuffer) {
-        /// detect if the upstream is overproducing data
-        guard inputBuffer == nil else {
-            fatalError("\(#function) was called while inputBuffer is not nil")
+    /// See InputStream.input
+    public func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .next(let input):
+            /// crash if the upstream is illegally overproducing data
+            guard inputBuffer == nil else {
+                fatalError("\(#function) was called while inputBuffer is not nil")
+            }
+
+            inputBuffer = input
+            resumeWriting()
+        case .connect(let connection):
+            upstream = connection
+            connection.request()
+        case .close: downstream?.close()
+        case .error(let e): downstream?.error(e)
         }
-
-        inputBuffer = input
-        resumeWriting()
-    }
-
-    /// See InputStream.onOutput
-    public func onOutput(_ outputRequest: OutputRequest) {
-        self.upstream = outputRequest
-        /// always request an initial buffer since we have room to store it
-        outputRequest.requestOutput()
-    }
-
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        downstream?.onError(error)
-    }
-
-    /// See InputStream.onClose
-    public func onClose() {
-        downstream?.onClose()
     }
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: Async.InputStream, S.Input == ByteBuffer {
-        downstream = inputStream
-        inputStream.onOutput(self)
+        downstream = AnyInputStream(wrapped: inputStream)
+        inputStream.connect(to: self)
     }
 
-    /// Resumes reading data.
-    public func requestOutput(_ count: UInt) {
-        /// We must add checks to this method since it is
-        /// called everytime downstream requests more data.
-        /// Not checking counts would result in over resuming
-        /// the dispatch source.
-        let isSuspended = requestedOutputRemaining == 0
-        requestedOutputRemaining += count
+    /// See ConnectionContext.connection
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .request(let count):
+            /// We must add checks to this method since it is
+            /// called everytime downstream requests more data.
+            /// Not checking counts would result in over resuming
+            /// the dispatch source.
+            let isSuspended = requestedOutputRemaining == 0
+            requestedOutputRemaining += count
 
-        /// ensure was suspended and output has actually
-        /// been requested
-        if isSuspended && requestedOutputRemaining > 0 {
-            ensureReadSource().resume()
+            /// ensure was suspended and output has actually
+            /// been requested
+            if isSuspended && requestedOutputRemaining > 0 {
+                ensureReadSource().resume()
+            }
+        case .cancel: close()
         }
     }
 
     /// Cancels reading
-    public func cancelOutput() {
+    public func close() {
         socket.close()
-        onClose()
+        downstream?.close()
         if requestedOutputRemaining == 0 {
             /// dispatch sources must be resumed before
             /// deinitializing
@@ -172,7 +169,7 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
             do {
                 try socket.prepareSocket()
             } catch {
-                downstream?.onError(error)
+                downstream?.error(error)
             }
             return
         }
@@ -186,12 +183,12 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
         } catch {
             // any errors that occur here cannot be thrown,
             //selfso send them to stream error catcher.
-            downstream?.onError(error)
+            downstream?.error(error)
             return
         }
 
         guard read > 0 else {
-            cancelOutput() // used to be source.cancel
+            close() // used to be source.cancel
             return
         }
 
@@ -201,7 +198,7 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
             start: outputBuffer.baseAddress,
             count: read
         )
-        downstream?.unsafeOnInput(bufferView)
+        downstream?.next(bufferView)
 
         /// decrement remaining and check if
         /// we need to suspend accepting
@@ -217,7 +214,7 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
             do {
                 try socket.prepareSocket()
             } catch {
-                downstream?.onError(error)
+                downstream?.error(error)
             }
             return
         }
@@ -233,11 +230,11 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
                 // wrote everything, suspend until we get more data to write
                 inputBuffer = nil
                 suspendWriting()
-                upstream?.requestOutput()
+                upstream?.request()
             default: print("not all data was written: \(count)/\(input.count)")
             }
         } catch {
-            onError(error)
+            downstream?.error(error)
         }
     }
 
@@ -255,7 +252,7 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
             source.setEventHandler(handler: readData)
 
             /// handle a cancel event
-            source.setCancelHandler(handler: cancelOutput)
+            source.setCancelHandler(handler: close)
 
             readSource = source
             return source
@@ -277,7 +274,7 @@ public final class DispatchSocketStream<Socket>: Stream, OutputRequest where Soc
             source.setEventHandler(handler: writeData)
 
             /// handle a cancel event
-            source.setCancelHandler(handler: cancelOutput)
+            source.setCancelHandler(handler: close)
 
             writeSource = source
             return source

@@ -1,6 +1,8 @@
+import Async
 import Bits
 import Dispatch
 import COperatingSystem
+import JunkDrawer
 
 /// Read and write byte buffers from a TCPClient.
 ///
@@ -39,6 +41,13 @@ public final class TCPClient {
     public func close() {
         willClose?()
         socket.close()
+    }
+}
+
+extension TCPClient {
+    /// Create a dispatch socket stream for this client.
+    public func stream(on eventLoop: EventLoop) -> DispatchSocketStream<TCPSocket> {
+        return socket.stream(on: eventLoop)
     }
 }
 

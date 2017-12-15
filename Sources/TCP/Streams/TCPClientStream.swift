@@ -3,7 +3,7 @@ import Dispatch
 import JunkDrawer
 
 /// Stream representation of a TCP server.
-public final class TCPClientStream: OutputStream, OutputRequest {
+public final class TCPClientStream: OutputStream, ConnectionContext {
     /// See OutputStream.Output
     public typealias Output = (TCPClient, EventLoop)
 
@@ -14,7 +14,7 @@ public final class TCPClientStream: OutputStream, OutputRequest {
     public let eventLoop: EventLoop
 
     /// Downstream client and eventloop input stream
-    private var downstream: AnyInputStream?
+    private var downstream: AnyInputStream<Output>?
 
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt
@@ -41,32 +41,31 @@ public final class TCPClientStream: OutputStream, OutputRequest {
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: InputStream, S.Input == Output {
-        downstream = inputStream
-        inputStream.onOutput(self)
+        downstream = AnyInputStream(wrapped: inputStream)
+        inputStream.connect(to: self)
     }
 
-    /// See OutputRequest.requestOutput
-    public func requestOutput(_ count: UInt) {
-        /// handle downstream requesting data
-        /// suspend will be called automatically if the
-        /// remaining requested output count ever
-        /// reaches zero.
-        /// the downstream is expected to continue
-        /// requesting additional output as it is ready.
-        /// the server will automatically resume if
-        /// additional clients are requested after
-        /// suspend has been called
-        eventLoop.queue.async {
-            self.request(count)
-
-        }
-    }
-
-    /// See OutputRequest.cancelOutput
-    public func cancelOutput() {
-        /// handle downstream canceling output requests
-        eventLoop.queue.async {
-            self.cancel()
+    /// See ConnectionContext.connection
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case.request(let count):
+            /// handle downstream requesting data
+            /// suspend will be called automatically if the
+            /// remaining requested output count ever
+            /// reaches zero.
+            /// the downstream is expected to continue
+            /// requesting additional output as it is ready.
+            /// the server will automatically resume if
+            /// additional clients are requested after
+            /// suspend has been called
+            eventLoop.queue.async {
+                self.request(count)
+            }
+        case .cancel:
+            /// handle downstream canceling output requests
+            eventLoop.queue.async {
+                self.cancel()
+            }
         }
     }
 
@@ -88,7 +87,7 @@ public final class TCPClientStream: OutputStream, OutputRequest {
     /// Cancels the stream
     private func cancel() {
         server.stop()
-        downstream?.onClose()
+        downstream?.close()
         if requestedOutputRemaining == 0 {
             /// dispatch sources must be resumed before
             /// deinitializing
@@ -106,7 +105,7 @@ public final class TCPClientStream: OutputStream, OutputRequest {
             }
 
             let eventLoop = eventLoopsIterator.next()
-            downstream?.unsafeOnInput((client, eventLoop))
+            downstream?.next((client, eventLoop))
 
             /// decrement remaining and check if
             /// we need to suspend accepting
@@ -118,7 +117,7 @@ public final class TCPClientStream: OutputStream, OutputRequest {
                 }
             }
         } catch {
-            downstream?.onError(error)
+            downstream?.error(error)
         }
     }
 

@@ -23,14 +23,17 @@ extension FileReader {
         let promise = Promise(Data.self)
 
         var data = Data()
-        let stream = ClosureStream<ByteBuffer>(
-            onInput: { data.append(contentsOf: $0) },
-            onError: { promise.fail($0) },
-            onClose: { promise.complete(data) },
-            onOutput: { $0.requestOutput(.max) },
-            onRequest: { _ in },
-            onCancel: { },
-            outputTo: { _ in }
+        let stream = ClosureStream<ByteBuffer>.init(
+            onInput: { event in
+                switch event {
+                case .next(let input): data.append(contentsOf: input)
+                case .error(let e): promise.fail(e)
+                case .connect(let upstream): upstream.request(count: .max)
+                case .close: promise.complete(data)
+                }
+            },
+            onOutput: { _ in }, // not used as an output stream
+            onConnection: { _ in } // not used as a connection context
         )
         self.read(at: path, into: stream)
         return promise.future
