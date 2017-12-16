@@ -20,7 +20,7 @@ class HTTPSerializerTests: XCTestCase {
         """
 
         var buffer = Data(count: 4096)
-        let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+        let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
         XCTAssertNil(serializer.message)
         XCTAssertEqual(serialized, 41)
         let chunk = Data(buffer[0..<serialized])
@@ -47,7 +47,7 @@ class HTTPSerializerTests: XCTestCase {
         var buffer = Data(count: 8) // small size here so we require multiple runs
         var output = Data()
         while serializer.message != nil {
-            let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+            let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
             output += Data(buffer[0..<serialized])
         }
         XCTAssertNil(serializer.message)
@@ -72,7 +72,7 @@ class HTTPSerializerTests: XCTestCase {
         """
 
         var buffer = Data(count: 4096)
-        let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+        let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
         XCTAssertNil(serializer.message)
         XCTAssertEqual(serialized, 38)
         let chunk = Data(buffer[0..<serialized])
@@ -98,7 +98,7 @@ class HTTPSerializerTests: XCTestCase {
         var buffer = Data(count: 8) // small size here so we require multiple runs
         var output = Data()
         while serializer.message != nil {
-            let serialized = try serializer.serialize(max: buffer.count, into: buffer.withMutableByteBuffer { $0 })
+            let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
             output += Data(buffer[0..<serialized])
         }
         XCTAssertNil(serializer.message)

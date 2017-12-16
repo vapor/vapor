@@ -15,18 +15,5 @@ public protocol HTTPSerializer: class {
 
     /// Serializes data from the supplied message into the buffer.
     /// Returns the number of bytes serialized.
-    func serialize(max: Int, into buffer: MutableByteBuffer) throws -> Int
+    func serialize(into buffer: MutableByteBuffer) throws -> Int
 }
-
-//extension DispatchData {
-//    init(_ string: String) {
-//        let bytes = string.withCString { pointer in
-//            return UnsafeRawBufferPointer(
-//                start: pointer,
-//                count: string.utf8.count
-//            )
-//        }
-//        self.init(bytes: bytes)
-//    }
-//}
-

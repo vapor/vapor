@@ -95,7 +95,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
         case .messageStreaming(let body):
             /// continue streaming the message until
             /// the serializer indicates it is done
-            let serialized = try! serializer.serialize(max: writeBuffer.count, into: writeBuffer)
+            let serialized = try! serializer.serialize(into: writeBuffer)
             let frame = ByteBuffer(start: writeBuffer.baseAddress, count: serialized)
             downstream?.next(frame)
             remainingByteBuffersRequested -= 1

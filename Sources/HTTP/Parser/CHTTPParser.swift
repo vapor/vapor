@@ -32,21 +32,21 @@ enum CHTTPParserState {
 
 extension CHTTPParser {
     /// Parses a Request from the stream.
-    public func parse(max: Int, from buffer: ByteBuffer) throws -> Int {
+    public func parse(from buffer: ByteBuffer) throws -> Int {
         guard let results = getResults() else {
             return 0
         }
 
-        results.currentSize += max
+        results.currentSize += buffer.count
         guard results.currentSize < results.maxSize else {
             throw HTTPError(identifier: "messageTooLarge", reason: "The HTTP message's size exceeded set maximum: \(maxSize)")
         }
 
         /// parse the message using the C HTTP parser.
-        try executeParser(max: max, from: buffer)
+        try executeParser(from: buffer)
 
         guard results.isComplete else {
-            return max
+            return buffer.count
         }
 
         // the results have completed, so we are ready
@@ -55,7 +55,7 @@ extension CHTTPParser {
         CParseResults.remove(from: &parser)
 
         message = try makeMessage(from: results)
-        return max
+        return buffer.count
     }
 
     /// Resets the parser
@@ -70,14 +70,14 @@ extension CHTTPParser {
 extension CHTTPParser {
     /// Parses a generic CHTTP message, filling the
     /// ParseResults object attached to the C praser.
-    internal func executeParser(max: Int, from buffer: ByteBuffer) throws {
+    internal func executeParser(from buffer: ByteBuffer) throws {
         // call the CHTTP parser
-        let parsedCount = http_parser_execute(&parser, &settings, buffer.cPointer, max)
+        let parsedCount = http_parser_execute(&parser, &settings, buffer.cPointer, buffer.count)
 
         // if the parsed count does not equal the bytes passed
         // to the parser, it is signaling an error
         // - 1 to allow room for filtering a possibly final \r\n which I observed the parser does
-        guard parsedCount >= max - 2, parsedCount <= max else {
+        guard parsedCount >= buffer.count - 2, parsedCount <= buffer.count else {
             throw HTTPError.invalidMessage()
         }
     }

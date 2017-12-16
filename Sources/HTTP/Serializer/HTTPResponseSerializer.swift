@@ -28,7 +28,7 @@ public final class HTTPResponseSerializer: HTTPSerializer {
     }
 
     /// See HTTPSerializer.serialize
-    public func serialize(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+    public func serialize(into buffer: MutableByteBuffer) throws -> Int {
         let data: Data
         if let existing = self.data {
             data = existing
@@ -40,7 +40,7 @@ public final class HTTPResponseSerializer: HTTPSerializer {
         }
 
         let remaining = data.count - dataOffset
-        let num = remaining > max ? max : remaining
+        let num = remaining > buffer.count ? buffer.count : remaining
         data.copyBytes(to: buffer.baseAddress!, from: dataOffset..<dataOffset + num)
         dataOffset = dataOffset + num
         if dataOffset == data.count {

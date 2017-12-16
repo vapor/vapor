@@ -43,7 +43,7 @@ public final class AppleTLSSocket: TLSSocket {
     }
 
     /// See TLSSocket.read
-    public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
+    public func read(into buffer: MutableByteBuffer) throws -> Int {
         var processed = 0
         SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
         if processed == 0 {
@@ -53,9 +53,9 @@ public final class AppleTLSSocket: TLSSocket {
     }
 
     /// See TLSSocket.write
-    public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
+    public func write(from buffer: ByteBuffer) throws -> Int {
         var processed: Int = 0
-        let status = SSLWrite(self.context, buffer.baseAddress!, max, &processed)
+        let status = SSLWrite(self.context, buffer.baseAddress!, buffer.count, &processed)
         switch status {
         case 0: break
         case errSSLWouldBlock:

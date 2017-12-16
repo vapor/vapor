@@ -1,11 +1,7 @@
 import Async
 import Bits
 
-public protocol TLSSocket: DispatchSocket {
-    func read(max: Int, into buffer: MutableByteBuffer) throws -> Int
-    func write(max: Int, from buffer: ByteBuffer) throws -> Int
-    func close()
-}
+public protocol TLSSocket: DispatchSocket {}
 
 /// MARK: ALPN
 

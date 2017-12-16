@@ -79,14 +79,14 @@ public struct TCPSocket: DispatchSocket {
 
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
-    public func read(max: Int, into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, max)
+    public func read(into buffer: MutableByteBuffer) throws -> Int {
+        let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, buffer.count)
 
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
                 // try again
-                return try read(max: max, into: buffer)
+                return try read(into: buffer)
             case ECONNRESET:
                 // closed by peer, need to close this side.
                 // Since this is not an error, no need to throw unless the close
@@ -114,7 +114,7 @@ public struct TCPSocket: DispatchSocket {
     }
 
     /// Writes all data from the pointer's position with the length specified to this socket.
-    public func write(max: Int, from buffer: ByteBuffer) throws -> Int {
+    public func write(from buffer: ByteBuffer) throws -> Int {
         guard let pointer = buffer.baseAddress else {
             return 0
         }
@@ -124,7 +124,7 @@ public struct TCPSocket: DispatchSocket {
             switch errno {
             case EINTR:
                 // try again
-                return try write(max: max, from: buffer)
+                return try write(from: buffer)
             case ECONNRESET, EBADF:
                 // closed by peer, need to close this side.
                 // Since this is not an error, no need to throw unless the close

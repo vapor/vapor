@@ -5,7 +5,7 @@ extension TCPSocket {
     /// Copies bytes into a buffer and writes them to the socket.
     public func write(_ data: Data) throws -> Int {
         return try data.withByteBuffer { buffer in
-            return try write(max: buffer.count, from: buffer)
+            return try write(from: buffer)
         }
     }
 
@@ -15,7 +15,7 @@ extension TCPSocket {
 
         let read = try data.withUnsafeMutableBytes { (pointer: MutableBytesPointer) -> Int in
             let buffer = MutableByteBuffer(start: pointer, count: max)
-            return try self.read(max: max, into: buffer)
+            return try self.read(into: buffer)
         }
 
         data.removeLast(data.count &- read)

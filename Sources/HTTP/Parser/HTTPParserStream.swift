@@ -48,7 +48,7 @@ public final class HTTPParserStream<Parser>: Stream, ConnectionContext where Par
             self.upstream = upstream
         case .next(let input):
             do {
-                let parsed = try parser.parse(max: input.count, from: input)
+                let parsed = try parser.parse(from: input)
                 assert(parsed == input.count) // we don't support partial parsing yet
 
                 if let message = parser.message {
