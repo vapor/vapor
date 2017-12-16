@@ -15,21 +15,18 @@ public final class LeafRenderer {
     /// Create a file reader & cache for the supplied queue
     public typealias FileFactory = (DispatchQueue) -> (FileReader & FileCache)
     private let fileFactory: FileFactory
-    
-    let eventLoop: EventLoop
 
     /// Views base directory.
     public let viewsDir: String
 
     /// Create a new Leaf renderer.
     public init(
-        config: LeafConfig,
-        on eventLoop: EventLoop
+        config: LeafConfig
     ) {
         self.tags = config.tags
         self._files = [:]
         self.fileFactory = config.fileFactory
-        self.eventLoop = eventLoop
+        self.Worker = Worker
         self.viewsDir = config.viewsDir.finished(with: "/")
     }
 
@@ -64,8 +61,7 @@ public final class LeafRenderer {
         let serializer = Serializer(
             ast: ast,
             renderer: self,
-            context: context,
-            on: eventLoop
+            context: context
         )
 
         serializer.serialize().do { data in
@@ -116,11 +112,11 @@ extension LeafRenderer {
         let promise = Promise(Data.self)
 
         let file: FileReader & FileCache
-        if let existing = _files[eventLoop.queue.label.hashValue] {
+        if let existing = _files[Worker.queue.label.hashValue] {
             file = existing
         } else {
-            file = fileFactory(eventLoop.queue)
-            _files[eventLoop.queue.label.hashValue] = file
+            file = fileFactory(EventLoop.current)
+            _files[Worker.queue.label.hashValue] = file
         }
 
         /// FIXME: better chunk size?

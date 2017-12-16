@@ -12,9 +12,9 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
     public var server: TCPServer
 
     /// This stream's event loop
-    public let eventLoop: EventLoop
+    public let worker: Worker
 
-    /// Downstream client and eventloop input stream
+    /// Downstream client and Worker input stream
     private var downstream: AnyInputStream<Output>?
 
     /// The amount of requested output remaining
@@ -24,8 +24,8 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
     private var acceptSource: DispatchSourceRead?
 
     /// Use TCPServer.stream to create
-    internal init(server: TCPServer, on eventLoop: EventLoop) {
-        self.eventLoop = eventLoop
+    internal init(server: TCPServer, on Worker: Worker) {
+        self.Worker = Worker
         self.server = server
         self.requestedOutputRemaining = 0
     }
@@ -49,12 +49,12 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
             /// the server will automatically resume if
             /// additional clients are requested after
             /// suspend has been called
-            eventLoop.queue.async {
+            Worker.queue.async {
                 self.request(count)
             }
         case .cancel:
             /// handle downstream canceling output requests
-            eventLoop.queue.async {
+            Worker.queue.async {
                 self.cancel()
             }
         }
@@ -95,7 +95,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
                 return
             }
 
-//            let eventLoop = eventLoopsIterator.next()
+//            let worker = WorkersIterator.next()
 
             downstream?.next(client)
 
@@ -120,7 +120,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
             /// create a new accept source
             let source = DispatchSource.makeReadSource(
                 fileDescriptor: server.socket.descriptor,
-                queue: eventLoop.queue
+                queue: Worker.queue
             )
 
             /// handle a new accept
@@ -142,7 +142,7 @@ extension TCPServer {
     /// Create a stream for this TCP server.
     /// - parameter on: the event loop to accept clients on
     /// - parameter assigning: the event loops to assign to incoming clients
-    public func stream(on eventLoop: EventLoop) -> TCPClientStream {
-        return .init(server: self, on: eventLoop)
+    public func stream(on Worker: Worker) -> TCPClientStream {
+        return .init(server: self, on: Worker)
     }
 }

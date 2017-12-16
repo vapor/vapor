@@ -17,7 +17,7 @@ public final class Request: EphemeralContainer, ParameterContainer {
     /// This response's worker
     public let superContainer: Container
 
-    /// See EventLoop.queue
+    /// See Worker.queue
     public var queue: DispatchQueue {
         return superContainer.queue
     }
@@ -121,7 +121,7 @@ public final class Request: EphemeralContainer, ParameterContainer {
 extension Request {
     /// The request's event loop container.
     /// note: convenience name for `.superContainer`
-    public var eventLoop: Container {
+    public var worker: Container {
         return superContainer
     }
 

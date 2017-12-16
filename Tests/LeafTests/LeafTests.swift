@@ -11,7 +11,7 @@ class LeafTests: XCTestCase {
 
     override func setUp() {
         self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
-        self.renderer = LeafRenderer.makeTestRenderer(eventLoop: queue)
+        self.renderer = LeafRenderer.makeTestRenderer(Worker: queue)
     }
 
     func testRaw() throws {

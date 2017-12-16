@@ -51,7 +51,7 @@ public struct AppleTLSClient: TLSClient {
 
 extension AppleTLSClient {
     /// Create a dispatch socket stream for this client.
-    public func stream(on eventLoop: EventLoop) -> DispatchSocketStream<AppleTLSSocket> {
-        return socket.stream(on: eventLoop)
+    public func stream(on Worker: Worker) -> DispatchSocketStream<AppleTLSSocket> {
+        return socket.stream(on: Worker)
     }
 }

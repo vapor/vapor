@@ -46,11 +46,11 @@ extension RedisClient {
     public static func connect(
         hostname: String = "localhost",
         port: UInt16 = 6379,
-        on eventLoop: EventLoop
+        on Worker: Worker
     ) throws -> RedisClient {
         let socket = try TCPSocket(isNonBlocking: true)
         let client = try TCPClient(socket: socket)
         try client.connect(hostname: hostname, port: port)
-        return RedisClient(byteStream: client.stream(on: eventLoop))
+        return RedisClient(byteStream: client.stream(on: Worker))
     }
 }

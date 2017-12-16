@@ -46,8 +46,8 @@ public final class TCPClient {
 
 extension TCPClient {
     /// Create a dispatch socket stream for this client.
-    public func stream(on eventLoop: EventLoop) -> DispatchSocketStream<TCPSocket> {
-        return socket.stream(on: eventLoop)
+    public func stream(on Worker: Worker) -> DispatchSocketStream<TCPSocket> {
+        return socket.stream(on: Worker)
     }
 }
 

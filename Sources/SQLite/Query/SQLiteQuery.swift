@@ -56,12 +56,12 @@ public final class SQLiteQuery {
                 // blocking execute now that we're on the background thread
                 let results = try self.blockingExecute()
                 // return to event loop
-                self.connection.eventLoop.queue.async {
+                self.connection.Worker.queue.async {
                     promise.complete(results)
                 }
             } catch {
                 // return to event loop to output error
-                self.connection.eventLoop.queue.async {
+                self.connection.Worker.queue.async {
                     promise.fail(error)
                 }
             }

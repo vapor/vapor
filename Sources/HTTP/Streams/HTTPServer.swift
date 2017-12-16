@@ -9,7 +9,7 @@ public final class HTTPServer<AcceptStream, Worker>
     where AcceptStream: OutputStream,
     AcceptStream.Output: ByteStreamRepresentable,
     Worker: HTTPResponder,
-    Worker: EventLoop
+    Worker: Worker
 {
     /// The underlying server stream.
     private let serverStream: HTTPServerStream<AcceptStream, Worker>
@@ -41,7 +41,7 @@ public protocol ByteStreamRepresentable {
             ByteStream.Output == ByteBuffer
 
     /// Convert to the associated byte stream.
-    func stream(on eventLoop: EventLoop) -> ByteStream
+    func stream(on Worker: Worker) -> ByteStream
 }
 
 extension TCPClient: ByteStreamRepresentable {}

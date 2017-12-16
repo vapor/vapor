@@ -29,7 +29,7 @@ public final class EngineClient: Client {
                 to: req.http.uri.hostname ?? "",
                 port: req.http.uri.port,
                 settings: HTTP2Settings(),
-                on: req.eventLoop
+                on: req.Worker
             ).then { client in
                 return client.send(request: req.http).then { httpRes -> Response in
                     let res = req.makeResponse()
