@@ -4,14 +4,14 @@ import Fluent
 import Foundation
 
 final class KitchenSink<D: Database>: Model {
+    /// See Model.Database
+    typealias Database = D
+
     /// See Model.ID
     typealias ID = String
 
     /// See Model.idKey
     static var idKey: IDKey { return \.id }
-
-    /// See Model.database
-    static var database: DatabaseIdentifier<D> { return .init("kitchenSink") }
 
     /// KitchenSink's identifier
     var id: String?

@@ -4,8 +4,7 @@ import Foundation
 import HTTP
 import Leaf
 import Vapor
-import Fluent
-import SQLite
+import FluentSQLite
 
 import Foundation
 
@@ -17,9 +16,7 @@ final class TestUser: Codable {
 }
 
 extension TestUser: Model {
-    /// Database ID
-    static let database = beta
-
+    typealias Database = SQLiteDatabase
     /// See Model.idKey
     static var idKey = \TestUser.id
 }
@@ -64,10 +61,15 @@ struct TestSiblings: Migration {
     }
 }
 
+extension DatabaseIdentifier {
+    static var beta: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("beta")
+    }
+}
 
 final class AutoUser: Migration, Model, Content {
-    static let database = beta
-    static var idKey = \AutoUser.id
+    typealias Database = SQLiteDatabase
+    static let idKey = \AutoUser.id
 
     var id: UUID?
     var name: String
@@ -79,10 +81,8 @@ final class AutoUser: Migration, Model, Content {
     }
 }
 
-
-
 final class User: Model, Content {
-    static let database = beta
+    typealias Database = SQLiteDatabase
     static var idKey = \User.id
 
     var id: UUID?

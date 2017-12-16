@@ -1,3 +1,4 @@
+import Fluent
 import Vapor
 
 /// Protects a route group, requiring a password authenticatable
@@ -9,12 +10,17 @@ public final class PasswordAuthenticationMiddleware<A>: Middleware
     /// the required password verifier
     public let verifier: PasswordVerifier
 
+    /// The database identifier
+    public let database: DatabaseIdentifier<A.Database>
+
     /// create a new password auth middleware
     public init(
         _ type: A.Type = A.self,
-        verifier: PasswordVerifier
+        verifier: PasswordVerifier,
+        database: DatabaseIdentifier<A.Database>
     ) {
         self.verifier = verifier
+        self.database = database
     }
 
     /// See Middleware.respond
@@ -33,7 +39,7 @@ public final class PasswordAuthenticationMiddleware<A>: Middleware
         }
 
         // get database connection
-        return req.connect(to: A.database).flatMap(to: Response.self) { conn in
+        return req.connect(to: database).flatMap(to: Response.self) { conn in
             // auth user on connection
             return try A.authenticate(
                 using: password,

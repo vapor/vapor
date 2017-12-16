@@ -51,13 +51,13 @@ do {
 
 
     var migrationConfig = MigrationConfig()
-    migrationConfig.add(migration: User.self, database: beta)
+    migrationConfig.add(model: User.self, database: beta)
     migrationConfig.add(migration: AddUsers.self, database: beta)
-    migrationConfig.add(migration: Pet.self, database: beta)
-    migrationConfig.add(migration: Toy.self, database: beta)
-    migrationConfig.add(migration: PetToyPivot.self, database: beta)
+    migrationConfig.add(model: Pet.self, database: beta)
+    migrationConfig.add(model: Toy.self, database: beta)
+    migrationConfig.add(model: PetToyPivot.self, database: beta)
     migrationConfig.add(migration: TestSiblings.self, database: beta)
-    migrationConfig.add(model: AutoUser.self)
+    migrationConfig.add(model: AutoUser.self, database: .beta)
     services.register(migrationConfig)
 
     let middlewareConfig = MiddlewareConfig()
@@ -113,7 +113,6 @@ do {
         return Future(helloRes)
     }
 
-
     router.post("login") { req -> Future<Response> in
         let loginRequest = try req.content.decode(LoginRequest.self)
 
@@ -148,7 +147,7 @@ do {
     router.post("login", use: controller.foo)
 
     final class Message: Model {
-        static let database = beta
+        typealias Database = SQLiteDatabase
         static let idKey = \Message.id
 
         var id: String?
@@ -324,7 +323,7 @@ do {
 
     try app.run()
 } catch {
-    print(error)
+    print("Top Level Error: \(error)")
     exit(1)
 }
 

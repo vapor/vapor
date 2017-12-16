@@ -4,7 +4,7 @@ import Foundation
 import Vapor
 
 final class Pet: Model {
-    static let database = beta
+    typealias Database = SQLiteDatabase
     static let idKey = \Pet.id
 
     var id: UUID?
