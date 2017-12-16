@@ -1,4 +1,5 @@
 import Async
+import Dispatch
 
 /// A stream containing an  responder.
 public final class ResponderStream: TransformingStream {

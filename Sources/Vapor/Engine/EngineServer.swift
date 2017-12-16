@@ -11,6 +11,8 @@ import Service
 import TCP
 import TLS
 
+extension TCPClient: ByteStreamRepresentable {}
+
 /// A TCP based server with HTTP parsing and serialization pipeline.
 public final class EngineServer: Server {
     /// Chosen configuration for this server.
@@ -18,10 +20,6 @@ public final class EngineServer: Server {
 
     /// Container for setting on event loops.
     public let container: Container
-    
-    private let acceptQueue = DispatchQueue(label: "codes.vapor.net.tcp.server", qos: .background)
-    
-    var strongRef: Any?
 
     /// Create a new EngineServer using config struct.
     public init(
@@ -34,31 +32,30 @@ public final class EngineServer: Server {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        var eventLoops: [BasicSubContainer] = []
+        var workers: [EngineWorker] = []
+
         for i in 0..<config.workerCount {
             // create new event loop
             let queue = DispatchQueue(label: "codes.vapor.engine.server.worker.\(i)")
 
             // copy services into new container
-            let eventLoop = self.container.makeSubContainer(on: queue)
-            eventLoops.append(eventLoop)
+            let worker = EngineWorker(
+                container: container.makeSubContainer(on: queue),
+                responder: responder
+            )
+            workers.append(worker)
         }
 
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         var tcpServer = try TCPServer(socket: tcpSocket)
         tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         let tcpStream = tcpServer.stream(
-            on: container.makeSubContainer(
-                on: DispatchQueue(label: "codes.vapor.engine.server.main")
-            ),
-            assigning: eventLoops
+            on: DispatchQueue(label: "codes.vapor.engine.server.main")
         )
-        let server = HTTPServer(acceptStream: tcpStream) { byteStream in
-            return ResponderStream(
-                responder: responder,
-                using: byteStream.eventLoop
-            )
-        }
+        let server = HTTPServer(
+            acceptStream: tcpStream,
+            workers: workers
+        )
 
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
@@ -87,6 +84,8 @@ public final class EngineServer: Server {
         // non-blocking main thread run
         RunLoop.main.run()
     }
+
+
     
 //    private func startPlain(with responder: Responder) throws {
 //        // create a tcp server
@@ -165,6 +164,28 @@ public final class EngineServer: Server {
 //        
 //        strongRef = tcp
 //    }
+}
+
+struct EngineWorker: HTTPResponder, EventLoop {
+    var queue: DispatchQueue {
+        return container.queue
+    }
+
+    let responder: Responder
+    let container: Container
+
+    init(container: Container, responder: Responder) {
+        self.container = container
+        self.responder = responder
+    }
+
+    func respond(to httpRequest: HTTPRequest, on eventLoop: EventLoop) throws -> Future<HTTPResponse> {
+        return then {
+            let req = Request(http: httpRequest, using: self.container)
+            return try self.responder.respond(to: req)
+                .map { $0.http }
+        }
+    }
 }
 
 extension Logger {

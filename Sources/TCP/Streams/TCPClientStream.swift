@@ -4,9 +4,9 @@ import Dispatch
 import JunkDrawer
 
 /// Stream representation of a TCP server.
-public final class TCPClientStream<EventLoop>: OutputStream, ConnectionContext where EventLoop: Async.EventLoop {
+public final class TCPClientStream: OutputStream, ConnectionContext {
     /// See OutputStream.Output
-    public typealias Output = TCPPeer<EventLoop>
+    public typealias Output = TCPClient
 
     /// The server being streamed
     public var server: TCPServer
@@ -20,24 +20,14 @@ public final class TCPClientStream<EventLoop>: OutputStream, ConnectionContext w
     /// The amount of requested output remaining
     private var requestedOutputRemaining: UInt
 
-    /// This server's event loops.
-    /// Configuring these using the eventLoopCount at init.
-    /// These will be supplied to requests at they arrive.
-    public let eventLoops: [EventLoop]
-
     /// Keep a reference to the read source so it doesn't deallocate
     private var acceptSource: DispatchSourceRead?
 
-    /// A round robin view into the event loop array.
-    private var eventLoopsIterator: LoopIterator<[EventLoop]>
-
     /// Use TCPServer.stream to create
-    internal init(server: TCPServer, on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) {
+    internal init(server: TCPServer, on eventLoop: EventLoop) {
         self.eventLoop = eventLoop
         self.server = server
         self.requestedOutputRemaining = 0
-        self.eventLoops = eventLoops
-        self.eventLoopsIterator = try! LoopIterator(eventLoops)
     }
 
     /// See OutputStream.output
@@ -105,12 +95,9 @@ public final class TCPClientStream<EventLoop>: OutputStream, ConnectionContext w
                 return
             }
 
-            let eventLoop = eventLoopsIterator.next()
+//            let eventLoop = eventLoopsIterator.next()
 
-            downstream?.next(.init(
-                client: client,
-                eventLoop: eventLoop
-            ))
+            downstream?.next(client)
 
             /// decrement remaining and check if
             /// we need to suspend accepting
@@ -151,50 +138,11 @@ public final class TCPClientStream<EventLoop>: OutputStream, ConnectionContext w
     }
 }
 
-/// A client that has been accepted by
-/// the TCP client stream.
-public final class TCPPeer<EventLoop>: Stream where EventLoop: Async.EventLoop {
-    /// See InputStream.Input
-    public typealias Input = ByteBuffer
-
-    // See OutputStream.Output
-    public typealias Output = ByteBuffer
-
-    /// The accepted client
-    public let client: TCPClient
-
-    /// The event loop this client was accepted on
-    public let eventLoop: EventLoop
-
-    /// Underlying byte stream
-    private let byteStream: DispatchSocketStream<TCPSocket>
-
-    /// Creates a new TCP accepted client
-    init(client: TCPClient, eventLoop: EventLoop) {
-        self.client = client
-        self.eventLoop = eventLoop
-        byteStream = client.stream(on: eventLoop)
-    }
-
-    /// See InputStream.input
-    public func input(_ event: InputEvent<ByteBuffer>) {
-        byteStream.input(event)
-    }
-
-    /// See OutputStream.output
-    public func output<S>(to inputStream: S) where S : InputStream, S.Input == ByteBuffer {
-        byteStream.output(to: inputStream)
-    }
-}
-
-
 extension TCPServer {
     /// Create a stream for this TCP server.
     /// - parameter on: the event loop to accept clients on
     /// - parameter assigning: the event loops to assign to incoming clients
-    public func stream<EventLoop>(on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) -> TCPClientStream<EventLoop>
-        where EventLoop: Async.EventLoop
-    {
-        return .init(server: self, on: eventLoop, assigning: eventLoops)
+    public func stream(on eventLoop: EventLoop) -> TCPClientStream {
+        return .init(server: self, on: eventLoop)
     }
 }
