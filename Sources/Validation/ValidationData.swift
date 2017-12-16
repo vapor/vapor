@@ -42,10 +42,66 @@ extension Int: ValidationDataRepresentable {
     }
 }
 
+extension Int8: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int16: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int32: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int64: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
 extension UInt: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         return .uint(self)
+    }
+}
+
+extension UInt8: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt16: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt32: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt64: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
     }
 }
 
