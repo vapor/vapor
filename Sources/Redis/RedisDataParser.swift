@@ -10,15 +10,11 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     /// See OutputStream.RedisData
     typealias Output = RedisData
     
-    /// The currently accumulated data from the socket
-    var responseBuffer = Data()
-    
     /// The in-progress parsing value
-    var parsingValue: PartialRedisData?
+    var parsingValues: [PartialRedisData]
     
-    /// The maximum size of a response RedisData
-    var maximumResponseSize = 10_000_000
-
+    private var lastPartialFinal = true
+    
     /// Use a basic output stream to implement server output stream.
     private var downstream: AnyInputStream<Output>?
 
@@ -39,7 +35,6 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
 
     /// InputStream.onInput
     func input(_ event: InputEvent<ByteBuffer>) {
-        print("[PARSER] \(event)")
         switch event {
         case .close: downstream?.close()
         case .connect(let upstream):
@@ -47,15 +42,14 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
         case .error(let error): downstream?.error(error)
         case .next(let input):
             state = .ready
-            responseBuffer.append(contentsOf: Data(input))
             do {
-                /// FIXME: handle this better
-                try parseBuffer()
+                try parseBuffer(input)
             } catch {
-                self.parsingValue = nil
+                self.parsingValues = []
                 downstream?.error(error)
             }
         }
+        
         update()
     }
 
@@ -68,7 +62,27 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             /// FIXME: handle
             downstreamDemand = 0
         }
+        
         update()
+    }
+    
+    /// Flushes parsed values
+    private func flush() {
+        if parsingValues.count > 0 {
+            var flushed: UInt = 0
+            
+            flushing: for value in parsingValues {
+                if case .parsed(let data) = value {
+                    flushed += 1
+                    downstream?.next(data)
+                } else {
+                    break flushing
+                }
+            }
+            
+            downstreamDemand -= flushed
+            parsingValues.removeFirst(numericCast(flushed))
+        }
     }
 
     /// updates the parser's state
@@ -77,6 +91,8 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
         guard downstreamDemand > 0 else {
             return
         }
+        
+        flush()
 
         switch state {
         case .awaitingUpstream:
@@ -87,7 +103,6 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             state = .awaitingUpstream
             upstream?.request()
         }
-        print(state)
     }
 
     func output<S>(to inputStream: S) where S: Async.InputStream, Output == S.Input {
@@ -96,15 +111,15 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     }
     
     /// Parses a basic String (no \r\n's) `String` starting at the current position
-    fileprivate func simpleString(from position: inout Int) -> String? {
-        var offset = 0
+    fileprivate func simpleString(from input: ByteBuffer, at offset: inout Int) -> String? {
         var carriageReturnFound = false
+        var base = offset
         
         // Loops until the carriagereturn
-        detectionLoop: for character in responseBuffer[position...] {
+        detectionLoop: while offset < input.count {
             offset += 1
             
-            if character == .carriageReturn {
+            if input[offset] == .carriageReturn {
                 carriageReturnFound = true
                 break detectionLoop
             }
@@ -115,23 +130,16 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             return nil
         }
         
-        // The last index must be a newLine
-        let endIndex = responseBuffer.index(position, offsetBy: offset)
-        
-        guard
-            endIndex < responseBuffer.endIndex,
-            responseBuffer[endIndex] == .newLine
-        else {
+        // newline
+        guard offset < input.count, input[offset + 1] == .newLine else {
             return nil
         }
         
-        defer {
-            // Updates the position with a new value
-            position = responseBuffer.index(position, offsetBy: offset + 1)
-        }
+        // past clrf
+        defer { offset += 1 }
         
         // Returns a String initialized with this data
-        return String(bytes: responseBuffer[position..<endIndex], encoding: .utf8)
+        return String(bytes: input[base..<offset], encoding: .utf8)
     }
     
     /// Parses an integer associated with the token at the provided position
@@ -160,59 +168,59 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     ///
     /// - throws: On an unexpected result
     /// - returns: The value (and if it's completely parsed) as a tuple, or `nil` if more data is needed to continue
-    fileprivate func parseToken(_ token: Character, at position: inout Int) throws -> (result: PartialRedisData, complete: Bool)? {
+    fileprivate func parseToken(_ token: UInt8, from input: ByteBuffer, at position: inout Int) throws -> PartialRedisData {
         switch token {
-        case "+":
+        case .plus:
             // Simple string
             guard let string = simpleString(from: &position) else {
-                return nil
+                throw RedisError(.parsingError)
             }
             
-            return (.parsed(.basicString(string)), true)
-        case "-":
+            return .parsed(.basicString(string))
+        case .hyphen:
             // Error
             guard let string = simpleString(from: &position) else {
-                return nil
+                throw RedisError(.parsingError)
             }
             
-            return (.parsed(.error(RedisError(.serverSide(string)))), true)
-        case ":":
+            return .parsed(.error(RedisError(.serverSide(string))))
+        case .colon:
             // Integer
             guard let number = try integer(from: &position) else {
-                return nil
+                throw RedisError(.parsingError)
             }
             
-            return (.parsed(.integer(number)), true)
-        case "$":
+            return .parsed(.integer(number))
+        case .dollar:
             // Bulk strings start with their length
             guard let size = try integer(from: &position) else {
-                return nil
+                throw RedisError(.parsingError)
             }
             
             // Negative bulk strings are `null`
             if size < 0 {
-                return (.parsed(.null), true)
+                return .parsed(.null)
             }
             
             // Parse the following length in data
             guard
                 size > -1,
-                size < responseBuffer.distance(from: position, to: responseBuffer.endIndex)
+                size < input.distance(from: position, to: input.endIndex)
             else {
                 throw RedisError(.parsingError)
             }
             
-            let endPosition = responseBuffer.index(position, offsetBy: size)
+            let endPosition = input.index(position, offsetBy: size)
             
             defer {
-                position = responseBuffer.index(position, offsetBy: size + 2)
+                position = input.index(position, offsetBy: size + 2)
             }
             
-            return (.parsed(.bulkString(Data(responseBuffer[position..<endPosition]))), true)
-        case "*":
+            return .parsed(.bulkString(Data(input[position..<endPosition])))
+        case .asterisk:
             // Arrays start with their element count
             guard let size = try integer(from: &position) else {
-                return nil
+                throw RedisError(.parsingError)
             }
             
             guard size >= 0 else {
@@ -223,137 +231,104 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             
             // Parse all elements
             for index in 0..<size {
-                guard remaining(1, from: position) else {
-                    return (.parsing(array), false)
+                guard input.count - position >= 1 else {
+                    return .parsing(array)
                 }
                 
                 let oldPosition = position
                 
                 // Parse the individual nested element
-                guard
-                    let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[position])), at: &position),
-                    complete
-                else {
+                guard try parseToken(input[position], from: input, at: &position) else {
                     position = oldPosition
-                    return (.parsing(array), false)
+                    return .parsing(array)
                 }
                 
                 array[index] = result
             }
             
-            // All elements have been parsed, return the complete array
-            return (.parsed(.array(try array.map { value in
+            let values = try array.map { value -> RedisData in
                 guard case .parsed(let value) = value else {
                     throw RedisError(.parsingError)
                 }
                 
                 return value
-            })), true)
+            }
+            
+            // All elements have been parsed, return the complete array
+            return .parsed(.array(values))
         default:
             throw RedisError(.invalidTypeToken)
         }
     }
     
-    /// Returns `true` if the requested remaining count is available from this position
-    fileprivate func remaining(_ n: Int, from position: Int) -> Bool {
-        return responseBuffer.distance(from: position, to: responseBuffer.endIndex) > 1
-    }
-    
-    /// Helper that flushes the value into the first response
-    fileprivate func flush(_ result: PartialRedisData) {
-        guard case .parsed(let data) = result else {
-            return
+    fileprivate func continueParsing(partial value: inout PartialRedisData, from input: ByteBuffer, at offset: inout Int) throws -> Bool {
+        guard offset > 0 else {
+            return false
         }
         
-        parsingValue = nil
-        downstreamDemand -= 1
-        downstream?.next(data)
-    }
-    
-    fileprivate func continueParsing(partialValues values: [PartialRedisData]) throws -> Bool {
-        var values = values
-        
-        // Loops over all elements
-        for i in 0..<values.count {
-            // Parses every `notyetParsed`
-            guard case .notYetParsed = values[i] else {
-                continue
-            }
-            
-            // Fetch the token
-            var index = responseBuffer.startIndex
-            
-            guard remaining(1, from: index) else {
-                parsingValue = .parsing(values)
+        // Parses every `notyetParsed`
+        switch value {
+        case .parsed(_):
+            return true
+        case .notYetParsed:
+            // need 1 byte for the token
+            guard input.count - offset >= 1 else {
                 return false
             }
             
-            // Parses the value associated with the token
-            guard
-                let (result, complete) = try parseToken(Character(Unicode.Scalar(responseBuffer[index])), at: &index),
-                complete
-            else {
-                parsingValue = .parsing(values)
-                // Parsing halted, stop
-                return false
+            let token = input[offset]
+            offset += 1
+            
+            value = try parseToken(token, from: input, at: &offset)
+            
+            if case .parsed(_) = value {
+                return true
+            }
+        case .parsing(var values):
+            for i in 0..<values.count {
+                guard try continueParsing(partial: &values[i], from: input, at: &offset) else {
+                    value = .parsing(values)
+                    return false
+                }
             }
             
-            // Remove the parsed data
-            responseBuffer.removeSubrange(..<index)
+            let values = try values.map { value -> RedisData in
+                guard case .parsed(let value) = value else {
+                    throw RedisError(.parsingError)
+                }
+                
+                return value
+            }
             
-            // Changes the value in this array
-            values[i] = result
+            value = .parsed(.array(values))
+            return true
         }
         
         return false
     }
     
     /// Continues parsing the `Data` buffer
-    fileprivate func parseBuffer() throws {
-        // If not enough characters are available, it's not even worth trying.
-        guard responseBuffer.count > 2 else {
-            return
-        }
+    fileprivate func parseBuffer(_ input: ByteBuffer) throws {
+        // flush first, so the order of information stays correct
+        flush()
+        
+        var offset = 0
+        var success: Bool
+        var value: PartialRedisData
         
         // Continues parsing while there are still pending requests
-        while true {
-            // Continue parsing if a value is partially parsed
-            if let parsingValue = parsingValue {
-                // The only half-parsed values can be arrays
-                guard case .parsing(let values) = parsingValue else {
-                    throw RedisError(.parsingError)
-                }
-                
-                guard try continueParsing(partialValues: values) else {
-                    return
-                }
-                
-                // Flushes the resulting array to a request
-                flush(parsingValue)
+        repeat {
+            if lastPartialFinal || self.parsingValues.count == 0 {
+                value = .notYetParsed
+            } else {
+                value = self.parsingValues.removeLast()
             }
             
-            var index = responseBuffer.startIndex
+            success = try continueParsing(partial: &value, from: input, at: &offset)
+            self.parsingValues.append(value)
             
-            // Parses an element
-            guard
-                let token = responseBuffer.first,
-                let (result, complete) = try parseToken(Character(Unicode.Scalar(token)), at: &index)
-            else {
-                return
-            }
-            
-            // Remove the parsed data
-            responseBuffer.removeSubrange(..<index)
-            
-            // If parsing is complete, flush
-            guard complete else {
-                // Else, store the half-parsed value
-                parsingValue = result
-                return
-            }
-            
-            flush(result)
-        }
+            flush()
+        } while offset < input.count && success
     }
 }
 

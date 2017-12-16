@@ -1,3 +1,5 @@
+import TCP
+
 public protocol TLSClient {
     var settings: TLSClientSettings { get }
     func connect(hostname: String, port: UInt16) throws

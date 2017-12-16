@@ -3,53 +3,61 @@ import Bits
 import COperatingSystem
 
 /// Parses buffers into packets
-internal final class PacketParser: Async.Stream {
+internal final class MySQLPacketParser: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = ByteBuffer
 
     /// See OutputStream.Output
     typealias Output = Packet
 
-    /// Basic stream to easily implement async stream.
-    private var outputStream: BasicStream<Output>
-
-    /// Internal buffer
+    /// Internal buffer that keeps track of partial packets
     private var buffer: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
     
+    /// Internal buffer that keeps tack of an uncompleted packet header (size: UInt24) + (sequenceID: UInt8)
     private var headerBytes = [UInt8]()
+    
+    /// Use a basic output stream to implement server output stream.
+    private var downstream: AnyInputStream<Output>?
+    
+    /// The upstream providing byte buffers
+    private var upstream: ConnectionContext?
+    
+    /// Remaining downstream demand
+    private var downstreamDemand: UInt
+    
+    private var state: MySQLPacketParserState
 
     /// Create a new packet parser
     init() {
-        self.outputStream = .init()
-    }
-
-    /// See InputStream.onInput
-    func onInput(_ input: ByteBuffer) {
-        do {
-            try parse(input)
-        } catch {
-            onError(error)
-        }
-    }
-
-    /// See InputStream.onError
-    func onError(_ error: Error) {
-        outputStream.onError(error)
-    }
-
-    /// See OutuptStream.onOutput
-    func onOutput<I>(_ input: I) where I: InputStream, Output == I.Input {
-        outputStream.onOutput(input)
+        downstreamDemand = 0
+        state = .ready
     }
     
-    /// See CloseableStream.close
-    func close() {
-        outputStream.close()
+    /// InputStream.onInput
+    func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close: downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error): downstream?.error(error)
+        case .next(let input):
+            do {
+                try self.parse(input)
+            } catch {
+                self.buffer = nil
+                downstream?.error(error)
+            }
+        }
+        update()
     }
-
-    /// See CloseableStream.onClose
-    func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
+    
+    func connection(_ event: ConnectionEvent) {
+        <#code#>
+    }
+    
+    func output<S>(to inputStream: S) where S : InputStream, Output == S.Input {
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
     
     func parse(_ input: ByteBuffer) throws {
@@ -176,6 +184,23 @@ internal final class PacketParser: Async.Stream {
             }
         } while canContinue
     }
+    
+    private func update() {
+        /// if demand is 0, we don't want to do anything
+        guard downstreamDemand > 0 else {
+            return
+        }
+        
+        switch state {
+        case .awaitingUpstream:
+            /// we are waiting for upstream, nothing to be done
+            break
+        case .ready:
+            /// ask upstream for some data
+            state = .awaitingUpstream
+            upstream?.request()
+        }
+    }
 
     // Parses the buffer
     //
@@ -232,6 +257,14 @@ internal final class PacketParser: Async.Stream {
             return false
         }
     }
+}
+
+/// Various states the parser stream can be in
+enum MySQLPacketParserState {
+    /// normal state
+    case ready
+    /// waiting for data from upstream
+    case awaitingUpstream
 }
 
 extension Packet {

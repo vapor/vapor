@@ -43,6 +43,7 @@ public final class HTTPParserStream<Parser>: Stream, ConnectionContext where Par
 
     /// See InputStream.input
     public func input(_ event: InputEvent<ByteBuffer>) {
+        // FIXME: HTTP pipelining (more than 1 request/response in a TCP buffer)
         switch event {
         case .connect(let upstream):
             self.upstream = upstream
