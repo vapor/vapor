@@ -2,7 +2,7 @@
 import PackageDescription
 
 #if os(macOS) || os(iOS)
-    let ssl: Target.Dependency = "AppleSSL"
+    let ssl: Target.Dependency = "AppleTLS"
 #else
     let ssl: Target.Dependency = "OpenSSL"
 #endif
@@ -75,7 +75,7 @@ let package = Package(
         .library(name: "SQLite", targets: ["SQLite"]),
         
         // TLS/SSL
-        // .library(name: "TLS", targets: ["TLS"]),
+        .library(name: "TLS", targets: ["TLS"]),
 
         // Validation
         .library(name: "Validation", targets: ["Validation"]),
@@ -196,7 +196,7 @@ let package = Package(
        
         // TLS
         .target(name: "TLS", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
-        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
+        .testTarget(name: "TLSTests", dependencies: ["OpenSSL", "TLS"]),
 
         // SQL
         .target(name: "SQL"),
@@ -227,9 +227,11 @@ let package = Package(
             "Routing",
             "Service",
             "TCP",
-            // "TLS",
+            "TLS",
             "ServerSecurity",
-            ssl,
+            // ssl,
+            "AppleTLS",
+            "OpenSSL"
             // "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
@@ -240,21 +242,21 @@ let package = Package(
     ]
 )
 
-#if os(macOS) || os(iOS)
+//#if os(macOS) || os(iOS)
    package.targets.append(
-        .target(name: "AppleSSL", dependencies: ["Async", "Bits", "Debugging", "TLS"])
+        .target(name: "AppleTLS", dependencies: ["Async", "Bits", "Debugging", "TLS"])
     )
 
     package.products.append(
-        .library(name: "AppleSSL", targets: ["AppleSSL"])
+        .library(name: "AppleTLS", targets: ["AppleTLS"])
     )
-#else
+//#else
     package.dependencies.append(
         .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
     )
     
     package.targets.append(
-        .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging", "TLS"])
+        .target(name: "OpenSSL", dependencies: ["Async", "COpenSSL", "Debugging", "TLS"])
     )
-#endif
+//#endif
 

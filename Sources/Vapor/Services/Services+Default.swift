@@ -14,10 +14,10 @@ import TLS
 //    public typealias DefaultSSLClientUpgrader = OpenSSLClientUpgrader.self
 //    public typealias DefaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
 //#else
-//    import AppleSSL
-//    public typealias DefaultSSLClient = AppleSSLClient.self
-//    public typealias DefaultSSLClientUpgrader = AppleSSLClientUpgrader.self
-//    public typealias DefaultSSLPeerUpgrader = AppleSSLClientUpgrader.self
+//    import AppleTLS
+//    public typealias DefaultSSLClient = AppleTLSClient.self
+//    public typealias DefaultSSLClientUpgrader = AppleTLSClientUpgrader.self
+//    public typealias DefaultSSLPeerUpgrader = AppleTLSClientUpgrader.self
 //#endif
 
 extension Services {

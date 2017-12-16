@@ -35,7 +35,7 @@ public struct AppleTLSClient: TLSClient {
         self.socket = socket
     }
 
-    /// Connects and handshakes to the remote server
+    /// See TLSClient.connect
     public func connect(hostname: String, port: UInt16) throws {
         try tcp.connect(hostname: hostname, port: port)
     }

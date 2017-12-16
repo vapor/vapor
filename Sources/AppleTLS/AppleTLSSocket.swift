@@ -25,6 +25,7 @@ public final class AppleTLSSocket: TLSSocket {
     /// True if the handshake has completed
     private var handshakeCompleted: Bool
 
+    /// True if the socket has been initialized
     private var initCompleted: Bool
 
     /// Creates an SSL socket
