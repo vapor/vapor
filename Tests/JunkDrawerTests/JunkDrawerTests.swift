@@ -3,7 +3,7 @@ import XCTest
 
 class JunkDrawerTests: XCTestCase {
     func testFileRead() throws {
-        let file = try File(queue: .global()).read(at: CommandLine.arguments[0]).blockingAwait()
+        let file = try File(queue: .global()).read(at: CommandLine.arguments[0], chunkSize: 128).blockingAwait()
         XCTAssertGreaterThan(file.count, 512)
     }
     

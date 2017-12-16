@@ -13,9 +13,10 @@ class SQLiteTests: XCTestCase {
     }
 
     func testTables() throws {
-        try database.query("select * From foo").execute().blockingAwait()!.stream().drain { row, req in
+        try database.query("select * From foo").execute().blockingAwait()!.stream().drain { req in
+            req.request(count: .max)
+        }.output { row in
             print(row)
-            req.requestOutput()
         }.catch { error in
             print("failed: \(error)")
         }.finally {

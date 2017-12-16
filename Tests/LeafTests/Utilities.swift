@@ -38,7 +38,7 @@ final class TestFiles: FileReader, FileCache {
         let data = """
         Test file name: "\(path)"
         """.data(using: .utf8)!
-        data.withByteBuffer(stream.onInput)
+        data.withByteBuffer(stream.next)
         stream.close()
     }
 }
@@ -59,9 +59,9 @@ final class PreloadedFiles: FileReader, FileCache {
 
     func read<S>(at path: String, into stream: S, chunkSize: Int) where S : Async.InputStream, S.Input == ByteBuffer {
         if let data = files[path] {
-            data.withByteBuffer(stream.onInput)
+            data.withByteBuffer(stream.next)
         } else {
-            stream.onError("Could not find file")
+            stream.error("Could not find file")
         }
         stream.close()
     }

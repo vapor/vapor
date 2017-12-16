@@ -6,41 +6,29 @@ import JunkDrawer
 import TCP
 import XCTest
 
+struct EchoWorker: HTTPResponder, EventLoop {
+    let queue: DispatchQueue = DispatchQueue(label: "codes.vapor.test.worker.echo")
+
+    func respond(to req: HTTPRequest, on eventLoop: EventLoop) throws -> Future<HTTPResponse> {
+        /// simple echo server
+        return Future(.init(body: req.body))
+    }
+}
+
 class HTTPServerTests: XCTestCase {
     func testTCP() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         let tcpServer = try TCPServer(socket: tcpSocket)
-        let tcpStream = tcpServer.stream(
-            on: DispatchQueue(label: "codes.vapor.http.test.server"),
-            assigning: [
-                DispatchQueue(label: "codes.vapor.test.worker.1"),
-                DispatchQueue(label: "codes.vapor.test.worker.2"),
-                DispatchQueue(label: "codes.vapor.test.worker.3"),
-                DispatchQueue(label: "codes.vapor.test.worker.4"),
-                DispatchQueue(label: "codes.vapor.test.worker.5"),
-                DispatchQueue(label: "codes.vapor.test.worker.6"),
-                DispatchQueue(label: "codes.vapor.test.worker.7"),
-                DispatchQueue(label: "codes.vapor.test.worker.8"),
-            ]
-        ).map { client, eventLoop -> DispatchSocketStream<TCPSocket> in
-            return client.stream(on: eventLoop)
-        }
+        let server = HTTPServer(
+            acceptStream: tcpServer.stream(
+                on: DispatchQueue(label: "codes.vapor.http.test.server")
+            ),
+            workers: [EchoWorker()]
+        )
+        server.onError = { XCTFail("\($0)") }
 
-        let server = HTTPServer<
-            DispatchSocketStream<TCPSocket>,
-            MapStream<HTTPRequest, HTTPResponse>
-        >(acceptStream: tcpStream) { byteStream in
-            print(byteStream.eventLoop)
-            return MapStream { (req: HTTPRequest) -> HTTPResponse in
-                /// simple echo server
-                return .init(body: req.body)
-            }
-        }
-        print(server)
-        
         // beyblades let 'er rip
         try tcpServer.start(hostname: "localhost", port: 8123, backlog: 128)
-        // RunLoop.main.run()
 
         let exp = expectation(description: "all requests complete")
         var num = 1024

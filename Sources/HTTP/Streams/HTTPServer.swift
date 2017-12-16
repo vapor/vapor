@@ -44,3 +44,4 @@ public protocol ByteStreamRepresentable {
     func stream(on eventLoop: EventLoop) -> ByteStream
 }
 
+extension TCPClient: ByteStreamRepresentable {}

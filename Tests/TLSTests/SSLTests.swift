@@ -24,7 +24,9 @@ class SSLTests: XCTestCase {
         let exp = expectation(description: "read data")
 
         let tlsStream = tlsClient.stream(on: DispatchQueue(label: "codes.vapor.tls.client"))
-        tlsStream.drain { buffer, req in
+        tlsStream.drain { req in
+            req.request(count: 1)
+        }.output { buffer in
             let res = Data(buffer)
             print(String(data: res, encoding: .utf8)!)
             exp.fulfill()
