@@ -17,21 +17,21 @@ class RedisTests: XCTestCase {
         )
     }
     
-    func testCRUD() throws {
-        let connection = try makeClient()
-      
-        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(2))
-        
-        let result = try! connection.set("world", forKey: "hello").flatMap {
-            return connection.getData(forKey: "hello")
-        }.blockingAwait(timeout: .seconds(2))
-        
-        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
-        
-        XCTAssertEqual(removedCount, 1)
-        
-        XCTAssertEqual(result.string, "world")
-    }
+//    func testCRUD() throws {
+//        let connection = try makeClient()
+//      
+//        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(2))
+//        
+//        let result = try! connection.set("world", forKey: "hello").flatMap {
+//            return connection.getData(forKey: "hello")
+//        }.blockingAwait(timeout: .seconds(2))
+//        
+//        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
+//        
+//        XCTAssertEqual(removedCount, 1)
+//        
+//        XCTAssertEqual(result.string, "world")
+//    }
     
 //    func testPubSub() throws {
 //        let promise = Promise<RedisData>()
