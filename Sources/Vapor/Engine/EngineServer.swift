@@ -11,8 +11,6 @@ import Service
 import TCP
 import TLS
 
-extension TCPClient: ByteStreamRepresentable {}
-
 /// A TCP based server with HTTP parsing and serialization pipeline.
 public final class EngineServer: Server {
     /// Chosen configuration for this server.
