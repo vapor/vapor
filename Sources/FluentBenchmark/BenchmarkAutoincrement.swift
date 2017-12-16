@@ -13,7 +13,7 @@ extension Benchmarker  {
             fail("message ID was incorrectly set")
         }
 
-        return message.save(on: conn).map {
+        return message.save(on: conn).map(to: Void.self) {
             if conn.lastAutoincrementID == nil {
                 throw FluentBenchmarkError(identifier: "autoincrement", reason: "The last auto increment was not set")
             }
@@ -26,9 +26,9 @@ extension Benchmarker  {
 
     /// Benchmark the Timestampable protocol
     public func benchmarkAutoincrement() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
-                self.pool.releaseConnection(conn)
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
+                return self.pool.releaseConnection(conn)
             }
         }
     }
@@ -38,20 +38,20 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the Timestampable protocol
     /// The schema will be prepared first.
     public func benchmarkAutoincrement_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn -> Future<Database.Connection> in
+        return pool.requestConnection().flatMap(to: Database.Connection.self) { conn in
             let promise = Promise<Database.Connection>()
             
             LogMessageMigration<Database>.prepare(on: conn).do {
                 promise.complete(conn)
-                }.catch { _ in
-                    promise.complete(conn)
+            }.catch { _ in
+                promise.complete(conn)
             }
             
             return promise.future
-            }.then { conn -> Future<Void> in
-                return try self._benchmark(on: conn).map {
-                    self.pool.releaseConnection(conn)
-                }
+        }.flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
+                self.pool.releaseConnection(conn)
+            }
         }
     }
 }

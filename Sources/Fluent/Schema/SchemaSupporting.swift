@@ -44,7 +44,7 @@ extension SchemaSupporting {
     /// for the supplied model type on this schema executor.
     public func create<Model>(_ model: Model.Type, closure: @escaping CreateClosure<Model>) -> Future<Void> {
         let creator = SchemaCreator(Model.self, on: self)
-        return then {
+        return Future {
             try closure(creator)
             return self.execute(schema: creator.schema)
         }
@@ -57,7 +57,7 @@ extension SchemaSupporting {
     /// for the supplied model type on this schema executor.
     public func update<Model>(_ model: Model.Type, closure: @escaping UpdateClosure<Model>) -> Future<Void> {
         let updater = SchemaUpdater(Model.self, on: self)
-        return then {
+        return Future {
             try closure(updater)
             return self.execute(schema: updater.schema)
         }

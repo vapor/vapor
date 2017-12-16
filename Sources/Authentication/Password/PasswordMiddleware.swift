@@ -33,13 +33,13 @@ public final class PasswordAuthenticationMiddleware<A>: Middleware
         }
 
         // get database connection
-        return req.connect(to: A.database).then { conn -> Future<Response> in
+        return req.connect(to: A.database).flatMap(to: Response.self) { conn in
             // auth user on connection
             return try A.authenticate(
                 using: password,
                 verifier: self.verifier,
                 on: conn
-            ).then { a -> Future<Response> in
+            ).flatMap(to: Response.self) { a in
                 // set authed on request
                 try req.authenticate(a)
                 return try next.respond(to: req)

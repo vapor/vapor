@@ -1,5 +1,7 @@
 import Vapor
 
+let http = HTTPResponse()
+
 final class Routes: RouteCollection {
     let app: Application
 
@@ -8,8 +10,10 @@ final class Routes: RouteCollection {
     }
 
     func boot(router: Router) throws {
-        router.get("hello") { req in
-            return "Hello, world!"
+        router.get("hello") { req -> Future<Response> in
+            let res = req.makeResponse()
+            res.http = http
+            return Future(res)
         }
     }
 }

@@ -15,19 +15,19 @@ extension Benchmarker {
         for i in 1...512 {
             let user = User<Database>(name: "User \(i)", age: i)
             
-            future = future.then {
+            future = future.flatMap(to: Void.self) {
                 return user.save(on: conn)
             }
         }
         
-        return future.then { () -> Future<Void> in
+        return future.flatMap(to: Void.self) {
             return conn.query(User<Database>.self).chunk(max: 64) { chunk in
                 if chunk.count != 64 {
                     self.fail("bad chunk count")
                 }
                 fetched64 += chunk
             }
-        }.then { () -> Future<Void> in
+        }.flatMap(to: Void.self) {
             if fetched64.count != 512 {
                 self.fail("did not fetch all - only \(fetched64.count) out of 2048")
             }
@@ -38,7 +38,7 @@ extension Benchmarker {
                 }
                 fetched2047 += chunk
             }
-        }.map { _ in
+        }.map(to: Void.self) {
             if fetched2047.count != 512 {
                 self.fail("did not fetch all - only \(fetched2047.count) out of 2048")
             }
@@ -47,8 +47,8 @@ extension Benchmarker {
 
     /// Benchmark result chunking
     public func benchmarkChunking() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }
@@ -59,7 +59,7 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark result chunking
     /// The schema will be prepared first.
     public func benchmarkChunking_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn -> Future<Database.Connection> in
+        return pool.requestConnection().flatMap(to: Database.Connection.self) { conn in
             let promise = Promise<Database.Connection>()
             
             UserMigration<Database>.prepare(on: conn).do {
@@ -69,8 +69,8 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
             }
             
             return promise.future
-        }.then { conn -> Future<Void> in
-            return try self._benchmark(on: conn).map {
+        }.flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }

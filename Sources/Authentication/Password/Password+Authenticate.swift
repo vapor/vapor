@@ -12,7 +12,7 @@ extension PasswordAuthenticatable {
             .query(on: connection)
             .filter(usernameKey == password.username)
             .first()
-            .map
+            .map(to: Self.self)
         { user in
             guard let user = user else {
                 throw AuthenticationError(

@@ -7,10 +7,14 @@ extension SQLiteConnection: TransactionSupporting {
     public func execute(transaction: DatabaseTransaction<SQLiteConnection>) -> Future<Void> {
         let promise = Promise(Void.self)
 
-        query(string: "BEGIN TRANSACTION").execute().do {
+        query(string: "BEGIN TRANSACTION").execute().do { results in
+            assert(results == nil)
             transaction.run(on: self).do {
                 self.query(string: "COMMIT TRANSACTION")
                     .execute()
+                    .map(to: Void.self) { results in
+                        assert(results == nil)
+                    }
                     .chain(to: promise)
             }.catch { err in
                 self.query(string: "ROLLBACK TRANSACTION").execute().do { query in

@@ -20,12 +20,12 @@ internal struct SchemaMigrationConfig<
 
     /// See MigrationRunnable.migrate
     internal func migrate(using databases: Databases, using container: Container) -> Future<Void> {
-        return then {
+        return Future {
             guard let database = databases.storage[self.database.uid] as? Database else {
                 throw FluentError(identifier: "no-migration-database", reason: "no database \(self.database.uid) was found for migrations")
             }
 
-            return try database.makeConnection(from: container.make(for: Database.Connection.self), on: container).then { conn in
+            return try database.makeConnection(from: container.make(for: Database.Connection.self), on: container).flatMap(to: Void.self) { conn in
                 self.prepareForMigration(on: conn)
             }
         }
@@ -34,8 +34,8 @@ internal struct SchemaMigrationConfig<
     /// Prepares the connection for migrations by ensuring
     /// the migration log model is ready for use.
     internal func prepareForMigration(on conn: Database.Connection) -> Future<Void> {
-        return MigrationLogMigration<Database>.prepareMetadata(on: conn).then { _ in
-            return MigrationLog<Database>.latestBatch(on: conn).then { lastBatch -> Future<Void> in
+        return MigrationLogMigration<Database>.prepareMetadata(on: conn).flatMap(to: Void.self) {
+            return MigrationLog<Database>.latestBatch(on: conn).flatMap(to: Void.self) { lastBatch in
                 return self.migrateBatch(on: conn, batch: lastBatch + 1)
             }
         }

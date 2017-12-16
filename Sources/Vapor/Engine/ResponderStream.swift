@@ -1,6 +1,8 @@
+import Async
+import Dispatch
 
 /// A stream containing an  responder.
-public final class ResponderStream: Async.Stream {
+public final class ResponderStream: TransformingStream {
     /// See InputStream.Input
     public typealias Input = HTTPRequest
 
@@ -13,51 +15,25 @@ public final class ResponderStream: Async.Stream {
     /// Worker to pass onto incoming requests
     public let container: Container
 
-    /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output>
+    /// Upstream HTTPRequest output stream
+    public var upstream: ConnectionContext?
+
+    /// Downstream HTTPResponse input stream
+    public var downstream: AnyInputStream<HTTPResponse>?
 
     /// Create a new response stream.
     /// The responses will be awaited on the supplied queue.
     public init(responder: Responder, using container: Container) {
         self.responder = responder
-        self.outputStream = .init()
         self.container = container
     }
 
-    /// See InputStream.onInput
-    public func onInput(_ input: Input) {
-        let req = Request(http: input, using: container)
-        do {
-            // dispatches the incoming request to the responder.
-            // the response is awaited on the responder stream's queue.
-            try responder.respond(to: req)
-                .map { res in
-                    return res.http
-                }
-                .stream(to: outputStream)
-        } catch {
-            self.onError(error)
+    /// See TransformingStream.transform
+    public func transform(_ httpRequest: HTTPRequest) -> Future<HTTPResponse> {
+        return Future {
+            let req = Request(http: httpRequest, using: self.container)
+            return try self.responder.respond(to: req)
+                .map(to: HTTPResponse.self) { $0.http }
         }
     }
-
-    /// See InputStream.onError
-    public func onError(_ error: Error) {
-        outputStream.onError(error)
-    }
-
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    public func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
-    }
 }
-
