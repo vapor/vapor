@@ -38,6 +38,15 @@ extension AllCapsLog: ServiceType {
 }
 
 
+class ConfigurableLog: Log {
+    let myConfig: String
+    
+    init(config: String) { self.myConfig = config }
+    func log(_ string: String) {
+        print("[Config \(myConfig) Log] - \(string)")
+    }
+}
+
 class AllCapsProvider: Provider {
     static let repositoryName = "all-caps-provider"
 

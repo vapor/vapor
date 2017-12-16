@@ -51,7 +51,8 @@ extension Services {
     /// Adds any type conforming to ServiceFactory
     public mutating func register(_ factory: ServiceFactory) {
         if let existing = factories.index(where: {
-            $0.serviceType == factory.serviceType
+            $0.serviceType == factory.serviceType &&
+            $0.serviceTag == factory.serviceTag
         }) {
             factories[existing] = factory
         } else {
