@@ -14,12 +14,6 @@ final class PetToyPivot: ModifiablePivot {
     static var rightIDKey = \PetToyPivot.toyID
     static let database = beta
 
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.petID): "petID",
-        key(\.toyID): "toyID"
-    ]
-
     var id: UUID?
     var petID: UUID
     var toyID: UUID

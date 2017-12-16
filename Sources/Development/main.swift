@@ -145,12 +145,6 @@ do {
     router.post("login", use: controller.foo)
 
     final class Message: Model {
-        static let keyStringMap: KeyStringMap = [
-            key(\.id): "id",
-            key(\.text): "text",
-            key(\.time): "customtime",
-        ]
-
         static let database = beta
         static let idKey = \Message.id
 

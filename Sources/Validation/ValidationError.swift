@@ -6,7 +6,7 @@ public struct BasicValidationError: ValidationError {
     public var reason: String {
         let path: String
         if keyPath.count > 0 {
-            path = "`" + keyPath.joined(separator: ".") + "`"
+            path = "`" + keyPath.map { $0.stringValue }.joined(separator: ".") + "`"
         } else {
             path = "data"
         }
@@ -17,7 +17,7 @@ public struct BasicValidationError: ValidationError {
     public var message: String
 
     /// Key path the validation error happened at
-    public var keyPath: [String]
+    public var keyPath: [CodingKey]
 
     /// Create a new JWT error
     public init(_ message: String) {
@@ -33,7 +33,7 @@ public protocol ValidationError: Debuggable, Error {
     var reason: String { get }
 
     /// Key path the validation error happened at
-    var keyPath: [String] { get set }
+    var keyPath: [CodingKey] { get set }
 }
 
 extension ValidationError {

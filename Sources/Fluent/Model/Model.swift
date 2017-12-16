@@ -47,7 +47,7 @@ public protocol Model: AnyModel, ContainerFindable {
 
 /// Type-erased model.
 /// See Model
-public protocol AnyModel: class, Codable, KeyStringMappable {
+public protocol AnyModel: class, Codable {
     /// This model's unique name.
     static var name: String { get }
 

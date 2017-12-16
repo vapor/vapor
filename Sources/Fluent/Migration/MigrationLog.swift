@@ -21,17 +21,6 @@ final class MigrationLog<D: Database>: Model, Timestampable {
     /// See Model.idKeyPath
     static var idKey: IDKey { return \.id }
 
-    /// See Model.keyPathMap
-    static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.batch): "batch",
-            key(\.createdAt): "createdAt",
-            key(\.updatedAt): "updatedAt",
-        ]
-    }
-
     /// See Model.id
     var id: UUID?
 

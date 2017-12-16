@@ -16,15 +16,6 @@ internal final class Foo<D: Database>: Model {
     /// See Model.idKey
     static var idKey: IDKey { return \.id }
 
-    /// See Model.keyStringMap
-    static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.bar): "bar",
-            key(\.baz): "baz"
-        ]
-    }
-
     /// See Model.database
     public static var database: DatabaseIdentifier<D> {
         return .init("test")

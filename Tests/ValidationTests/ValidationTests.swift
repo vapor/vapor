@@ -61,14 +61,7 @@ final class User: Validatable {
         self.name = name
         self.age = age
     }
-
-    static var keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name",
-        key(\.age): "age",
-        key(\.child): "child"
-    ]
-
+    
     static var validations: Validations = [
         key(\.name): IsCount(5...),
         key(\.age): IsCount(3...),

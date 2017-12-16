@@ -28,11 +28,8 @@ public final class QueryBuilder<Model> where Model: Fluent.Model {
             let type = Model.self as? AnySoftDeletable.Type,
             !self.query.withSoftDeleted
         {
-            guard let deletedAtKey = type.keyStringMap[type.anyDeletedAtKey] else {
-                fatalError("no key")
-            }
-
-            let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey)
+            let deletedAtKey = T.codingPath(forKey: type.anyDeletedAtKey)
+            let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey[0].stringValue)
 
             try! self.group(.or) { or in
                 try or.filter(deletedAtField > Date())
