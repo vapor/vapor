@@ -30,10 +30,10 @@ public final class ResponderStream: TransformingStream {
 
     /// See TransformingStream.transform
     public func transform(_ httpRequest: HTTPRequest) -> Future<HTTPResponse> {
-        return then {
+        return Future {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)
-                .map { $0.http }
+                .map(to: HTTPResponse.self) { $0.http }
         }
     }
 }

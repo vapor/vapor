@@ -12,7 +12,7 @@ extension SQLiteConnection: TransactionSupporting {
             transaction.run(on: self).do {
                 self.query(string: "COMMIT TRANSACTION")
                     .execute()
-                    .map { results in
+                    .map(to: Void.self) { results in
                         assert(results == nil)
                     }
                     .chain(to: promise)

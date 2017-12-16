@@ -94,8 +94,8 @@ extension LeafRenderer: ViewRenderer {
         return try render(
             path: path,
             context: LeafContext(data: LeafEncoder().encode(context))
-        ).map { data in
-            return View(data: data)
+        ).map(to: View.self) { data in
+            return .init(data: data)
         }
     }
 }

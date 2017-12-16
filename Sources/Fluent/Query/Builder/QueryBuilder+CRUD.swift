@@ -19,7 +19,7 @@ extension QueryBuilder {
     public func create(_ model: Model) -> Future<Void> {
         query.data = model
         query.action = .create
-        return connection.then { conn -> Future<Void> in
+        return connection.flatMap(to: Void.self) { conn in
             if model.fluentID == nil {
                 // generate an id
                 switch Model.ID.identifierType {
@@ -38,21 +38,24 @@ extension QueryBuilder {
                 timestampable.createdAt = now
             }
 
-            return try model.willCreate(on: conn)
-                .then { _ -> Future<Void> in
-                    return self.execute().then { _ -> Future<Void> in
+            return try model
+                .willCreate(on: conn)
+                .flatMap(to: Void.self) {
+                    return self.execute().flatMap(to: Void.self) {
                         try model.parseID(from: conn)
                         return .done
                     }
                 }
-                .then { try model.didCreate(on: conn) }
+                .flatMap(to: Void.self) {
+                    try model.didCreate(on: conn)
+                }
         }
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
     public func update(_ model: Model) -> Future<Void> {
-        return connection.then { conn -> Future<Void> in
+        return connection.flatMap(to: Void.self) { conn in
             self.query.data = model
 
             guard let id = model.fluentID else {
@@ -69,9 +72,14 @@ extension QueryBuilder {
             }
 
 
-            return try model.willUpdate(on: conn)
-                .then { self.execute() }
-                .then { try model.didUpdate(on: conn) }
+            return try model
+                .willUpdate(on: conn)
+                .flatMap(to: Void.self) {
+                    self.execute()
+                }
+                .flatMap(to: Void.self) {
+                    try model.didUpdate(on: conn)
+                }
         }
     }
 
@@ -94,15 +102,17 @@ extension QueryBuilder {
     /// Throws an error if the mdoel did not have an id.
     /// note: does NOT respect soft deletable.
     internal func _delete(_ model: Model) -> Future<Void> {
-        return connection.then { conn in
-            return try model.willDelete(on: conn).then { _ -> Future<Void> in
+        return connection.flatMap(to: Void.self) { conn in
+            return try model.willDelete(on: conn).flatMap(to: Void.self) {
                 guard let id = model.fluentID else {
                     throw FluentError(identifier: "missing-id", reason: "Model does not have an identifier, it is necessary for removing it")
                 }
 
                 try self.filter(Model.idKey == id)
                 self.query.action = .delete
-                return self.execute().then { try model.didDelete(on: conn) }
+                return self.execute().flatMap(to: Void.self) {
+                    try model.didDelete(on: conn)
+                }
             }
         }
     }

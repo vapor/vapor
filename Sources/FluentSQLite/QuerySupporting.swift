@@ -47,7 +47,7 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
             sqliteQuery.execute().do { results in
                 if let results = results {
                     /// there are results to be streamed
-                    results.stream().map { row -> D in
+                    results.stream().map(to: D.self) { row in
                         let decoder = SQLiteRowDecoder(row: row)
                         let model = try D(from: decoder)
                         return model

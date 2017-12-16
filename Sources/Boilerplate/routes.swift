@@ -10,10 +10,10 @@ final class Routes: RouteCollection {
     }
 
     func boot(router: Router) throws {
-        router.get("hello") { req -> Response in
+        router.get("hello") { req -> Future<Response> in
             let res = req.makeResponse()
             res.http = http
-            return res
+            return Future(res)
         }
     }
 }

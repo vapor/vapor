@@ -10,14 +10,11 @@ extension Benchmarker {
         let a = Foo<Database>(bar: "asdf", baz: 42)
         let b = Foo<Database>(bar: "asdf", baz: 42)
         
-        return a.save(on: conn).then { () -> Future<Void> in
-            print(#line)
+        return a.save(on: conn).flatMap(to: Void.self) {
             return b.save(on: conn)
-        }.then { _ -> Future<Int> in
-            print(#line)
+        }.flatMap(to: Int.self) {
             return conn.query(Foo<Database>.self).count()
-        }.then { count -> Future<Void> in
-            print(#line)
+        }.flatMap(to: Void.self) { count in
             if count != 2 {
                 self.fail("count should have been 2")
             }
@@ -26,22 +23,18 @@ extension Benchmarker {
             b.bar = "fdsa"
             
             return b.save(on: conn)
-        }.then { _ -> Future<Foo<Database>?> in
-            print(#line)
+        }.flatMap(to: Foo<Database>?.self) {
             return try Foo<Database>.find(b.requireID(), on: conn)
-        }.then { fetched -> Future<Void> in
-            print(#line)
+        }.flatMap(to: Void.self) { fetched in
             // read
             if fetched?.bar != "fdsa" {
                 self.fail("b.bar should have been updated")
             }
             
             return b.delete(on: conn)
-        }.then { _ -> Future<Int> in
-            print(#line)
+        }.flatMap(to: Int.self) {
             return conn.query(Foo<Database>.self).count()
-        }.map { count in
-            print(#line)
+        }.map(to: Void.self) { count in
             if count != 1 {
                 self.fail("count should have been 1")
             }
@@ -50,8 +43,8 @@ extension Benchmarker {
 
     /// Benchmark the basic model CRUD.
     public func benchmarkModels() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }
@@ -62,9 +55,9 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the basic model CRUD.
     /// The schema will be prepared first.
     public func benchmarkModels_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return FooMigration<Database>.prepare(on: conn).then {
-                return try self._benchmark(on: conn).map {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return FooMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
+                return try self._benchmark(on: conn).map(to: Void.self) {
                     self.pool.releaseConnection(conn)
                 }
             }

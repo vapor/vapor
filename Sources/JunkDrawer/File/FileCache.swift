@@ -18,7 +18,7 @@ extension FileReader where Self: FileCache {
         if let data = getCachedFile(at: path) {
             return Future(data)
         } else {
-            return read(at: path, chunkSize: chunkSize).map { data in
+            return read(at: path, chunkSize: chunkSize).map(to: Data.self) { data in
                 self.setCachedFile(file: data, at: path)
                 return data
             }

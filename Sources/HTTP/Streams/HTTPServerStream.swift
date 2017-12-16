@@ -58,7 +58,7 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
             byteStream
                 .stream(to: parserStream)
                 .stream(to: worker.stream(on: worker))
-                .map { response -> HTTPResponse in
+                .map(to: HTTPResponse.self) { response in
                     /// map the responder adding http upgrade support
                     defer {
                         if let onUpgrade = response.onUpgrade {

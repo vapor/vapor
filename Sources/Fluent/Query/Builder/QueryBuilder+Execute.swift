@@ -13,7 +13,7 @@ extension QueryBuilder {
     /// Returns a future with the first result of the query.
     /// `nil` if no results were returned.
     public func first() -> Future<Model?> {
-        return range(...1).all().map { $0.first }
+        return range(...1).all().map(to: Model?.self) { $0.first }
     }
 
     /// Runs a delete operation.

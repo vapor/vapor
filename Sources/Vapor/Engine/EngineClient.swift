@@ -43,7 +43,7 @@ public final class EngineClient: Client {
         if ssl {
             fatalError()
         } else {
-            return then {
+            return Future {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
                 let tcpClient = try TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
@@ -51,7 +51,7 @@ public final class EngineClient: Client {
                 let client = HTTPClient(byteStream: byteStream, maxResponseSize: self.config.maxResponseSize)
 
                 req.http.headers[.host] = req.http.uri.hostname
-                return client.send(req.http).then { httpRes -> Response in
+                return client.send(req.http).map(to: Response.self) { httpRes in
                     let res = req.makeResponse()
                     res.http = httpRes
                     return res

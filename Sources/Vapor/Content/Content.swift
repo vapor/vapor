@@ -5,7 +5,7 @@ import Foundation
 import Service
 
 /// Representable as content in an HTTP message.
-public protocol Content: Codable, ResponseCodable, RequestCodable, FutureType {
+public protocol Content: Codable, ResponseCodable, RequestCodable {
     /// The default media type to use when _encoding_ this
     /// content. This can be overridden at the encode call.
     static var defaultMediaType: MediaType { get }
