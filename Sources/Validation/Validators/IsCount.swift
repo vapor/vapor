@@ -1,6 +1,6 @@
 /// Validates whether the data is within a supplied int range.
 /// note: strings have length checked, while integers have their values checked
-public struct IsCount: Validator {
+public struct IsCount<T>: Validator where T: BinaryInteger {
     /// See Validator.inverseMessage
     public var inverseMessage: String {
         if let min = self.min, let max = self.max {
@@ -16,36 +16,36 @@ public struct IsCount: Validator {
 
     /// the minimum possible value, if nil, not checked
     /// note: inclusive
-    public let min: Int?
+    public let min: T?
 
     /// the maximum possible value, if nil, not checked
     /// note: inclusive
-    public let max: Int?
+    public let max: T?
 
     /// creates an is count validator using a predefined int range
     ///     1...5
-    public init(_ range: Range<Int>) {
+    public init(_ range: Range<T>) {
         self.min = range.lowerBound
         self.max = range.upperBound
     }
 
     /// creates an is count validator using a partial range through
     ///     ...5
-    public init(_ range: PartialRangeThrough<Int>) {
+    public init(_ range: PartialRangeThrough<T>) {
         self.max = range.upperBound
         self.min = nil
     }
 
     /// creates an is count validator using a partial range up to
     ///     ..<5
-    public init(_ range: PartialRangeUpTo<Int>) {
+    public init(_ range: PartialRangeUpTo<T>) {
         self.max = range.upperBound - 1
         self.min = nil
     }
 
-    /// creates an is coutn validator using a partial range from
+    /// creates an is count validator using a partial range from
     ///     5...
-    public init(_ range: PartialRangeFrom<Int>) {
+    public init(_ range: PartialRangeFrom<T>) {
         self.max = nil
         self.min = range.lowerBound
     }
@@ -75,8 +75,28 @@ public struct IsCount: Validator {
                     throw BasicValidationError("is larger than \(max)")
                 }
             }
+        case .uint(let uint):
+            if let min = self.min {
+                guard uint >= min else {
+                    throw BasicValidationError("is not larger than \(min)")
+                }
+            }
+            if let max = self.max {
+                guard uint <= max else {
+                    throw BasicValidationError("is larger than \(max)")
+                }
+            }
         default:
             throw BasicValidationError("is invalid")
         }
+    }
+}
+
+extension IsCount where T.Stride: SignedInteger {
+    /// creates an is count validator using a predefined int range
+    ///     1...5
+    public init(_ range: CountableClosedRange<T>) {
+        self.min = range.lowerBound
+        self.max = range.upperBound
     }
 }

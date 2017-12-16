@@ -4,6 +4,7 @@ import Foundation
 public enum ValidationData {
     case string(String)
     case int(Int)
+    case uint(UInt)
     case bool(Bool)
     case data(Data)
     case double(Double)
@@ -38,6 +39,13 @@ extension Int: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         return .int(self)
+    }
+}
+
+extension UInt: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(self)
     }
 }
 

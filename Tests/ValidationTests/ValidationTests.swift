@@ -5,48 +5,45 @@ class ValidationTests: XCTestCase {
     func testValidate() throws {
         let user = User(name: "Tanner", age: 23)
         user.child = User(name: "Zizek Pulaski", age: 3)
-        do {
-            try user.validate()
-        } catch {
-            XCTFail("\(error)")
-        }
+        try user.validate()
     }
 
     func testASCII() throws {
         try IsASCII().validate(.string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))
-        do {
-            try IsASCII().validate(.string("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))
-            XCTFail()
-        } catch is ValidationError {
-            // pass
+        XCTAssertThrowsError(try IsASCII().validate(.string("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))) {
+            XCTAssert($0 is ValidationError)
         }
     }
 
     func testAlphanumeric() throws {
         try IsAlphanumeric().validate(.string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"))
-        do {
-            try IsAlphanumeric().validate(.string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))
-            XCTFail()
-        } catch is ValidationError {
-            // pass
+        XCTAssertThrowsError(try IsAlphanumeric().validate(.string("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"))) {
+            XCTAssert($0 is ValidationError)
         }
     }
 
     func testEmail() throws {
         try IsEmail().validate(.string("tanner@vapor.codes"))
-        do {
-            try IsEmail().validate(.string("asdf"))
-            XCTFail()
-        } catch is ValidationError {
-            // pass
-        }
+        XCTAssertThrowsError(try IsEmail().validate(.string("asdf"))) { XCTAssert($0 is ValidationError) }
     }
+    
+    func testCount() throws {
+        try IsCount(-5...5).validate(.int(4))
+        XCTAssertThrowsError(try IsCount(-5...5).validate(.int(6))) { XCTAssert($0 is ValidationError) }
+        
+        try IsCount(5...).validate(.uint(UInt.max))
+        try IsCount(...(UInt.max - 100)).validate(.int(Int.min))
 
+        try IsCount(-5...5).validate(.uint(4))
+        XCTAssertThrowsError(try IsCount(-5...5).validate(.uint(6))) { XCTAssert($0 is ValidationError) }
+    }
+    
     static var allTests = [
         ("testValidate", testValidate),
         ("testASCII", testASCII),
         ("testAlphanumeric", testAlphanumeric),
         ("testEmail", testEmail),
+        ("testCount", testCount),
     ]
 }
 
