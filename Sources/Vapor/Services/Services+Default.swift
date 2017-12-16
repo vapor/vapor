@@ -8,17 +8,17 @@ import Routing
 import Service
 import TLS
 
-#if os(Linux)
-    import OpenSSL
-    public typealias DefaultSSLClient = OpenSSLClient.self
-    public typealias DefaultSSLClientUpgrader = OpenSSLClientUpgrader.self
-    public typealias DefaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
-#else
-    import AppleSSL
-    public typealias DefaultSSLClient = AppleSSLClient.self
-    public typealias DefaultSSLClientUpgrader = AppleSSLClientUpgrader.self
-    public typealias DefaultSSLPeerUpgrader = AppleSSLClientUpgrader.self
-#endif
+//#if os(Linux)
+//    import OpenSSL
+//    public typealias DefaultSSLClient = OpenSSLClient.self
+//    public typealias DefaultSSLClientUpgrader = OpenSSLClientUpgrader.self
+//    public typealias DefaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
+//#else
+//    import AppleSSL
+//    public typealias DefaultSSLClient = AppleSSLClient.self
+//    public typealias DefaultSSLClientUpgrader = AppleSSLClientUpgrader.self
+//    public typealias DefaultSSLPeerUpgrader = AppleSSLClientUpgrader.self
+//#endif
 
 extension Services {
     /// The default Services included in the framework.
@@ -37,34 +37,34 @@ extension Services {
             return EngineServerConfig()
         }
         
-        services.register { container in
-            return SSLClientSettings()
-        }
-        
-        services.register(SSLClientUpgrader.self) { _ in
-            return DefaultSSLClientUpgrader()
-        }
-        
-        services.register(SSLPeerUpgrader.self) { _ in
-            return DefaultSSLPeerUpgrader()
-        }
-        
-        services.register(SSLClient.self) { container -> DefaultSSLClient in
-            let client = try defaultSSLClient.init(
-                settings: try container.make(for: SSLClientSettings.self),
-                on: container
-            )
-            
-            return BasicSSLClient(boxing: client)
-        }
+//        services.register { container in
+//            return SSLClientSettings()
+//        }
+//        
+//        services.register(SSLClientUpgrader.self) { _ in
+//            return DefaultSSLClientUpgrader()
+//        }
+//        
+//        services.register(SSLPeerUpgrader.self) { _ in
+//            return DefaultSSLPeerUpgrader()
+//        }
+//        
+//        services.register(SSLClient.self) { container -> DefaultSSLClient in
+//            let client = try defaultSSLClient.init(
+//                settings: try container.make(for: SSLClientSettings.self),
+//                on: container
+//            )
+//            
+//            return BasicSSLClient(boxing: client)
+//        }
 
         services.register(Client.self) { container -> EngineClient in
             if let sub = container as? SubContainer {
                 /// if a request is creating a client, we should
                 /// use the event loop as the container
-                return EngineClient(container: sub.superContainer)
+                return try EngineClient(container: sub.superContainer, config: container.make(for: EngineClient.self))
             } else {
-                return EngineClient(container: container)
+                return try EngineClient(container: container, config: container.make(for: EngineClient.self))
             }
         }
 

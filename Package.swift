@@ -84,7 +84,7 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
         
         // WebSockets
-        .library(name: "WebSocket", targets: ["WebSocket"]),
+        // .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
@@ -180,7 +180,7 @@ let package = Package(
         .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
-        .target(name: "Routing", dependencies: ["JunkDrawer", "Debugging", "HTTP", "WebSocket"]),
+        .target(name: "Routing", dependencies: ["JunkDrawer", "Debugging", "HTTP", /*"WebSocket"*/]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
         
         // Redis
@@ -230,13 +230,13 @@ let package = Package(
             // "TLS",
             "ServerSecurity",
             ssl,
-            "WebSocket",
+            // "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
+        // .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
+        // .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
 

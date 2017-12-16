@@ -98,7 +98,9 @@ public final class DispatchSocketStream<Socket>: Stream, ConnectionContext
         case .close:
             /// don't propogate to downstream or we will have an infinite loop
             close()
-        case .error(let e): downstream?.error(e)
+        case .error(let e):
+            /// don't propogate to downstream or we will have an infinite loop
+            print("Socket Error: \(e)")
         }
     }
 

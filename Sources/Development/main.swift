@@ -25,18 +25,18 @@ do {
     try services.register(FluentProvider())
     try services.register(SQLiteProvider())
     
-    var engineConfig = EngineServerConfig()
-    engineConfig.ssl = EngineServerSSLConfig(settings:
-        SSLServerSettings(
-            hostname: "localhost",
-            publicKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.pem",
-            privateKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/private.pem"
-        )
-    )
-    
-    engineConfig.ssl?.port = 8081
-    
-    services.register(engineConfig)
+//    var engineConfig = EngineServerConfig()
+//    engineConfig.ssl = EngineServerSSLConfig(settings:
+//        SSLServerSettings(
+//            hostname: "localhost",
+//            publicKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/public.pem",
+//            privateKey: "/Users/joannisorlandos/Documents/vapor/vapor/Tests/TLSTests/private.pem"
+//        )
+//    )
+//
+//    engineConfig.ssl?.port = 8081
+//
+//    services.register(engineConfig)
 
     var databaseConfig = DatabaseConfig()
     databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
@@ -261,23 +261,17 @@ do {
         return try User.query(on: req).filter(\User.age > 50).all()
     }
 
-    router.get("run") { req -> Future<String> in
-        return User.query(on: req).run(into: { _ in }).then { _ -> String in
-            return "done"
-        }
-    }
-
     router.get("all") { req -> Future<String> in
         return try User.query(on: req).filter(\.name == "Vapor").all().then { _ -> String in
             return "done"
         }
     }
     
-    router.websocket("foo") { (req, ws) in
-        for _ in 1...1000 {
-            ws.send("TEST: \(Date())")
-        }
-    }
+//    router.websocket("foo") { (req, ws) in
+//        for _ in 1...1000 {
+//            ws.send("TEST: \(Date())")
+//        }
+//    }
 
     router.get("first") { req -> Future<User> in
         return try User.query(on: req).filter(\User.name == "Vapor").first().then { user -> User in
@@ -327,10 +321,10 @@ do {
     //    return data ?? flag ?? "none"
     //}
 
-    let foo = try app.withConnection(to: alpha) { alpha in
-        return try alpha.query(string: "select sqlite_version();").all()
-    }.blockingAwait()
-    print(foo)
+//    let foo = try app.withConnection(to: alpha) { alpha in
+//        return try alpha.query(string: "select sqlite_version();").ex
+//    }.blockingAwait()
+//    print(foo)
 
     try app.run()
 } catch {

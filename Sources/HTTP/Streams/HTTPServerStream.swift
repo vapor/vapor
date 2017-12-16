@@ -16,6 +16,9 @@ internal final class HTTPServerStream<ByteStream, Responder>: InputStream
     /// See OutputStream.Output
     typealias Output = ByteStream
 
+    /// Handles errors
+    internal var onError: HTTPServer<ByteStream, Responder>.ErrorHandler?
+
     /// The upstream accept stream
     private var upstream: ConnectionContext?
 
@@ -58,7 +61,8 @@ internal final class HTTPServerStream<ByteStream, Responder>: InputStream
                 }
                 .stream(to: serializerStream)
                 .output(to: byteStream)
-        case .error(let error): print(error)
+        case .error(let error):
+            onError?(error)
         case .close: print("accept stream closed")
         }
     }

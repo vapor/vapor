@@ -20,6 +20,15 @@ public final class HTTPServer<ByteStream, Responder>
     /// create responder streams for incoming clients.
     public typealias ResponderFactory = (ByteStream) -> (Responder)
 
+    /// Handles any uncaught errors
+    public typealias ErrorHandler = (Error) -> ()
+
+    /// Sets this servers error handler.
+    public var onError: ErrorHandler? {
+        get { return serverStream.onError }
+        set { serverStream.onError = newValue}
+    }
+
     /// Create a new HTTP server with the supplied accept stream.
     public init<AcceptStream>(acceptStream: AcceptStream, responderFactory: @escaping ResponderFactory)
         where AcceptStream: OutputStream,

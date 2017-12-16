@@ -48,10 +48,9 @@ extension Request {
             res.http.mediaType = type
         }
 
-        let bodyStream = BodyStream()
-        
-        reader.read(at: path, into: bodyStream, chunkSize: 2048)
-        res.http.body = HTTPBody(chunked: bodyStream)
+        res.http.body = HTTPBody(
+            chunked: reader.read(at: path, chunkSize: 2048)
+        )
         return res
     }
 }

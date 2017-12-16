@@ -1,11 +1,12 @@
 import Async
+import Bits
 import Dispatch
 import JunkDrawer
 
 /// Stream representation of a TCP server.
-public final class TCPClientStream: OutputStream, ConnectionContext {
+public final class TCPClientStream<EventLoop>: OutputStream, ConnectionContext where EventLoop: Async.EventLoop {
     /// See OutputStream.Output
-    public typealias Output = (TCPClient, EventLoop)
+    public typealias Output = TCPPeer<EventLoop>
 
     /// The server being streamed
     public var server: TCPServer
@@ -105,7 +106,11 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
             }
 
             let eventLoop = eventLoopsIterator.next()
-            downstream?.next((client, eventLoop))
+
+            downstream?.next(.init(
+                client: client,
+                eventLoop: eventLoop
+            ))
 
             /// decrement remaining and check if
             /// we need to suspend accepting
@@ -146,11 +151,50 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
     }
 }
 
+/// A client that has been accepted by
+/// the TCP client stream.
+public final class TCPPeer<EventLoop>: Stream where EventLoop: Async.EventLoop {
+    /// See InputStream.Input
+    public typealias Input = ByteBuffer
+
+    // See OutputStream.Output
+    public typealias Output = ByteBuffer
+
+    /// The accepted client
+    public let client: TCPClient
+
+    /// The event loop this client was accepted on
+    public let eventLoop: EventLoop
+
+    /// Underlying byte stream
+    private let byteStream: DispatchSocketStream<TCPSocket>
+
+    /// Creates a new TCP accepted client
+    init(client: TCPClient, eventLoop: EventLoop) {
+        self.client = client
+        self.eventLoop = eventLoop
+        byteStream = client.stream(on: eventLoop)
+    }
+
+    /// See InputStream.input
+    public func input(_ event: InputEvent<ByteBuffer>) {
+        byteStream.input(event)
+    }
+
+    /// See OutputStream.output
+    public func output<S>(to inputStream: S) where S : InputStream, S.Input == ByteBuffer {
+        byteStream.output(to: inputStream)
+    }
+}
+
+
 extension TCPServer {
     /// Create a stream for this TCP server.
     /// - parameter on: the event loop to accept clients on
     /// - parameter assigning: the event loops to assign to incoming clients
-    public func stream(on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) -> TCPClientStream {
+    public func stream<EventLoop>(on eventLoop: EventLoop, assigning eventLoops: [EventLoop]) -> TCPClientStream<EventLoop>
+        where EventLoop: Async.EventLoop
+    {
         return .init(server: self, on: eventLoop, assigning: eventLoops)
     }
 }
