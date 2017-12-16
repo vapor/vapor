@@ -58,8 +58,12 @@ public final class HTTPResponseSerializer: _HTTPSerializer {
 fileprivate extension HTTPResponse {
     var firstLine: [UInt8] {
         // First line
-        let statusCode = [UInt8](self.status.code.description.utf8)
-        return http1Prefix + statusCode + [.space] + self.status.messageBytes + crlf
+        var http1Line = http1Prefix
+        http1Line.append(contentsOf: self.status.code.description.utf8)
+        http1Line.append(.space)
+        http1Line.append(contentsOf: self.status.messageBytes)
+        http1Line.append(contentsOf: crlf)
+        return http1Line
     }
 }
 

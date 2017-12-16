@@ -58,42 +58,45 @@ extension _HTTPSerializer {
     
     /// See HTTPSerializer.serialize
     public func serialize(into buffer: MutableByteBuffer) throws -> Int {
-        let bufferSize: Int
-        let writeSize: Int
+        var bufferSize: Int
+        var writeSize: Int
         
-        switch state {
-        case .noMessage:
-            throw HTTPError(identifier: "no-response", reason: "Serialization requested without a response")
-        case .firstLine:
-            guard let firstLine = self.firstLine else {
-                throw HTTPError(identifier: "invalid-state", reason: "Missing first line metadata")
+        repeat {
+            switch state {
+            case .noMessage:
+                throw HTTPError(identifier: "no-response", reason: "Serialization requested without a response")
+            case .firstLine:
+                guard let firstLine = self.firstLine else {
+                    throw HTTPError(identifier: "invalid-state", reason: "Missing first line metadata")
+                }
+                
+                bufferSize = firstLine.count
+                writeSize = min(buffer.count, bufferSize - offset)
+                
+                firstLine.withUnsafeBytes { pointer in
+                    _ = memcpy(buffer.baseAddress!, pointer.baseAddress!.advanced(by: offset), writeSize)
+                }
+            case .headers:
+                guard let headersData = self.headersData else {
+                    throw HTTPError(identifier: "invalid-state", reason: "Missing header state")
+                }
+                
+                bufferSize = headersData.count
+                writeSize = min(buffer.count, bufferSize - offset)
+                
+                headersData.withByteBuffer { headerBuffer in
+                    _ = memcpy(buffer.baseAddress!, headerBuffer.baseAddress!.advanced(by: offset), writeSize)
+                }
             }
             
-            bufferSize = firstLine.count
-            writeSize = min(buffer.count, bufferSize - offset)
-            
-            firstLine.withUnsafeBytes { pointer in
-                _ = memcpy(buffer.baseAddress!, pointer.baseAddress!.advanced(by: offset), writeSize)
+            if offset + writeSize < bufferSize {
+                offset += writeSize
+                return writeSize
+            } else {
+                state.next()
+                offset = 0
             }
-        case .headers:
-            guard let headersData = self.headersData else {
-                throw HTTPError(identifier: "invalid-state", reason: "Missing header state")
-            }
-            
-            bufferSize = headersData.count
-            writeSize = min(buffer.count, bufferSize - offset)
-            
-            headersData.withByteBuffer { headerBuffer in
-                buffer.baseAddress?.assign(from: headerBuffer.baseAddress!.advanced(by: offset), count: writeSize)
-            }
-        }
-        
-        if offset + writeSize < bufferSize {
-            offset += writeSize
-        } else {
-            state.next()
-            offset = 0
-        }
+        } while state != .noMessage
         
         return writeSize
     }

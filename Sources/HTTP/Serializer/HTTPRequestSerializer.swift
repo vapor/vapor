@@ -77,7 +77,9 @@ fileprivate extension HTTPRequest {
             firstLine.append(contentsOf: fragment.utf8)
         }
         
-        return firstLine + http1newLine
+        firstLine.append(contentsOf: http1newLine)
+        
+        return firstLine
     }
 }
 
