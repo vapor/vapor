@@ -196,7 +196,7 @@ let package = Package(
        
         // TLS
         .target(name: "TLS", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
-        .testTarget(name: "TLSTests", dependencies: ["AppleSSL", "TLS"]),
+        .testTarget(name: "TLSTests", dependencies: ["TLS"]),
 
         // SQL
         .target(name: "SQL"),
