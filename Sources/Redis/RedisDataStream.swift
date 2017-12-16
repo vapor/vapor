@@ -62,10 +62,10 @@ final class RedisDataStream: Stream, ConnectionContext {
         case .next(let input):
             let promise = responseQueue.popLast()!
             promise.complete(input)
-            update()
         case .error(let error): downstream?.error(error)
         case .close: downstream?.close()
         }
+        update()
     }
 
     /// See ConnectionContext.connection

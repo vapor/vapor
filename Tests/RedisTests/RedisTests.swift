@@ -7,32 +7,31 @@ import JunkDrawer
 
 class RedisTests: XCTestCase {
     var clientCount = 0
-    
+
+    let queue = DispatchQueue(label: "codes.vapor.redis.test")
+
     func makeClient() throws -> RedisClient {
-        let queue = DispatchQueue(label: "test.kaas.\(clientCount)")
-        clientCount += 1
         return try RedisClient.connect(
             hostname: "localhost",
             on: queue
         )
     }
     
-//    func testCRUD() throws {
-//        let connection = try makeClient()
-//      
-//        _ = try! connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(2))
-//        
-//        let result = try! connection.set("world", forKey: "hello").flatMap {
-//            return connection.getData(forKey: "hello")
-//        }.blockingAwait(timeout: .seconds(2))
-//        
-//        let removedCount = try! connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(2))
-//        
-//        XCTAssertEqual(removedCount, 1)
-//        
-//        XCTAssertEqual(result.string, "world")
-//    }
-    
+    func testCRUD() throws {
+        let connection = try makeClient()
+        _ = try connection.delete(
+            keys: ["*"]
+        ).blockingAwait(timeout: .seconds(10))
+
+        _  = try connection.set("world", forKey: "hello").blockingAwait(timeout: .seconds(10))
+        let result = try connection.getData(forKey: "hello").blockingAwait()
+
+        let removedCount = try connection.delete(keys: ["hello"]).blockingAwait(timeout: .seconds(10))
+
+        XCTAssertEqual(removedCount, 1)
+        XCTAssertEqual(result.string, "world")
+    }
+
 //    func testPubSub() throws {
 //        let promise = Promise<RedisData>()
 //        let listener = try makeClient()

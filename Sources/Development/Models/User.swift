@@ -81,6 +81,28 @@ final class AutoUser: Migration, Model, Content {
     }
 }
 
+final class User2: Codable {
+    var id: UUID?
+    var name: String
+    var age: Double
+
+    init(name: String, age: Double) {
+        self.name = name
+        self.age = age
+    }
+}
+
+extension User2: Model {
+    typealias Database = SQLiteDatabase
+    typealias ID = UUID
+    static var idKey: IDKey {
+        return \.id
+    }
+}
+
+extension User2: Migration {}
+extension User2: Content {}
+
 final class User: Model, Content {
     typealias Database = SQLiteDatabase
     static var idKey = \User.id

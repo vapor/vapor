@@ -16,11 +16,14 @@ final class RedisDataSerializer: Async.Stream {
     /// The upstream output stream supplying redis data
     private var upstream: ConnectionContext?
 
+    private var lastMessage: Data?
+
     /// Creates a new ValueSerializer
     init() {}
 
     /// See InputStream.input
     func input(_ event: InputEvent<RedisData>) {
+        print("[SERIALIZER] \(event)")
         switch event {
         case .close: downstream?.close()
         case .error(let error): downstream?.error(error)
@@ -28,10 +31,10 @@ final class RedisDataSerializer: Async.Stream {
             self.upstream = upstream
             downstream?.connect(to: upstream)
         case .next(let input):
-            let message = input.serialize()
-            message.withUnsafeBytes { (pointer: BytesPointer) in
-                let buffer = ByteBuffer(start: pointer, count: message.count)
-                downstream?.next(buffer)
+            let data = input.serialize()
+            lastMessage = data
+            data.withByteBuffer { buffer in
+                self.downstream?.next(buffer)
             }
         }
     }
@@ -43,22 +46,22 @@ final class RedisDataSerializer: Async.Stream {
     }
 }
 
-extension RedisDataSerializer {
-    /// Used for pipelining commands
-    /// Concatenates commands to RedisData for the outputStream
-    func onInput(_ input: [RedisData]) {
-        /// FIXME: should we make a `PipelinedDataSerializer` that properly conforms?
-        var buffer = Data()
-        for item in input {
-            buffer.append(contentsOf: item.serialize())
-        }
-        buffer.withUnsafeBytes { (pointer: BytesPointer) in
-            let buffer = ByteBuffer(start: pointer, count: buffer.count)
-            downstream?.next(buffer)
-        }
-    }
-    
-}
+//extension RedisDataSerializer {
+//    /// Used for pipelining commands
+//    /// Concatenates commands to RedisData for the outputStream
+//    func onInput(_ input: [RedisData]) {
+//        /// FIXME: should we make a `PipelinedDataSerializer` that properly conforms?
+//        var buffer = Data()
+//        for item in input {
+//            buffer.append(contentsOf: item.serialize())
+//        }
+//        buffer.withUnsafeBytes { (pointer: BytesPointer) in
+//            let buffer = ByteBuffer(start: pointer, count: buffer.count)
+//            downstream?.next(buffer)
+//        }
+//    }
+//    
+//}
 
 /// Static "fast" route for serializing `null` values
 fileprivate let nullData = Data("$-1\r\n".utf8)
