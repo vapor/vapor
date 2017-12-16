@@ -46,14 +46,14 @@ struct TestSiblings: Migration {
 
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         let owner = User(name: "Tanner", age: 23)
-        return owner.save(on: connection).then { () -> Future<Void> in
+        return owner.save(on: connection).flatMap(to: Void.self) {
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
             let toy = Toy(name: "Rubber Band")
 
             return [
                 pet.save(on: connection),
                 toy.save(on: connection)
-            ].then {
+            ].flatMap(to: Void.self) { _ in // FIXME: add flatmap void overload to arrays
                 return pet.toys.attach(toy, on: connection)
             }
         }

@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Dispatch
+import JunkDrawer
 import TCP
 
 /// An HTTP message.
@@ -43,8 +44,8 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
 
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
-    /// Accepts a TCP client
-    public typealias Closure = (HTTPUpgradable) -> ()
+    /// Accepts the byte stream underlying the HTTP connection.
+    public typealias Closure = (AnyStream<ByteBuffer, ByteBuffer>) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -63,12 +64,6 @@ public struct HTTPOnUpgrade: Codable {
     public init(from decoder: Decoder) throws {
         self.init { _ in }
     }
-}
-
-/// Capable of being upgraded using the HTTP upgrade mechanism.
-public protocol HTTPUpgradable {
-    /// Raw byte stream
-    var byteStream: BasicStream<ByteBuffer> { get }
 }
 
 // MARK: Debug string

@@ -94,8 +94,8 @@ extension LeafRenderer: ViewRenderer {
         return try render(
             path: path,
             context: LeafContext(data: LeafEncoder().encode(context))
-        ).map { data in
-            return View(data: data)
+        ).map(to: View.self) { data in
+            return .init(data: data)
         }
     }
 }
@@ -123,7 +123,8 @@ extension LeafRenderer {
             _files[eventLoop.queue.label.hashValue] = file
         }
 
-        file.cachedRead(at: fullPath).do { view in
+        /// FIXME: better chunk size?
+        file.cachedRead(at: fullPath, chunkSize: 2048).do { view in
             self.render(template: view, context: context).do { data in
                 promise.complete(data)
             }.catch { error in

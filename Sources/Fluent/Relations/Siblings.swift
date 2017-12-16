@@ -84,12 +84,14 @@ extension Siblings {
     public func isAttached(
         _ model: Related,
         on conn: DatabaseConnectable
-    ) throws -> Future<Bool> {
-        return try Through.query(on: conn)
-            .filter(basePivotField == base.requireID())
-            .filter(relatedPivotField == model.requireID())
-            .first()
-            .map { $0 != nil }
+    ) -> Future<Bool> {
+        return Future {
+            return try Through.query(on: conn)
+                .filter(self.basePivotField == self.base.requireID())
+                .filter(self.relatedPivotField == model.requireID())
+                .first()
+                .map(to: Bool.self) { $0 != nil }
+        }
     }
 
     /// Detaches the supplied model from this relationship
@@ -97,11 +99,13 @@ extension Siblings {
     public func detach(
         _ model: Related,
         on conn: DatabaseConnectable
-    ) throws -> Future<Void> {
-        return try Through.query(on: conn)
-            .filter(basePivotField == base.requireID())
-            .filter(relatedPivotField == model.requireID())
-            .delete()
+    ) -> Future<Void> {
+        return Future {
+            return try Through.query(on: conn)
+                .filter(self.basePivotField == self.base.requireID())
+                .filter(self.relatedPivotField == model.requireID())
+                .delete()
+        }
     }
 }
 

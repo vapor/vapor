@@ -156,3 +156,14 @@ extension UInt64: Parameter {
     }
 }
 
+extension UUID: Parameter {
+    /// Attempts to read the parameter into a `UUID`
+    public static func make(for parameter: String, using container: Container) throws -> UUID {
+        guard let uuid = UUID(uuidString: parameter) else {
+            throw RoutingError(identifier: "parameterNotAUUID", reason: "The parameter was not convertible to a UUID")
+        }
+
+        return uuid
+    }
+}
+

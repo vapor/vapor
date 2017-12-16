@@ -10,7 +10,7 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
 
     /// See SchemaExecutor.execute()
     public func execute(schema: DatabaseSchema) -> Future<Void> {
-        return then {
+        return Future {
             guard schema.removeReferences.count <= 0 else {
                 throw FluentSQLiteError(identifier: "foreignkeys-unsupported", reason: "SQLite does not support deleting foreign keys")
             }
@@ -20,18 +20,24 @@ extension SQLiteConnection: SchemaSupporting, ReferenceSupporting {
             let string = SQLiteSQLSerializer()
                 .serialize(schema: schemaQuery)
 
-            return self.query(string: string).execute()
+            return self.query(string: string).execute().map(to: Void.self) { results in
+                assert(results == nil)
+            }
         }
     }
     
     /// ReferenceSupporting.enableReferences
     public func enableReferences() -> Future<Void> {
-        return query(string: "PRAGMA foreign_keys = ON;").execute()
+        return query(string: "PRAGMA foreign_keys = ON;").execute().map(to: Void.self) { results in
+            assert(results == nil)
+        }
     }
 
     /// ReferenceSupporting.disableReferences
     public func disableReferences() -> Future<Void> {
-        return query(string: "PRAGMA foreign_keys = OFF;").execute()
+        return query(string: "PRAGMA foreign_keys = OFF;").execute().map(to: Void.self) { results in
+            assert(results == nil)
+        }
     }
 }
 

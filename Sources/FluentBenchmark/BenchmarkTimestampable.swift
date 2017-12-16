@@ -12,7 +12,7 @@ extension Benchmarker {
             self.fail("timestamps should have been nil")
         }
 
-        return tanner.save(on: conn).then { _ -> Future<Date> in
+        return tanner.save(on: conn).flatMap(to: Date.self) {
             if tanner.createdAt?.isWithin(seconds: 1, of: Date()) != true {
                 self.fail("timestamps should be current")
             }
@@ -23,16 +23,16 @@ extension Benchmarker {
             
             let updated = tanner.updatedAt!
             
-            return tanner.save(on: conn).map {
+            return tanner.save(on: conn).map(to: Date.self) {
                 return updated
             }
-        }.then { originalUpdatedAt -> Future<User<Database>?> in
+        }.flatMap(to: User<Database>?.self) { originalUpdatedAt in
             if tanner.updatedAt! <= originalUpdatedAt {
                 self.fail("new updated at should be greater")
             }
             
             return try conn.query(User<Database>.self).filter(\User<Database>.name == "Tanner").first()
-        }.map { fetched in
+        }.map(to: Void.self) { fetched in
             guard let fetched = fetched else {
                 self.fail("could not fetch user")
                 return
@@ -47,8 +47,8 @@ extension Benchmarker {
 
     /// Benchmark the Timestampable protocol
     public func benchmarkTimestampable() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
+        return pool.requestConnection().flatMap(to: Void.self.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }
@@ -59,9 +59,9 @@ extension Benchmarker where Database.Connection: SchemaSupporting {
     /// Benchmark the Timestampable protocol
     /// The schema will be prepared first.
     public func benchmarkTimestampable_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return UserMigration<Database>.prepare(on: conn).then { _ in
-                return try self._benchmark(on: conn).map { _ in
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return UserMigration<Database>.prepare(on: conn).flatMap(to: Void.self) {
+                return try self._benchmark(on: conn).map(to: Void.self) {
                     self.pool.releaseConnection(conn)
                 }
             }

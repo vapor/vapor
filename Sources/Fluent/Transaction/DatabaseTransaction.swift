@@ -12,7 +12,7 @@ public struct DatabaseTransaction<Connection: DatabaseConnection> {
 
     /// Runs the transaction on a connection.
     public func run(on conn: Connection) -> Future<Void> {
-        return then {
+        return Future {
             return try self.closure(conn)
         }
     }

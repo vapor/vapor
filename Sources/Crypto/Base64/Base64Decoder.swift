@@ -4,22 +4,16 @@ import Async
 
 public final class Base64Decoder: Base64 {
     /// The capacity currently used in the pointer
-    var currentCapacity = 0
+    public var currentCapacity = 0
     
     /// The total capacity of the pointer
-    let allocatedCapacity: Int
+    public let allocatedCapacity: Int
     
     /// The pointer for containing the base64 encoded data
-    let pointer: MutableBytesPointer
-    
-    /// The bytes that couldn't be parsed from the previous buffer
-    var remainder = Data()
+    public let pointer: MutableBytesPointer
 
     /// base64 or base64 url
     let encoding: Base64Encoding
-
-    /// Use a basic stream to easily implement our output stream.
-    var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new Base64 encoder
     ///
@@ -38,7 +32,7 @@ public final class Base64Decoder: Base64 {
     /// - parameter capacity: The capacity of the output pointer
     /// - parameter finish: If `true`, this base64 reached the end of it's stream
     /// - returns: If the base64 processing data is complete. The capacity of the pointer used, and the amount of input bytes consumed
-    func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
+    public func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
         guard let input = buffer.baseAddress else {
             return (true, 0, 0)
         }

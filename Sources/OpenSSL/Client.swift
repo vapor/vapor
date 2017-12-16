@@ -6,37 +6,6 @@ import Dispatch
 import Bits
 import COpenSSL
 
-enum Side {
-    case client
-    case server(certificate: String, key: String)
-}
-
-enum Method {
-    case ssl23
-    case tls1_0
-    case tls1_1
-    case tls1_2
-    
-    func method(side: Side) -> UnsafePointer<SSL_METHOD> {
-        switch side {
-        case .client:
-            switch self {
-            case .ssl23: return SSLv23_client_method()
-            case .tls1_0: return TLSv1_client_method()
-            case .tls1_1: return TLSv1_1_client_method()
-            case .tls1_2: return TLSv1_2_client_method()
-            }
-        case .server(_, _):
-            switch self {
-            case .ssl23: return SSLv23_server_method()
-            case .tls1_0: return TLSv1_server_method()
-            case .tls1_1: return TLSv1_1_server_method()
-            case .tls1_2: return TLSv1_2_server_method()
-            }
-        }
-    }
-}
-
 public final class OpenSSLClient: OpenSSLStream, SSLClient {
     public typealias Output = ByteBuffer
     
@@ -90,12 +59,12 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
         try self.init(upgrading: socket, settings: settings, on: eventLoop)
     }
     
-    public init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
+    init(upgrading socket: TCPSocket, settings: SSLClientSettings, on eventLoop: EventLoop) throws {
         self.socket = socket
         self.settings = settings
         self.writeQueue = []
         
-        let method = Method.ssl23.method(side: .client)
+        let method = OpenSSLMethod.ssl23.method(side: .client)
         
         guard SSLSettings.initialized, let context = SSL_CTX_new(method) else {
             throw OpenSSLError(.cannotCreateContext)
@@ -127,72 +96,6 @@ public final class OpenSSLClient: OpenSSLStream, SSLClient {
         )
         
         self.writeSource = DispatchSource.makeWriteSource(fileDescriptor: socket.descriptor, queue: queue)
-        
-        self.writeSource.setEventHandler {
-            guard self.handshakeComplete else {
-                self.writeSource.suspend()
-                self.handshake()
-                return
-            }
-            
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-            
-            let data = self.writeQueue[0]
-            
-            let processed = data.withUnsafeBytes { (pointer: BytesPointer) -> Int in
-                return numericCast(SSL_write(ssl, pointer, numericCast(data.count)))
-            }
-            
-            if status == 0, processed == data.count {
-                _ = self.writeQueue.removeFirst()
-            } else {
-                self.writeQueue[0].removeFirst(processed)
-            }
-            
-            guard self.writeQueue.count > 0 else {
-                self.writeSource.suspend()
-                return
-            }
-        }
-        
-        self.readSource.setEventHandler {
-            guard self.handshakeComplete else {
-                self.handshake()
-                return
-            }
-            
-            let read: Int
-            
-            do {
-                read = try self.read(into: self.outputBuffer)
-            } catch {
-                self.onError(error)
-                self.close()
-                return
-            }
-            
-            guard read > 0 else {
-                // need to close!!! gah
-                self.close()
-                return
-            }
-            
-            // create a view into the internal buffer and
-            // send to the output stream
-            let bufferView = ByteBuffer(
-                start: self.outputBuffer.baseAddress,
-                count: read
-            )
-            
-            self.outputStream.onInput(bufferView)
-        }
-        
-        self.readSource.setCancelHandler {
-            self.close()
-        }
         
         self.readSource.resume()
         self.writeSource.resume()

@@ -36,6 +36,7 @@ class MySQLTests: XCTestCase {
         ("testStream", testStream),
         ("testComplexModel", testComplexModel),
         ("testFailures", testFailures),
+        ("testSingleValueDecoding", testSingleValueDecoding),
     ]
     
     override func setUp() {
@@ -190,6 +191,13 @@ class MySQLTests: XCTestCase {
         XCTAssertEqual(first.ui64, 0)
      
         try connection.dropTable(named: "complex").blockingAwait(timeout: .seconds(3))
+    }
+    
+    func testSingleValueDecoding() throws {
+        try testPopulateUsersSchema()
+        
+        let tables = try connection.all(String.self, in: "SHOW TABLES").blockingAwait()
+        XCTAssertEqual(tables, ["users"])
     }
     
     func testFailures() throws {

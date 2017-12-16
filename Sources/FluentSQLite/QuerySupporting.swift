@@ -6,7 +6,7 @@ import SQL
 
 extension SQLiteConnection: QuerySupporting, JoinSupporting {
     /// See QueryExecutor.execute
-    public func execute<I: InputStream & ClosableStream, D: Decodable>(
+    public func execute<I: InputStream, D: Decodable>(
         query: DatabaseQuery,
         into stream: I
     ) where I.Input == D {
@@ -44,29 +44,23 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
             }
 
             /// setup drain
-            sqliteQuery.drain { row in
-                let decoder = SQLiteRowDecoder(row: row)
-                do {
-                    let model = try D(from: decoder)
-                    stream.onInput(model)
-                } catch {
-                    stream.onError(error)
+            sqliteQuery.execute().do { results in
+                if let results = results {
+                    /// there are results to be streamed
+                    results.stream().map(to: D.self) { row in
+                        let decoder = SQLiteRowDecoder(row: row)
+                        let model = try D(from: decoder)
+                        return model
+                    }.output(to: stream)
+                } else {
                     stream.close()
                 }
-            }.catch { err in
-                stream.onError(err)
-                stream.close()
-            }
-
-            /// execute query
-            sqliteQuery.execute().do {
-                stream.close()
-            }.catch { err in
-                stream.onError(err)
+            }.catch { error in
+                stream.error(error)
                 stream.close()
             }
         } catch {
-            stream.onError(error)
+            stream.error(error)
             stream.close()
         }
     }

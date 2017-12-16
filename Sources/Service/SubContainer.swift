@@ -40,7 +40,7 @@ public final class BasicSubContainer: SubContainer {
 
 extension Container {
     /// Creates a sub container for this container.
-    public func makeSubContainer(on eventLoop: EventLoop) -> SubContainer {
+    public func makeSubContainer(on eventLoop: EventLoop) -> BasicSubContainer {
         return BasicSubContainer(config: config, environment: environment, services: services, super: self, on: eventLoop)
     }
 }

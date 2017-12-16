@@ -30,7 +30,7 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
-        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
+        // .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
@@ -46,17 +46,14 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
 
         // MySQL
-        .library(name: "MySQL", targets: ["MySQL"]),
+        // .library(name: "MySQL", targets: ["MySQL"]),
         
-        // Multipart
-        .library(name: "Multipart", targets: ["Multipart"]),
-
         // Multipart
         .library(name: "Multipart", targets: ["Multipart"]),
 
         // Net
         .library(name: "HTTP", targets: ["HTTP"]),
-        .library(name: "HTTP2", targets: ["HTTP2"]),
+        // .library(name: "HTTP2", targets: ["HTTP2"]),
         .library(name: "TCP", targets: ["TCP"]),
 
         // Random
@@ -78,7 +75,7 @@ let package = Package(
         .library(name: "SQLite", targets: ["SQLite"]),
         
         // TLS/SSL
-        .library(name: "TLS", targets: ["TLS"]),
+        // .library(name: "TLS", targets: ["TLS"]),
 
         // Validation
         .library(name: "Validation", targets: ["Validation"]),
@@ -87,11 +84,11 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
         
         // WebSockets
-        .library(name: "WebSocket", targets: ["WebSocket"]),
+        // .library(name: "WebSocket", targets: ["WebSocket"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async.git", .exact("1.0.0-alpha.5")),
+        .package(url: "https://github.com/vapor/async.git", .branch("any-input-stream")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [
@@ -134,8 +131,8 @@ let package = Package(
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
-        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
-        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
+        // .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        // .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
@@ -156,8 +153,8 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", "TLS", "Crypto"]),
-        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
+        // .target(name: "MySQL", dependencies: ["TCP", /*"TLS",*/ "Crypto"]),
+        // .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Multipart
         .target(name: "Multipart", dependencies: ["JunkDrawer", "Debugging", "HTTP"]),
@@ -171,8 +168,8 @@ let package = Package(
         .testTarget(name: "TCPTests", dependencies: ["TCP"]),
         
         // HTTP/2
-        .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Service", "Pufferfish"]),
-        .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
+        // .target(name: "HTTP2", dependencies: ["HTTP", "TLS", "Pufferfish"]),
+        // .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
         .target(name: "Random", dependencies: ["JunkDrawer"]),
@@ -183,7 +180,7 @@ let package = Package(
         .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
-        .target(name: "Routing", dependencies: ["JunkDrawer", "Debugging", "HTTP", "WebSocket"]),
+        .target(name: "Routing", dependencies: ["JunkDrawer", "Debugging", "HTTP", /*"WebSocket"*/]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
         
         // Redis
@@ -215,7 +212,7 @@ let package = Package(
         .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "MySQL", "SQLite"]),
+        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "SQLite"]),
         .target(name: "Vapor", dependencies: [
             "Command",
             "Console",
@@ -226,19 +223,20 @@ let package = Package(
             "JunkDrawer",
             "Leaf",
             "Logging",
+            "Multipart",
             "Routing",
             "Service",
             "TCP",
-            "TLS",
+            // "TLS",
             "ServerSecurity",
-            "WebSocket",
             ssl,
+            // "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-        .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", "TLS", "HTTP", "Crypto"]),
-        .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
+        // .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
+        // .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )
 
@@ -258,8 +256,5 @@ let package = Package(
     package.targets.append(
         .target(name: "OpenSSL", dependencies: ["COpenSSL", "Async", "Debugging", "TLS"])
     )
-    
-    package.products.append(
-        .library(name: "OpenSSL", targets: ["OpenSSL"])
-    )
 #endif
+

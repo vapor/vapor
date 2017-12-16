@@ -19,7 +19,7 @@ extension SQLiteConnection: DatabaseConnection {
     public typealias Config = SQLiteConfig
     
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        return then {
+        return Future {
             guard let sqlite = self as? D.Connection else {
                 throw FluentSQLiteError(identifier: "invalid-connection-type", reason: "The provided connection was not an SQLite connection")
             }

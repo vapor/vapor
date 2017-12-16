@@ -63,23 +63,21 @@ extension Model where ID: StringDecodable {
         }
 
         if let ephemeral = container as? EphemeralContainer {
-            return ephemeral.connect(to: database).then { conn in
-                return self.find(id, on: conn).map { pet in
-                    guard let pet = pet else {
+            return ephemeral.connect(to: database).flatMap(to: Self.self) { conn in
+                return self.find(id, on: conn).map(to: Self.self) { model in
+                    guard let model = model else {
                         throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
                     }
-
-                    return pet
+                    return model
                 }
             }
         } else {
             return container.withConnection(to: database) { conn in
-                return self.find(id, on: conn).map { pet in
-                    guard let pet = pet else {
+                return self.find(id, on: conn).map(to: Self.self) { model in
+                    guard let model = model else {
                         throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
                     }
-
-                    return pet
+                    return model
                 }
             }
         }
@@ -181,7 +179,7 @@ extension Model {
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
     public static func find(_ id: Self.ID, on conn: DatabaseConnectable) -> Future<Self?> {
-        return then {
+        return Future {
             return try query(on: conn)
                 .filter(idKey == id)
                 .first()
