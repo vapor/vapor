@@ -15,25 +15,16 @@ class SocketsTests: XCTestCase {
         let serverSocket = try TCPSocket(isNonBlocking: true)
         let server = try TCPServer(socket: serverSocket)
 
+        let worker = DispatchQueue(label: "codes.vapor.test.worker.1")
         let serverStream = server.stream(
-            on: DispatchQueue(label: "codes.vapor.test.server"),
-            assigning: [
-                DispatchQueue(label: "codes.vapor.test.worker.1"),
-                DispatchQueue(label: "codes.vapor.test.worker.2"),
-                DispatchQueue(label: "codes.vapor.test.worker.3"),
-                DispatchQueue(label: "codes.vapor.test.worker.4"),
-                DispatchQueue(label: "codes.vapor.test.worker.5"),
-                DispatchQueue(label: "codes.vapor.test.worker.6"),
-                DispatchQueue(label: "codes.vapor.test.worker.7"),
-                DispatchQueue(label: "codes.vapor.test.worker.8"),
-            ]
+            on: DispatchQueue(label: "codes.vapor.test.server")
         )
 
         /// set up the server stream
         serverStream.drain { req in
             req.request(count: .max)
-        }.output { (client, eventLoop) in
-            let clientStream = client.stream(on: eventLoop)
+        }.output { client in
+            let clientStream = client.stream(on: worker)
             var clientReq: ConnectionContext?
             clientStream.drain { req in
                 clientReq = req

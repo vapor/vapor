@@ -1,5 +1,5 @@
+import Async
 import Bits
-import JunkDrawer
 
 public protocol TLSSocket: DispatchSocket {
     func read(max: Int, into buffer: MutableByteBuffer) throws -> Int

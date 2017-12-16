@@ -57,7 +57,7 @@ do {
     migrationConfig.add(migration: TestSiblings.self, database: beta)
     services.register(migrationConfig)
 
-    var middlewareConfig = MiddlewareConfig()
+    let middlewareConfig = MiddlewareConfig()
     //middlewareConfig.use(ErrorMiddleware.self)
     services.register(middlewareConfig)
 
