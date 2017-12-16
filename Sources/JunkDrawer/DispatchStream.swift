@@ -100,7 +100,8 @@ public final class DispatchSocketStream<Socket>: Stream, ConnectionContext
             close()
         case .error(let e):
             /// don't propogate to downstream or we will have an infinite loop
-            print("Socket Error: \(e)")
+            print("Uncaught Error: \(e)")
+            close()
         }
     }
 

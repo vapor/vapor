@@ -57,10 +57,9 @@ do {
     migrationConfig.add(migration: TestSiblings.self, database: beta)
     services.register(migrationConfig)
 
-    // var middlewareConfig = MiddlewareConfig()
+    var middlewareConfig = MiddlewareConfig()
     //middlewareConfig.use(ErrorMiddleware.self)
-    // middlewareConfig.use(FluentMiddleware.self)
-    // services.register(middlewareConfig)
+    services.register(middlewareConfig)
 
     
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
@@ -107,7 +106,7 @@ do {
     let helloRes = try! HTTPResponse(headers: [
         .contentType: "text/plain; charset=utf-8"
     ], body: "Hello, world!")
-    router.grouped(DateMiddleware()).get("plaintext") { req in
+    router.get("plaintext") { req in
         return helloRes
     }
 

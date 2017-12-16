@@ -59,7 +59,6 @@ public final class EngineServer: Server {
                 using: byteStream.eventLoop
             )
         }
-        print(server)
 
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
@@ -167,44 +166,6 @@ public final class EngineServer: Server {
 //        strongRef = tcp
 //    }
 }
-
-//fileprivate final class HTTPPeer: Async.Stream, HTTPUpgradable {
-//    typealias Input = HTTPResponse
-//    typealias Output = HTTPRequest
-//
-//    let serializer: ResponseSerializer
-//    let parser: RequestParser
-//    var byteStream: DuplexByteStream
-//
-//    init<Socket: Async.Stream>(socket: Socket) where Socket.Input == ByteBuffer, Socket.Output == ByteBuffer {
-//        serializer = .init()
-//        parser = .init(maxSize: 10_000_000)
-//
-//        byteStream = DuplexByteStream(socket)
-//        serializer.stream(to: socket)
-//        byteStream.stream(to: parser)
-//    }
-//
-//    func onInput(_ input: Input) {
-//        serializer.onInput(input)
-//    }
-//
-//    func onError(_ error: Error) {
-//        byteStream.onError(error)
-//    }
-//
-//    func onOutput<I>(_ input: I) where I: Async.InputStream, Output == I.Input {
-//        parser.onOutput(input)
-//    }
-//
-//    func close() {
-//        byteStream.close()
-//    }
-//
-//    func onClose(_ onClose: ClosableStream) {
-//        byteStream.onClose(onClose)
-//    }
-//}
 
 extension Logger {
     func reportError(_ error: Error, as label: String) {
