@@ -59,9 +59,12 @@ extension _HTTPSerializer {
     /// See HTTPSerializer.serialize
     public func serialize(into buffer: MutableByteBuffer) throws -> Int {
         var bufferSize: Int
-        var writeSize: Int
+        var writeOffset = 0
         
         repeat {
+            let writeSize: Int
+            let outputSize = buffer.count - writeOffset
+            
             switch state {
             case .noMessage:
                 throw HTTPError(identifier: "no-response", reason: "Serialization requested without a response")
@@ -71,10 +74,10 @@ extension _HTTPSerializer {
                 }
                 
                 bufferSize = firstLine.count
-                writeSize = min(buffer.count, bufferSize - offset)
+                writeSize = min(outputSize, bufferSize - offset)
                 
                 firstLine.withUnsafeBytes { pointer in
-                    _ = memcpy(buffer.baseAddress!, pointer.baseAddress!.advanced(by: offset), writeSize)
+                    _ = memcpy(buffer.baseAddress!.advanced(by: writeOffset), pointer.baseAddress!.advanced(by: offset), writeSize)
                 }
             case .headers:
                 guard let headersData = self.headersData else {
@@ -82,22 +85,24 @@ extension _HTTPSerializer {
                 }
                 
                 bufferSize = headersData.count
-                writeSize = min(buffer.count, bufferSize - offset)
+                writeSize = min(outputSize, bufferSize - offset)
                 
                 headersData.withByteBuffer { headerBuffer in
-                    _ = memcpy(buffer.baseAddress!, headerBuffer.baseAddress!.advanced(by: offset), writeSize)
+                    _ = memcpy(buffer.baseAddress!.advanced(by: writeOffset), headerBuffer.baseAddress!.advanced(by: offset), writeSize)
                 }
             }
             
+            writeOffset += writeSize
+            
             if offset + writeSize < bufferSize {
                 offset += writeSize
-                return writeSize
+                return writeOffset
             } else {
                 state.next()
                 offset = 0
             }
-        } while state != .noMessage
+        } while !self.ready
         
-        return writeSize
+        return writeOffset
     }
 }
