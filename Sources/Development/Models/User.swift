@@ -64,6 +64,23 @@ struct TestSiblings: Migration {
     }
 }
 
+
+final class AutoUser: Migration, Model, Content {
+    static let database = beta
+    static var idKey = \AutoUser.id
+
+    var id: UUID?
+    var name: String
+    var age: Double
+
+    init(name: String, age: Double) {
+        self.name = name
+        self.age = age
+    }
+}
+
+
+
 final class User: Model, Content {
     static let database = beta
     static var idKey = \User.id

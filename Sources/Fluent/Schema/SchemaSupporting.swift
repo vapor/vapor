@@ -20,17 +20,19 @@ public protocol SchemaFieldType {
 
     /// Default schema field types Fluent must know
     /// how to make for migrations and tests.
-    static func makeSchemaFieldType<T>(for type: T.Type) -> Self?
+    static func makeSchemaFieldType(for type: Any.Type) -> Self?
 }
 
 extension SchemaFieldType {
     /// Returns the schema field type for a given type or throws and error
-    public static func requireSchemaFieldType<T>(for type: T.Type) throws -> Self {
-        guard let type = makeSchemaFieldType(for: T.self) else {
-            throw FluentError(identifier: "scema-type-not-supported", reason: "Type for \(T.self) required, a matching database type could not be found")
+    public static func requireSchemaFieldType(for type: Any.Type) throws -> Self {
+        guard let res = makeSchemaFieldType(for: type) else {
+            throw FluentError(
+                identifier: "scema-type-not-supported",
+                reason: "Type for \(type) required, a matching database type could not be found"
+            )
         }
-
-        return type
+        return res
     }
 }
 

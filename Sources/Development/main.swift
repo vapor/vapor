@@ -15,6 +15,8 @@ import Vapor
 let beta = DatabaseIdentifier<SQLiteDatabase>("beta")
 let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
 
+print(AutoUser.properties())
+
 extension Request: DatabaseConnectable {}
 
 do {
@@ -55,6 +57,7 @@ do {
     migrationConfig.add(migration: Toy.self, database: beta)
     migrationConfig.add(migration: PetToyPivot.self, database: beta)
     migrationConfig.add(migration: TestSiblings.self, database: beta)
+    migrationConfig.add(model: AutoUser.self)
     services.register(migrationConfig)
 
     let middlewareConfig = MiddlewareConfig()

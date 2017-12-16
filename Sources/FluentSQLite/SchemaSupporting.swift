@@ -54,8 +54,8 @@ extension SQLiteFieldType: SchemaFieldType {
     }
 
     /// See SchemaFieldType.makeSchemaField
-    public static func makeSchemaFieldType<T>(for type: T.Type) -> SQLiteFieldType? {
-        switch id(T.self) {
+    public static func makeSchemaFieldType(for type: Any.Type) -> SQLiteFieldType? {
+        switch id(type) {
         case id(Date.self), id(Double.self), id(Float.self): return .real
         case id(Int.self), id(UInt.self): return .integer
         case id(String.self): return .text
@@ -65,6 +65,6 @@ extension SQLiteFieldType: SchemaFieldType {
     }
 }
 
-fileprivate func id<T>(_ type: T.Type) -> ObjectIdentifier {
-    return ObjectIdentifier(T.self)
+fileprivate func id(_ type: Any.Type) -> ObjectIdentifier {
+    return ObjectIdentifier(type)
 }

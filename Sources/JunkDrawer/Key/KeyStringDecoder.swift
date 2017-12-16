@@ -10,6 +10,10 @@ extension Decodable {
             defer { depth += 1 }
             var progress = 0
 
+            if depth > 42 {
+                fatalError("Exceeded maximum `codingPath(forKey:)` depth.")
+            }
+
             b: while true {
                 defer { progress += 1 }
                 let result = KeyStringDecoderResult(progress: progress, depth: depth)
@@ -28,7 +32,6 @@ extension Decodable {
         }
     }
 
-
     /// Returns the Decodable coding path `[CodingKey]` for the supplied key path.
     /// Note: Attempting to resolve a keyPath for non-decoded key paths (i.e., count, etc)
     /// will result in a fatalError.
@@ -36,6 +39,8 @@ extension Decodable {
         return unsafeCodingPath(forKey: keyPath)
     }
 }
+
+// MARK: Utils
 
 private func isTruthy(_ any: Any?) -> Bool {
     switch any! {
@@ -53,7 +58,46 @@ private func isTruthy(_ any: Any?) -> Bool {
     }
 }
 
-internal final class KeyStringDecoderResult {
+// MARK: Protocols
+
+public protocol AnyKeyStringDecodable {
+    static var _keyStringTrue: Any { get }
+    static var _keyStringFalse: Any { get }
+    static func _keyStringIsTrue(_ any: Any) -> Bool
+}
+
+public protocol KeyStringDecodable: Equatable, AnyKeyStringDecodable {
+    static var keyStringTrue: Self { get }
+    static var keyStringFalse: Self { get }
+}
+
+extension KeyStringDecodable {
+    public static var _keyStringTrue: Any { return keyStringTrue }
+    public static var _keyStringFalse: Any { return keyStringFalse }
+    public static func _keyStringIsTrue(_ any: Any) -> Bool {
+        return keyStringTrue == any as! Self
+    }
+}
+
+private let _false = UUID()
+private let _true = UUID()
+
+extension UUID: KeyStringDecodable {
+    public static var keyStringTrue: UUID { return _true }
+    public static var keyStringFalse: UUID { return _false }
+}
+
+private let _falsedate = Date(timeIntervalSince1970: 0)
+private let _truedate = Date(timeIntervalSince1970: 1)
+
+extension Date: KeyStringDecodable {
+    public static var keyStringTrue: Date { return _truedate }
+    public static var keyStringFalse: Date { return _falsedate }
+}
+
+// MARK: Result
+
+fileprivate final class KeyStringDecoderResult {
     var codingPath: [CodingKey]?
     var progress: Int
     var current: Int
@@ -71,7 +115,9 @@ internal final class KeyStringDecoderResult {
     }
 }
 
-internal final class KeyStringDecoder: Decoder {
+// MARK: Coders
+
+fileprivate final class KeyStringDecoder: Decoder {
     var codingPath: [CodingKey]
     var result: KeyStringDecoderResult
     var userInfo: [CodingUserInfoKey: Any]
@@ -96,7 +142,7 @@ internal final class KeyStringDecoder: Decoder {
     }
 }
 
-internal struct KeyStringSingleValueDecoder: SingleValueDecodingContainer {
+fileprivate struct KeyStringSingleValueDecoder: SingleValueDecodingContainer {
     var codingPath: [CodingKey]
     var result: KeyStringDecoderResult
 
@@ -147,42 +193,7 @@ internal struct KeyStringSingleValueDecoder: SingleValueDecodingContainer {
     }
 }
 
-public protocol AnyKeyStringDecodable {
-    static var _keyStringTrue: Any { get }
-    static var _keyStringFalse: Any { get }
-    static func _keyStringIsTrue(_ any: Any) -> Bool
-}
-
-public protocol KeyStringDecodable: Equatable, AnyKeyStringDecodable {
-    static var keyStringTrue: Self { get }
-    static var keyStringFalse: Self { get }
-}
-
-extension KeyStringDecodable {
-    public static var _keyStringTrue: Any { return keyStringTrue }
-    public static var _keyStringFalse: Any { return keyStringFalse }
-    public static func _keyStringIsTrue(_ any: Any) -> Bool {
-        return keyStringTrue == any as! Self
-    }
-}
-
-private let _false = UUID()
-private let _true = UUID()
-
-extension UUID: KeyStringDecodable {
-    public static var keyStringTrue: UUID { return _true }
-    public static var keyStringFalse: UUID { return _false }
-}
-
-private let _falsedate = Date(timeIntervalSince1970: 0)
-private let _truedate = Date(timeIntervalSince1970: 1)
-
-extension Date: KeyStringDecodable {
-    public static var keyStringTrue: Date { return _truedate }
-    public static var keyStringFalse: Date { return _falsedate }
-}
-
-internal struct KeyStringKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: CodingKey {
+fileprivate struct KeyStringKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: CodingKey {
     typealias Key = K
     var allKeys: [K]
     var codingPath: [CodingKey]
