@@ -29,7 +29,7 @@ extension KeyPath: QueryFieldRepresentable {
             throw FluentError(identifier: "invalid-root-type", reason: "`Can't create query field. \(Root.self)` does not conform to `AnyModel`.")
         }
 
-        let key = model.codingPath(forKey: self)
+        let key = model.unsafeCodingPath(forKey: self)
         return QueryField(entity: model.entity, name: key[0].stringValue)
     }
 }

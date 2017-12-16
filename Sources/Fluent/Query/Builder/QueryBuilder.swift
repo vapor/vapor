@@ -28,7 +28,7 @@ public final class QueryBuilder<Model> where Model: Fluent.Model {
             let type = Model.self as? AnySoftDeletable.Type,
             !self.query.withSoftDeleted
         {
-            let deletedAtKey = T.codingPath(forKey: type.anyDeletedAtKey)
+            let deletedAtKey = D.unsafeCodingPath(forKey: type.anyDeletedAtKey)
             let deletedAtField = QueryField(entity: type.entity, name: deletedAtKey[0].stringValue)
 
             try! self.group(.or) { or in

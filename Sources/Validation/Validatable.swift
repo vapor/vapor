@@ -31,7 +31,7 @@ extension Validatable {
             do {
                 try validation.validate(data)
             } catch var error as ValidationError {
-                error.keyPath += Self.codingPath(forKey: key)
+                error.keyPath += Self.unsafeCodingPath(forKey: key)
                 errors.append(error)
             }
         }

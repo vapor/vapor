@@ -2,7 +2,9 @@ import Foundation
 
 /// Maps KeyPath to [CodingKey] on Decodable types.
 extension Decodable {
-    public static func codingPath(forKey keyPath: AnyKeyPath) -> [CodingKey] {
+    /// Accepts `AnyKeyPath`.
+    /// See Decodable.codingPath(forKey:)
+    public static func unsafeCodingPath(forKey keyPath: AnyKeyPath) -> [CodingKey] {
         var depth = 0
         a: while true {
             defer { depth += 1 }
@@ -25,6 +27,14 @@ extension Decodable {
             }
         }
     }
+
+
+    /// Returns the Decodable coding path `[CodingKey]` for the supplied key path.
+    /// Note: Attempting to resolve a keyPath for non-decoded key paths (i.e., count, etc)
+    /// will result in a fatalError.
+    public static func codingPath<T>(forKey keyPath: KeyPath<Self, T>) -> [CodingKey] {
+        return unsafeCodingPath(forKey: keyPath)
+    }
 }
 
 private func isTruthy(_ any: Any?) -> Bool {
@@ -33,13 +43,13 @@ private func isTruthy(_ any: Any?) -> Bool {
     case let int as Int: return int == 1
     case let string as String: return string == "1"
     case let double as Double: return double == 1
-    case let custom as KeyStringDecodable: return type(of: custom).keyStringIsTrue(custom)
+    case let custom as AnyKeyStringDecodable: return type(of: custom)._keyStringIsTrue(custom)
     case let opt as Optional<Any>:
         switch opt {
         case .none: return false
         case .some(let w): return isTruthy(w)
         }
-    default: fatalError("unsupported type: \(type(of: any))")
+    default: fatalError("Unsupported type. Conform `\(type(of: any))` to `KeyStringDecodable` to fix this error.")
     }
 }
 
@@ -137,32 +147,39 @@ internal struct KeyStringSingleValueDecoder: SingleValueDecodingContainer {
     }
 }
 
-public protocol KeyStringDecodable {
-    static var keyStringTrue: Any { get }
-    static var keyStringFalse: Any { get }
-    static func keyStringIsTrue(_ any: Any) -> Bool
+public protocol AnyKeyStringDecodable {
+    static var _keyStringTrue: Any { get }
+    static var _keyStringFalse: Any { get }
+    static func _keyStringIsTrue(_ any: Any) -> Bool
 }
 
-let _false = UUID()
-let _true = UUID()
+public protocol KeyStringDecodable: Equatable, AnyKeyStringDecodable {
+    static var keyStringTrue: Self { get }
+    static var keyStringFalse: Self { get }
+}
+
+extension KeyStringDecodable {
+    public static var _keyStringTrue: Any { return keyStringTrue }
+    public static var _keyStringFalse: Any { return keyStringFalse }
+    public static func _keyStringIsTrue(_ any: Any) -> Bool {
+        return keyStringTrue == any as! Self
+    }
+}
+
+private let _false = UUID()
+private let _true = UUID()
 
 extension UUID: KeyStringDecodable {
-    public static var keyStringTrue: Any { return _true }
-    public static var keyStringFalse: Any { return _false }
-    public static func keyStringIsTrue(_ any: Any) -> Bool {
-        return (any as! UUID) == _true
-    }
+    public static var keyStringTrue: UUID { return _true }
+    public static var keyStringFalse: UUID { return _false }
 }
 
-let _falsedate = Date(timeIntervalSince1970: 0)
-let _truedate = Date(timeIntervalSince1970: 1)
+private let _falsedate = Date(timeIntervalSince1970: 0)
+private let _truedate = Date(timeIntervalSince1970: 1)
 
 extension Date: KeyStringDecodable {
-    public static var keyStringTrue: Any { return _truedate }
-    public static var keyStringFalse: Any { return _falsedate }
-    public static func keyStringIsTrue(_ any: Any) -> Bool {
-        return (any as! Date) == _truedate
-    }
+    public static var keyStringTrue: Date { return _truedate }
+    public static var keyStringFalse: Date { return _falsedate }
 }
 
 internal struct KeyStringKeyedDecoder<K>: KeyedDecodingContainerProtocol where K: CodingKey {
@@ -241,12 +258,12 @@ internal struct KeyStringKeyedDecoder<K>: KeyedDecodingContainerProtocol where K
 
     func decode<T>(_ type: T.Type, forKey key: K) throws -> T where T : Decodable {
         // restore query field map, for override
-        if let custom = T.self as? KeyStringDecodable.Type {
+        if let custom = T.self as? AnyKeyStringDecodable.Type {
             if result.cycle {
                 result.codingPath = codingPath + [key]
-                return custom.keyStringTrue as! T
+                return custom._keyStringTrue as! T
             } else {
-                return custom.keyStringFalse as! T
+                return custom._keyStringFalse as! T
             }
         } else {
             let decoder = KeyStringDecoder(codingPath: codingPath + [key], result: result)
