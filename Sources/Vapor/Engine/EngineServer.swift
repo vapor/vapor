@@ -287,13 +287,15 @@ public struct EngineServerConfig {
     public init(
         hostname: String = "localhost",
         port: UInt16 = 8080,
-        workerCount: Int = 8
+        backlog: Int32 = 4096,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
+        maxConnectionsPerIP: Int = 128
     ) {
         self.hostname = hostname
         self.port = port
         self.workerCount = workerCount
-        self.backlog = 4096
-        self.maxConnectionsPerIP = 128
+        self.backlog = backlog
+        self.maxConnectionsPerIP = maxConnectionsPerIP
         // self.ssl = nil
     }
 }
