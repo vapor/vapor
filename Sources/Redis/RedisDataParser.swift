@@ -30,6 +30,7 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     /// Creates a new ValueParser
     init() {
         downstreamDemand = 0
+        self.parsingValues = []
         state = .ready
     }
 
@@ -143,9 +144,9 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     }
     
     /// Parses an integer associated with the token at the provided position
-    fileprivate func integer(from position: inout Int) throws -> Int? {
+    fileprivate func integer(from input: ByteBuffer, at offset: inout Int) throws -> Int? {
         // Parses a string
-        guard let string = simpleString(from: &position) else {
+        guard let string = simpleString(from: input, at: &offset) else {
             return nil
         }
         
@@ -172,28 +173,28 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
         switch token {
         case .plus:
             // Simple string
-            guard let string = simpleString(from: &position) else {
+            guard let string = simpleString(from: input, at: &position) else {
                 throw RedisError(.parsingError)
             }
             
             return .parsed(.basicString(string))
         case .hyphen:
             // Error
-            guard let string = simpleString(from: &position) else {
+            guard let string = simpleString(from: input, at: &position) else {
                 throw RedisError(.parsingError)
             }
             
             return .parsed(.error(RedisError(.serverSide(string))))
         case .colon:
             // Integer
-            guard let number = try integer(from: &position) else {
+            guard let number = try integer(from: input, at: &position) else {
                 throw RedisError(.parsingError)
             }
             
             return .parsed(.integer(number))
         case .dollar:
             // Bulk strings start with their length
-            guard let size = try integer(from: &position) else {
+            guard let size = try integer(from: input, at: &position) else {
                 throw RedisError(.parsingError)
             }
             
@@ -219,7 +220,7 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             return .parsed(.bulkString(Data(input[position..<endPosition])))
         case .asterisk:
             // Arrays start with their element count
-            guard let size = try integer(from: &position) else {
+            guard let size = try integer(from: input, at: &position) else {
                 throw RedisError(.parsingError)
             }
             
@@ -235,13 +236,8 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
                     return .parsing(array)
                 }
                 
-                let oldPosition = position
-                
                 // Parse the individual nested element
-                guard try parseToken(input[position], from: input, at: &position) else {
-                    position = oldPosition
-                    return .parsing(array)
-                }
+                let result = try parseToken(input[position], from: input, at: &position)
                 
                 array[index] = result
             }

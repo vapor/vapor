@@ -81,8 +81,6 @@ public struct TCPSocket: DispatchSocket {
     /// Returns the amount of bytes actually read.
     public func read(into buffer: MutableByteBuffer) throws -> Int {
         let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, buffer.count)
-        print("READ: \(receivedBytes)")
-
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -120,10 +118,7 @@ public struct TCPSocket: DispatchSocket {
             return 0
         }
 
-        print(String(bytes: buffer, encoding: .ascii)!)
-
         let sent = send(descriptor, pointer, buffer.count, 0)
-        print("SENT: \(sent)")
         guard sent != -1 else {
             switch errno {
             case EINTR:

@@ -23,7 +23,6 @@ final class RedisDataSerializer: Async.Stream {
 
     /// See InputStream.input
     func input(_ event: InputEvent<RedisData>) {
-        print("[SERIALIZER] \(event)")
         switch event {
         case .close: downstream?.close()
         case .error(let error): downstream?.error(error)
