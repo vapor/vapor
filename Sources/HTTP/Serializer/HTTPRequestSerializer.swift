@@ -4,93 +4,80 @@ import Dispatch
 import Foundation
 
 /// Converts requests to DispatchData.
-public final class HTTPRequestSerializer: HTTPSerializer {
-    /// See HTTPSerializer.Message
+public final class HTTPRequestSerializer: _HTTPSerializer {
     public typealias Message = HTTPRequest
-
-    /// The message being serialized
-    public var message: HTTPRequest? {
-        didSet {
-            dataOffset = 0
-            data = nil
-        }
-    }
-
+    
     /// Serialized message
-    private var data: Data?
-
+    var firstLine: [UInt8]?
+    
+    /// Headers
+    var headersData: Data?
+    
     /// The current offset
-    private var dataOffset: Int
-
-    /// Create a new HTTPRequestSerializer
-    public init() {
-        dataOffset = 0
+    var offset: Int
+    
+    /// The current serialization taking place
+    var state = State.noMessage {
+        didSet {
+            switch self.state {
+            case .headers:
+                self.firstLine = nil
+            case .noMessage:
+                self.headersData = nil
+                self.firstLine = nil
+            default: break
+            }
+        }
     }
-
-    /// See HTTPSerializer.serialize
-    public func serialize(into buffer: MutableByteBuffer) throws -> Int {
-        let data: Data
-        if let existing = self.data {
-            data = existing
-        } else {
-            let new = serialize(message!)
-            self.dataOffset = 0
-            self.data = new
-            data = new
-        }
-
-        let remaining = data.count - dataOffset
-        let num = remaining > buffer.count ? buffer.count : remaining
-        data.copyBytes(to: buffer.baseAddress!, from: dataOffset..<dataOffset + num)
-        dataOffset = dataOffset + num
-
-        if dataOffset == data.count {
-            message = nil
-        }
+    
+    /// Set up the variables for Message serialization
+    public func setMessage(to message: Message) {
+        offset = 0
         
-        return num
-    }
-
-    private func serialize(_ request: HTTPRequest) -> Data {
-        var data = Data()
-
-        var serialized = request.method.bytes
-        serialized.reserveCapacity(request.headers.storage.count + 256)
-
-        serialized.append(.space)
-
-        if request.uri.pathBytes.first != .forwardSlash {
-            serialized.append(.forwardSlash)
-        }
-
-        serialized.append(contentsOf: request.uri.pathBytes)
-
-        if let query = request.uri.query {
-            serialized.append(.questionMark)
-            serialized.append(contentsOf: query.utf8)
-        }
-
-        if let fragment = request.uri.fragment {
-            serialized.append(.numberSign)
-            serialized.append(contentsOf: fragment.utf8)
-        }
-
-        serialized.append(contentsOf: http1newLine)
-
-        var headers = request.headers
-        switch request.body.storage {
+        self.state = .firstLine
+        var headers = message.headers
+        
+        switch message.body.storage {
         case .outputStream:
             headers[.transferEncoding] = "chunked"
         case .data, .dispatchData, .staticString, .string:
-            headers[.contentLength] = request.body.count.description
+            headers[.contentLength] = message.body.count.description
         }
+        
+        self.firstLine = message.firstLine
+        self.headersData = headers.storage + crlf
+    }
 
-        data += serialized
-        data += headers.storage
+    /// Create a new HTTPRequestSerializer
+    public init() {
+        offset = 0
+    }
+}
 
-        // End of Headers
-        data += crlf
-        return data
+fileprivate extension HTTPRequest {
+    var firstLine: [UInt8] {
+        var firstLine = self.method.bytes
+        firstLine.reserveCapacity(self.headers.storage.count + 256)
+        
+        firstLine.append(.space)
+        
+        if self.uri.pathBytes.first != .forwardSlash {
+            firstLine.append(.forwardSlash)
+        }
+        
+        firstLine.append(contentsOf: self.uri.pathBytes)
+        
+        if let query = self.uri.query {
+            firstLine.append(.questionMark)
+            firstLine.append(contentsOf: query.utf8)
+        }
+        
+        if let fragment = self.uri.fragment {
+            firstLine.append(.numberSign)
+            firstLine.append(contentsOf: fragment.utf8)
+        }
+        
+        return firstLine + http1newLine
     }
 }
 
