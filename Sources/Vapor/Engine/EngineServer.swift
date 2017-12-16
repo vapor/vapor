@@ -32,28 +32,21 @@ public final class EngineServer: Server {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        var workers: [EngineWorker] = []
-
-        for i in 0..<config.workerCount {
+        let workers = (0..<config.workerCount).map { i -> EngineWorker in
             // create new event loop
             let queue = DispatchQueue(label: "codes.vapor.engine.server.worker.\(i)")
-
-            // copy services into new container
-            let worker = EngineWorker(
+            return EngineWorker(
                 container: container.makeSubContainer(on: queue),
                 responder: responder
             )
-            workers.append(worker)
         }
 
-        let tcpSocket = try TCPSocket(isNonBlocking: true)
-        var tcpServer = try TCPServer(socket: tcpSocket)
+        var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
         tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-        let tcpStream = tcpServer.stream(
-            on: DispatchQueue(label: "codes.vapor.engine.server.main")
-        )
         let server = HTTPServer(
-            acceptStream: tcpStream,
+            acceptStream: tcpServer.stream(
+                on: DispatchQueue(label: "codes.vapor.engine.server.main")
+            ),
             workers: workers
         )
 
@@ -74,12 +67,6 @@ public final class EngineServer: Server {
             port: config.port,
             backlog: config.backlog
         )
-//
-//        try startPlain(with: responder)
-
-//        if let sslConfig = config.ssl {
-//            try startSSL(with: responder, sslConfig: sslConfig)
-//        }
 
         // non-blocking main thread run
         RunLoop.main.run()
@@ -166,7 +153,7 @@ public final class EngineServer: Server {
 //    }
 }
 
-struct EngineWorker: HTTPResponder, EventLoop {
+fileprivate struct EngineWorker: HTTPResponder, EventLoop {
     var queue: DispatchQueue {
         return container.queue
     }
