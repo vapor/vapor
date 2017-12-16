@@ -137,7 +137,7 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
         }
         
         // past clrf
-        defer { offset += 1 }
+        defer { offset += 2 }
         
         // Returns a String initialized with this data
         return String(bytes: input[base..<offset], encoding: .utf8)
@@ -150,15 +150,8 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
             return nil
         }
         
-        // Skip past the token and until before the carriage return
-        let integerIndex = string.index(after: string.startIndex)
-        let integerEnd = string.index(string.endIndex, offsetBy: -1)
-        
         // Instantiate the integer
-        guard
-            string.count > 1,
-            let number = Int(string[integerIndex..<integerEnd])
-        else {
+        guard let number = Int(string) else {
             throw RedisError(.parsingError)
         }
         
@@ -258,10 +251,6 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     }
     
     fileprivate func continueParsing(partial value: inout PartialRedisData, from input: ByteBuffer, at offset: inout Int) throws -> Bool {
-        guard offset > 0 else {
-            return false
-        }
-        
         // Parses every `notyetParsed`
         switch value {
         case .parsed(_):
