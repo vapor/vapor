@@ -8,6 +8,10 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
             return [
                 "The URI was not a valid WebSocket URI"
             ]
+        case .parserError:
+            return [
+                "The parser had an internal error"
+            ]
         case .cannotConnect:
             return [
                 "The URI was not open to WebSockets/HTTP"
@@ -51,6 +55,10 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
                 "The scheme must be either `ws` or `wss`",
                 "The hostname must be set and a valid hostname"
             ]
+        case .parserError:
+            return [
+                "Please file a bug including stack trace and a lot of details, so we can fix this"
+            ]
         case .cannotConnect:
             return []
         case .notUpgraded:
@@ -84,6 +92,8 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
         switch problem {
         case .invalidURI:
             return "The URI was invalid for WebSocket connections"
+        case .parserError:
+            return "The parser had an internal error"
         case .cannotConnect:
             return "The URI could not be connected to"
         case .notUpgraded:
@@ -145,6 +155,9 @@ public struct WebSocketError : Swift.Error, Debuggable, Traceable, Helpable, Enc
     enum Problem : String {
         /// The URI was invalid for WebSocket connections
         case invalidURI
+        
+        /// The parser had an internal error
+        case parserError
         
         /// The URI could not be connected to
         case cannotConnect

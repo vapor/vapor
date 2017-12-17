@@ -172,7 +172,8 @@ public final class Base64Encoder: Base64 {
                 pointer.deallocate(capacity: bytes.count)
             }
             
-            pointer.assign(from: input, count: bytes.count)
+            memcpy(pointer, input, bytes.count)
+            
             return encode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
                 return Data(buffer)
             }
@@ -184,18 +185,18 @@ public final class Base64Encoder: Base64 {
     /// - parameter data: The string of which the UTF-8 representation will be encoded
     /// - returns: A base64 encoded string
     public func encode(string: String) -> String {
-        let bytes = [UInt8](string.utf8)
+        let characters = string.utf8.count
         
-        let pointer = MutableBytesPointer.allocate(capacity: bytes.count)
+        let pointer = MutableBytesPointer.allocate(capacity: characters)
         
-        pointer.assign(from: bytes, count: bytes.count)
+        memcpy(pointer, string, characters)
         
         defer {
-            pointer.deinitialize(count: bytes.count)
-            pointer.deallocate(capacity: bytes.count)
+            pointer.deinitialize(count: characters)
+            pointer.deallocate(capacity: characters)
         }
         
-        return encode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
+        return encode(buffer: ByteBuffer(start: pointer, count: characters)) { buffer in
             guard let result = buffer.string() else {
                 return ""
             }

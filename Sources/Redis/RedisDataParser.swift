@@ -14,7 +14,7 @@ internal final class RedisDataParser: ProtocolTransformationStream {
     var parsing: PartialRedisData?
     
     /// An array, for when a single TCP message has > 1 entity
-    var backlog: [RedisData]
+    var backlog: [Output]
     
     /// Keeps track of the backlog that is already drained but not removed
     var consumedBacklog: Int

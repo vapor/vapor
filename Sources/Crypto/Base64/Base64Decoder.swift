@@ -123,7 +123,8 @@ public final class Base64Decoder: Base64 {
                 pointer.deallocate(capacity: bytes.count)
             }
             
-            pointer.assign(from: input, count: bytes.count)
+            memcpy(pointer, input, bytes.count)
+            
             return try decode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
                 return Data(buffer)
             }
@@ -135,18 +136,18 @@ public final class Base64Decoder: Base64 {
     /// - parameter data: The string data to decode
     /// - returns: A Data decoded from the inputted string
     public func decode(string: String) throws -> Data {
-        let bytes = [UInt8](string.utf8)
+        let characters = string.utf8.count
         
-        let pointer = MutableBytesPointer.allocate(capacity: bytes.count)
+        let pointer = MutableBytesPointer.allocate(capacity: characters)
         
-        pointer.assign(from: bytes, count: bytes.count)
+        memcpy(pointer, string, characters)
         
         defer {
-            pointer.deinitialize(count: bytes.count)
-            pointer.deallocate(capacity: bytes.count)
+            pointer.deinitialize(count: characters)
+            pointer.deallocate(capacity: characters)
         }
         
-        return try decode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
+        return try decode(buffer: ByteBuffer(start: pointer, count: characters)) { buffer in
             return Data(buffer)
         }
     }

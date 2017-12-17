@@ -111,12 +111,12 @@ public final class Base64Stream: Async.Stream, ConnectionContext {
 
             // Set the remainder
             remainder.withUnsafeBytes { pointer in
-                newPointer.assign(from: pointer, count: remainder.count)
+                _ = memcpy(newPointer, pointer, remainder.count)
             }
 
             // Appends the input
             if input.count > 0, let inputPointer = input.baseAddress {
-                newPointer.advanced(by: remainder.count).assign(from: inputPointer, count: input.count)
+                memcpy(newPointer.advanced(by: remainder.count), inputPointer, input.count)
             }
 
             try process(input: ByteBuffer(start: newPointer, count: newPointerLength))
