@@ -98,14 +98,8 @@ extension MySQLConnection {
         try client.connect(hostname: hostname, port: port)
         
         return try MySQLConnection(
-            hostname: hostname,
-            port: port,
-            ssl: ssl,
-            user: user,
-            password: password,
-            database: database,
-            on: client,
-            eventLoop: eventLoop
+            handshake: true as! Handshake,
+            stream: AnyStream(client.stream(on: eventLoop))
         )
     }
 }

@@ -29,7 +29,7 @@ class HTTPServerTests: XCTestCase {
 
         // beyblades let 'er rip
         try tcpServer.start(hostname: "localhost", port: 8123, backlog: 128)
-
+        
         let exp = expectation(description: "all requests complete")
         var num = 1024
         for _ in 0..<num {

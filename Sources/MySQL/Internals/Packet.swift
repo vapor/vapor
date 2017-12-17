@@ -58,7 +58,7 @@ internal final class Packet: ExpressibleByArrayLiteral {
     }
     
     convenience init(arrayLiteral elements: UInt8...) {
-        let pointer = MutableBytesPointer.allocate(capacity: elements.count)
+        let pointer = MutableBytesPointer.allocate(capacity: 4 &+ elements.count)
         
         let packetSizeBytes = [
             UInt8((elements.count) & 0xff),
@@ -69,6 +69,24 @@ internal final class Packet: ExpressibleByArrayLiteral {
         memcpy(pointer, packetSizeBytes, 3)
         memcpy(pointer.advanced(by: 4), elements, elements.count)
         
-        self.init(payload: ByteBuffer(start: pointer, count: elements.count))
+        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ elements.count))
+    }
+    
+    convenience init(data: Data) {
+        let pointer = MutableBytesPointer.allocate(capacity: 4 &+ data.count)
+        
+        let packetSizeBytes = [
+            UInt8((data.count) & 0xff),
+            UInt8((data.count >> 8) & 0xff),
+            UInt8((data.count >> 16) & 0xff),
+        ]
+        
+        memcpy(pointer, packetSizeBytes, 3)
+        
+        data.withByteBuffer { buffer in
+            _ = memcpy(pointer.advanced(by: 4), buffer.baseAddress!, data.count)
+        }
+        
+        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ data.count))
     }
 }
