@@ -10,37 +10,23 @@ final class FrameSerializer: ProtocolSerializerStream {
     /// See OutputStream.Output
     typealias Output = ByteBuffer
     
-    var serializing: Input?
-    
-    var serializationState: Output.State?
-    
-    func serialize(_ input: Input, state: Output.State) throws -> Output.State {
-        let taken = Swift.min(65_507, self.count - state)
-        let buffer = UnsafeBufferPointer<Element>(start: self.baseAddress?.advanced(by: state), count: taken)
-        
-        
-        
-        return state + taken
+    var serializing: Input? {
+        didSet {
+            serializationProgress = 0
+            
+            // masks the data if needed, works _only_ because this is a class
+            if mask {
+                serializing?.mask()
+            } else {
+                serializing?.unmask()
+            }
+        }
     }
     
-    func input(_ event: InputEvent<Frame>) {
-        <#code#>
-    }
-    
-    func output<S>(to inputStream: S) where S : InputStream, Output == S.Input {
-        <#code#>
-    }
-    
-    func connection(_ event: ConnectionEvent) {
-        <#code#>
-    }
+    var serializationProgress: Int
     
     /// An array with the additional unserialized frames
     var backlog: [Frame]
-    
-    var currentBuffer: Frame
-    
-    var currentOffset: Int
     
     var consumedBacklog: Int
     
@@ -62,35 +48,30 @@ final class FrameSerializer: ProtocolSerializerStream {
     /// Only clients send masked messages
     init(masking: Bool) {
         self.mask = masking
+        self.serializationProgress = 0
+        self.downstream = nil
+        self.backlog = []
+        self.consumedBacklog = 0
+        self.state = .ready
+        self.downstreamDemand = 0
     }
-
-    func onInput(_ input: Frame) {
-        // masks the data if needed
-        if mask {
-            input.mask()
+    
+    func serialize(_ input: Input) throws {
+        let pointer = input.buffer.baseAddress?.advanced(by: serializationProgress)
+        
+        let unserialized = input.buffer.count - serializationProgress
+        let size = Swift.min(unserialized, 65_507)
+        
+        let buffer = ByteBuffer(start: pointer, count: size)
+        
+        flush(buffer)
+        
+        if unserialized - size > 0 {
+            self.serializing = input
+            self.serializationProgress += size
         } else {
-            input.unmask()
+            self.serializing = nil
         }
-
-        outputStream.onInput(ByteBuffer(start: input.buffer.baseAddress, count: input.buffer.count))
-    }
-
-    func onError(_ error: Error) {
-        outputStream.onError(error)
-    }
-
-    func onOutput<I>(_ input: I) where I : InputStream, Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See CloseableStream.close
-    func close() {
-        outputStream.close()
-    }
-
-    /// See CloseableStream.onClose
-    func onClose(_ onClose: ClosableStream) {
-        outputStream.onClose(onClose)
     }
 }
 

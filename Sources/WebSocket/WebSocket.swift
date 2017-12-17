@@ -18,7 +18,7 @@ public class WebSocket {
     var backlog: [Frame]
     
     /// Serializes data into frames
-//    let serializer: FrameSerializer
+    let serializer: FrameSerializer
     
     /// Parses frames from data
     let parser: FrameParser
@@ -52,7 +52,7 @@ public class WebSocket {
         }
         
         func bindFrameStreams() {
-            
+            stream
         }
         
         if server {
