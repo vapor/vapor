@@ -9,24 +9,39 @@ import TCP
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
 public class WebSocket {
-    /// The internal connection that communicates the frames
-    let connection: Connection
-    
     /// A stream of strings received from the remote
     let stringOutputStream: MapStream<Frame, String?>
     
     /// A stream of binary data received from the remote
     let binaryOutputStream: MapStream<Frame, ByteBuffer>
-
+    
+    /// Serializes data into frames
+    let serializer: FrameSerializer
+    
+    /// Parses frames from data
+    let parser: FrameParser
+    
+    /// Defines the side of the socket
+    ///
+    /// Server side Sockets don't use masking
+    let mode: WebSocketMode
+    
+    /// The underlying communication layer
+    let socket: AnyStream<ByteBuffer, ByteBuffer>
+    
     /// Create a new WebSocket from a TCP client for either the Client or Server Side
     ///
     /// Server side connections do not mask sent data
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init(socket: DispatchSocket, server: Bool = true)
+    init(socket: AnyStream<ByteBuffer, ByteBuffer>, server: Bool = true)
     {
-        self.connection = Connection(socket: socket, mode: server ? .server: .client)
+        self.parser = socket.stream(to: FrameParser())
+        self.serializer = FrameSerializer(masking: !server)
+        self.socket = socket
+        
+        serializer.output(to: socket)
         
         self.stringOutputStream = MapStream<Frame, String?> { frame in
             let data = Data(buffer: frame.buffer)
@@ -37,7 +52,7 @@ public class WebSocket {
             return ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count)
         }
         
-//        self.connection.split { frame in
+//        parser.drain { frame in
 //            switch frame.opCode {
 //            case .close:
 //                self.connection.close()
@@ -54,7 +69,7 @@ public class WebSocket {
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
-        connection.close()
+        socket.close()
     }
 }
 

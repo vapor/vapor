@@ -1,3 +1,4 @@
+import Async
 import HTTP
 import Crypto
 
@@ -46,6 +47,7 @@ extension WebSocket {
 
         response.onUpgrade = HTTPOnUpgrade { tcpClient in
             let websocket = WebSocket(socket: tcpClient)
+            
             // Does it make sense to be defined here? If someone calls the above method, the websocket won't be set according to the given settings.
             try? settings.apply(on: websocket, request: request, response: response)
 

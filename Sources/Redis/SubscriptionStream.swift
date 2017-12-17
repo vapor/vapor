@@ -11,7 +11,7 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
     public typealias Output = ChannelMessage
     
     /// The downstream, listening for messages
-    private var downstream: AnyInputStream<ChannelMessage>?
+    private var downstream: AnyInputStream<Output>?
     
     /// The upstream output stream supplying redis data
     private var upstream: ConnectionContext?
@@ -63,6 +63,7 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
             let channel = array[1].string
         else {
             self.downstream?.error(RedisError(.unexpectedResult(data)))
+            self.request(count: 1)
             self.close()
             return
         }

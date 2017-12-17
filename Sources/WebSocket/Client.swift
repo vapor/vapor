@@ -32,9 +32,9 @@ extension WebSocket {
         let promise = Promise<WebSocket>()
         
         // Creates an HTTP client for the handshake
-        let serializer = RequestSerializer()
+        let serializer = HTTPRequestSerializer()
         
-        let parser: ResponseParser
+        let parser: HTTPResponseParser
         
         // Generates the UUID that will make up the WebSocket-Key
         let id = OSRandom().data(count: 16).base64EncodedString()
@@ -48,9 +48,9 @@ extension WebSocket {
         ])
         
         if uri.scheme == "wss" {
-            let client = try container.make(BasicSSLClient.self, for: WebSocket.self)
+            let client = try container.make(TLSSocket.self, for: WebSocket.self)
             
-            parser = client.stream(to: ResponseParser(maxSize: 50_000))
+            parser = client.output(to: HTTPResponseParser(maxSize: 50_000))
             
             try client.connect(hostname: hostname, port: port).do {
                 client.finally {
