@@ -22,7 +22,7 @@ extension RedisClient {
         // The client cannot be used for other commands now
         self.isSubscribed = true
 
-        return SubscriptionStream(reading: self.stream)
+        return SubscriptionStream(reading: self.stream.parser)
     }
     
     /// Publishes the message to a channels

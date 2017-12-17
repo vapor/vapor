@@ -16,7 +16,7 @@ final class RedisDataStream: Stream, ConnectionContext {
     private var requestQueue: [RedisData]
 
     /// Parses redis data from binary
-    private let parser: RedisDataParser
+    let parser: RedisDataParser
 
     /// Serializes redis data to binary
     private let serializer: RedisDataSerializer
@@ -60,12 +60,14 @@ final class RedisDataStream: Stream, ConnectionContext {
         case .connect(let upstream):
             self.upstream = upstream
         case .next(let input):
-            let promise = responseQueue.popLast()!
-            promise.complete(input)
+            if let promise = responseQueue.popLast() {
+                promise.complete(input)
+            } else {
+                update()
+            }
         case .error(let error): downstream?.error(error)
         case .close: downstream?.close()
         }
-        update()
     }
 
     /// See ConnectionContext.connection

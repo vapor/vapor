@@ -36,7 +36,7 @@ class RedisTests: XCTestCase {
         let promise = Promise<RedisData>()
         let listener = try makeClient()
 
-        listener.subscribe(to: ["test", "test2"]).drain { req in
+        _ = listener.subscribe(to: ["test", "test2"]).drain { req in
             req.request()
         }.output { input in
             promise.complete(input.message)

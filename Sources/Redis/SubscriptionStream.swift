@@ -3,7 +3,7 @@ import Async
 /// Outputs all notifications for a listening client's channels
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
-public final class SubscriptionStream: Async.Stream {
+public final class SubscriptionStream: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     public typealias Input = RedisData
     
@@ -17,13 +17,25 @@ public final class SubscriptionStream: Async.Stream {
     private var upstream: ConnectionContext?
     
     /// Drains a Redis Client's parser of it's results
-    init(reading parser: RedisDataStream) {
+    init(reading parser: RedisDataParser) {
         self.upstream = parser
+        parser.output(to: self)
     }
     
     public func output<S>(to inputStream: S) where S : InputStream, SubscriptionStream.Output == S.Input {
         downstream = AnyInputStream(inputStream)
-        upstream.flatMap(inputStream.connect)
+        inputStream.connect(to: self)
+    }
+    
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .request(let count):
+            /// downstream has requested output
+            upstream?.request(count: count)
+        case .cancel:
+            /// FIXME: handle
+            upstream?.cancel()
+        }
     }
 
     public func input(_ event: InputEvent<RedisData>) {
@@ -57,6 +69,9 @@ public final class SubscriptionStream: Async.Stream {
         
         // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
         guard array[0].string == "message" else {
+            print(array[0].string)
+            // Request more data
+            self.request(count: 1)
             return
         }
         

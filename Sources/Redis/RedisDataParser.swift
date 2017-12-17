@@ -69,20 +69,14 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     
     /// Flushes parsed values
     private func flush() {
-        if parsingValues.count > 0 {
-            var flushed: UInt = 0
-            
-            flushing: for value in parsingValues {
-                if case .parsed(let data) = value {
-                    flushed += 1
-                    downstream?.next(data)
-                } else {
-                    break flushing
-                }
+        while parsingValues.count > 0, downstreamDemand > 0, let value = parsingValues.first {
+            guard case .parsed(let data) = value else {
+                return
             }
             
-            downstreamDemand -= flushed
-            parsingValues.removeFirst(numericCast(flushed))
+            parsingValues.removeFirst()
+            
+            downstream?.next(data)
         }
     }
 
@@ -229,8 +223,11 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
                     return .parsing(array)
                 }
                 
+                let token = input[position]
+                position += 1
+                
                 // Parse the individual nested element
-                let result = try parseToken(input[position], from: input, at: &position)
+                let result = try parseToken(token, from: input, at: &position)
                 
                 array[index] = result
             }
