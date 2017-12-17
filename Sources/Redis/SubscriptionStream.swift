@@ -69,7 +69,6 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
         
         // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
         guard array[0].string == "message" else {
-            print(array[0].string)
             // Request more data
             self.request(count: 1)
             return
