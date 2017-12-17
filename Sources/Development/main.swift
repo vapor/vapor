@@ -262,11 +262,11 @@ do {
         }
     }
     
-//    router.websocket("foo") { (req, ws) in
-//        for _ in 1...1000 {
-//            ws.send("TEST: \(Date())")
-//        }
-//    }
+    router.websocket("foo") { (req, ws) in
+        for _ in 1...1000 {
+            ws.send(string: "TEST: \(Date())")
+        }
+    }
 
     router.get("first") { req -> Future<User> in
         return try User.query(on: req).filter(\User.name == "Vapor").first().map(to: User.self) { user in

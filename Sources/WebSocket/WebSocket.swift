@@ -10,10 +10,10 @@ import TCP
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
 public class WebSocket {
     /// A stream of strings received from the remote
-    let stringOutputStream: MapStream<Frame, String?>
+    let stringOutputStream: EmitterStream<String>
     
     /// A stream of binary data received from the remote
-    let binaryOutputStream: MapStream<Frame, ByteBuffer>
+    let binaryOutputStream: EmitterStream<ByteBuffer>
     
     var backlog: [Frame]
     
@@ -24,6 +24,8 @@ public class WebSocket {
     let parser: FrameParser
     
     let server: Bool
+    
+    var errorCallback: (Error) -> () = { _ in }
     
     /// The underlying communication layer
     let socket: AnyStream<ByteBuffer, ByteBuffer>
@@ -42,17 +44,38 @@ public class WebSocket {
         self.socket = socket
         self.server = server
         
-        self.stringOutputStream = MapStream<Frame, String?> { frame in
-            let data = Data(buffer: frame.buffer)
-            return String(data: data, encoding: .utf8)
-        }
+        serializer.output(to: socket)
         
-        self.binaryOutputStream = MapStream<Frame, ByteBuffer> { frame in
-            return ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count)
-        }
+        self.stringOutputStream = EmitterStream<String>()
+        self.binaryOutputStream = EmitterStream<ByteBuffer>()
         
         func bindFrameStreams() {
-            stream
+            socket.stream(to: parser).drain { upstream in
+                upstream.request(count: .max)
+            }.output { frame in
+                switch frame.opCode {
+                case .close:
+                    socket.close()
+                case .text:
+                    let data = Data(buffer: frame.payload)
+                    
+                    guard let string = String(data: data, encoding: .utf8) else {
+                        throw WebSocketError(.invalidFrame)
+                    }
+                    
+                    self.stringOutputStream.emit(string)
+                case .continuation, .binary:
+                    let buffer = ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count)
+                    
+                    self.binaryOutputStream.emit(buffer)
+                case .ping:
+                    let frame = Frame(op: .pong, payload: frame.payload, mask: self.nextMask)
+                    self.serializer.queue(frame)
+                case .pong: break
+                }
+            }.catch(onError: self.errorCallback).finally {
+                socket.close()
+            }
         }
         
         if server {
@@ -78,53 +101,61 @@ public class WebSocket {
         }
     }
     
+    var nextMask: [UInt8]? {
+        return self.server ? nil : randomMask()
+    }
+    
+    public func send(string: String) {
+        Data(string.utf8).withByteBuffer { bytes in
+            let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+            serializer.queue(frame)
+        }
+    }
+    
+    public func send(data: Data) {
+        data.withByteBuffer { bytes in
+            let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+            serializer.queue(frame)
+        }
+    }
+    
+    public func send(bytes: ByteBuffer) {
+        let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+        serializer.queue(frame)
+    }
+    
+    
+    @discardableResult
+    public func onData(_ run: @escaping (WebSocket, Data) throws -> ()) -> DrainStream<ByteBuffer> {
+        return binaryOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { bytes in
+            let data = Data(buffer: bytes)
+            try run(self, data)
+        }
+    }
+    
+    
+    @discardableResult
+    public func onByteBuffer(_ run: @escaping (WebSocket, ByteBuffer) throws -> ()) -> DrainStream<ByteBuffer> {
+        return binaryOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { bytes in
+            try run(self, bytes)
+        }
+    }
+    
+    @discardableResult
+    public func onString(_ run: @escaping (WebSocket, String) throws -> ()) -> DrainStream<String> {
+        return stringOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { string in
+            try run(self, string)
+        }
+    }
+    
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
         socket.close()
     }
-}//extension WebSocket {
-//    /// A helper that processes a frame and directs it to the proper handler.
-//    ///
-//    /// Automatically replies to `ping` and automatically handles `close`
-//    func processFrame(_ frame: Frame) {
-//        // Unmasks the data so it's readable
-//        frame.unmask()
-//
-//        func processString() {
-//            // If this is an UTF-8 invalid string
-//            guard let string = frame.payload.string() else {
-//                self.connection.close()
-//                return
-//            }
-//
-//            // Stream to the textStream's listener
-//            self.textStream.outputStream.onInput(string)
-//        }
-//
-//        func processBinary() {
-//            // Stream to the binaryStream's listener
-//            self.binaryStream.outputStream.onInput(frame.payload)
-//        }
-//
-//        switch frame.opCode {
-//        case .text:
-//            processString()
-//        case .binary:
-//            processBinary()
-//        case .ping:
-//            do {
-//                // reply the input
-//                let pongFrame = try Frame(op: .pong , payload: frame.payload, mask: frame.maskBytes, isMasked: self.connection.serverSide)
-//                self.connection.onInput(pongFrame)
-//            } catch {
-//                self.connection.onError(error)
-//            }
-//        case .continuation:
-//            processBinary()
-//        case .close:
-//            self.connection.close()
-//        case .pong:
-//            return
-//        }
-//    }
-//}
+}

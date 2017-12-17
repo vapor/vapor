@@ -129,7 +129,7 @@ final class FrameParser: ProtocolParserStream {
         
         if frameSize == accumulated {
             let payload = ByteBuffer(start: bufferBuilder.advanced(by: header.consumed), count: accumulated &- header.consumed)
-            let frame = try Frame(op: header.op, payload: payload, mask: header.mask, isMasked: header.mask != nil, isFinal: header.final)
+            let frame = Frame(op: header.op, payload: payload, mask: header.mask, isMasked: header.mask != nil, isFinal: header.final)
             accumulated = 0
             flush(frame)
         }

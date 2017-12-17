@@ -122,11 +122,11 @@ final class Frame {
     }
     
     /// Creates a new payload by referencing the original payload.
-    init(op: OpCode, payload: ByteBuffer, mask: [UInt8]?, isMasked: Bool = false, isFinal: Bool = true) throws {
+    init(op: OpCode, payload: ByteBuffer, mask: [UInt8]?, isMasked: Bool = false, isFinal: Bool = true) {
         if !isFinal {
             // Only binary and continuation frames can be not final
             guard op == .binary || op == .continuation else {
-                throw WebSocketError(.invalidFrameParameters)
+                fatalError("Only binary frames can be non-final")
             }
         }
         
@@ -184,7 +184,7 @@ final class Frame {
             // Masks must be 4 bytes
             guard mask.count == 4 else {
                 self.buffer.dealloc()
-                throw WebSocketError(.invalidMask)
+                fatalError("Invalid mask generated")
             }
             
             // If the data is already masked

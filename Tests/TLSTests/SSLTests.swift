@@ -10,7 +10,7 @@ class SSLTests: XCTestCase {
     func testClientBlocking() { do { try _testClientBlocking() } catch { XCTFail("\(error)") } }
     func _testClientBlocking() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: false)
-        let tcpClient = try TCPClient(socket: tcpSocket)
+        let tcpClient = TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
         let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
         try tlsClient.connect(hostname: "google.com", port: 443)
@@ -25,7 +25,7 @@ class SSLTests: XCTestCase {
     func testClient() { do { try _testClient() } catch { XCTFail("\(error)") } }
     func _testClient() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
-        let tcpClient = try TCPClient(socket: tcpSocket)
+        let tcpClient =  TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
         // let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
         let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)

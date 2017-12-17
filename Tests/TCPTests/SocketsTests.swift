@@ -59,7 +59,7 @@ class SocketsTests: XCTestCase {
         var num = 1024
         for _ in 0..<num {
             let clientSocket = try TCPSocket(isNonBlocking: false)
-            let client = try TCPClient(socket: clientSocket)
+            let client = TCPClient(socket: clientSocket)
             try client.connect(hostname: "localhost", port: 8338)
             let write = Data("hello".utf8)
             _ = try client.socket.write(write)

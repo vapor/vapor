@@ -8,7 +8,7 @@ import XCTest
 class HTTPClientTests: XCTestCase {
     func testTCP() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
-        let tcpClient = try TCPClient(socket: tcpSocket)
+        let tcpClient = TCPClient(socket: tcpSocket)
         try tcpClient.connect(hostname: "httpbin.org", port: 80)
         let tcpStream = tcpSocket.stream(on: DispatchQueue(label: "codes.vapor.http.test.client"))
         let client = HTTPClient(byteStream: tcpStream)
