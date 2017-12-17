@@ -29,13 +29,24 @@ class ValidationTests: XCTestCase {
     
     func testCount() throws {
         try IsCount(-5...5).validate(.int(4))
+        try IsCount(-5...5).validate(.int(5))
+        try IsCount(-5...5).validate(.int(-5))
         XCTAssertThrowsError(try IsCount(-5...5).validate(.int(6))) { XCTAssert($0 is ValidationError) }
-        
+        XCTAssertThrowsError(try IsCount(-5...5).validate(.int(-6))) { XCTAssert($0 is ValidationError) }
+
         try IsCount(5...).validate(.uint(UInt.max))
         try IsCount(...(UInt.max - 100)).validate(.int(Int.min))
+        
+        XCTAssertThrowsError(try IsCount(...Int.max).validate(.uint(UInt.max))) { XCTAssert($0 is ValidationError) }
 
         try IsCount(-5...5).validate(.uint(4))
         XCTAssertThrowsError(try IsCount(-5...5).validate(.uint(6))) { XCTAssert($0 is ValidationError) }
+        
+        try IsCount(-5..<6).validate(.int(-5))
+        try IsCount(-5..<6).validate(.int(-4))
+        try IsCount(-5..<6).validate(.int(5))
+        XCTAssertThrowsError(try IsCount(-5..<6).validate(.int(-6))) { XCTAssert($0 is ValidationError) }
+        XCTAssertThrowsError(try IsCount(-5..<6).validate(.int(6))) { XCTAssert($0 is ValidationError) }
     }
     
     static var allTests = [
