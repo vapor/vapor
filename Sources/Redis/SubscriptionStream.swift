@@ -10,7 +10,7 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
     /// See OutputStream.Output
     public typealias Output = ChannelMessage
     
-    /// Use a basic output stream to implement server output stream.
+    /// The downstream, listening for messages
     private var downstream: AnyInputStream<ChannelMessage>?
     
     /// The upstream output stream supplying redis data

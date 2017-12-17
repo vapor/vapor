@@ -10,16 +10,16 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
     /// See OutputStream.RedisData
     typealias Output = RedisData
     
-    /// The in-progress parsing value
+    /// The in-progress parsing values
+    ///
+    /// An array, for when a single TCP message has > 1 entity
     var parsingValues: [PartialRedisData]
     
-    private var lastPartialFinal = true
+    /// The upstream providing byte buffers
+    private var upstream: ConnectionContext?
     
     /// Use a basic output stream to implement server output stream.
     private var downstream: AnyInputStream<Output>?
-
-    /// The upstream providing byte buffers
-    private var upstream: ConnectionContext?
 
     /// Remaining downstream demand
     private var downstreamDemand: UInt
@@ -300,7 +300,7 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
         
         // Continues parsing while there are still pending requests
         repeat {
-            if lastPartialFinal || self.parsingValues.count == 0 {
+            if self.parsingValues.count == 0 {
                 value = .notYetParsed
             } else {
                 value = self.parsingValues.removeLast()
@@ -318,6 +318,7 @@ internal final class RedisDataParser: Async.Stream, ConnectionContext {
 enum RedisDataParserState {
     /// normal state
     case ready
+    
     /// waiting for data from upstream
     case awaitingUpstream
 }

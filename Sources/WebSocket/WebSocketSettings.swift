@@ -47,6 +47,14 @@ public struct WebSocketSettings {
     }
 }
 
+enum WebSocketMode {
+    case server, client
+    
+    var masking: Bool {
+        return self == .client
+    }
+}
+
 extension String {
     var isSecure: Bool {
         return self == "https" || self == "wss"
