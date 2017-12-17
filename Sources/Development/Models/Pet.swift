@@ -15,7 +15,7 @@ final class Pet: Model {
 
     var id: UUID?
     var name: String
-    var ownerID: User.ID
+    var ownerID: User.ID?
 
     init(id: UUID? = nil, name: String, ownerID: User.ID) {
         self.id = id
@@ -39,7 +39,7 @@ extension Pet: Migration {
         return connection.create(self) { schema in
             try schema.field(for: \.id)
             try schema.field(for: \.name)
-            try schema.field(for: \.ownerID)
+            try schema.field(for: \.ownerID, referencing: \User.id, onDelete: .setNull)
         }
     }
     
