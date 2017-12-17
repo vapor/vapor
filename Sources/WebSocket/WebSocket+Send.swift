@@ -1,6 +1,6 @@
-//import COperatingSystem
-//import Async
-//import Bits
+import COperatingSystem
+import Async
+import Bits
 //
 ///// Serializes frames to binary
 //final class FrameSerializer : Async.Stream {
@@ -54,21 +54,21 @@
 //        outputStream.onClose(onClose)
 //    }
 //}
-//
-///// Generates a random mask for client sockets
-//func randomMask() -> [UInt8] {
-//    var buffer: [UInt8] = [0,0,0,0]
-//    
-//    var number: UInt32
-//    
-//    #if os(Linux)
-//        number = numericCast(COperatingSystem.random() % Int(UInt32.max))
-//    #else
-//        number = arc4random_uniform(UInt32.max)
-//    #endif
-//    
-//    memcpy(&buffer, &number, 4)
-//    
-//    return buffer
-//}
+
+/// Generates a random mask for client sockets
+func randomMask() -> [UInt8] {
+    var buffer: [UInt8] = [0,0,0,0]
+    
+    var number: UInt32
+    
+    #if os(Linux)
+        number = numericCast(COperatingSystem.random() % Int(UInt32.max))
+    #else
+        number = arc4random_uniform(UInt32.max)
+    #endif
+    
+    memcpy(&buffer, &number, 4)
+    
+    return buffer
+}
 

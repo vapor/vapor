@@ -20,7 +20,7 @@ public final class TCPClient {
     public var willClose: WillClose?
 
     /// Creates a new TCPClient from an existing TCPSocket.
-    public init(socket: TCPSocket) throws {
+    public init(socket: TCPSocket) {
         self.socket = socket
         self.socket.disablePipeSignal()
     }

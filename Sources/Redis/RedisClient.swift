@@ -49,7 +49,7 @@ extension RedisClient {
         on eventLoop: EventLoop
     ) throws -> RedisClient {
         let socket = try TCPSocket(isNonBlocking: true)
-        let client = try TCPClient(socket: socket)
+        let client = TCPClient(socket: socket)
         try client.connect(hostname: hostname, port: port)
         return RedisClient(byteStream: client.stream(on: eventLoop))
     }

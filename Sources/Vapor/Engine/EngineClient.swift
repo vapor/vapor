@@ -45,7 +45,7 @@ public final class EngineClient: Client {
         } else {
             return Future {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
-                let tcpClient = try TCPClient(socket: tcpSocket)
+                let tcpClient = TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
                 let byteStream = tcpClient.stream(on: self.container)
                 let client = HTTPClient(byteStream: byteStream, maxResponseSize: self.config.maxResponseSize)

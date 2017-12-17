@@ -15,16 +15,15 @@ public class WebSocket {
     /// A stream of binary data received from the remote
     let binaryOutputStream: MapStream<Frame, ByteBuffer>
     
+    var backlog: [Frame]
+    
     /// Serializes data into frames
-    let serializer: FrameSerializer
+//    let serializer: FrameSerializer
     
     /// Parses frames from data
     let parser: FrameParser
     
-    /// Defines the side of the socket
-    ///
-    /// Server side Sockets don't use masking
-    let mode: WebSocketMode
+    let server: Bool
     
     /// The underlying communication layer
     let socket: AnyStream<ByteBuffer, ByteBuffer>
@@ -37,11 +36,13 @@ public class WebSocket {
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
     init(socket: AnyStream<ByteBuffer, ByteBuffer>, server: Bool = true)
     {
+        self.backlog = []
         self.parser = socket.stream(to: FrameParser())
-        self.serializer = FrameSerializer(masking: !server)
+//        self.serializer = FrameSerializer(masking: !server)
         self.socket = socket
+        self.server = server
         
-        serializer.output(to: socket)
+//        serializer.output(to: socket)
         
         self.stringOutputStream = MapStream<Frame, String?> { frame in
             let data = Data(buffer: frame.buffer)
@@ -52,19 +53,31 @@ public class WebSocket {
             return ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count)
         }
         
-//        parser.drain { frame in
-//            switch frame.opCode {
-//            case .close:
-//                self.connection.close()
-//            case .ping:
-//                frame.opCode = .pong
-//
-//                // Invert the remote's mask
-//                // If the remote is a server, we're the client and vice versa
-//                frame.toggleMask()
-//                self.connection.in
-//            }
-//        }.stream(to: self.connection)
+        func bindFrameStreams() {
+            
+        }
+        
+        if server {
+            bindFrameStreams()
+        } else {
+            // Generates the UUID that will make up the WebSocket-Key
+            let id = OSRandom().data(count: 16).base64EncodedString()
+            
+            // Creates an HTTP client for the handshake
+            let HTTPSerializer = HTTPRequestSerializer().stream()
+            
+            let HTTPParser = HTTPResponseParser(maxSize: 50_000).stream()
+            
+            HTTPSerializer.output(to: socket)
+            
+            let drain = DrainStream<HTTPResponse>(onInput: { response in
+                try WebSocket.upgrade(response: response, id: id)
+                
+                bindFrameStreams()
+            })
+            
+            socket.stream(to: HTTPParser).output(to: drain)
+        }
     }
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection

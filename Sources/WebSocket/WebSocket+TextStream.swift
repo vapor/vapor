@@ -51,15 +51,11 @@ extension WebSocket {
     /// Sends a string to the server
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
-    public func send(_ string: String) {
-        Data(string.utf8).withByteBuffer { buffer in
-            let mask: [UInt8]?
+    public func send(_ string: String) throws {
+        try Data(string.utf8).withByteBuffer { buffer in
+            let mask: [UInt8]? = self.server ? nil : randomMask()
             
-            if self.mode == .client {
-                mask = randomMask()
-            }
-            
-            let frame = Frame(op: .text, payload: buffer, mask: mask)
+            let frame = try Frame(op: .text, payload: buffer, mask: mask)
             
             self.backlog.append(frame)
         }
@@ -70,7 +66,7 @@ extension WebSocket {
     /// Any previously listening closures will be overridden
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
-    public func onText(_ closure: @escaping ((String) -> ())) -> AnyInputStream<String> {
-        self.stringOutputStream
-    }
+//    public func onText(_ closure: @escaping ((String) -> ())) -> AnyInputStream<String> {
+//        self.stringOutputStream
+//    }
 }

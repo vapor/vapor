@@ -45,6 +45,11 @@ final class FrameParser: ProtocolTransformationStream {
     
     public init(maximumPayloadSize: Int = 100_000) {
         self.maximumPayloadSize = maximumPayloadSize
+        self.consumedBacklog = 0
+        self.downstreamDemand = 0
+        self.state = .ready
+        self.backlog = []
+        
         // 2 for the header, 9 for the length, 4 for the mask
         self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)
     }

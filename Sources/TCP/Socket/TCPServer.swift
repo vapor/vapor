@@ -42,7 +42,7 @@ public struct TCPServer {
         let accepted = try socket.accept()
 
         /// init a tcp client with the socket and assign it an event loop
-        let client = try TCPClient(socket: accepted)
+        let client = TCPClient(socket: accepted)
 
         /// check the will accept closure to approve this connection
         if let shouldAccept = willAccept, !shouldAccept(client) {
