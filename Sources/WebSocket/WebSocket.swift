@@ -38,11 +38,9 @@ public class WebSocket {
     {
         self.backlog = []
         self.parser = socket.stream(to: FrameParser())
-//        self.serializer = FrameSerializer(masking: !server)
+        self.serializer = FrameSerializer(masking: !server)
         self.socket = socket
         self.server = server
-        
-//        serializer.output(to: socket)
         
         self.stringOutputStream = MapStream<Frame, String?> { frame in
             let data = Data(buffer: frame.buffer)
@@ -84,13 +82,49 @@ public class WebSocket {
     public func close() {
         socket.close()
     }
-}
-
-/// Various states a WebSocket stream can be in
-enum WebSocketStreamState {
-    /// normal state
-    case ready
-    
-    /// waiting for data from upstream
-    case awaitingUpstream
-}
+}//extension WebSocket {
+//    /// A helper that processes a frame and directs it to the proper handler.
+//    ///
+//    /// Automatically replies to `ping` and automatically handles `close`
+//    func processFrame(_ frame: Frame) {
+//        // Unmasks the data so it's readable
+//        frame.unmask()
+//
+//        func processString() {
+//            // If this is an UTF-8 invalid string
+//            guard let string = frame.payload.string() else {
+//                self.connection.close()
+//                return
+//            }
+//
+//            // Stream to the textStream's listener
+//            self.textStream.outputStream.onInput(string)
+//        }
+//
+//        func processBinary() {
+//            // Stream to the binaryStream's listener
+//            self.binaryStream.outputStream.onInput(frame.payload)
+//        }
+//
+//        switch frame.opCode {
+//        case .text:
+//            processString()
+//        case .binary:
+//            processBinary()
+//        case .ping:
+//            do {
+//                // reply the input
+//                let pongFrame = try Frame(op: .pong , payload: frame.payload, mask: frame.maskBytes, isMasked: self.connection.serverSide)
+//                self.connection.onInput(pongFrame)
+//            } catch {
+//                self.connection.onError(error)
+//            }
+//        case .continuation:
+//            processBinary()
+//        case .close:
+//            self.connection.close()
+//        case .pong:
+//            return
+//        }
+//    }
+//}

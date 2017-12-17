@@ -5,7 +5,7 @@ import Foundation
 /// A stream of incoming and outgoing strings between 2 parties over WebSockets
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/text-stream/)
-final class StringStream: ProtocolTransformationStream {
+final class StringStream: ProtocolParserStream {
     typealias Input = Frame
     typealias Output = String
     

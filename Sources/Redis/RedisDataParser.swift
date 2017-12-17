@@ -3,7 +3,7 @@ import Bits
 import Foundation
 
 /// A streaming Redis value parser
-internal final class RedisDataParser: ProtocolTransformationStream {
+internal final class RedisDataParser: ProtocolParserStream {
     /// See InputStream.Input
     typealias Input = ByteBuffer
     

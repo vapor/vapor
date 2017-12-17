@@ -3,7 +3,7 @@ import Foundation
 import COperatingSystem
 import Bits
 
-final class FrameParser: ProtocolTransformationStream {
+final class FrameParser: ProtocolParserStream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
     
