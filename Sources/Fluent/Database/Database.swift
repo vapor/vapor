@@ -14,13 +14,13 @@ public protocol Database {
     /// execute callbacks on the supplied dispatch queue.
     func makeConnection(
         from config: Connection.Config,
-        on eventloop: EventLoop
+        on Worker: Worker
     ) -> Future<Connection>
 }
 
 extension Database {
     /// Create a fluent connection pool for this database.
-    public func makeConnectionPool(max: UInt, using config: Connection.Config, on eventLoop: EventLoop) -> DatabaseConnectionPool<Self> {
-        return DatabaseConnectionPool(max: max, database: self, using: config, on: eventLoop)
+    public func makeConnectionPool(max: UInt, using config: Connection.Config, on Worker: Worker) -> DatabaseConnectionPool<Self> {
+        return DatabaseConnectionPool(max: max, database: self, using: config, on: Worker)
     }
 }

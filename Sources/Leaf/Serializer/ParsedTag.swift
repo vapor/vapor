@@ -16,20 +16,20 @@ public struct ParsedTag {
     public let source: Source
 
     /// Queue to complete futures on.
-    public let eventLoop: EventLoop
+    public let worker: Worker
 
     init(
         name: String,
         parameters: [LeafData],
         body: [Syntax]?,
         source: Source,
-        on eventLoop: EventLoop
+        on Worker: Worker
     ) {
         self.name = name
         self.parameters = parameters
         self.body = body
         self.source = source
-        self.eventLoop = eventLoop
+        self.Worker = Worker
     }
 }
 

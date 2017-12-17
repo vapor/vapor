@@ -4,19 +4,19 @@ import Dispatch
 
 /// A worker is any type that contains a reference
 /// to an Event Loop.
-// public protocol Worker: EventLoop, Container {}
+// public protocol Worker: Worker, Container {}
 //
 ///// A basic worker.
 //public final class BasicWorker: Worker {
-//    /// See Worker.eventLoop
-//    public let eventLoop: EventLoop
+//    /// See Worker.Worker
+//    public let worker: Worker
 //
 //    /// See Worker.container
 //    public let container: Container
 //
-//    /// See EventLoop.queue
+//    /// See Worker.queue
 //    public var queue: DispatchQueue {
-//        return eventLoop.queue
+//        return Worker.queue
 //    }
 //
 //    /// See Container.config
@@ -40,8 +40,8 @@ import Dispatch
 //    }
 //
 //    /// Create a new basic worker
-//    public init(eventLoop: EventLoop, container: Container) {
-//        self.eventLoop = eventLoop
+//    public init(Worker: Worker, container: Container) {
+//        self.Worker = Worker
 //        self.container = container
 //    }
 //}

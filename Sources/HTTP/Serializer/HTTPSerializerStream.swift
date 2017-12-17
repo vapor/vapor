@@ -89,7 +89,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
             state = .awaitingMessage
         case .awaitingMessage: break
         case .messageReady(let message):
-            serializer.message = message
+            serializer.setMessage(to: message)
             state = .messageStreaming(message.body)
             update()
         case .messageStreaming(let body):
@@ -101,7 +101,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
             remainingByteBuffersRequested -= 1
 
             /// the serializer indicates it is done w/ this message
-            if serializer.message == nil {
+            if serializer.ready {
                 /// handle the body separately
                 state = .bodyReady(body)
             }

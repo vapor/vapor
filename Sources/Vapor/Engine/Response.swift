@@ -14,7 +14,7 @@ public final class Response: EphemeralContainer {
     /// This response's worker
     public let superContainer: Container
 
-    /// See EventLoop.queue
+    /// See Worker.queue
     public var queue: DispatchQueue {
         return superContainer.queue
     }
@@ -102,7 +102,7 @@ public final class Response: EphemeralContainer {
 extension Response {
     /// The response's event loop container.
     /// note: convenience name for `.superContainer`
-    public var eventLoop: Container {
+    public var worker: Container {
         return superContainer
     }
 

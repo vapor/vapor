@@ -1,5 +1,22 @@
 import HTTP
+import Bits
 import XCTest
+
+extension HTTPSerializer {
+    func serialize() throws -> Data {
+        var data = Data(count: 4096)
+        var count = 0
+        
+        try data.withMutableByteBuffer { buffer in
+            while !self.ready {
+                let buffer = MutableByteBuffer(start: buffer.baseAddress?.advanced(by: count), count: data.count - count)
+                count += try self.serialize(into: buffer)
+            }
+        }
+        
+        return data[..<count]
+    }
+}
 
 class HTTPSerializerTests: XCTestCase {
     func testRequest() throws {
@@ -10,7 +27,7 @@ class HTTPSerializerTests: XCTestCase {
         )
 
         let serializer = HTTPRequestSerializer()
-        serializer.message = request
+        serializer.setMessage(to: request)
 
         let expected = """
         POST /foo HTTP/1.1\r
@@ -19,12 +36,10 @@ class HTTPSerializerTests: XCTestCase {
 
         """
 
-        var buffer = Data(count: 4096)
-        let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
-        XCTAssertNil(serializer.message)
-        XCTAssertEqual(serialized, 41)
-        let chunk = Data(buffer[0..<serialized])
-        XCTAssertEqual(expected, String(data: chunk, encoding: .utf8))
+        let serialized = try serializer.serialize()
+        XCTAssert(serializer.ready)
+        XCTAssertEqual(serialized.count, 41)
+        XCTAssertEqual(expected, String(data: serialized, encoding: .utf8))
     }
 
     func testRequestChunked() throws {
@@ -35,7 +50,7 @@ class HTTPSerializerTests: XCTestCase {
         )
 
         let serializer = HTTPRequestSerializer()
-        serializer.message = request
+        serializer.setMessage(to: request)
 
         let expected = """
         POST /foo HTTP/1.1\r
@@ -46,11 +61,10 @@ class HTTPSerializerTests: XCTestCase {
 
         var buffer = Data(count: 8) // small size here so we require multiple runs
         var output = Data()
-        while serializer.message != nil {
+        while !serializer.ready {
             let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
             output += Data(buffer[0..<serialized])
         }
-        XCTAssertNil(serializer.message)
         XCTAssertEqual(output.count, 41)
         XCTAssertEqual(expected, String(data: output, encoding: .utf8))
     }
@@ -62,7 +76,7 @@ class HTTPSerializerTests: XCTestCase {
         )
 
         let serializer = HTTPResponseSerializer()
-        serializer.message = response
+        serializer.setMessage(to: response)
 
         let expected = """
         HTTP/1.1 200 OK\r
@@ -71,12 +85,10 @@ class HTTPSerializerTests: XCTestCase {
 
         """
 
-        var buffer = Data(count: 4096)
-        let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
-        XCTAssertNil(serializer.message)
-        XCTAssertEqual(serialized, 38)
-        let chunk = Data(buffer[0..<serialized])
-        XCTAssertEqual(expected, String(data: chunk, encoding: .utf8))
+        let serialized = try serializer.serialize()
+        XCTAssert(serializer.ready)
+        XCTAssertEqual(serialized.count, 38)
+        XCTAssertEqual(expected, String(data: serialized, encoding: .utf8))
     }
 
     func testResponseChunked() throws {
@@ -86,7 +98,7 @@ class HTTPSerializerTests: XCTestCase {
         )
 
         let serializer = HTTPResponseSerializer()
-        serializer.message = response
+        serializer.setMessage(to: response)
 
         let expected = """
         HTTP/1.1 200 OK\r
@@ -97,11 +109,14 @@ class HTTPSerializerTests: XCTestCase {
 
         var buffer = Data(count: 8) // small size here so we require multiple runs
         var output = Data()
-        while serializer.message != nil {
-            let serialized = try serializer.serialize(into: buffer.withMutableByteBuffer { $0 })
-            output += Data(buffer[0..<serialized])
+        
+        try buffer.withMutableByteBuffer { buffer in
+            while !serializer.ready {
+                let serialized = try serializer.serialize(into: buffer)
+                output += Data(buffer[0..<serialized])
+            }
         }
-        XCTAssertNil(serializer.message)
+        
         XCTAssertEqual(output.count, 38)
         XCTAssertEqual(expected, String(data: output, encoding: .utf8))
     }

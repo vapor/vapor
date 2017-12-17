@@ -38,12 +38,12 @@ public final class SQLiteResults {
                 // blocking execute now that we're on the background thread
                 let row = try self.blockingFetchRow()
                 // return to event loop
-                self.connection.eventLoop.queue.async {
+                self.connection.Worker.queue.async {
                     promise.complete(row)
                 }
             } catch {
                 // return to event loop to output error
-                self.connection.eventLoop.queue.async {
+                self.connection.Worker.queue.async {
                     promise.fail(error)
                 }
             }

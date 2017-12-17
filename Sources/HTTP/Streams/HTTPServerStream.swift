@@ -6,7 +6,7 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
     where AcceptStream: OutputStream,
     AcceptStream.Output: ByteStreamRepresentable,
     Worker: HTTPResponder,
-    Worker: EventLoop
+    Worker: Worker
 {
     /// See InputStream.Input
     typealias Input = AcceptStream.Output

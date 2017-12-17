@@ -33,7 +33,7 @@ public final class Loop: LeafTag {
                     ast: body,
                     renderer: renderer,
                     context: context,
-                    on: parsed.eventLoop
+                    on: parsed.Worker
                 )
                 let subpromise = Promise(Data.self)
                 serializer.serialize().do { bytes in

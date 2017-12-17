@@ -74,20 +74,20 @@ public final class EngineServer: Server {
     
 //    private func startPlain(with responder: Responder) throws {
 //        // create a tcp server
-//        let tcp = try TCPServer(eventLoops: eventLoops.map { $0.queue }, acceptQueue: acceptQueue)
+//        let tcp = try TCPServer(Workers: Workers.map { $0.queue }, acceptQueue: acceptQueue)
 //
 //        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
 //
 //        let mapStream = MapStream<TCPClient, HTTPPeer>(map: HTTPPeer.init)
 //        let server = HTTPServer<HTTPPeer>(socket: tcp.stream(to: mapStream))
 //
-//        var eventLoopsIterator = LoopIterator<[Container]>(collection: eventLoops)
+//        var workersIterator = LoopIterator<[Container]>(collection: Workers)
 //
 //        // setup the server pipeline
 //        server.start {
 //            return ResponderStream(
 //                responder: responder,
-//                using: eventLoopsIterator.next()!
+//                using: WorkersIterator.next()!
 //            )
 //        }.catch { err in
 //            logger.reportError(err, as: "Server error")
@@ -101,16 +101,16 @@ public final class EngineServer: Server {
 
 //    private func startSSL(with responder: Responder, sslConfig: EngineServerSSLConfig) throws {
 //        // create a tcp server
-//        let tcp = try TCPServer(eventLoops: eventLoops.map { $0.queue }, acceptQueue: acceptQueue)
+//        let tcp = try TCPServer(Workers: Workers.map { $0.queue }, acceptQueue: acceptQueue)
 //        
 //        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
 //        
 //        let upgrader = try container.make(SSLPeerUpgrader.self, for: EngineServer.self)
 //        
 //        let sslStream = FutureMapStream<TCPClient, BasicSSLPeer> { client in
-//            return try client.eventLoop.queue.sync {
+//            return try client.Worker.queue.sync {
 //                client.disableReadSource()
-//                return try upgrader.upgrade(socket: client.socket, settings: sslConfig.sslSettings, eventLoop: client.eventLoop)
+//                return try upgrader.upgrade(socket: client.socket, settings: sslConfig.sslSettings, Worker: client.Worker)
 //            }
 //        }
 //        
@@ -121,13 +121,13 @@ public final class EngineServer: Server {
 //        let console = try container.make(Console.self, for: EngineServer.self)
 //        let logger = try container.make(Logger.self, for: EngineServer.self)
 //        
-//        var eventLoopsIterator = LoopIterator<[Container]>(collection: eventLoops)
+//        var workersIterator = LoopIterator<[Container]>(collection: Workers)
 //        
 //        // setup the server pipeline
 //        server.start {
 //            return ResponderStream(
 //                responder: responder,
-//                using: eventLoopsIterator.next()!
+//                using: WorkersIterator.next()!
 //            )
 //        }.catch { err in
 //            logger.reportError(err, as: "Server error")
@@ -151,7 +151,7 @@ public final class EngineServer: Server {
 //    }
 }
 
-fileprivate struct EngineWorker: HTTPResponder, EventLoop {
+fileprivate struct EngineWorker: HTTPResponder, Worker {
     var queue: DispatchQueue {
         return container.queue
     }
@@ -164,7 +164,7 @@ fileprivate struct EngineWorker: HTTPResponder, EventLoop {
         self.responder = responder
     }
 
-    func respond(to httpRequest: HTTPRequest, on eventLoop: EventLoop) throws -> Future<HTTPResponse> {
+    func respond(to httpRequest: HTTPRequest, on Worker: Worker) throws -> Future<HTTPResponse> {
         return Future {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)

@@ -6,10 +6,10 @@ import JunkDrawer
 import TCP
 import XCTest
 
-struct EchoWorker: HTTPResponder, EventLoop {
-    let queue: DispatchQueue = DispatchQueue(label: "codes.vapor.test.worker.echo")
+struct EchoWorker: HTTPResponder, Worker {
+    let loop = EventLoop()
 
-    func respond(to req: HTTPRequest, on eventLoop: EventLoop) throws -> Future<HTTPResponse> {
+    func respond(to req: HTTPRequest, on Worker: Worker) throws -> Future<HTTPResponse> {
         /// simple echo server
         return Future(.init(body: req.body))
     }
@@ -23,7 +23,16 @@ class HTTPServerTests: XCTestCase {
             acceptStream: tcpServer.stream(
                 on: DispatchQueue(label: "codes.vapor.http.test.server")
             ),
-            workers: [EchoWorker()]
+            workers: [
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+                EchoWorker(),
+            ]
         )
         server.onError = { XCTFail("\($0)") }
 
