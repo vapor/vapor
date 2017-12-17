@@ -32,57 +32,31 @@ class RedisTests: XCTestCase {
         XCTAssertEqual(result.string, "world")
     }
 
-//    func testPubSub() throws {
-//        let promise = Promise<RedisData>()
-//        let listener = try makeClient()
-//
-//        listener.subscribe(to: ["test", "test2"]).drain { data in
-//            promise.complete(data.message)
-//        }.catch(onError: promise.fail)
-//
-//        let publisher = try makeClient()
-//        let listeners = try publisher.publish("hello", to: "test").blockingAwait(timeout: .seconds(1))
-//
-//        XCTAssertEqual(listeners, 1)
-//
-//        let result = try promise.future.blockingAwait(timeout: .seconds(3))
-//
-//        XCTAssertEqual(result.string, "hello")
-//
-//        // Prevent deallocation
-//        _ = listener
-//    }
-//
-//    func testPipeline() throws {
-//        let connection = try makeClient()
-//        _ = try connection.delete(keys: ["*"]).blockingAwait(timeout: .seconds(1))
-//
-//        let pipeline = connection.makePipeline()
-//
-//        let result = try pipeline
-//            .enqueue(command: "SET", arguments: [.bulkString("hello"), .bulkString("world")])
-//            .enqueue(command: "SET", arguments: [.bulkString("hello1"), .bulkString("world")])
-//            .execute()
-//            .blockingAwait(timeout: .seconds(2))
-//
-//
-//        XCTAssertEqual(result[0].string, "+OK\r")
-//        XCTAssertEqual(result[1].string, "+OK\r")
-//
-//
-//        let deleted = try pipeline
-//            .enqueue(command: "DEL", arguments: [.bulkString("hello")])
-//            .enqueue(command: "DEL", arguments: [.bulkString("hello1")])
-//            .execute()
-//            .blockingAwait(timeout: .seconds(2))
-//
-//        XCTAssertEqual(deleted[0].int, 1)
-//        XCTAssertEqual(deleted[1].int, 1)
-//    }
-//
-//    static let allTests = [
-//        ("testCRUD", testCRUD),
-//        ("testPubSub", testPubSub),
-//        ("testPipeline", testPipeline),
-//    ]
+    func testPubSub() throws {
+        let promise = Promise<RedisData>()
+        let listener = try makeClient()
+
+        listener.subscribe(to: ["test", "test2"]).drain { req in
+            req.request()
+        }.output { input in
+            promise.complete(input.message)
+        }.catch(onError: promise.fail)
+
+        let publisher = try makeClient()
+        let listeners = try publisher.publish("hello", to: "test").blockingAwait(timeout: .seconds(1))
+
+        XCTAssertEqual(listeners, 1)
+
+        let result = try promise.future.blockingAwait(timeout: .seconds(3))
+
+        XCTAssertEqual(result.string, "hello")
+
+        // Prevent deallocation
+        _ = listener
+    }
+    
+    static let allTests = [
+        ("testCRUD", testCRUD),
+        ("testPubSub", testPubSub),
+    ]
 }

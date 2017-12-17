@@ -32,6 +32,7 @@ final class RedisDataSerializer: Async.Stream {
         case .next(let input):
             let data = input.serialize()
             lastMessage = data
+            // FIXME: More performant serialization?
             data.withByteBuffer { buffer in
                 self.downstream?.next(buffer)
             }
@@ -44,23 +45,6 @@ final class RedisDataSerializer: Async.Stream {
         upstream.flatMap(inputStream.connect)
     }
 }
-
-//extension RedisDataSerializer {
-//    /// Used for pipelining commands
-//    /// Concatenates commands to RedisData for the outputStream
-//    func onInput(_ input: [RedisData]) {
-//        /// FIXME: should we make a `PipelinedDataSerializer` that properly conforms?
-//        var buffer = Data()
-//        for item in input {
-//            buffer.append(contentsOf: item.serialize())
-//        }
-//        buffer.withUnsafeBytes { (pointer: BytesPointer) in
-//            let buffer = ByteBuffer(start: pointer, count: buffer.count)
-//            downstream?.next(buffer)
-//        }
-//    }
-//    
-//}
 
 /// Static "fast" route for serializing `null` values
 fileprivate let nullData = Data("$-1\r\n".utf8)

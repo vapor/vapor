@@ -12,7 +12,7 @@ public final class RedisClient {
     internal var isSubscribed = false
 
     /// Underlying redis data stream.
-    private let stream: RedisDataStream
+    let stream: RedisDataStream
 
     /// Creates a new Redis client on the provided connection
     public init<ByteStream>(byteStream: ByteStream) where

@@ -1,56 +1,68 @@
-//import Async
-//
-///// Outputs all notifications for a listening client's channels
-/////
-///// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
-//public final class SubscriptionStream: Async.OutputStream {
-//    /// See OutputStream.Output
-//    public typealias Output = ChannelMessage
-//
-//    /// Use a basic output stream to implement output stream.
-//    private var outputStream: BasicStream<Output> = .init()
-//    
-//    /// Drains a Redis Client's parser of it's results
-//    init(reading parser: DataParser) {
-//        parser.drain { data in
-//            // Extracts the notification from this message
-//            //
-//            // - The type of notification
-//            // - The channel on which the notification is emitted
-//            // - The notification's payload
-//            guard
-//                let array = data.array,
-//                array.count == 3,
-//                let channel = array[1].string
-//            else {
-//                self.outputStream.onError(RedisError(.unexpectedResult(data)))
-//                return
-//            }
-//            
-//            // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
-//            guard array[0].string == "message" else {
-//                return
-//            }
-//            
-//            let message = ChannelMessage(channel: channel, message: array[2])
-//            
-//            self.outputStream.onInput(message)
-//        }.catch(onError: outputStream.onError)
-//    }
-//
-//    /// See OutputStream.onOutput
-//    public func onOutput<I>(_ input: I) where I : InputStream, SubscriptionStream.Output == I.Input {
-//        outputStream.onOutput(input)
-//    }
-//    
-//    /// See CloseableStream.close
-//    public func close() {
-//        outputStream.close()
-//    }
-//
-//    /// See CloseableStream.onClose
-//    public func onClose(_ onClose: ClosableStream) {
-//        outputStream.onClose(onClose)
-//    }
-//}
+import Async
+
+/// Outputs all notifications for a listening client's channels
+///
+/// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
+public final class SubscriptionStream: Async.Stream {
+    /// See InputStream.Input
+    public typealias Input = RedisData
+    
+    /// See OutputStream.Output
+    public typealias Output = ChannelMessage
+    
+    /// Use a basic output stream to implement server output stream.
+    private var downstream: AnyInputStream<ChannelMessage>?
+    
+    /// The upstream output stream supplying redis data
+    private var upstream: ConnectionContext?
+    
+    /// Drains a Redis Client's parser of it's results
+    init(reading parser: RedisDataStream) {
+        self.upstream = parser
+    }
+    
+    public func output<S>(to inputStream: S) where S : InputStream, SubscriptionStream.Output == S.Input {
+        downstream = AnyInputStream(inputStream)
+        upstream.flatMap(inputStream.connect)
+    }
+
+    public func input(_ event: InputEvent<RedisData>) {
+        switch event {
+        case .close: downstream?.close()
+        case .error(let error):
+            downstream?.error(error)
+        case .connect(let upstream):
+            self.upstream = upstream
+            downstream?.connect(to: upstream)
+        case .next(let input):
+            process(input)
+        }
+    }
+    
+    func process(_ data: RedisData) {
+        // Extracts the notification from this message
+        //
+        // - The type of notification
+        // - The channel on which the notification is emitted
+        // - The notification's payload
+        guard
+            let array = data.array,
+            array.count == 3,
+            let channel = array[1].string
+        else {
+            self.downstream?.error(RedisError(.unexpectedResult(data)))
+            self.close()
+            return
+        }
+        
+        // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
+        guard array[0].string == "message" else {
+            return
+        }
+        
+        let message = ChannelMessage(channel: channel, message: array[2])
+        
+        self.downstream?.next(message)
+    }
+}
 
