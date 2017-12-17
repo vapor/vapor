@@ -7,6 +7,7 @@ public enum ValidationData {
     case uint(UInt)
     case bool(Bool)
     case data(Data)
+    case date(Date)
     case double(Double)
     case array([ValidationData])
     case dictionary([String: ValidationData])
@@ -116,6 +117,13 @@ extension Data: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         return .data(self)
+    }
+}
+
+extension Date: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .date(self)
     }
 }
 
