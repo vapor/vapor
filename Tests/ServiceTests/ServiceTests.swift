@@ -56,6 +56,25 @@ class ServiceTests: XCTestCase {
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
     }
+    
+    func testTagDisambiguation() throws {
+        var config = Config()
+        config.prefer(ConfigurableLog.self, tagged: "foo1", for: Log.self)
+        
+        var services = Services()
+        services.register(Log.self, tag: "foo1") { _ -> ConfigurableLog in ConfigurableLog(config: "foo1") }
+        services.register(Log.self, tag: "foo2") { _ -> ConfigurableLog in ConfigurableLog(config: "foo2") }
+        
+        let container = BasicContainer(
+        	config: config,
+         	environment: .production,
+            services: services,
+            on: DispatchQueue.global()
+        )
+        let log = try container.make(Log.self, for: ServiceTests.self)
+        
+        XCTAssertEqual((log as? ConfigurableLog)?.myConfig, "foo1")
+    }
 
     func testClient() throws {
         var config = Config()
@@ -119,16 +138,18 @@ class ServiceTests: XCTestCase {
             services: services,
             on: DispatchQueue.global()
         )
-        do {
-            _ = try container.make(Log.self, for: ServiceTests.self)
-            XCTFail("Should not have resolved.")
-        } catch {
-            print("\(error)")
-        }
+        XCTAssertThrowsError(_ = try container.make(Log.self, for: ServiceTests.self), "Should not have resolved")
     }
 
     static var allTests = [
         ("testHappyPath", testHappyPath),
+        ("testMultiple", testMultiple),
+        ("testTagged", testTagged),
+        ("testTagDisambiguation", testTagDisambiguation),
+        ("testClient", testClient),
+        ("testSpecific", testSpecific),
+        ("testProvider", testProvider),
+        ("testRequire", testRequire),
     ]
 }
 

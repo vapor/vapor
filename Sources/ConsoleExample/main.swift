@@ -2,11 +2,11 @@ import Console
 
 let console = Terminal()
 
-console.output("Welcome", style: .custom(.red), newLine: false)
-console.output(" to", style: .custom(.yellow), newLine: false)
-console.output(" the", style: .custom(.green), newLine: false)
-console.output(" Console", style: .custom(.cyan), newLine: false)
-console.output(" Example!", style: .custom(.magenta))
+console.output("Welcome", style: .init(color: .red), newLine: false)
+console.output(" to", style: .init(color: .yellow), newLine: false)
+console.output(" the", style: .init(color: .green), newLine: false)
+console.output(" Console", style: .init(color: .cyan), newLine: false)
+console.output(" Example!", style: .init(color: .magenta))
 
 console.print()
 
