@@ -37,6 +37,8 @@ internal final class MySQLPacketParser: ProtocolParserStream {
     /// Create a new packet parser
     init() {
         downstreamDemand = 0
+        self.backlog = []
+        self.consumedBacklog = 0
         state = .ready
     }
     

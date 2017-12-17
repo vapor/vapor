@@ -117,6 +117,6 @@ extension MySQLConnection {
             }
         }
         
-        _ = try? self.write(packetFor: data)
+        self.serializer.queue(Packet(data: data))
     }
 }

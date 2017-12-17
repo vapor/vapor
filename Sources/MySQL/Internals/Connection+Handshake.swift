@@ -30,6 +30,23 @@ extension MySQLConnection {
     }
 }
 
+/// This library's capabilities
+var capabilities: Capabilities {
+    let base: Capabilities = [
+        .longPassword, .protocol41, .longFlag, .secureConnection, .connectWithDB
+    ]
+    
+    return base
+}
+
+extension Handshake {
+    /// If `true`, both parties support MySQL's v4.1 protocol
+    var mysql41: Bool {
+        // client && server 4.1 support
+        return self.isGreaterThan4 == true && capabilities.contains(.protocol41) && self.capabilities.contains(.protocol41) == true
+    }
+}
+
 fileprivate final class MySQLConnector {
     enum ConnectionState {
         case start, sentHandshake, sentSSL
@@ -43,6 +60,8 @@ fileprivate final class MySQLConnector {
     let ssl: MySQLSSLConfig?
     let eventLoop: EventLoop
     
+    let serializer = MySQLPacketSerializer()
+    
     var state: ConnectionState
     var handshake: Handshake?
     
@@ -55,6 +74,9 @@ fileprivate final class MySQLConnector {
         ssl: MySQLSSLConfig?,
         on eventLoop: EventLoop
     ) {
+        self.hostname = hostname
+        self.port = port
+        self.state = .start
         self.user = user
         self.password = password
         self.database = database
@@ -72,6 +94,8 @@ fileprivate final class MySQLConnector {
             
             let stream = client.stream(on: eventLoop)
             let parser = stream.stream(to: MySQLPacketParser())
+            
+            self.serializer.output(to: stream)
             
             func complete() throws {
                 guard let handshake = self.handshake else {
@@ -102,6 +126,7 @@ fileprivate final class MySQLConnector {
                 }
             }.catch(onError: promise.fail)
             
+            return promise.future
         } catch {
             return Future(error: error)
         }
@@ -119,7 +144,7 @@ fileprivate final class MySQLConnector {
     /// Send the handshake to the client
     func sendHandshake(for handshake: Handshake) throws {
         if handshake.isGreaterThan4 {
-            var size = 32 + self.username.utf8.count + 1 + database.utf8.count + 1
+            var size = 32 + self.user.utf8.count + 1 + database.utf8.count + 1
             
             if let password = self.password, handshake.capabilities.contains(.secureConnection) {
                 size += 21
@@ -135,9 +160,9 @@ fileprivate final class MySQLConnector {
                 pointer.deallocate(capacity: size)
             }
             
-            let username = [UInt8](self.username.utf8)
+            let username = [UInt8](self.user.utf8)
             
-            let combinedCapabilities = self.capabilities.rawValue & handshake.capabilities.rawValue
+            let combinedCapabilities = capabilities.rawValue & handshake.capabilities.rawValue
             
             var writer = pointer
             
@@ -185,9 +210,12 @@ fileprivate final class MySQLConnector {
             memcpy(writer, database, database.utf8.count)
             writer += database.count + 1
             
+            // SequenceId 1
+            pointer[3] = 1
+            
             let data = ByteBuffer(start: pointer, count: size)
             
-            try self.write(packetFor: data, startingAt: 1)
+            self.serializer.queue(Packet(payload: data))
         } else {
             throw MySQLError(.invalidHandshake)
         }
@@ -234,9 +262,9 @@ fileprivate final class MySQLConnector {
                     
                     let hash = sha1Encrypted(from: password, seed: Array(packet.payload[(offset &+ 1)...]))
                     
-                    try self.write(packetFor: hash)
+                    try serializer.queue(Packet(data: hash))
                 case "mysql_clear_password":
-                    try self.write(packetFor: Data(password.utf8))
+                    try serializer.queue(Packet(data: Data(password.utf8)))
                 default:
                     throw MySQLError(.invalidHandshake)
                 }
@@ -248,14 +276,11 @@ fileprivate final class MySQLConnector {
             return
         }
         
-        let response = try packet.parseResponse(mysql41: self.mysql41)
+        let response = try packet.parseResponse(mysql41: handshake?.mysql41 == true)
         
         switch response {
         case .error(let error):
-            completing.fail(error)
-            // Unauthenticated
-            self.close()
-            return
+            throw error
         default:
             return
         }

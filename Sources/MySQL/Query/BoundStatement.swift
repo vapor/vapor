@@ -55,7 +55,7 @@ public final class BoundStatement {
             throw MySQLError(.notEnoughParametersBound)
         }
         
-        try statement.connection.write(packetFor: header + parameterData)
+        statement.connection.serializer.queue(Packet(data: header + parameterData))
     }
     
     /// Fetched `count` more results from MySQL
@@ -69,7 +69,7 @@ public final class BoundStatement {
             }
         }
         
-        try statement.connection.write(packetFor: data)
+        statement.connection.serializer.queue(Packet(data: data))
     }
     
     /// Executes the bound statement and returns all decoded results in a future array
@@ -77,16 +77,16 @@ public final class BoundStatement {
         var results = [D]()
         return self.forEach(D.self) { res in
             results.append(res)
-        }.map { _ -> [D] in
-            return results
-        }
+        }.transform(to: results)
     }
     
     public func execute() throws -> Future<Void> {
         let promise = Promise<Void>()
         
         // Set up a parser
-        statement.connection.packetStream.drain { packet in
+        _ = statement.connection.parser.drain { parser in
+            parser.request()
+        }.output { packet in
             do {
                 if let (affectedRows, lastInsertID) = try packet.parseBinaryOK() {
                     self.statement.connection.affectedRows = affectedRows
@@ -125,10 +125,15 @@ public final class BoundStatement {
             self.statement.connection.lastInsertID = lastInsertID
         }
         
-        statement.connection.packetStream.stream(to: rowStream)
-            .drain(onInput: handler)
-            .catch(onError: promise.fail)
-            .finally(onClose: { promise.complete() })
+        statement.connection.parser
+            .stream(to: rowStream)
+            .drain { parser in
+                parser.request()
+            }.output { input in
+                try handler(input)
+                self.statement.connection.parser.request()
+            }.catch(onError: promise.fail)
+            .finally { promise.complete() }
 
         do {
             try send()

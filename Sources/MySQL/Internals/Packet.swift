@@ -15,7 +15,9 @@ internal final class Packet: ExpressibleByArrayLiteral {
     
     /// The sequence ID is incremented per message
     /// This client doesn't use this
-    var sequenceId: UInt8
+    var sequenceId: UInt8 {
+        return buffer[3]
+    }
     
     /// The payload contains the packet's data
     var payload: ByteBuffer {
@@ -40,13 +42,11 @@ internal final class Packet: ExpressibleByArrayLiteral {
     
     /// Creates a new packet
     init(payload: ByteBuffer) {
-        self.sequenceId = payload[3]
         self._buffer = .immutable(payload)
     }
     
     /// Creates a new packet
     init(payload: MutableByteBuffer) {
-        self.sequenceId = payload[3]
         self._buffer = .mutable(payload)
     }
     

@@ -34,21 +34,6 @@ public final class MySQLConnection {
     /// Amount of affected rows in the last successful query
     public var affectedRows: UInt64?
     
-    /// The client's capabilities
-    var capabilities: Capabilities {
-        let base: Capabilities = [
-            .longPassword, .protocol41, .longFlag, .secureConnection, .connectWithDB
-        ]
-        
-        return base
-    }
-    
-    /// If `true`, both parties support MySQL's v4.1 protocol
-    var mysql41: Bool {
-        // client && server 4.1 support
-        return handshake.isGreaterThan4 == true && self.capabilities.contains(.protocol41) && handshake.capabilities.contains(.protocol41) == true
-    }
-    
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
