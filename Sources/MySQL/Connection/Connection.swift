@@ -55,7 +55,7 @@ public final class MySQLConnection {
     init(
         handshake: Handshake,
         stream: AnyStream<ByteBuffer, ByteBuffer>
-    ) throws {
+    ) {
         self.streamClose = stream.close
         self.handshake = handshake
         self.parser = stream.stream(to: MySQLPacketParser())
@@ -79,27 +79,3 @@ public final class MySQLConnection {
     }
 }
 
-/// MARK: Static
-
-extension MySQLConnection {
-    /// Creates a new connection and completes the handshake
-    public static func makeConnection(
-        hostname: String,
-        port: UInt16 = 3306,
-        ssl: MySQLSSLConfig? = nil,
-        user: String,
-        password: String?,
-        database: String,
-        on eventLoop: EventLoop
-    ) throws -> MySQLConnection {
-        let socket = try TCPSocket()
-        let client = TCPClient(socket: socket)
-        
-        try client.connect(hostname: hostname, port: port)
-        
-        return try MySQLConnection(
-            handshake: true as! Handshake,
-            stream: AnyStream(client.stream(on: eventLoop))
-        )
-    }
-}

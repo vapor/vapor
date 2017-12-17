@@ -85,26 +85,22 @@ extension MySQLConnection {
             }
         }
         
-        do {
-            let promise = Promise<Void>()
+        let promise = Promise<Void>()
+        
+        _ = self.parser.drain { connection in
+            connection.request()
+        }.output { packet in
+            guard packet.payload.first == 0x00 else {
+                promise.fail(MySQLError(packet: packet))
+                return
+            }
             
-            _ = self.parser.drain { connection in
-                connection.request()
-            }.output { packet in
-                guard packet.payload.first == 0x00 else {
-                    promise.fail(MySQLError(packet: packet))
-                    return
-                }
-                
-                promise.complete()
-            }.catch(onError: promise.fail)
-            
-            try self.serializer.queue(Packet(data: data))
-            
-            return promise.future
-        } catch {
-            return Future(error: error)
-        }
+            promise.complete()
+        }.catch(onError: promise.fail)
+        
+        self.serializer.queue(Packet(data: data))
+        
+        return promise.future
     }
     
     /// https://mariadb.com/kb/en/library/3-binary-protocol-prepared-statements-com_stmt_close/
