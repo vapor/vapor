@@ -19,13 +19,20 @@ internal final class Packet: ExpressibleByArrayLiteral {
     
     /// The payload contains the packet's data
     var payload: ByteBuffer {
+        let buffer = self.buffer
+        
+        return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+    }
+    
+    /// The payload contains the packet's data
+    var buffer: ByteBuffer {
         switch _buffer {
         case .immutable(let buffer):
             // UInt24 + sequenceId
-            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+            return buffer
         case .mutable(let buffer):
             // UInt24 + sequenceId
-            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+            return ByteBuffer(start: buffer.baseAddress, count: buffer.count)
         }
     }
     

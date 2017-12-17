@@ -100,7 +100,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
         self.line = line
         self.column = column
         
-        let parser = Parser(packet: packet, position: 1)
+        var parser = Parser(packet: packet, position: 1)
         
         do {
             let code = try parser.parseUInt16()

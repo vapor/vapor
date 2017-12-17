@@ -4,8 +4,8 @@ import Bits
 
 extension Packet {
     /// Reads this packet as a row containing the data related to the provided columns
-    func makeRow(columns: [Field], binary: Bool, reserveCapacity: Int? = nil) throws -> Row {
-        let parser = Parser(packet: self)
+    func parseRow(columns: [Field], binary: Bool, reserveCapacity: Int? = nil) throws -> Row {
+        var parser = Parser(packet: self)
         var row = Row()
         
         if let reserveCapacity = reserveCapacity {
@@ -53,7 +53,7 @@ extension Packet {
 }
 
 extension Parser {
-    func parseColumn(forField field: Field, index: Int) throws -> Column {
+    mutating func parseColumn(forField field: Field, index: Int) throws -> Column {
         if self.payload[1 + (index / 8)] >> (8 - (index % 8)) == 1 {
             return .null
         } else {

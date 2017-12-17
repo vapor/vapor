@@ -224,18 +224,10 @@ internal final class MySQLPacketParser: ProtocolParserStream {
 //    }
 }
 
-/// Various states the parser stream can be in
-enum MySQLPacketParserState {
-    /// normal state
-    case ready
-    /// waiting for data from upstream
-    case awaitingUpstream
-}
-
 extension Packet {
     /// Parses the field definition from a packet
     func parseFieldDefinition() throws -> Field {
-        let parser = Parser(packet: self)
+        var parser = Parser(packet: self)
         
         try parser.skipLenEnc() // let catalog = try parser.parseLenEncString()
         try parser.skipLenEnc() // let database = try parser.parseLenEncString()

@@ -163,7 +163,7 @@ public final class BoundStatement {
 
 extension Packet {
     func parseBinaryOK() throws -> (UInt64, UInt64)? {
-        let parser = Parser(packet: self)
+        var parser = Parser(packet: self)
         let byte = try parser.byte()
         
         if byte == 0x00 {

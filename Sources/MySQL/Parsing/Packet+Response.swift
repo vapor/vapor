@@ -50,7 +50,7 @@ extension Packet {
                 throw MySQLError(.invalidResponse)
             }
             
-            let parser = Parser(packet: self, position: 1)
+            var parser = Parser(packet: self, position: 1)
             
             let affectedRows = try parser.parseLenEnc()
             let lastInsertedId = try parser.parseLenEnc()

@@ -33,6 +33,6 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
         // Starts the packet number at the starting number
         // The handshake starts at 1, instead of 0
         
-        flush(input._buffer)
+        flush(input.buffer)
     }
 }
