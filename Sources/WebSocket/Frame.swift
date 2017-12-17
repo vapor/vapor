@@ -26,11 +26,11 @@ import Bits
 /// A WebSocket frame contains a payload
 ///
 /// Interfacing with this class directly is usually not necessary and not recommended unless you know how WebSockets work.
-public final class Frame {
-    public typealias Header = (final: Bool, op: Frame.OpCode, size: UInt64, mask: [UInt8]?, consumed: Int)
+final class Frame {
+    typealias Header = (final: Bool, op: Frame.OpCode, size: UInt64, mask: [UInt8]?, consumed: Int)
     
     /// The type of payload
-    public enum OpCode: Byte {
+    enum OpCode: Byte {
         /// This message is a continuation of a previous frame and it's associated payload
         case continuation = 0x00
         
@@ -51,10 +51,10 @@ public final class Frame {
     }
     
     /// If `true`, this is the final message in it's sequence
-    public let isFinal: Bool
+    let isFinal: Bool
     
     /// The type of frame (and payload)
-    public let opCode: OpCode
+    let opCode: OpCode
     
     /// The serialized message
     let buffer: MutableByteBuffer
@@ -68,12 +68,12 @@ public final class Frame {
     }
     
     /// if true, this message is masked
-    public var isMasked: Bool {
+    var isMasked: Bool {
         return self.buffer[1] & 0b10000000 == 0b10000000
     }
     
     /// The bytes used to mask the payload
-    public let maskBytes: [UInt8]?
+    let maskBytes: [UInt8]?
     
     /// A helper for finding the buffer that contains only the payload
     fileprivate var mutablePayload: MutableByteBuffer {
@@ -81,7 +81,7 @@ public final class Frame {
     }
     
     /// A read-only payload buffer of this frame
-    public var payload: ByteBuffer {
+    var payload: ByteBuffer {
         return ByteBuffer(start: buffer.baseAddress?.advanced(by: headerUntil), count: payloadLength)
     }
     
@@ -91,7 +91,7 @@ public final class Frame {
     }
     
     /// Unmasks the data if it's masked
-    public func unmask() {
+    func unmask() {
         guard isMasked else {
             return
         }
@@ -101,7 +101,7 @@ public final class Frame {
     }
     
     /// Masks the data if it's unmasked
-    public func mask() {
+    func mask() {
         guard !isMasked else {
             return
         }
@@ -122,11 +122,11 @@ public final class Frame {
     }
     
     /// Creates a new payload by referencing the original payload.
-    public init(op: OpCode, payload: ByteBuffer, mask: [UInt8]?, isMasked: Bool = false, isFinal: Bool = true) throws {
+    init(op: OpCode, payload: ByteBuffer, mask: [UInt8]?, isMasked: Bool = false, isFinal: Bool = true) {
         if !isFinal {
             // Only binary and continuation frames can be not final
             guard op == .binary || op == .continuation else {
-                throw WebSocketError(.invalidFrameParameters)
+                fatalError("Only binary frames can be non-final")
             }
         }
         
@@ -184,7 +184,7 @@ public final class Frame {
             // Masks must be 4 bytes
             guard mask.count == 4 else {
                 self.buffer.dealloc()
-                throw WebSocketError(.invalidMask)
+                fatalError("Invalid mask generated")
             }
             
             // If the data is already masked
@@ -193,12 +193,12 @@ public final class Frame {
                 pointer[1] = pointer[1] | 0b10000000
             }
             
-            pointer.advanced(by: 2 &+ payloadLengthSize).assign(from: mask, count: 4)
+            memcpy(pointer.advanced(by: 2 &+ payloadLengthSize), mask, 4)
         }
         
         // You can't write empty buffers
         if let baseAddress = payload.baseAddress {
-            pointer.advanced(by: headerUntil).assign(from: baseAddress, count: payload.count)
+            memcpy(pointer.advanced(by: headerUntil), baseAddress, payload.count)
         }
         
         self.maskBytes = mask

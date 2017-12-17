@@ -12,54 +12,54 @@ extension MySQLConnection {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
         
-        self.packetStream.drain { packet in
+        _ = self.parser.drain { parser in
+            parser.request()
+        }.output { packet in
             if packet.payload.first == 0xfe {
+                self.parser.request()
                 // Ignore `0xfe` payloads, since we skip past those in the above `do {} catch {}`
                 return
             }
             
             if let statement = statement {
-                do {
-                    if statement.columns.count < statement.columnCount {
-                        statement.columns.append(try packet.parseFieldDefinition())
-                    } else if statement.parameters.count < statement.parameterCount {
-                        statement.parameters.append(try packet.parseFieldDefinition())
-                    }
-                    
-                    if statement.columns.count == statement.columnCount && statement.parameters.count == statement.parameterCount {
-                        promise.complete(statement)
-                    }
-                } catch {
-                    promise.fail(error)
+                // Continue processing the statement preparation
+                if statement.columns.count < statement.columnCount {
+                    statement.columns.append(try packet.parseFieldDefinition())
+                } else if statement.parameters.count < statement.parameterCount {
+                    statement.parameters.append(try packet.parseFieldDefinition())
+                }
+                
+                if statement.columns.count == statement.columnCount && statement.parameters.count == statement.parameterCount {
+                    promise.complete(statement)
+                } else {
+                    self.parser.request()
                 }
             } else {
+                // Statement preparation details not yet read
                 guard packet.payload.count == 12, packet.payload.first == 0x00 else {
-                    promise.fail(MySQLError(packet: packet))
+                    throw MySQLError(packet: packet)
+                }
+                
+                var parser = Parser(packet: packet, position: 1)
+                
+                let statementID = try parser.parseUInt32()
+                let columnCount = try parser.parseUInt16()
+                let parameterCount = try parser.parseUInt16()
+                
+                let preparedStatement = PreparedStatement(
+                    statementID: statementID,
+                    columnCount: columnCount,
+                    connection: self,
+                    parameterCount: parameterCount
+                )
+                
+                if columnCount == 0 && parameterCount == 0 {
+                    promise.complete(preparedStatement)
                     return
                 }
                 
-                let parser = Parser(packet: packet, position: 1)
-                
-                do {
-                    let statementID = try parser.parseUInt32()
-                    let columnCount = try parser.parseUInt16()
-                    let parameterCount = try parser.parseUInt16()
-                    
-                    let preparedStatement = PreparedStatement(
-                        statementID: statementID,
-                        columnCount: columnCount,
-                        connection: self,
-                        parameterCount: parameterCount
-                    )
-                    
-                    if columnCount == 0 && parameterCount == 0 {
-                        promise.complete(preparedStatement)
-                    }
-                    
-                    statement = preparedStatement
-                } catch {
-                    promise.fail(error)
-                }
+                statement = preparedStatement
+                self.parser.request()
             }
         }.catch(onError: promise.fail)
         
@@ -85,24 +85,22 @@ extension MySQLConnection {
             }
         }
         
-        do {
-            let promise = Promise<Void>()
+        let promise = Promise<Void>()
+        
+        _ = self.parser.drain { connection in
+            connection.request()
+        }.output { packet in
+            guard packet.payload.first == 0x00 else {
+                promise.fail(MySQLError(packet: packet))
+                return
+            }
             
-            self.packetStream.drain { packet in
-                guard packet.payload.first == 0x00 else {
-                    promise.fail(MySQLError(packet: packet))
-                    return
-                }
-                
-                promise.complete()
-            }.catch(onError: promise.fail)
-            
-            try self.write(packetFor: data)
-            
-            return promise.future
-        } catch {
-            return Future(error: error)
-        }
+            promise.complete()
+        }.catch(onError: promise.fail)
+        
+        self.serializer.queue(Packet(data: data))
+        
+        return promise.future
     }
     
     /// https://mariadb.com/kb/en/library/3-binary-protocol-prepared-statements-com_stmt_close/
@@ -119,6 +117,6 @@ extension MySQLConnection {
             }
         }
         
-        _ = try? self.write(packetFor: data)
+        self.serializer.queue(Packet(data: data))
     }
 }

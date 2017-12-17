@@ -4,22 +4,16 @@ import Async
 
 public final class Base64Decoder: Base64 {
     /// The capacity currently used in the pointer
-    var currentCapacity = 0
+    public var currentCapacity = 0
     
     /// The total capacity of the pointer
-    let allocatedCapacity: Int
+    public let allocatedCapacity: Int
     
     /// The pointer for containing the base64 encoded data
-    let pointer: MutableBytesPointer
-    
-    /// The bytes that couldn't be parsed from the previous buffer
-    var remainder = Data()
+    public let pointer: MutableBytesPointer
 
     /// base64 or base64 url
     let encoding: Base64Encoding
-
-    /// Use a basic stream to easily implement our output stream.
-    var outputStream: BasicStream<Output> = .init()
     
     /// Creates a new Base64 encoder
     ///
@@ -38,7 +32,7 @@ public final class Base64Decoder: Base64 {
     /// - parameter capacity: The capacity of the output pointer
     /// - parameter finish: If `true`, this base64 reached the end of it's stream
     /// - returns: If the base64 processing data is complete. The capacity of the pointer used, and the amount of input bytes consumed
-    func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
+    public func process(_ buffer: ByteBuffer, toPointer pointer: MutableBytesPointer, capacity: Int, finish: Bool) throws -> (complete: Bool, filled: Int, consumed: Int) {
         guard let input = buffer.baseAddress else {
             return (true, 0, 0)
         }
@@ -129,7 +123,8 @@ public final class Base64Decoder: Base64 {
                 pointer.deallocate(capacity: bytes.count)
             }
             
-            pointer.assign(from: input, count: bytes.count)
+            memcpy(pointer, input, bytes.count)
+            
             return try decode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
                 return Data(buffer)
             }
@@ -141,18 +136,18 @@ public final class Base64Decoder: Base64 {
     /// - parameter data: The string data to decode
     /// - returns: A Data decoded from the inputted string
     public func decode(string: String) throws -> Data {
-        let bytes = [UInt8](string.utf8)
+        let characters = string.utf8.count
         
-        let pointer = MutableBytesPointer.allocate(capacity: bytes.count)
+        let pointer = MutableBytesPointer.allocate(capacity: characters)
         
-        pointer.assign(from: bytes, count: bytes.count)
+        memcpy(pointer, string, characters)
         
         defer {
-            pointer.deinitialize(count: bytes.count)
-            pointer.deallocate(capacity: bytes.count)
+            pointer.deinitialize(count: characters)
+            pointer.deallocate(capacity: characters)
         }
         
-        return try decode(buffer: ByteBuffer(start: pointer, count: bytes.count)) { buffer in
+        return try decode(buffer: ByteBuffer(start: pointer, count: characters)) { buffer in
             return Data(buffer)
         }
     }

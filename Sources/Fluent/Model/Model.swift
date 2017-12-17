@@ -10,8 +10,6 @@ import Service
 public protocol Model: AnyModel, ContainerFindable {
     /// The type of database this model can be queried on.
     associatedtype Database: Fluent.Database
-    /// This model's database
-    static var database: DatabaseIdentifier<Database> { get }
 
     /// The associated Identifier type.
     /// Usually Int or UUID.
@@ -47,7 +45,7 @@ public protocol Model: AnyModel, ContainerFindable {
 
 /// Type-erased model.
 /// See Model
-public protocol AnyModel: class, Codable, KeyStringMappable {
+public protocol AnyModel: class, Codable {
     /// This model's unique name.
     static var name: String { get }
 
@@ -55,46 +53,29 @@ public protocol AnyModel: class, Codable, KeyStringMappable {
     static var entity: String { get }
 }
 
-extension Model where ID: StringDecodable {
-    /// See EphemeralWorkerFindable.find
-    public static func find(identifier: String, using container: Container) throws -> Future<Self> {
-        guard let id = ID.decode(from: identifier) else {
-            throw FluentError(identifier: "incorrect-model-identifier", reason: "could not convert parameter \(identifier) to type `\(ID.self)`")
-        }
-
-        if let ephemeral = container as? EphemeralContainer {
-            return ephemeral.connect(to: database).then { conn in
-                return self.find(id, on: conn).map { pet in
-                    guard let pet = pet else {
-                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
-                    }
-
-                    return pet
-                }
-            }
-        } else {
-            return container.withConnection(to: database) { conn in
-                return self.find(id, on: conn).map { pet in
-                    guard let pet = pet else {
-                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
-                    }
-
-                    return pet
-                }
-            }
-        }
-    }
-}
-
 extension Model {
     /// Creates a query for this model on the supplied connection.
-    public func query(on conn: DatabaseConnectable) -> QueryBuilder<Self> {
-        return .init(on: conn.connect(to: Self.database))
+    public func query(
+        _ database: DatabaseIdentifier<Database>? = nil,
+        on conn: DatabaseConnectable
+    ) -> QueryBuilder<Self> {
+        let conn = Future<Database.Connection> {
+            let dbid = try Self.requireDefaultDatabase()
+            return conn.connect(to: dbid)
+        }
+        return .init(on: conn)
     }
 
     /// Creates a query for this model on the supplied connection.
-    public static func query(on conn: DatabaseConnectable) -> QueryBuilder<Self> {
-        return .init(on: conn.connect(to: database))
+    public static func query(
+        _ database: DatabaseIdentifier<Database>? = nil,
+        on conn: DatabaseConnectable
+    ) -> QueryBuilder<Self> {
+        let conn = Future<Database.Connection> {
+            let dbid = try Self.requireDefaultDatabase()
+            return conn.connect(to: dbid)
+        }
+        return .init(on: conn)
     }
 }
 
@@ -141,7 +122,7 @@ extension Model {
     /// Throws an error if the model doesn't have an ID.
     public func requireID() throws -> ID {
         guard let id = self.fluentID else {
-            throw FluentError(identifier: "no-id", reason: "This model didn't have an identifier")
+            throw FluentError(identifier: "idRequired", reason: "\(Self.self) does not have an identifier.")
         }
 
         return id
@@ -181,10 +162,79 @@ extension Model {
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
     public static func find(_ id: Self.ID, on conn: DatabaseConnectable) -> Future<Self?> {
-        return then {
+        return Future {
             return try query(on: conn)
                 .filter(idKey == id)
                 .first()
         }
     }
 }
+
+// MARK: Default Database
+
+/// Private static default database storage.
+private var _defaultDatabases: [ObjectIdentifier: Any] = [:]
+
+extension Model {
+    /// This Model's default database. This will be used
+    /// when no database id is passed (for example, on `Model.query(on:)`,
+    /// or when it is not possible to pass a database (such as static lookup).
+    public static var defaultDatabase: DatabaseIdentifier<Database>? {
+        get { return _defaultDatabases[ObjectIdentifier(Self.self)] as? DatabaseIdentifier<Database> }
+        set { _defaultDatabases[ObjectIdentifier(Self.self)] = newValue }
+    }
+
+    /// Returns the `.defaultDatabase` or throws an error.
+    public static func requireDefaultDatabase() throws -> DatabaseIdentifier<Database> {
+        guard let dbid = Self.defaultDatabase else {
+            throw FluentError(
+                identifier: "noDefaultDatabase",
+                reason: "A default database is required if no database ID is passed to `\(Self.self).query(_:on:)` or if `\(Self.self)` is being looked up statically. Set `\(Self.self).defaultDatabase` or to fix this error."
+            )
+        }
+        return dbid
+    }
+}
+
+// MARK: Container Findable
+
+extension Model {
+    /// See EphemeralWorkerFindable.find
+    public static func find(identifier: String, using container: Container) throws -> Future<Self> {
+        guard let idType = ID.self as? StringDecodable.Type else {
+            throw FluentError(
+                identifier: "invalidIDType",
+                reason: "Could not convert string to ID. Conform `\(ID.self)` to `StringDecodable` to fix this error."
+            )
+        }
+
+        guard let id = idType.decode(from: identifier) as? ID else {
+            throw FluentError(
+                identifier: "invalidID",
+                reason: "Could not convert parameter \(identifier) to type `\(ID.self)`"
+            )
+        }
+
+        let dbid = try Self.requireDefaultDatabase()
+        if let ephemeral = container as? EphemeralContainer {
+            return ephemeral.connect(to: dbid).flatMap(to: Self.self) { conn in
+                return self.find(id, on: conn).map(to: Self.self) { model in
+                    guard let model = model else {
+                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
+                    }
+                    return model
+                }
+            }
+        } else {
+            return container.withConnection(to: dbid) { conn in
+                return self.find(id, on: conn).map(to: Self.self) { model in
+                    guard let model = model else {
+                        throw FluentError(identifier: "entity-not-found", reason: "no model with ID \(id) was found")
+                    }
+                    return model
+                }
+            }
+        }
+    }
+}
+

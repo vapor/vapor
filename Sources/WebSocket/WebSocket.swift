@@ -8,46 +8,154 @@ import TCP
 /// A websocket connection. Can be either the client or server side of the connection
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/websocket/websocket/)
-public class WebSocket: ClosableStream {
-    /// A stream of incoming and outgoing strings between both parties
-    let textStream = TextStream()
+public class WebSocket {
+    /// A stream of strings received from the remote
+    let stringOutputStream: EmitterStream<String>
     
-    /// A stream of incoming and outgoing binary blobs between both parties
-    let binaryStream = BinaryStream()
+    /// A stream of binary data received from the remote
+    let binaryOutputStream: EmitterStream<ByteBuffer>
     
-    /// The internal connection that communicates the frames
-    let connection: Connection
-
+    var backlog: [Frame]
+    
+    /// Serializes data into frames
+    let serializer: FrameSerializer
+    
+    /// Parses frames from data
+    let parser: FrameParser
+    
+    let server: Bool
+    
+    var errorCallback: (Error) -> () = { _ in }
+    
+    /// The underlying communication layer
+    let socket: AnyStream<ByteBuffer, ByteBuffer>
+    
     /// Create a new WebSocket from a TCP client for either the Client or Server Side
     ///
     /// Server side connections do not mask sent data
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    public init<ByteStream>(socket: ByteStream, serverSide: Bool = true) where
-        ByteStream: Async.Stream,
-        ByteStream.Input == ByteBuffer,
-        ByteStream.Output == ByteBuffer
+    init(socket: AnyStream<ByteBuffer, ByteBuffer>, server: Bool = true)
     {
-        self.connection = Connection(socket: socket, serverSide: serverSide)
+        self.backlog = []
+        self.parser = socket.stream(to: FrameParser())
+        self.serializer = FrameSerializer(masking: !server)
+        self.socket = socket
+        self.server = server
         
-        self.textStream.frameStream = self.connection
-        self.binaryStream.frameStream = self.connection
-
-        /// FIXME: use a stream splitter here? this api seems a bit odd
-        self.connection.drain(onInput: self.processFrame).catch { error in
-            self.textStream.onError(error)
-            self.binaryStream.onError(error)
+        serializer.output(to: socket)
+        
+        self.stringOutputStream = EmitterStream<String>()
+        self.binaryOutputStream = EmitterStream<ByteBuffer>()
+        
+        func bindFrameStreams() {
+            socket.stream(to: parser).drain { upstream in
+                upstream.request(count: .max)
+            }.output { frame in
+                switch frame.opCode {
+                case .close:
+                    socket.close()
+                case .text:
+                    let data = Data(buffer: frame.payload)
+                    
+                    guard let string = String(data: data, encoding: .utf8) else {
+                        throw WebSocketError(.invalidFrame)
+                    }
+                    
+                    self.stringOutputStream.emit(string)
+                case .continuation, .binary:
+                    let buffer = ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count)
+                    
+                    self.binaryOutputStream.emit(buffer)
+                case .ping:
+                    let frame = Frame(op: .pong, payload: frame.payload, mask: self.nextMask)
+                    self.serializer.queue(frame)
+                case .pong: break
+                }
+            }.catch(onError: self.errorCallback).finally {
+                socket.close()
+            }
+        }
+        
+        if server {
+            bindFrameStreams()
+        } else {
+            // Generates the UUID that will make up the WebSocket-Key
+            let id = OSRandom().data(count: 16).base64EncodedString()
+            
+            // Creates an HTTP client for the handshake
+            let HTTPSerializer = HTTPRequestSerializer().stream()
+            
+            let HTTPParser = HTTPResponseParser(maxSize: 50_000).stream()
+            
+            HTTPSerializer.output(to: socket)
+            
+            let drain = DrainStream<HTTPResponse>(onInput: { response in
+                try WebSocket.upgrade(response: response, id: id)
+                
+                bindFrameStreams()
+            })
+            
+            socket.stream(to: HTTPParser).output(to: drain)
+        }
+    }
+    
+    var nextMask: [UInt8]? {
+        return self.server ? nil : randomMask()
+    }
+    
+    public func send(string: String) {
+        Data(string.utf8).withByteBuffer { bytes in
+            let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+            serializer.queue(frame)
+        }
+    }
+    
+    public func send(data: Data) {
+        data.withByteBuffer { bytes in
+            let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+            serializer.queue(frame)
+        }
+    }
+    
+    public func send(bytes: ByteBuffer) {
+        let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+        serializer.queue(frame)
+    }
+    
+    
+    @discardableResult
+    public func onData(_ run: @escaping (WebSocket, Data) throws -> ()) -> DrainStream<ByteBuffer> {
+        return binaryOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { bytes in
+            let data = Data(buffer: bytes)
+            try run(self, data)
+        }
+    }
+    
+    
+    @discardableResult
+    public func onByteBuffer(_ run: @escaping (WebSocket, ByteBuffer) throws -> ()) -> DrainStream<ByteBuffer> {
+        return binaryOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { bytes in
+            try run(self, bytes)
+        }
+    }
+    
+    @discardableResult
+    public func onString(_ run: @escaping (WebSocket, String) throws -> ()) -> DrainStream<String> {
+        return stringOutputStream.drain { upstream in
+            upstream.request(count: .max)
+        }.output { string in
+            try run(self, string)
         }
     }
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
-        connection.close()
-    }
-    
-    /// Sets a handler that will be triggered when the WebSocket closes
-    public func onClose(_ onClose: ClosableStream) {
-        connection.onClose(onClose)
+        socket.close()
     }
 }

@@ -7,7 +7,7 @@ extension RedisClient {
     public func subscribe(to channel: String) -> SubscriptionStream {
         return self.subscribe(to: [channel])
     }
-        
+    
     /// Subscribes to the given list of channels
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#subscribing)
@@ -16,15 +16,13 @@ extension RedisClient {
             return RedisData(bulk: name)
         }
         
-        let command = RedisData.array(["SUBSCRIBE"] + channels)
-        
-        dataSerializer.onInput(command)
+        _ = self.run(command: "SUBSCRIBE", arguments: channels)
         
         // Mark this client as being subscribed
         // The client cannot be used for other commands now
         self.isSubscribed = true
-        
-        return SubscriptionStream(reading: self.dataParser)
+
+        return SubscriptionStream(reading: self.stream.parser)
     }
     
     /// Publishes the message to a channels
@@ -32,7 +30,7 @@ extension RedisClient {
     /// [Learn More →](https://docs.vapor.codes/3.0/redis/pub-sub/#publishing)
     @discardableResult
     public func publish(_ message: RedisData, to channel: String) -> Future<Int> {
-        return run(command: "PUBLISH", arguments: [.bulkString(channel), message]).map { reply in
+        return run(command: "PUBLISH", arguments: [.bulkString(channel), message]).map(to: Int.self) { reply in
             guard let receivers = reply.int else {
                 throw RedisError(.unexpectedResult(reply))
             }
@@ -41,3 +39,4 @@ extension RedisClient {
         }
     }
 }
+

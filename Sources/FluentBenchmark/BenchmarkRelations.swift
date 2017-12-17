@@ -15,12 +15,12 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
         
         let promise = Promise<Int>()
         
-        conn.enableReferences().then {
+        conn.enableReferences().flatMap(to: Void.self) {
             return tanner.save(on: conn)
-        }.then { _ -> Future<Void> in
+        }.flatMap(to: Void.self) {
             ziz = try Pet<Database>(name: "Ziz", ownerID: tanner.requireID())
             return ziz.save(on: conn)
-        }.then {
+        }.flatMap(to: Void.self) {
             return foo.save(on: conn)
         }.addAwaiter { response in
             if response.error == nil {
@@ -34,49 +34,49 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
             }
         }
             
-        return promise.future.then { count -> Future<User<Database>> in
+        return promise.future.flatMap(to: User<Database>.self) { count in
             if count != 1 {
                 self.fail("count should have been 1")
             }
             
             return ziz.owner.get(on: conn)
-        }.then { user -> Future<Void> in
+        }.flatMap(to: Void.self) { user in
             if user.name != "Tanner" {
                 self.fail("pet owner's name wrong")
             }
             
             return plasticBag.save(on: conn)
-        }.then { _ -> Future<Void> in
+        }.flatMap(to: Void.self) {
             return oldBologna.save(on: conn)
-        }.then { _ -> Future<Void> in
+        }.flatMap(to: Void.self) {
             return ziz.toys.attach(plasticBag, on: conn)
-        }.then { _ -> Future<Void> in
+        }.flatMap(to: Void.self) {
             return oldBologna.pets.attach(ziz, on: conn)
-        }.then { _ -> Future<Int> in
+        }.flatMap(to: Int.self) {
             return try ziz.toys.query(on: conn).count()
-        }.then { count -> Future<Int> in
+        }.flatMap(to: Int.self) { count in
             if count != 2 {
                 self.fail("count should have been 2")
             }
             
             return try oldBologna.pets.query(on: conn).count()
-        }.then { count -> Future<Int> in
+        }.flatMap(to: Int.self) { count in
             if count != 1 {
                 self.fail("count should have been 1")
             }
             
             return try plasticBag.pets.query(on: conn).count()
-        }.then { count -> Future<Bool> in
+        }.flatMap(to: Bool.self) { count in
             if count != 1 {
                 self.fail("count should have been 1")
             }
             
-            return try ziz.toys.isAttached(plasticBag, on: conn)
-        }.then { _ -> Future<Void> in
-            return try ziz.toys.detach(plasticBag, on: conn)
-        }.then { _ -> Future<Bool> in
-            return try ziz.toys.isAttached(plasticBag, on: conn)
-        }.map { bool in
+            return ziz.toys.isAttached(plasticBag, on: conn)
+        }.flatMap(to: Void.self) { bool in
+            return ziz.toys.detach(plasticBag, on: conn)
+        }.flatMap(to: Bool.self) {
+            return ziz.toys.isAttached(plasticBag, on: conn)
+        }.map(to: Void.self) { bool in
             if bool {
                 self.fail("should be detached")
             }
@@ -85,8 +85,8 @@ extension Benchmarker where Database.Connection: JoinSupporting & ReferenceSuppo
 
     /// Benchmark fluent relations.
     public func benchmarkRelations() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return try self._benchmark(on: conn).map {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return try self._benchmark(on: conn).map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }
@@ -97,18 +97,18 @@ extension Benchmarker where Database.Connection: SchemaSupporting & JoinSupporti
     /// Benchmark fluent relations.
     /// The schema will be prepared first.
     public func benchmarkRelations_withSchema() throws -> Future<Void> {
-        return pool.requestConnection().then { conn in
-            return conn.enableReferences().then {
+        return pool.requestConnection().flatMap(to: Void.self) { conn in
+            return conn.enableReferences().flatMap(to: Void.self) {
                 return UserMigration<Database>.prepare(on: conn)
-            }.then {
+            }.flatMap(to: Void.self) {
                 return PetMigration<Database>.prepare(on: conn)
-            }.then {
+            }.flatMap(to: Void.self) {
                 return ToyMigration<Database>.prepare(on: conn)
-            }.then {
+            }.flatMap(to: Void.self) {
                 return PetToyMigration<Database>.prepare(on: conn)
-            }.then {
+            }.flatMap(to: Void.self) {
                 return try self._benchmark(on: conn)
-            }.map {
+            }.map(to: Void.self) {
                 self.pool.releaseConnection(conn)
             }
         }

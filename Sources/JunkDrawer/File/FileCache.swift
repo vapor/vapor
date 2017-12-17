@@ -14,11 +14,11 @@ public protocol FileCache {
 extension FileReader where Self: FileCache {
     /// Checks the cache for the file path or reads
     /// it from the reader.
-    public func cachedRead(at path: String) -> Future<Data> {
+    public func cachedRead(at path: String, chunkSize: Int) -> Future<Data> {
         if let data = getCachedFile(at: path) {
             return Future(data)
         } else {
-            return read(at: path).map { data in
+            return read(at: path, chunkSize: chunkSize).map(to: Data.self) { data in
                 self.setCachedFile(file: data, at: path)
                 return data
             }

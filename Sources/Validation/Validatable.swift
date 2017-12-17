@@ -1,5 +1,7 @@
+import JunkDrawer
+
 /// Capable of being validated.
-public protocol Validatable: Codable, KeyStringMappable, ValidationDataRepresentable {
+public protocol Validatable: Codable, ValidationDataRepresentable {
     /// The validations that will run when `.validate()`
     /// is called on an instance of this class.
     static var validations: Validations { get }
@@ -29,7 +31,7 @@ extension Validatable {
             do {
                 try validation.validate(data)
             } catch var error as ValidationError {
-                try error.keyPath.append(Self.keyStringMap.requireString(for: key))
+                error.keyPath += Self.unsafeCodingPath(forKey: key)
                 errors.append(error)
             }
         }
@@ -47,7 +49,7 @@ struct ValidatableError: ValidationError {
     var errors: [ValidationError]
 
     /// See ValidationError.keyPath
-    var keyPath: [String]
+    var keyPath: [CodingKey]
 
     /// See ValidationError.reason
     var reason: String {
@@ -55,7 +57,7 @@ struct ValidatableError: ValidationError {
             var error = error
             error.keyPath = keyPath + error.keyPath
             return error.reason
-            }.joined(separator: ", ")
+        }.joined(separator: ", ")
     }
 
     /// creates a new validatable error

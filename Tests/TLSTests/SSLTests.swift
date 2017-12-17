@@ -1,103 +1,61 @@
-import XCTest
 import Async
-import Dispatch
-import TCP
+// import AppleSSL
+import OpenSSL
 import Bits
+import TCP
 import TLS
-//
-//#if os(macOS) && !OPENSSL
-//    import AppleSSL
-//
-//    typealias SSL = AppleSSL.SSLStream
-//#else
-//    import OpenSSL
-//    
-//    typealias SSLStream = OpenSSL.SSLStream
-//#endif
-//
-//#if Xcode
-//    private var workDir: String {
-//        let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
-//        let path = "/\(parent)/"
-//        return path
-//    }
-//#else
-//    private let workDir = "./Tests/TLSTests/"
-//#endif
+import XCTest
 
 class SSLTests: XCTestCase {
-    func testSSL() throws {
-        // FIXME: @joannis, this is failing on macOS
-        /*
-        let server = try TCP.Server()
-        
-        var peers = [SSLStream<TCPClient>]()
-        var clients = [TLSClient]()
-        
-        let peerQueue = DispatchQueue(label: "test.peer")
-        
-        let message = Data("Hello world".utf8)
-        
-        var count = 0
-        
-        let receivedFuture = Promise<Void>()
-        
-        server.drain { client in
-            do {
-                let tlsClient = try! SSLStream(socket: client, descriptor: client.socket.descriptor, queue: peerQueue)
-         
-                tlsClient.drain { received in
-                    count += 1
-                    XCTAssertEqual(Data(received), message)
-                    receivedFuture.complete(())
-                    client.close()
-                }
-         
-                #if os(macOS) && !OPENSSL
-                    let cert = "\(workDir)public.der"
-                    try tlsClient.initializePeer(signedBy: cert).blockingAwait(timeout: .seconds(2))
-                #else
-                    let cert = "\(workDir)public.pem"
-                    let key = "\(workDir)private.pem"
-         
-                    try tlsClient.initializePeer(certificate: cert, key: key).blockingAwait(timeout: .seconds(2))
-                #endif
-         
-                tlsClient.start()
-                peers.append(tlsClient)
-            } catch {
-                client.close()
-            }
+    func testClientBlocking() { do { try _testClientBlocking() } catch { XCTFail("\(error)") } }
+    func _testClientBlocking() throws {
+        let tcpSocket = try TCPSocket(isNonBlocking: false)
+        let tcpClient = TCPClient(socket: tcpSocket)
+        let tlsSettings = TLSClientSettings()
+        let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        try tlsClient.connect(hostname: "google.com", port: 443)
+        try tlsClient.socket.handshake()
+        let req = "GET /robots.txt HTTP/1.1\r\nContent-Length: 0\r\nHost: www.google.com\r\nUser-Agent: hi\r\n\r\n".data(using: .utf8)!
+        _ = try tlsClient.socket.write(from: req.withByteBuffer { $0 })
+        var res = Data(count: 4096)
+        _ = try tlsClient.socket.read(into: res.withMutableByteBuffer { $0 })
+        print(String(data: res, encoding: .ascii)!)
+    }
+
+    func testClient() { do { try _testClient() } catch { XCTFail("\(error)") } }
+    func _testClient() throws {
+        let tcpSocket = try TCPSocket(isNonBlocking: true)
+        let tcpClient =  TCPClient(socket: tcpSocket)
+        let tlsSettings = TLSClientSettings()
+        // let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
+        let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        try tlsClient.connect(hostname: "google.com", port: 443)
+
+        let exp = expectation(description: "read data")
+
+        let tlsStream = tlsClient.stream(on: DispatchQueue(label: "codes.vapor.tls.client"))
+        tlsStream.drain { req in
+            req.request(count: 1)
+        }.output { buffer in
+            let res = Data(buffer)
+            XCTAssertTrue(String(data: res, encoding: .utf8)!.contains("User-agent: *"))
+            exp.fulfill()
+        }.catch { err in
+            XCTFail("\(err)")
+        }.finally {
+            // closed
         }
-        
-        try server.start(port: 8432)
-        let clientQueue = DispatchQueue(label: "test.client")
 
+        let source = EmitterStream(ByteBuffer.self)
+        source.output(to: tlsStream)
 
-        let future = try clientQueue.sync { () -> Future<()> in
-            let client = try TLSClient(worker: EventLoop(queue: clientQueue))
+        let req = "GET /robots.txt HTTP/1.1\r\nContent-Length: 0\r\nHost: www.google.com\r\nUser-Agent: hi\r\n\r\n".data(using: .utf8)!
+        source.emit(req.withByteBuffer { $0 })
 
-            clients.append(client)
-
-            return try client.connect(hostname: "localhost", port: 8432).map {
-                message.withUnsafeBytes { (pointer: BytesPointer) in
-                    let buffer = ByteBuffer(start: pointer, count: message.count)
-
-                    client.inputStream(buffer)
-                }
-            }
-        }
-        
-        try future.blockingAwait(timeout: .seconds(1))
-        try receivedFuture.future.blockingAwait()
-        
-        XCTAssertEqual(count, 1)
-        XCTAssertEqual(peers.count, 1)
-        XCTAssertEqual(clients.count, 1)
-        */
+        waitForExpectations(timeout: 5)
     }
 
     static let allTests = [
-        ("testSSL", testSSL)
+        ("testClient", testClient)
     ]
 }

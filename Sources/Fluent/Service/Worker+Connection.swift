@@ -11,12 +11,12 @@ extension Container {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func withConnection<Database, F>(
+    public func withConnection<Database, T>(
         to database: DatabaseIdentifier<Database>,
-        closure: @escaping (Database.Connection) throws -> F
-    ) -> Future<F.Expectation> where F: FutureType {
-        return makeConnection(to: database).then { conn in
-            return try closure(conn).map { e in
+        closure: @escaping (Database.Connection) throws -> Future<T>
+    ) -> Future<T> {
+        return makeConnection(to: database).flatMap(to: T.self) { conn in
+            return try closure(conn).map(to: T.self) { e in
                 conn.close()
                 return e
             }
@@ -28,7 +28,7 @@ extension Container {
     public func makeConnection<Database>(
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        return then {
+        return Future {
             let databases = try self.make(Databases.self, for: Self.self)
 
             guard let db = databases.storage[database.uid] as? Database else {
@@ -48,17 +48,17 @@ extension Container {
     /// The database connection will be cached on this worker.
     /// The same database connection will always be returned for
     /// a given worker.
-    public func withPooledConnection<Database, F>(
+    public func withPooledConnection<Database, T>(
         to database: DatabaseIdentifier<Database>,
-        closure: @escaping (Database.Connection) throws -> F
-    ) -> Future<F.Expectation> where F: FutureType {
-        return then {
+        closure: @escaping (Database.Connection) throws -> Future<T>
+    ) -> Future<T> {
+        return Future {
             let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
-            return pool.requestConnection().then { conn in
-                return try closure(conn).map { res in
+            return pool.requestConnection().flatMap(to: T.self) { conn in
+                return try closure(conn).map(to: T.self) { res in
                     pool.releaseConnection(conn)
                     return res
                 }
@@ -71,7 +71,7 @@ extension Container {
     public func requestPooledConnection<Database>(
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
-        return then {
+        return Future {
             let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
             let pool = try cache.pool(for: database)
 
@@ -107,7 +107,7 @@ extension Container {
 extension EphemeralContainer {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        return then {
+        return Future {
             let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
             if let current = connections.cache[database.uid]?.connection as? Future<D.Connection> {
                 return current
@@ -118,7 +118,7 @@ extension EphemeralContainer {
             let active = ActiveConnection()
             connections.cache[database.uid] = active
 
-            let conn = self.superContainer.requestPooledConnection(to: database).map { conn -> D.Connection in
+            let conn = self.superContainer.requestPooledConnection(to: database).map(to: D.Connection.self) { conn in
                 /// first get a pointer to the pool
                 let pool = try self.superContainer.requireConnectionPool(to: database)
 

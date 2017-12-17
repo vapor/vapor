@@ -21,17 +21,6 @@ final class MigrationLog<D: Database>: Model, Timestampable {
     /// See Model.idKeyPath
     static var idKey: IDKey { return \.id }
 
-    /// See Model.keyPathMap
-    static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.batch): "batch",
-            key(\.createdAt): "createdAt",
-            key(\.updatedAt): "updatedAt",
-        ]
-    }
-
     /// See Model.id
     var id: UUID?
 
@@ -85,13 +74,11 @@ extension MigrationLog {
     /// Returns the latest batch number.
     /// note: returns 0 if no batches have run yet.
     internal static func latestBatch(on conn: Database.Connection) -> Future<Int> {
-        return then {
+        return Future {
             return try conn.query(MigrationLog<Database>.self)
                 .sort(\MigrationLog.batch, .descending)
                 .first()
-                .map { log in
-                    return log?.batch ?? 0
-            }
+                .map(to: Int.self) { $0?.batch ?? 0 }
         }
     }
 }

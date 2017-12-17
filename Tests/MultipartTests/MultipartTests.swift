@@ -19,7 +19,7 @@ class MultipartTests: XCTestCase {
     """
     
     func testBasics() throws {
-        let data = """
+        let string = """
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
         Content-Disposition: form-data; name="test"\r
         \r
@@ -33,22 +33,27 @@ class MultipartTests: XCTestCase {
         \r
         \(multinamed)\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
+        
         """
         
-        let body = HTTPBody(Data(data.utf8))
+        let data = Data(string.utf8)
+        let body = HTTPBody(data)
         
-        let form = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
+        XCTAssertEqual(Array("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8), try MultipartParser.boundary(for: data))
         
+        let form = try MultipartParser(body: body, boundary: Array("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8)).parse()
         
         XCTAssertEqual(form.parts.count, 3)
         
-        XCTAssertEqual(try form.getString(forName: "test"), "eqw-dd-sa----123;1[234")
-        XCTAssertEqual(try form.getFile(forName: "named"), Data(named.utf8))
-        XCTAssertEqual(try form.getFile(forName: "multinamed[]"), Data(multinamed.utf8))
+        XCTAssertEqual(try form.getString(named: "test"), "eqw-dd-sa----123;1[234")
+        XCTAssertEqual(try form.getFile(named: "named").data, Data(named.utf8))
+        XCTAssertEqual(try form.getFile(named: "multinamed[]").data, Data(multinamed.utf8))
+        
+        XCTAssertEqual(MultipartSerializer(form: form).serialize(), data)
     }
 
     func testMultifile() throws {
-        let data = """
+        let string = """
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r
         Content-Disposition: form-data; name="test"\r
         \r
@@ -62,20 +67,24 @@ class MultipartTests: XCTestCase {
         \r
         \(multinamed)\r
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r
+        
         """
         
-        let body = HTTPBody(Data(data.utf8))
+        let data = Data(string.utf8)
+        let body = HTTPBody(data)
         
-        let multipart = try MultipartParser.parse(from: body, boundary: Data("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8))
+        let multipart = try MultipartParser(body: body, boundary: Array("----WebKitFormBoundaryPVOZifB9OqEwP2fn".utf8)).parse()
         
-        let files = multipart.getFiles(forName: "multinamed[]")
+        let files = try multipart.getFiles(named: "multinamed[]")
         
         XCTAssertEqual(files.count, 2)
-        let file = try multipart.getFile(forName: "multinamed[]")
-        XCTAssertEqual(file, Data(named.utf8))
+        let file = try multipart.getFile(named: "multinamed[]")
+        XCTAssertEqual(file.data, Data(named.utf8))
         
-        XCTAssertEqual(files.first, Data(named.utf8))
-        XCTAssertEqual(files.last, Data(multinamed.utf8))
+        XCTAssertEqual(files.first?.data, Data(named.utf8))
+        XCTAssertEqual(files.last?.data, Data(multinamed.utf8))
+        
+        XCTAssertEqual(MultipartSerializer(form: multipart).serialize(), data)
     }
     
     static let allTests = [

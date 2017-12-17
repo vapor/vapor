@@ -5,13 +5,7 @@ import Foundation
 import SQLite
 
 final class Toy: Model {
-    static let database = beta
-
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name"
-    ]
-
+    typealias Database = SQLiteDatabase
     static let idKey = \Toy.id
 
     var id: UUID?

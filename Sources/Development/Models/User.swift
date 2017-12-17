@@ -4,8 +4,7 @@ import Foundation
 import HTTP
 import Leaf
 import Vapor
-import Fluent
-import SQLite
+import FluentSQLite
 
 import Foundation
 
@@ -17,21 +16,9 @@ final class TestUser: Codable {
 }
 
 extension TestUser: Model {
-    /// Database ID
-    static let database = beta
-
+    typealias Database = SQLiteDatabase
     /// See Model.idKey
     static var idKey = \TestUser.id
-
-    /// See Model.keyFieldMap
-    static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.age): "age",
-            key(\.child.id): "foo"
-        ]
-    }
 }
 
 extension TestUser: Migration {
@@ -56,14 +43,14 @@ struct TestSiblings: Migration {
 
     static func prepare(on connection: SQLiteConnection) -> Future<Void> {
         let owner = User(name: "Tanner", age: 23)
-        return owner.save(on: connection).then { () -> Future<Void> in
+        return owner.save(on: connection).flatMap(to: Void.self) {
             let pet = try Pet(name: "Ziz", ownerID: owner.requireID())
             let toy = Toy(name: "Rubber Band")
 
             return [
                 pet.save(on: connection),
                 toy.save(on: connection)
-            ].then {
+            ].flatMap(to: Void.self) { _ in // FIXME: add flatmap void overload to arrays
                 return pet.toys.attach(toy, on: connection)
             }
         }
@@ -74,13 +61,50 @@ struct TestSiblings: Migration {
     }
 }
 
+extension DatabaseIdentifier {
+    static var beta: DatabaseIdentifier<SQLiteDatabase> {
+        return .init("beta")
+    }
+}
+
+final class AutoUser: Migration, Model, Content {
+    typealias Database = SQLiteDatabase
+    static let idKey = \AutoUser.id
+
+    var id: UUID?
+    var name: String
+    var age: Double
+
+    init(name: String, age: Double) {
+        self.name = name
+        self.age = age
+    }
+}
+
+final class User2: Codable {
+    var id: UUID?
+    var name: String
+    var age: Double
+
+    init(name: String, age: Double) {
+        self.name = name
+        self.age = age
+    }
+}
+
+extension User2: Model {
+    typealias Database = SQLiteDatabase
+    typealias ID = UUID
+    static var idKey: IDKey {
+        return \.id
+    }
+}
+
+extension User2: Migration {}
+extension User2: Content {}
+
 final class User: Model, Content {
-    static let database = beta
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.name): "name",
-        key(\.age): "age",
-    ]
+    typealias Database = SQLiteDatabase
     static var idKey = \User.id
 
     var id: UUID?

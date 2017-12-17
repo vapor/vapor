@@ -6,19 +6,13 @@ import SQLite
 import FluentSQLite
 
 final class PetToyPivot: ModifiablePivot {
+    typealias Database = SQLiteDatabase
     typealias Left = Pet
     typealias Right = Toy
 
     static let idKey = \PetToyPivot.id
     static let leftIDKey = \PetToyPivot.petID
     static var rightIDKey = \PetToyPivot.toyID
-    static let database = beta
-
-    static let keyStringMap: KeyStringMap = [
-        key(\.id): "id",
-        key(\.petID): "petID",
-        key(\.toyID): "toyID"
-    ]
 
     var id: UUID?
     var petID: UUID

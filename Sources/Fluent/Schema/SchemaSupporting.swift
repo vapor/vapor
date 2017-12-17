@@ -20,17 +20,19 @@ public protocol SchemaFieldType {
 
     /// Default schema field types Fluent must know
     /// how to make for migrations and tests.
-    static func makeSchemaFieldType<T>(for type: T.Type) -> Self?
+    static func makeSchemaFieldType(for type: Any.Type) -> Self?
 }
 
 extension SchemaFieldType {
     /// Returns the schema field type for a given type or throws and error
-    public static func requireSchemaFieldType<T>(for type: T.Type) throws -> Self {
-        guard let type = makeSchemaFieldType(for: T.self) else {
-            throw FluentError(identifier: "scema-type-not-supported", reason: "Type for \(T.self) required, a matching database type could not be found")
+    public static func requireSchemaFieldType(for type: Any.Type) throws -> Self {
+        guard let res = makeSchemaFieldType(for: type) else {
+            throw FluentError(
+                identifier: "scema-type-not-supported",
+                reason: "Type for \(type) required, a matching database type could not be found"
+            )
         }
-
-        return type
+        return res
     }
 }
 
@@ -44,7 +46,7 @@ extension SchemaSupporting {
     /// for the supplied model type on this schema executor.
     public func create<Model>(_ model: Model.Type, closure: @escaping CreateClosure<Model>) -> Future<Void> {
         let creator = SchemaCreator(Model.self, on: self)
-        return then {
+        return Future {
             try closure(creator)
             return self.execute(schema: creator.schema)
         }
@@ -57,7 +59,7 @@ extension SchemaSupporting {
     /// for the supplied model type on this schema executor.
     public func update<Model>(_ model: Model.Type, closure: @escaping UpdateClosure<Model>) -> Future<Void> {
         let updater = SchemaUpdater(Model.self, on: self)
-        return then {
+        return Future {
             try closure(updater)
             return self.execute(schema: updater.schema)
         }

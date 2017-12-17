@@ -18,17 +18,6 @@ public final class User<D: Database>: Model, Timestampable {
         return "users"
     }
 
-    /// See Model.keyStringMap
-    public static var keyStringMap: KeyStringMap {
-        return [
-            key(\.id): "id",
-            key(\.name): "name",
-            key(\.age): "age",
-            key(\.createdAt): "createdAt",
-            key(\.updatedAt): "updatedAt"
-        ]
-    }
-
     /// See Model.database
     public static var database: DatabaseIdentifier<D> {
         return .init("test")

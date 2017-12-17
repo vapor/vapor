@@ -26,9 +26,7 @@ extension Response: ResponseEncodable {
     }
 }
 
-extension HTTPResponse: ResponseEncodable, FutureType {
-    public typealias Expectation = HTTPResponse
-
+extension HTTPResponse: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
         let new = req.makeResponse()
@@ -36,9 +34,4 @@ extension HTTPResponse: ResponseEncodable, FutureType {
         res = new
         return .done
     }
-}
-
-/// Makes `Response` a drop-in replacement for `Future<Response>
-extension Response: FutureType {
-    public typealias Expectation = Response
 }

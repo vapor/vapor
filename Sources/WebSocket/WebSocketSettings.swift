@@ -1,4 +1,5 @@
 import Foundation
+import TLS
 import HTTP
 
 public struct WebSocketSettings {
@@ -6,7 +7,7 @@ public struct WebSocketSettings {
 
     // TODO how can I set the packet size?
     // public var maxPacketSize: Int = Int(UInt16.max)
-    public var requireSSL: Bool = false
+    public var sslSettings: TLSClientSettings?
     public var subProtocols: SubProtocolTransformer = { requestProtocols in
         guard !requestProtocols.isEmpty else { return nil }
         return requestProtocols.first
@@ -16,11 +17,10 @@ public struct WebSocketSettings {
     public init() { }
 
     func apply(on request: HTTPRequest) throws {
-        guard requireSSL else { return }
+        guard let _ = sslSettings else { return }
 
         // TODO is there a better way of checking if the request is over ssl?
-        if let hostname = request.uri.hostname,
-            hostname.isSecure {
+        if request.uri.hostname?.isSecure == true {
             return
         }
 
@@ -44,6 +44,12 @@ public struct WebSocketSettings {
 
     private func getSubProtocols(from request: HTTPRequest) -> [String] {
         return request.headers[.secWebSocketProtocol]?.components(separatedBy: ", ") ?? []
+    }
+}
+
+extension String {
+    var isSecure: Bool {
+        return self == "https" || self == "wss"
     }
 }
 

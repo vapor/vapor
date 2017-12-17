@@ -2,7 +2,7 @@ import Foundation
 import Bits
 
 /// A helper class that helps with parsing a packet
-final class Parser {
+struct Parser {
     /// Keeps track of the current parser position
     var position: Int
     
@@ -21,14 +21,14 @@ final class Parser {
     }
     
     /// Requires `n` amount of bytes or throws an error
-    func require(_ n: Int) throws {
+    mutating func require(_ n: Int) throws {
         guard position &+ n <= packet.payload.count else {
             throw MySQLError(.invalidPacket)
         }
     }
     
     /// Helper that reads a single byte
-    func byte() throws -> UInt8 {
+    mutating func byte() throws -> UInt8 {
         try require(1)
         
         defer { position = position &+ 1 }
@@ -37,7 +37,7 @@ final class Parser {
     }
     
     /// Reads a buffer of `length` bytes
-    func buffer(length: Int) throws -> [UInt8] {
+    mutating func buffer(length: Int) throws -> [UInt8] {
         try require(length)
         
         defer { position = position &+ length }
@@ -46,7 +46,7 @@ final class Parser {
     }
     
     /// Reads 2 bytes into an UInt16
-    func parseUInt16() throws -> UInt16 {
+    mutating func parseUInt16() throws -> UInt16 {
         try require(2)
         
         defer { position = position &+ 2 }
@@ -55,7 +55,7 @@ final class Parser {
     }
     
     /// Reads 4 bytes into an UInt32
-    func parseUInt32() throws -> UInt32 {
+    mutating func parseUInt32() throws -> UInt32 {
         try require(4)
         
         defer { position = position &+ 4 }
@@ -64,7 +64,7 @@ final class Parser {
     }
     
     /// Reads 8 bytes into an UInt64
-    func parseUInt64() throws -> UInt64 {
+    mutating func parseUInt64() throws -> UInt64 {
         try require(8)
         
         defer { position = position &+ 8 }
@@ -73,7 +73,7 @@ final class Parser {
     }
     
     /// Parses the length encoded integer
-    func parseLenEnc() throws -> UInt64 {
+    mutating func parseLenEnc() throws -> UInt64 {
         guard position < self.payload.count else {
             throw MySQLError(.invalidResponse)
         }
@@ -100,14 +100,14 @@ final class Parser {
     }
     
     /// Parses length encoded Data
-    func parseLenEncData() throws -> Data {
+    mutating func parseLenEncData() throws -> Data {
         let length = try skipLenEnc()
         
         return Data(self.payload[position &- length..<position])
     }
     
     /// Parses length encoded Data
-    func parseLenEncBytes() throws -> ByteBuffer {
+    mutating func parseLenEncBytes() throws -> ByteBuffer {
         let length = try skipLenEnc()
         
         return ByteBuffer(start: self.payload.baseAddress?.advanced(by: position &- length), count: length)
@@ -115,7 +115,7 @@ final class Parser {
     
     /// Skips length encoded data/strings
     @discardableResult
-    func skipLenEnc() throws -> Int {
+    mutating func skipLenEnc() throws -> Int {
         let length = Int(try parseLenEnc())
         
         guard position &+ length <= self.payload.count else {
@@ -128,7 +128,7 @@ final class Parser {
     }
     
     /// Parses a length encoded string
-    func parseLenEncString() throws -> String {
+    mutating func parseLenEncString() throws -> String {
         let data = try parseLenEncData()
         return String(data: data, encoding: .utf8) ?? ""
     }

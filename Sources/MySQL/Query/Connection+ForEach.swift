@@ -12,14 +12,18 @@ extension MySQLConnection {
     /// - throws: Network error
     /// - returns: A future that will be completed when all results have been processed by the handler
     @discardableResult
-    internal func forEachRow(in query: MySQLQuery, _ handler: @escaping Callback<Row>) -> Future<Void> {
+    internal func forEachRow(in query: MySQLQuery, _ handler: @escaping Callback<Row>) -> Signal {
         let promise = Promise(Void.self)
 
-        let rowStream = RowStream(mysql41: self.mysql41)
-        packetStream.stream(to: rowStream)
-            .drain(onInput: handler)
-            .catch(onError: promise.fail)
-            .finally(onClose: { promise.complete() })
+        let rowStream = RowStream(mysql41: self.handshake.mysql41)
+        
+        parser.stream(to: rowStream).drain { connection in
+            connection.request()
+        }.output(onInput: handler)
+        .catch(onError: promise.fail)
+        .finally {
+            promise.complete()
+        }
         
         // Send the query
         do {

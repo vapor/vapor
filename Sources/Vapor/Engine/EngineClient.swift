@@ -1,5 +1,6 @@
 import Async
 import HTTP
+import JunkDrawer
 /*import HTTP2*/
 import TCP
 import TLS
@@ -9,9 +10,13 @@ public final class EngineClient: Client {
     /// See Client.container
     public let container: Container
 
+    /// This client's config.
+    public let config: EngineClientConfig
+
     /// Create a new engine client
-    public init(container: Container) {
+    public init(container: Container, config: EngineClientConfig) {
         self.container = container
+        self.config = config
     }
 
     /// See Responder.respond
@@ -34,53 +39,36 @@ public final class EngineClient: Client {
             }
         } else {*/
             /// if using cleartext, just use http/1.
-        return HTTPClient.connect(
-            to: req.http.uri.hostname ?? "",
-            port: req.http.uri.port,
-            ssl: ssl,
-            using: req
-        ).then { client -> Future<Response> in
-            req.http.headers[.host] = req.http.uri.hostname
-            return client.send(request: req.http).then { httpRes -> Response in
-                let res = req.makeResponse()
-                res.http = httpRes
-                return res
+
+        if ssl {
+            fatalError()
+        } else {
+            return Future {
+                let tcpSocket = try TCPSocket(isNonBlocking: true)
+                let tcpClient = TCPClient(socket: tcpSocket)
+                try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
+                let byteStream = tcpClient.stream(on: self.container)
+                let client = HTTPClient(byteStream: byteStream, maxResponseSize: self.config.maxResponseSize)
+
+                req.http.headers[.host] = req.http.uri.hostname
+                return client.send(req.http).map(to: Response.self) { httpRes in
+                    let res = req.makeResponse()
+                    res.http = httpRes
+                    return res
+                }
             }
         }
-        /*}*/
     }
 }
 
-extension HTTPClient {
-    /// Connects with HTTP/1.1 to a remote server.
-    ///
-    ///     // Future<HTTPClient>
-    ///     let client = try HTTPClient.connect(
-    ///        to: "example.com",
-    ///        ssl: true,
-    ///        worker: request
-    ///     )
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/client/)
-    public static func connect(to hostname: String, port: UInt16? = nil, ssl: Bool, using container: Container) -> Future<HTTPClient> {
-        let port = port ?? (ssl ? 443 : 80)
+/// Configuration option's for the EngineClient.
+public struct EngineClientConfig {
+    /// The maximum response size to allow for
+    /// incoming HTTP responses.
+    public let maxResponseSize: Int
 
-        do {
-            if ssl {
-                let client = try container.make(BasicSSLClient.self, for: HTTPClient.self)
-
-                return try client.connect(hostname: hostname, port: port).map {
-                    return HTTPClient(socket: client)
-                }
-            } else {
-                let client = try TCPClient(on: container)
-                
-                return try client.connect(hostname: hostname, port: port).map {
-                    return HTTPClient(socket: client)
-                }
-            }
-        } catch {
-            return Future(error: error)
-        }
+    /// Create a new EngineClientConfig.
+    public init(maxResponseSize: Int) {
+        self.maxResponseSize = maxResponseSize
     }
 }

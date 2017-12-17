@@ -42,7 +42,7 @@ extension Packet {
     func parseHandshake() throws -> Handshake {
         let length = payload.count
         
-        let parser = Parser(packet: self)
+        var parser = Parser(packet: self)
         
         // Require decimal `10` to be the protocol version
         guard try parser.byte() == 10 else {
