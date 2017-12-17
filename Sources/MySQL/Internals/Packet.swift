@@ -3,7 +3,7 @@ import Async
 import Bits
 
 /// Any MySQL packet
-internal class Packet {
+internal final class Packet: ExpressibleByArrayLiteral {
     /// Keeps track of the mutability of the buffer so it can be deallocated
     enum Buffer {
         case mutable(MutableByteBuffer)
@@ -19,30 +19,49 @@ internal class Packet {
     
     /// The payload contains the packet's data
     var payload: ByteBuffer {
-        switch buffer {
-        case .immutable(let buffer): return buffer
-        case .mutable(let buffer): return ByteBuffer(start: buffer.baseAddress, count: buffer.count)
+        switch _buffer {
+        case .immutable(let buffer):
+            // UInt24 + sequenceId
+            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+        case .mutable(let buffer):
+            // UInt24 + sequenceId
+            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
         }
     }
     
-    var buffer: Buffer
+    var _buffer: Buffer
     
     /// Creates a new packet
-    init(sequenceId: UInt8, payload: ByteBuffer) {
-        self.sequenceId = sequenceId
-        self.buffer = .immutable(payload)
+    init(payload: ByteBuffer) {
+        self.sequenceId = payload[3]
+        self._buffer = .immutable(payload)
     }
     
     /// Creates a new packet
-    init(sequenceId: UInt8, payload: MutableByteBuffer) {
-        self.sequenceId = sequenceId
-        self.buffer = .mutable(payload)
+    init(payload: MutableByteBuffer) {
+        self.sequenceId = payload[3]
+        self._buffer = .mutable(payload)
     }
     
     deinit {
-        if case .mutable(let buffer) = buffer {
+        if case .mutable(let buffer) = _buffer {
             // Deallocates the MySQL buffer
             buffer.baseAddress?.deallocate(capacity: buffer.count)
         }
+    }
+    
+    convenience init(arrayLiteral elements: UInt8...) {
+        let pointer = MutableBytesPointer.allocate(capacity: elements.count)
+        
+        let packetSizeBytes = [
+            UInt8((elements.count) & 0xff),
+            UInt8((elements.count >> 8) & 0xff),
+            UInt8((elements.count >> 16) & 0xff),
+        ]
+
+        memcpy(pointer, packetSizeBytes, 3)
+        memcpy(pointer.advanced(by: 4), elements, elements.count)
+        
+        self.init(payload: ByteBuffer(start: pointer, count: elements.count))
     }
 }

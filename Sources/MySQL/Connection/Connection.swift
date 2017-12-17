@@ -18,38 +18,15 @@ public struct MySQLSSLConfig {
 
 /// A connectio to a MySQL database servers
 public final class MySQLConnection {
-    /// The socket it's connected on
-    var client: TCPClient
+    /// The state of the server's handshake
+    var handshake: Handshake
     
-    /// The socket it's connected on
-    var socket: DispatchSocket
-    
-    /// The eventloop to listen for socket data on
-    var eventLoop: EventLoop
-    
-    /// Parses the incoming buffers into packets
+    /// The incoming stream parser
     let parser: MySQLPacketParser
     
-    /// The username to authenticate with
-    let username: String
+    let serializer: MySQLPacketSerializer
     
-    /// The password to authenticate with
-    let password: String?
-    
-    /// The database to select
-    let database: String
-    
-    /// The state of the server's handshake
-    var handshake: Handshake?
-    
-    /// Indicates that the SSL handshake has been sent
-    var sslSettingsSent = false
-    
-    /// Indicates if this socket should be upgraded to SSL and how to upgrade
-    var ssl: MySQLSSLConfig?
-    
-    /// A future promise
-    var authenticated = Promise<Void>()
+    let streamClose: () -> ()
     
     /// The inserted ID from the last successful query
     public var lastInsertID: UInt64?
@@ -69,36 +46,22 @@ public final class MySQLConnection {
     /// If `true`, both parties support MySQL's v4.1 protocol
     var mysql41: Bool {
         // client && server 4.1 support
-        return handshake?.isGreaterThan4 == true && self.capabilities.contains(.protocol41) && handshake?.capabilities.contains(.protocol41) == true
+        return handshake.isGreaterThan4 == true && self.capabilities.contains(.protocol41) && handshake.capabilities.contains(.protocol41) == true
     }
     
     /// Creates a new connection
     ///
     /// Doesn't finish the handshake synchronously
     init(
-        port: UInt16 = 3306,
-        ssl: MySQLSSLConfig? = nil,
-        user: String,
-        password: String?,
-        database: String,
-        client: TCPClient,
-        eventLoop: EventLoop
+        handshake: Handshake,
+        stream: AnyStream<ByteBuffer, ByteBuffer>
     ) throws {
-        let parser = MySQLPacketParser()
-        self.authenticated = Promise<Void>()
-        self.client = client
-        self.socket = client.socket
-        self.ssl = ssl
-        self.parser = parser
-        self.username = user
-        self.password = password
-        self.database = database
-        self.eventLoop = eventLoop
+        self.streamClose = stream.close
+        self.handshake = handshake
+        self.parser = stream.stream(to: MySQLPacketParser())
+        self.serializer = MySQLPacketSerializer()
         
-        client
-            .stream(on: eventLoop)
-            .stream(to: parser)
-            .output(to: self)
+        serializer.output(to: stream)
     }
 
     deinit {
@@ -108,8 +71,11 @@ public final class MySQLConnection {
     /// Closes the connection
     public func close() {
         // Write `close`
-        _ = try? self.write(packetFor: Data([0x01]))
-        self.socket.close()
+        serializer.queue([
+            0x01 // close identifier
+        ])
+        
+        streamClose()
     }
 }
 
@@ -127,7 +93,7 @@ extension MySQLConnection {
         on eventLoop: EventLoop
     ) throws -> MySQLConnection {
         let socket = try TCPSocket()
-        let client = try TCPClient(socket: socket)
+        let client = TCPClient(socket: socket)
         
         try client.connect(hostname: hostname, port: port)
         

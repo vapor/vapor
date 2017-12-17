@@ -46,7 +46,7 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
 
         // MySQL
-//         .library(name: "MySQL", targets: ["MySQL"]),
+        .library(name: "MySQL", targets: ["MySQL"]),
         
         // Multipart
         .library(name: "Multipart", targets: ["Multipart"]),
@@ -153,8 +153,8 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-//         .target(name: "MySQL", dependencies: ["TCP", /*"TLS",*/ "Crypto"]),
-//         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
+        .target(name: "MySQL", dependencies: ["TCP", /*"TLS",*/ "Crypto"]),
+        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Multipart
         .target(name: "Multipart", dependencies: ["JunkDrawer", "Debugging", "HTTP"]),
