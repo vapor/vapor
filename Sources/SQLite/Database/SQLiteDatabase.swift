@@ -24,7 +24,7 @@ public final class SQLiteDatabase {
     public func makeConnection(
         on Worker: Worker
     ) -> Future<SQLiteConnection> {
-        let promise = Promise(SQLiteConnection.self)
+        let promise = Promise(SQLiteCoOnnection.self)
         let background = DispatchQueue(label: "sqlite.connection.background")
 
         background.async {

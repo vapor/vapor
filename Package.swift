@@ -88,7 +88,7 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async.git", .branch("protocol-streams")),
+        .package(url: "https://github.com/vapor/async.git", .branch("reactive-streams")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [
