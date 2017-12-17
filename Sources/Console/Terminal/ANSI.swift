@@ -143,26 +143,27 @@ extension ANSISGRColorSpec {
     /// Convert the color spec to an SGR command
     var foregroundAnsiCommand: ANSISGRCommand {
         switch self {
-        case .traditional(let c):       return .foregroundColor(c)
-        case .bright(let c):			return .brightForegroundColor(c)
-        case .palette(let c):			return .paletteForegroundColor(c)
+        case .traditional(let c): return .foregroundColor(c)
+        case .bright(let c): return .brightForegroundColor(c)
+        case .palette(let c): return .paletteForegroundColor(c)
         case .rgb(let r, let g, let b):	return .rgbForegroundColor(r: r, g: g, b: b)
-        case .`default`:				return .defaultForegroundColor
+        case .`default`: return .defaultForegroundColor
         }
     }
 
     var backgroundAnsiCommand: ANSISGRCommand {
         switch self {
-        case .traditional(let c):       return .backgroundColor(c)
-        case .bright(let c):            return .brightBackgroundColor(c)
-        case .palette(let c):           return .paletteBackgroundColor(c)
+        case .traditional(let c): return .backgroundColor(c)
+        case .bright(let c): return .brightBackgroundColor(c)
+        case .palette(let c): return .paletteBackgroundColor(c)
         case .rgb(let r, let g, let b): return .rgbBackgroundColor(r: r, g: g, b: b)
-        case .`default`:                return .defaultBackgroundColor
+        case .`default`: return .defaultBackgroundColor
         }
     }
 }
 
 extension ConsoleStyle {
+    /// The ANSI command for this console style.
     var ansiCommand: ANSICommand {
         var commands: [ANSISGRCommand] = [.reset]
         
