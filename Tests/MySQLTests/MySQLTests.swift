@@ -11,14 +11,6 @@ import JunkDrawer
 class MySQLTests: XCTestCase {
     static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
     
-    let pool = MySQLConnectionPool(
-        hostname: "localhost",
-        user: "root",
-        password: nil,
-        database: "vapor_test",
-        on: MySQLTests.poolQueue
-    )
-    
     let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",
         user: "root",
@@ -76,28 +68,6 @@ class MySQLTests: XCTestCase {
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait(timeout: .seconds(3))
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
         try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
-    }
-
-    func testManyQueries() throws {
-        try testCreateUsersSchema()
-        
-        var results = [Future<Void>]()
-        results.reserveCapacity(100)
-        
-        MySQLTests.poolQueue.sync {
-            for i in 0..<100 {
-                results.append(pool.retain { connection in
-                    return connection.administrativeQuery("INSERT INTO users (username) VALUES ('User\(i)')")
-                })
-            }
-        }
-        
-        do {
-            try results.flatten().blockingAwait(timeout: .seconds(10))
-        } catch {
-            let count = results.filter { $0.isCompleted }.count
-            XCTFail("Only \(count) out of 100 success")
-        }
     }
     
     func testForEach() throws {

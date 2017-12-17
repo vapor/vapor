@@ -231,8 +231,8 @@ let package = Package(
             "ServerSecurity",
             // ssl,
             "AppleTLS",
-            "OpenSSL"
-            // "WebSocket",
+            "OpenSSL",
+             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 

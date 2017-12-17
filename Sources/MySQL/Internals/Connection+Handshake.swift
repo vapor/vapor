@@ -262,9 +262,9 @@ fileprivate final class MySQLConnector {
                     
                     let hash = sha1Encrypted(from: password, seed: Array(packet.payload[(offset &+ 1)...]))
                     
-                    try serializer.queue(Packet(data: hash))
+                    serializer.queue(Packet(data: hash))
                 case "mysql_clear_password":
-                    try serializer.queue(Packet(data: Data(password.utf8)))
+                    serializer.queue(Packet(data: Data(password.utf8)))
                 default:
                     throw MySQLError(.invalidHandshake)
                 }
