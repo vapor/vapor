@@ -56,8 +56,8 @@ public final class EngineServer: Server {
         }
 
         console.print("Server starting on ", newLine: false)
-        console.output("http://" + config.hostname, style: .custom(.cyan), newLine: false)
-        console.output(":" + config.port.description, style: .custom(.cyan))
+        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+        console.output(":" + config.port.description, style: .init(color: .cyan))
 
         // bind, listen, and start accepting
         try tcpServer.start(
