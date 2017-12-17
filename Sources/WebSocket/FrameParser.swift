@@ -1,7 +1,7 @@
 import Async
 import Bits
 
-public final class FrameParser: Async.Stream, ClosableStream {
+public final class FrameParser: ProtocolStream {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
     
@@ -22,34 +22,55 @@ public final class FrameParser: Async.Stream, ClosableStream {
     
     /// The currently processing frame
     var processing: Frame.Header?
-
-    /// Use a basic stream to easily implement our output stream.
-    private var outputStream: BasicStream<Output> = .init()
+    
+    /// Serialized requests
+    var remainingDownstreamRequests: UInt
+    
+    /// Unrequested backlog
+    var backlog = [Output]()
+    
+    /// Upstream bytebuffer output stream
+    private var upstream: ConnectionContext?
+    
+    /// Downstream frame input stream
+    private var downstream: AnyInputStream<Output>?
     
     public init(maximumPayloadSize: Int = 100_000) {
         self.maximumPayloadSize = maximumPayloadSize
         // 2 for the header, 9 for the length, 4 for the mask
         self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)
     }
-
-    /// See OutputStream.onOutput
-    public func onOutput<I>(_ input: I) where I : InputStream, FrameParser.Output == I.Input {
-        outputStream.onOutput(input)
-    }
-
-    /// See OutputStream.onError
-    public func onError(_ error: Error) {
-        outputStream.onError(error)
+    
+    public func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .next(let input):
+            if let promise = responseQueue.popLast() {
+                promise.complete(input)
+            } else {
+                update()
+            }
+        case .error(let error): downstream?.error(error)
+        case .close: downstream?.close()
+        }
     }
     
-    /// See ClosableStream.close
-    public func close() {
-        self.outputStream.close()
+    public func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .request(let count):
+            let isSuspended = remainingDownstreamRequests == 0
+            remainingDownstreamRequests += count
+            if isSuspended { update() }
+        case .cancel:
+            /// FIXME: better cancel support
+            remainingDownstreamRequests = 0
+        }
     }
     
-    /// See ClosableStream.onClose
-    public func onClose(_ onClose: ClosableStream) {
-        self.outputStream.onClose(onClose)
+    public func output<S>(to inputStream: S) where S : InputStream, FrameParser.Output == S.Input {
+        downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
     
     /// See OutputStream.onInput
