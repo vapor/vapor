@@ -20,7 +20,7 @@ final class RedisDataSerializer: Async.Stream {
 
     /// Creates a new ValueSerializer
     init() {}
-
+    
     /// See InputStream.input
     func input(_ event: InputEvent<RedisData>) {
         switch event {

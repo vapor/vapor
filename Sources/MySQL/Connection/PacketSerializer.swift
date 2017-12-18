@@ -37,6 +37,10 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     }
 
     func queue(_ packet: Packet) {
-        fatalError("implement me")
+        if downstreamDemand > 0 {
+            self.flush(packet.buffer)
+        } else {
+            self.backlog.append(packet)
+        }
     }
 }

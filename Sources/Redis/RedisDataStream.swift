@@ -11,9 +11,10 @@ final class RedisDataStream: Stream, ConnectionContext {
 
     /// A set of promises awaiting a response
     private var responseQueue: [Promise<RedisData>]
-
-    /// A set of promises awaiting a response
-    private var requestQueue: [RedisData]
+    private var drainedResponses = 0
+    
+    private var requests = [RedisData]()
+    private var drainedRequests = 0
 
     /// Parses redis data from binary
     let parser: RedisDataParser
@@ -44,7 +45,6 @@ final class RedisDataStream: Stream, ConnectionContext {
         serializer = .init()
         remainingDownstreamRequests = 0
         responseQueue = []
-        requestQueue = []
         source
             .stream(to: parser)
             .stream(to: self)
@@ -64,11 +64,15 @@ final class RedisDataStream: Stream, ConnectionContext {
         case .connect(let upstream):
             self.upstream = upstream
         case .next(let input):
-            if let promise = responseQueue.popLast() {
-                promise.complete(input)
+            if responseQueue.count > drainedResponses {
+                responseQueue[drainedResponses].complete(input)
+                drainedResponses += 1
             } else {
-                update()
+                flushBacklog()
             }
+            
+            responseQueue.removeFirst(drainedResponses)
+            drainedResponses = 0
         case .error(let error): downstream?.error(error)
         case .close: downstream?.close()
         }
@@ -78,9 +82,9 @@ final class RedisDataStream: Stream, ConnectionContext {
     func connection(_ event: ConnectionEvent) {
         switch event {
         case .request(let count):
-            let isSuspended = remainingDownstreamRequests == 0
             remainingDownstreamRequests += count
-            if isSuspended { update() }
+            
+            flushBacklog()
         case .cancel:
             /// FIXME: better cancel support
             remainingDownstreamRequests = 0
@@ -92,22 +96,37 @@ final class RedisDataStream: Stream, ConnectionContext {
     /// response when it arrives.
     func enqueue(request: RedisData) -> Future<RedisData> {
         let promise = Promise(RedisData.self)
-        requestQueue.insert(request, at: 0)
-        responseQueue.insert(promise, at: 0)
+        
+        flush(request)
+        responseQueue.append(promise)
+        
         upstream?.request()
-        update()
+        
         return promise.future
+    }
+    
+    func flushBacklog() {
+        while requests.count > drainedRequests, remainingDownstreamRequests > 0 {
+            serializer.next(requests[drainedRequests])
+            
+            drainedRequests += 1
+            remainingDownstreamRequests -= 1
+        }
+        
+        requests.removeFirst(drainedRequests)
+        self.drainedRequests = 0
     }
 
     /// Updates the stream's state. If there are outstanding
     /// downstream requests, they will be fulfilled.
-    private func update() {
+    private func flush(_ request: RedisData) {
+        flushBacklog()
+        
         guard remainingDownstreamRequests > 0 else {
+            requests.append(request)
             return
         }
-        while let request = requestQueue.popLast() {
-            remainingDownstreamRequests -= 1
-            downstream?.next(request)
-        }
+        
+        serializer.next(request)
     }
 }

@@ -11,7 +11,7 @@ internal final class MySQLPacketParser: ProtocolParserStream {
     typealias Output = Packet
     
     /// The in-progress parsing value
-    var parsing: (buffer: MutableByteBuffer, containing: Int, sequenceId: UInt8)?
+    var parsing: (buffer: MutableByteBuffer, containing: Int)?
     
     /// Internal buffer that keeps tack of an uncompleted packet header (size: UInt24) + (sequenceID: UInt8)
     private var headerBytes = [UInt8]()
@@ -24,6 +24,22 @@ internal final class MySQLPacketParser: ProtocolParserStream {
     
     /// The upstream providing byte buffers
     var upstream: ConnectionContext?
+    
+    var upstreamBuffer: ByteBuffer?
+    var upstreamBufferOffset: Int = 0
+    
+    /// Must not be called before input
+    /// The remaining length after `pointer`
+    var length: Int {
+        return upstreamBuffer!.count &- upstreamBufferOffset
+    }
+    
+    /// Must not be called before input
+    ///
+    /// The current position of reading
+    var pointer: BytesPointer {
+        return upstreamBuffer!.baseAddress!.advanced(by: upstreamBufferOffset)
+    }
     
     /// Use a basic output stream to implement server output stream.
     var downstream: AnyInputStream<Output>?
@@ -43,191 +59,155 @@ internal final class MySQLPacketParser: ProtocolParserStream {
     }
     
     func transform(_ input: ByteBuffer) throws {
-        // FIXME: Packet parser must dump all data, not just the payload inside the packet
+        self.upstreamBuffer = input
+        self.upstreamBufferOffset = 0
         
-        // If there's no input pointer, throw an error
-        guard var pointer = input.baseAddress else {
-            throw MySQLError(.invalidPacket)
-        }
-
-        // Capture the pointer's contentlength
-        var length = input.count
-        var canContinue: Bool
-        
-        nextPacket: repeat {
-            // If an existing packet it building
-            if let (_buffer, _containing, _sequenceId) = self.parsing {
-                // Continue parsing from the start
-
-                // Parse the packet contents
-                canContinue = try parseInput(
-                    pointer: &pointer,
-                    into: _buffer,
-                    length: &length,
-                    alreadyContaining: _containing,
-                    sequenceId: _sequenceId
-                )
+        // If an existing packet it building
+        if let (buffer, containing) = self.parsing {
+            let dataSize = min(buffer.count &- containing, length)
+            
+            memcpy(buffer.baseAddress!, pointer, dataSize)
+            
+            upstreamBufferOffset += dataSize
+            
+            if dataSize &+ containing == buffer.count {
+                // Packet is complete, send it up
+                let packet = Packet(payload: buffer)
+                flush(packet)
             } else {
-                let byte0: UInt32
-                let byte1: UInt32
-                let byte2: UInt32
-                
-                if headerBytes.count == 0 {
-                    byte0 = (numericCast(pointer[0]) as UInt32).littleEndian
-                    byte1 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
-                    byte2 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
-                    
-                    let bufferSize = Int(byte0 | byte1 | byte2) &+ 4
-                    
-                    let buffer = ByteBuffer(start: pointer, count: bufferSize)
-                    
-                    // Packet is complete, send it up
-                    let packet = Packet(payload: buffer)
-                    flush(packet)
-                    
-                    length -= bufferSize
-                    pointer = pointer.advanced(by: bufferSize)
-                    canContinue = true
-                    continue nextPacket
-                }
-                
-                // at least 4 packet bytes for new packets
-                guard length &+ headerBytes.count > 3 else {
-                    if length == 0 {
-                        return
-                    }
-
-                    if length == 1 {
-                        headerBytes = [
-                            pointer[0]
-                        ]
-                    } else if length == 2 {
-                        headerBytes = [
-                            pointer[0], pointer[1]
-                        ]
-                    } else {
-                        headerBytes = [
-                            pointer[0], pointer[1], pointer[1]
-                        ]
-                    }
-
+                // Wait for more data
+                self.parsing = (buffer, dataSize &+ containing)
+                upstream?.request()
+            }
+        } else {
+            // Continue parsing from the start
+            if headerBytes.count == 0 {
+                guard length >= 3 else {
+                    dumpHeader()
                     return
                 }
-                let offset: Int
-
-                // take the first 3 bytes
-                // Take the cached previous packet edge-case bytes into consideration
-                switch headerBytes.count {
-                case 1:
-                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
-                    byte1 = (numericCast(pointer[0]) as UInt32).littleEndian << 8
-                    byte2 = (numericCast(pointer[1]) as UInt32).littleEndian << 16
-
-                    offset = 2
-                    headerBytes = []
-                case 2:
-                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
-                    byte1 = (numericCast(headerBytes[1]) as UInt32).littleEndian << 8
-                    byte2 = (numericCast(pointer[0]) as UInt32).littleEndian << 16
-
-                    offset = 1
-                    headerBytes = []
-                case 3:
-                    byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
-                    byte1 = (numericCast(headerBytes[1]) as UInt32).littleEndian << 8
-                    byte2 = (numericCast(headerBytes[2]) as UInt32).littleEndian << 16
-
-                    offset = 0
-                    headerBytes = []
-                default:
-                    byte0 = (numericCast(pointer[0]) as UInt32).littleEndian
-                    byte1 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
-                    byte2 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
-
-                    offset = 3
+                
+                let byte0: UInt32 = (numericCast(pointer[0]) as UInt32).littleEndian
+                let byte1: UInt32 = (numericCast(pointer[1]) as UInt32).littleEndian << 8
+                let byte2: UInt32 = (numericCast(pointer[2]) as UInt32).littleEndian << 16
+                
+                let payloadSize = numericCast(byte0 | byte1 | byte2) as Int
+                
+                // sequenceID + payload
+                let fullPacketSize = 1 &+ payloadSize
+                
+                if length < fullPacketSize {
+                    dumpPayload(size: fullPacketSize)
+                } else {
+                    flushPayload(size: fullPacketSize)
                 }
-
-                // Parse buffer size
-                let bufferSize = Int(byte0 | byte1 | byte2) &+ 4 // uint24 + sequence
-
-                let sequenceId = input[offset]
-
-                // Advance the pointer by the header size
-                pointer = pointer.advanced(by: 1 &+ offset)
-
-                // Decrease the pointer size by the header size
-                length = length &- (1 &+ offset)
-
-                // Build a buffer size
-                let bufferPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: bufferSize)
-                let buffer = MutableByteBuffer(start: bufferPointer, count: bufferSize)
-
-                // Parse the packet contents
-                canContinue = try parseInput(
-                    pointer: &pointer,
-                    into: buffer,
-                    length: &length,
-                    alreadyContaining: 0,
-                    sequenceId: sequenceId
-                )
+            } else {
+                guard let header = parseHeader() else {
+                    return
+                }
+                
+                let fullPacketSize = 1 &+ header
+                
+                if length < fullPacketSize {
+                    dumpPayload(size: fullPacketSize)
+                } else {
+                    flushPayload(size: fullPacketSize)
+                }
             }
-        } while canContinue
+        }
     }
-
-    // Parses the buffer
-    //
-    // returns true if parsing needs to continue
-    private func parseInput(
-        pointer: inout BytesPointer,
-        into buffer: MutableByteBuffer,
-        length: inout Int,
-        alreadyContaining containing: Int,
-        sequenceId: UInt8
-    ) throws -> Bool {
-        // If there's no input pointer, throw an error
-        guard let destination = buffer.baseAddress?.advanced(by: containing) else {
-            throw MySQLError(.invalidPacket)
+    
+    private func flushPayload(size: Int) {
+        // we don't need to copy this
+        let buffer = ByteBuffer(start: pointer, count: size)
+        
+        upstreamBufferOffset = upstreamBufferOffset &+ size
+        
+        // Packet is complete, send it up
+        let packet = Packet(payload: buffer)
+        flush(packet)
+    }
+    
+    private func dumpHeader() {
+        guard headerBytes.count &+ length < 3 else {
+            fatalError("Dumping MySQL packet header which is large enough to parse")
         }
-
-        // The rest of the packet
-        let needing = buffer.count &- containing
-
-        // If there's too much data
-        if length > needing {
-            // copy only the necessary
-            memcpy(destination, pointer, needing)
-
-            // Packet is complete, send it up
-            let packet = Packet(payload: buffer)
-            flush(packet)
-
-            self.parsing = nil
-
-            guard length &- needing > 0 else {
-                return false
-            }
-
-            pointer = pointer.advanced(by: needing)
-            length = length &- needing
-            return true
-            // If we have exactly enough or too little
+        
+        // at least 4 packet bytes for new packets
+        if length == 0 {
+            return
+        }
+        
+        if length == 1 {
+            headerBytes += [
+                pointer[0]
+            ]
+        } else if length == 2 {
+            headerBytes += [
+                pointer[0], pointer[1]
+            ]
         } else {
-            memcpy(destination, pointer, length)
-
-            // If the packet is not complete yet
-            guard containing &+ length == needing else {
-                // update the partial packet
-                self.parsing = (buffer, containing &+ length, sequenceId)
-                return false
-            }
-
-            // Packet is complete, send it up
-            let packet = Packet(payload: buffer)
-            flush(packet)
-
-            self.parsing = nil
-            return false
+            headerBytes += [
+                pointer[0], pointer[1], pointer[1]
+            ]
         }
+        
+        upstream?.request()
+        return
+    }
+    
+    private func dumpPayload(size: Int) {
+        // dump payload inside packet
+        // Build a buffer size, we need to copy this since it's not complete
+        let bufferPointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
+        let buffer = MutableByteBuffer(start: bufferPointer, count: size)
+        
+        let containing = min(length, size)
+        memcpy(bufferPointer, pointer, containing)
+        
+        self.parsing = (buffer, containing)
+        upstream?.request()
+    }
+    
+    /// Do not call this function is the headerBytes size == 0
+    private func parseHeader() -> Int? {
+        guard headerBytes.count > 0 else {
+            fatalError("Incorrect usage of MySQL packet header parsing")
+        }
+        
+        guard length &+ headerBytes.count >= 3 else {
+            dumpHeader()
+            return nil
+        }
+        
+        let byte0: UInt32
+        let byte1: UInt32
+        let byte2: UInt32
+        
+        // take the first 3 bytes
+        // Take the cached previous packet edge-case bytes into consideration
+        switch headerBytes.count {
+        case 1:
+            byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
+            
+            byte1 = (numericCast(pointer[0]) as UInt32).littleEndian << 8
+            byte2 = (numericCast(pointer[1]) as UInt32).littleEndian << 16
+            self.upstreamBufferOffset += 2
+            
+            headerBytes = []
+        case 2:
+            byte0 = (numericCast(headerBytes[0]) as UInt32).littleEndian
+            byte1 = (numericCast(headerBytes[1]) as UInt32).littleEndian << 8
+            
+            byte2 = (numericCast(pointer[0]) as UInt32).littleEndian << 16
+            self.upstreamBufferOffset += 1
+            
+            headerBytes = []
+        default:
+            fatalError("Invalid scenario reached")
+        }
+        
+        return numericCast(byte0 | byte1 | byte2) as Int
     }
 }
 
