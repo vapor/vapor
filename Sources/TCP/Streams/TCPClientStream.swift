@@ -29,12 +29,14 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
 
     /// See OutputStream.output
     public func output<S>(to inputStream: S) where S: InputStream, S.Input == Output {
+        print("\(type(of: self)).\(#function)")
         downstream = AnyInputStream(inputStream)
         inputStream.connect(to: self)
     }
 
     /// See ConnectionContext.connection
     public func connection(_ event: ConnectionEvent) {
+        print("\(type(of: self)).\(#function)")
         switch event {
         case.request(let count):
             /// handle downstream requesting data
@@ -56,6 +58,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
     /// Resumes accepting clients if currently suspended
     /// and count is greater than 0
     private func request(_ accepting: UInt) {
+        print("\(type(of: self)).\(#function)(\(accepting))")
         let isSuspended = requestedOutputRemaining == 0
         if accepting == .max {
             requestedOutputRemaining = .max
@@ -70,6 +73,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
 
     /// Cancels the stream
     private func cancel() {
+        print("\(type(of: self)).\(#function)")
         server.stop()
         downstream?.close()
         if requestedOutputRemaining == 0 {
@@ -82,6 +86,7 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
 
     /// Accepts a client and outputs to the stream
     private func accept(isCancelled: Bool) {
+        print("\(type(of: self)).\(#function)")
         do {
             guard let client = try server.accept() else {
                 // the client was rejected
@@ -109,9 +114,10 @@ public final class TCPClientStream: OutputStream, ConnectionContext {
     /// Returns the existing accept source or creates
     /// and stores a new one
     private func ensureAcceptSource() -> EventSource {
+        print("\(type(of: self)).\(#function)")
         guard let existing = acceptSource else {
             /// create a new accept source
-            let source = self.eventLoop.onReadable(descriptor: server.socket.descriptor, accept)
+            let source = eventLoop.onReadable(descriptor: server.socket.descriptor, accept)
             acceptSource = source
             return source
         }
