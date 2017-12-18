@@ -3,6 +3,9 @@ import Bits
 import COperatingSystem
 import Foundation
 
+fileprivate let cRead = read
+fileprivate let cClose = close
+
 /// Any TCP socket. It doesn't specify being a server or client yet.
 public struct TCPSocket: Socket {
     /// The file descriptor related to this socket
@@ -88,7 +91,7 @@ public struct TCPSocket: Socket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     public func read(into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = Darwin.read(descriptor, buffer.baseAddress!, buffer.count)
+        let receivedBytes = cRead(descriptor, buffer.baseAddress!, buffer.count)
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -148,6 +151,6 @@ public struct TCPSocket: Socket {
 
     /// Closes the socket
     public func close() {
-        Darwin.close(descriptor)
+        cClose(descriptor)
     }
 }
