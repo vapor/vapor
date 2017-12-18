@@ -1,9 +1,10 @@
 import XCTest
+import Async
 @testable import JunkDrawer
 
 class JunkDrawerTests: XCTestCase {
     func testFileRead() throws {
-        let file = try File(queue: .global()).read(at: CommandLine.arguments[0], chunkSize: 128).blockingAwait()
+        let file = try File(on: DispatchEventLoop(label: "junk-drawer")).read(at: CommandLine.arguments[0], chunkSize: 128).blockingAwait()
         XCTAssertGreaterThan(file.count, 512)
     }
     

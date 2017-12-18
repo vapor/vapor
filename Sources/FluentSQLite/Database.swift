@@ -6,8 +6,8 @@ import Debugging
 extension SQLiteDatabase: Database {
     public typealias Connection = SQLiteConnection
     
-    public func makeConnection(from config: SQLiteConfig, on Worker: Worker) -> Future<SQLiteConnection> {
-        return self.makeConnection(on: Worker)
+    public func makeConnection(from config: SQLiteConfig, on worker: Worker) -> Future<SQLiteConnection> {
+        return self.makeConnection(on: worker)
     }
 }
 

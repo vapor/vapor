@@ -8,7 +8,7 @@ import JunkDrawer
 class RedisTests: XCTestCase {
     var clientCount = 0
 
-    let queue = DispatchQueue(label: "codes.vapor.redis.test")
+    let queue = DispatchEventLoop(label: "codes.vapor.redis.test")
 
     func makeClient() throws -> RedisClient {
         return try RedisClient.connect(

@@ -10,7 +10,7 @@ class SSLTests: XCTestCase {
     func testClientBlocking() { do { try _testClientBlocking() } catch { XCTFail("\(error)") } }
     func _testClientBlocking() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: false)
-        let tcpClient = TCPClient(socket: tcpSocket)
+        let tcpClient = try TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
         let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
         try tlsClient.connect(hostname: "google.com", port: 443)
@@ -25,7 +25,7 @@ class SSLTests: XCTestCase {
     func testClient() { do { try _testClient() } catch { XCTFail("\(error)") } }
     func _testClient() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
-        let tcpClient =  TCPClient(socket: tcpSocket)
+        let tcpClient = try TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
         // let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
         let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
@@ -33,7 +33,9 @@ class SSLTests: XCTestCase {
 
         let exp = expectation(description: "read data")
 
-        let tlsStream = tlsClient.stream(on: DispatchQueue(label: "codes.vapor.tls.client"))
+        let tlsStream = tlsClient.socket.source(on: DispatchEventLoop(label: "codes.vapor.tls.client"))
+        let tlsSink = tlsClient.socket.sink(on: DispatchEventLoop(label: "codes.vapor.tls.client"))
+        
         tlsStream.drain { req in
             req.request(count: 1)
         }.output { buffer in
@@ -47,7 +49,7 @@ class SSLTests: XCTestCase {
         }
 
         let source = EmitterStream(ByteBuffer.self)
-        source.output(to: tlsStream)
+        source.output(to: tlsSink)
 
         let req = "GET /robots.txt HTTP/1.1\r\nContent-Length: 0\r\nHost: www.google.com\r\nUser-Agent: hi\r\n\r\n".data(using: .utf8)!
         source.emit(req.withByteBuffer { $0 })

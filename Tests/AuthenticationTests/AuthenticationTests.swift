@@ -6,7 +6,7 @@ import XCTest
 
 class AuthenticationTests: XCTestCase {
     func testPassword() throws {
-        let queue = DispatchQueue(label: "test.auth")
+        let queue = DispatchEventLoop(label: "test.auth")
         
         let database = SQLiteDatabase(storage: .memory)
         let conn = try database.makeConnection(on: queue).blockingAwait()

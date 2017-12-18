@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 import Service
 import XCTest
@@ -12,7 +13,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -30,7 +31,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -51,7 +52,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -69,7 +70,7 @@ class ServiceTests: XCTestCase {
         	config: config,
          	environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try container.make(Log.self, for: ServiceTests.self)
         
@@ -88,7 +89,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try! container.make(Log.self, for: ServiceTests.self)
         XCTAssert(log is PrintLog)
@@ -104,7 +105,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
@@ -119,7 +120,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         let log = try container.make(AllCapsLog.self, for: ServiceTests.self)
         XCTAssert(type(of: log) == AllCapsLog.self)
@@ -136,7 +137,7 @@ class ServiceTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
         XCTAssertThrowsError(_ = try container.make(Log.self, for: ServiceTests.self), "Should not have resolved")
     }

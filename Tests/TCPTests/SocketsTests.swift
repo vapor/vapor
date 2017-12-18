@@ -15,7 +15,7 @@ class SocketsTests: XCTestCase {
         let serverSocket = try TCPSocket(isNonBlocking: true)
         let server = try TCPServer(socket: serverSocket)
 
-        let worker = DispatchQueue(label: "codes.vapor.test.worker.1")
+        let worker = DispatchEventLoop(label: "codes.vapor.test.worker.1")
         let serverStream = server.stream(
             on: DispatchEventLoop(label: "codes.vapor.test.server")
         )
@@ -24,14 +24,16 @@ class SocketsTests: XCTestCase {
         serverStream.drain { req in
             req.request(count: .max)
         }.output { client in
-            let clientStream = client.stream(on: worker)
+            let clientSource = client.socket.source(on: worker)
+            let clientSink = client.socket.sink(on: worker)
+            
             var clientReq: ConnectionContext?
-            clientStream.drain { req in
+            clientSource.drain { req in
                 clientReq = req
                 clientReq!.request()
             }.output { buffer in
                 /// simple echo server
-                clientStream.next(buffer)
+                clientSink.next(buffer)
                 /// after we write data, we are ready to read more
                 /// note: important that we start reading here
                 /// or else the source will not be active to detect
@@ -59,7 +61,7 @@ class SocketsTests: XCTestCase {
         var num = 1024
         for _ in 0..<num {
             let clientSocket = try TCPSocket(isNonBlocking: false)
-            let client = TCPClient(socket: clientSocket)
+            let client = try TCPClient(socket: clientSocket)
             try client.connect(hostname: "localhost", port: 8338)
             let write = Data("hello".utf8)
             _ = try client.socket.write(write)

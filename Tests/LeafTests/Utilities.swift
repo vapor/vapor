@@ -7,11 +7,11 @@ import JunkDrawer
 import Leaf
 
 extension LeafRenderer {
-    static func makeTestRenderer(Worker: Worker) -> LeafRenderer {
+    static func makeTestRenderer(worker: Worker) -> LeafRenderer {
         let config = LeafConfig { _ in
             return TestFiles()
         }
-        return LeafRenderer(config: config, on: Worker)
+        return LeafRenderer(config: config, on: worker)
     }
 }
 

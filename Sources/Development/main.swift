@@ -123,7 +123,7 @@ do {
     }
 
     router.get("leaf") { req -> Future<View> in
-        let promise = Promise(User.self)
+//        let promise = Promise(User.self)
         // user.futureChild = promise.future
 //        req.eventLoop.asyncAfter(deadline: .now() + 2) {
 //            let user = User(name: "unborn", age: -1)

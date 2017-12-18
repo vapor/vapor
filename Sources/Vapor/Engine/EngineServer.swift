@@ -163,7 +163,7 @@ fileprivate struct EngineWorker: HTTPResponder, Worker {
         self.responder = responder
     }
 
-    func respond(to httpRequest: HTTPRequest, on Worker: Worker) throws -> Future<HTTPResponse> {
+    func respond(to httpRequest: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse> {
         return Future {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)

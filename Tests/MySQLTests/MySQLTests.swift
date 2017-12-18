@@ -9,7 +9,7 @@ import JunkDrawer
 
 /// Requires a user with the username `vapor` and password `vapor` with permissions on the `vapor_test` database on localhost
 class MySQLTests: XCTestCase {
-    static let poolQueue: DispatchQueue = DispatchQueue(label: "multi")
+    static let poolQueue = DispatchEventLoop(label: "multi")
     
     let connection = try! MySQLConnection.makeConnection(
         hostname: "localhost",

@@ -7,11 +7,11 @@ import XCTest
 
 class LeafTests: XCTestCase {
     var renderer: LeafRenderer!
-    var queue: DispatchQueue!
+    var queue: Worker!
 
     override func setUp() {
-        self.queue = DispatchQueue(label: "codes.vapor.leaf.test")
-        self.renderer = LeafRenderer.makeTestRenderer(Worker: queue)
+        self.queue = DispatchEventLoop(label: "codes.vapor.leaf.test")
+        self.renderer = LeafRenderer.makeTestRenderer(worker: queue)
     }
 
     func testRaw() throws {

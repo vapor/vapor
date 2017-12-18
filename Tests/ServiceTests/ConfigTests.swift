@@ -1,3 +1,4 @@
+import Async
 import Dispatch
 import Service
 import XCTest
@@ -17,7 +18,7 @@ class ConfigTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -35,7 +36,7 @@ class ConfigTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)
@@ -52,7 +53,7 @@ class ConfigTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         do {
@@ -78,7 +79,7 @@ class ConfigTests: XCTestCase {
             config: config,
             environment: .production,
             services: services,
-            on: DispatchQueue.global()
+            on: DispatchEventLoop(label: "unit-test")
         )
 
         let hasher = try container.make(Hasher.self, for: ConfigTests.self)

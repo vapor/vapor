@@ -40,7 +40,7 @@ import Dispatch
 //    }
 //
 //    /// Create a new basic worker
-//    public init(Worker: Worker, container: Container) {
+//    public init(worker: Worker, container: Container) {
 //        self.Worker = Worker
 //        self.container = container
 //    }
