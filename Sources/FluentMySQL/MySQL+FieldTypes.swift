@@ -117,6 +117,11 @@ public struct ColumnType {
         return ColumnType(name: "DATE", length: nil)
     }
     
+    /// A TEXT
+    public static func text() -> ColumnType {
+        return ColumnType(name: "TEXT", length: nil)
+    }
+    
     /// A DATETIME
     public static func datetime() -> ColumnType {
         return ColumnType(name: "DATETIME", length: nil)
