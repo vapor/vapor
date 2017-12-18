@@ -89,13 +89,6 @@ public struct TCPSocket: Socket {
     /// Returns the amount of bytes actually read.
     public func read(into buffer: MutableByteBuffer) throws -> SocketReadStatus {
         let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, buffer.count)
-        do {
-            if receivedBytes > 0 {
-                let buf = ByteBuffer(start: buffer.baseAddress, count: receivedBytes)
-                let string = String(bytes: buf, encoding: .ascii)!
-                print("[tcp] read: \(string)")
-            }
-        }
 
         guard receivedBytes != -1 else {
             switch errno {
@@ -135,13 +128,6 @@ public struct TCPSocket: Socket {
         }
 
         let sent = send(descriptor, pointer, buffer.count, 0)
-
-        do {
-            let buf = ByteBuffer(start: buffer.baseAddress, count: sent)
-            let string = String(bytes: buf, encoding: .ascii)!
-            print("[tcp] wrote: \(string)")
-        }
-
 
         guard sent != -1 else {
             switch errno {

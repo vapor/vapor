@@ -42,7 +42,6 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
 
     /// See ConnectionContext.connection
     public func connection(_ event: ConnectionEvent) {
-        print("\(type(of: self)).\(#function)(\(event))")
         switch event {
         case .request(let count):
             let isSuspended = remainingByteBuffersRequested == 0
@@ -56,7 +55,6 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
 
     /// See InputStream.input
     public func input(_ event: InputEvent<Serializer.Message>) {
-        print("\(type(of: self)).\(#function)(\(event))")
         switch event {
         case .close:
             downstream?.close()
