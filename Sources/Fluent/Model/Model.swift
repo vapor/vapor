@@ -181,7 +181,7 @@ extension Model {
     /// the supplied identifier.
     public static func find(
         _ id: Self.ID,
-        from database: DatabaseIdentifier<Database>?,
+        from database: DatabaseIdentifier<Database>? = nil,
         on conn: DatabaseConnectable
     ) -> Future<Self?> {
         return Future {
