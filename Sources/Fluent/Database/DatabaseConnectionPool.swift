@@ -45,6 +45,8 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
     public func requestConnection() -> Future<Database.Connection> {
         let promise = Promise(Database.Connection.self)
 
+        print("pool.requestConnection")
+
         if let ready = self.available.popLast() {
             promise.complete(ready)
         } else if self.active < self.max {

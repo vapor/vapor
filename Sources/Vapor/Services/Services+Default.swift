@@ -7,13 +7,10 @@ import Foundation
 import Routing
 import Service
 import TLS
-
 #if os(Linux)
     import OpenSSL
-    public typealias DefaultTLSClient = OpenSSLClient
 #else
     import AppleTLS
-    public typealias DefaultTLSClient = AppleTLSClient
 #endif
 
 extension Services {

@@ -25,31 +25,6 @@ public final class Request: EphemeralContainer, ParameterContainer {
 
     /// See Extendable.extend
     public var extend: Extend
-
-    /// See Worker.queue
-    public var eventLoop: EventLoop {
-        return superContainer.eventLoop
-    }
-
-    /// See Container.config
-    public var config: Config {
-        return superContainer.config
-    }
-
-    /// See Container.environment
-    public var environment: Environment {
-        return superContainer.environment
-    }
-
-    /// See Container.services
-    public var services: Services {
-        return superContainer.services
-    }
-
-    /// See Container.serviceCache
-    public var serviceCache: ServiceCache {
-        return superContainer.serviceCache
-    }
     
     /// HTTP requests have a method, like GET or POST
     ///

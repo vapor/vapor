@@ -29,9 +29,15 @@ public final class SQLiteResults {
     /// Fetches rows in blocking fashion. This should be called from a
     /// background thread.
     public func fetchRow() -> Future<SQLiteRow?> {
-        return Future {
-            return try Future(self.blockingFetchRow())
+        let promise = Promise(SQLiteRow?.self)
+        connection.eventLoop.async {
+            do {
+                try promise.complete(self.blockingFetchRow())
+            } catch {
+                promise.fail(error)
+            }
         }
+        return promise.future
     }
 
     /// Fetches rows in blocking fashion. This should be called from a

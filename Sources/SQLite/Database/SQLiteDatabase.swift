@@ -22,20 +22,30 @@ public final class SQLiteDatabase {
     /// Make sure to supply the event loop to this parameter so you get called back
     /// on the appropriate thread.
     public func makeConnection(
-        on Worker: Worker
+        on worker: Worker
     ) -> Future<SQLiteConnection> {
-        return Future {
-            let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
-            var raw: SQLiteConnection.Raw?
-            guard sqlite3_open_v2(self.storage.path, &raw, options, nil) == SQLITE_OK else {
-                throw SQLiteError(problem: .error, reason: "Could not open database.")
-            }
+        let promise = Promise(SQLiteConnection.self)
 
-            guard let r = raw else {
-                throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
-            }
+        print(worker.eventLoop.label)
+        worker.eventLoop.async {
+            do {
+                let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
+                var raw: SQLiteConnection.Raw?
+                guard sqlite3_open_v2(self.storage.path, &raw, options, nil) == SQLITE_OK else {
+                    throw SQLiteError(problem: .error, reason: "Could not open database.")
+                }
 
-            return Future(SQLiteConnection(raw: r, database: self))
+                guard let r = raw else {
+                    throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
+                }
+
+                let conn = SQLiteConnection(raw: r, database: self, on: worker)
+                promise.complete(conn)
+            } catch {
+                promise.fail(error)
+            }
         }
+
+        return promise.future
     }
 }

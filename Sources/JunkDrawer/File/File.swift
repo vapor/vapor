@@ -26,35 +26,46 @@ public final class File: FileReader, FileCache {
     public func read<S>(at path: String, into stream: S, chunkSize: Int)
         where S: Async.InputStream, S.Input == ByteBuffer
     {
-        func onError(_ error: Error) {
-            stream.error(error)
+        eventLoop.async {
+            if let data = FileManager.default.contents(atPath: path) {
+                data.withByteBuffer(stream.next)
+            } else {
+                stream.error(FileError(.readError(0, path: path)))
+            }
             stream.close()
         }
-
-        guard let file = fopen(path, "rb") else {
-            let error = FileError(.readError(0, path: path))
-            onError(error)
-            return
-        }
-
-        let descriptor = fileno(file)
-        let buffer = MutableByteBuffer(start: .allocate(capacity: chunkSize), count: chunkSize)
-        let source = eventLoop.onReadable(descriptor: descriptor) { isCancelled in
-            if isCancelled {
-                stream.close()
-            } else {
-                let read = fread(buffer.baseAddress, chunkSize, 1, file); // Read in the entire file
-                if read > 0 {
-                    let view = ByteBuffer(start: buffer.baseAddress, count: read)
-                    stream.next(view)
-                } else {
-                    fclose(file)
-                }
-            }
-        }
-
-        source.resume()
-        self.source = source
+//        func onError(_ error: Error) {
+//            stream.error(error)
+//            stream.close()
+//        }
+//
+//        guard let file = fopen(path, "rb") else {
+//            let error = FileError(.readError(0, path: path))
+//            onError(error)
+//            return
+//        }
+//
+//        let descriptor = fileno(file)
+//        let buffer = MutableByteBuffer(start: .allocate(capacity: chunkSize), count: chunkSize)
+//        let source = eventLoop.onReadable(descriptor: descriptor) { isCancelled in
+//            print("file read callback")
+//            if isCancelled {
+//                stream.close()
+//            } else {
+//                let read = fread(buffer.baseAddress, chunkSize, 1, file); // Read in the entire file
+//                if read > 0 {
+//                    let view = ByteBuffer(start: buffer.baseAddress, count: read)
+//                    print(view)
+//                    stream.next(view)
+//                } else {
+//                    fclose(file)
+//                    stream.close()
+//                }
+//            }
+//        }
+//
+//        source.resume()
+//        self.source = source
     }
 
     /// See FileReader.fileExists

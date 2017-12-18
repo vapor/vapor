@@ -11,6 +11,38 @@ public protocol EphemeralContainer: SubContainer {
 
     /// Call this closure each time an existing self is deinitialized.
     static var onDeinit: LifecycleHook? { get set }
+
+    /// A private container for storing things sensitive
+    /// to this ephemeral container.
+    var privateContainer: SubContainer { get }
+}
+
+/// The ephemeral container should act _as_ it's super container.
+extension EphemeralContainer {
+    /// See Worker.queue
+    public var eventLoop: EventLoop {
+        return superContainer.eventLoop
+    }
+
+    /// See Container.config
+    public var config: Config {
+        return superContainer.config
+    }
+
+    /// See Container.environment
+    public var environment: Environment {
+        return superContainer.environment
+    }
+
+    /// See Container.services
+    public var services: Services {
+        return superContainer.services
+    }
+
+    /// See Container.serviceCache
+    public var serviceCache: ServiceCache {
+        return superContainer.serviceCache
+    }
 }
 
 public protocol ContainerFindable {
