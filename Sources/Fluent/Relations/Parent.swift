@@ -27,9 +27,10 @@ public struct Parent<Child: Model, Parent: Model>
 
     /// Create a query for the parent.
     public func query(
+        _ database: DatabaseIdentifier<Parent.Database>? = nil,
         on conn: DatabaseConnectable
     ) throws -> QueryBuilder<Parent> {
-        return try Parent.query(on: conn)
+        return try Parent.query(database, on: conn)
             .filter(Parent.idKey == child[keyPath: parentForeignIDKey])
     }
 

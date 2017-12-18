@@ -69,8 +69,11 @@ public struct Siblings<Base: Model, Related: Model, Through: Pivot>
     }
 
     /// Create a query for the parent.
-    public func query(on conn: DatabaseConnectable) throws -> QueryBuilder<Related> {
-        return try Related.query(on: conn)
+    public func query(
+        _ database: DatabaseIdentifier<Related.Database>?,
+        on conn: DatabaseConnectable
+    ) throws -> QueryBuilder<Related> {
+        return try Related.query(database, on: conn)
             .join(field: relatedPivotField)
             .filter(basePivotField == base.requireID())
     }

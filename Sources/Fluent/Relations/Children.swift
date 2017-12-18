@@ -24,8 +24,11 @@ public struct Children<Parent: Model, Child: Model>
     }
 
     /// Create a query for all children.
-    public func query(on conn: DatabaseConnectable) throws -> QueryBuilder<Child> {
-        return try Child.query(on: conn)
+    public func query(
+        _ database: DatabaseIdentifier<Parent.Database>?,
+        on conn: DatabaseConnectable
+    ) throws -> QueryBuilder<Child> {
+        return try Child.query(database, on: conn)
             .filter(parentForeignIDKey.makeQueryField() == parent.requireID())
     }
 }
