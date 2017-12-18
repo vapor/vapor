@@ -61,7 +61,7 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
                 }
             } catch {
                 // Close the stream with an error
-                stream.onError(error)
+                stream.error(error)
                 stream.close()
                 return
             }
@@ -73,12 +73,10 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
         _ = self.logger?.log(query: sqlString)
         
         if query.data == nil && binds.count == 0 {
-            connection.forEach(D.self, in: sqlString) { result in
-                stream.onInput(result)
-            }.do {
-                stream.close()
-            }.catch { error in
-                stream.onError(error)
+            do {
+                try connection.stream(D.self, in: sqlString, to: stream)
+            } catch {
+                stream.error(error)
                 stream.close()
             }
             return
@@ -101,27 +99,18 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
                 }
                 
                 // Streams all results into the parameter-provided stream
-                let future = bound.forEach(D.self, stream.onInput)
-
-                future.do {
-                    // On success, close the stream
-                    stream.close()
-                }.catch { error in
-                    // Close the stream with an error
-                    stream.onError(error)
-                    stream.close()
-                }
-
-                return future
+                try bound.stream(D.self, to: stream)
+                
+                return Future<Void>(())
             } catch {
                 // Close the stream with an error
-                stream.onError(error)
+                stream.error(error)
                 stream.close()
                 return Future(error: error)
             }
         }.catch { error in
             // Close the stream with an error
-            stream.onError(error)
+            stream.error(error)
             stream.close()
         }
     }

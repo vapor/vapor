@@ -151,6 +151,23 @@ public final class BoundStatement {
 
         return promise.future
     }
+    
+    public func stream<D, Stream>(_ type: D.Type, to stream: Stream) throws
+        where D: Decodable, Stream: Async.InputStream, Stream.Input == D
+    {
+        let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in
+            self.statement.connection.affectedRows = affectedRows
+            self.statement.connection.lastInsertID = lastInsertID
+        }
+        
+        self.statement.connection.parser.stream(to: rowStream).map(to: D.self) { row in
+            let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+            return try D(from: decoder)
+        }.output(to: stream)
+        
+        // Send the query
+        try send()
+    }
 
     /// Loops over all rows resulting from the query
     ///

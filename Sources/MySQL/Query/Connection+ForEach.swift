@@ -39,6 +39,20 @@ extension MySQLConnection {
         return promise.future
     }
     
+    public func stream<D, Stream>(_ type: D.Type, in query: MySQLQuery, to stream: Stream) throws
+        where D: Decodable, Stream: InputStream, Stream.Input == D
+    {
+        let rowStream = RowStream(mysql41: self.handshake.mysql41)
+        
+        parser.stream(to: rowStream).map(to: D.self) { row in
+            let decoder = try RowDecoder(keyed: row, lossyIntegers: true, lossyStrings: true)
+            return try D(from: decoder)
+        }.output(to: stream)
+        
+        // Send the query
+        try self.write(query: query.queryString)
+    }
+    
     /// Loops over all rows resulting from the query
     ///
     /// - parameter type: Deserializes all rows to the provided `Decodable` `D`

@@ -10,7 +10,7 @@ extension FluentMySQLConnection : SchemaSupporting, TransactionSupporting {
     public func execute(transaction: DatabaseTransaction<FluentMySQLConnection>) -> Future<Void> {
         let promise = Promise<Void>()
         
-        connection.administrativeQuery("START TRANSACTION").then {
+        connection.administrativeQuery("START TRANSACTION").flatMap(to: Void.self) {
             return transaction.run(on: self)
         }.addAwaiter { result in
             if let error = result.error {
@@ -46,8 +46,8 @@ extension ColumnType: SchemaFieldType {
     }
     
     /// Return the MySQL types used by default for the primary types
-    public static func makeSchemaFieldType<T>(for type: T.Type) -> ColumnType? {
-        switch id(T.self) {
+    public static func makeSchemaFieldType(for type: Any.Type) -> ColumnType? {
+        switch id(Any.self) {
         case id(Int.self):
             #if arch(x86_64) || arch(arm64)
                 return .int64()
