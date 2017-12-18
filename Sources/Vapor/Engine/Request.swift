@@ -14,31 +14,42 @@ public final class Request: EphemeralContainer, ParameterContainer {
     /// Underlying HTTP request.
     public var http: HTTPRequest
 
-    /// This response's worker
+    /// This request's parent container.
     public let superContainer: Container
 
-    /// See Worker.queue
-    public var queue: DispatchQueue {
-        return superContainer.queue
-    }
-
-    /// See Container.config
-    public var config: Config
-
-    /// See Container.environment
-    public var environment: Environment
-
-    /// See Container.services
-    public var services: Services
-
-    /// See Container.serviceCache
-    public var serviceCache: ServiceCache
+    /// This request's private container.
+    public let privateContainer: SubContainer
 
     /// Holds parameters for routing
     public var parameters: Parameters
 
     /// See Extendable.extend
     public var extend: Extend
+
+    /// See Worker.queue
+    public var eventLoop: EventLoop {
+        return superContainer.eventLoop
+    }
+
+    /// See Container.config
+    public var config: Config {
+        return superContainer.config
+    }
+
+    /// See Container.environment
+    public var environment: Environment {
+        return superContainer.environment
+    }
+
+    /// See Container.services
+    public var services: Services {
+        return superContainer.services
+    }
+
+    /// See Container.serviceCache
+    public var serviceCache: ServiceCache {
+        return superContainer.serviceCache
+    }
     
     /// HTTP requests have a method, like GET or POST
     ///
@@ -103,10 +114,7 @@ public final class Request: EphemeralContainer, ParameterContainer {
     public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.config = container.config
-        self.environment = container.environment
-        self.services = container.services
-        self.serviceCache = .init()
+        self.privateContainer = container.subContainer(on: container.eventLoop)
         self.extend = Extend()
         self.parameters = []
         Request.onInit?(self)

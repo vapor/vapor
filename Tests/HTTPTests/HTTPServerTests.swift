@@ -7,7 +7,7 @@ import TCP
 import XCTest
 
 struct EchoWorker: HTTPResponder, Worker {
-    let eventLoop: EventLoop = try! DispatchEventLoop(label: "codes.vapor.http.test.server.worker")
+    let eventLoop: EventLoop = try! KqueueEventLoop(label: "codes.vapor.http.test.server.worker")
 
     func respond(to req: HTTPRequest, on Worker: Worker) throws -> Future<HTTPResponse> {
         /// simple echo server
@@ -17,7 +17,7 @@ struct EchoWorker: HTTPResponder, Worker {
 
 class HTTPServerTests: XCTestCase {
     func testTCP() throws {
-        let accept = try! DispatchEventLoop(label: "codes.vapor.http.test.server.accept")
+        let accept = try! KqueueEventLoop(label: "codes.vapor.http.test.server.accept")
         let workers = [
             EchoWorker(),
             EchoWorker(),
@@ -52,7 +52,6 @@ class HTTPServerTests: XCTestCase {
 
         // beyblades let 'er rip
         try tcpServer.start(hostname: "localhost", port: 8123, backlog: 128)
-        
         let exp = expectation(description: "all requests complete")
         var num = 1024
         for _ in 0..<num {
@@ -63,7 +62,8 @@ class HTTPServerTests: XCTestCase {
             _ = try client.socket.write(write)
             let read = try client.socket.read(max: 512)
             client.close()
-            XCTAssertEqual(String(data: read, encoding: .utf8), "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
+            let string = String(data: read, encoding: .utf8)
+            XCTAssertEqual(string, "HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
             num -= 1
             if num == 0 {
                 exp.fulfill()

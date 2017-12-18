@@ -60,7 +60,11 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
                     /// map the responder adding http upgrade support
                     defer {
                         if let onUpgrade = response.onUpgrade {
-                            onUpgrade.closure(.init(source), .init(sink))
+                            do {
+                                try onUpgrade.closure(.init(source), .init(sink))
+                            } catch {
+                                self.onError?(error)
+                            }
                         }
                     }
                     return response

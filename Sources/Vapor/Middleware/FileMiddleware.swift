@@ -20,7 +20,7 @@ public final class FileMiddleware: Middleware {
 
     /// See Middleware.respond.
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let reader = try req.Worker.make(FileReader.self, for: FileMiddleware.self)
+        let reader = try req.make(FileReader.self, for: FileMiddleware.self)
         
         var path = req.http.uri.path
         if path.hasPrefix("/") {

@@ -28,7 +28,15 @@ public final class SQLiteResults {
 
     /// Fetches rows in blocking fashion. This should be called from a
     /// background thread.
-    public func fetchRow() throws -> SQLiteRow? {
+    public func fetchRow() -> Future<SQLiteRow?> {
+        return Future {
+            return try Future(self.blockingFetchRow())
+        }
+    }
+
+    /// Fetches rows in blocking fashion. This should be called from a
+    /// background thread.
+    public func blockingFetchRow() throws -> SQLiteRow? {
         guard case .rowAvailable = state else {
             return nil
         }

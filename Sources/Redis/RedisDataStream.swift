@@ -31,21 +31,25 @@ final class RedisDataStream: Stream, ConnectionContext {
     private var upstream: ConnectionContext?
 
     /// Creates a new redis data stream.
-    internal init<ByteStream>(byteStream: ByteStream)
-        where ByteStream: Async.Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer
+    internal init<SourceStream, SinkStream>(
+        source: SourceStream,
+        sink: SinkStream
+    ) where
+        SourceStream: OutputStream,
+        SinkStream: InputStream,
+        SinkStream.Input == ByteBuffer,
+        SourceStream.Output == ByteBuffer
     {
         parser = .init()
         serializer = .init()
         remainingDownstreamRequests = 0
         responseQueue = []
         requestQueue = []
-        byteStream
+        source
             .stream(to: parser)
             .stream(to: self)
             .stream(to: serializer)
-            .output(to: byteStream)
+            .output(to: sink)
     }
 
     /// See OutputStream.output

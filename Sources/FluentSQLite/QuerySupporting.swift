@@ -44,6 +44,7 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
             }
 
             /// setup drain
+            /// BLOCKING
             sqliteQuery.execute().do { results in
                 if let results = results {
                     /// there are results to be streamed
@@ -60,6 +61,7 @@ extension SQLiteConnection: QuerySupporting, JoinSupporting {
                 stream.close()
             }
         } catch {
+            print(error)
             stream.error(error)
             stream.close()
         }

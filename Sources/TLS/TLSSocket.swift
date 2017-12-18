@@ -1,7 +1,7 @@
 import Async
 import Bits
 
-public protocol TLSSocket: DispatchSocket {}
+public protocol TLSSocket: Socket {}
 
 /// MARK: ALPN
 

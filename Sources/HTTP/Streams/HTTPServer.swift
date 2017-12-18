@@ -1,5 +1,6 @@
 import Async
 import Bits
+import class Foundation.Thread
 import TCP
 
 /// Converts an output stream of byte streams (meta stream) to
@@ -29,6 +30,15 @@ public final class HTTPServer<AcceptStream, Worker>
             acceptStream: acceptStream,
             workers: workers
         )
+        for worker in workers {
+            if #available(OSX 10.12, *) {
+                Thread.detachNewThread {
+                    worker.eventLoop.runLoop()
+                }
+            } else {
+                fatalError("macOS 10.12 required")
+            }
+        }
     }
 }
 

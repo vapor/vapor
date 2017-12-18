@@ -94,7 +94,11 @@ internal final class HTTPClientStream<SourceStream, SinkStream>: Stream, Connect
             let promise = responseQueue.popLast()!
             promise.complete(input)
             if let onUpgrade = input.onUpgrade {
-                onUpgrade.closure(.init(source), .init(sink))
+                do {
+                    try onUpgrade.closure(.init(source), .init(sink))
+                } catch {
+                    downstream?.error(error)
+                }
             }
             update()
         case .error(let error): downstream?.error(error)

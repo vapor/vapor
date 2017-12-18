@@ -8,17 +8,13 @@ import Routing
 import Service
 import TLS
 
-//#if os(Linux)
-//    import OpenSSL
-//    public typealias DefaultSSLClient = OpenSSLClient.self
-//    public typealias DefaultSSLClientUpgrader = OpenSSLClientUpgrader.self
-//    public typealias DefaultSSLPeerUpgrader = OpenSSLPeerUpgrader.self
-//#else
-//    import AppleTLS
-//    public typealias DefaultSSLClient = AppleTLSClient.self
-//    public typealias DefaultSSLClientUpgrader = AppleTLSClientUpgrader.self
-//    public typealias DefaultSSLPeerUpgrader = AppleTLSClientUpgrader.self
-//#endif
+#if os(Linux)
+    import OpenSSL
+    public typealias DefaultTLSClient = OpenSSLClient
+#else
+    import AppleTLS
+    public typealias DefaultTLSClient = AppleTLSClient
+#endif
 
 extension Services {
     /// The default Services included in the framework.
@@ -106,7 +102,7 @@ extension Services {
         }
 
         services.register([FileReader.self, FileCache.self]) { container in
-            return File(queue: container.queue)
+            return File(on: container)
         }
 
         // register terminal console

@@ -41,15 +41,19 @@ public final class EngineClient: Client {
             /// if using cleartext, just use http/1.
 
         if ssl {
-            fatalError()
+            fatalError("HTTPS not yet supported")
         } else {
             return Future {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
-                let tcpClient = TCPClient(socket: tcpSocket)
+                let tcpClient = try TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
-                let byteStream = tcpClient.stream(on: self.container)
-                let client = HTTPClient(byteStream: byteStream, maxResponseSize: self.config.maxResponseSize)
-
+                let source = tcpSocket.source(on: self.container.eventLoop)
+                let sink = tcpSocket.sink(on: self.container.eventLoop)
+                let client = HTTPClient(
+                    source: source,
+                    sink: sink,
+                    maxResponseSize: self.config.maxResponseSize
+                )
                 req.http.headers[.host] = req.http.uri.hostname
                 return client.send(req.http).map(to: Response.self) { httpRes in
                     let res = req.makeResponse()

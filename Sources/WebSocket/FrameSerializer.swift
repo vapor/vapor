@@ -55,7 +55,11 @@ final class FrameSerializer: ProtocolSerializerStream {
         self.state = .ready
         self.downstreamDemand = 0
     }
-    
+
+    func queue(_ packet: Frame) {
+        fatalError("implement me")
+    }
+
     func serialize(_ input: Input) throws {
         let pointer = input.buffer.baseAddress?.advanced(by: serializationProgress)
         

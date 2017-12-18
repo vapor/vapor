@@ -36,12 +36,3 @@ public final class OpenSSLClient: TLSClient {
         tcp.close()
     }
 }
-
-/// MARK: Stream
-
-extension OpenSSLClient {
-    /// Create a dispatch socket stream for this client.
-    public func stream(on eventLoop: EventLoop) -> DispatchSocketStream<OpenSSLSocket> {
-        return socket.stream(on: eventLoop)
-    }
-}

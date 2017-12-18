@@ -153,7 +153,7 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-        .target(name: "MySQL", dependencies: ["TCP", /*"TLS",*/ "Crypto"]),
+        .target(name: "MySQL", dependencies: ["Crypto", "TCP", "TLS"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Multipart

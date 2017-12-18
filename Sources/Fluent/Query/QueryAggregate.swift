@@ -70,12 +70,16 @@ extension QueryBuilder {
         var result: D? = nil
 
         run(decoding: AggregateResult<D>.self).drain { upstream in
+            print(#line)
             upstream.request(count: .max)
         }.output { res in
+            print(#line)
             result = res.fluentAggregate
         }.catch { err in
+            print(#line)
             promise.fail(err)
         }.finally {
+            print(#line)
             if let result = result {
                 promise.complete(result)
             } else {

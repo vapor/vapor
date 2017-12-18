@@ -125,11 +125,10 @@ do {
     router.get("leaf") { req -> Future<View> in
         let promise = Promise(User.self)
         // user.futureChild = promise.future
-
-        req.queue.asyncAfter(deadline: .now() + 2) {
-            let user = User(name: "unborn", age: -1)
-            promise.complete(user)
-        }
+//        req.eventLoop.asyncAfter(deadline: .now() + 2) {
+//            let user = User(name: "unborn", age: -1)
+//            promise.complete(user)
+//        }
 
         let user = User(name: "Vapor", age: 3);
         return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", user)

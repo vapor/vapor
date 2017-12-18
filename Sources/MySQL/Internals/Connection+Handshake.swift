@@ -88,21 +88,26 @@ fileprivate final class MySQLConnector {
         do {
             let promise = Promise<MySQLConnection>()
             let socket = try TCPSocket()
-            let client = TCPClient(socket: socket)
+            let client = try TCPClient(socket: socket)
             
             try client.connect(hostname: hostname, port: port)
             
-            let stream = client.stream(on: eventLoop)
-            let parser = stream.stream(to: MySQLPacketParser())
-            
-            self.serializer.output(to: stream)
+            let source = socket.source(on: eventLoop)
+            let parser = source.stream(to: MySQLPacketParser())
+
+            let sink = socket.sink(on: eventLoop)
+            self.serializer.output(to: sink)
             
             func complete() throws {
                 guard let handshake = self.handshake else {
                     throw MySQLError(.invalidHandshake)
                 }
                 
-                let connection = MySQLConnection(handshake: handshake, stream: AnyStream(stream))
+                let connection = MySQLConnection(
+                    handshake: handshake,
+                    source: .init(source),
+                    sink: .init(sink)
+                )
                 promise.complete(connection)
             }
             

@@ -17,7 +17,7 @@ extension Request {
     ///
     /// For an example of how this is used, look at 'FileMiddleware'
     public func streamFile(at path: String) throws -> Response {
-        let reader = try Worker.make(FileReader.self, for: Request.self)
+        let reader = try make(FileReader.self, for: Request.self)
         let res = makeResponse()
 
         guard

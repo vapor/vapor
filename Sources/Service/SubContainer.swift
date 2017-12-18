@@ -40,7 +40,7 @@ public final class BasicSubContainer: SubContainer {
 
 extension Container {
     /// Creates a sub container for this container.
-    func subContainer(on worker: Worker) -> BasicSubContainer {
+    public func subContainer(on worker: Worker) -> BasicSubContainer {
         return BasicSubContainer(
             config: config,
             environment: environment,

@@ -46,12 +46,3 @@ public struct AppleTLSClient: TLSClient {
         tcp.close()
     }
 }
-
-/// MARK: Stream
-
-extension AppleTLSClient {
-    /// Create a dispatch socket stream for this client.
-    public func stream(on Worker: Worker) -> DispatchSocketStream<AppleTLSSocket> {
-        return socket.stream(on: Worker)
-    }
-}

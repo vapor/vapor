@@ -1,7 +1,5 @@
 import Async
 import Bits
-import Dispatch
-import Foundation
 import TCP
 
 /// A Redis client
@@ -15,12 +13,16 @@ public final class RedisClient {
     let stream: RedisDataStream
 
     /// Creates a new Redis client on the provided connection
-    public init<ByteStream>(byteStream: ByteStream) where
-        ByteStream: Async.Stream,
-        ByteStream.Input == ByteBuffer,
-        ByteStream.Output == ByteBuffer
+    public init<SourceStream, SinkStream>(
+        source: SourceStream,
+        sink: SinkStream
+    ) where
+        SourceStream: OutputStream,
+        SinkStream: InputStream,
+        SinkStream.Input == ByteBuffer,
+        SourceStream.Output == ByteBuffer
     {
-        stream = .init(byteStream: byteStream)
+        stream = .init(source: source, sink: sink)
     }
 
     /// Runs a Value as a command
@@ -46,11 +48,14 @@ extension RedisClient {
     public static func connect(
         hostname: String = "localhost",
         port: UInt16 = 6379,
-        on Worker: Worker
+        on worker: Worker
     ) throws -> RedisClient {
         let socket = try TCPSocket(isNonBlocking: true)
-        let client = TCPClient(socket: socket)
+        let client = try TCPClient(socket: socket)
         try client.connect(hostname: hostname, port: port)
-        return RedisClient(byteStream: client.stream(on: Worker))
+        return RedisClient(
+            source: socket.source(on: worker.eventLoop),
+            sink: socket.sink(on: worker.eventLoop)
+        )
     }
 }

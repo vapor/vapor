@@ -57,13 +57,12 @@ extension WebSocket {
             let socket = try TCPSocket()
             
             // The TCP Client that will be used by both HTTP and the WebSocket for communication
-            let client = TCPClient(socket: socket)
-            
-            let stream = AnyStream(client.stream(on: container))
-            let websocket = WebSocket(socket: stream, server: false)
-            
+            let client = try TCPClient(socket: socket)
+
+            let source = socket.source(on: container.eventLoop)
+            let sink = socket.sink(on: container.eventLoop)
+            let websocket = WebSocket(source: .init(source), sink: .init(sink), server: false)
             try client.connect(hostname: hostname, port: port)
-            
             return websocket
         }
     }

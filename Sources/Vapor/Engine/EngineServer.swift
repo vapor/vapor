@@ -30,21 +30,21 @@ public final class EngineServer: Server {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        let workers = (0..<config.workerCount).map { i -> EngineWorker in
+        let workers = try (0..<config.workerCount).map { i -> EngineWorker in
             // create new event loop
-            let queue = DispatchQueue(label: "codes.vapor.engine.server.worker.\(i)")
+            let eventLoop = try KqueueEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
             return EngineWorker(
-                container: container.makeSubContainer(on: queue),
+                container: container.subContainer(on: eventLoop),
                 responder: responder
             )
         }
 
         var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
         tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+
+        let accept = try KqueueEventLoop(label: "codes.vapor.engine.server.accept")
         let server = HTTPServer(
-            acceptStream: tcpServer.stream(
-                on: DispatchQueue(label: "codes.vapor.engine.server.main")
-            ),
+            acceptStream: tcpServer.stream(on: accept),
             workers: workers
         )
 
@@ -67,7 +67,7 @@ public final class EngineServer: Server {
         )
 
         // non-blocking main thread run
-        RunLoop.main.run()
+        accept.runLoop()
     }
 
 
@@ -152,10 +152,9 @@ public final class EngineServer: Server {
 }
 
 fileprivate struct EngineWorker: HTTPResponder, Worker {
-    var queue: DispatchQueue {
-        return container.queue
+    var eventLoop: EventLoop {
+        return container.eventLoop
     }
-
     let responder: Responder
     let container: Container
 

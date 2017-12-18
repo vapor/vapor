@@ -38,7 +38,8 @@ public final class QueryResultStream<Model, Database>: Async.Stream
 
     public func input(_ event: InputEvent<Model>) {
         switch event {
-        case .close: downstream?.close()
+        case .close:
+            downstream?.close()
         case .connect(let upstream):
             self.upstream = upstream
             /// act as a passthrough stream

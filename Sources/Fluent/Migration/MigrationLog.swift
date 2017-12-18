@@ -52,13 +52,13 @@ final class MigrationLogMigration<
 
     /// See Migration.prepare
     static func prepare(on connection: Database.Connection) -> Future<Void> {
-            return connection.create(MigrationLog<Database>.self) { builder in
-                try builder.field(for: \MigrationLog<D>.id)
-                try builder.field(for: \MigrationLog<D>.name)
-                try builder.field(for: \MigrationLog<D>.batch)
-                try builder.field(for: \MigrationLog<D>.createdAt)
-                try builder.field(for: \MigrationLog<D>.updatedAt)
-            }
+        return connection.create(MigrationLog<Database>.self) { builder in
+            try builder.field(for: \MigrationLog<D>.id)
+            try builder.field(for: \MigrationLog<D>.name)
+            try builder.field(for: \MigrationLog<D>.batch)
+            try builder.field(for: \MigrationLog<D>.createdAt)
+            try builder.field(for: \MigrationLog<D>.updatedAt)
+        }
     }
 
     /// See Migration.revert

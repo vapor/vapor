@@ -46,7 +46,14 @@ public final class SQLiteQuery {
     // MARK: Execute
 
     /// Executes the query, blocking until complete.
-    private func execute() throws -> SQLiteResults? {
+    public func execute() -> Future<SQLiteResults?> {
+        return Future {
+            return try Future(self.blockingExecute())
+        }
+    }
+
+    /// Executes the query, blocking until complete.
+    private func blockingExecute() throws -> SQLiteResults? {
         var columns: [SQLiteColumn] = []
 
         var raw: Raw?

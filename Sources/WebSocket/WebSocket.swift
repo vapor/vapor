@@ -28,7 +28,8 @@ public class WebSocket {
     var errorCallback: (Error) -> () = { _ in }
     
     /// The underlying communication layer
-    let socket: AnyStream<ByteBuffer, ByteBuffer>
+    let source: AnyOutputStream<ByteBuffer>
+    let sink: AnyInputStream<ByteBuffer>
     
     /// Create a new WebSocket from a TCP client for either the Client or Server Side
     ///
@@ -36,26 +37,29 @@ public class WebSocket {
     ///
     /// - parameter client: The TCP.Client that the WebSocket connection runs on
     /// - parameter serverSide: If `true`, run the WebSocket as a server side connection.
-    init(socket: AnyStream<ByteBuffer, ByteBuffer>, server: Bool = true)
-    {
+    init(
+        source: AnyOutputStream<ByteBuffer>,
+        sink: AnyInputStream<ByteBuffer>,
+        server: Bool = true
+    ) {
         self.backlog = []
-        self.parser = socket.stream(to: FrameParser())
+        self.parser = source.stream(to: FrameParser())
         self.serializer = FrameSerializer(masking: !server)
-        self.socket = socket
+        self.source = source
+        self.sink = sink
         self.server = server
-        
-        serializer.output(to: socket)
+        serializer.output(to: sink)
         
         self.stringOutputStream = EmitterStream<String>()
         self.binaryOutputStream = EmitterStream<ByteBuffer>()
         
         func bindFrameStreams() {
-            socket.stream(to: parser).drain { upstream in
+            source.stream(to: parser).drain { upstream in
                 upstream.request(count: .max)
             }.output { frame in
                 switch frame.opCode {
                 case .close:
-                    socket.close()
+                    sink.close()
                 case .text:
                     let data = Data(buffer: frame.payload)
                     
@@ -74,7 +78,7 @@ public class WebSocket {
                 case .pong: break
                 }
             }.catch(onError: self.errorCallback).finally {
-                socket.close()
+                sink.close()
             }
         }
         
@@ -89,7 +93,7 @@ public class WebSocket {
             
             let HTTPParser = HTTPResponseParser(maxSize: 50_000).stream()
             
-            HTTPSerializer.output(to: socket)
+            HTTPSerializer.output(to: sink)
             
             let drain = DrainStream<HTTPResponse>(onInput: { response in
                 try WebSocket.upgrade(response: response, id: id)
@@ -97,7 +101,7 @@ public class WebSocket {
                 bindFrameStreams()
             })
             
-            socket.stream(to: HTTPParser).output(to: drain)
+            source.stream(to: HTTPParser).output(to: drain)
         }
     }
     
@@ -156,6 +160,6 @@ public class WebSocket {
     
     /// Closes the connection to the other side by sending a `close` frame and closing the TCP connection
     public func close() {
-        socket.close()
+        sink.close()
     }
 }
