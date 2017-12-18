@@ -21,17 +21,17 @@ extension Services {
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func register<S>(
+    public mutating func instance<S>(
         _ interface: Any.Type,
         tag: String? = nil,
         isSingleton: Bool = false,
         _ instance: S
     ) {
-        return register(supports: [interface], tag: tag, isSingleton: isSingleton, instance)
+        return self.instance(supports: [interface], tag: tag, isSingleton: isSingleton, instance)
     }
 
     /// Adds an instance of a service to the Services.
-    public mutating func register<S>(
+    public mutating func instance<S>(
         supports: [Any.Type] = [],
         tag: String? = nil,
         isSingleton: Bool = false,
@@ -97,7 +97,7 @@ extension Services {
     }
 
     /// Adds an initialized provider
-    public mutating func register<P: Provider>(_ provider: P) throws {
+    public mutating func provider<P: Provider>(_ provider: P) throws {
         guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }

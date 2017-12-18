@@ -44,6 +44,14 @@ public final class Application: Container {
         self.extend = Extend()
         self.eventLoop = try KqueueEventLoop(label: "codes.vapor.application")
 
+        if #available(OSX 10.12, *) {
+            Thread.detachNewThread {
+                self.eventLoop.runLoop()
+            }
+        } else {
+            fatalError()
+        }
+
         // boot all service providers
         for provider in services.providers {
             try provider.boot(self)

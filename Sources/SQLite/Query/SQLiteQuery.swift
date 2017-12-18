@@ -47,9 +47,15 @@ public final class SQLiteQuery {
 
     /// Executes the query, blocking until complete.
     public func execute() -> Future<SQLiteResults?> {
-        return Future {
-            return try Future(self.blockingExecute())
+        let promise = Promise(SQLiteResults?.self)
+        connection.eventLoop.async {
+            do {
+                try promise.complete(self.blockingExecute())
+            } catch {
+                promise.fail(error)
+            }
         }
+        return promise.future
     }
 
     /// Executes the query, blocking until complete.

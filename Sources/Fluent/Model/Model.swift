@@ -96,7 +96,13 @@ extension Model {
 
     /// See Model.entity
     public static var entity: String {
-        return name + "s"
+        var pluralName = name.replacingOccurrences(of: "([^aeiouy]|qu)y$", with: "$1ie", options: [.regularExpression])
+
+        if pluralName.last != "s" {
+            pluralName += "s"
+        }
+
+        return pluralName
     }
 
     /// Seee Model.willCreate()

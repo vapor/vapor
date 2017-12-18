@@ -21,12 +21,11 @@ extension Request: DatabaseConnectable {}
 
 do {
     var services = Services.default()
+    services.instance(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
+    try services.provider(LeafProvider())
+    try services.provider(FluentProvider())
+    try services.provider(SQLiteProvider())
 
-//    services.register(SQLiteStorage.file(path: "/tmp/alpha.sqlite"))
-    try services.register(LeafProvider())
-//    try services.register(FluentProvider())
-//    try services.register(SQLiteProvider())
-    
 //    var engineConfig = EngineServerConfig()
 //    engineConfig.ssl = EngineServerSSLConfig(settings:
 //        SSLServerSettings(
@@ -37,36 +36,35 @@ do {
 //    )
 //
 //    engineConfig.ssl?.port = 8081
-//
 //    services.register(engineConfig)
 
-//    var databaseConfig = DatabaseConfig()
-//    databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
-//    databaseConfig.add(
-//        database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
-//        as: beta
-//    )
-//    databaseConfig.enableLogging(on: beta)
-//    services.register(databaseConfig)
+    var databaseConfig = DatabaseConfig()
+    databaseConfig.add(database: SQLiteDatabase.self, as: alpha)
+    databaseConfig.add(
+        database: SQLiteDatabase(storage: .file(path: "/tmp/beta.sqlite")),
+        as: beta
+    )
+    databaseConfig.enableLogging(on: beta)
+    services.instance(databaseConfig)
 
 
-//    var migrationConfig = MigrationConfig()
-//    migrationConfig.add(model: User.self, database: beta)
-//    migrationConfig.add(migration: AddUsers.self, database: beta)
-//    migrationConfig.add(model: Pet.self, database: beta)
-//    migrationConfig.add(model: Toy.self, database: beta)
-//    migrationConfig.add(model: PetToyPivot.self, database: beta)
-//    migrationConfig.add(migration: TestSiblings.self, database: beta)
-//    migrationConfig.add(model: AutoUser.self, database: .beta)
-//    services.register(migrationConfig)
+    var migrationConfig = MigrationConfig()
+    migrationConfig.add(model: User.self, database: beta)
+    migrationConfig.add(migration: AddUsers.self, database: beta)
+    migrationConfig.add(model: Pet.self, database: beta)
+    migrationConfig.add(model: Toy.self, database: beta)
+    migrationConfig.add(model: PetToyPivot.self, database: beta)
+    migrationConfig.add(migration: TestSiblings.self, database: beta)
+    migrationConfig.add(model: AutoUser.self, database: .beta)
+    services.instance(migrationConfig)
 
     let middlewareConfig = MiddlewareConfig()
     //middlewareConfig.use(ErrorMiddleware.self)
-    services.register(middlewareConfig)
+    services.instance(middlewareConfig)
 
     
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
-    services.register(dir)
+    services.instance(dir)
 
     let app = try Application(services: services)
 
@@ -96,7 +94,7 @@ do {
         return client.send(.get, to: "https://www.apache.org/foundation/press/kit/asf_logo.png")
     }
     
-    router.get("hello") { req -> Future<[User]> in
+    router.get("hello2") { req -> Future<[User]> in
         let user = User(name: "Vapor", age: 3);
         return Future([user])
     }

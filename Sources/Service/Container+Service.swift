@@ -10,6 +10,7 @@ extension Container {
         _ interface: Interface.Type = Interface.self,
         for client: Client.Type
     ) throws -> Interface {
+        print("make: \(Interface.self)")
         // check if we've previously resolved this service
         if let service = try serviceCache.get(Interface.self, for: Client.self) {
             return service
@@ -38,6 +39,7 @@ extension Container {
         _ interface: Any.Type,
         for client: Any.Type
     ) throws -> Any {
+        print("unsafe make: \(interface)")
         // find all available service types that match the requested type.
         let available = services.factories(supporting: interface)
 

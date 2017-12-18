@@ -19,31 +19,6 @@ public final class Response: EphemeralContainer {
 
     /// See Extendable.extend
     public var extend: Extend
-
-    /// See Worker.queue
-    public var eventLoop: EventLoop {
-        return superContainer.eventLoop
-    }
-
-    /// See Container.config
-    public var config: Config {
-        return superContainer.config
-    }
-
-    /// See Container.environment
-    public var environment: Environment {
-        return superContainer.environment
-    }
-
-    /// See Container.services
-    public var services: Services {
-        return superContainer.services
-    }
-
-    /// See Container.serviceCache
-    public var serviceCache: ServiceCache {
-        return superContainer.serviceCache
-    }
     
     /// See Message.version
     public var version: HTTPVersion {

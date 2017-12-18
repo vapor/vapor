@@ -72,7 +72,9 @@ extension Container {
         to database: DatabaseIdentifier<Database>
     ) -> Future<Database.Connection> {
         return Future {
+            print("inside request pooled conn")
             let cache = try self.make(ConnectionPoolCache.self, for: Database.self)
+            print(cache)
             let pool = try cache.pool(for: database)
 
             /// request a connection from the pool
@@ -107,8 +109,9 @@ extension Container {
 extension EphemeralContainer {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
+        print("CONNECT")
         return Future {
-            let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
+            let connections = try self.privateContainer.make(ActiveConnectionCache.self, for: Self.self)
             if let current = connections.cache[database.uid]?.connection as? Future<D.Connection> {
                 return current
             }
@@ -117,10 +120,14 @@ extension EphemeralContainer {
             /// we can be sure that .connection will be set before this is called again
             let active = ActiveConnection()
             connections.cache[database.uid] = active
+            print(connections.cache)
 
-            let conn = self.superContainer.requestPooledConnection(to: database).map(to: D.Connection.self) { conn in
+            print("REQUESTING POOLED CONN")
+
+            let conn = self.requestPooledConnection(to: database).map(to: D.Connection.self) { conn in
+                print("SET RELEASE")
                 /// first get a pointer to the pool
-                let pool = try self.superContainer.requireConnectionPool(to: database)
+                let pool = try self.requireConnectionPool(to: database)
 
                 /// then create an active connection that knows how to
                 /// release itself
@@ -139,11 +146,15 @@ extension EphemeralContainer {
 
     /// Releases all active connections.
     public func releaseConnections() throws {
-        let connections = try self.make(ActiveConnectionCache.self, for: Self.self)
+        let connections = try self.privateContainer.make(ActiveConnectionCache.self, for: Self.self)
         let conns = connections.cache
         connections.cache = [:]
+        print(conns)
         for (_, conn) in conns {
-            conn.release!()
+            if conn.release == nil {
+                print("DIDNT RELEASE")
+            }
+            conn.release?()
         }
     }
 }
@@ -173,6 +184,7 @@ internal final class ConnectionPoolCache {
     let container: Container
 
     init(databases: Databases, on container: Container) {
+        print("init pool cache")
         self.databases = databases
         self.container = container
         self.cache = [:]
