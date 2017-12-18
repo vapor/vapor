@@ -22,6 +22,8 @@ final class RowStream: ProtocolParserStream {
     
     var state: ProtocolParserState
     
+    var endOfHeaders = false
+    
     typealias PacketOKSetter = ((UInt64, UInt64) -> ())
 
     /// A list of all fields' descriptions in this table
@@ -101,7 +103,7 @@ final class RowStream: ProtocolParserStream {
             try parseColumns(from: input)
             return
         }
-
+        
         // Otherwise, parse the next row
         try preParseRows(from: input)
     }
@@ -110,18 +112,22 @@ final class RowStream: ProtocolParserStream {
     func preParseRows(from packet: Packet) throws {
         // End of file packet
         if packet.payload.first == 0xfe {
-            var parser = Parser(packet: packet)
-            parser.position = 1
-            let flags = try parser.parseUInt16()
+            if endOfHeaders {
+                var parser = Parser(packet: packet)
+                parser.position = 1
+                let flags = try parser.parseUInt16()
+                
+                if flags & serverMoreResultsExists == 0 {
+                    self.close()
+                    return
+                }
 
-            if flags & serverMoreResultsExists == 0 {
-                self.close()
-                return
+                try onEOF?(flags)
             }
-
-            try onEOF?(flags)
             return
         }
+        
+        endOfHeaders = true
 
         // If it's an error packet
         if packet.payload.count > 0,

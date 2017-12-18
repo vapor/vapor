@@ -52,10 +52,20 @@ extension Packet {
             
             var parser = Parser(packet: self, position: 1)
             
-            let affectedRows = try parser.parseLenEnc()
-            let lastInsertedId = try parser.parseLenEnc()
             let statusFlags: UInt16?
             let warnings: UInt16?
+            
+            // Only an EOF
+            if self.payload.count == 5 {
+                statusFlags = try parser.parseUInt16()
+                warnings = try parser.parseUInt16()
+                
+                let ok = Response.OK(affectedRows: 0, lastInsertId: 0, status: statusFlags, warnings: warnings, data: Data())
+                return .eof(ok)
+            }
+            
+            let affectedRows = try parser.parseLenEnc()
+            let lastInsertedId = try parser.parseLenEnc()
             
             if mysql41 {
                 statusFlags = try parser.parseUInt16()

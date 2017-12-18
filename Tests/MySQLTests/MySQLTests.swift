@@ -90,14 +90,14 @@ class MySQLTests: XCTestCase {
     func testAll() throws {
         try testPopulateUsersSchema()
      
-        var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
+        var iterator = ["Joannis", "Jonas", "Logan", "Tanner"].makeIterator()
      
         let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(3))
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
         }
         
-        XCTAssertEqual(users.count, 3)
+        XCTAssertEqual(users.count, 4)
     }
     
     func testStream() throws {
@@ -111,8 +111,8 @@ class MySQLTests: XCTestCase {
             XCTAssertEqual(user.username, iterator.next())
             count += 1
             
-            if count == 3 {
-                promise.complete(3)
+            if count == 4 {
+                promise.complete(4)
             }
         }.catch { XCTFail("\($0)") }
             

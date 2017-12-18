@@ -16,8 +16,18 @@ extension MySQLConnection {
             parser.request()
         }.output { packet in
             if packet.payload.first == 0xfe {
-                self.parser.request()
+                // EOF, end of columns
+                if
+                    let statement = statement,
+                    statement.parameterCount == statement.parameters.count,
+                    packet.payload.count == 5,
+                    packet.payload.first == 0xfe
+                {
+                    promise.complete(statement)
+                }
+                
                 // Ignore `0xfe` payloads, since we skip past those in the above `do {} catch {}`
+                self.parser.request()
                 return
             }
             
@@ -29,11 +39,7 @@ extension MySQLConnection {
                     statement.parameters.append(try packet.parseFieldDefinition())
                 }
                 
-                if statement.columns.count == statement.columnCount && statement.parameters.count == statement.parameterCount {
-                    promise.complete(statement)
-                } else {
-                    self.parser.request()
-                }
+                self.parser.request()
             } else {
                 // Statement preparation details not yet read
                 guard packet.payload.count == 12, packet.payload.first == 0x00 else {

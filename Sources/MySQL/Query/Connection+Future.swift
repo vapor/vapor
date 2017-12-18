@@ -9,7 +9,11 @@ extension MySQLConnection {
     internal func allRows(in query: MySQLQuery) -> Future<[Row]> {
         var rows = [Row]()
         
-        return forEachRow(in: query) { rows.append($0) }.transform(to: rows)
+        return forEachRow(in: query) { entity in
+            rows.append(entity)
+        }.map(to: [Row].self) {
+            return rows
+        }
     }
     
     /// Collects all decoded results and returs them in the future
@@ -21,6 +25,10 @@ extension MySQLConnection {
     public func all<D: Decodable>(_ type: D.Type, in query: MySQLQuery) -> Future<[D]> {
         var results = [D]()
         
-        return forEach(D.self, in: query) { results.append($0) }.transform(to: results)
+        return forEach(D.self, in: query) { entity in
+            results.append(entity)
+        }.map(to: [D].self) {
+            return results
+        }
     }
 }

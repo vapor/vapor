@@ -51,7 +51,7 @@ public final class BoundStatement {
     ///     2    cursor for update
     ///     4    scrollable cursor
     func send() throws {
-        guard boundParameters == statement.parameters.count else {
+        guard boundParameters == statement.parameterCount else {
             throw MySQLError(.notEnoughParametersBound)
         }
         
@@ -77,7 +77,9 @@ public final class BoundStatement {
         var results = [D]()
         return self.forEach(D.self) { res in
             results.append(res)
-        }.transform(to: results)
+        }.map(to: [D].self) {
+            return results
+        }
     }
     
     public func execute() throws -> Future<Void> {
@@ -125,15 +127,17 @@ public final class BoundStatement {
             self.statement.connection.lastInsertID = lastInsertID
         }
         
-        statement.connection.parser
-            .stream(to: rowStream)
-            .drain { parser in
-                parser.request()
-            }.output { input in
-                try handler(input)
-                self.statement.connection.parser.request()
-            }.catch(onError: promise.fail)
-            .finally { promise.complete() }
+        self.statement.connection.parser.stream(to: rowStream).drain { connection in
+            connection.request()
+        }.output { row in
+            try handler(row)
+            rowStream.request()
+        }.catch { error in
+            promise.fail(error)
+        }.finally {
+            rowStream.cancel()
+            promise.complete()
+        }
 
         do {
             try send()
