@@ -61,7 +61,7 @@ extension WebSocket {
 
             let source = socket.source(on: container.eventLoop)
             let sink = socket.sink(on: container.eventLoop)
-            let websocket = WebSocket(source: .init(source), sink: .init(sink), server: false)
+            let websocket = WebSocket(source: source, sink: sink, server: false)
             try client.connect(hostname: hostname, port: port)
             return websocket
         }

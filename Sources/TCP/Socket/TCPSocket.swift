@@ -151,6 +151,6 @@ public struct TCPSocket: Socket {
 
     /// Closes the socket
     public func close() {
-        cClose(descriptor)
+        _ = cClose(descriptor)
     }
 }

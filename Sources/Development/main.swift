@@ -261,8 +261,9 @@ do {
     }
     
     router.websocket("foo") { (req, ws) in
-        for _ in 1...1000 {
-            ws.send(string: "TEST: \(Date())")
+        ws.onString { websocket, string in
+            print(string)
+            websocket.send(string: string)
         }
     }
 
