@@ -1,3 +1,4 @@
+import Async
 import Bits
 import Dispatch
 import COperatingSystem
@@ -42,7 +43,7 @@ public struct TCPServer {
         let accepted = try socket.accept()
 
         /// init a tcp client with the socket and assign it an event loop
-        let client = TCPClient(socket: accepted)
+        let client = try TCPClient(socket: accepted)
 
         /// check the will accept closure to approve this connection
         if let shouldAccept = willAccept, !shouldAccept(client) {
@@ -60,8 +61,16 @@ public struct TCPServer {
     }
 }
 
-import COperatingSystem
-import Foundation
+
+extension TCPServer {
+    /// Create a stream for this TCP server.
+    /// - parameter on: the event loop to accept clients on
+    /// - parameter assigning: the event loops to assign to incoming clients
+    public func stream(on eventLoop: EventLoop) -> TCPClientStream {
+        return .init(server: self, on: eventLoop)
+    }
+}
+
 
 extension TCPSocket {
     /// bind - bind a name to a socket

@@ -1,16 +1,16 @@
 import Async
 import Bits
-import Dispatch
 import COperatingSystem
+import Foundation
 
 /// Any TCP socket. It doesn't specify being a server or client yet.
-public struct TCPSocket: DispatchSocket {
+public struct TCPSocket: Socket {
     /// The file descriptor related to this socket
     public let descriptor: Int32
 
     /// The remote's address
     public var address: TCPAddress?
-    
+
     /// True if the socket is non blocking
     public let isNonBlocking: Bool
 
@@ -23,27 +23,35 @@ public struct TCPSocket: DispatchSocket {
         isNonBlocking: Bool,
         shouldReuseAddress: Bool,
         address: TCPAddress?
-    ) {
+        ) {
         self.descriptor = established
         self.isNonBlocking = isNonBlocking
         self.shouldReuseAddress = shouldReuseAddress
         self.address = address
     }
-    
+
     /// Creates a new TCP socket
     public init(
         isNonBlocking: Bool = true,
         shouldReuseAddress: Bool = true
-    ) throws {
+        ) throws {
         let sockfd = socket(AF_INET, SOCK_STREAM, 0)
         guard sockfd > 0 else {
             throw TCPError.posix(errno, identifier: "socketCreate")
         }
-        
+
         if isNonBlocking {
             // Set the socket to async/non blocking I/O
             guard fcntl(sockfd, F_SETFL, O_NONBLOCK) == 0 else {
                 throw TCPError.posix(errno, identifier: "setNonBlocking")
+            }
+        }
+
+        if shouldReuseAddress {
+            var yes = 1
+            let intSize = socklen_t(MemoryLayout<Int>.size)
+            guard setsockopt(sockfd, SOL_SOCKET, SO_REUSEPORT, &yes, intSize) == 0 else {
+                throw TCPError.posix(errno, identifier: "setReuseAddress")
             }
         }
 
@@ -68,19 +76,19 @@ public struct TCPSocket: DispatchSocket {
     /// it will kill the process.
     public func disablePipeSignal() {
         signal(SIGPIPE, SIG_IGN)
-        
+
         #if !os(Linux)
             var n = 1
             setsockopt(self.descriptor, SOL_SOCKET, SO_NOSIGPIPE, &n, numericCast(MemoryLayout<Int>.size))
         #endif
-        
+
         // TODO: setsockopt(self.descriptor, SOL_TCP, TCP_NODELAY, &n, numericCast(MemoryLayout<Int>.size)) ?
     }
 
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     public func read(into buffer: MutableByteBuffer) throws -> Int {
-        let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, buffer.count)
+        let receivedBytes = Darwin.read(descriptor, buffer.baseAddress!, buffer.count)
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -140,6 +148,6 @@ public struct TCPSocket: DispatchSocket {
 
     /// Closes the socket
     public func close() {
-        COperatingSystem.close(descriptor)
+        Darwin.close(descriptor)
     }
 }

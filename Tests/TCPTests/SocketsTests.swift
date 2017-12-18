@@ -17,7 +17,7 @@ class SocketsTests: XCTestCase {
 
         let worker = DispatchQueue(label: "codes.vapor.test.worker.1")
         let serverStream = server.stream(
-            on: DispatchQueue(label: "codes.vapor.test.server")
+            on: DispatchEventLoop(label: "codes.vapor.test.server")
         )
 
         /// set up the server stream

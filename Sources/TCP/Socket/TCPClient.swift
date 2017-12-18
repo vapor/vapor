@@ -1,8 +1,4 @@
-import Async
-import Bits
-import Dispatch
 import COperatingSystem
-import JunkDrawer
 
 /// Read and write byte buffers from a TCPClient.
 ///
@@ -15,12 +11,12 @@ public final class TCPClient {
 
     /// Handles close events
     public typealias WillClose = () -> ()
-    
+
     /// Will be triggered before closing the socket, as part of the cleanup process
     public var willClose: WillClose?
 
     /// Creates a new TCPClient from an existing TCPSocket.
-    public init(socket: TCPSocket) {
+    public init(socket: TCPSocket) throws {
         self.socket = socket
         self.socket.disablePipeSignal()
     }
@@ -41,13 +37,6 @@ public final class TCPClient {
     public func close() {
         willClose?()
         socket.close()
-    }
-}
-
-extension TCPClient {
-    /// Create a dispatch socket stream for this client.
-    public func stream(on Worker: Worker) -> DispatchSocketStream<TCPSocket> {
-        return socket.stream(on: Worker)
     }
 }
 
@@ -84,7 +73,7 @@ extension TCPSocket {
             throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
-        res = COperatingSystem.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = Darwin.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
         if res != 0 {
             switch errno {
             case EINTR:
