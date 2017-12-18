@@ -56,24 +56,26 @@ public protocol AnyModel: class, Codable {
 extension Model {
     /// Creates a query for this model on the supplied connection.
     public func query(
-        _ database: DatabaseIdentifier<Database>?,
         on conn: DatabaseConnectable
     ) -> QueryBuilder<Self> {
         let conn = Future<Database.Connection> {
-            let dbid = try database ?? Self.requireDefaultDatabase()
-            return conn.connect(to: dbid)
+            if let existing = conn.existingConnection(to: Self.Database.self) {
+                return Future(existing)
+            } else {
+                return try conn.connect(to: Self.requireDefaultDatabase())
+            }
         }
         return .init(on: conn)
     }
 
     /// Creates a query for this model on the supplied connection.
-    public static func query(
-        _ database: DatabaseIdentifier<Database>?,
-        on conn: DatabaseConnectable
-    ) -> QueryBuilder<Self> {
+    public static func query(on conn: DatabaseConnectable) -> QueryBuilder<Self> {
         let conn = Future<Database.Connection> {
-            let dbid = try database ?? Self.requireDefaultDatabase()
-            return conn.connect(to: dbid)
+            if let existing = conn.existingConnection(to: Self.Database.self) {
+                return Future(existing)
+            } else {
+                return try conn.connect(to: Self.requireDefaultDatabase())
+            }
         }
         return .init(on: conn)
     }
@@ -142,50 +144,34 @@ extension Model {
     /// Calls `create` if the ID is `nil`, and `update` if it exists.
     /// If you need to create a model with a pre-existing ID,
     /// call `create` instead.
-    public func save(
-        to database: DatabaseIdentifier<Database>?,
-        on conn: DatabaseConnectable
-    ) -> Future<Void> {
-        return query(database, on: conn).save(self)
+    public func save(on conn: DatabaseConnectable) -> Future<Void> {
+        return query(on: conn).save(self)
     }
 
     /// Saves this model as a new item in the database.
     /// This method can auto-generate an ID depending on ID type.
-    public func create(
-        to database: DatabaseIdentifier<Database>?,
-        on conn: DatabaseConnectable
-    ) -> Future<Void> {
-        return query(database, on: conn).create(self)
+    public func create(on conn: DatabaseConnectable) -> Future<Void> {
+        return query(on: conn).create(self)
     }
 
     /// Updates the model. This requires that
     /// the model has its ID set.
-    public func update(
-        to database: DatabaseIdentifier<Database>?,
-        on conn: DatabaseConnectable
-    ) -> Future<Void> {
-        return query(database, on: conn).update(self)
+    public func update(on conn: DatabaseConnectable) -> Future<Void> {
+        return query(on: conn).update(self)
     }
 
     /// Saves this model to the supplied query executor.
     /// If `shouldCreate` is true, the model will be saved
     /// as a new item even if it already has an identifier.
-    public func delete(
-        to database: DatabaseIdentifier<Database>?,
-        on conn: DatabaseConnectable
-    ) -> Future<Void> {
-        return query(database, on: conn).delete(self)
+    public func delete(on conn: DatabaseConnectable) -> Future<Void> {
+        return query(on: conn).delete(self)
     }
 
     /// Attempts to find an instance of this model w/
     /// the supplied identifier.
-    public static func find(
-        _ id: Self.ID,
-        from database: DatabaseIdentifier<Database>? = nil,
-        on conn: DatabaseConnectable
-    ) -> Future<Self?> {
+    public static func find(_ id: Self.ID, on conn: DatabaseConnectable) -> Future<Self?> {
         return Future {
-            return try query(database, on: conn)
+            return try query(on: conn)
                 .filter(idKey == id)
                 .first()
         }

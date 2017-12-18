@@ -13,6 +13,9 @@ public protocol DatabaseConnection: QuerySupporting, DatabaseConnectable {
 /// for the supplied identifier.
 public protocol DatabaseConnectable {
     /// Create a database connection for the supplied dbid.
+    func existingConnection<D>(to type: D.Type) -> D.Connection?
+        where D: Database
+
     func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection>
 }
 
