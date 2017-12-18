@@ -262,7 +262,6 @@ do {
     
     router.websocket("foo") { (req, ws) in
         ws.onString { websocket, string in
-            print(string)
             websocket.send(string: string)
         }
     }

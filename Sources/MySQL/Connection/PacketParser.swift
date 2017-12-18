@@ -3,7 +3,7 @@ import Bits
 import COperatingSystem
 
 /// Parses buffers into packets
-internal final class MySQLPacketParser: ProtocolParserStream {
+internal final class MySQLPacketParser: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = ByteBuffer
     

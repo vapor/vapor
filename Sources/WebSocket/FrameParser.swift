@@ -3,7 +3,7 @@ import Foundation
 import COperatingSystem
 import Bits
 
-final class FrameParser: ProtocolParserStream {
+final class FrameParser: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     public typealias Input = ByteBuffer
     
@@ -22,14 +22,16 @@ final class FrameParser: ProtocolParserStream {
     /// The remainder buffer that couldn't yet be parsed (such as 2 bytes of an UInt32)
     var partialBuffer = [UInt8]()
     
+    var parsing: ByteBuffer? {
+        didSet {
+            parsedBytes = 0
+        }
+    }
+    
+    var parsedBytes: Int = 0
+    
     /// The currently processing frame
     var processing: Frame.Header?
-    
-    /// An array, for when a single TCP message has > 1 entity
-    var backlog: [Output]
-    
-    /// Keeps track of the backlog that is already drained but not removed
-    var consumedBacklog: Int
     
     /// The upstream providing byte buffers
     var upstream: ConnectionContext?
@@ -45,36 +47,86 @@ final class FrameParser: ProtocolParserStream {
     
     public init(maximumPayloadSize: Int = 100_000) {
         self.maximumPayloadSize = maximumPayloadSize
-        self.consumedBacklog = 0
         self.downstreamDemand = 0
         self.state = .ready
-        self.backlog = []
         
         // 2 for the header, 9 for the length, 4 for the mask
         self.bufferBuilder = MutableBytesPointer.allocate(capacity: maximumPayloadSize + 15)
     }
     
-    /// See OutputStream.onInput
-    public func transform(_ input: ByteBuffer) throws {
-        guard let pointer = input.baseAddress, input.count > 0 else {
-            // ignore
-            return
-        }
-        
-        var offset = 0
-        
-        while offset < input.count {
-            let remaining = input.count &- offset
-            
-            let consumed = try process(pointer: pointer.advanced(by: offset), length: remaining)
-            
-            offset = offset &+ consumed
+    func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close:
+            downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error):
+            downstream?.error(error)
+        case .next(let next):
+            do {
+                self.parsing = next
+                
+                try transform()
+            } catch {
+                self.downstream?.error(error)
+            }
         }
     }
     
-    private func process(pointer: BytesPointer, length: Int) throws -> Int {
+    func output<S>(to inputStream: S) where S : Async.InputStream, FrameParser.Output == S.Input {
+        self.downstream = AnyInputStream(inputStream)
+        upstream.flatMap(inputStream.connect)
+    }
+    
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            self.downstreamDemand = 0
+        case .request(let demand):
+            self.downstreamDemand += demand
+        }
+        
+        guard downstreamDemand > 0, parsing != nil else {
+            upstream?.request()
+            return
+        }
+        
+        do {
+            try transform()
+        } catch {
+            self.downstream?.error(error)
+        }
+    }
+    
+    func flush(_ frame: Frame) {
+        downstreamDemand -= 1
+        downstream?.next(frame)
+        
+        if self.parsing == nil {
+            
+        }
+    }
+    
+    /// See OutputStream.onInput
+    public func transform() throws {
+        guard let parsing = self.parsing else {
+            return
+        }
+        
+        if downstreamDemand > 0, parsedBytes < parsing.count {
+            try process()
+        }
+    }
+    
+    private func process() throws {
+        guard let parsing = parsing, let pointer = parsing.baseAddress?.advanced(by: parsedBytes), parsing.count &- parsedBytes > 0 else {
+            // ignore
+            throw WebSocketError(.invalidBufferSize)
+        }
+        
         let header: Frame.Header
         var offset: Int
+        let length = parsing.count &- parsedBytes
         
         // If a header was already processed
         if let processing = processing {
@@ -94,7 +146,8 @@ final class FrameParser: ProtocolParserStream {
                     // Not enough data for a header
                     memcpy(bufferBuilder.advanced(by: accumulated), pointer, length)
                     accumulated = accumulated &+ length
-                    return length
+                    parsedBytes += length
+                    return
                 }
                 
                 header = parsedHeader
@@ -105,7 +158,8 @@ final class FrameParser: ProtocolParserStream {
                     // Not enough data for a header
                     memcpy(bufferBuilder.advanced(by: accumulated), pointer, length)
                     accumulated = accumulated &+ length
-                    return length
+                    parsedBytes += length
+                    return
                 }
                 
                 header = parsedHeader
@@ -130,19 +184,19 @@ final class FrameParser: ProtocolParserStream {
         if frameSize == accumulated {
             let payload = ByteBuffer(start: bufferBuilder.advanced(by: header.consumed), count: accumulated &- header.consumed)
             let frame = Frame(op: header.op, payload: payload, mask: header.mask, isMasked: header.mask != nil, isFinal: header.final)
+            parsedBytes += offset
             accumulated = 0
+            
+            if self.parsedBytes == parsing.count {
+                self.parsing = nil
+            }
+            
             flush(frame)
         }
-        
-        if frameSize > accumulated {
-            throw WebSocketError(.parserError)
-        }
-        
-        return offset
     }
     
     static func parseFrameHeader(from base: UnsafePointer<UInt8>, length: Int) throws -> Frame.Header? {
-        guard
+         guard
             length > 3,
             let code = Frame.OpCode(rawValue: base[0] & 0b00001111)
         else {
@@ -193,9 +247,6 @@ final class FrameParser: ProtocolParserStream {
             
             base = base.advanced(by: 8)
             consumed = consumed &+ 8
-        } else {
-            // Technically impossible, but good to have
-            throw WebSocketError(.invalidFrame)
         }
         
         let mask: [UInt8]?
@@ -230,4 +281,13 @@ final class FrameParser: ProtocolParserStream {
     deinit {
         bufferBuilder.deallocate(capacity: maximumPayloadSize + 15)
     }
+}
+
+/// Various states the parser stream can be in
+enum ProtocolParserState {
+    /// normal state
+    case ready
+    
+    /// waiting for data from upstream
+    case awaitingUpstream
 }

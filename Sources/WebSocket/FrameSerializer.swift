@@ -3,7 +3,7 @@ import Async
 import Bits
 
 /// Serializes frames to binary
-final class FrameSerializer: ProtocolSerializerStream {
+final class FrameSerializer: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = Frame
     
@@ -40,6 +40,14 @@ final class FrameSerializer: ProtocolSerializerStream {
     
     var sendingFrame: Frame?
     
+    var parsing: ByteBuffer? {
+        didSet {
+            parsedBytes = 0
+        }
+    }
+    
+    var parsedBytes: Int = 0
+    
     /// If true, masks the messages before sending
     let mask: Bool
 
@@ -57,35 +65,60 @@ final class FrameSerializer: ProtocolSerializerStream {
         self.state = .ready
         self.downstreamDemand = 0
     }
+    
+    func input(_ event: InputEvent<Frame>) {
+        switch event {
+        case .close:
+            downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error):
+            downstream?.error(error)
+        case .next(let frame):
+            self.queue(frame)
+        }
+    }
+    
+    func output<S>(to inputStream: S) where S : Async.InputStream, Output == S.Input {
+        self.downstream = AnyInputStream(inputStream)
+        upstream.flatMap(inputStream.connect)
+    }
 
     func queue(_ frame: Frame) {
         if downstreamDemand > 0 {
-            sendingFrame = frame
-            
-            self.flush(ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count))
+            self.flush(frame)
         } else {
             self.backlog.append(frame)
         }
     }
-
-    func serialize(_ input: Input) throws {
-        let pointer = input.buffer.baseAddress?.advanced(by: serializationProgress)
-        
-        let unserialized = input.buffer.count - serializationProgress
-        let size = Swift.min(unserialized, 65_507)
-        
-        self.sendingFrame = input
-        
-        let buffer = ByteBuffer(start: pointer, count: size)
-        
-        flush(buffer)
-        
-        if unserialized - size > 0 {
-            self.serializing = input
-            self.serializationProgress += size
-        } else {
-            self.serializing = nil
+    
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            self.downstreamDemand = 0
+        case .request(let demand):
+            self.downstreamDemand += demand
         }
+        
+        defer {
+            self.backlog.removeFirst(consumedBacklog)
+        }
+        
+        while downstreamDemand > 0, parsing != nil {
+            guard backlog.count > consumedBacklog else {
+                upstream?.request()
+                return
+            }
+            
+            flush(self.backlog[consumedBacklog])
+            consumedBacklog += 1
+        }
+    }
+    
+    func flush(_ frame: Frame) {
+        downstreamDemand -= 1
+        self.serializing = frame
+        downstream?.next(ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count))
     }
 }
 

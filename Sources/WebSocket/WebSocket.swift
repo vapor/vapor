@@ -54,9 +54,17 @@ public class WebSocket {
         self.binaryOutputStream = EmitterStream<ByteBuffer>()
         
         func bindFrameStreams() {
-            source.stream(to: parser).drain { upstream in
-                upstream.request(count: .max)
+            source.output(to: parser)
+                
+            parser.drain { upstream in
+                self.parser.request()
             }.output { frame in
+                frame.unmask()
+                
+                defer {
+                    self.parser.request()
+                }
+                
                 switch frame.opCode {
                 case .close:
                     sink.close()
