@@ -62,6 +62,15 @@ internal final class MySQLPacketParser: ProtocolParserStream {
         self.upstreamBuffer = input
         self.upstreamBufferOffset = 0
         
+        while downstreamDemand > 0, length > 0 {
+            parseNext()
+        }
+        
+        print(downstreamDemand, length)
+        print(Array(input))
+    }
+    
+    private func parseNext() {
         // If an existing packet it building
         if let (buffer, containing) = self.parsing {
             let dataSize = min(buffer.count &- containing, length)
@@ -95,6 +104,8 @@ internal final class MySQLPacketParser: ProtocolParserStream {
                 
                 // sequenceID + payload
                 let fullPacketSize = 1 &+ payloadSize
+                
+                upstreamBufferOffset = upstreamBufferOffset &+ 3
                 
                 if length < fullPacketSize {
                     dumpPayload(size: fullPacketSize)

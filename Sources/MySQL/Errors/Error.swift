@@ -106,7 +106,7 @@ public struct MySQLError : Swift.Error, Debuggable, Traceable, Helpable {
             let code = try parser.parseUInt16()
                 
             if code != 0xffff {
-                if try parser.byte() == .numberSign {
+                if parser.packet.payload.first == .numberSign {
                     // SQL State
                     parser.position += 5
                 }

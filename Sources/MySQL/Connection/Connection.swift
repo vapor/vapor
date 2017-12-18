@@ -39,14 +39,14 @@ public final class MySQLConnection {
     /// Doesn't finish the handshake synchronously
     init(
         handshake: Handshake,
-        source: AnyOutputStream<ByteBuffer>,
-        sink: AnyInputStream<ByteBuffer>
+        parser: MySQLPacketParser,
+        serializer: MySQLPacketSerializer,
+        close: @escaping () -> ()
     ) {
-        self.streamClose = sink.close
+        self.streamClose = close
         self.handshake = handshake
-        self.parser = source.stream(to: MySQLPacketParser())
-        self.serializer = MySQLPacketSerializer()
-        serializer.output(to: sink)
+        self.parser = parser
+        self.serializer = serializer
     }
 
     deinit {

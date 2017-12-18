@@ -30,8 +30,9 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     }
     
     func serialize(_ input: Packet) throws {
-        // Starts the packet number at the starting number
-        // The handshake starts at 1, instead of 0
+        guard input.containsPacketSize else {
+            fatalError("Server message sent to server")
+        }
         
         flush(input.buffer)
     }

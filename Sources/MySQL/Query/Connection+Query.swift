@@ -46,7 +46,9 @@ extension MySQLConnection {
             
             promise.complete()
         }.catch(onError: promise.fail)
-        .finally(onClose:  { promise.complete() })
+        .finally {
+            promise.complete()
+        }
         
         do {
             try self.write(query: query.queryString)

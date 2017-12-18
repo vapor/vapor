@@ -16,7 +16,18 @@ internal final class Packet: ExpressibleByArrayLiteral {
     /// The sequence ID is incremented per message
     /// This client doesn't use this
     var sequenceId: UInt8 {
-        return containsPacketSize ? buffer[3] : buffer[0]
+        get {
+            return containsPacketSize ? buffer[3] : buffer[0]
+        }
+        set {
+            if case .mutable(let buffer) = _buffer {
+                if containsPacketSize {
+                    buffer[3] = newValue
+                } else {
+                    buffer[0] = newValue
+                }
+            }
+        }
     }
     
     var containsPacketSize: Bool
@@ -24,7 +35,6 @@ internal final class Packet: ExpressibleByArrayLiteral {
     /// The payload contains the packet's data
     var payload: ByteBuffer {
         let buffer = self.buffer
-        
         
         if containsPacketSize {
             // size (UInt24) + sequenceId + payload
@@ -89,7 +99,7 @@ internal final class Packet: ExpressibleByArrayLiteral {
             UInt8((data.count) & 0xff),
             UInt8((data.count >> 8) & 0xff),
             UInt8((data.count >> 16) & 0xff),
-            ]
+        ]
         
         memcpy(pointer, packetSizeBytes, 3)
         
@@ -97,6 +107,6 @@ internal final class Packet: ExpressibleByArrayLiteral {
             _ = memcpy(pointer.advanced(by: 4), buffer.baseAddress!, data.count)
         }
         
-        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ data.count), containsPacketSize: true)
+        self.init(payload: MutableByteBuffer(start: pointer, count: 4 &+ data.count), containsPacketSize: true)
     }
 }

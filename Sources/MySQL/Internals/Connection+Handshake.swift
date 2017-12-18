@@ -33,7 +33,7 @@ extension MySQLConnection {
 /// This library's capabilities
 var capabilities: Capabilities {
     let base: Capabilities = [
-        .longPassword, .protocol41, .longFlag, .secureConnection, .connectWithDB
+        .longPassword, .protocol41, .longFlag, .connectWithDB, .secureConnection
     ]
     
     return base
@@ -105,29 +105,41 @@ fileprivate final class MySQLConnector {
                 
                 let connection = MySQLConnection(
                     handshake: handshake,
-                    source: .init(source),
-                    sink: .init(sink)
+                    parser: parser,
+                    serializer: serializer,
+                    close: socket.close
                 )
+                
                 promise.complete(connection)
             }
             
             _ = parser.drain { upstream in
                 upstream.request()
             }.output { packet in
+                // https://mariadb.com/kb/en/library/1-connecting-connecting/
                 switch self.state {
                 case .start:
-                    self.handshake = try self.doHandshake(for: packet)
-                case .sentHandshake:
                     if let ssl = self.ssl {
-                        // FIXME:
-                        fatalError("SSL not supported yet \(ssl)")
+                        _ = ssl
+                        fatalError("Unsupported StartTLS")
+                        // Do SSL upgrade
+                        // self.state = .sendSSL
                     } else {
-                        try self.finishAuthentication(for: packet)
-                        try complete()
+                        self.handshake = try self.doHandshake(for: packet)
+                        self.state = .sentHandshake
                     }
+                    
+                    parser.request()
                 case .sentSSL:
-                    try self.finishAuthentication(for: packet)
-                    try complete()
+                    self.handshake = try self.doHandshake(for: packet)
+                    self.state = .sentHandshake
+                    parser.request()
+                case .sentHandshake:
+                    if try self.finishAuthentication(for: packet) {
+                        try complete()
+                    } else {
+                        parser.request()
+                    }
                 }
             }.catch(onError: promise.fail)
             
@@ -149,78 +161,51 @@ fileprivate final class MySQLConnector {
     /// Send the handshake to the client
     func sendHandshake(for handshake: Handshake) throws {
         if handshake.isGreaterThan4 {
-            var size = 32 + self.user.utf8.count + 1 + database.utf8.count + 1
-            
-            if let password = self.password, handshake.capabilities.contains(.secureConnection) {
-                size += 21
-            } else {
-                size += 1
-            }
-            
-            let pointer = UnsafeMutablePointer<UInt8>.allocate(capacity: size)
-            pointer.initialize(to: 0, count: size)
-            
-            defer {
-                pointer.deinitialize(count: size)
-                pointer.deallocate(capacity: size)
-            }
-            
-            let username = [UInt8](self.user.utf8)
+            var data = Data()
             
             let combinedCapabilities = capabilities.rawValue & handshake.capabilities.rawValue
             
-            var writer = pointer
-            
-            memcpy(writer, [
+            data.append(contentsOf: [
                 UInt8((combinedCapabilities) & 0xff),
                 UInt8((combinedCapabilities >> 1) & 0xff),
                 UInt8((combinedCapabilities >> 2) & 0xff),
                 UInt8((combinedCapabilities >> 3) & 0xff),
-            ], 4)
-            
-            writer += 4
+            ])
             
             // UInt32(0) for the maximum packet length, or, undefined
             // pointer is already 0 here
-            writer += 4
+            data.append(contentsOf: [0,0,0,0])
             
-            writer.pointee = handshake.defaultCollation
-            writer += 1
+            data.append(handshake.defaultCollation)
             
             // 23 reserved space
-            writer += 23
+            data.append(contentsOf: [UInt8](repeating: 0, count: 23))
             
-            memcpy(writer, username, username.count)
+            // user + null terminator
+            data.append(contentsOf: self.user.utf8)
+            data.append(0)
             
-            // 1 null terminator
-            writer += username.count + 1
-            
-            if let password = password {
+            if let password = password, handshake.capabilities.contains(.secureConnection) {
                 let hash = sha1Encrypted(from: password, seed: handshake.randomSeed)
                 
                 // SHA1.digestSize == 20
-                writer.pointee = 20
-                writer += 1
-                
-                // SHA1 is always 20 long
-                hash.withByteBuffer { buffer in
-                    _ = memcpy(writer, buffer.baseAddress!, 20)
-                }
-                writer += 20
+                data.append(numericCast(hash.count))
+                data.append(hash)
             } else {
-                writer.pointee = 0
-                writer += 1
+                data.append(0)
             }
             
-            memcpy(writer, database, database.utf8.count)
-            writer += database.count + 1
+            if handshake.capabilities.contains(.connectWithDB) {
+                data.append(contentsOf: database.utf8)
+                data.append(0)
+            }
             
-            // SequenceId 1
-            pointer[3] = 1
+            let packet = Packet(data: data)
             
-            let data = ByteBuffer(start: pointer, count: size)
+            // handshake starts at 1
+            packet.sequenceId = 1
             
-            self.serializer.queue(Packet(payload: data))
+            self.serializer.queue(packet)
         } else {
             throw MySQLError(.invalidHandshake)
         }
@@ -239,7 +224,7 @@ fileprivate final class MySQLConnector {
     }
     
     /// Parse the authentication request
-    func finishAuthentication(for packet: Packet) throws {
+    func finishAuthentication(for packet: Packet) throws -> Bool {
         switch packet.payload.first {
         case 0xfe:
             if packet.payload.count == 0 {
@@ -274,20 +259,13 @@ fileprivate final class MySQLConnector {
                     throw MySQLError(.invalidHandshake)
                 }
             }
+            
+            return false
         case 0xff:
             throw MySQLError(packet: packet)
         default:
             // auth is finished, have the parser stream to the packet stream now
-            return
-        }
-        
-        let response = try packet.parseResponse(mysql41: handshake?.mysql41 == true)
-        
-        switch response {
-        case .error(let error):
-            throw error
-        default:
-            return
+            return true
         }
     }
 }
