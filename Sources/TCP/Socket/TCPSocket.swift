@@ -88,7 +88,7 @@ public struct TCPSocket: Socket {
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
     public func read(into buffer: MutableByteBuffer) throws -> SocketReadStatus {
-        let receivedBytes = Darwin.read(descriptor, buffer.baseAddress!, buffer.count)
+        let receivedBytes = COperatingSystem.read(descriptor, buffer.baseAddress!, buffer.count)
         do {
             if receivedBytes > 0 {
                 let buf = ByteBuffer(start: buffer.baseAddress, count: receivedBytes)
@@ -96,6 +96,7 @@ public struct TCPSocket: Socket {
                 print("[tcp] read: \(string)")
             }
         }
+
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -165,6 +166,6 @@ public struct TCPSocket: Socket {
 
     /// Closes the socket
     public func close() {
-        Darwin.close(descriptor)
+        _ = COperatingSystem.close(descriptor)
     }
 }

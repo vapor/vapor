@@ -1,5 +1,7 @@
 import COperatingSystem
 
+fileprivate let cConnect = connect
+
 /// Read and write byte buffers from a TCPClient.
 ///
 /// These are usually created as output by a TCPServer.
@@ -73,7 +75,8 @@ extension TCPSocket {
             throw TCPError(identifier: "unwrapAddress", reason: "Could not unwrap address info.")
         }
 
-        res = Darwin.connect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
+        res = cConnect(descriptor, info.pointee.ai_addr, info.pointee.ai_addrlen)
+            
         if res != 0 {
             switch errno {
             case EINTR:

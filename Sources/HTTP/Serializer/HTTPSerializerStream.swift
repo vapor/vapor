@@ -135,7 +135,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
     }
 
     deinit {
-        writeBuffer.baseAddress!.deinitialize()
+        writeBuffer.baseAddress!.deinitialize(count: writeBuffer.count)
         writeBuffer.baseAddress!.deallocate(capacity: writeBuffer.count)
     }
 }

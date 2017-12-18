@@ -38,6 +38,8 @@ final class FrameSerializer: ProtocolSerializerStream {
     
     var state: ProtocolParserState
     
+    var sendingFrame: Frame?
+    
     /// If true, masks the messages before sending
     let mask: Bool
 
@@ -56,8 +58,14 @@ final class FrameSerializer: ProtocolSerializerStream {
         self.downstreamDemand = 0
     }
 
-    func queue(_ packet: Frame) {
-        fatalError("implement me")
+    func queue(_ frame: Frame) {
+        if downstreamDemand > 0 {
+            sendingFrame = frame
+            
+            self.flush(ByteBuffer(start: frame.buffer.baseAddress, count: frame.buffer.count))
+        } else {
+            self.backlog.append(frame)
+        }
     }
 
     func serialize(_ input: Input) throws {
@@ -65,6 +73,8 @@ final class FrameSerializer: ProtocolSerializerStream {
         
         let unserialized = input.buffer.count - serializationProgress
         let size = Swift.min(unserialized, 65_507)
+        
+        self.sendingFrame = input
         
         let buffer = ByteBuffer(start: pointer, count: size)
         
