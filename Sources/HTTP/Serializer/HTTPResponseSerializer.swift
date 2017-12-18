@@ -49,8 +49,10 @@ public final class HTTPResponseSerializer: _HTTPSerializer {
         switch message.body.storage {
         case .outputStream:
             headers[.transferEncoding] = "chunked"
+            headers[.contentLength] = nil
         case .data, .dispatchData, .staticString, .string:
             headers[.contentLength] = message.body.count.description
+            headers[.transferEncoding] = nil
         }
         
         self.firstLine = message.firstLine

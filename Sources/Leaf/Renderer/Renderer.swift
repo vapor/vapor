@@ -108,11 +108,12 @@ extension LeafRenderer {
     public func render(path: String, context: LeafContext) -> Future<Data> {
         let path = path.hasSuffix(".leaf") ? path : path + ".leaf"
         let fullPath: String
-        if path.hasSuffix("/") {
+        if path.hasPrefix("/") {
             fullPath = path
         } else {
             fullPath = viewsDir + path
         }
+        print(fullPath)
 
         let promise = Promise(Data.self)
 
