@@ -75,7 +75,7 @@ final class FrameParser: Async.Stream, ConnectionContext {
     
     func output<S>(to inputStream: S) where S : Async.InputStream, FrameParser.Output == S.Input {
         self.downstream = AnyInputStream(inputStream)
-        upstream.flatMap(inputStream.connect)
+        inputStream.connect(to: self)
     }
     
     func connection(_ event: ConnectionEvent) {

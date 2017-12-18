@@ -93,7 +93,7 @@ fileprivate final class MySQLConnector {
             try client.connect(hostname: hostname, port: port)
             
             let source = socket.source(on: eventLoop)
-            let parser = source.stream(to: MySQLPacketParser())
+            let parser = MySQLPacketParser()
 
             let sink = socket.sink(on: eventLoop)
             self.serializer.output(to: sink)
@@ -116,8 +116,8 @@ fileprivate final class MySQLConnector {
                 promise.complete(connection)
             }
             
-            _ = parser.drain { upstream in
-                upstream.request()
+            _ = source.stream(to: parser).drain { upstream in
+                parser.request()
             }.output { packet in
                 // https://mariadb.com/kb/en/library/1-connecting-connecting/
                 switch self.state {

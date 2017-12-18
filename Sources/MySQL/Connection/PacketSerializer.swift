@@ -1,7 +1,16 @@
 import Async
 import Bits
 
-final class MySQLPacketSerializer: ProtocolSerializerStream {
+/// Various states the parser stream can be in
+enum ProtocolSerializerState {
+    /// normal state
+    case ready
+    
+    /// waiting for data from upstream
+    case awaitingUpstream
+}
+
+final class MySQLPacketSerializer: Async.Stream {
     /// See InputStream.Input
     typealias Input = Packet
     
@@ -14,9 +23,9 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     
     var consumedBacklog: Int
     
-    var serializing: Packet?
-    
     var downstreamDemand: UInt
+    
+    var serializing: Packet?
     
     var upstream: ConnectionContext?
     
@@ -37,11 +46,33 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     }
     
     init() {
-        downstreamDemand = 0
         state = .ready
+        self.downstreamDemand = 0
         self.consumedBacklog = 0
         self._sequenceId = 0
         self.backlog = []
+    }
+    
+    /// See InputStream.input
+    func input(_ event: InputEvent<Input>) {
+        switch event {
+        case .close: downstream?.close()
+        case .error(let error): downstream?.error(error)
+        case .connect(let upstream):
+            self.upstream = upstream
+            downstream?.connect(to: upstream)
+        case .next(let input):
+            self.flush(input)
+        }
+    }
+    
+    func connect(to context: ConnectionContext) {
+        
+    }
+    
+    /// See OutputStream.output
+    func output<S>(to inputStream: S) where S: Async.InputStream, Output == S.Input {
+        downstream = AnyInputStream(inputStream)
     }
     
     func nextCommandPhase() {
@@ -54,10 +85,18 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
         }
         
         // FIXME:
-        input.sequenceId = self.sequenceId
-        sendingPacket = input
+        flush(input)
+    }
+    
+    func flush(_ packet: Packet) {
+        guard downstreamDemand > 0 else {
+            return
+        }
         
-        flush(input.buffer)
+        packet.sequenceId = self.sequenceId
+        
+        self.serializing = packet
+        downstream?.next(packet.buffer)
     }
 
     func queue(_ packet: Packet, nextPhase: Bool = true) {
@@ -65,15 +104,6 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
             self.nextCommandPhase()
         }
         
-        // FIXME:
-        packet.sequenceId = self.sequenceId
-        
-        if downstreamDemand > 0 {
-            sendingPacket = packet
-            
-            self.flush(packet.buffer)
-        } else {
-            self.backlog.append(packet)
-        }
+        self.flush(packet)
     }
 }

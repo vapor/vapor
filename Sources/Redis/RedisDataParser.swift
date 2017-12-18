@@ -2,8 +2,17 @@ import Async
 import Bits
 import Foundation
 
+/// Various states the parser stream can be in
+enum ProtocolParserState {
+    /// normal state
+    case ready
+    
+    /// waiting for data from upstream
+    case awaitingUpstream
+}
+
 /// A streaming Redis value parser
-internal final class RedisDataParser: ProtocolParserStream {
+internal final class RedisDataParser: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = ByteBuffer
     
@@ -11,13 +20,7 @@ internal final class RedisDataParser: ProtocolParserStream {
     typealias Output = RedisData
     
     /// The in-progress parsing value
-    var parsing: PartialRedisData?
-    
-    /// An array, for when a single TCP message has > 1 entity
-    var backlog: [Output]
-    
-    /// Keeps track of the backlog that is already drained but not removed
-    var consumedBacklog: Int
+    var processing: PartialRedisData?
     
     /// The upstream providing byte buffers
     var upstream: ConnectionContext?
@@ -31,12 +34,62 @@ internal final class RedisDataParser: ProtocolParserStream {
     /// Current state
     var state: ProtocolParserState
     
+    var parsing: ByteBuffer? {
+        didSet {
+            parsedBytes = 0
+        }
+    }
+    
+    var parsedBytes: Int = 0
+    
     /// Creates a new ValueParser
     init() {
         downstreamDemand = 0
-        self.backlog = []
-        self.consumedBacklog = 0
         state = .ready
+    }
+    
+    func input(_ event: InputEvent<ByteBuffer>) {
+        switch event {
+        case .close:
+            downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error):
+            downstream?.error(error)
+        case .next(let next):
+            do {
+                self.parsing = next
+                
+                try transform()
+            } catch {
+                self.downstream?.error(error)
+            }
+        }
+    }
+    
+    func output<S>(to inputStream: S) where S : Async.InputStream, Output == S.Input {
+        self.downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
+    }
+    
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            self.downstreamDemand = 0
+        case .request(let demand):
+            self.downstreamDemand += demand
+        }
+        
+        guard downstreamDemand > 0, parsing != nil else {
+            upstream?.request()
+            return
+        }
+        
+        do {
+            try transform()
+        } catch {
+            self.downstream?.error(error)
+        }
     }
     
     /// Parses a basic String (no \r\n's) `String` starting at the current position
@@ -224,28 +277,44 @@ internal final class RedisDataParser: ProtocolParserStream {
     }
     
     /// Continues parsing the `Data` buffer
-    func transform(_ input: ByteBuffer) throws {
-        var offset = 0
+    func transform() throws {
+        guard downstreamDemand > 0 else {
+            return
+        }
+        
+        guard let parsing = parsing else {
+            upstream?.request()
+            return
+        }
+        
         var value: PartialRedisData
         
         // Continues parsing while there are still pending requests
         repeat {
-            if let parsing = self.parsing {
-                value = parsing
+            if let processing = self.processing {
+                value = processing
             } else {
                 value = .notYetParsed
             }
             
-            if try continueParsing(partial: &value, from: input, at: &offset) {
+            if try continueParsing(partial: &value, from: parsing, at: &parsedBytes) {
                 guard case .parsed(let value) = value else {
                     throw RedisError(.parsingError)
                 }
                 
+                self.processing = nil
                 flush(value)
             } else {
-                self.parsing = value
+                self.processing = value
             }
-        } while offset < input.count
+        } while parsedBytes < parsing.count && downstreamDemand > 0
+        
+        upstream?.request()
+    }
+    
+    private func flush(_ data: RedisData) {
+        self.downstreamDemand -= 1
+        self.downstream?.next(data)
     }
 }
 
