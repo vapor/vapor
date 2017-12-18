@@ -6,6 +6,7 @@ import FluentMySQL
 
 class FluentMySQLTests: XCTestCase {
     var benchmarker: Benchmarker<MySQLDatabase>!
+    let loop = DispatchEventLoop(label: "test")
     
     override func setUp() {
         let database = MySQLDatabase(
@@ -15,13 +16,13 @@ class FluentMySQLTests: XCTestCase {
             database: "vapor_test"
         )
         
-        benchmarker = Benchmarker(database, config: .init(), onFail: XCTFail)
+        benchmarker = Benchmarker(database, config: .init(), on: loop, onFail: XCTFail)
         
-        try! benchmarker.pool.requestConnection().then { conn -> Future<Void> in
-            return conn.disableReferences().then { _ -> Future<Void> in
+        try! benchmarker.pool.requestConnection().flatMap(to: Void.self) { conn in
+            return conn.disableReferences().flatMap(to: Void.self) {
                 return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `pet+toy`, `pets`, `toys`, `users`, `foos`")
-            }.then { _ -> Future<Void> in
-                return conn.enableReferences().map {
+            }.flatMap(to: Void.self) {
+                return conn.enableReferences().map(to: Void.self) {
                     self.benchmarker.pool.releaseConnection(conn)
                 }
             }
