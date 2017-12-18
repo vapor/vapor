@@ -33,14 +33,14 @@ public final class SQLiteResultStream: OutputStream, ConnectionContext {
                 return
             }
 
-            results.fetchRow().do { row in
-                if let row = row {
+            do {
+                if let row = try results.fetchRow() {
                     self.downstream?.next(row)
                     self.request(count: count - 1)
                 } else {
                     self.downstream?.close()
                 }
-            }.catch { error in
+            } catch {
                 self.downstream?.error(error)
             }
         }

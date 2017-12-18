@@ -8,10 +8,12 @@ import XCTest
 class HTTPClientTests: XCTestCase {
     func testTCP() throws {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
-        let tcpClient = TCPClient(socket: tcpSocket)
+        let tcpClient = try TCPClient(socket: tcpSocket)
         try tcpClient.connect(hostname: "httpbin.org", port: 80)
-        let tcpStream = tcpSocket.stream(on: DispatchQueue(label: "codes.vapor.http.test.client"))
-        let client = HTTPClient(byteStream: tcpStream)
+        let eventLoop = DispatchEventLoop(label: "codes.vapor.http.test.client")
+        let tcpSource = tcpSocket.source(on: eventLoop)
+        let tcpSink = tcpSocket.sink(on: eventLoop)
+        let client = HTTPClient(source: tcpSource, sink: tcpSink)
 
         let req = HTTPRequest(method: .get, uri: "/html", headers: [.host: "httpbin.org"])
         let res = client.send(req)
@@ -49,7 +51,7 @@ class HTTPClientTests: XCTestCase {
                 print(event)
             }
         )
-        let client = HTTPClient(byteStream: byteStream)
+        let client = HTTPClient(source: byteStream, sink: byteStream)
         let req = HTTPRequest(method: .get, uri: "/html", headers: [.host: "httpbin.org"])
         let futureRes = client.send(req)
 

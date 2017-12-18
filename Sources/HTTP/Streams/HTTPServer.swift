@@ -9,7 +9,7 @@ public final class HTTPServer<AcceptStream, Worker>
     where AcceptStream: OutputStream,
     AcceptStream.Output: ByteStreamRepresentable,
     Worker: HTTPResponder,
-    Worker: Worker
+    Worker: Async.Worker
 {
     /// The underlying server stream.
     private let serverStream: HTTPServerStream<AcceptStream, Worker>
@@ -35,13 +35,29 @@ public final class HTTPServer<AcceptStream, Worker>
 /// Representable by an associated byte stream.
 public protocol ByteStreamRepresentable {
     /// The associated byte stream type.
-    associatedtype ByteStream
-        where ByteStream: Stream,
-            ByteStream.Input == ByteBuffer,
-            ByteStream.Output == ByteBuffer
+    associatedtype SourceStream
+        where
+            SourceStream: OutputStream,
+            SourceStream.Output == ByteBuffer
+
+    associatedtype SinkStream
+        where
+            SinkStream: InputStream,
+            SinkStream.Input == ByteBuffer
 
     /// Convert to the associated byte stream.
-    func stream(on Worker: Worker) -> ByteStream
+    func source(on worker: Worker) -> SourceStream
+    func sink(on worker: Worker) -> SinkStream
 }
 
-extension TCPClient: ByteStreamRepresentable {}
+extension TCPClient: ByteStreamRepresentable {
+    /// See ByteStreamRepresentable.source
+    public func source(on eventLoop: Worker) -> SocketSource<TCPSocket> {
+        return socket.source(on: eventLoop.eventLoop)
+    }
+
+    /// See ByteStreamRepresentable.sink
+    public func sink(on eventLoop: Worker) -> SocketSink<TCPSocket> {
+        return socket.sink(on: eventLoop.eventLoop)
+    }
+}

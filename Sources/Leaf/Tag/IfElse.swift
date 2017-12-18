@@ -14,7 +14,7 @@ public final class IfElse: LeafTag {
                 ast: body,
                 renderer: renderer,
                 context: context,
-                on: parsed.Worker
+                on: parsed.eventLoop
             )
             serializer.serialize().do { bytes in
                 promise.complete(.data(bytes))

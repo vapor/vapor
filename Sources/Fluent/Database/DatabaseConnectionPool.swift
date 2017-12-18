@@ -8,7 +8,7 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
     public let database: Database
 
     /// The Worker for this pool
-    public let worker: Worker
+    public let eventLoop: EventLoop
     
     /// The configuration to be used for connections in this pool
     public let config: Database.Connection.Config
@@ -30,10 +30,10 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
         max: UInt,
         database: Database,
         using config: Database.Connection.Config,
-        on Worker: Worker
+        on worker: Worker
     ) {
         self.database = database
-        self.Worker = Worker
+        self.eventLoop = worker.eventLoop
         self.config = config
         self.max = max
         self.active = 0
@@ -48,7 +48,7 @@ public final class DatabaseConnectionPool<Database: Fluent.Database> {
         if let ready = self.available.popLast() {
             promise.complete(ready)
         } else if self.active < self.max {
-            self.database.makeConnection(from: config, on: Worker).do { connection in
+            self.database.makeConnection(from: config, on: eventLoop).do { connection in
                 self.active += 1
                 if let references = connection as? _ReferenceSupporting {
                     references.enableReferences().do {

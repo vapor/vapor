@@ -45,33 +45,8 @@ public final class SQLiteQuery {
 
     // MARK: Execute
 
-    /// Starts executing the statement.
-    public func execute() -> Future<SQLiteResults?> {
-        let promise = Promise(SQLiteResults?.self)
-
-        // sqlite may block at anytime, so we need to run everything
-        // on a separate background queue
-        connection.background.async {
-            do {
-                // blocking execute now that we're on the background thread
-                let results = try self.blockingExecute()
-                // return to event loop
-                self.connection.Worker.queue.async {
-                    promise.complete(results)
-                }
-            } catch {
-                // return to event loop to output error
-                self.connection.Worker.queue.async {
-                    promise.fail(error)
-                }
-            }
-        }
-
-        return promise.future
-    }
-
     /// Executes the query, blocking until complete.
-    private func blockingExecute() throws -> SQLiteResults? {
+    private func execute() throws -> SQLiteResults? {
         var columns: [SQLiteColumn] = []
 
         var raw: Raw?

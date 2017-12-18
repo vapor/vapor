@@ -24,19 +24,29 @@ public final class BasicSubContainer: SubContainer {
     /// See SubContainer.superContainer
     public var superContainer: Container
 
+    /// See Worker.eventLoop
+    public var eventLoop: EventLoop
+
     /// Create a new basic container
-    public init(config: Config, environment: Environment, services: Services, super: Container) {
+    public init(config: Config, environment: Environment, services: Services, super: Container, on worker: Worker) {
         self.config = config
         self.environment = environment
         self.services = services
         self.serviceCache = .init()
         self.superContainer = `super`
+        self.eventLoop = worker.eventLoop
     }
 }
 
 extension Container {
     /// Creates a sub container for this container.
-    var subContainer: BasicSubContainer {
-        return BasicSubContainer(config: config, environment: environment, services: services, super: self)
+    func subContainer(on worker: Worker) -> BasicSubContainer {
+        return BasicSubContainer(
+            config: config,
+            environment: environment,
+            services: services,
+            super: self,
+            on: worker
+        )
     }
 }

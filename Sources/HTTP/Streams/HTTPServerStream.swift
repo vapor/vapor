@@ -6,13 +6,10 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
     where AcceptStream: OutputStream,
     AcceptStream.Output: ByteStreamRepresentable,
     Worker: HTTPResponder,
-    Worker: Worker
+    Worker: Async.Worker
 {
     /// See InputStream.Input
     typealias Input = AcceptStream.Output
-
-    /// See OutputStream.Output
-    typealias Output = AcceptStream.Output.ByteStream
 
     /// Handles errors
     internal var onError: HTTPServer<AcceptStream, Worker>.ErrorHandler?
@@ -54,21 +51,22 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
             }
             worker = workers[workerOffset]
 
-            let byteStream = input.stream(on: worker)
-            byteStream
+            let source = input.source(on: worker)
+            let sink = input.sink(on: worker)
+            source
                 .stream(to: parserStream)
                 .stream(to: worker.stream(on: worker))
                 .map(to: HTTPResponse.self) { response in
                     /// map the responder adding http upgrade support
                     defer {
                         if let onUpgrade = response.onUpgrade {
-                            onUpgrade.closure(AnyStream(byteStream))
+                            onUpgrade.closure(.init(source), .init(sink))
                         }
                     }
                     return response
                 }
                 .stream(to: serializerStream)
-                .output(to: byteStream)
+                .output(to: sink)
         case .error(let error):
             onError?(error)
         case .close: print("accept stream closed")

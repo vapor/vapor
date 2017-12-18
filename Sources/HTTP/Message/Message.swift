@@ -44,8 +44,14 @@ public protocol HTTPMessage: Codable, CustomDebugStringConvertible {
 
 /// An action that happens when the message is upgraded.
 public struct HTTPOnUpgrade: Codable {
+    /// Byte source (input)
+    public typealias Source = AnyOutputStream<ByteBuffer>
+
+    /// Byte sink (output)
+    public typealias Sink = AnyInputStream<ByteBuffer>
+
     /// Accepts the byte stream underlying the HTTP connection.
-    public typealias Closure = (AnyStream<ByteBuffer, ByteBuffer>) -> ()
+    public typealias Closure = (Source, Sink) -> ()
 
     /// Internal storage
     public let closure: Closure
@@ -62,7 +68,7 @@ public struct HTTPOnUpgrade: Codable {
 
     /// See Decodable.init
     public init(from decoder: Decoder) throws {
-        self.init { _ in }
+        self.init { _, _ in }
     }
 }
 

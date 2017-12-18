@@ -24,47 +24,18 @@ public final class SQLiteDatabase {
     public func makeConnection(
         on Worker: Worker
     ) -> Future<SQLiteConnection> {
-        let promise = Promise(SQLiteCoOnnection.self)
-        let background = DispatchQueue(label: "sqlite.connection.background")
-
-        background.async {
+        return Future {
             let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
             var raw: SQLiteConnection.Raw?
             guard sqlite3_open_v2(self.storage.path, &raw, options, nil) == SQLITE_OK else {
-                Worker.queue.async {
-                    promise.fail(
-                        SQLiteError(
-                            problem: .error,
-                            reason: "Could not open database."
-                        )
-                    )
-                }
-                return
+                throw SQLiteError(problem: .error, reason: "Could not open database.")
             }
 
             guard let r = raw else {
-                Worker.queue.async {
-                    promise.fail(
-                        SQLiteError(
-                            problem: .error,
-                            reason: "Unexpected nil database."
-                        )
-                    )
-                }
-                return
+                throw SQLiteError(problem: .error, reason: "Unexpected nil database.")
             }
 
-            let connection = SQLiteConnection(
-                raw: r,
-                Worker: Worker,
-                background: background,
-                database: self
-            )
-            Worker.queue.async {
-                promise.complete(connection)
-            }
+            return Future(SQLiteConnection(raw: r, database: self))
         }
-
-        return promise.future
     }
 }

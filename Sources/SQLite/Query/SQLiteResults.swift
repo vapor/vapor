@@ -26,35 +26,9 @@ public final class SQLiteResults {
         state = .rowAvailable
     }
 
-    /// Returns a future row. Returns nil if there
-    /// are no more rows.
-    public func fetchRow() -> Future<SQLiteRow?> {
-        let promise = Promise(SQLiteRow?.self)
-
-        // sqlite may block at anytime, so we need to run everything
-        // on a separate background queue
-        connection.background.async {
-            do {
-                // blocking execute now that we're on the background thread
-                let row = try self.blockingFetchRow()
-                // return to event loop
-                self.connection.Worker.queue.async {
-                    promise.complete(row)
-                }
-            } catch {
-                // return to event loop to output error
-                self.connection.Worker.queue.async {
-                    promise.fail(error)
-                }
-            }
-        }
-
-        return promise.future
-    }
-
     /// Fetches rows in blocking fashion. This should be called from a
     /// background thread.
-    private func blockingFetchRow() throws -> SQLiteRow? {
+    public func fetchRow() throws -> SQLiteRow? {
         guard case .rowAvailable = state else {
             return nil
         }

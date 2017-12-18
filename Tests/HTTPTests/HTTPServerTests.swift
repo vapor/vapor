@@ -7,7 +7,7 @@ import TCP
 import XCTest
 
 struct EchoWorker: HTTPResponder, Worker {
-    let loop = EventLoop()
+    let eventLoop: EventLoop = DispatchEventLoop(label: "codes.vapor.http.test.server.worker")
 
     func respond(to req: HTTPRequest, on Worker: Worker) throws -> Future<HTTPResponse> {
         /// simple echo server
@@ -17,11 +17,13 @@ struct EchoWorker: HTTPResponder, Worker {
 
 class HTTPServerTests: XCTestCase {
     func testTCP() throws {
+        let accept = DispatchEventLoop(label: "codes.vapor.http.test.server.accept")
+
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         let tcpServer = try TCPServer(socket: tcpSocket)
-        let server = HTTPServer(
+        let server = HTTPServer<TCPClientStream, EchoWorker>(
             acceptStream: tcpServer.stream(
-                on: DispatchQueue(label: "codes.vapor.http.test.server")
+                on: accept
             ),
             workers: [
                 EchoWorker(),
@@ -43,7 +45,7 @@ class HTTPServerTests: XCTestCase {
         var num = 1024
         for _ in 0..<num {
             let clientSocket = try TCPSocket(isNonBlocking: false)
-            let client = TCPClient(socket: clientSocket)
+            let client = try TCPClient(socket: clientSocket)
             try client.connect(hostname: "localhost", port: 8123)
             let write = Data("GET / HTTP/1.1\r\nContent-Length: 0\r\n\r\n".utf8)
             _ = try client.socket.write(write)

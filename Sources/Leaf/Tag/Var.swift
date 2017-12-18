@@ -18,7 +18,7 @@ public final class Var: LeafTag {
                 ast: body,
                 renderer: renderer,
                 context: context,
-                on: parsed.Worker
+                on: parsed.eventLoop
             )
             serializer.serialize().do { rendered in
                 dict[key] = .data(rendered)

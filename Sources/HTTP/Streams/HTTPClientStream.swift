@@ -3,10 +3,11 @@ import Bits
 
 /// An inverse client stream accepting responses and outputting requests.
 /// Used to implement HTTPClient. Should be kept internal
-internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
-    where ByteStream: Stream,
-    ByteStream.Input == ByteBuffer,
-    ByteStream.Output == ByteBuffer
+internal final class HTTPClientStream<SourceStream, SinkStream>: Stream, ConnectionContext where
+    SourceStream: OutputStream,
+    SourceStream.Output == ByteBuffer,
+    SinkStream: InputStream,
+    SinkStream.Input == ByteBuffer
 {
     /// See InputStream.Input
     typealias Input = HTTPResponse
@@ -30,23 +31,27 @@ internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
     var upstream: ConnectionContext?
 
     /// The source bytestream
-    let byteStream: ByteStream
+    let source: SourceStream
+
+    /// The sink bytestream
+    let sink: SinkStream
 
     /// Creates a new HTTP client stream
-    init(byteStream: ByteStream, maxResponseSize: Int = 10_000_000) {
+    init(source: SourceStream, sink: SinkStream, maxResponseSize: Int = 10_000_000) {
         self.responseQueue = []
         self.requestQueue = []
         self.remainingDownstreamRequests = 0
-        self.byteStream = byteStream
+        self.source = source
+        self.sink = sink
 
         let serializerStream = HTTPRequestSerializer().stream()
         let parserStream = HTTPResponseParser(maxSize: maxResponseSize).stream()
 
-        byteStream
+        source
             .stream(to: parserStream)
             .stream(to: self)
             .stream(to: serializerStream)
-            .output(to: byteStream)
+            .output(to: sink)
     }
 
     /// Updates the stream's state. If there are outstanding
@@ -89,7 +94,7 @@ internal final class HTTPClientStream<ByteStream>: Stream, ConnectionContext
             let promise = responseQueue.popLast()!
             promise.complete(input)
             if let onUpgrade = input.onUpgrade {
-                onUpgrade.closure(AnyStream(byteStream))
+                onUpgrade.closure(.init(source), .init(sink))
             }
             update()
         case .error(let error): downstream?.error(error)

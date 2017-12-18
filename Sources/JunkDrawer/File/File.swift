@@ -11,13 +11,15 @@ public final class File: FileReader, FileCache {
     /// This file's queue. Must be sync.
     /// all calls to this File reader must be made
     /// from this queue.
-    let queue: DispatchQueue
+    let eventLoop: EventLoop
+
+    private var source: EventSource?
 
     /// Create a new CFile
     /// FIXME: add cache maximum
-    public init(queue: DispatchQueue) {
+    public init(on worker: Worker) {
         self.cache = [:]
-        self.queue = queue
+        self.eventLoop = worker.eventLoop
     }
 
     /// See FileReader.read
@@ -29,41 +31,30 @@ public final class File: FileReader, FileCache {
             stream.close()
         }
 
-        let file = DispatchIO(
-            type: .stream,
-            path: path,
-            oflag: O_RDONLY,
-            mode: 0,
-            queue: queue
-        ) { error in
-            if error == 0 {
-                // success
+        guard let file = fopen(path, "rb") else {
+            let error = FileError(.readError(0, path: path))
+            onError(error)
+            return
+        }
+
+        let descriptor = fileno(file)
+        let buffer = MutableByteBuffer(start: .allocate(capacity: chunkSize), count: chunkSize)
+        let source = eventLoop.onReadable(descriptor: descriptor) { isCancelled in
+            if isCancelled {
+                stream.close()
             } else {
-                let error = FileError(.readError(error, path: path))
-                onError(error)
+                let read = fread(buffer.baseAddress, chunkSize, 1, file); // Read in the entire file
+                if read > 0 {
+                    let view = ByteBuffer(start: buffer.baseAddress, count: read)
+                    stream.next(view)
+                } else {
+                    fclose(file)
+                }
             }
         }
 
-        if let file = file {
-            file.setLimit(highWater: chunkSize)
-            file.read(offset: 0, length: size_t.max - 1, queue: queue) { done, data, error in
-                if done {
-                    if error == 0 {
-                        stream.close()
-                    } else {
-                        onError(FileError(.readError(error, path: path)))
-                    }
-                } else {
-                    if let data = data {
-                        Data(data).withByteBuffer(stream.next)
-                    } else {
-                        onError(FileError(.readError(error, path: path)))
-                    }
-                }
-            }
-        } else {
-            onError(FileError(.invalidDescriptor))
-        }
+        source.resume()
+        self.source = source
     }
 
     /// See FileReader.fileExists
