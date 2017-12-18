@@ -65,9 +65,10 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
             self.nextCommandPhase()
         }
         
+        // FIXME:
+        packet.sequenceId = self.sequenceId
+        
         if downstreamDemand > 0 {
-            // FIXME:
-            packet.sequenceId = self.sequenceId
             sendingPacket = packet
             
             self.flush(packet.buffer)

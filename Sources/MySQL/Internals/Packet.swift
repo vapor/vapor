@@ -91,7 +91,7 @@ internal final class Packet: ExpressibleByArrayLiteral {
         
         memcpy(pointer.advanced(by: 4), elements, elements.count)
         
-        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ elements.count), containsPacketSize: true)
+        self.init(payload: MutableByteBuffer(start: pointer, count: 4 &+ elements.count), containsPacketSize: true)
     }
     
     convenience init(data: Data) {
