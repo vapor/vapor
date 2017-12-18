@@ -16,24 +16,31 @@ internal final class Packet: ExpressibleByArrayLiteral {
     /// The sequence ID is incremented per message
     /// This client doesn't use this
     var sequenceId: UInt8 {
-        return buffer[3]
+        return containsPacketSize ? buffer[3] : buffer[0]
     }
+    
+    var containsPacketSize: Bool
     
     /// The payload contains the packet's data
     var payload: ByteBuffer {
         let buffer = self.buffer
         
-        return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+        
+        if containsPacketSize {
+            // size (UInt24) + sequenceId + payload
+            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 4), count: buffer.count &- 4)
+        } else {
+            // sequenceId + payload
+            return ByteBuffer(start: buffer.baseAddress?.advanced(by: 1), count: buffer.count &- 1)
+        }
     }
     
     /// The payload contains the packet's data
     var buffer: ByteBuffer {
         switch _buffer {
         case .immutable(let buffer):
-            // UInt24 + sequenceId
             return buffer
         case .mutable(let buffer):
-            // UInt24 + sequenceId
             return ByteBuffer(start: buffer.baseAddress, count: buffer.count)
         }
     }
@@ -41,13 +48,15 @@ internal final class Packet: ExpressibleByArrayLiteral {
     var _buffer: Buffer
     
     /// Creates a new packet
-    init(payload: ByteBuffer) {
+    init(payload: ByteBuffer, containsPacketSize: Bool = false) {
         self._buffer = .immutable(payload)
+        self.containsPacketSize = containsPacketSize
     }
     
     /// Creates a new packet
-    init(payload: MutableByteBuffer) {
+    init(payload: MutableByteBuffer, containsPacketSize: Bool = false) {
         self._buffer = .mutable(payload)
+        self.containsPacketSize = containsPacketSize
     }
     
     deinit {
@@ -65,11 +74,12 @@ internal final class Packet: ExpressibleByArrayLiteral {
             UInt8((elements.count >> 8) & 0xff),
             UInt8((elements.count >> 16) & 0xff),
         ]
-
+        
         memcpy(pointer, packetSizeBytes, 3)
+        
         memcpy(pointer.advanced(by: 4), elements, elements.count)
         
-        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ elements.count))
+        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ elements.count), containsPacketSize: true)
     }
     
     convenience init(data: Data) {
@@ -79,7 +89,7 @@ internal final class Packet: ExpressibleByArrayLiteral {
             UInt8((data.count) & 0xff),
             UInt8((data.count >> 8) & 0xff),
             UInt8((data.count >> 16) & 0xff),
-        ]
+            ]
         
         memcpy(pointer, packetSizeBytes, 3)
         
@@ -87,6 +97,6 @@ internal final class Packet: ExpressibleByArrayLiteral {
             _ = memcpy(pointer.advanced(by: 4), buffer.baseAddress!, data.count)
         }
         
-        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ data.count))
+        self.init(payload: ByteBuffer(start: pointer, count: 4 &+ data.count), containsPacketSize: true)
     }
 }
