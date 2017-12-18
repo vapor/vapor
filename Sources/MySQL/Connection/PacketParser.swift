@@ -65,9 +65,6 @@ internal final class MySQLPacketParser: ProtocolParserStream {
         while downstreamDemand > 0, length > 0 {
             parseNext()
         }
-        
-        print(downstreamDemand, length)
-        print(Array(input))
     }
     
     private func parseNext() {

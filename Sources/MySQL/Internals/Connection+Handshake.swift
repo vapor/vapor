@@ -98,6 +98,8 @@ fileprivate final class MySQLConnector {
             let sink = socket.sink(on: eventLoop)
             self.serializer.output(to: sink)
             
+            serializer.sequenceId = 1
+            
             func complete() throws {
                 guard let handshake = self.handshake else {
                     throw MySQLError(.invalidHandshake)
@@ -110,6 +112,7 @@ fileprivate final class MySQLConnector {
                     close: socket.close
                 )
                 
+                serializer.nextCommandPhase()
                 promise.complete(connection)
             }
             
@@ -119,7 +122,7 @@ fileprivate final class MySQLConnector {
                 // https://mariadb.com/kb/en/library/1-connecting-connecting/
                 switch self.state {
                 case .start:
-                    if let ssl = self.ssl {
+                    if  let ssl = self.ssl, capabilities.contains(.ssl) {
                         _ = ssl
                         fatalError("Unsupported StartTLS")
                         // Do SSL upgrade
@@ -167,9 +170,9 @@ fileprivate final class MySQLConnector {
             
             data.append(contentsOf: [
                 UInt8((combinedCapabilities) & 0xff),
-                UInt8((combinedCapabilities >> 1) & 0xff),
-                UInt8((combinedCapabilities >> 2) & 0xff),
-                UInt8((combinedCapabilities >> 3) & 0xff),
+                UInt8((combinedCapabilities >> 8) & 0xff),
+                UInt8((combinedCapabilities >> 16) & 0xff),
+                UInt8((combinedCapabilities >> 24) & 0xff),
             ])
             
             // UInt32(0) for the maximum packet length, or, undefined
@@ -203,9 +206,8 @@ fileprivate final class MySQLConnector {
             let packet = Packet(data: data)
             
             // handshake starts at 1
-            packet.sequenceId = 1
             
-            self.serializer.queue(packet)
+            self.serializer.queue(packet, nextPhase: false)
         } else {
             throw MySQLError(.invalidHandshake)
         }
@@ -252,9 +254,9 @@ fileprivate final class MySQLConnector {
                     
                     let hash = sha1Encrypted(from: password, seed: Array(packet.payload[(offset &+ 1)...]))
                     
-                    serializer.queue(Packet(data: hash))
+                    serializer.queue(Packet(data: hash), nextPhase: false)
                 case "mysql_clear_password":
-                    serializer.queue(Packet(data: Data(password.utf8)))
+                    serializer.queue(Packet(data: Data(password.utf8)), nextPhase: false)
                 default:
                     throw MySQLError(.invalidHandshake)
                 }

@@ -30,7 +30,7 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
-//        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
@@ -131,8 +131,8 @@ let package = Package(
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
-//         .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
-//         .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
+        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 

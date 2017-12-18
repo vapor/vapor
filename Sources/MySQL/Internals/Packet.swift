@@ -26,6 +26,8 @@ internal final class Packet: ExpressibleByArrayLiteral {
                 } else {
                     buffer[0] = newValue
                 }
+            } else {
+                fatalError("Trying to set a sequenceID on a server packet")
             }
         }
     }

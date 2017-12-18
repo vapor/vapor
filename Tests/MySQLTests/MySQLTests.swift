@@ -32,11 +32,11 @@ class MySQLTests: XCTestCase {
             password: "vapor3",
             database: "vapor_test",
             on: MySQLTests.poolQueue
-        ).blockingAwait(timeout: .seconds(100))
+        ).blockingAwait(timeout: .seconds(10))
         
-        _ = try? connection.dropTables(named: "users").blockingAwait(timeout: .seconds(300))
-        _ = try? connection.dropTables(named: "complex").blockingAwait(timeout: .seconds(300))
-        _ = try? connection.dropTables(named: "test").blockingAwait(timeout: .seconds(300))
+        _ = try? connection.dropTables(named: "users").blockingAwait(timeout: .seconds(3))
+        _ = try? connection.dropTables(named: "complex").blockingAwait(timeout: .seconds(3))
+        _ = try? connection.dropTables(named: "test").blockingAwait(timeout: .seconds(3))
     }
 
     func testPreparedStatements() throws {
@@ -67,15 +67,16 @@ class MySQLTests: XCTestCase {
     func testPopulateUsersSchema() throws {
         try testCreateUsersSchema()
      
-        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait(timeout: .seconds(300))
-        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(300))
-        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(300))
+        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Joannis')").blockingAwait(timeout: .seconds(3))
+        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Jonas')").blockingAwait(timeout: .seconds(3))
+        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Logan')").blockingAwait(timeout: .seconds(3))
+        try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Tanner')").blockingAwait(timeout: .seconds(3))
     }
     
     func testForEach() throws {
         try testPopulateUsersSchema()
      
-        var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
+        var iterator = ["Joannis", "Jonas", "Logan", "Tanner"].makeIterator()
         var count = 0
         
         try connection.forEach(User.self, in: "SELECT * FROM users") { user in
@@ -83,7 +84,7 @@ class MySQLTests: XCTestCase {
             count += 1
         }.blockingAwait(timeout: .seconds(3))
         
-        XCTAssertEqual(count, 3)
+        XCTAssertEqual(count, 4)
     }
 
     func testAll() throws {
@@ -91,7 +92,7 @@ class MySQLTests: XCTestCase {
      
         var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
      
-        let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(300))
+        let users = try connection.all(User.self, in: "SELECT * FROM users").blockingAwait(timeout: .seconds(3))
         for user in users {
             XCTAssertEqual(user.username, iterator.next())
         }
@@ -102,7 +103,7 @@ class MySQLTests: XCTestCase {
     func testStream() throws {
         try testPopulateUsersSchema()
      
-        var iterator = ["Joannis", "Logan", "Tanner"].makeIterator()
+        var iterator = ["Joannis", "Jonas", "Logan", "Tanner"].makeIterator()
         var count = 0
         let promise = Promise<Int>()
      
@@ -115,7 +116,7 @@ class MySQLTests: XCTestCase {
             }
         }.catch { XCTFail("\($0)") }
             
-        XCTAssertEqual(3, try promise.future.blockingAwait(timeout: .seconds(30)))
+        XCTAssertEqual(4, try promise.future.blockingAwait(timeout: .seconds(3)))
     }
     
     func testComplexModel() throws {
@@ -133,11 +134,11 @@ class MySQLTests: XCTestCase {
         table.schema.append(Table.Column(named: "ui64", type: .uint64()))
      
         do {
-            try connection.createTable(table).blockingAwait(timeout: .seconds(300))
+            try connection.createTable(table).blockingAwait(timeout: .seconds(3))
      
-            try connection.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(300))
+            try connection.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
      
-            try connection.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(300))
+            try connection.administrativeQuery("INSERT INTO complex (number0, number1, i16, ui16, i32, ui32, i64, ui64) VALUES (3.14, 6.28, -5, 5, -10000, 10000, 5000, 0)").blockingAwait(timeout: .seconds(3))
         } catch {
             debugPrint(error)
             XCTFail()
@@ -174,7 +175,7 @@ class MySQLTests: XCTestCase {
     
     func testFailures() throws {
         XCTAssertThrowsError(try connection.administrativeQuery("INSERT INTO users (username) VALUES ('Exampleuser')").blockingAwait(timeout: .seconds(3)))
-        XCTAssertThrowsError(try connection.all(User.self, in: "SELECT * FORM users").blockingAwait(timeout: .seconds(300)))
+        XCTAssertThrowsError(try connection.all(User.self, in: "SELECT * FORM users").blockingAwait(timeout: .seconds(3)))
     }
 }
 

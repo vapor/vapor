@@ -19,9 +19,13 @@ extension MySQLConnection {
         
         parser.stream(to: rowStream).drain { connection in
             connection.request()
-        }.output(onInput: handler)
-        .catch(onError: promise.fail)
-        .finally {
+        }.output { row in
+            try handler(row)
+            rowStream.request()
+        }.catch { error in
+            promise.fail(error)
+        }.finally {
+            rowStream.cancel()
             promise.complete()
         }
         

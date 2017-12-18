@@ -10,6 +10,8 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     
     var backlog: [Packet]
     
+    var sendingPacket: Packet?
+    
     var consumedBacklog: Int
     
     var serializing: Packet?
@@ -22,11 +24,28 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
     
     var state: ProtocolParserState
     
+    fileprivate var _sequenceId: UInt8
+    
+    var sequenceId: UInt8 {
+        get {
+            defer { _sequenceId = _sequenceId &+ 1 }
+            return _sequenceId
+        }
+        set {
+            _sequenceId = newValue
+        }
+    }
+    
     init() {
         downstreamDemand = 0
         state = .ready
         self.consumedBacklog = 0
+        self._sequenceId = 0
         self.backlog = []
+    }
+    
+    func nextCommandPhase() {
+        self.sequenceId = 0
     }
     
     func serialize(_ input: Packet) throws {
@@ -34,11 +53,23 @@ final class MySQLPacketSerializer: ProtocolSerializerStream {
             fatalError("Server message sent to server")
         }
         
+        // FIXME:
+        input.sequenceId = self.sequenceId
+        sendingPacket = input
+        
         flush(input.buffer)
     }
 
-    func queue(_ packet: Packet) {
+    func queue(_ packet: Packet, nextPhase: Bool = true) {
+        if nextPhase {
+            self.nextCommandPhase()
+        }
+        
         if downstreamDemand > 0 {
+            // FIXME:
+            packet.sequenceId = self.sequenceId
+            sendingPacket = packet
+            
             self.flush(packet.buffer)
         } else {
             self.backlog.append(packet)
