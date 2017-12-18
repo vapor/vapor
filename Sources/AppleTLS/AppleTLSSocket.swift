@@ -44,27 +44,27 @@ public final class AppleTLSSocket: TLSSocket {
     }
 
     /// See TLSSocket.read
-    public func read(into buffer: MutableByteBuffer) throws -> Int {
+    public func read(into buffer: MutableByteBuffer) throws -> SocketReadStatus {
         var processed = 0
         SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
         if processed == 0 {
             self.close()
         }
-        return processed
+        return .read(count: processed)
     }
 
     /// See TLSSocket.write
-    public func write(from buffer: ByteBuffer) throws -> Int {
+    public func write(from buffer: ByteBuffer) throws -> SocketWriteStatus {
         var processed: Int = 0
         let status = SSLWrite(self.context, buffer.baseAddress!, buffer.count, &processed)
         switch status {
-        case 0: break
+        case 0:
+            return .wrote(count: processed)
         case errSSLWouldBlock:
-            print("write: errSSLWouldBlock")
-        default: throw AppleTLSError.secError(status)
+            return .wouldBlock
+        default:
+            throw AppleTLSError.secError(status)
         }
-
-        return processed
     }
 
     /// See TLSSocket.close

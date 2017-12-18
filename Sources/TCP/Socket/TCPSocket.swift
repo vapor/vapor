@@ -23,7 +23,7 @@ public struct TCPSocket: Socket {
         isNonBlocking: Bool,
         shouldReuseAddress: Bool,
         address: TCPAddress?
-        ) {
+    ) {
         self.descriptor = established
         self.isNonBlocking = isNonBlocking
         self.shouldReuseAddress = shouldReuseAddress
@@ -34,7 +34,7 @@ public struct TCPSocket: Socket {
     public init(
         isNonBlocking: Bool = true,
         shouldReuseAddress: Bool = true
-        ) throws {
+    ) throws {
         let sockfd = socket(AF_INET, SOCK_STREAM, 0)
         guard sockfd > 0 else {
             throw TCPError.posix(errno, identifier: "socketCreate")
@@ -87,8 +87,15 @@ public struct TCPSocket: Socket {
 
     /// Read data from the socket into the supplied buffer.
     /// Returns the amount of bytes actually read.
-    public func read(into buffer: MutableByteBuffer) throws -> Int {
+    public func read(into buffer: MutableByteBuffer) throws -> SocketReadStatus {
         let receivedBytes = Darwin.read(descriptor, buffer.baseAddress!, buffer.count)
+        do {
+            if receivedBytes > 0 {
+                let buf = ByteBuffer(start: buffer.baseAddress, count: receivedBytes)
+                let string = String(bytes: buf, encoding: .ascii)!
+                print("[tcp] read: \(string)")
+            }
+        }
         guard receivedBytes != -1 else {
             switch errno {
             case EINTR:
@@ -99,10 +106,10 @@ public struct TCPSocket: Socket {
                 // Since this is not an error, no need to throw unless the close
                 // itself throws an error.
                 _ = close()
-                return 0
-            case EAGAIN:
-                // timeout reached (linux)
-                return 0
+                return .read(count: 0)
+            case EAGAIN, EWOULDBLOCK:
+                // no data yet
+                return .wouldBlock
             default:
                 throw TCPError.posix(errno, identifier: "read")
             }
@@ -114,19 +121,27 @@ public struct TCPSocket: Socket {
             // if already closed, no issue.
             // do NOT propogate as error
             _ = close()
-            return 0
+            return .read(count: 0)
         }
 
-        return receivedBytes
+        return .read(count: receivedBytes)
     }
 
     /// Writes all data from the pointer's position with the length specified to this socket.
-    public func write(from buffer: ByteBuffer) throws -> Int {
+    public func write(from buffer: ByteBuffer) throws -> SocketWriteStatus {
         guard let pointer = buffer.baseAddress else {
-            return 0
+            return .wrote(count: 0)
         }
 
         let sent = send(descriptor, pointer, buffer.count, 0)
+
+        do {
+            let buf = ByteBuffer(start: buffer.baseAddress, count: sent)
+            let string = String(bytes: buf, encoding: .ascii)!
+            print("[tcp] wrote: \(string)")
+        }
+
+
         guard sent != -1 else {
             switch errno {
             case EINTR:
@@ -137,13 +152,15 @@ public struct TCPSocket: Socket {
                 // Since this is not an error, no need to throw unless the close
                 // itself throws an error.
                 self.close()
-                return 0
+                return .wrote(count: 0)
+            case EAGAIN, EWOULDBLOCK:
+                return .wouldBlock
             default:
                 throw TCPError.posix(errno, identifier: "write")
             }
         }
 
-        return sent
+        return .wrote(count: sent)
     }
 
     /// Closes the socket

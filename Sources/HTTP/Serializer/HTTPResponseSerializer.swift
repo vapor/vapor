@@ -14,11 +14,14 @@ public final class HTTPResponseSerializer: _HTTPSerializer {
     /// Headers
     var headersData: Data?
 
+    /// Body data
+    var staticBodyData: Data?
+
     /// The current offset
     var offset: Int
     
     /// The current serialization taking place
-    var state = State.noMessage {
+    var state = HTTPSerializerState.noMessage {
         didSet {
             switch self.state {
             case .headers:
@@ -52,6 +55,22 @@ public final class HTTPResponseSerializer: _HTTPSerializer {
         
         self.firstLine = message.firstLine
         self.headersData = headers.storage + crlf
+
+        switch message.body.storage {
+        case .data(let data):
+            self.staticBodyData = data
+        case .dispatchData(let dispatchData):
+            self.staticBodyData = Data(dispatchData)
+        case .staticString(let staticString):
+            let buffer = UnsafeBufferPointer(
+                start: staticString.utf8Start,
+                count: staticString.utf8CodeUnitCount
+            )
+            self.staticBodyData = Data(buffer)
+        case .string(let string):
+            self.staticBodyData = Data(string.utf8)
+        case .outputStream: break
+        }
     }
 }
 

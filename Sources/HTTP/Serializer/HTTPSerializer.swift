@@ -4,16 +4,17 @@ import Dispatch
 import Foundation
 
 /// A helper for Request and Response serializer that keeps state
-internal enum State {
+internal enum HTTPSerializerState {
     case noMessage
     case firstLine
     case headers
+    case staticBody
     
     mutating func next() {
-        if self == .firstLine {
-            self = .headers
-        } else {
-            self = .noMessage
+        switch self {
+        case .firstLine: self = .headers
+        case .headers: self = .staticBody
+        default: self = .noMessage
         }
     }
 }
@@ -42,12 +43,15 @@ internal protocol _HTTPSerializer: HTTPSerializer {
     
     /// Headers
     var headersData: Data? { get set }
+
+    /// Body data
+    var staticBodyData: Data? { get set }
     
     /// The current offset of the currently serializing entity
     var offset: Int { get set }
     
     /// Keeps track of the state of serialization
-    var state: State { get set }
+    var state: HTTPSerializerState { get set }
 }
 
 extension _HTTPSerializer {
@@ -89,6 +93,18 @@ extension _HTTPSerializer {
                 
                 headersData.withByteBuffer { headerBuffer in
                     _ = memcpy(buffer.baseAddress!.advanced(by: writeOffset), headerBuffer.baseAddress!.advanced(by: offset), writeSize)
+                }
+            case .staticBody:
+                if let bodyData = self.staticBodyData {
+                    bufferSize = bodyData.count
+                    writeSize = min(outputSize, bufferSize - offset)
+
+                    bodyData.withByteBuffer { bodyBuffer in
+                        _ = memcpy(buffer.baseAddress!.advanced(by: writeOffset), bodyBuffer.baseAddress!.advanced(by: offset), writeSize)
+                    }
+                } else {
+                    state.next()
+                    continue
                 }
             }
             

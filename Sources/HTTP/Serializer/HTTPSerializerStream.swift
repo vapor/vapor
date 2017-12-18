@@ -42,6 +42,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
 
     /// See ConnectionContext.connection
     public func connection(_ event: ConnectionEvent) {
+        print("\(type(of: self)).\(#function)(\(event))")
         switch event {
         case .request(let count):
             let isSuspended = remainingByteBuffersRequested == 0
@@ -55,6 +56,7 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
 
     /// See InputStream.input
     public func input(_ event: InputEvent<Serializer.Message>) {
+        print("\(type(of: self)).\(#function)(\(event))")
         switch event {
         case .close:
             downstream?.close()
@@ -81,6 +83,9 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
         guard remainingByteBuffersRequested > 0 else {
             return
         }
+//        print("\(type(of: self)).\(#function)(\(state))")
+//        print(remainingByteBuffersRequested)
+//        print(downstream)
 
         switch state {
         case .ready:
@@ -99,55 +104,30 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
             let frame = ByteBuffer(start: writeBuffer.baseAddress, count: serialized)
             downstream?.next(frame)
             remainingByteBuffersRequested -= 1
-
             /// the serializer indicates it is done w/ this message
             if serializer.ready {
                 /// handle the body separately
-                state = .bodyReady(body)
+                switch body.storage {
+                case .dispatchData, .data, .staticString, .string:
+                    state = .ready
+                case .outputStream(let closure):
+                    state = .streamingBodyReady(closure)
+                }
             }
             update()
-        case .bodyReady(let body):
-            switch body.storage {
-            case .dispatchData(let data):
-                Data(data).withByteBuffer(downstream!.next)
-                remainingByteBuffersRequested -= 1
-                state = .ready
-                update()
-            case .data(let data):
-                data.withByteBuffer(downstream!.next)
-                remainingByteBuffersRequested -= 1
-                state = .ready
-                update()
-            case .staticString(let string):
-                let buffer = UnsafeBufferPointer(start: string.utf8Start, count: string.utf8CodeUnitCount)
-                downstream!.next(buffer)
-                remainingByteBuffersRequested -= 1
-                state = .ready
-                update()
-            case .string(let string):
-                let size = string.utf8.count
-                string.withCString { pointer in
-                    pointer.withMemoryRebound(to: UInt8.self, capacity: size) { pointer in
-                        self.downstream!.next(ByteBuffer(start: pointer, count: size))
-                        self.remainingByteBuffersRequested -= 1
-                    }
-                }
-                state = .ready
-                update()
-            case .outputStream(let closure):
-                closure(HTTPChunkEncodingStream()).drain { req in
-                    self.state = .bodyStreaming(req)
-                    self.update()
-                }.output { buffer in
-                    self.remainingByteBuffersRequested -= 1
-                    self.downstream!.next(buffer)
-                    self.update()
-                }.catch { error in
-                    self.downstream?.error(error)
-                }.finally {
-                    self.state = .ready
-                    self.update()
-                }
+        case .streamingBodyReady(let closure):
+            closure(HTTPChunkEncodingStream()).drain { req in
+                self.state = .bodyStreaming(req)
+                self.update()
+            }.output { buffer in
+                self.remainingByteBuffersRequested -= 1
+                self.downstream!.next(buffer)
+                self.update()
+            }.catch { error in
+                self.downstream?.error(error)
+            }.finally {
+                self.state = .ready
+                self.update()
             }
         case .bodyStreaming(let req):
             req.request()
@@ -165,7 +145,7 @@ enum HTTPSerializerStreamState<Message> {
     case awaitingMessage
     case messageReady(Message)
     case messageStreaming(HTTPBody)
-    case bodyReady(HTTPBody)
+    case streamingBodyReady(HTTPBody.OutputStreamClosure)
     case bodyStreaming(ConnectionContext)
 }
 

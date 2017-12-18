@@ -58,37 +58,32 @@ public final class OpenSSLSocket: TLSSocket {
     }
 
     /// See TLSSocket.read
-    public func read(into buffer: UnsafeMutableBufferPointer<UInt8>) throws -> Int {
+    public func read(into buffer: UnsafeMutableBufferPointer<UInt8>) throws -> SocketReadStatus {
         let bytesRead = SSL_read(cSSL, buffer.baseAddress!, Int32(buffer.count))
-        print("READ")
-        print(bytesRead)
         if bytesRead <= 0 {
-            let code = SSL_get_error(cSSL, bytesRead)
-            guard
-                code == SSL_ERROR_WANT_READ ||
-                code == SSL_ERROR_WANT_WRITE ||
-                code == SSL_ERROR_WANT_CONNECT
-            else {
+            switch SSL_get_error(cSSL, bytesRead) {
+            case SSL_ERROR_WANT_READ, SSL_ERROR_WANT_WRITE, SSL_ERROR_WANT_CONNECT:
+                return .wouldBlock
+            default:
                 throw makeError(status: bytesRead, identifier: "read")
             }
-            return Int(0)
         }
-        return Int(bytesRead)
+        return .read(count: Int(bytesRead))
     }
 
     /// See TLSSocket.write
-    public func write(from buffer: UnsafeBufferPointer<UInt8>) throws -> Int {
+    public func write(from buffer: UnsafeBufferPointer<UInt8>) throws -> SocketWriteStatus {
         guard buffer.count > 0 else {
             // attempts to write something less than 0
             // will cause an ssl write error
-            return 0
+            return .wrote(count: 0)
         }
 
         let bytesSent = SSL_write(cSSL, buffer.baseAddress!, Int32(buffer.count))
         if bytesSent <= 0 {
             throw makeError(status: bytesSent, identifier: "write")
         }
-        return Int(bytesSent)
+        return .wrote(count: Int(bytesSent))
     }
 
     /// See TLSSocket.close
