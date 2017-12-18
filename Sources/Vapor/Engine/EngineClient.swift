@@ -4,6 +4,11 @@ import JunkDrawer
 /*import HTTP2*/
 import TCP
 import TLS
+#if os(Linux)
+    import OpenSSL
+#else
+    import AppleTLS
+#endif
 
 /// HTTP/1.1 and HTTP/2 client wrapper.
 public final class EngineClient: Client {
@@ -41,7 +46,29 @@ public final class EngineClient: Client {
             /// if using cleartext, just use http/1.
 
         if ssl {
-            fatalError("HTTPS not yet supported")
+            #if os(macOS)
+                return Future {
+                    let tcpSocket = try TCPSocket(isNonBlocking: true)
+                    let tcpClient = try TCPClient(socket: tcpSocket)
+                    let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
+                    try tlsClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 443)
+                    let source = tlsClient.socket.source(on: self.container.eventLoop)
+                    let sink = tlsClient.socket.sink(on: self.container.eventLoop)
+                    let client = HTTPClient(
+                        source: source,
+                        sink: sink,
+                        maxResponseSize: self.config.maxResponseSize
+                    )
+                    req.http.headers[.host] = req.http.uri.hostname
+                    return client.send(req.http).map(to: Response.self) { httpRes in
+                        let res = req.makeResponse()
+                        res.http = httpRes
+                        return res
+                    }
+                }
+            #else
+                fatalError("HTTPS not yet supported")
+            #endif
         } else {
             return Future {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)

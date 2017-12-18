@@ -46,11 +46,18 @@ public final class AppleTLSSocket: TLSSocket {
     /// See TLSSocket.read
     public func read(into buffer: MutableByteBuffer) throws -> SocketReadStatus {
         var processed = 0
-        SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
-        if processed == 0 {
-            self.close()
+        let status = SSLRead(context, buffer.baseAddress!, buffer.count, &processed)
+        switch status {
+        case 0:
+            if processed == 0 {
+                self.close()
+            }
+            return .read(count: processed)
+        case errSSLWouldBlock:
+            return .wouldBlock
+        default:
+            throw AppleTLSError.secError(status)
         }
-        return .read(count: processed)
     }
 
     /// See TLSSocket.write

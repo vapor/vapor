@@ -91,7 +91,7 @@ do {
     router.get("example3") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
         
-        return client.send(.get, to: "https://www.apache.org/foundation/press/kit/asf_logo.png")
+        return client.send(.get, to: "https://www.google.com")
     }
     
     router.get("hello2") { req -> Future<[User]> in
