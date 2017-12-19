@@ -85,10 +85,19 @@ Support us with a monthly donation and help us continue our activities. [[Become
 
 ### 🥇 Sponsors
 
-Proudly sponsored by Nodes
+Proudly sponsored by [Nodes](http://nodesagency.com) (🏅) and [Skelpo](https://www.skelpo.com) (🥉).
+
+- 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
+- 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
+- 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
+- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor) (personal backers)
 
 <a href="http://nodesagency.com">
     <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
+</a>
+
+<a href="https://www.skelpo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
 </a>
 
 Become a sponsor and get your logo on our README on GitHub with a link to your site. [[Become a sponsor](https://opencollective.com/vapor#sponsor)]
