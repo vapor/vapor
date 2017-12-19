@@ -1,11 +1,10 @@
 import Async
-import JunkDrawer
 import HTTP
 import Foundation
 import Service
 
 /// Representable as content in an HTTP message.
-public protocol Content: Codable, ResponseCodable, RequestCodable, FutureType {
+public protocol Content: Codable, ResponseCodable, RequestCodable {
     /// The default media type to use when _encoding_ this
     /// content. This can be overridden at the encode call.
     static var defaultMediaType: MediaType { get }
@@ -52,6 +51,83 @@ extension String: Content {
 }
 
 extension Int: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int8: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int16: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int32: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int64: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt8: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt16: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt32: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt64: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Double: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Float: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
         return .plainText

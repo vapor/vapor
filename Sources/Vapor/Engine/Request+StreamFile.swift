@@ -17,7 +17,7 @@ extension Request {
     ///
     /// For an example of how this is used, look at 'FileMiddleware'
     public func streamFile(at path: String) throws -> Response {
-        let reader = try eventLoop.make(FileReader.self, for: Request.self)
+        let reader = try make(FileReader.self, for: Request.self)
         let res = makeResponse()
 
         guard
@@ -48,10 +48,9 @@ extension Request {
             res.http.mediaType = type
         }
 
-        let bodyStream = BodyStream()
-        
-        reader.read(at: path, into: bodyStream, chunkSize: 2048)
-        res.http.body = HTTPBody(chunked: bodyStream)
+        res.http.body = HTTPBody(
+            chunked: reader.read(at: path, chunkSize: 2048)
+        )
         return res
     }
 }

@@ -14,22 +14,8 @@ public final class Response: EphemeralContainer {
     /// This response's worker
     public let superContainer: Container
 
-    /// See EventLoop.queue
-    public var queue: DispatchQueue {
-        return superContainer.queue
-    }
-
-    /// See Container.config
-    public var config: Config
-
-    /// See Container.environment
-    public var environment: Environment
-
-    /// See Container.services
-    public var services: Services
-
-    /// See Container.serviceCache
-    public var serviceCache: ServiceCache
+    /// This response's private container.
+    public let privateContainer: SubContainer
 
     /// See Extendable.extend
     public var extend: Extend
@@ -84,10 +70,7 @@ public final class Response: EphemeralContainer {
     public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.config = container.config
-        self.environment = container.environment
-        self.services = container.services
-        self.serviceCache = .init()
+        self.privateContainer = container.subContainer(on: container.eventLoop)
         self.extend = Extend()
         Response.onInit?(self)
     }
@@ -102,7 +85,7 @@ public final class Response: EphemeralContainer {
 extension Response {
     /// The response's event loop container.
     /// note: convenience name for `.superContainer`
-    public var eventLoop: Container {
+    public var worker: Container {
         return superContainer
     }
 

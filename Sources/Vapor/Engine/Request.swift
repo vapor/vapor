@@ -14,25 +14,11 @@ public final class Request: EphemeralContainer, ParameterContainer {
     /// Underlying HTTP request.
     public var http: HTTPRequest
 
-    /// This response's worker
+    /// This request's parent container.
     public let superContainer: Container
 
-    /// See EventLoop.queue
-    public var queue: DispatchQueue {
-        return superContainer.queue
-    }
-
-    /// See Container.config
-    public var config: Config
-
-    /// See Container.environment
-    public var environment: Environment
-
-    /// See Container.services
-    public var services: Services
-
-    /// See Container.serviceCache
-    public var serviceCache: ServiceCache
+    /// This request's private container.
+    public let privateContainer: SubContainer
 
     /// Holds parameters for routing
     public var parameters: Parameters
@@ -103,10 +89,7 @@ public final class Request: EphemeralContainer, ParameterContainer {
     public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.config = container.config
-        self.environment = container.environment
-        self.services = container.services
-        self.serviceCache = .init()
+        self.privateContainer = container.subContainer(on: container.eventLoop)
         self.extend = Extend()
         self.parameters = []
         Request.onInit?(self)
@@ -121,7 +104,7 @@ public final class Request: EphemeralContainer, ParameterContainer {
 extension Request {
     /// The request's event loop container.
     /// note: convenience name for `.superContainer`
-    public var eventLoop: Container {
+    public var worker: Container {
         return superContainer
     }
 

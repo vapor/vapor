@@ -1,6 +1,5 @@
 import Async
 import HTTP
-import Leaf
 
 extension View: Content {
     /// See Content.defaultMediaType

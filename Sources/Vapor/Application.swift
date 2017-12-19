@@ -7,6 +7,12 @@ import HTTP
 import Routing
 import Service
 
+#if os(macOS)
+    public typealias DefaultEventLoop = KqueueEventLoop
+#else
+    public typealias DefaultEventLoop = DispatchEventLoop
+#endif
+
 /// Core framework class. You usually create only
 /// one of these per application.
 /// Acts as a service container and much more.
@@ -25,8 +31,8 @@ public final class Application: Container {
     /// See ServiceCacheable.serviceCache
     public let serviceCache: ServiceCache
 
-    /// See EventLoop.queue
-    public var queue: DispatchQueue
+    /// See Worker.queue
+    public let eventLoop: EventLoop
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -42,7 +48,15 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.queue = .init(label: "codes.vapor.application")
+        self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
+
+        if #available(OSX 10.12, *) {
+            Thread.detachNewThread {
+                self.eventLoop.runLoop()
+            }
+        } else {
+            fatalError()
+        }
 
         // boot all service providers
         for provider in services.providers {

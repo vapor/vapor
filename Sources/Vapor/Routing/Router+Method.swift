@@ -4,11 +4,11 @@ import Routing
 extension Router {
     /// Registers a route handler at the supplied path.
     @discardableResult
-    public func on<F: FutureType>(
+    public func on<T>(
         _ method: HTTPMethod,
         to path: [PathComponent],
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
         let route = Route<Responder>(
             path: [.constants([.bytes(method.bytes)])] + path,
@@ -25,10 +25,10 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func get<F: FutureType>(
+    public func get<T>(
         _ path: PathComponent...,
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         return self.on(.get, to: path, use: closure)
     }
 
@@ -36,10 +36,10 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func put<F: FutureType>(
+    public func put<T>(
         _ path: PathComponent...,
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         return self.on(.put, to: path, use: closure)
     }
 
@@ -47,10 +47,10 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func post<F: FutureType>(
+    public func post<T>(
         _ path: PathComponent...,
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         return self.on(.post, to: path, use: closure)
     }
 
@@ -58,10 +58,10 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func delete<F: FutureType>(
+    public func delete<T>(
         _ path: PathComponent...,
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         return self.on(.delete, to: path, use: closure)
     }
 
@@ -69,10 +69,10 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func patch<F: FutureType>(
+    public func patch<T>(
         _ path: PathComponent...,
-        use closure: @escaping RouteResponder<F>.Closure
-    ) -> Route<Responder> where F.Expectation: ResponseEncodable {
+        use closure: @escaping RouteResponder<T>.Closure
+    ) -> Route<Responder> where T: ResponseEncodable {
         return self.on(.patch, to: path, use: closure)
     }
 }

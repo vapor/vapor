@@ -4,8 +4,10 @@ import Foundation
 public enum ValidationData {
     case string(String)
     case int(Int)
+    case uint(UInt)
     case bool(Bool)
     case data(Data)
+    case date(Date)
     case double(Double)
     case array([ValidationData])
     case dictionary([String: ValidationData])
@@ -41,6 +43,69 @@ extension Int: ValidationDataRepresentable {
     }
 }
 
+extension Int8: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int16: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int32: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension Int64: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .int(Int(self))
+    }
+}
+
+extension UInt: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(self)
+    }
+}
+
+extension UInt8: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt16: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt32: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
+extension UInt64: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .uint(UInt(self))
+    }
+}
+
 extension Double: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
@@ -52,6 +117,13 @@ extension Data: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         return .data(self)
+    }
+}
+
+extension Date: ValidationDataRepresentable {
+    /// See ValidationDataRepresentable.makeValidationData
+    public func makeValidationData() -> ValidationData {
+        return .date(self)
     }
 }
 

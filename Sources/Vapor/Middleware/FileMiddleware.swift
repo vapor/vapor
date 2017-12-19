@@ -1,9 +1,9 @@
+import Async
+import Bits
 import COperatingSystem
 import HTTP
-import Bits
-import JunkDrawer
-import Foundation
 import Dispatch
+import Foundation
 
 /// Services files from the public folder.
 public final class FileMiddleware: Middleware {
@@ -15,12 +15,12 @@ public final class FileMiddleware: Middleware {
 
     /// Creates a new filemiddleware.
     public init(publicDirectory: String) {
-        self.publicDirectory = publicDirectory.finished(with: "/")
+        self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
     }
 
     /// See Middleware.respond.
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let reader = try req.eventLoop.make(FileReader.self, for: FileMiddleware.self)
+        let reader = try req.make(FileReader.self, for: FileMiddleware.self)
         
         var path = req.http.uri.path
         if path.hasPrefix("/") {

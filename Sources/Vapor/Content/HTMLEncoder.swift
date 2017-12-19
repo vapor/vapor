@@ -1,4 +1,4 @@
-import JunkDrawer
+import CodableKit
 import Foundation
 import HTTP
 
@@ -77,6 +77,46 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
 
     func encode(_ value: String) throws {
         encoder.data = value.description.data(using: .utf8)
+    }
+
+    func encode(_ value: Int8) throws {
+        try encode(Int(value))
+    }
+
+    func encode(_ value: Int16) throws {
+        try encode(Int(value))
+    }
+
+    func encode(_ value: Int32) throws {
+        try encode(Int(value))
+    }
+
+    func encode(_ value: Int64) throws {
+        try encode(Int(value))
+    }
+
+    func encode(_ value: UInt) throws {
+        try encode(Int(value))
+    }
+
+    func encode(_ value: UInt8) throws {
+        try encode(UInt(value))
+    }
+
+    func encode(_ value: UInt16) throws {
+        try encode(UInt(value))
+    }
+
+    func encode(_ value: UInt32) throws {
+        try encode(UInt(value))
+    }
+
+    func encode(_ value: UInt64) throws {
+        try encode(UInt(value))
+    }
+
+    func encode(_ value: Float) throws {
+        try encode(Double(value))
     }
 
     func encode<T: Encodable>(_ value: T) throws {

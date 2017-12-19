@@ -1,12 +1,11 @@
 import Async
 import Bits
-import JunkDrawer
-import Foundation
 import Dispatch
-import TCP
 import HTTP
+import Foundation
+import TCP
 import Vapor
-import WebSocket
+// import WebSocket
 import XCTest
 
 struct MyError: Error {}
@@ -88,41 +87,42 @@ class WebSocketTests : XCTestCase {
     ]
 }
 
-final class WebSocketApplication: Responder {
-    var sockets = [UUID: WebSocket]()
-    
-    func respond(to req: Request) throws -> Future<Response> {
-        let promise = Promise<Response>()
+//final class WebSocketApplication: Responder {
+//    var sockets = [UUID: WebSocket]()
+//    
+//    func respond(to req: Request) throws -> Future<Response> {
+//        let promise = Promise<Response>()
+//
+//        guard WebSocket.shouldUpgrade(for: req.http) else {
+//            let res = req.makeResponse()
+//            res.http = try HTTPResponse(status: .ok, body: "hi")
+//            promise.complete(res)
+//            return promise.future
+//        }
+//
+//        let http = try WebSocket.upgradeResponse(for: req.http, with: WebSocketSettings()) { websocket in
+//            let id = UUID()
+//
+//            websocket.onText { text in
+//                let rev = String(text.reversed())
+//                websocket.send(rev)
+//            }.catch(onError: promise.fail)
+//
+//            websocket.onBinary { buffer in
+//                websocket.send(buffer)
+//            }.catch(onError: promise.fail)
+//
+//            self.sockets[id] = websocket
+//
+//            websocket.finally {
+//                self.sockets[id] = nil
+//            }
+//        }
+//        let res = req.makeResponse()
+//        res.http = http
+//        promise.complete(res)
+//
+//        return promise.future
+//    }
+//}
 
-        guard WebSocket.shouldUpgrade(for: req.http) else {
-            let res = req.makeResponse()
-            res.http = try HTTPResponse(status: .ok, body: "hi")
-            promise.complete(res)
-            return promise.future
-        }
-
-        let http = try WebSocket.upgradeResponse(for: req.http, with: WebSocketSettings()) { websocket in
-            let id = UUID()
-
-            websocket.onText { text in
-                let rev = String(text.reversed())
-                websocket.send(rev)
-            }.catch(onError: promise.fail)
-
-            websocket.onBinary { buffer in
-                websocket.send(buffer)
-            }.catch(onError: promise.fail)
-
-            self.sockets[id] = websocket
-
-            websocket.finally {
-                self.sockets[id] = nil
-            }
-        }
-        let res = req.makeResponse()
-        res.http = http
-        promise.complete(res)
-
-        return promise.future
-    }
-}
