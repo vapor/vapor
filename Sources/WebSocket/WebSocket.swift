@@ -119,7 +119,7 @@ public class WebSocket {
     
     public func send(string: String) {
         Data(string.utf8).withByteBuffer { bytes in
-            let frame = Frame(op: .binary, payload: bytes, mask: nextMask)
+            let frame = Frame(op: .text, payload: bytes, mask: nextMask)
             serializer.queue(frame)
         }
     }
