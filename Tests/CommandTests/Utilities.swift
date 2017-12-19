@@ -17,7 +17,7 @@ final class TestGroup: Group {
     let help = ["This is a test grouping!"]
 
     func run(using console: Console, with input: Input) throws {
-        if input.options["version"]?.bool == true {
+        if input.options["version"] == "true" {
             console.print("v2.0")
         } else {
             throw "unknown"
@@ -37,7 +37,7 @@ final class SubGroup: Group {
     let help = ["This is a test sub grouping!"]
 
     func run(using console: Console, with input: Input) throws {
-        if input.options["version"]?.bool == true {
+        if input.options["version"] == "true" {
             console.print("v2.0")
         } else {
             throw "unknown"

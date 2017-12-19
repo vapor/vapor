@@ -1,9 +1,8 @@
-import XCTest
-import Dispatch
 import Async
-import TCP
-import JunkDrawer
+import Dispatch
 @testable import Redis
+import TCP
+import XCTest
 
 class RedisTests: XCTestCase {
     var clientCount = 0

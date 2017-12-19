@@ -1,10 +1,9 @@
 import Async
 import Bits
-import JunkDrawer
-import Foundation
 import Dispatch
-import TCP
 import HTTP
+import Foundation
+import TCP
 import Vapor
 // import WebSocket
 import XCTest
