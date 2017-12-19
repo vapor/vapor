@@ -7,10 +7,6 @@ let package = Package(
         // Auth
         .library(name: "Authentication", targets: ["Authentication"]),
 
-        // Console
-        .library(name: "Console", targets: ["Console"]),
-        .library(name: "Command", targets: ["Command"]),
-
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
         .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
@@ -47,6 +43,9 @@ let package = Package(
         // Swift Promises, Futures, and Streams.
         .package(url: "https://github.com/vapor/async.git", .branch("beta")),
 
+        // Swift wrapper for Console I/O.
+        .package(url: "https://github.com/vapor/console.git", .branch("beta")),
+
         // Core extensions, type-aliases, and functions that facilitate common tasks.
         .package(url: "https://github.com/vapor/core.git", .branch("beta")),
 
@@ -70,13 +69,6 @@ let package = Package(
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
-        
-        // Console
-        .target(name: "Console", dependencies: ["Async", "Service"]),
-        .target(name: "Command", dependencies: ["Console"]),
-        .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
-        .testTarget(name: "CommandTests", dependencies: ["Command"]),
-        .target(name: "ConsoleExample", dependencies: ["Console"]),
 
         // Fluent
         .target(name: "Fluent", dependencies: ["Async", "Service"]),
