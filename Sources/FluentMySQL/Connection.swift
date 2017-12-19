@@ -20,14 +20,14 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
     public func close() {
         self.connection.close()
     }
+
+    public func existingConnection<D>(to type: D.Type) -> D.Connection? where D : Database {
+        return self as? D.Connection
+    }
     
     /// Respresents the current FluentMySQLConnection as a connection to `D`
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        guard let mysql = self as? D.Connection else {
-            return Future(error: InvalidConnectionType())
-        }
-        
-        return Future(mysql)
+        fatalError("Call `.existingConnection` first.")
     }
     
     /// Keeps track of logs by MySQL
@@ -99,7 +99,8 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
                 }
                 
                 // Streams all results into the parameter-provided stream
-                try bound.stream(D.self, to: stream)
+                fatalError()
+                // try bound.stream(D.self, in: _, to: stream)
                 
                 return Future<Void>(())
             } catch {

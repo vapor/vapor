@@ -1,20 +1,29 @@
 import Async
-// import AppleSSL
-import OpenSSL
 import Bits
 import TCP
 import TLS
 import XCTest
+#if os(Linux)
+    import OpenSSL
+#else
+    import AppleTLS
+#endif
 
 class SSLTests: XCTestCase {
     func testClientBlocking() { do { try _testClientBlocking() } catch { XCTFail("\(error)") } }
     func _testClientBlocking() throws {
+
+
         let tcpSocket = try TCPSocket(isNonBlocking: false)
         let tcpClient = try TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
-        let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        #if os(Linux)
+            let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        #else
+            let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
+        #endif
         try tlsClient.connect(hostname: "google.com", port: 443)
-        try tlsClient.socket.handshake()
+        // try tlsClient.socket.handshake()
         let req = "GET /robots.txt HTTP/1.1\r\nContent-Length: 0\r\nHost: www.google.com\r\nUser-Agent: hi\r\n\r\n".data(using: .utf8)!
         _ = try tlsClient.socket.write(from: req.withByteBuffer { $0 })
         var res = Data(count: 4096)
@@ -27,8 +36,11 @@ class SSLTests: XCTestCase {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         let tcpClient = try TCPClient(socket: tcpSocket)
         let tlsSettings = TLSClientSettings()
-        // let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
-        let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        #if os(Linux)
+            let tlsClient = try OpenSSLClient(tcp: tcpClient, using: tlsSettings)
+        #else
+            let tlsClient = try AppleTLSClient(tcp: tcpClient, using: tlsSettings)
+        #endif
         try tlsClient.connect(hostname: "google.com", port: 443)
 
         let exp = expectation(description: "read data")

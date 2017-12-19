@@ -1,7 +1,7 @@
 // swift-tools-version:4.0
 import PackageDescription
 
-#if os(macOS) || os(iOS)
+#if os(macOS)
     let ssl: Target.Dependency = "AppleTLS"
 #else
     let ssl: Target.Dependency = "OpenSSL"
@@ -196,7 +196,7 @@ let package = Package(
        
         // TLS
         .target(name: "TLS", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
-        .testTarget(name: "TLSTests", dependencies: ["OpenSSL", "TLS"]),
+        .testTarget(name: "TLSTests", dependencies: [ssl, "TLS"]),
 
         // SQL
         .target(name: "SQL"),
@@ -229,9 +229,7 @@ let package = Package(
             "TCP",
             "TLS",
             "ServerSecurity",
-            // ssl,
-            "AppleTLS",
-            "OpenSSL",
+            ssl,
              "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
@@ -242,7 +240,7 @@ let package = Package(
     ]
 )
 
-//#if os(macOS) || os(iOS)
+#if os(macOS)
    package.targets.append(
         .target(name: "AppleTLS", dependencies: ["Async", "Bits", "Debugging", "TLS"])
     )
@@ -250,7 +248,7 @@ let package = Package(
     package.products.append(
         .library(name: "AppleTLS", targets: ["AppleTLS"])
     )
-//#else
+#else
     package.dependencies.append(
         .package(url: "https://github.com/vapor/copenssl.git", .exact("1.0.0-alpha.1"))
     )
@@ -258,5 +256,5 @@ let package = Package(
     package.targets.append(
         .target(name: "OpenSSL", dependencies: ["Async", "COpenSSL", "Debugging", "TLS"])
     )
-//#endif
+#endif
 
