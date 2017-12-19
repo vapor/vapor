@@ -90,7 +90,7 @@ Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://w
 - 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
 - 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
 - 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
-- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor) (personal backers)
+- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor)
 
 <a href="http://nodesagency.com">
     <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
