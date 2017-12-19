@@ -8,30 +8,13 @@ let package = Package(
         .library(name: "Authentication", targets: ["Authentication"]),
 
         // Fluent
-        .library(name: "Fluent", targets: ["Fluent"]),
         .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
-        .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // JWT
         .library(name: "JWT", targets: ["JWT"]),
 
-        // Leaf
-        .library(name: "Leaf", targets: ["Leaf"]),
-
-        // Logging
-        .library(name: "Logging", targets: ["Logging"]),
-
-        // MySQL
-        .library(name: "MySQL", targets: ["MySQL"]),
-
         // Redis
         .library(name: "Redis", targets: ["Redis"]),
-
-        // SQL
-        .library(name: "SQL", targets: ["SQL"]),
-
-        // SQLite
-        .library(name: "SQLite", targets: ["SQLite"]),
 
         // Validation
         .library(name: "Validation", targets: ["Validation"]),
@@ -55,6 +38,12 @@ let package = Package(
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
+        // Swift ORM (queries, models, and relations) for NoSQL and SQL databases.
+        .package(url: "https://github.com/vapor/fluent.git", .branch("beta")),
+
+        // An expressive, performant, and extensible templating language built for Swift.
+        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
@@ -71,41 +60,16 @@ let package = Package(
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "Service"]),
-        .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
-        .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
-        .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
         .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
         .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
-        .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
         // JWT
         .target(name: "JWT", dependencies: ["Crypto"]),
         .testTarget(name: "JWTTests", dependencies: ["JWT"]),
-
-        // Leaf
-        .target(name: "Leaf", dependencies: ["Service"]),
-        .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
-
-        // Logging
-        .target(name: "Logging", dependencies: []),
-
-        // MySQL
-        .target(name: "MySQL", dependencies: ["Crypto", "TCP", "TLS"]),
-        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Redis
         .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
         .testTarget(name: "RedisTests", dependencies: ["Redis"]),
-
-        // SQL
-        .target(name: "SQL"),
-        .testTarget(name: "SQLTests", dependencies: ["SQL"]),
-
-        // SQLite
-        .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["CSQLite", "Debugging", "Random"]),
-        .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Validation
         .target(name: "Validation", dependencies: ["CodableKit"]),
