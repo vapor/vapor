@@ -10,7 +10,7 @@ enum ProtocolSerializerState {
     case awaitingUpstream
 }
 
-final class MySQLPacketSerializer: Async.Stream {
+final class MySQLPacketSerializer: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = Packet
     
@@ -66,13 +66,21 @@ final class MySQLPacketSerializer: Async.Stream {
         }
     }
     
-    func connect(to context: ConnectionContext) {
+    func connection(_ event: ConnectionEvent) {
+        switch event {
+        case .cancel:
+            self.downstreamDemand = 0
+        case .request(let req):
+            self.downstreamDemand += req
+        }
         
+        flush(nil)
     }
     
     /// See OutputStream.output
     func output<S>(to inputStream: S) where S: Async.InputStream, Output == S.Input {
         downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
     }
     
     func nextCommandPhase() {
@@ -88,15 +96,32 @@ final class MySQLPacketSerializer: Async.Stream {
         flush(input)
     }
     
-    func flush(_ packet: Packet) {
+    func flush(_ packet: Packet?) {
         guard downstreamDemand > 0 else {
+            if let packet = packet {
+                self.backlog.append(packet)
+            }
             return
         }
         
-        packet.sequenceId = self.sequenceId
-        
-        self.serializing = packet
-        downstream?.next(packet.buffer)
+        if backlog.count > consumedBacklog {
+            defer {
+                backlog.removeFirst(consumedBacklog)
+            }
+            
+            let frame = backlog[consumedBacklog]
+            self.serializing = frame
+            self.downstream?.next(frame.buffer)
+            
+            if let packet = packet {
+                self.backlog.append(packet)
+            }
+        } else if let packet = packet {
+            packet.sequenceId = self.sequenceId
+            
+            self.serializing = packet
+            downstream?.next(packet.buffer)
+        }
     }
 
     func queue(_ packet: Packet, nextPhase: Bool = true) {
