@@ -1,9 +1,8 @@
 import Async
-import TCP
 import Bits
 import Crypto
-import JunkDrawer
 import Foundation
+import TCP
 
 extension MySQLConnection {
     /// Creates a new connection and completes the handshake

@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import Foundation
 import HTTP
 import Leaf

@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 
 /// Declares a database migration.
 public protocol Migration {

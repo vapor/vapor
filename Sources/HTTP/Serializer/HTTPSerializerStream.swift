@@ -81,9 +81,6 @@ public final class HTTPSerializerStream<Serializer>: Async.Stream, ConnectionCon
         guard remainingByteBuffersRequested > 0 else {
             return
         }
-//        print("\(type(of: self)).\(#function)(\(state))")
-//        print(remainingByteBuffersRequested)
-//        print(downstream)
 
         switch state {
         case .ready:

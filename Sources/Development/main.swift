@@ -1,6 +1,5 @@
 import Async
 import TLS
-import JunkDrawer
 import Dispatch
 import Fluent
 import FluentSQLite

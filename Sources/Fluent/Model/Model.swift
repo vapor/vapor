@@ -1,5 +1,5 @@
 import Async
-import JunkDrawer
+import CodableKit
 import Service
 
 /// Fluent database models. These types can be fetched

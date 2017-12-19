@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import Dispatch
 
 /// Capable of creating instances of registered services.

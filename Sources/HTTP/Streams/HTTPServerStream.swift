@@ -73,7 +73,7 @@ internal final class HTTPServerStream<AcceptStream, Worker>: InputStream
                 .output(to: sink)
         case .error(let error):
             onError?(error)
-        case .close: print("accept stream closed")
+        case .close: print("Accept stream closed.")
         }
     }
 }

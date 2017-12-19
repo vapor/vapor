@@ -50,7 +50,6 @@ final class HTTPChunkEncodingStream: Async.Stream, ConnectionContext {
             self.upstream = upstream
         case .next(let input):
             // FIXME: Improve performance
-            print("HEX:" + String(input.count, radix: 16, uppercase: true))
             let hexNumber = String(input.count, radix: 16, uppercase: true).data(using: .utf8)!
             let chunk = hexNumber + crlf + Data(input) + crlf
             chunk.withByteBuffer { downstream?.next($0) }

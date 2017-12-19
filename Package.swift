@@ -13,20 +13,12 @@ let package = Package(
         // Auth
         .library(name: "Authentication", targets: ["Authentication"]),
 
-        // Core
-        .library(name: "Bits", targets: ["Bits"]),
-        .library(name: "JunkDrawer", targets: ["JunkDrawer"]),
-        .library(name: "COperatingSystem", targets: ["COperatingSystem"]),
-
         // Console
         .library(name: "Console", targets: ["Console"]),
         .library(name: "Command", targets: ["Command"]),
 
         // Crypto
         .library(name: "Crypto", targets: ["Crypto"]),
-
-        // Debugging
-        .library(name: "Debugging", targets: ["Debugging"]),
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
@@ -88,7 +80,10 @@ let package = Package(
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
-        .package(url: "https://github.com/vapor/async.git", .branch("reactive-streams")),
+        .package(url: "https://github.com/vapor/async.git", .branch("beta")),
+
+        // Core extensions, type-aliases, and functions that facilitate common tasks.
+        .package(url: "https://github.com/vapor/core.git", .branch("beta")),
     ],
     targets: [
         .target(name: "Authentication", dependencies: [
@@ -98,36 +93,23 @@ let package = Package(
             "Authentication", "FluentSQLite", "Vapor"
         ]),
 
-        // Bits
-        .target(name: "Bits"),
-
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
-
-        // Core
-        .target(name: "JunkDrawer", dependencies: ["Async", "Bits", "COperatingSystem", "Debugging"]),
-        .testTarget(name: "JunkDrawerTests", dependencies: ["JunkDrawer"]),
-        .target(name: "COperatingSystem"),
         
-
         // Console
-        .target(name: "Console", dependencies: ["Async", "JunkDrawer"]),
+        .target(name: "Console", dependencies: ["Async"]),
         .target(name: "Command", dependencies: ["Console"]),
         .testTarget(name: "ConsoleTests", dependencies: ["Console"]),
         .testTarget(name: "CommandTests", dependencies: ["Command"]),
         .target(name: "ConsoleExample", dependencies: ["Console"]),
 
         // Crypto
-        .target(name: "Crypto", dependencies: ["Async", "Bits", "COperatingSystem", "Debugging", "JunkDrawer"]),
+        .target(name: "Crypto", dependencies: ["Async", "Bits", "COperatingSystem", "Debugging"]),
         .testTarget(name: "CryptoTests", dependencies: ["Crypto"]),
 
-        // Debugging
-        .target(name: "Debugging"),
-        .testTarget(name: "DebuggingTests", dependencies: ["Debugging"]),
-
         // Fluent
-        .target(name: "Fluent", dependencies: ["Async", "JunkDrawer", "Service"]),
+        .target(name: "Fluent", dependencies: ["Async", "Service"]),
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
@@ -145,19 +127,18 @@ let package = Package(
         .testTarget(name: "JWTTests", dependencies: ["JWT"]),
 
         // Leaf
-        .target(name: "Leaf", dependencies: ["JunkDrawer", "Service"]),
+        .target(name: "Leaf", dependencies: ["Service"]),
         .testTarget(name: "LeafTests", dependencies: ["Leaf"]),
 
         // Logging
-        .target(name: "Logging", dependencies: ["JunkDrawer", "Service"]),
-        .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
+        .target(name: "Logging", dependencies: []),
 
         // MySQL
         .target(name: "MySQL", dependencies: ["Crypto", "TCP", "TLS"]),
         .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
         
         // Multipart
-        .target(name: "Multipart", dependencies: ["JunkDrawer", "Debugging", "HTTP"]),
+        .target(name: "Multipart", dependencies: ["Debugging", "HTTP"]),
         .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
 
         // Net
@@ -172,7 +153,7 @@ let package = Package(
         // .testTarget(name: "HTTP2Tests", dependencies: ["HTTP2"]),
 
         // Random crypto
-        .target(name: "Random", dependencies: ["JunkDrawer"]),
+        .target(name: "Random", dependencies: ["Bits"]),
         .testTarget(name: "RandomTests", dependencies: ["Random"]),
         
         // Compression
@@ -180,7 +161,7 @@ let package = Package(
         .testTarget(name: "PufferfishTests", dependencies: ["Pufferfish"]),
 
         // Routing
-        .target(name: "Routing", dependencies: ["JunkDrawer", "Debugging", "HTTP", /*"WebSocket"*/]),
+        .target(name: "Routing", dependencies: ["Debugging", "HTTP", /*"WebSocket"*/]),
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
         
         // Redis
@@ -188,7 +169,7 @@ let package = Package(
         .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
-        .target(name: "Service", dependencies: ["JunkDrawer", "Debugging"]),
+        .target(name: "Service", dependencies: ["Debugging"]),
         .testTarget(name: "ServiceTests", dependencies: ["Service"]),
         
         // Security
@@ -204,11 +185,11 @@ let package = Package(
 
         // SQLite
         .target(name: "CSQLite"),
-        .target(name: "SQLite", dependencies: ["JunkDrawer", "CSQLite", "Debugging", "Random"]),
+        .target(name: "SQLite", dependencies: ["CSQLite", "Debugging", "Random"]),
         .testTarget(name: "SQLiteTests", dependencies: ["SQLite"]),
 
         // Validation
-        .target(name: "Validation", dependencies: ["JunkDrawer"]),
+        .target(name: "Validation", dependencies: ["CodableKit"]),
         .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
 
         // Vapor
@@ -220,7 +201,6 @@ let package = Package(
             "Debugging",
             "FormURLEncoded",
             "HTTP",
-            "JunkDrawer",
             "Leaf",
             "Logging",
             "Multipart",
@@ -235,7 +215,7 @@ let package = Package(
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
 
         // WebSocket
-         .target(name: "WebSocket", dependencies: ["JunkDrawer", "Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
+         .target(name: "WebSocket", dependencies: ["Debugging", "TCP", /*"TLS",*/ "HTTP", "Crypto"]),
          .testTarget(name: "WebSocketTests", dependencies: ["WebSocket"]),
     ]
 )

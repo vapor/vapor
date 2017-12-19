@@ -11,7 +11,6 @@ extension MySQLConnection {
     func prepare(query: MySQLQuery) -> Future<PreparedStatement> {
         let promise = Promise<PreparedStatement>()
         var statement: PreparedStatement?
-        
         _ = self.parser.drain { parser in
             parser.request()
         }.output { packet in

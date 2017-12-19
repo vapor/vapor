@@ -1,5 +1,3 @@
-import JunkDrawer
-
 public final class SQLiteDataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]

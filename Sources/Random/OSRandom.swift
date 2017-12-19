@@ -1,5 +1,4 @@
 import Bits
-import JunkDrawer
 import Foundation
 import COperatingSystem
 
@@ -7,7 +6,7 @@ import COperatingSystem
 /// uses `random` on Linux and `arc4random` on macOS.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/crypto/random/)
-public final class OSRandom: DataGenerator, EmptyInitializable {
+public final class OSRandom: DataGenerator {
     /// Create a new OSRandom
     public init() {}
 

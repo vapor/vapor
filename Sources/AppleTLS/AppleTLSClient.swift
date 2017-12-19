@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import Security
 import TCP
 import TLS

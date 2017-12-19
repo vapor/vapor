@@ -1,5 +1,3 @@
-import JunkDrawer
-
 internal final class RowEncodingContainer<K: CodingKey>: KeyedEncodingContainerProtocol
 {
     typealias Key = K

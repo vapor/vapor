@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import HTTP
 import Foundation
 import Service

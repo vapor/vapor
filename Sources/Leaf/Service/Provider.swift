@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import Dispatch
 import Foundation
 import Service

@@ -26,7 +26,7 @@ extension Console {
             }
         }
 
-        if input.options["help"]?.bool == true {
+        if input.options["help"] == "true" {
             try outputHelp(for: runnable, executable: input.executable)
         } else {
             let arguments: [Argument]

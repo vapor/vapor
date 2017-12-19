@@ -1,6 +1,5 @@
 import Async
 import Bits
-import JunkDrawer
 
 /// An HTTP client wrapped around TCP client
 ///

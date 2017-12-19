@@ -1,9 +1,9 @@
 import Async
-import JunkDrawer
-import SQL
+import CodableKit
+import Fluent
 import FluentSQL
 import MySQL
-import Fluent
+import SQL
 
 /// A MySQL query serializer
 internal final class MySQLSerializer: SQLSerializer {
@@ -99,7 +99,7 @@ public final class FluentMySQLConnection: DatabaseConnectable, JoinSupporting, R
                 }
                 
                 // Streams all results into the parameter-provided stream
-                fatalError()
+                try bound.stream(D.self, in: sqlString, to: stream)
                 // try bound.stream(D.self, in: _, to: stream)
                 
                 return Future<Void>(())

@@ -15,18 +15,12 @@ class FluentMySQLTests: XCTestCase {
             password: nil,
             database: "vapor_test"
         )
+
+        let conn = try! database.makeConnection(from: .init(), on: loop).blockingAwait()
+        try! conn.connection.administrativeQuery("DROP DATABASE vapor_test").blockingAwait()
+        try! conn.connection.administrativeQuery("CREATE DATABASE vapor_test;").blockingAwait()
         
         benchmarker = Benchmarker(database, config: .init(), on: loop, onFail: XCTFail)
-        
-        try! benchmarker.pool.requestConnection().flatMap(to: Void.self) { conn in
-            return conn.disableReferences().flatMap(to: Void.self) {
-                return conn.connection.administrativeQuery("DROP TABLE IF EXISTS `pet+toy`, `pets`, `toys`, `users`, `foos`")
-            }.flatMap(to: Void.self) {
-                return conn.enableReferences().map(to: Void.self) {
-                    self.benchmarker.pool.releaseConnection(conn)
-                }
-            }
-        }.blockingAwait(timeout: .seconds(10))
     }
     
     func testSchema() throws {
@@ -34,7 +28,8 @@ class FluentMySQLTests: XCTestCase {
     }
     
     func testModels() throws {
-        try benchmarker.benchmarkModels_withSchema().blockingAwait(timeout: .seconds(60))
+        print(#line)
+        try! benchmarker.benchmarkModels_withSchema().blockingAwait(timeout: .seconds(60))
     }
     
     func testRelations() throws {

@@ -1,4 +1,4 @@
-import JunkDrawer
+import Service
 
 /// Protocol for powering styled Console I/O.
 public protocol BaseConsole: Extendable {

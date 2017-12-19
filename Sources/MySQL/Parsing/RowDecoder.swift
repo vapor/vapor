@@ -1,4 +1,4 @@
-import JunkDrawer
+import CodableKit
 import Foundation
 
 func makeRowDecoder(row: Row, lossyIntegers: Bool, lossyStrings: Bool) throws -> Decoder {

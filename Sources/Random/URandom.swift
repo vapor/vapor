@@ -1,4 +1,3 @@
-import JunkDrawer
 import Foundation
 import COperatingSystem
 
@@ -13,7 +12,7 @@ public final class URandom: DataGenerator {
     private let file: UnsafeMutablePointer<FILE>
 
     /// Initialize URandom
-    public init(path: String) throws {
+    public init(path: String = "/dev/urandom") throws {
         guard let file = fopen(path, "rb") else {
             // The Random protocol doesn't allow init to fail, so we have to
             // check whether /dev/urandom was successfully opened here
@@ -42,11 +41,5 @@ public final class URandom: DataGenerator {
     /// Get a random array of Bytes
     public func bytes(count: Int) throws -> Data {
         return try read(numBytes: count)
-    }
-}
-
-extension URandom: EmptyInitializable {
-    public convenience init() throws {
-        try self.init(path: "/dev/urandom")
     }
 }

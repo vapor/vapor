@@ -1,6 +1,5 @@
 import Async
 import Console
-import JunkDrawer
 import Dispatch
 import HTTP
 import Foundation

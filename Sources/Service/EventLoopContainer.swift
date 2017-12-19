@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 import Dispatch
 
 /// A worker is any type that contains a reference

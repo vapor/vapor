@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 
 extension MySQLConnection {
     /// A simple callback closure

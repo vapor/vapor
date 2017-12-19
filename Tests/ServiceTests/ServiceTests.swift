@@ -114,7 +114,7 @@ class ServiceTests: XCTestCase {
     func testProvider() throws {
         let config = Config()
         var services = Services()
-        try services.instance(AllCapsProvider())
+        try services.provider(AllCapsProvider())
 
         let container = BasicContainer(
             config: config,

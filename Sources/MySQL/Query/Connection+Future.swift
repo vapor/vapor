@@ -1,5 +1,4 @@
 import Async
-import JunkDrawer
 
 extension MySQLConnection {
     /// Collects all resulting rows and returs them in the future

@@ -47,7 +47,7 @@ extension ColumnType: SchemaFieldType {
     
     /// Return the MySQL types used by default for the primary types
     public static func makeSchemaFieldType(for type: Any.Type) -> ColumnType? {
-        switch id(Any.self) {
+        switch id(type) {
         case id(Int.self):
             #if arch(x86_64) || arch(arm64)
                 return .int64()
@@ -79,8 +79,8 @@ extension ColumnType: SchemaFieldType {
     }
 }
 
-fileprivate func id<T>(_ type: T.Type) -> ObjectIdentifier {
-    return ObjectIdentifier(T.self)
+fileprivate func id(_ type: Any.Type) -> ObjectIdentifier {
+    return ObjectIdentifier(type)
 }
 
 extension SchemaQuery: MySQLQuery {

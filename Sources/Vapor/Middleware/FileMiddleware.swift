@@ -1,9 +1,8 @@
+import Bits
 import COperatingSystem
 import HTTP
-import Bits
-import JunkDrawer
-import Foundation
 import Dispatch
+import Foundation
 
 /// Services files from the public folder.
 public final class FileMiddleware: Middleware {

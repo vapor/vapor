@@ -1,5 +1,3 @@
-import JunkDrawer
-
 /// Capable of being validated.
 public protocol Validatable: Codable, ValidationDataRepresentable {
     /// The validations that will run when `.validate()`

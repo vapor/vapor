@@ -1,6 +1,5 @@
 import Async
 import HTTP
-import JunkDrawer
 /*import HTTP2*/
 import TCP
 import TLS

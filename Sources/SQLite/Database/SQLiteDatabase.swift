@@ -26,7 +26,6 @@ public final class SQLiteDatabase {
     ) -> Future<SQLiteConnection> {
         let promise = Promise(SQLiteConnection.self)
 
-        print(worker.eventLoop.label)
         worker.eventLoop.async {
             do {
                 let options = SQLITE_OPEN_CREATE | SQLITE_OPEN_READWRITE | SQLITE_OPEN_NOMUTEX
