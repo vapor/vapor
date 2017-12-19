@@ -4,17 +4,8 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        // Auth
-        .library(name: "Authentication", targets: ["Authentication"]),
-
         // Fluent
         .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
-
-        // JWT
-        .library(name: "JWT", targets: ["JWT"]),
-
-        // Redis
-        .library(name: "Redis", targets: ["Redis"]),
 
         // Validation
         .library(name: "Validation", targets: ["Validation"]),
@@ -48,13 +39,6 @@ let package = Package(
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
-        .target(name: "Authentication", dependencies: [
-            "Async", "Bits", "Crypto", "Debugging", "Fluent", "HTTP", "Service", "Vapor"
-        ]),
-        .testTarget(name: "AuthenticationTests", dependencies: [
-            "Authentication", "FluentSQLite", "Vapor"
-        ]),
-
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
@@ -63,13 +47,6 @@ let package = Package(
         .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
         .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
-        // JWT
-        .target(name: "JWT", dependencies: ["Crypto"]),
-        .testTarget(name: "JWTTests", dependencies: ["JWT"]),
-        
-        // Redis
-        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
-        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Validation
         .target(name: "Validation", dependencies: ["CodableKit"]),
