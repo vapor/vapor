@@ -96,9 +96,13 @@ Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://w
     <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
 </a>
 
+<br>
+
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
 </a>
+
+<br>
 
 <a href="http://dominickm.com" target="_blank">
     <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">
