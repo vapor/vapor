@@ -107,6 +107,11 @@ extension Container {
 
 /// Automatic connection releasing when the ephemeral worker deinits.
 extension EphemeralContainer {
+    /// See DatabseConnectable.existingConnection
+    public func existingConnection<D>(to type: D.Type) -> D.Connection? where D: Database {
+        return nil
+    }
+
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
         print("CONNECT")

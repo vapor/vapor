@@ -58,8 +58,8 @@ do {
     migrationConfig.add(model: AutoUser.self, database: .beta)
     services.instance(migrationConfig)
 
-    let middlewareConfig = MiddlewareConfig()
-    //middlewareConfig.use(ErrorMiddleware.self)
+    var middlewareConfig = MiddlewareConfig()
+    middlewareConfig.use(ErrorMiddleware.self)
     services.instance(middlewareConfig)
 
     
