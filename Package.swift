@@ -68,5 +68,3 @@ let package = Package(
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
 )
-
-
