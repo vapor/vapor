@@ -17,15 +17,13 @@ public struct SQLiteConfig {
 
 extension SQLiteConnection: DatabaseConnection {
     public typealias Config = SQLiteConfig
+
+    public func existingConnection<D>(to type: D.Type) -> D.Connection? where D: Database {
+        return self as? D.Connection
+    }
     
     public func connect<D>(to database: DatabaseIdentifier<D>) -> Future<D.Connection> {
-        return Future {
-            guard let sqlite = self as? D.Connection else {
-                throw FluentSQLiteError(identifier: "invalid-connection-type", reason: "The provided connection was not an SQLite connection")
-            }
-
-            return Future(sqlite)
-        }
+        fatalError("Cannot call `.connect(to:)` on an existing connection. Call `.existingConnection` instead.")
     }
 }
 
