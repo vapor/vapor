@@ -30,7 +30,7 @@ let package = Package(
 
         // Fluent
         .library(name: "Fluent", targets: ["Fluent"]),
-//        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
+        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
         .library(name: "FluentSQLite", targets: ["FluentSQLite"]),
 
         // FormURLEncoded
@@ -46,8 +46,8 @@ let package = Package(
         .library(name: "Logging", targets: ["Logging"]),
 
         // MySQL
-//        .library(name: "MySQL", targets: ["MySQL"]),
-
+        .library(name: "MySQL", targets: ["MySQL"]),
+        
         // Multipart
         .library(name: "Multipart", targets: ["Multipart"]),
 
@@ -60,7 +60,7 @@ let package = Package(
         .library(name: "Random", targets: ["Random"]),
 
         // Redis
-//        .library(name: "Redis", targets: ["Redis"]),
+        .library(name: "Redis", targets: ["Redis"]),
 
         // Routing
         .library(name: "Routing", targets: ["Routing"]),
@@ -131,8 +131,8 @@ let package = Package(
         .target(name: "FluentBenchmark", dependencies: ["Fluent"]),
         .target(name: "FluentSQL", dependencies: ["Fluent", "SQL"]),
         .target(name: "FluentSQLite", dependencies: ["Fluent", "FluentSQL", "SQLite"]),
-//        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
-//        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
+        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
+        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
         .testTarget(name: "FluentTests", dependencies: ["FluentBenchmark", "FluentSQLite", "SQLite"]),
 
@@ -153,9 +153,9 @@ let package = Package(
         .testTarget(name: "LoggingTests", dependencies: ["Logging"]),
 
         // MySQL
-//        .target(name: "MySQL", dependencies: ["Crypto", "TCP", "TLS"]),
-//        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
-
+        .target(name: "MySQL", dependencies: ["Crypto", "TCP", "TLS"]),
+        .testTarget(name: "MySQLTests", dependencies: ["MySQL"]),
+        
         // Multipart
         .target(name: "Multipart", dependencies: ["JunkDrawer", "Debugging", "HTTP"]),
         .testTarget(name: "MultipartTests", dependencies: ["Multipart"]),
@@ -184,8 +184,8 @@ let package = Package(
         .testTarget(name: "RoutingTests", dependencies: ["Routing"]),
         
         // Redis
-//        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
-//        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
+        .target(name: "Redis", dependencies: ["Async", "Bits", "Debugging", "TCP"]),
+        .testTarget(name: "RedisTests", dependencies: ["Redis"]),
 
         // Service
         .target(name: "Service", dependencies: ["JunkDrawer", "Debugging"]),
