@@ -1,6 +1,12 @@
 // swift-tools-version:4.0
 import PackageDescription
 
+#if os(macOS)
+    let tlsImpl: Target.Dependency = "AppleTLS"
+#else
+    let tlsImpl: Target.Dependency = "OpenSSL"
+#endif
+
 let package = Package(
     name: "Vapor",
     products: [
@@ -22,12 +28,15 @@ let package = Package(
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
+        // FIXME: rely on just TemplateKit
+        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
     targets: [
         // Boilerplate
-        .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
+        .target(name: "Boilerplate", dependencies: ["Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
 
@@ -36,21 +45,23 @@ let package = Package(
         .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Fluent", "FluentSQLite", "Leaf", "Vapor", "SQLite"]),
+        .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
+            "CodableKit",
             "Command",
             "Console",
             "COperatingSystem",
             "Debugging",
             "FormURLEncoded",
             "HTTP",
-            "Leaf",
             "Logging",
             "Multipart",
             "Routing",
             "Service",
             "TCP",
+            "TemplateKit",
             "TLS",
+            tlsImpl,
             "ServerSecurity",
              "WebSocket",
         ]),

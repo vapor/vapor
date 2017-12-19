@@ -1,3 +1,4 @@
+import Async
 import Bits
 import COperatingSystem
 import HTTP
@@ -14,7 +15,7 @@ public final class FileMiddleware: Middleware {
 
     /// Creates a new filemiddleware.
     public init(publicDirectory: String) {
-        self.publicDirectory = publicDirectory.finished(with: "/")
+        self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
     }
 
     /// See Middleware.respond.

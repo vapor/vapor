@@ -6,3 +6,4 @@
 @_exported import Logging
 @_exported import Routing
 @_exported import Service
+@_exported import TemplateKit
