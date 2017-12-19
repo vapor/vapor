@@ -63,7 +63,7 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
             let channel = array[1].string
         else {
             self.downstream?.error(RedisError(.unexpectedResult(data)))
-            self.request(count: 1)
+            upstream?.request(count: 1)
             self.close()
             return
         }
@@ -71,7 +71,7 @@ public final class SubscriptionStream: Async.Stream, ConnectionContext {
         // We're only accepting real notifications for now. No replies for completed subscribing and unsubscribing.
         guard array[0].string == "message" else {
             // Request more data
-            self.request(count: 1)
+            upstream?.request(count: 1)
             return
         }
         

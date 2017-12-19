@@ -81,7 +81,7 @@ final class FrameSerializer: Async.Stream, ConnectionContext {
     
     func output<S>(to inputStream: S) where S : Async.InputStream, Output == S.Input {
         self.downstream = AnyInputStream(inputStream)
-        upstream.flatMap(inputStream.connect)
+        inputStream.connect(to: self)
     }
 
     func queue(_ frame: Frame) {

@@ -152,7 +152,7 @@ public final class BoundStatement {
         return promise.future
     }
     
-    public func stream<D, Stream>(_ type: D.Type, to stream: Stream) throws
+    public func stream<D, Stream>(_ type: D.Type, in query: MySQLQuery, to stream: Stream) throws
         where D: Decodable, Stream: Async.InputStream, Stream.Input == D
     {
         let rowStream = RowStream(mysql41: true, binary: true) { affectedRows, lastInsertID in

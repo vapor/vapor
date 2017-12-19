@@ -3,7 +3,7 @@ import Async
 /// A stream of decoded rows related to a query
 ///
 /// This API is currently internal so we don't break the public API when finalizing the "raw" row API
-final class RowStream: ProtocolParserStream {
+final class RowStream: Async.Stream, ConnectionContext {
     /// See InputStream.Input
     typealias Input = Packet
     
@@ -41,6 +41,8 @@ final class RowStream: ProtocolParserStream {
     /// If `true`, the results are using the binary protocols
     var binary: Bool
     
+    var parsing: Packet?
+    
     var packetOKcallback: PacketOKSetter?
 
     /// Handles EOF
@@ -62,16 +64,55 @@ final class RowStream: ProtocolParserStream {
         
         self.onEOF = { _ in self.close() }
     }
+    
+    func input(_ event: InputEvent<Packet>) {
+        switch event {
+        case .close:
+            downstream?.close()
+        case .connect(let upstream):
+            self.upstream = upstream
+        case .error(let error):
+            downstream?.error(error)
+        case .next(let next):
+            self.parsing = next
+            
+            if downstreamDemand > 0 {
+                do {
+                    try transform()
+                } catch {
+                    downstream?.error(error)
+                }
+            }
+        }
+    }
+    
+    func connection(_ event: ConnectionEvent) {
+        upstream?.connection(event)
+    }
+    
+    func output<S>(to inputStream: S) where S : Async.InputStream, Output == S.Input {
+        self.downstream = AnyInputStream(inputStream)
+        inputStream.connect(to: self)
+    }
+    
+    private func flush(_ data: Output) {
+        self.downstreamDemand -= 1
+        self.downstream?.next(data)
+    }
 
-    func transform(_ input: Packet) throws {
+    func transform() throws {
+        guard let parsing = parsing else {
+            throw MySQLError(.invalidPacket)
+        }
+        
         // If the header (column count) is not yet set
         guard let columnCount = self.columnCount else {
             // Parse the column count
-            var parser = Parser(packet: input)
+            var parser = Parser(packet: parsing)
             
             // Tries to parse the header count
             guard let columnCount = try? parser.parseLenEnc() else {
-                if case .error(let error) = try input.parseResponse(mysql41: mysql41) {
+                if case .error(let error) = try parsing.parseResponse(mysql41: mysql41) {
                     throw error
                 } else {
                     self.close()
@@ -82,10 +123,10 @@ final class RowStream: ProtocolParserStream {
             // No columns means that this is likely the success response of a binary INSERT/UPDATE/DELETE query
             if columnCount == 0 {
                 guard binary else {
-                    throw MySQLError(packet: input)
+                    throw MySQLError(packet: parsing)
                 }
                 
-                if let (affectedRows, lastInsertID) = try input.parseBinaryOK() {
+                if let (affectedRows, lastInsertID) = try parsing.parseBinaryOK() {
                     self.packetOKcallback?(affectedRows, lastInsertID)
                 }
                 
@@ -100,12 +141,12 @@ final class RowStream: ProtocolParserStream {
         // if the column count isn't met yet
         if columns.count != columnCount {
             // Parse the next column
-            try parseColumns(from: input)
+            try parseColumns(from: parsing)
             return
         }
         
         // Otherwise, parse the next row
-        try preParseRows(from: input)
+        try preParseRows(from: parsing)
     }
 
     /// Parses a row from this packet, checks

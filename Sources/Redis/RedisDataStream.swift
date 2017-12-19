@@ -100,7 +100,7 @@ final class RedisDataStream: Stream, ConnectionContext {
         flush(request)
         responseQueue.append(promise)
         
-        upstream?.request()
+        parser.request()
         
         return promise.future
     }
