@@ -4,14 +4,7 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        // Fluent
-        .library(name: "FluentMySQL", targets: ["FluentMySQL"]),
-
-        // Validation
-        .library(name: "Validation", targets: ["Validation"]),
-
-        // Vapor
-        .library(name: "Vapor", targets: ["Vapor"]),
+        .library(name: "Vapor", targets: ["Validation", "Vapor"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
@@ -29,12 +22,6 @@ let package = Package(
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
-        // Swift ORM (queries, models, and relations) for NoSQL and SQL databases.
-        .package(url: "https://github.com/vapor/fluent.git", .branch("beta")),
-
-        // An expressive, performant, and extensible templating language built for Swift.
-        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
-
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
     ],
@@ -42,10 +29,6 @@ let package = Package(
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Fluent", "Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
-
-        // Fluent
-        .target(name: "FluentMySQL", dependencies: ["Fluent", "FluentSQL", "MySQL"]),
-        .testTarget(name: "FluentMySQLTests", dependencies: ["FluentMySQL"]),
 
 
         // Validation
