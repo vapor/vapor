@@ -37,8 +37,10 @@ public struct MiddlewareConfig {
 extension MiddlewareConfig {
     /// Resolves the desired middleware for a given container
     internal func resolve(for container: Container) throws -> [Middleware] {
-        return try storage.map { lazy in
+        let r = try storage.map { lazy in
             return try lazy(container)
         }
+        print(r)
+        return r
     }
 }
