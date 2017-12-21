@@ -13,8 +13,8 @@ public extension HTTP.Message {
         headers[.contentType] = "application/json; charset=utf-8"
     }
 
-    public func decodeJSONBody<T: Decodable>(using decoder: JSONDecoder = JSONDecoder()) throws -> T {
-        return try decoder.decode(T.self, from: Data(bytes: body.bytes ?? []))
+    public func decodeJSONBody<T: Decodable>(_ type: T.Type = T.self, using decoder: JSONDecoder = JSONDecoder()) throws -> T {
+        return try decoder.decode(type, from: Data(bytes: body.bytes ?? []))
     }
 }
 #endif

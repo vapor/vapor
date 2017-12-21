@@ -28,6 +28,17 @@ class CodableTests: XCTestCase {
         XCTAssertEqual(model.opt, "test")
     }
 
+    func testDecodeJSONBodyWithExplicitType() throws {
+        let request = Request(method: .post, path: "/")
+        let rawJSON = "{ \"foo\": \"qux\", \"baz\": 4237846, \"opt\": \"test\" }".makeBytes()
+
+        request.body = Body.data(rawJSON)
+        let model = try request.decodeJSONBody(TestModel.self)
+        XCTAssertEqual(model.foo, "qux")
+        XCTAssertEqual(model.baz, 4237846)
+        XCTAssertEqual(model.opt, "test")
+    }
+
     func testDecodeJSONBodyInterop() throws {
         let request = Request(method: .post, path: "/")
         request.json = ["foo": "bar", "baz": 123]
@@ -83,6 +94,7 @@ class CodableTests: XCTestCase {
 
     static let allTests: [(String, (CodableTests) -> () throws -> ())] = [
         ("testDecodeJSONBodyRaw", testDecodeJSONBodyRaw),
+        ("testDecodeJSONBodyWithExplicitType", testDecodeJSONBodyWithExplicitType),
         ("testDecodeJSONBodyInterop", testDecodeJSONBodyInterop),
         ("testDecodeFailsWithMissingField", testDecodeFailsWithMissingField),
         ("testEncodeJSONBodyInterop", testEncodeJSONBodyInterop),
