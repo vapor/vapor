@@ -233,8 +233,8 @@ do {
         return Future(res)
     }
 
-    router.get("123") { req -> Future<String> in
-        return Future("123")
+    router.get("123") { req in
+        return "123"
     }
 //
 //    router.get("hello") { req in

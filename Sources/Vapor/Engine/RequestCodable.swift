@@ -5,7 +5,7 @@ public protocol RequestDecodable {
 
 /// Can be converted to a request
 public protocol RequestEncodable {
-    func encode(to req: inout Request) throws -> Future<Void>
+    func encode(using container: Container) throws -> Future<Request>
 }
 
 /// Can be converted from and to a request
@@ -14,9 +14,8 @@ public typealias RequestCodable = RequestDecodable & RequestEncodable
 // MARK: Request Conformance
 
 extension Request: RequestEncodable {
-    public func encode(to req: inout Request) throws -> Future<Void> {
-        req = self
-        return .done
+    public func encode(using container: Container) throws -> Future<Request> {
+        return Future(self)
     }
 }
 

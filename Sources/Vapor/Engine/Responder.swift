@@ -11,7 +11,7 @@ public struct RouteResponder<T>: Responder
     where T: ResponseEncodable
 {
     /// Responder closure
-    public typealias Closure = (Request) throws -> Future<T>
+    public typealias Closure = (Request) throws -> T
 
     /// The stored responder closure.
     public let closure: Closure
@@ -23,12 +23,8 @@ public struct RouteResponder<T>: Responder
 
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try closure(req).flatMap(to: Response.self) { rep in
-            var res = req.makeResponse()
-            return try rep.encode(to: &res, for: req).map(to: Response.self) {
-                return res
-            }
-        }
+        let encodable = try closure(req)
+        return try encodable.encode(for: req)
     }
 }
 

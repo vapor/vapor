@@ -12,7 +12,7 @@ public struct AnyResponse: ResponseEncodable {
     }
 
     /// Encodes the response
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
-        return try encodable.encode(to: &res, for: req)
+    public func encode(for req: Request) throws -> Future<Response> {
+        return try encodable.encode(for: req)
     }
 }

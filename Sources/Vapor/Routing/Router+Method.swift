@@ -19,6 +19,23 @@ extension Router {
     }
 }
 
+extension Future: ResponseEncodable {
+    /// See ResponseEncodable.encode
+    public func encode(for req: Request) throws -> Future<Response> {
+        return flatMap(to: Response.self) { exp in
+            guard let encodable = exp as? ResponseEncodable else {
+                throw VaporError(
+                    identifier: "futureResponseEncodable",
+                    reason: "`Future<\(Expectation.self)>` is not `ResponseEncodable` because `\(Expectation.self)` is not `ResponseEncodable`."
+                )
+            }
+
+            return try encodable.encode(for: req)
+        }
+    }
+
+
+}
 
 extension Router {
     /// Creates a `Route` at the provided path using the `GET` method.

@@ -17,15 +17,17 @@ extension Content {
     }
 
     /// See RequestEncodable.encode
-    public func encode(to req: inout Request) throws -> Future<Void> {
+    public func encode(using container: Container) throws -> Future<Request> {
+        let req = Request(using: container)
         try req.content.encode(self)
-        return .done
+        return Future(req)
     }
 
     /// See ResponseEncodable.encode
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(for req: Request) throws -> Future<Response> {
+        let res = req.makeResponse()
         try res.content.encode(self)
-        return .done
+        return Future(res)
     }
 
     /// See RequestDecodable.decode
