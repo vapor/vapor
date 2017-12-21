@@ -20,6 +20,7 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [HomeKitty](#homekitty) - a crowdsourced HomeKit database
 * [ServerSideSwift.racing](#serversideswiftracing) - growth statistics on popular server-side swift frameworks
 * [Vapor.berlin](#vaporberlin) - website to create and vote topics for the VaporBerlin meetup
+* [Leaderboard](#leaderboard) - A Slack app for tracking your office games. 
 
 # PDX Cocoaheads
 
@@ -237,4 +238,12 @@ Website to create and vote topics for the VaporBerlin meetup
 
 ### Site
 [Demo](http://vapor.berlin/#/)
+
+# Leaderboard
+
+A Slack app for tracking your office games.
+
+### Site
+[Demo](https://leaderboardapp.com)
+
 
