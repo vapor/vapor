@@ -47,11 +47,15 @@ extension FileManager {
     fileprivate func isDirectory(path: String) -> Bool {
         var isDirectory: ObjCBool = false
         _ = fileExists(atPath: path, isDirectory: &isDirectory)
-        #if os(Linux)
-            return isDirectory
-        #else
+	#if swift(>=4.1)
             return isDirectory.boolValue
-        #endif
+	#else
+	    #if os(Linux)
+                return isDirectory
+	    #else
+                return isDirectory.boolValue
+	    #endif
+	#endif
     }
 
     fileprivate func files(path: String) throws -> [String] {
