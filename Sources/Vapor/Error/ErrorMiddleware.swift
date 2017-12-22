@@ -3,7 +3,7 @@ import HTTP
 fileprivate let errorView = ErrorView()
 
 /// Catches errors and converts them into responses
-/// which a description of the error.
+/// with a description of the error.
 public final class ErrorMiddleware: Middleware {
     let log: LogProtocol
     let environment: Environment

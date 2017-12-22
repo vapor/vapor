@@ -1,10 +1,12 @@
 #if os(Linux)
 
 import XCTest
+import Testing
 @testable import CacheTests
 @testable import SessionsTests
 @testable import ConfigsTests
 @testable import VaporTests
+@testable import TestingTests
 
 XCTMain([
     // Cache
@@ -23,6 +25,7 @@ XCTMain([
     // Vapor
     testCase(ConfigIntegrationTests.allTests),
     testCase(VaporTests.ConfigTests.allTests),
+    testCase(CodableTests.allTests),
     testCase(ConsoleTests.allTests),
     testCase(ContentTests.allTests),
     testCase(CORSMiddlewareTests.allTests),
@@ -41,6 +44,9 @@ XCTMain([
     testCase(RoutingTests.allTests),
     testCase(RouteListTests.allTests),
     testCase(SessionsTests.allTests),
+
+    // Testing
+    testCase(ResponderTests.allTests),
 ])
 
 #endif

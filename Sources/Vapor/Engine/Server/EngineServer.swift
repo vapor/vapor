@@ -4,7 +4,7 @@ import Sockets
 import TLS
 
 /// TCP and TLS servers from engine
-/// wrappe dto conform to the Server Protocol
+/// wrapped to conform to the Server Protocol
 public final class EngineServer: ServerProtocol {
     public let server: Server
 
