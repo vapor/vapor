@@ -80,6 +80,11 @@ let envOption = Option(name: "env", help: [
     "Ex: prod, dev, test, my-custom-env"
 ], default: nil)
 
+let portOption = Option(name: "port", help: [
+    "Changes the port"
+], default: nil)
+
+
 /// Wraps all vapor commands and adds support
 /// for the `--env` flag which is resolved outside
 /// of this module
@@ -94,7 +99,7 @@ internal struct VaporCommandWrapper: Command {
 
     /// See Runnable.options
     var options: [Option] {
-        return subCommand.options + [envOption]
+        return subCommand.options + [envOption, portOption]
     }
 
     /// See Runnable.help
