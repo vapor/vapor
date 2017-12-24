@@ -63,7 +63,7 @@ public struct CommandConfig {
         }
         return BasicCommandGroup(
             commands: commands,
-            options: [envOption],
+            options: [envOption, portOption],
             help: ["Runs your Vapor application's commands"]
         ) { console, input in
             if let lazy = self.defaultRunnable {
@@ -99,7 +99,7 @@ internal struct VaporCommandWrapper: Command {
 
     /// See Runnable.options
     var options: [Option] {
-        return subCommand.options + [envOption, portOption]
+        return subCommand.options + [envOption]
     }
 
     /// See Runnable.help
