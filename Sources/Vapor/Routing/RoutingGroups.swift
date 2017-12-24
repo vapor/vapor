@@ -75,7 +75,7 @@ extension Router {
         return RouteGroup(cascadingTo: self, components: path)
     }
     
-    /// Returns a group cascading to router with middleware attached
+    /// Returns a RouteGroup cascading to router with middleware attached
     ///
     ///
     /// **Example:**
@@ -85,8 +85,8 @@ extension Router {
     ///
     /// // creating new group on router
     /// let users = router.group("user")
-    ///   .validate(userMustBeAuthorized)
-    ///   .validate(userMustBeCurrentUser)
+    ///     .beforeEach(userMustBeAuthorized)
+    ///     .beforeEach(userMustBeCurrentUser) 
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -98,7 +98,7 @@ extension Router {
     ///
     /// - Parameter middleware: Middleware
     /// - Returns: RouterGroup with middleware attached
-    public func validate(_ middleware: Middleware...) -> RouteGroup {
+    public func beforeEach(_ middleware: Middleware...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }
     
@@ -117,8 +117,8 @@ extension Router {
     ///
     /// // creating new group on router
     /// let users = router.group("user")
-    ///   .validate(userMustBeAuthorized)
-    ///   .validate(userMustBeCurrentUser)
+    ///     .beforeEach(userMustBeAuthorized)
+    ///     .beforeEach(userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -131,7 +131,7 @@ extension Router {
     /// - Parameter validator: `(request: Request, next: Responder) throws -> Future<Response>`
     ///
     /// - Returns: RouterGroup with validator attached
-    public func validate(_ validator: @escaping Validator) -> RouteGroup {
+    public func beforeEach(_ validator: @escaping Validator) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(validator)])
     }
 
