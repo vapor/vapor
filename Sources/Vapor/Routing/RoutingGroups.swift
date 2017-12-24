@@ -48,8 +48,8 @@ public final class RouteGroup: Router {
 
 extension Router {
     
-    /// Validation of `Request` than return `Response` wrapped in `Future` using `Responder`
-    public typealias Validator  = (Request, Responder) throws -> Future<Response>
+    /// Closure of `Request` than return `Response` wrapped in `Future` using `Responder`
+    public typealias Closure  = (Request, Responder) throws -> Future<Response>
     
     /// Creates a group cascading to router or group with the provided path components
     ///
@@ -102,7 +102,7 @@ extension Router {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }
     
-    /// Returns a group cascading to router with validator attached
+    /// Returns a group cascading to router with closure attached
     ///
     ///
     /// **Example:**
@@ -128,11 +128,11 @@ extension Router {
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
     ///
-    /// - Parameter validator: `(request: Request, next: Responder) throws -> Future<Response>`
+    /// - Parameter closure: `(request: Request, next: Responder) throws -> Future<Response>`
     ///
-    /// - Returns: RouterGroup with validator attached
-    public func beforeEach(_ validator: @escaping Validator) -> RouteGroup {
-        return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(validator)])
+    /// - Returns: RouterGroup with closure attached
+    public func beforeEach(_ closure: @escaping Router.Closure) -> RouteGroup {
+        return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(closure)])
     }
 
 }
