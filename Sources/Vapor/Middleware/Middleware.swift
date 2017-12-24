@@ -2,6 +2,22 @@ public protocol Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }
 
+
+/// Wrapper to create Middleware from function
+public final class MiddlewareFunction: Middleware {
+    typealias Respond = (Request, Responder) throws -> Future<Response>
+    private let respond: Respond
+    
+    init(_ function: @escaping Respond) {
+        self.respond = function
+    }
+    
+    public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+        return try self.respond(request,next)
+    }
+    
+}
+
 /// A wrapper that applies the supplied middleware to a responder.
 ///
 /// Note: internal since it is exposed through `makeResponder` extensions.

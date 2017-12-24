@@ -13,10 +13,10 @@ import Routing
 public final class RouteGroup: Router {
     /// All routes registered to this group
     public private(set) var routes: [Route<Responder>] = []
-
+    
     let `super`: Router
-    let components: [PathComponent]
-    let middleware: [Middleware]
+    public let components: [PathComponent]
+    public let middleware: [Middleware]
     
     /// Creates a new group
     ///
@@ -47,31 +47,92 @@ public final class RouteGroup: Router {
 }
 
 extension Router {
-    /// Creates a group with the provided path components and hands it to the closure
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
-    public func group(_ path: PathComponent..., use: ((RouteGroup) -> ())) {
-        use(RouteGroup(cascadingTo: self, components: path))
-    }
     
-    /// Creates a group with the provided path components
+    /// Validation of `Request` than return `Response` wrapped in `Future` using `Responder`
+    public typealias Validator  = (Request, Responder) throws -> Future<Response>
+    
+    /// Creates a group cascading to router or group with the provided path components
+    ///
+    ///
+    /// **Example:**
+    /// ```
+    /// // creating new group on router
+    /// let users = router.group("user")
+    ///
+    /// // adding "user/auth/" route to router
+    /// users.get("auth", use: userAuthHandler)
+    ///
+    /// // adding "user/profile/" route to router
+    /// users.get("profile", use: userProfileHandler)
+    ///
+    /// ```
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
-    public func grouped(_ path: PathComponent...) -> RouteGroup {
+    ///
+    /// - Parameter path: Group path components separated by commas
+    /// - Returns: created RouteGroup
+    public func group(_ path: PathComponent...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, components: path)
     }
     
-    /// Creates a group with the provided middleware and hands it to the closure
+    /// Returns a group cascading to router with middleware attached
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#middleware)
-    public func group(_ middleware: Middleware..., use: ((RouteGroup) -> ())) {
-        use(RouteGroup(cascadingTo: self, middleware: middleware))
-    }
-    
-    /// Creates a group with the provided middleware
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#middleware)
-    public func grouped(_ middleware: Middleware...) -> RouteGroup {
+    /// **Example:**
+    /// ```
+    /// let userMustBeAuthorized = UserMustBeAuthorizedMiddleware(....)
+    /// let currentUser = CheckIfCurrentUserMiddleware(....)
+    ///
+    /// // creating new group on router
+    /// let users = router.group("user")
+    ///   .validate(userMustBeAuthorized)
+    ///   .validate(userMustBeCurrentUser)
+    ///
+    /// // adding "user/profile/" route to router
+    /// // both of validations applied
+    /// users.get("auth", use: userAuthHandler)
+    ///
+    /// ```
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
+    ///
+    /// - Parameter middleware: Middleware
+    /// - Returns: RouterGroup with middleware attached
+    public func validate(_ middleware: Middleware...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }
+    
+    /// Returns a group cascading to router with validator attached
+    ///
+    ///
+    /// **Example:**
+    /// ```
+    /// let userMustBeAuthorized = { req, next in
+    ///     return try userService.authorized(user)
+    /// }
+    ///
+    /// let currentUser  = { req, next in
+    ///     return try userService.isCurrentUser(req)
+    /// }
+    ///
+    /// // creating new group on router
+    /// let users = router.group("user")
+    ///   .validate(userMustBeAuthorized)
+    ///   .validate(userMustBeCurrentUser)
+    ///
+    /// // adding "user/profile/" route to router
+    /// // both of validations applied
+    /// users.get("auth", use: userAuthHandler)
+    ///
+    /// ```
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
+    ///
+    /// - Parameter validator: `(request: Request, next: Responder) throws -> Future<Response>`
+    ///
+    /// - Returns: RouterGroup with validator attached
+    public func validate(_ validator: @escaping Validator) -> RouteGroup {
+        return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(validator)])
+    }
+
 }
