@@ -75,6 +75,8 @@ public final class EngineServer: Server {
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
+        
+        try tcpServer.start(hostname: config.hostname, port: config.port, backlog: config.backlog)
     }
 
     private func startSSL<EngineWorker: Worker & HTTPResponder>(workers: [EngineWorker], accept: EventLoop, ssl: EngineServerSSLConfig) throws {
@@ -104,6 +106,8 @@ public final class EngineServer: Server {
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
+        
+        try tcpServer.start(hostname: ssl.hostname, port: ssl.port, backlog: ssl.backlog)
     }
 }
 
