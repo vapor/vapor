@@ -77,16 +77,15 @@ extension Router {
     
     /// Returns a RouteGroup cascading to router with middleware attached
     ///
-    ///
     /// **Example:**
     /// ```
-    /// let userMustBeAuthorized = UserMustBeAuthorizedMiddleware(....)
+    /// let userMustBeAuthorized = AuthorizationMiddleware(....)
     /// let currentUser = CheckIfCurrentUserMiddleware(....)
     ///
     /// // creating new group on router
     /// let users = router.group("user")
-    ///     .beforeEach(userMustBeAuthorized)
-    ///     .beforeEach(userMustBeCurrentUser) 
+    ///     .using(AuthorizationMiddleware)
+    ///     .using(userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -98,7 +97,7 @@ extension Router {
     ///
     /// - Parameter middleware: Middleware
     /// - Returns: RouterGroup with middleware attached
-    public func beforeEach(_ middleware: Middleware...) -> RouteGroup {
+    public func using(_ middleware: Middleware...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }
     
@@ -117,8 +116,8 @@ extension Router {
     ///
     /// // creating new group on router
     /// let users = router.group("user")
-    ///     .beforeEach(userMustBeAuthorized)
-    ///     .beforeEach(userMustBeCurrentUser)
+    ///     .using(userMustBeAuthorized)
+    ///     .using(userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -131,7 +130,7 @@ extension Router {
     /// - Parameter closure: `(request: Request, next: Responder) throws -> Future<Response>`
     ///
     /// - Returns: RouterGroup with closure attached
-    public func beforeEach(_ closure: @escaping Router.Closure) -> RouteGroup {
+    public func using(_ closure: @escaping Router.Closure) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(closure)])
     }
 
