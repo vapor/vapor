@@ -12,26 +12,26 @@ public final class DataEncoder {
     }
 
     /// Encodes the object to data
-    public func encode<E>(_ encodable: E) throws -> Data
+    public func encode<E>(_ encodable: E) throws -> HTTPBody
         where E: Encodable
     {
         try encodable.encode(to: encoder)
-        guard let data = encoder.data else {
+        guard let body = encoder.body else {
             throw VaporError(identifier: "encoding-failed", reason: "An unknown error caused the data not to be encoded")
         }
-        return data
+        return body
     }
 }
 
 fileprivate final class _DataEncoder: Encoder {
     public var codingPath: [CodingKey]
     public var userInfo: [CodingUserInfoKey: Any]
-    public var data: Data?
+    public var body: HTTPBody?
 
     public init() {
         self.codingPath = []
         self.userInfo = [:]
-        self.data = nil
+        self.body = nil
     }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
@@ -60,23 +60,29 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
     }
 
     func encodeNil() throws {
-        encoder.data = nil
+        encoder.body = nil
     }
 
     func encode(_ value: Bool) throws {
-        encoder.data = value.description.data(using: .utf8)
+        if let data = value.description.data(using: .utf8) {
+            encoder.body = HTTPBody(data)
+        }
     }
 
     func encode(_ value: Int) throws {
-        encoder.data = value.description.data(using: .utf8)
+        if let data = value.description.data(using: .utf8) {
+            encoder.body = HTTPBody(data)
+        }
     }
 
     func encode(_ value: Double) throws {
-        encoder.data = value.description.data(using: .utf8)
+        if let data = value.description.data(using: .utf8) {
+            encoder.body = HTTPBody(data)
+        }
     }
 
     func encode(_ value: String) throws {
-        encoder.data = value.description.data(using: .utf8)
+        encoder.body = HTTPBody(string: value)
     }
 
     func encode(_ value: Int8) throws {
@@ -121,7 +127,7 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
 
     func encode<T: Encodable>(_ value: T) throws {
         if let data = value as? Data {
-            encoder.data = data
+            encoder.body = HTTPBody(data)
         } else {
             try value.encode(to: encoder)
         }
@@ -131,9 +137,7 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
 /// MARK: Content
 
 extension DataEncoder: BodyEncoder {
-    /// See BodyEncoder.encode
-    public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T: Encodable {
-        let data = try encode(encodable)
-        return HTTPBody(data)
+    public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T : Encodable {
+        return try self.encode(encodable)
     }
 }
