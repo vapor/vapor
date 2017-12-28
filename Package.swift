@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        .library(name: "Vapor", targets: ["Validation", "Vapor"]),
+        .library(name: "Vapor", targets: ["Validation", "Vapor", "Testing"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
@@ -63,8 +63,11 @@ let package = Package(
             "TLS",
             tlsImpl,
             "ServerSecurity",
-             "WebSocket",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+
+        .target(name: "Testing", dependencies: ["Vapor"]),
+        .testTarget(name: "TestingTests", dependencies: ["Testing"]),
     ]
 )

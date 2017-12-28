@@ -51,6 +51,15 @@ public final class Request: EphemeralContainer, ParameterContainer {
         }
     }
     
+    public var cookies: Cookies {
+        get {
+            return http.cookies
+        }
+        set {
+            http.cookies = newValue
+        }
+    }
+    
     /// See `Message.version`
     public var version: HTTPVersion {
         get {
