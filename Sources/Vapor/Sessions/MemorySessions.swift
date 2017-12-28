@@ -2,7 +2,6 @@ import Crypto
 
 /// Simple in-memory sessions implementation.
 public final class MemorySessions: Sessions {
-
     /// The internal storage.
     private var sessions: [String: Session]
 
@@ -18,31 +17,28 @@ public final class MemorySessions: Sessions {
         sessions = [:]
     }
 
-    /// See Sessions.createSession
-    public func createSession() throws -> Session {
-        var cookie = cookieFactory()
-        /// FIXME: optimize
-        let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
-        cookie.value = String(data: random, encoding: .utf8)!
-        return Session(from: cookie)
-    }
-
     /// See Sessions.readSession
-    public func readSession(for cookie: Cookie.Value) throws -> Session {
-        guard let session = sessions[cookie.value] else {
-            throw VaporError(identifier: "invalidSession", reason: "No session with that identifier was found.")
-        }
-
-        return session
-    }
-
-    /// See Sessions.updateSession
-    public func updateSession(_ session: Session) {
-        sessions[session.cookie.value] = session
+    public func readSession(for cookie: Cookie.Value) throws -> Session? {
+        return sessions[cookie.value]
     }
 
     /// See Sessions.destroySession
-    public func destroySession(_ session: Session) throws {
-        sessions[session.cookie.value] = nil
+    public func destroySession(for cookie: Cookie.Value) throws {
+        sessions[cookie.value] = nil
+    }
+
+    /// See Sessions.updateSession
+    public func updateSession(_ session: Session) throws -> Cookie.Value {
+        var cookie: Cookie.Value
+        if let existing = session.cookie {
+            cookie = existing
+        } else {
+            cookie = cookieFactory()
+            /// FIXME: optimize
+            let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
+            cookie.value = String(data: random, encoding: .utf8)!
+        }
+        sessions[cookie.value] = session
+        return cookie
     }
 }

@@ -28,6 +28,10 @@ extension Services {
         services.register { container in
             return EngineServerConfig()
         }
+
+        services.register { container in
+            return SessionCache()
+        }
         
 //        services.register { container in
 //            return SSLClientSettings()

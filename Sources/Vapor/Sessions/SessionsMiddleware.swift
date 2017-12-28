@@ -14,25 +14,24 @@ public final class SessionsMiddleware<S>: Middleware where S: Sessions {
     
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let session: Session
+        /// create a session cache
+        let cache = try request.privateContainer.make(SessionCache.self, for: SessionsMiddleware<S>.self)
 
-        let cookieName = self.cookieName
+        /// check for an existing session
         if let cookieValue = request.http.cookies[cookieName] {
-            session = try sessions.readSession(for: cookieValue)
-        } else {
-            let cookieValue = try sessions.createSession()
-            session = cookieValue
+            cache.session = try sessions.readSession(for: cookieValue)
         }
 
-        let cache = try request.privateContainer.make(SessionCache.self, for: SessionsMiddleware<S>.self)
-        cache.session = session
-
+        /// generate a response for the request
         return try next.respond(to: request).map(to: Response.self) { res in
-            if session.isValid {
-                res.http.cookies[cookieName] = session.cookie
-                try self.sessions.updateSession(session)
-            } else {
-                try self.sessions.destroySession(session)
+            if let session = cache.session {
+                /// a session exists or has been created. we must
+                /// set a cookie value on the response
+                res.http.cookies[self.cookieName] = try self.sessions.updateSession(session)
+            } else if let cookieValue = request.http.cookies[self.cookieName] {
+                /// the request had a session cookie, but now there is no session.
+                /// we need to perform cleanup.
+                try self.sessions.destroySession(for: cookieValue)
             }
 
             return res
@@ -43,19 +42,16 @@ public final class SessionsMiddleware<S>: Middleware where S: Sessions {
 /// MARK: Request
 
 extension Request {
-    /// Returns the current session. `nil` if no session exists.
-    public func session() throws -> Session? {
+    /// Returns the current session or creates one. `nil` if no session exists.
+    public func session() throws -> Session {
         let cache = try privateContainer.make(SessionCache.self, for: Request.self)
-        return cache.session
+        return cache.session ?? Session()
     }
 
-    /// Returns the current session, throwing an error if no session exists.
-    public func requireSession() throws -> Session {
-        guard let session = try self.session() else {
-            throw VaporError(identifier: "noSession", reason: "A session is required.")
-        }
-
-        return session
+    /// Destroys the current session, if one exists.
+    public func destroySession() throws {
+        let cache = try privateContainer.make(SessionCache.self, for: Request.self)
+        cache.session = nil
     }
 }
 
