@@ -6,7 +6,9 @@ public final class MemorySessions: Sessions {
     private var sessions: [String: Session]
 
     /// Generates a new cookie.
-    public typealias CookieFactory = () -> (Cookie.Value)
+    /// Accepts the cookie's string value and returns an
+    /// initialized cookie value.
+    public typealias CookieFactory = (String) -> (Cookie.Value)
 
     /// This middleware's cookie factory.
     private var cookieFactory: CookieFactory
@@ -29,14 +31,13 @@ public final class MemorySessions: Sessions {
 
     /// See Sessions.updateSession
     public func updateSession(_ session: Session) throws -> Cookie.Value {
-        var cookie: Cookie.Value
+        let cookie: Cookie.Value
         if let existing = session.cookie {
             cookie = existing
         } else {
-            cookie = cookieFactory()
             /// FIXME: optimize
             let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
-            cookie.value = String(data: random, encoding: .utf8)!
+            cookie = cookieFactory(String(data: random, encoding: .utf8)!)
         }
         sessions[cookie.value] = session
         return cookie
