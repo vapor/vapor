@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        .library(name: "Vapor", targets: ["Validation", "Vapor", "Testing"]),
+        .library(name: "Vapor", targets: ["Validation", "Vapor"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
@@ -66,8 +66,5 @@ let package = Package(
             "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
-
-        .target(name: "Testing", dependencies: ["Vapor"]),
-        .testTarget(name: "TestingTests", dependencies: ["Testing"]),
     ]
 )
