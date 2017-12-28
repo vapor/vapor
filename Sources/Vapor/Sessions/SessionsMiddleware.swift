@@ -15,7 +15,7 @@ public final class SessionsMiddleware<S>: Middleware where S: Sessions {
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         /// create a session cache
-        let cache = try request.privateContainer.make(SessionCache.self, for: SessionsMiddleware<S>.self)
+        let cache = try request.privateContainer.make(SessionCache.self, for: Request.self)
 
         /// check for an existing session
         if let cookieValue = request.http.cookies[cookieName] {
