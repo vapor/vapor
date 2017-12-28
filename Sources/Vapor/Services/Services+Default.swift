@@ -29,7 +29,7 @@ extension Services {
             return EngineServerConfig()
         }
 
-        services.register { container in
+        services.register(isSingleton: true) { container in
             return SessionCache()
         }
         
