@@ -49,6 +49,7 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
+    middlewareConfig.use(SessionsMiddleware.self)
     services.instance(middlewareConfig)
 
 
@@ -58,6 +59,22 @@ do {
     let app = try Application(services: services)
 
     let router = try app.make(Router.self)
+
+    router.get("set") { req -> String in
+        let session = try req.session()
+        session["foo"] = "bar"
+        return "done"
+    }
+
+    router.get("get") { req -> String  in
+        let session = try req.session()
+        return session["foo"] ?? "none"
+    }
+
+    router.get("del") { req -> String  in
+        try req.destroySession()
+        return "deleted"
+    }
 
     router.get("example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)

@@ -1,4 +1,5 @@
 import Crypto
+import Foundation
 
 /// Simple in-memory sessions implementation.
 public final class MemorySessions: Sessions {
@@ -16,7 +17,18 @@ public final class MemorySessions: Sessions {
     /// MemorySession with basic cookie factory.
     public static func `default`() -> MemorySessions {
         return .init { value in
-            return Cookie.Value(value: value)
+            return Cookie.Value(
+                value: value,
+                expires: Date(
+                    timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
+                ),
+                maxAge: nil,
+                domain: nil,
+                path: "/",
+                secure: false,
+                httpOnly: false,
+                sameSite: nil
+            )
         }
     }
 

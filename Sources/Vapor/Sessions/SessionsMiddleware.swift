@@ -33,7 +33,7 @@ public final class SessionsMiddleware: Middleware {
                 /// we need to perform cleanup.
                 try self.sessions.destroySession(for: cookieValue)
             }
-
+            print(res.http)
             return res
         }
     }
@@ -45,7 +45,13 @@ extension Request {
     /// Returns the current session or creates one. `nil` if no session exists.
     public func session() throws -> Session {
         let cache = try privateContainer.make(SessionCache.self, for: Request.self)
-        return cache.session ?? Session()
+        if let existing = cache.session {
+            return existing
+        } else {
+            let new = Session()
+            cache.session = new
+            return new
+        }
     }
 
     /// Destroys the current session, if one exists.
