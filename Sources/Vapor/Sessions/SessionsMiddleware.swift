@@ -1,3 +1,5 @@
+import Foundation
+
 /// Checks the cookies for each `Request`
 public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
@@ -32,8 +34,17 @@ public final class SessionsMiddleware: Middleware {
                 /// the request had a session cookie, but now there is no session.
                 /// we need to perform cleanup.
                 try self.sessions.destroySession(for: cookieValue)
+                res.http.cookies[self.cookieName] = Cookie.Value(
+                    value: "",
+                    expires: Date(timeIntervalSince1970: 0),
+                    maxAge: nil,
+                    domain: nil,
+                    path: nil,
+                    secure: false,
+                    httpOnly: false,
+                    sameSite: nil
+                )
             }
-            print(res.http)
             return res
         }
     }

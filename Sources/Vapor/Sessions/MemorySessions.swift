@@ -58,6 +58,7 @@ public final class MemorySessions: Sessions {
             let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
             cookie = cookieFactory(String(data: random, encoding: .utf8)!)
         }
+        session.cookie = cookie
         sessions[cookie.value] = session
         return cookie
     }
