@@ -1,14 +1,14 @@
 /// Checks the cookies for each `Request`
-public final class SessionsMiddleware<S>: Middleware where S: Sessions {
+public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
     let cookieName: String
     
     /// Creates new cookies
-    public let sessions: S
+    public let sessions: Sessions
     
-    /// Creates a new `SessionCookieMiddleware` that can validate `Request`s
-    public init(cookie: String, sessions: S) {
-        self.cookieName = cookie
+    /// Creates a new `SessionsMiddleware`.
+    public init(cookieName: String, sessions: Sessions) {
+        self.cookieName = cookieName
         self.sessions = sessions
     }
     

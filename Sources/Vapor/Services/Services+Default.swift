@@ -29,8 +29,18 @@ extension Services {
             return EngineServerConfig()
         }
 
+        // sessions
         services.register(isSingleton: true) { container in
             return SessionCache()
+        }
+        services.register { container in
+            return try SessionsMiddleware(
+                cookieName: "vapor-session",
+                sessions: container.make(for: SessionsMiddleware.self)
+            )
+        }
+        services.register(Sessions.self) { container in
+            return MemorySessions.default()
         }
         
 //        services.register { container in

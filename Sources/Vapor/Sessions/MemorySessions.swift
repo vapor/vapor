@@ -13,6 +13,13 @@ public final class MemorySessions: Sessions {
     /// This middleware's cookie factory.
     private var cookieFactory: CookieFactory
 
+    /// MemorySession with basic cookie factory.
+    public static func `default`() -> MemorySessions {
+        return .init { value in
+            return Cookie.Value(value: value)
+        }
+    }
+
     /// Create a new `MemorySessions` with the supplied cookie factory.
     public init(cookieFactory: @escaping CookieFactory) {
         self.cookieFactory = cookieFactory
