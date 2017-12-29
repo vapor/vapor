@@ -68,7 +68,7 @@ extension ContentContainer {
     public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> D?
         where D: Decodable
     {
-        return try get(at: keyPath)
+        return try? get(at: keyPath)
     }
 
     /// Convenience for accessing a single value from the content
