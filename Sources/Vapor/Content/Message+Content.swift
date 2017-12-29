@@ -11,7 +11,7 @@ public struct ContentContainer {
 extension ContentContainer {
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
-    public func encode<C: Content>(_ content: C) throws {
+    public func encode<C>(_ content: C) throws where C: Content {
         let encoder = try requireEncoder(for: C.defaultMediaType)
         let body = try encoder.encodeBody(from: content)
         update(body, C.defaultMediaType)
@@ -19,14 +19,14 @@ extension ContentContainer {
 
     /// Serializes the supplied content to this message.
     /// Uses the Content's default media type if none is supplied.
-    public func encode<E: Encodable>(_ encodable: E, as mediaType: MediaType) throws {
+    public func encode<E>(_ encodable: E, as mediaType: MediaType) throws where E: Encodable {
         let encoder = try requireEncoder(for: mediaType)
         let body = try encoder.encodeBody(from: encodable)
         update(body, mediaType)
     }
     
     /// Parses the supplied content from the mesage.
-    public func decode<D: Decodable>(_ content: D.Type) throws -> D {
+    public func decode<D>(_ content: D.Type) throws -> D where D: Decodable {
         let decoder = try requireDecoder()
         return try decoder.decode(D.self, from: body)
     }
@@ -68,7 +68,7 @@ extension ContentContainer {
     public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> D?
         where D: Decodable
     {
-        return try? get(at: keyPath)
+        return try get(at: keyPath)
     }
 
     /// Convenience for accessing a single value from the content
