@@ -80,11 +80,7 @@ extension Services {
 
         // register middleware
         services.register { container -> MiddlewareConfig in
-            var config = MiddlewareConfig()
-            config.use(FileMiddleware.self)
-            config.use(DateMiddleware.self)
-            config.use(ErrorMiddleware.self)
-            return config
+            return MiddlewareConfig.default()
         }
 
         services.register { container -> FileMiddleware in
