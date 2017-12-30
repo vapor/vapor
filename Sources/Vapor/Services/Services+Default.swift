@@ -138,22 +138,23 @@ extension Services {
         services.register(Console.self) { container in
             return Terminal()
         }
-        services.register(Responder.self) { container in
-            return try RouterResponder(
+        services.register(Responder.self) { container -> Responder in
+            let middleware = try container
+                .make(MiddlewareConfig.self, for: ServeCommand.self)
+                .resolve(for: container)
+
+            let router = try RouterResponder(
                 router: container.make(for: Responder.self)
             )
+            return middleware.makeResponder(chainedto: router)
         }
 
         services.register { worker -> ServeCommand in
             let responder = try worker.make(Responder.self, for: ServeCommand.self)
 
-            let middleware = try worker
-                .make(MiddlewareConfig.self, for: ServeCommand.self)
-                .resolve(for: worker)
-
             return try ServeCommand(
                 server: worker.make(for: ServeCommand.self),
-                responder: middleware.makeResponder(chainedto: responder)
+                responder: responder
             )
         }
         services.register { container -> CommandConfig in
