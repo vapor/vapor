@@ -29,6 +29,12 @@ class MockRouter: Router {
     }
 }
 
+class FakeMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+        return try next.respond(to: request)
+    }
+}
+
 /// Equatable
 // FIXME: move to Engine
 

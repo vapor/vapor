@@ -5,10 +5,66 @@ import XCTest
 
 class RoutingTests : XCTestCase {
     
-    func testGroupContainsRoute() {
+    func testGroup() {
         let router = MockRouter()
         let sut = router.group("test")
-        XCTAssertTrue(sut.components.contains(where: { $0 == "test"}))
+        XCTAssertNotNil(sut) // test that there is no error
+    }
+    
+    func testGroupConfigure() {
+        let sut = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
+        sut.grouped(with: "") { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
+        }
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func testUsingMiddlewareAsFunction() {
+        let router = MockRouter()
+        let sut = router.using({ req, next in
+            return try next.respond(to: req)
+        })
+        XCTAssertNotNil(sut) // test that there is no error
+    }
+    
+    func testUsingMiddleware() {
+        let router = MockRouter()
+        let sut = router.using(FakeMiddleware())
+        XCTAssertNotNil(sut) // test that there is no error
+    }
+    
+    func testUsingMiddlewareAsFunctionWithConfiguration() {
+        let router = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
+        let midfunc: MiddlewareFunction.Respond = { req, next in
+            return try next.respond(to: req)
+        }
+        router.using(midfunc) { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
+    }
+    
+    func testUsingMiddlewareWithConfiguration() {
+        let router = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
+        
+        router.using(FakeMiddleware()) { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
+        }
+        
+        wait(for: [exp], timeout: 1)
     }
     
     // FIXME: We need more testable router

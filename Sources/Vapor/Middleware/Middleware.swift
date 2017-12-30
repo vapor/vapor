@@ -5,7 +5,9 @@ public protocol Middleware {
 
 /// Wrapper to create Middleware from function
 public final class MiddlewareFunction: Middleware {
-    typealias Respond = (Request, Responder) throws -> Future<Response>
+    /// Closure of `Request` than return `Response` wrapped in `Future` using `Responder`
+    public typealias Respond = (Request, Responder) throws -> Future<Response>
+    
     private let respond: Respond
     
     init(_ function: @escaping Respond) {
