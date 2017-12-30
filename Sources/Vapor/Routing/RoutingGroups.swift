@@ -187,23 +187,20 @@ extension Router {
     public func using(_ respond: @escaping MiddlewareFunction.Respond) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)])
     }
-
+    
     
     /// Ataches RouteGroup cascading to router with middleware attached
     /// and call configuaration function with new group provided
     /// **Example:**
     /// ```
-    /// let userMustBeAuthorized = { req, next in
-    ///     return try userService.authorized(user)
-    /// }
+    ///    func userMustBeAuthorized(request: Request, next: Responder) throws -> Future<Response> {
+    ///        return try userService.authorized(user)
+    ///    }
     ///
-    /// // creating new group on router
-    /// router.using(userMustBeAuthorized) { group in
-    ///
-    ///         // adding "user/profile/" route to router
-    ///         // AuthorizationMiddleware is applied
-    ///         group.get("profile", use: userProfileHandler)
-    ///     }
+    ///    // use functioan as a middleware
+    ///    router.use(userMustBeAuthorized) { group in
+    ///        group.get("profile", use: userProfileHandler)
+    ///    }
     /// ```
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
