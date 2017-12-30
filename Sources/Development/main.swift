@@ -60,6 +60,10 @@ do {
 
     let router = try app.make(Router.self)
 
+    router.get("search") { req -> String in
+        return try req.query.get(String.self, at: ["query"])
+    }
+
     router.get("hash", String.parameter) { req -> String in
         let string = try req.parameter(String.self)
         return try req.make(BCryptHasher.self).make(string)
