@@ -43,7 +43,7 @@ class RoutingTests : XCTestCase {
         let midfunc: MiddlewareFunction.Respond = { req, next in
             return try next.respond(to: req)
         }
-        router.using(midfunc) { group in
+        router.use(midfunc) { group in
             group.get("") { _ in
                 return Future("test")
             }
