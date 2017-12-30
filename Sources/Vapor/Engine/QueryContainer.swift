@@ -44,6 +44,13 @@ extension QueryContainer {
     }
 
     /// Convenience for accessing a single value from the content
+    public func get<D>(_ type: D.Type = D.self, at keyPath: BasicKeyRepresentable...) throws -> D
+        where D: Decodable
+    {
+        return try get(at: keyPath)
+    }
+
+    /// Convenience for accessing a single value from the content
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {

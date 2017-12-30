@@ -50,15 +50,24 @@ do {
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
     middlewareConfig.use(SessionsMiddleware.self)
-    services.instance(middlewareConfig)
+    services.use(middlewareConfig)
 
 
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
-    services.instance(dir)
+    services.use(dir)
 
-    let app = try Application(services: services)
+    let app = try Application(environment: .detect(), services: services)
 
     let router = try app.make(Router.self)
+
+    router.get("search") { req -> String in
+        return try req.query.get(String.self, at: ["query"])
+    }
+
+    router.get("hash", String.parameter) { req -> String in
+        let string = try req.parameter(String.self)
+        return try req.make(BCryptHasher.self).make(string)
+    }
 
     router.get("set") { req -> String in
         let session = try req.session()
