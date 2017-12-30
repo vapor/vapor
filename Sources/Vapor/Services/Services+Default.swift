@@ -29,6 +29,21 @@ extension Services {
             return EngineServerConfig()
         }
 
+        // bcrypt
+        services.register { container -> BCryptHasher in
+            let cost: UInt
+
+            switch container.environment {
+            case .production: cost = 12
+            default: cost = 4
+            }
+            
+            return BCryptHasher(
+                version: .two(.y),
+                cost: cost
+            )
+        }
+
         // sessions
         services.register(isSingleton: true) { container in
             return SessionCache()
