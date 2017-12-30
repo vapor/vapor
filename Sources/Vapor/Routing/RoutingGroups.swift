@@ -198,7 +198,7 @@ extension Router {
     ///    }
     ///
     ///    // use functioan as a middleware
-    ///    router.use(userMustBeAuthorized) { group in
+    ///    router.using(userMustBeAuthorized) { group in
     ///        group.get("profile", use: userProfileHandler)
     ///    }
     /// ```
@@ -208,7 +208,7 @@ extension Router {
     ///   - respond: respond: `(request: Request, next: Responder) throws -> Future<Response>`
     ///   - configure: Group configuration function
     ///
-    public func use(_ respond: @escaping MiddlewareFunction.Respond, configure: (RouteGroup) -> ()) {
+    public func using(_ respond: @escaping MiddlewareFunction.Respond, configure: (RouteGroup) -> ()) {
         configure(RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)]))
     }
 }
