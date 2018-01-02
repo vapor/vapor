@@ -56,6 +56,7 @@ public final class EngineClient: Client {
                     let client = HTTPClient(
                         source: source,
                         sink: sink,
+                        worker: self.container,
                         maxResponseSize: self.config.maxResponseSize
                     )
                     req.http.headers[.host] = req.http.uri.hostname
@@ -78,6 +79,7 @@ public final class EngineClient: Client {
                 let client = HTTPClient(
                     source: source,
                     sink: sink,
+                    worker: self.container,
                     maxResponseSize: self.config.maxResponseSize
                 )
                 req.http.headers[.host] = req.http.uri.hostname
