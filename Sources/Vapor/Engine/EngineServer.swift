@@ -299,12 +299,15 @@ public struct EngineServerConfig {
 }
 
 extension EngineServerConfig {
-    public static func heroku(port: UInt16=8080) -> EngineServerConfig {
+    /// Creates server config for use with Heroku.
+    /// Heroku requires that the port be set to $PORT
+    /// and the hostname be 0.0.0.0
+    public static func heroku() -> EngineServerConfig {
         if let portString = ProcessInfo.processInfo.environment["PORT"],
             let customPort = UInt16(portString) {
             return EngineServerConfig(hostname: "0.0.0.0", port: customPort)
         }
-        return EngineServerConfig(hostname: "localhost", port: port)
+        return EngineServerConfig()
     }
 }
 
