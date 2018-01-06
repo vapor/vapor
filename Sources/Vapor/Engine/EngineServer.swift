@@ -297,3 +297,14 @@ public struct EngineServerConfig {
         // self.ssl = nil
     }
 }
+
+extension EngineServerConfig {
+    public static func heroku(port: UInt16=8080) -> EngineServerConfig {
+        if let portString = ProcessInfo.processInfo.environment["PORT"],
+            let customPort = UInt16(portString) {
+            return EngineServerConfig(hostname: "0.0.0.0", port: customPort)
+        }
+        return EngineServerConfig(hostname: "localhost", port: port)
+    }
+}
+
