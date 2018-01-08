@@ -2,7 +2,7 @@ import Async
 import Dispatch
 
 /// A stream containing an  responder.
-public final class ResponderStream: TransformingStream {
+public final class ResponderStream: TranscribingStream {
     /// See InputStream.Input
     public typealias Input = HTTPRequest
 
@@ -15,12 +15,6 @@ public final class ResponderStream: TransformingStream {
     /// Worker to pass onto incoming requests
     public let container: Container
 
-    /// Upstream HTTPRequest output stream
-    public var upstream: ConnectionContext?
-
-    /// Downstream HTTPResponse input stream
-    public var downstream: AnyInputStream<HTTPResponse>?
-
     /// Create a new response stream.
     /// The responses will be awaited on the supplied queue.
     public init(responder: Responder, using container: Container) {
@@ -29,7 +23,7 @@ public final class ResponderStream: TransformingStream {
     }
 
     /// See TransformingStream.transform
-    public func transform(_ httpRequest: HTTPRequest) -> Future<HTTPResponse> {
+    public func transcribe(_ httpRequest: HTTPRequest) -> Future<HTTPResponse> {
         return Future {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)
