@@ -4,37 +4,44 @@ public final class Session {
     public var cookie: Cookie.Value?
 
     /// This session's data
-    public var data: Encodable
+    public var data: SessionData
 
     /// Create a new session.
     public init() {
         cookie = nil
-        data = [:]
+        data = .init()
     }
 }
 
+/// Codable session data.
+public struct SessionData: Codable {
+    /// Session codable object storage.
+    public var storage: [String: Codable]
+
+    /// Create a new, empty session data.
+    public init() {
+        storage = [:]
+    }
+
+    /// See Decodable.init
+    public init(from decoder: Decoder) throws {
+        storage = try [String: Codable].init(from: decoder)
+    }
+
+    /// See Encodable.encode
+    public func encode(to encoder: Encoder) throws {
+        try storage.encode(to: encoder)
+    }
+}
 
 extension Session {
     /// Convenience [String: String] accessor.
     public subscript(_ key: String) -> String? {
         get {
-            let dict: [String: String]
-            if let existing = data as? [String: String] {
-                dict = existing
-            } else {
-                dict = [:]
-            }
-            return dict[key]
+            return data.storage[key] as? String
         }
         set {
-            var dict: [String: String]
-            if let existing = data as? [String: String] {
-                dict = existing
-            } else {
-                dict = [:]
-            }
-            dict[key] = newValue
-            data = dict
+            data.storage[key] = newValue
         }
     }
 }
