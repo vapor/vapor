@@ -162,14 +162,6 @@ extension Services {
             )
         }
 
-        // worker
-        services.register { container -> EphemeralWorkerConfig in
-            let config = EphemeralWorkerConfig()
-            config.add(Request.self)
-            config.add(Response.self)
-            return config
-        }
-
         // directory
         services.register { container -> DirectoryConfig in
             return DirectoryConfig.default()
