@@ -3,7 +3,7 @@ import Console
 import Foundation
 
 /// Displays all registered routes.
-public struct RoutesCommand: Command {
+public struct RoutesCommand: Command, Service {
     /// See Command.arguments
     public let arguments: [Argument] = []
 

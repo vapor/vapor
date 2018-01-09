@@ -2,7 +2,7 @@ import Routing
 
 /// Capable of registering responder routes and returning
 /// appropriate responders for a given request.
-public protocol Router: class {
+public protocol Router: class, Service {
     /// An array of routes that have been registered
     /// to this router.
     var routes: [Route<Responder>] { get }

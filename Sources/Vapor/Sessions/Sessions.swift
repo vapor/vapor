@@ -1,5 +1,5 @@
 /// Capable of managing CRUD operations for `Session`s.
-public protocol Sessions {
+public protocol Sessions: Service {
     /// Fetches a session for the supplied cookie value.
     func readSession(for cookie: Cookie.Value) throws -> Session?
 

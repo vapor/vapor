@@ -2,7 +2,7 @@ import Foundation
 import FormURLEncoded
 
 /// Configures which encoders/decoders to use for a given media type.
-public struct ContentConfig {
+public struct ContentConfig: Service {
     /// Configured encoders.
     var encoders: [MediaType: BodyEncoder]
 

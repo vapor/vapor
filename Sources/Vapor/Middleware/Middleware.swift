@@ -1,11 +1,11 @@
-public protocol Middleware {
+public protocol Middleware: Service {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }
 
 /// A wrapper that applies the supplied middleware to a responder.
 ///
 /// Note: internal since it is exposed through `makeResponder` extensions.
-internal final class MiddlewareResponder: Responder {
+public final class MiddlewareResponder: Responder, Service {
     /// The middleware to apply.
     let middleware: Middleware
 
@@ -19,7 +19,7 @@ internal final class MiddlewareResponder: Responder {
     }
 
     /// Responder conformance.
-    func respond(to req: Request) throws -> Future<Response> {
+    public func respond(to req: Request) throws -> Future<Response> {
         return try middleware.respond(to: req, chainingTo: chained)
     }
 }
@@ -29,7 +29,7 @@ internal final class MiddlewareResponder: Responder {
 
 extension Middleware {
     /// Converts a middleware into a responder by chaining it to an actual responder.
-    public func makeResponder(chainedTo responder: Responder) -> Responder {
+    public func makeResponder(chainedTo responder: Responder) -> MiddlewareResponder {
         return MiddlewareResponder(middleware: self, chained: responder)
     }
 }
@@ -38,12 +38,12 @@ extension Middleware {
 extension Array where Element == Middleware {
     /// Converts an array of middleware into a responder by
     /// chaining them to an actual responder.
-    public func makeResponder(chainedto responder: Responder) -> Responder {
+    public func makeResponder(chainedto responder: Responder) -> MiddlewareResponder {
         var responder = responder
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
         }
-        return responder
+        return responder as! MiddlewareResponder
     }
 }
 
@@ -51,11 +51,11 @@ extension Array where Element == Middleware {
 extension Array where Element: Middleware {
     /// Converts an array of middleware into a responder by
     /// chaining them to an actual responder.
-    public func makeResponder(chainedto responder: Responder) -> Responder {
+    public func makeResponder(chainedto responder: Responder) -> MiddlewareResponder {
         var responder = responder
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
         }
-        return responder
+        return responder as! MiddlewareResponder
     }
 }

@@ -3,7 +3,7 @@ import Service
 
 /// Configures application middleware.
 /// Middleware will be used in the order they are added.
-public struct MiddlewareConfig {
+public struct MiddlewareConfig: Service {
     /// Lazily initializes a middleware using container.
     typealias LazyMiddleware = (Container) throws -> Middleware
 

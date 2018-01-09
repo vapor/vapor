@@ -10,7 +10,7 @@ import TLS
 #endif
 
 /// HTTP/1.1 and HTTP/2 client wrapper.
-public final class EngineClient: Client {
+public final class EngineClient: Client, Service {
     /// See Client.container
     public let container: Container
 
@@ -92,7 +92,7 @@ public final class EngineClient: Client {
 }
 
 /// Configuration option's for the EngineClient.
-public struct EngineClientConfig {
+public struct EngineClientConfig: Service {
     /// The maximum response size to allow for
     /// incoming HTTP responses.
     public let maxResponseSize: Int

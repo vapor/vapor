@@ -2,7 +2,7 @@ import Crypto
 import Foundation
 
 /// A instance-based wrapper around Crypto.BCrypt.
-public final class BCryptHasher {
+public final class BCryptHasher: Service {
     /// BCrypt salt cost
     private let cost: UInt
 
