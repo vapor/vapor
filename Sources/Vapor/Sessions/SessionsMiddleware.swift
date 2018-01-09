@@ -74,6 +74,6 @@ extension Request {
 
 /// MARK: Service
 
-internal final class SessionCache {
+internal final class SessionCache: Service {
     var session: Session?
 }

@@ -11,7 +11,7 @@ import TCP
 import TLS
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: Server {
+public final class EngineServer: Server, Service {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
@@ -261,7 +261,7 @@ extension Logger {
 //}
 
 /// Engine server config struct.
-public struct EngineServerConfig {
+public struct EngineServerConfig: Service {
     /// Host name the server will bind to.
     public var hostname: String
 

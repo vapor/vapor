@@ -16,7 +16,7 @@ class MiddlewareTests : XCTestCase {
         var services = Services.default()
         var middlewareConfig = MiddlewareConfig()
         middlewareConfig.use(myMiddleware)
-        services.use(middlewareConfig)
+        services.register(middlewareConfig)
 
         let app = try Application(services: services)
 

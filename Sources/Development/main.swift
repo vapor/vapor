@@ -50,11 +50,11 @@ do {
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
     middlewareConfig.use(SessionsMiddleware.self)
-    services.use(middlewareConfig)
+    services.register(middlewareConfig)
 
 
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
-    services.use(dir)
+    services.register(dir)
 
     let app = try Application(environment: .detect(), services: services)
 

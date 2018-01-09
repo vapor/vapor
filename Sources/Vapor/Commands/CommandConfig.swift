@@ -4,7 +4,7 @@ import Foundation
 
 /// Helps configure which commands will
 /// run when the application boots.
-public struct CommandConfig {
+public struct CommandConfig: Service {
     /// A not-yet configured runnable.
     public typealias LazyRunnable = (Container) throws -> Runnable
 
