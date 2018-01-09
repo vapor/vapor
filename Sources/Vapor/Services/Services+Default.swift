@@ -6,11 +6,6 @@ import Foundation
 import Routing
 import Service
 import TLS
-#if os(Linux)
-    import OpenSSL
-#else
-    import AppleTLS
-#endif
 
 extension Services {
     /// The default Services included in the framework.
@@ -58,27 +53,6 @@ extension Services {
             return MemorySessions.default()
         }
         
-//        services.register { container in
-//            return SSLClientSettings()
-//        }
-//        
-//        services.register(SSLClientUpgrader.self) { _ in
-//            return DefaultSSLClientUpgrader()
-//        }
-//        
-//        services.register(SSLPeerUpgrader.self) { _ in
-//            return DefaultSSLPeerUpgrader()
-//        }
-//        
-//        services.register(SSLClient.self) { container -> DefaultSSLClient in
-//            let client = try defaultSSLClient.init(
-//                settings: try container.make(for: SSLClientSettings.self),
-//                on: container
-//            )
-//            
-//            return BasicSSLClient(boxing: client)
-//        }
-
         services.register(Client.self) { container -> EngineClient in
             if let sub = container as? SubContainer {
                 /// if a request is creating a client, we should

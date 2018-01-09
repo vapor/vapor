@@ -30,6 +30,15 @@ public final class Response: EphemeralContainer {
         }
     }
     
+    public var cookies: Cookies {
+        get {
+            return http.cookies
+        }
+        set {
+            http.cookies = newValue
+        }
+    }
+    
     /// HTTP response status code.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)

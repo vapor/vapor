@@ -63,7 +63,7 @@ let package = Package(
             "TLS",
             tlsImpl,
             "ServerSecurity",
-             "WebSocket",
+            "WebSocket",
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
