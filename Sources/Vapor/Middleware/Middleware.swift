@@ -1,11 +1,11 @@
-public protocol Middleware: Service {
+public protocol Middleware {
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }
 
 /// A wrapper that applies the supplied middleware to a responder.
 ///
 /// Note: internal since it is exposed through `makeResponder` extensions.
-public final class MiddlewareResponder: Responder, Service {
+final class MiddlewareResponder: Responder {
     /// The middleware to apply.
     let middleware: Middleware
 
@@ -29,7 +29,7 @@ public final class MiddlewareResponder: Responder, Service {
 
 extension Middleware {
     /// Converts a middleware into a responder by chaining it to an actual responder.
-    public func makeResponder(chainedTo responder: Responder) -> MiddlewareResponder {
+    public func makeResponder(chainedTo responder: Responder) -> Responder {
         return MiddlewareResponder(middleware: self, chained: responder)
     }
 }
@@ -38,7 +38,7 @@ extension Middleware {
 extension Array where Element == Middleware {
     /// Converts an array of middleware into a responder by
     /// chaining them to an actual responder.
-    public func makeResponder(chainedto responder: Responder) -> MiddlewareResponder {
+    public func makeResponder(chainedto responder: Responder) -> Responder {
         var responder = responder
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
@@ -51,7 +51,7 @@ extension Array where Element == Middleware {
 extension Array where Element: Middleware {
     /// Converts an array of middleware into a responder by
     /// chaining them to an actual responder.
-    public func makeResponder(chainedto responder: Responder) -> MiddlewareResponder {
+    public func makeResponder(chainedto responder: Responder) -> Responder {
         var responder = responder
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
