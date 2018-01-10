@@ -43,7 +43,7 @@ extension Array where Element == Middleware {
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
         }
-        return responder as! MiddlewareResponder
+        return responder
     }
 }
 
@@ -56,6 +56,6 @@ extension Array where Element: Middleware {
         for middleware in self {
             responder = middleware.makeResponder(chainedTo: responder)
         }
-        return responder as! MiddlewareResponder
+        return responder
     }
 }
