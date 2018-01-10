@@ -31,8 +31,8 @@ let package = Package(
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
-        // FIXME: rely on just TemplateKit
-        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+        // Easy-to-use foundation for building powerful templating languages in Swift.
+        .package(url: "https://github.com/vapor/template-kit.git", .branch("beta")),
 
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
