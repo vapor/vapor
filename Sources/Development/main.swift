@@ -50,11 +50,11 @@ do {
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
     middlewareConfig.use(SessionsMiddleware.self)
-    services.use(middlewareConfig)
+    services.register(middlewareConfig)
 
 
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
-    services.use(dir)
+    services.register(dir)
 
     let app = try Application(environment: .detect(), services: services)
 
@@ -87,7 +87,6 @@ do {
 
     router.get("example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-
         return client.send(.get, to: "http://www.zombo.com/")
     }
     
@@ -316,10 +315,9 @@ do {
         return Future(req.redirect(to: "http://google.com"))
     }
 
-//    router.get("leafcontext") { req -> Future<View> in
-//        let leaf = try req.make(LeafRenderer.self)
-//        return try leaf.make("home", [:] as [String: String])
-//    }
+    router.get("template") { req -> Future<View> in
+        return try req.view().render("hello")
+    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]

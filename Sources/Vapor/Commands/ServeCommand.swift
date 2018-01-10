@@ -2,7 +2,7 @@ import Command
 import Console
 
 /// Starts serving the app's responder over HTTP.
-public struct ServeCommand: Command {
+public struct ServeCommand: Command, Service {
     /// See Command.arguments
     public let arguments: [Argument] = []
 

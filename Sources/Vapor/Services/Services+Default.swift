@@ -18,14 +18,14 @@ extension Services {
         var services = Services()
 
         // register engine server and default config settings
-        services.register(Server.self) { container in
+        services.register(Server.self) { container -> EngineServer in
             return try EngineServer(
                 config: container.make(for: EngineServer.self),
                 container: container
             )
         }
         
-        services.register { container in
+        services.register { container -> EngineServerConfig in
             return EngineServerConfig()
         }
 
@@ -48,13 +48,13 @@ extension Services {
         services.register(isSingleton: true) { container in
             return SessionCache()
         }
-        services.register { container in
+        services.register { container -> SessionsMiddleware in
             return try SessionsMiddleware(
                 cookieName: "vapor-session",
                 sessions: container.make(for: SessionsMiddleware.self)
             )
         }
-        services.register(Sessions.self) { container in
+        services.register(Sessions.self) { container -> MemorySessions in
             return MemorySessions.default()
         }
         
@@ -89,7 +89,7 @@ extension Services {
             }
         }
 
-        services.register { container in
+        services.register { container -> EngineClientConfig in
             return EngineClientConfig(maxResponseSize: 10_000_000)
         }
 
@@ -112,29 +112,29 @@ extension Services {
         }
 
         // register router
-        services.register(Router.self, isSingleton: true) { container in
+        services.register(Router.self, isSingleton: true) { container -> EngineRouter in
             return EngineRouter.default()
         }
 
         // register content coders
-        services.register { container in
+        services.register { container -> ContentConfig in
             return ContentConfig.default()
         }
         
         // register transfer encodings
-        services.register { container in
+        services.register { container -> TransferEncodingConfig in
             return TransferEncodingConfig.default()
         }
 
-        services.register([FileReader.self, FileCache.self]) { container in
+        services.register([FileReader.self, FileCache.self]) { container -> File in
             return File(on: container)
         }
 
         // register terminal console
-        services.register(Console.self) { container in
+        services.register(Console.self) { container -> Terminal in
             return Terminal()
         }
-        services.register(Responder.self) { container -> Responder in
+        services.register(Responder.self) { container -> ApplicationResponder in
             let middleware = try container
                 .make(MiddlewareConfig.self, for: ServeCommand.self)
                 .resolve(for: container)
@@ -142,7 +142,8 @@ extension Services {
             let router = try RouterResponder(
                 router: container.make(for: Responder.self)
             )
-            return middleware.makeResponder(chainedto: router)
+            let wrapped = middleware.makeResponder(chainedto: router)
+            return ApplicationResponder(wrapped)
         }
 
         services.register { worker -> ServeCommand in
@@ -162,14 +163,6 @@ extension Services {
             )
         }
 
-        // worker
-        services.register { container -> EphemeralWorkerConfig in
-            let config = EphemeralWorkerConfig()
-            config.add(Request.self)
-            config.add(Response.self)
-            return config
-        }
-
         // directory
         services.register { container -> DirectoryConfig in
             return DirectoryConfig.default()
@@ -185,6 +178,31 @@ extension Services {
             return PrintLogger()
         }
 
+        // templates
+        services.register(TemplateRenderer.self) { container -> PlaintextRenderer in
+            let dir = try container.make(DirectoryConfig.self, for: PlaintextRenderer.self)
+            return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
+        }
+
         return services
     }
 }
+
+public struct ApplicationResponder: Responder, Service {
+    private let responder: Responder
+    init(_ responder: Responder) {
+        self.responder = responder
+    }
+
+    public func respond(to req: Request) throws -> Future<Response> {
+        return try responder.respond(to: req)
+    }
+}
+
+extension PlaintextRenderer: Service {}
+extension File: Service { }
+extension Terminal: Service { }
+extension EphemeralWorkerConfig: Service { }
+extension DirectoryConfig: Service { }
+extension ConsoleLogger: Service { }
+extension PrintLogger: Service {}

@@ -5,7 +5,7 @@ public protocol Middleware {
 /// A wrapper that applies the supplied middleware to a responder.
 ///
 /// Note: internal since it is exposed through `makeResponder` extensions.
-internal final class MiddlewareResponder: Responder {
+final class MiddlewareResponder: Responder {
     /// The middleware to apply.
     let middleware: Middleware
 
@@ -19,7 +19,7 @@ internal final class MiddlewareResponder: Responder {
     }
 
     /// Responder conformance.
-    func respond(to req: Request) throws -> Future<Response> {
+    public func respond(to req: Request) throws -> Future<Response> {
         return try middleware.respond(to: req, chainingTo: chained)
     }
 }

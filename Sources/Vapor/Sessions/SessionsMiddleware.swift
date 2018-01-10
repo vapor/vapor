@@ -1,7 +1,7 @@
 import Foundation
 
 /// Checks the cookies for each `Request`
-public final class SessionsMiddleware: Middleware {
+public final class SessionsMiddleware: Middleware, Service {
     /// The cookie to work with
     let cookieName: String
     
@@ -74,6 +74,6 @@ extension Request {
 
 /// MARK: Service
 
-internal final class SessionCache {
+internal final class SessionCache: Service {
     var session: Session?
 }
