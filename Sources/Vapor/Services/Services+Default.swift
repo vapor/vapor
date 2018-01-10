@@ -178,6 +178,12 @@ extension Services {
             return PrintLogger()
         }
 
+        // templates
+        services.register(TemplateRenderer.self) { container -> PlaintextRenderer in
+            let dir = try container.make(DirectoryConfig.self, for: PlaintextRenderer.self)
+            return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
+        }
+
         return services
     }
 }
@@ -193,6 +199,7 @@ public struct ApplicationResponder: Responder, Service {
     }
 }
 
+extension PlaintextRenderer: Service {}
 extension File: Service { }
 extension Terminal: Service { }
 extension EphemeralWorkerConfig: Service { }
