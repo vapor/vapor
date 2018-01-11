@@ -63,7 +63,7 @@ public struct CommandConfig: Service {
         }
         return BasicCommandGroup(
             commands: commands,
-            options: [envOption],
+            options: [envOption, portOption],
             help: ["Runs your Vapor application's commands"]
         ) { console, input in
             if let lazy = self.defaultRunnable {
@@ -79,6 +79,11 @@ let envOption = Option(name: "env", help: [
     "Changes the environment (if Environment.detect() is being used)",
     "Ex: prod, dev, test, my-custom-env"
 ], default: nil)
+
+let portOption = Option(name: "port", help: [
+    "Changes the port"
+], default: nil)
+
 
 /// Wraps all vapor commands and adds support
 /// for the `--env` flag which is resolved outside
