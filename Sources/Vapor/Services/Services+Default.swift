@@ -27,8 +27,8 @@ extension Services {
         
         services.register { container -> EngineServerConfig in
             switch container.environment {
-            case .cloud, .heroku:
-                return try EngineServerConfig.cloud()
+            case .cloud: return try EngineServerConfig.cloud()
+            case .heroku: return try EngineServerConfig.heroku()
             default:
                 if container.environment.isRelease {
                     return EngineServerConfig.release()

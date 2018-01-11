@@ -8,8 +8,8 @@ extension Environment {
 }
 
 extension EngineServerConfig {
-    /// Creates server config for use with Heroku.
-    /// Heroku requires that the port be set to $PORT
+    /// Creates server config for use with Vapor Cloud.
+    /// Vapor Cloud requires that the port be set to $PORT
     /// and the hostname be 0.0.0.0
     public static func cloud() throws -> EngineServerConfig {
         guard let string = Environment.get("PORT"), let port = UInt16(string) else {
@@ -25,6 +25,15 @@ extension Environment {
     /// An environment for deploying to Heroku.
     public static var heroku: Environment {
         return .custom(name: "heroku", isRelease: true)
+    }
+}
+
+extension EngineServerConfig {
+    /// Creates server config for use with Heroku.
+    /// Heroku requires that the port be set to $PORT
+    /// and the hostname be 0.0.0.0
+    public static func heroku() throws -> EngineServerConfig {
+        return try cloud()
     }
 }
 
