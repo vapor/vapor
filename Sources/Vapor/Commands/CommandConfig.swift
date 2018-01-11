@@ -85,10 +85,6 @@ extension Environment {
             self = .development
         case "test", "testing":
             self = .testing
-        case "cloud", "vaporcloud", "vapor-cloud":
-            self = .cloud
-        case "heroku":
-            self = .heroku
         default:
             self = .custom(name: string)
         }

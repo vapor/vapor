@@ -26,15 +26,10 @@ extension Services {
         }
         
         services.register { container -> EngineServerConfig in
-            switch container.environment {
-            case .cloud: return try EngineServerConfig.cloud()
-            case .heroku: return try EngineServerConfig.heroku()
-            default:
-                if container.environment.isRelease {
-                    return try EngineServerConfig.release()
-                } else {
-                    return try EngineServerConfig.detect()
-                }
+            if container.environment.isRelease {
+                return try EngineServerConfig.detect(port: 80)
+            } else {
+                return try EngineServerConfig.detect()
             }
         }
 

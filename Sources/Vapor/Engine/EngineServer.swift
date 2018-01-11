@@ -308,21 +308,12 @@ extension EngineServerConfig {
         workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
         maxConnectionsPerIP: Int = 128
     ) throws -> EngineServerConfig {
-        let chosenPort: UInt16
-
-        if let overridePort = try CommandInput.commandLine.parse(
-            option: .value(name: "port")
-        ).flatMap(UInt16.init) {
-            chosenPort = overridePort
-        } else {
-            chosenPort = port
-        }
-
-        return EngineServerConfig(hostname: hostname, port: chosenPort, backlog: backlog, workerCount: workerCount, maxConnectionsPerIP: maxConnectionsPerIP)
-    }
-
-    /// `EngineServerConfig` for production environments.
-    public static func release() throws -> EngineServerConfig {
-        return try EngineServerConfig.detect(port: 80)
+        return try EngineServerConfig(
+            hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
+            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(UInt16.init) ?? port,
+            backlog: backlog,
+            workerCount: workerCount,
+            maxConnectionsPerIP: maxConnectionsPerIP
+        )
     }
 }
