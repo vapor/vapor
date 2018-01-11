@@ -12,7 +12,7 @@ extension EngineServerConfig {
     /// Vapor Cloud requires that the port be set to $PORT
     /// and the hostname be 0.0.0.0
     public static func cloud() throws -> EngineServerConfig {
-        guard let string = Environment.get("PORT"), let port = UInt16(string) else {
+        guard let port = Environment.get("PORT").flatMap(UInt16.init) else {
             throw VaporError(identifier: "cloudConfig", reason: "No $PORT environment variable was found.")
         }
         return try EngineServerConfig.detect(hostname: "0.0.0.0", port: port)
