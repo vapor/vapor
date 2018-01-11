@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Console
+import Command
 import Debugging
 import Dispatch
 import Foundation
@@ -283,11 +284,11 @@ public struct EngineServerConfig: Service {
 
     /// Creates a new engine server config
     public init(
-        hostname: String = "localhost",
-        port: UInt16 = 8080,
-        backlog: Int32 = 4096,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxConnectionsPerIP: Int = 128
+        hostname: String,
+        port: UInt16,
+        backlog: Int32,
+        workerCount: Int,
+        maxConnectionsPerIP: Int
     ) {
         self.hostname = hostname
         self.port = port
@@ -299,8 +300,28 @@ public struct EngineServerConfig: Service {
 }
 
 extension EngineServerConfig {
+    public static func detect(
+        hostname: String = "localhost",
+        port: UInt16 = 8080,
+        backlog: Int32 = 4096,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
+        maxConnectionsPerIP: Int = 128
+    ) throws -> EngineServerConfig {
+        let chosenPort: UInt16
+
+        if let overridePort = try CommandInput.commandLine.parse(
+            option: .value(name: "port")
+        ).flatMap { UInt16($0) } {
+            chosenPort = overridePort
+        } else {
+            chosenPort = port
+        }
+
+        return EngineServerConfig(hostname: hostname, port: chosenPort, backlog: backlog, workerCount: workerCount, maxConnectionsPerIP: maxConnectionsPerIP)
+    }
+
     /// `EngineServerConfig` for production environments.
-    public static func release() -> EngineServerConfig {
-        return EngineServerConfig(port: 80)
+    public static func release() throws -> EngineServerConfig {
+        return try EngineServerConfig.detect(port: 80)
     }
 }

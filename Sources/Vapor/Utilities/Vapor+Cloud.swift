@@ -15,7 +15,7 @@ extension EngineServerConfig {
         guard let string = Environment.get("PORT"), let port = UInt16(string) else {
             throw VaporError(identifier: "cloudConfig", reason: "No $PORT environment variable was found.")
         }
-        return EngineServerConfig(hostname: "0.0.0.0", port: port)
+        return try EngineServerConfig.detect(hostname: "0.0.0.0", port: port)
     }
 }
 

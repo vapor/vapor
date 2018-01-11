@@ -31,9 +31,9 @@ extension Services {
             case .heroku: return try EngineServerConfig.heroku()
             default:
                 if container.environment.isRelease {
-                    return EngineServerConfig.release()
+                    return try EngineServerConfig.release()
                 } else {
-                    return EngineServerConfig()
+                    return try EngineServerConfig.detect()
                 }
             }
         }
