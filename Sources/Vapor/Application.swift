@@ -75,7 +75,7 @@ public final class Application: Container {
             .makeCommandGroup(for: self)
 
         let console = try make(Console.self)
-        try console.run(command, arguments: CommandLine.arguments)
+        try console.run(command, input: &.commandLine)
         exit(0)
     }
 }
