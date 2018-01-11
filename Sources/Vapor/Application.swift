@@ -7,12 +7,6 @@ import HTTP
 import Routing
 import Service
 
-#if os(macOS)
-    public typealias DefaultEventLoop = KqueueEventLoop
-#else
-    public typealias DefaultEventLoop = DispatchEventLoop
-#endif
-
 /// Core framework class. You usually create only
 /// one of these per application.
 /// Acts as a service container and much more.
@@ -50,17 +44,19 @@ public final class Application: Container {
         self.extend = Extend()
         self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
 
-        if #available(OSX 10.12, *) {
-            Thread.detachNewThread {
-                self.eventLoop.runLoop()
-            }
-        } else {
-            fatalError()
+        Thread.async {
+            self.eventLoop.runLoop()
         }
 
         // boot all service providers
         for provider in services.providers {
             try provider.boot(self)
+        }
+
+        if _isDebugAssertConfiguration() && environment.isRelease {
+            let log = try self.make(Logger.self)
+            log.warning("Debug build mode detected while configured for release environment: \(environment.name).")
+            log.info("Compile your application with `-c release` to enable code optimizations.")
         }
     }
 

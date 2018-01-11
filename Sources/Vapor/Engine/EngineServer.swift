@@ -297,3 +297,10 @@ public struct EngineServerConfig: Service {
         // self.ssl = nil
     }
 }
+
+extension EngineServerConfig {
+    /// `EngineServerConfig` for production environments.
+    public static func release() -> EngineServerConfig {
+        return EngineServerConfig(port: 80)
+    }
+}

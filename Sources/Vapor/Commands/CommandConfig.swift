@@ -62,3 +62,40 @@ public struct CommandConfig: Service {
         )
     }
 }
+
+extension Environment {
+    /// Detects the environment from command line arguments
+    /// or returns development if none was passed.
+    public static func detect(input: inout CommandInput) throws -> Environment {
+        var env: Environment = .development
+        if let value = try input.parse(option: .value(name: "env")) {
+            env = Environment(commandLine: value)
+        }
+        return env
+    }
+
+    /// Detects the environment using default command line input.
+    public static func detect() throws -> Environment {
+        return try detect(input: &.commandLine)
+    }
+}
+
+extension Environment {
+    /// Initialize the environment from a command line argument.
+    internal init(commandLine string: String) {
+        switch string {
+        case "prod", "production":
+            self = .production
+        case "dev", "development":
+            self = .development
+        case "test", "testing":
+            self = .testing
+        case "cloud", "vaporcloud", "vapor-cloud":
+            self = .cloud
+        case "heroku":
+            self = .heroku
+        default:
+            self = .custom(name: string)
+        }
+    }
+}

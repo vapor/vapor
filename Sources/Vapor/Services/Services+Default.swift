@@ -26,7 +26,16 @@ extension Services {
         }
         
         services.register { container -> EngineServerConfig in
-            return EngineServerConfig()
+            switch container.environment {
+            case .cloud, .heroku:
+                return try EngineServerConfig.cloud()
+            default:
+                if container.environment.isRelease {
+                    return EngineServerConfig.release()
+                } else {
+                    return EngineServerConfig()
+                }
+            }
         }
 
         // bcrypt

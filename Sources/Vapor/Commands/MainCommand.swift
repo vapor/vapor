@@ -14,6 +14,7 @@ internal struct MainCommand: CommandGroup {
             .flag(name: "version", short: "c", help: ["Displays the framework's version"])
         ]
         self.help = ["Runs your Vapor application's commands"]
+        self.defaultRunnable = defaultRunnable
     }
 
     func run(using context: CommandContext) throws {
@@ -24,7 +25,7 @@ internal struct MainCommand: CommandGroup {
             if let lazy = self.defaultRunnable {
                 try lazy.run(using: context)
             } else {
-                throw VaporError(identifier: "no-default-command", reason: "There is no default command in Vapor")
+                throw VaporError(identifier: "noDefaultCommand", reason: "No default command has been registered.")
             }
         }
     }
