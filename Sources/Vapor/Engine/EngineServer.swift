@@ -300,6 +300,7 @@ public struct EngineServerConfig: Service {
 }
 
 extension EngineServerConfig {
+    /// Detects `EngineServerConfig` from the environment.
     public static func detect(
         hostname: String = "localhost",
         port: UInt16 = 8080,
@@ -311,7 +312,7 @@ extension EngineServerConfig {
 
         if let overridePort = try CommandInput.commandLine.parse(
             option: .value(name: "port")
-        ).flatMap { UInt16($0) } {
+        ).flatMap(UInt16.init) {
             chosenPort = overridePort
         } else {
             chosenPort = port
