@@ -47,9 +47,13 @@ extension Request {
         {
             res.http.mediaType = type
         }
+        
+        let stream = ConnectingStream<ByteBuffer>()
+        
+        reader.read(at: path, into: stream, chunkSize: 2048)
 
         res.http.body = HTTPBody(
-            chunked: reader.read(at: path, chunkSize: 2048)
+            chunked: stream
         )
         return res
     }
