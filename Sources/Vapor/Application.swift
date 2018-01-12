@@ -36,6 +36,11 @@ public final class Application: Container {
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
+    
+    /// An internal reference to the Router to provide routing shortcuts
+    ///
+    /// FIXME: Force unwrapped because you cannot initialize a router before the rest is initialized
+    fileprivate var router: Router!
 
     /// Creates a new Application.
     public init(
@@ -49,6 +54,7 @@ public final class Application: Container {
         self.serviceCache = .init()
         self.extend = Extend()
         self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
+        self.router = try self.make(Router.self, for: Application.self)
 
         if #available(OSX 10.12, *) {
             Thread.detachNewThread {
@@ -77,5 +83,22 @@ public final class Application: Container {
         let console = try make(Console.self)
         try console.run(command, arguments: CommandLine.arguments)
         exit(0)
+    }
+}
+
+extension Application: Router {
+    /// All routes registered to this router
+    public var routes: [Route<Responder>] {
+        return router.routes
+    }
+    
+    /// Routes a new Request to get a responder that can make a Response
+    public func route(request: Request) -> Responder? {
+        return router.route(request: request)
+    }
+    
+    /// Registers a new route. This should only be done during boot
+    public func register(route: Route<Responder>) {
+        router.register(route: route)
     }
 }
