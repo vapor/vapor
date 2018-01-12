@@ -10,7 +10,7 @@ public protocol BodyEncoder {
 /// Decodes decodable types from an HTTP body.
 public protocol BodyDecoder {
     /// Parses a decodable type from the data in the HTTP body.
-    func decode<T: Decodable>(_ decodable: T.Type, from body: HTTPBody) throws -> T
+    func decode<T: Decodable>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T>
 }
 
 // MARK: Foundation
@@ -23,12 +23,10 @@ extension JSONEncoder: BodyEncoder {
 }
 
 extension JSONDecoder: BodyDecoder {
-    public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> T where T : Decodable {
-        guard let data = body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "JSONDecodes doesn't support streaming bodies")
+    public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T> where T : Decodable {
+        return body.makeData(max: 100_000).map(to: T.self) { data in
+            return try self.decode(T.self, from: data)
         }
-        
-        return try self.decode(T.self, from: data)
     }
 }
 
@@ -37,7 +35,7 @@ extension JSONDecoder: BodyDecoder {
 extension BodyDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
     func get<D>(at keyPath: [BasicKey], from body: HTTPBody) throws -> D where D: Decodable {
-        let unwrapper = try self.decode(DecoderUnwrapper.self, from: body)
+        let unwrapper = try self.decode(DecoderUnwrapper.self, from: body).assertCompleted()
         var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
 
         var keys = Array(keyPath.reversed())
