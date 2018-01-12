@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Console
+import Command
 import Debugging
 import Dispatch
 import Foundation
@@ -282,11 +283,11 @@ public struct EngineServerConfig: Service {
 
     /// Creates a new engine server config
     public init(
-        hostname: String = "localhost",
-        port: UInt16 = 8080,
-        backlog: Int32 = 4096,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxConnectionsPerIP: Int = 128
+        hostname: String,
+        port: UInt16,
+        backlog: Int32,
+        workerCount: Int,
+        maxConnectionsPerIP: Int
     ) {
         self.hostname = hostname
         self.port = port
@@ -298,15 +299,20 @@ public struct EngineServerConfig: Service {
 }
 
 extension EngineServerConfig {
-    /// Creates server config for use with Heroku.
-    /// Heroku requires that the port be set to $PORT
-    /// and the hostname be 0.0.0.0
-    public static func heroku() -> EngineServerConfig {
-        if let portString = ProcessInfo.processInfo.environment["PORT"],
-            let customPort = UInt16(portString) {
-            return EngineServerConfig(hostname: "0.0.0.0", port: customPort)
-        }
-        return EngineServerConfig()
+    /// Detects `EngineServerConfig` from the environment.
+    public static func detect(
+        hostname: String = "localhost",
+        port: UInt16 = 8080,
+        backlog: Int32 = 4096,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
+        maxConnectionsPerIP: Int = 128
+    ) throws -> EngineServerConfig {
+        return try EngineServerConfig(
+            hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
+            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(UInt16.init) ?? port,
+            backlog: backlog,
+            workerCount: workerCount,
+            maxConnectionsPerIP: maxConnectionsPerIP
+        )
     }
 }
-

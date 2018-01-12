@@ -26,7 +26,11 @@ extension Services {
         }
         
         services.register { container -> EngineServerConfig in
-            return EngineServerConfig()
+            if container.environment.isRelease {
+                return try EngineServerConfig.detect(port: 80)
+            } else {
+                return try EngineServerConfig.detect()
+            }
         }
 
         // bcrypt
