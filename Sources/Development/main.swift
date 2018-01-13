@@ -89,13 +89,13 @@ do {
         let client = try req.make(Client.self, for: Request.self)
         return client.send(.get, to: "http://www.zombo.com/")
     }
-    
+
     router.get("example1") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://www.romansgohome.com")
     }
-    
+
     router.get("example2") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
@@ -104,10 +104,10 @@ do {
 
     router.get("example3") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-        
+
         return client.send(.get, to: "https://www.google.com")
     }
-    
+
 //    router.get("hello2") { req -> Future<[User]> in
 //        let user = User(name: "Vapor", age: 3);
 //        return Future([user])
@@ -126,12 +126,12 @@ do {
     }
 
     router.post("login") { req -> Future<Response> in
-        let loginRequest = try req.content.decode(LoginRequest.self)
+        return try req.content.decode(LoginRequest.self).map(to: Response.self) { loginRequest in
+            print(loginRequest.email) // user@vapor.codes
+            print(loginRequest.password) // don't look!
 
-        print(loginRequest.email) // user@vapor.codes
-        print(loginRequest.password) // don't look!
-
-        return Future(req.makeResponse())
+            return req.makeResponse()
+        }
     }
 
 //    router.get("leaf") { req -> Future<View> in
@@ -300,7 +300,7 @@ do {
             return "done!"
         }
     }
-                                                                         
+
     router.get("query") { req -> Future<String> in
         struct Hello: Decodable {
             var name: String?
@@ -317,6 +317,10 @@ do {
 
     router.get("template") { req -> Future<View> in
         return try req.view().render("hello")
+    }
+    
+    router.get(PathComponent.anything) { _ in
+        return "Hello"
     }
 
     //router.get("fuzzy") { req -> String in

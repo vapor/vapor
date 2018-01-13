@@ -26,7 +26,7 @@ extension ContentContainer {
     }
     
     /// Parses the supplied content from the mesage.
-    public func decode<D>(_ content: D.Type) throws -> D where D: Decodable {
+    public func decode<D>(_ content: D.Type) throws -> Future<D> where D: Decodable {
         let decoder = try requireDecoder()
         return try decoder.decode(D.self, from: body)
     }

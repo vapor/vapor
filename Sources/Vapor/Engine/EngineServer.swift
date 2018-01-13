@@ -30,44 +30,47 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        let workers = try (0..<config.workerCount).map { i -> EngineWorker in
-            // create new event loop
-            let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
-            return EngineWorker(
-                container: container.subContainer(on: eventLoop),
-                responder: responder
-            )
-        }
-
         var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
         tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-
-        let accept = try DefaultEventLoop(label: "codes.vapor.engine.server.accept")
-        let server = HTTPServer(
-            acceptStream: tcpServer.stream(on: accept),
-            workers: workers
-        )
-
+        
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
-
-        server.onError = { error in
-            logger.reportError(error, as: "Server Error")
+        
+        for i in 1...config.workerCount {
+            let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
+            let responder = EngineResponder(container: self.container, responder: responder)
+            let acceptStream = tcpServer.stream(on: eventLoop)
+            
+            let server = HTTPServer(
+                acceptStream: acceptStream,
+                worker: eventLoop,
+                responder: responder
+            )
+            
+            server.onError = { error in
+                logger.reportError(error, as: "Server Error")
+            }
+            
+            // non-blocking main thread run
+            if #available(OSX 10.12, *) {
+                Thread.detachNewThread {
+                    eventLoop.runLoop()
+                }
+            } else {
+                fatalError()
+            }
         }
-
-        console.print("Server starting on ", newLine: false)
-        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
-        console.output(":" + config.port.description, style: .init(color: .cyan))
-
+        
         // bind, listen, and start accepting
         try tcpServer.start(
             hostname: config.hostname,
             port: config.port,
             backlog: config.backlog
         )
-
-        // non-blocking main thread run
-        accept.runLoop()
+        
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+        console.output(":" + config.port.description, style: .init(color: .cyan))
     }
 
 
@@ -151,10 +154,7 @@ public final class EngineServer: Server, Service {
 //    }
 }
 
-fileprivate struct EngineWorker: HTTPResponder, Worker {
-    var eventLoop: EventLoop {
-        return container.eventLoop
-    }
+fileprivate struct EngineResponder: HTTPResponder {
     let responder: Responder
     let container: Container
 

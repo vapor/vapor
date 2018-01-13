@@ -12,7 +12,7 @@ extension MultipartForm: Content {
     public init(from decoder: Decoder) throws {
         let data = try Data(from: decoder)
         
-        self = try MultipartParser(body: HTTPBody(data), boundary: MultipartParser.boundary(for: data)).parse()
+        self = try MultipartParser(data: data, boundary: MultipartParser.boundary(for: data)).parse()
     }
     
     /// See Content.defaultMediaType
@@ -52,7 +52,9 @@ extension MultipartForm: Content {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return Future(try MultipartParser(body: req.body, boundary: Array(boundary.utf8)).parse())
+        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+            return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
+        }
     }
     
     /// See ResponseDecodable.decode
@@ -61,6 +63,8 @@ extension MultipartForm: Content {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return Future(try MultipartParser(body: req.body, boundary: Array(boundary.utf8)).parse())
+        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+            return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
+        }
     }
 }

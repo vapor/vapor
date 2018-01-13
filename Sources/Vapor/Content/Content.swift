@@ -33,13 +33,13 @@ extension Content {
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<Self> {
         let content = try req.content.decode(Self.self)
-        return Future(content)
+        return content
     }
 
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
         let content = try res.content.decode(Self.self)
-        return Future(content)
+        return content
     }
 }
 

@@ -9,7 +9,7 @@ public struct QueryContainer {
 extension QueryContainer {
     /// Parses the supplied content from the mesage.
     public func decode<D: Decodable>(_ decodable: D.Type) throws -> D {
-        return try requireDecoder().decode(D.self, from: HTTPBody(string: query))
+        return try requireDecoder().decode(D.self, from: HTTPBody(string: query)).assertCompleted()
     }
 
     /// Gets the query decoder or throws an error
