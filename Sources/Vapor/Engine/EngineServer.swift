@@ -30,36 +30,26 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
+        var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
+        tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+        
+        let console = try container.make(Console.self, for: EngineServer.self)
+        let logger = try container.make(Logger.self, for: EngineServer.self)
+        
         for i in 1...config.workerCount {
             let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
             let responder = EngineResponder(container: self.container, responder: responder)
-            
-            var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
-            tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+            let acceptStream = tcpServer.stream(on: eventLoop)
             
             let server = HTTPServer(
-                acceptStream: tcpServer.stream(on: eventLoop),
+                acceptStream: acceptStream,
                 worker: eventLoop,
                 responder: responder
             )
             
-            let console = try container.make(Console.self, for: EngineServer.self)
-            let logger = try container.make(Logger.self, for: EngineServer.self)
-            
             server.onError = { error in
                 logger.reportError(error, as: "Server Error")
             }
-            
-            console.print("Server starting on ", newLine: false)
-            console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
-            console.output(":" + config.port.description, style: .init(color: .cyan))
-            
-            // bind, listen, and start accepting
-            try tcpServer.start(
-                hostname: config.hostname,
-                port: config.port,
-                backlog: config.backlog
-            )
             
             // non-blocking main thread run
             if #available(OSX 10.12, *) {
@@ -70,6 +60,17 @@ public final class EngineServer: Server, Service {
                 fatalError()
             }
         }
+        
+        // bind, listen, and start accepting
+        try tcpServer.start(
+            hostname: config.hostname,
+            port: config.port,
+            backlog: config.backlog
+        )
+        
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+        console.output(":" + config.port.description, style: .init(color: .cyan))
     }
 
 
