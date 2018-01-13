@@ -79,9 +79,7 @@ public final class Application: Container {
         let console = try make(Console.self)
         try console.run(command, input: &.commandLine)
         
-        while true {
-            RunLoop.main.run()
-        }
+        while true { RunLoop.main.run() }
     }
 }
 

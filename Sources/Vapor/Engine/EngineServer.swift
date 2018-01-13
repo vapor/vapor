@@ -52,13 +52,7 @@ public final class EngineServer: Server, Service {
             }
             
             // non-blocking main thread run
-            if #available(OSX 10.12, *) {
-                Thread.detachNewThread {
-                    eventLoop.runLoop()
-                }
-            } else {
-                fatalError()
-            }
+            Thread.async { eventLoop.runLoop() }
         }
         
         // bind, listen, and start accepting
