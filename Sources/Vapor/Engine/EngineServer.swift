@@ -40,6 +40,7 @@ public final class EngineServer: Server, Service {
             let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
             let responder = EngineResponder(container: self.container, responder: responder)
             let acceptStream = tcpServer.stream(on: eventLoop)
+                .map(to: SocketStream<TCPSocket>.self) { $0.socket.stream(on: eventLoop) }
             
             let server = HTTPServer(
                 acceptStream: acceptStream,

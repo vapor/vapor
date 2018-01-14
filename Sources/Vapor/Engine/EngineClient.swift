@@ -51,12 +51,9 @@ public final class EngineClient: Client, Service {
                     let tcpClient = try TCPClient(socket: tcpSocket)
                     let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
                     try tlsClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 443)
-                    let source = tlsClient.socket.source(on: self.container.eventLoop)
-                    let sink = tlsClient.socket.sink(on: self.container.eventLoop)
                     let client = HTTPClient(
-                        source: source,
-                        sink: sink,
-                        worker: self.container,
+                        stream: tlsClient.socket.stream(on: self.container),
+                        on: self.container,
                         maxResponseSize: self.config.maxResponseSize
                     )
                     req.http.headers[.host] = req.http.uri.hostname
@@ -74,12 +71,9 @@ public final class EngineClient: Client, Service {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
                 let tcpClient = try TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
-                let source = tcpSocket.source(on: self.container.eventLoop)
-                let sink = tcpSocket.sink(on: self.container.eventLoop)
                 let client = HTTPClient(
-                    source: source,
-                    sink: sink,
-                    worker: self.container,
+                    stream: tcpSocket.stream(on: self.container),
+                    on: self.container,
                     maxResponseSize: self.config.maxResponseSize
                 )
                 req.http.headers[.host] = req.http.uri.hostname
