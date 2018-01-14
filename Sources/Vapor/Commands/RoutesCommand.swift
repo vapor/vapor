@@ -78,7 +78,6 @@ public struct RoutesCommand: Command, Service {
             guard let first = route.path.first, case .constants(let method) = first else {
                 continue
             }
-
             console.success(method[0].string, newLine: false)
 
             for _ in 0..<longestMethod - method[0].count {

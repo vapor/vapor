@@ -54,7 +54,7 @@ public final class EngineServer: Server, Service {
             // non-blocking main thread run
             Thread.async { eventLoop.runLoop() }
         }
-        
+
         // bind, listen, and start accepting
         try tcpServer.start(
             hostname: config.hostname,
@@ -65,6 +65,8 @@ public final class EngineServer: Server, Service {
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
+
+        while true { RunLoop.main.run() }
     }
 
 

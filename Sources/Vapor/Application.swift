@@ -78,8 +78,13 @@ public final class Application: Container {
 
         let console = try make(Console.self)
         try console.run(command, input: &.commandLine)
-        
-        while true { RunLoop.main.run() }
+
+        // Enforce `Never` return.
+        // It's possible that this method may actually return, since
+        // not all Vapor commands have run loops.
+        // However, because this method likely _can_ result in
+        // a run loop, having a `Never` may help reduce bugs.
+        exit(0)
     }
 }
 
