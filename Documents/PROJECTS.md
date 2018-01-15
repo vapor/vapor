@@ -1,7 +1,7 @@
 # Projects
 
 People have built some awesome things with Vapor, and we can't wait to see what you add to the list! All projects listed here are live and hosted on the cloud. Please report any links that are no longer active.
-
+* [CocoaHeads Russia](#cocoaheads-russia) -  API to iOS application for CocoaHeads meetups in Russia 
 * [PDX Cocoaheads Website](#pdx-cocoaheads) - The pdx cocoaheads.com site
 * [Vapor Chat](#vapor-chat) - realtime chat site / iOS app
 * [Qutheory.io](#qutheoryio) - the official Vapor site
@@ -20,6 +20,26 @@ People have built some awesome things with Vapor, and we can't wait to see what 
 * [HomeKitty](#homekitty) - a crowdsourced HomeKit database
 * [ServerSideSwift.racing](#serversideswiftracing) - growth statistics on popular server-side swift frameworks
 * [Vapor.berlin](#vaporberlin) - website to create and vote topics for the VaporBerlin meetup
+
+# Cocoaheads Russia 
+CocoaHeads Russia is a group devoted to discussion of programming on MacOS X and iOS in Russia.
+
+### GitHub
+
+#### Backend
+This is open sources server side api for CocoaHeads Russia app.
+https://github.com/cocoaheadsru/server
+
+#### iOS Client 
+iOS application for CocoaHeads meetups in Russia 
+https://github.com/cocoaheadsru/application
+
+#### Frontend 
+Under constuction 
+
+#### Site
+http://www.cocoaheads.ru 
+
 
 # PDX Cocoaheads
 
