@@ -54,9 +54,7 @@ extension Request {
         res.http.body = HTTPBody(
             chunked: passthrough
         )
-        
         reader.read(at: path, into: passthrough, chunkSize: 2048)
-        
         return res
     }
 }
