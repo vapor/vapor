@@ -48,8 +48,7 @@ class ApplicationTests: XCTestCase {
             "hello": "world"
         }
         """.makeBody()
-
-        XCTAssertEqual(req.content["hello"], "world")
+        try XCTAssertEqual(req.content["hello"].await(on: app), "world")
     }
 
     func testComplexContent() throws {
@@ -87,7 +86,7 @@ class ApplicationTests: XCTestCase {
         req.http.mediaType = .json
         req.http.body = try complexJSON.makeBody()
 
-        XCTAssertEqual(req.content["batters", "batter", 1, "type"], "Chocolate")
+        try XCTAssertEqual(req.content["batters", "batter", 1, "type"].await(on: app), "Chocolate")
     }
 
     func testQuery() throws {

@@ -54,6 +54,6 @@ extension QueryContainer {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        return try requireDecoder().get(at: keyPath.makeBasicKeys(), from: HTTPBody(string: query))
+        return try requireDecoder().get(at: keyPath.makeBasicKeys(), from: HTTPBody(string: query)).assertCompleted()
     }
 }
