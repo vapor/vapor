@@ -43,3 +43,12 @@ extension HTTPStatus: ResponseEncodable {
         return Future(new)
     }
 }
+
+extension StaticString: ResponseEncodable {
+    /// See ResponseRepresentable.makeResponse
+    public func encode(for req: Request) throws -> Future<Response> {
+        let new = req.makeResponse()
+        new.body = HTTPBody(staticString: self)
+        return Future(new)
+    }
+}

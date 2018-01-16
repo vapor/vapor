@@ -87,6 +87,10 @@ do {
         try req.destroySession()
         return "deleted"
     }
+    
+    router.get("ping") { req in
+        return "123" as StaticString
+    }
 
     router.get("example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)

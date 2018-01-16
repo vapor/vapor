@@ -16,9 +16,6 @@ public final class Response: EphemeralContainer {
 
     /// This response's private container.
     public let privateContainer: SubContainer
-
-    /// See Extendable.extend
-    public var extend: Extend
     
     /// See Message.version
     public var version: HTTPVersion {
@@ -71,7 +68,6 @@ public final class Response: EphemeralContainer {
         self.http = http
         self.superContainer = container
         self.privateContainer = container.subContainer(on: container.eventLoop)
-        self.extend = Extend()
         Response.onInit?(self)
     }
 
