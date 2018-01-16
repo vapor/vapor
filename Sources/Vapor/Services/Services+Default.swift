@@ -121,9 +121,8 @@ extension Services {
         }
 
         // register content coders
-        services.register { container -> ContentConfig in
-            return ContentConfig.default()
-        }
+        services.register(ContentConfig.self)
+        services.register(ContentCoders.self)
         
         // register transfer encodings
         services.register { container -> TransferEncodingConfig in
