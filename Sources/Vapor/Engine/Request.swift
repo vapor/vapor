@@ -4,7 +4,7 @@ import HTTP
 import Routing
 import Service
 
-public final class Request: ParameterContainer, Extendable {
+public final class Request: ParameterContainer {
     /// Underlying HTTP request.
     public var http: HTTPRequest
 
@@ -16,9 +16,6 @@ public final class Request: ParameterContainer, Extendable {
 
     /// Holds parameters for routing
     public var parameters: Parameters
-
-    /// See Extendable.extend
-    public var extend: Extend
     
     /// HTTP requests have a method, like GET or POST
     ///
@@ -67,7 +64,6 @@ public final class Request: ParameterContainer, Extendable {
         self.http = http
         self.superContainer = container
         self.privateContainer = container.subContainer(on: container.eventLoop)
-        self.extend = Extend()
         self.parameters = []
         hasActiveConnections = false
     }
