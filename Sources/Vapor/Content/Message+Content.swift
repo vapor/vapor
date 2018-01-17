@@ -51,24 +51,30 @@ extension ContentContainer {
 
 extension ContentContainer {
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ keyPath: BasicKeyRepresentable...) -> Future<D>
+    public subscript<D>(_ keyPath: BasicKeyRepresentable...) -> Future<D?>
         where D: Decodable
     {
         return self[D.self, at: keyPath]
     }
 
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ type: D.Type, at keyPath: BasicKeyRepresentable...) -> Future<D>
+    public subscript<D>(_ type: D.Type, at keyPath: BasicKeyRepresentable...) -> Future<D?>
         where D: Decodable
     {
         return self[D.self, at: keyPath]
     }
 
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> Future<D>
+    public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> Future<D?>
         where D: Decodable
     {
-        return get(at: keyPath)
+        let promise = Promise(D?.self)
+        get(at: keyPath).do { value in
+            promise.complete(value)
+        }.catch { err in
+            promise.complete(nil)
+        }
+        return promise.future
     }
 
     /// Convenience for accessing a single value from the content
