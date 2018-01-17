@@ -282,11 +282,7 @@ do {
     router.websocket("foo") { (req, ws) in
         ws.onString { websocket, string in
             websocket.send(string: string)
-        }.catch { error in
-            print("Error: \(error)")
-        }.finally {
-            print("Closed")
-        }.upstream!.request(count: .max)
+        }
     }
 //
 //    router.get("first") { req -> Future<User> in

@@ -34,49 +34,49 @@ extension JSONDecoder: BodyDecoder {
 
 extension BodyDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [BasicKey], from body: HTTPBody) throws -> D where D: Decodable {
-        let unwrapper = try self.decode(DecoderUnwrapper.self, from: body).assertCompleted()
-        var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
+    func get<D>(at keyPath: [BasicKey], from body: HTTPBody) throws -> Future<D> where D: Decodable {
+        return try self.decode(DecoderUnwrapper.self, from: body).map(to: D.self) { unwrapper in
+            var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
 
-        var keys = Array(keyPath.reversed())
-        if keys.count == 0 {
-            return try unwrapper.decoder.singleValueContainer().decode(D.self)
-        }
-
-        while let key = keys.popLast() {
-            switch keys.count {
-            case 0:
-                switch state {
-                case .keyed(let keyed):
-                    return try keyed.decode(D.self, forKey: key)
-                case .unkeyed(var unkeyed):
-                    return try unkeyed.nestedContainer(keyedBy: BasicKey.self)
-                        .decode(D.self, forKey: key)
-                }
-            case 1...:
-                let next = keys.last!
-                if let index = next.intValue {
-                    switch state {
-                    case .keyed(let keyed):
-                        var new = try keyed.nestedUnkeyedContainer(forKey: key)
-                        state = try .unkeyed(new.skip(to: index))
-                    case .unkeyed(var unkeyed):
-                        var new = try unkeyed.nestedUnkeyedContainer()
-                        state = try .unkeyed(new.skip(to: index))
-                    }
-                } else {
-                    switch state {
-                    case .keyed(let keyed):
-                        state = try .keyed(keyed.nestedContainer(keyedBy: BasicKey.self, forKey: key))
-                    case .unkeyed(var unkeyed):
-                        state = try .keyed(unkeyed.nestedContainer(keyedBy: BasicKey.self))
-                    }
-                }
-            default: fatalError()
+            var keys = Array(keyPath.reversed())
+            if keys.count == 0 {
+                return try unwrapper.decoder.singleValueContainer().decode(D.self)
             }
-        }
 
-        fatalError()
+            while let key = keys.popLast() {
+                switch keys.count {
+                case 0:
+                    switch state {
+                    case .keyed(let keyed):
+                        return try keyed.decode(D.self, forKey: key)
+                    case .unkeyed(var unkeyed):
+                        return try unkeyed.nestedContainer(keyedBy: BasicKey.self)
+                            .decode(D.self, forKey: key)
+                    }
+                case 1...:
+                    let next = keys.last!
+                    if let index = next.intValue {
+                        switch state {
+                        case .keyed(let keyed):
+                            var new = try keyed.nestedUnkeyedContainer(forKey: key)
+                            state = try .unkeyed(new.skip(to: index))
+                        case .unkeyed(var unkeyed):
+                            var new = try unkeyed.nestedUnkeyedContainer()
+                            state = try .unkeyed(new.skip(to: index))
+                        }
+                    } else {
+                        switch state {
+                        case .keyed(let keyed):
+                            state = try .keyed(keyed.nestedContainer(keyedBy: BasicKey.self, forKey: key))
+                        case .unkeyed(var unkeyed):
+                            state = try .keyed(unkeyed.nestedContainer(keyedBy: BasicKey.self))
+                        }
+                    }
+                default: fatalError("Unexpected negative key count")
+                }
+            }
+            fatalError("`while let key = keys.popLast()` should never fallthrough")
+        }
     }
 }
 

@@ -51,38 +51,42 @@ extension ContentContainer {
 
 extension ContentContainer {
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ keyPath: BasicKeyRepresentable...) -> D?
+    public subscript<D>(_ keyPath: BasicKeyRepresentable...) -> Future<D>
         where D: Decodable
     {
         return self[D.self, at: keyPath]
     }
 
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ type: D.Type, at keyPath: BasicKeyRepresentable...) -> D?
+    public subscript<D>(_ type: D.Type, at keyPath: BasicKeyRepresentable...) -> Future<D>
         where D: Decodable
     {
         return self[D.self, at: keyPath]
     }
 
     /// Convenience for accessing a single value from the content
-    public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> D?
+    public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> Future<D>
         where D: Decodable
     {
-        return try? get(at: keyPath)
+        return get(at: keyPath)
     }
 
     /// Convenience for accessing a single value from the content
-    public func get<D>(_ type: D.Type = D.self, at keyPath: BasicKeyRepresentable...) throws -> D
+    public func get<D>(_ type: D.Type = D.self, at keyPath: BasicKeyRepresentable...) -> Future<D>
         where D: Decodable
     {
-        return try get(at: keyPath)
+        return get(at: keyPath)
     }
 
     /// Convenience for accessing a single value from the content
-    public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
+    public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) -> Future<D>
         where D: Decodable
     {
-        let decoder = try requireDecoder()
-        return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
+        do {
+            let decoder = try requireDecoder()
+            return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
+        } catch {
+            return Future(error: error)
+        }
     }
 }
