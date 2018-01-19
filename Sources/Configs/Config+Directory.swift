@@ -47,7 +47,7 @@ extension FileManager {
     fileprivate func isDirectory(path: String) -> Bool {
         var isDirectory: ObjCBool = false
         _ = fileExists(atPath: path, isDirectory: &isDirectory)
-        #if os(Linux)
+        #if os(Linux) && !swift(=>4.1)
             return isDirectory
         #else
             return isDirectory.boolValue
