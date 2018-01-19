@@ -46,7 +46,7 @@ public final class EngineClient: Client, Service {
 
         if ssl {
             #if os(macOS)
-                return Future {
+                return Future.flatMap {
                     let tcpSocket = try TCPSocket(isNonBlocking: true)
                     let tcpClient = try TCPClient(socket: tcpSocket)
                     let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
@@ -67,7 +67,7 @@ public final class EngineClient: Client, Service {
                 fatalError("HTTPS not yet supported")
             #endif
         } else {
-            return Future {
+            return Future.flatMap {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
                 let tcpClient = try TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)

@@ -161,7 +161,7 @@ fileprivate struct EngineResponder: HTTPResponder {
     }
 
     func respond(to httpRequest: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse> {
-        return Future {
+        return Future.flatMap {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)
                 .map(to: HTTPResponse.self) { $0.http }

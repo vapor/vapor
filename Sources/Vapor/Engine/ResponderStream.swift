@@ -24,7 +24,7 @@ public final class ResponderStream: TranscribingStream {
 
     /// See TransformingStream.transform
     public func transcribe(_ httpRequest: HTTPRequest) -> Future<HTTPResponse> {
-        return Future {
+        return Future.flatMap {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)
                 .map(to: HTTPResponse.self) { $0.http }
