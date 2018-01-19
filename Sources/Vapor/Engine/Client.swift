@@ -36,6 +36,7 @@ extension Client {
             try req.content.encode(content)
             req.http.method = method
             req.http.uri = url
+            req.http.headers = headers
             return try self.respond(to: req)
         }
     }
