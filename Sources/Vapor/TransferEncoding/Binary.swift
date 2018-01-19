@@ -8,7 +8,7 @@ public final class BinaryCoder: TransferCoder {
     /// Creates a new binary encoding
     public init() {
         self.mapStream = MapStream<ByteBuffer, ByteBuffer> { buffer in
-            return buffer
+            return Future(buffer)
         }
     }
 }
