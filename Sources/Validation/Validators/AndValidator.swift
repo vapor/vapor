@@ -56,14 +56,14 @@ internal struct AndValidatorError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         if var left = left, var right = right {
-            left.keyPath = keyPath + left.keyPath
-            right.keyPath = keyPath + right.keyPath
+            left.codingPath = codingPath + left.codingPath
+            right.codingPath = codingPath + right.codingPath
             return "\(left.reason) and \(right.reason)"
         } else if var left = left {
-            left.keyPath = keyPath + left.keyPath
+            left.codingPath = codingPath + left.codingPath
             return left.reason
         } else if var right = right {
-            right.keyPath = keyPath + right.keyPath
+            right.codingPath = codingPath + right.codingPath
             return right.reason
         } else {
             return ""
@@ -71,13 +71,13 @@ internal struct AndValidatorError: ValidationError {
     }
 
     /// See ValidationError.keyPath
-    var keyPath: [CodingKey]
+    var codingPath: [CodingKey]
 
     /// Creates a new or validator error
     init(_ left: ValidationError?, _ right: ValidationError?) {
         self.left = left
         self.right = right
-        self.keyPath = []
+        self.codingPath = []
     }
 }
 

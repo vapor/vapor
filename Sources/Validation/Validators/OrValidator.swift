@@ -49,19 +49,19 @@ internal struct OrValidatorError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         var left = self.left
-        left.keyPath = keyPath + left.keyPath
+        left.codingPath = codingPath + left.codingPath
         var right = self.right
-        right.keyPath = keyPath + right.keyPath
+        right.codingPath = codingPath + right.codingPath
         return "\(left.reason) and \(right.reason)"
     }
 
     /// See ValidationError.keyPath
-    var keyPath: [CodingKey]
+    var codingPath: [CodingKey]
 
     /// Creates a new or validator error
     init(_ left: ValidationError, _ right: ValidationError) {
         self.left = left
         self.right = right
-        self.keyPath = []
+        self.codingPath = []
     }
 }

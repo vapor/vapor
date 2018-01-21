@@ -23,13 +23,13 @@ extension Validatable {
         for (key, validation) in Self.validations.storage {
             /// fetch the value for the key path and
             /// convert it to validation data
-            let data = (self[keyPath: key] as ValidationDataRepresentable).makeValidationData()
+            let data = (self[keyPath: key.keyPath] as ValidationDataRepresentable).makeValidationData()
 
             /// run the validation, catching validation errors
             do {
                 try validation.validate(data)
             } catch var error as ValidationError {
-                error.keyPath += Self.unsafeCodingPath(forKey: key)
+                error.codingPath += key.codingPath
                 errors.append(error)
             }
         }
@@ -47,13 +47,13 @@ struct ValidatableError: ValidationError {
     var errors: [ValidationError]
 
     /// See ValidationError.keyPath
-    var keyPath: [CodingKey]
+    var codingPath: [CodingKey]
 
     /// See ValidationError.reason
     var reason: String {
         return errors.map { error in
             var error = error
-            error.keyPath = keyPath + error.keyPath
+            error.codingPath = codingPath + error.codingPath
             return error.reason
         }.joined(separator: ", ")
     }
@@ -61,6 +61,6 @@ struct ValidatableError: ValidationError {
     /// creates a new validatable error
     public init(_ errors: [ValidationError]) {
         self.errors = errors
-        self.keyPath = []
+        self.codingPath = []
     }
 }
