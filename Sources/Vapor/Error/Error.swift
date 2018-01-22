@@ -3,7 +3,8 @@ import Foundation
 import COperatingSystem
 
 /// Errors that can be thrown while working with Vapor.
-public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable {
+public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable, Helpable {
+
     public static let readableName = "Vapor Error"
     public let identifier: String
     public var reason: String
@@ -12,14 +13,18 @@ public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable {
     public var line: UInt
     public var column: UInt
     public var stackTrace: [String]
-    
+    public var suggestedFixes: [String]
+    public var possibleCauses: [String]
+
     init(
         identifier: String,
         reason: String,
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
-        column: UInt = #column
+        column: UInt = #column,
+        suggestedFixes: [String] = [],
+        possibleCauses: [String] = []
     ) {
         self.identifier = identifier
         self.reason = reason
@@ -28,6 +33,8 @@ public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable {
         self.line = line
         self.column = column
         self.stackTrace = VaporError.makeStackTrace()
+        self.suggestedFixes = suggestedFixes
+        self.possibleCauses = possibleCauses
     }
     
     static func unknownMediaType(

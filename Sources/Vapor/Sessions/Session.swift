@@ -7,9 +7,9 @@ public final class Session {
     public var data: SessionData
 
     /// Create a new session.
-    public init() {
-        cookie = nil
-        data = .init()
+    public init(cookie: Cookie.Value? = nil, data: SessionData = .init()) {
+        self.cookie = cookie
+        self.data = data
     }
 }
 

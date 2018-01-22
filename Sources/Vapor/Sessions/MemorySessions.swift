@@ -39,17 +39,18 @@ public final class MemorySessions: Sessions {
     }
 
     /// See Sessions.readSession
-    public func readSession(for cookie: Cookie.Value) throws -> Session? {
-        return sessions[cookie.value]
+    public func readSession(for cookie: Cookie.Value) throws -> Future<Session?> {
+        return Future(sessions[cookie.value])
     }
 
     /// See Sessions.destroySession
-    public func destroySession(for cookie: Cookie.Value) throws {
+    public func destroySession(for cookie: Cookie.Value) throws -> Future<Void> {
         sessions[cookie.value] = nil
+        return .done
     }
 
     /// See Sessions.updateSession
-    public func updateSession(_ session: Session) throws -> Cookie.Value {
+    public func updateSession(_ session: Session) throws -> Future<Cookie.Value> {
         let cookie: Cookie.Value
         if let existing = session.cookie {
             cookie = existing
@@ -60,6 +61,6 @@ public final class MemorySessions: Sessions {
         }
         session.cookie = cookie
         sessions[cookie.value] = session
-        return cookie
+        return Future(cookie)
     }
 }
