@@ -49,17 +49,14 @@ extension Services {
         }
 
         // sessions
-        services.register(isSingleton: true) { container in
-            return SessionCache()
-        }
-        services.register { container -> SessionsMiddleware in
-            return try SessionsMiddleware(
-                cookieName: "vapor-session",
-                sessions: container.make(for: SessionsMiddleware.self)
-            )
-        }
-        services.register(Sessions.self) { container -> MemorySessions in
-            return MemorySessions.default()
+        services.register(SessionCache.self)
+        services.register(SessionsMiddleware.self)
+        services.register(KeyedCacheSessions.self)
+        services.register(SessionsConfig.self)
+
+        // keyed cache
+        services.register(KeyedCache.self) { container -> MemoryKeyedCache in
+            return MemoryKeyedCache()
         }
         
 //        services.register { container in
@@ -209,3 +206,4 @@ extension EphemeralWorkerConfig: Service { }
 extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}
+extension MemoryKeyedCache: Service {}
