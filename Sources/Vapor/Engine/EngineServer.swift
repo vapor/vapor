@@ -171,7 +171,7 @@ fileprivate struct EngineResponder: HTTPResponder {
 
 extension Logger {
     func reportError(_ error: Error, as label: String) {
-        var string = "\(label): "
+        var string = ""
         if let debuggable = error as? Debuggable {
             string += debuggable.fullIdentifier
             string += ": "
@@ -188,6 +188,14 @@ extension Logger {
             )
         } else {
             self.error(string)
+        }
+        if let helpable = error as? Helpable & Debuggable {
+            if helpable.suggestedFixes.count > 0 {
+                self.debug("Suggested fixes for \(helpable.fullIdentifier): " + helpable.suggestedFixes.joined(separator: " "))
+            }
+            if helpable.possibleCauses.count > 0 {
+                self.debug("Possible causes for \(helpable.fullIdentifier): " + helpable.possibleCauses.joined(separator: " "))
+            }
         }
     }
 }

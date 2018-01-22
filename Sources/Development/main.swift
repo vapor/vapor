@@ -52,7 +52,7 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
-    middlewareConfig.use(SessionsMiddleware.self)
+//    middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
 
