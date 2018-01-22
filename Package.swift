@@ -36,6 +36,12 @@ let package = Package(
 
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
+
+        // Pure Swift (POSIX) TCP and UDP non-blocking socket layer, with event-driven Server and Client.
+        .package(url: "https://github.com/vapor/sockets.git", .branch("beta")),
+
+        // Swift OpenSSL & macOS Security TLS wrapper
+        .package(url: "https://github.com/vapor/tls.git", .branch("beta")),
     ],
     targets: [
         // Boilerplate
