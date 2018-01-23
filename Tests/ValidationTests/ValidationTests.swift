@@ -3,8 +3,7 @@ import XCTest
 
 class ValidationTests: XCTestCase {
     func testValidate() throws {
-        let user = User(name: "Tanner", age: 23)
-        user.child = User(name: "Zizek Pulaski", age: 3)
+        let user = User(name: "Tanner", age: 23, pet: Pet(name: "Zizek Pulaski"))
         try user.validate()
     }
 
@@ -62,17 +61,25 @@ final class User: Validatable {
     var id: Int?
     var name: String
     var age: Int
-    var child: User?
+    var pet: Pet
 
-    init(id: Int? = nil, name: String, age: Int) {
+    init(id: Int? = nil, name: String, age: Int, pet: Pet) {
         self.id = id
         self.name = name
         self.age = age
+        self.pet = pet
     }
     
     static var validations: Validations = [
         key(\.name): IsCount(5...),
         key(\.age): IsCount(3...),
-        key(\.child): IsNil() || IsValid()
+        key(\.pet.name): IsCount(5...)
     ]
+}
+
+final class Pet: Codable {
+    var name: String
+    init(name: String) {
+        self.name = name
+    }
 }

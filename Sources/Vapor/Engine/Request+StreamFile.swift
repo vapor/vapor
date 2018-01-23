@@ -1,3 +1,4 @@
+import Async
 import Bits
 import Foundation
 
@@ -48,9 +49,12 @@ extension Request {
             res.http.mediaType = type
         }
 
+        let passthrough = ConnectingStream<ByteBuffer>()
+        
         res.http.body = HTTPBody(
-            chunked: reader.read(at: path, chunkSize: 2048)
+            chunked: passthrough
         )
+        reader.read(at: path, into: passthrough, chunkSize: 2048)
         return res
     }
 }

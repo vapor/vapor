@@ -1,5 +1,8 @@
 import COperatingSystem
 import Vapor
+import Dispatch
+
+
 
 //let beta = DatabaseIdentifier<SQLiteDatabase>("beta")
 //let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
@@ -49,28 +52,57 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
-    services.instance(middlewareConfig)
+//    middlewareConfig.use(SessionsMiddleware.self)
+    services.register(middlewareConfig)
 
 
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
-    services.instance(dir)
+    services.register(dir)
 
-    let app = try Application(services: services)
+    let app = try Application(environment: .detect(), services: services)
 
     let router = try app.make(Router.self)
 
-    router.get("example") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
+    router.get("search") { req -> String in
+        return try req.query.get(String.self, at: ["query"])
+    }
 
-        return client.send(.get, to: "http://www.zombo.com/")
+    router.get("hash", String.parameter) { req -> String in
+        let string = try req.parameter(String.self)
+        return try req.make(BCryptHasher.self).make(string)
+    }
+
+    router.get("set") { req -> String in
+        let session = try req.session()
+        session["foo"] = "bar"
+        return "done"
+    }
+
+    router.get("get") { req -> String  in
+        let session = try req.session()
+        return session["foo"] ?? "none"
+    }
+
+    router.get("del") { req -> String  in
+        try req.destroySession()
+        return "deleted"
     }
     
+    router.get("ping") { req in
+        return "123" as StaticString
+    }
+
+    router.get("example") { req -> Future<Response> in
+        let client = try req.make(Client.self, for: Request.self)
+        return client.send(.get, to: "http://www.zombo.com/")
+    }
+
     router.get("example1") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://www.romansgohome.com")
     }
-    
+
     router.get("example2") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
@@ -79,10 +111,10 @@ do {
 
     router.get("example3") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-        
+
         return client.send(.get, to: "https://www.google.com")
     }
-    
+
 //    router.get("hello2") { req -> Future<[User]> in
 //        let user = User(name: "Vapor", age: 3);
 //        return Future([user])
@@ -101,12 +133,12 @@ do {
     }
 
     router.post("login") { req -> Future<Response> in
-        let loginRequest = try req.content.decode(LoginRequest.self)
+        return try req.content.decode(LoginRequest.self).map(to: Response.self) { loginRequest in
+            print(loginRequest.email) // user@vapor.codes
+            print(loginRequest.password) // don't look!
 
-        print(loginRequest.email) // user@vapor.codes
-        print(loginRequest.password) // don't look!
-
-        return Future(req.makeResponse())
+            return req.makeResponse()
+        }
     }
 
 //    router.get("leaf") { req -> Future<View> in
@@ -233,8 +265,8 @@ do {
         return Future(res)
     }
 
-    router.get("123") { req -> Future<String> in
-        return Future("123")
+    router.get("123") { req in
+        return "123"
     }
 //
 //    router.get("hello") { req in
@@ -275,7 +307,7 @@ do {
             return "done!"
         }
     }
-                                                                         
+
     router.get("query") { req -> Future<String> in
         struct Hello: Decodable {
             var name: String?
@@ -290,10 +322,13 @@ do {
         return Future(req.redirect(to: "http://google.com"))
     }
 
-//    router.get("leafcontext") { req -> Future<View> in
-//        let leaf = try req.make(LeafRenderer.self)
-//        return try leaf.make("home", [:] as [String: String])
-//    }
+    router.get("template") { req -> Future<View> in
+        return try req.view().render("hello")
+    }
+    
+    router.get(PathComponent.anything) { _ in
+        return "Hello"
+    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]

@@ -4,7 +4,7 @@ import HTTP
 import Service
 
 /// Captures all errors and transforms them into an internal server error.
-public final class ErrorMiddleware: Middleware {
+public final class ErrorMiddleware: Middleware, Service {
     /// The environment to respect when presenting errors.
     let environment: Environment
 

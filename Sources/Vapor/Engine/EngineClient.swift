@@ -10,7 +10,7 @@ import TLS
 #endif
 
 /// HTTP/1.1 and HTTP/2 client wrapper.
-public final class EngineClient: Client {
+public final class EngineClient: Client, Service {
     /// See Client.container
     public let container: Container
 
@@ -46,16 +46,14 @@ public final class EngineClient: Client {
 
         if ssl {
             #if os(macOS)
-                return Future {
+                return Future.flatMap {
                     let tcpSocket = try TCPSocket(isNonBlocking: true)
                     let tcpClient = try TCPClient(socket: tcpSocket)
                     let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
                     try tlsClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 443)
-                    let source = tlsClient.socket.source(on: self.container.eventLoop)
-                    let sink = tlsClient.socket.sink(on: self.container.eventLoop)
                     let client = HTTPClient(
-                        source: source,
-                        sink: sink,
+                        stream: tlsClient.socket.stream(on: self.container),
+                        on: self.container,
                         maxResponseSize: self.config.maxResponseSize
                     )
                     req.http.headers[.host] = req.http.uri.hostname
@@ -69,15 +67,13 @@ public final class EngineClient: Client {
                 fatalError("HTTPS not yet supported")
             #endif
         } else {
-            return Future {
+            return Future.flatMap {
                 let tcpSocket = try TCPSocket(isNonBlocking: true)
                 let tcpClient = try TCPClient(socket: tcpSocket)
                 try tcpClient.connect(hostname: req.http.uri.hostname!, port: req.http.uri.port ?? 80)
-                let source = tcpSocket.source(on: self.container.eventLoop)
-                let sink = tcpSocket.sink(on: self.container.eventLoop)
                 let client = HTTPClient(
-                    source: source,
-                    sink: sink,
+                    stream: tcpSocket.stream(on: self.container),
+                    on: self.container,
                     maxResponseSize: self.config.maxResponseSize
                 )
                 req.http.headers[.host] = req.http.uri.hostname
@@ -92,7 +88,7 @@ public final class EngineClient: Client {
 }
 
 /// Configuration option's for the EngineClient.
-public struct EngineClientConfig {
+public struct EngineClientConfig: Service {
     /// The maximum response size to allow for
     /// incoming HTTP responses.
     public let maxResponseSize: Int

@@ -6,7 +6,7 @@ import Dispatch
 import Foundation
 
 /// Services files from the public folder.
-public final class FileMiddleware: Middleware {
+public final class FileMiddleware: Middleware, Service {
     /// The public directory.
     /// note: does _not_ end with a slash
     let publicDirectory: String

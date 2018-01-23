@@ -3,12 +3,12 @@ import Console
 import Foundation
 
 /// Displays all registered routes.
-public struct RoutesCommand: Command {
+public struct RoutesCommand: Command, Service {
     /// See Command.arguments
-    public let arguments: [Argument] = []
+    public let arguments: [CommandArgument] = []
 
     /// See Runnable.options
-    public let options: [Option] = []
+    public let options: [CommandOption] = []
 
     /// See Runnable.help
     public let help: [String] = ["Displays all registered routes"]
@@ -22,7 +22,9 @@ public struct RoutesCommand: Command {
     }
 
     /// See Runnable.run
-    public func run(using console: Console, with input: Input) throws {
+    public func run(using context: CommandContext) throws {
+        let console = context.console
+        
         var longestMethod = 0
         var longestPath = 0
 
@@ -42,10 +44,12 @@ public struct RoutesCommand: Command {
                 case .constants(let consts):
                     pathLength += consts.count
                     for const in consts {
-                        pathLength += const.count
+                        pathLength += const.count + 1 // /const
                     }
                 case .parameter(let param):
-                    pathLength += param.count + 2
+                    pathLength += param.count + 2 // /:param
+                case .anything:
+                    pathLength += 2 // /*
                 }
             }
 
@@ -74,7 +78,6 @@ public struct RoutesCommand: Command {
             guard let first = route.path.first, case .constants(let method) = first else {
                 continue
             }
-
             console.success(method[0].string, newLine: false)
 
             for _ in 0..<longestMethod - method[0].count {
@@ -98,6 +101,9 @@ public struct RoutesCommand: Command {
                     console.print(":", newLine: false)
                     console.info(param.string, newLine: false)
                     pathLength += param.count + 2
+                case .anything:
+                    console.info("/*", newLine: false)
+                    pathLength += 2
                 }
             }
 

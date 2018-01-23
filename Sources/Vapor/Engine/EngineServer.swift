@@ -1,6 +1,7 @@
 import Async
 import Bits
 import Console
+import Command
 import Debugging
 import Dispatch
 import Foundation
@@ -11,7 +12,7 @@ import TCP
 import TLS
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: Server {
+public final class EngineServer: Server, Service {
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
@@ -29,34 +30,31 @@ public final class EngineServer: Server {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        let workers = try (0..<config.workerCount).map { i -> EngineWorker in
-            // create new event loop
-            let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
-            return EngineWorker(
-                container: container.subContainer(on: eventLoop),
-                responder: responder
-            )
-        }
-
         var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
         tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-
-        let accept = try DefaultEventLoop(label: "codes.vapor.engine.server.accept")
-        let server = HTTPServer(
-            acceptStream: tcpServer.stream(on: accept),
-            workers: workers
-        )
-
+        
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)
-
-        server.onError = { error in
-            logger.reportError(error, as: "Server Error")
+        
+        for i in 1...config.workerCount {
+            let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
+            let responder = EngineResponder(container: self.container, responder: responder)
+            let acceptStream = tcpServer.stream(on: eventLoop)
+                .map(to: SocketStream<TCPSocket>.self) { $0.socket.stream(on: eventLoop) }
+            
+            let server = HTTPServer(
+                acceptStream: acceptStream,
+                worker: eventLoop,
+                responder: responder
+            )
+            
+            server.onError = { error in
+                logger.reportError(error, as: "Server Error")
+            }
+            
+            // non-blocking main thread run
+            Thread.async { eventLoop.runLoop() }
         }
-
-        console.print("Server starting on ", newLine: false)
-        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
-        console.output(":" + config.port.description, style: .init(color: .cyan))
 
         // bind, listen, and start accepting
         try tcpServer.start(
@@ -64,9 +62,12 @@ public final class EngineServer: Server {
             port: config.port,
             backlog: config.backlog
         )
+        
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+        console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        // non-blocking main thread run
-        accept.runLoop()
+        while true { RunLoop.main.run() }
     }
 
 
@@ -150,10 +151,7 @@ public final class EngineServer: Server {
 //    }
 }
 
-fileprivate struct EngineWorker: HTTPResponder, Worker {
-    var eventLoop: EventLoop {
-        return container.eventLoop
-    }
+fileprivate struct EngineResponder: HTTPResponder {
     let responder: Responder
     let container: Container
 
@@ -163,7 +161,7 @@ fileprivate struct EngineWorker: HTTPResponder, Worker {
     }
 
     func respond(to httpRequest: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse> {
-        return Future {
+        return Future.flatMap {
             let req = Request(http: httpRequest, using: self.container)
             return try self.responder.respond(to: req)
                 .map(to: HTTPResponse.self) { $0.http }
@@ -173,7 +171,7 @@ fileprivate struct EngineWorker: HTTPResponder, Worker {
 
 extension Logger {
     func reportError(_ error: Error, as label: String) {
-        var string = "\(label): "
+        var string = ""
         if let debuggable = error as? Debuggable {
             string += debuggable.fullIdentifier
             string += ": "
@@ -190,6 +188,14 @@ extension Logger {
             )
         } else {
             self.error(string)
+        }
+        if let helpable = error as? Helpable & Debuggable {
+            if helpable.suggestedFixes.count > 0 {
+                self.debug("Suggested fixes for \(helpable.fullIdentifier): " + helpable.suggestedFixes.joined(separator: " "))
+            }
+            if helpable.possibleCauses.count > 0 {
+                self.debug("Possible causes for \(helpable.fullIdentifier): " + helpable.possibleCauses.joined(separator: " "))
+            }
         }
     }
 }
@@ -261,7 +267,7 @@ extension Logger {
 //}
 
 /// Engine server config struct.
-public struct EngineServerConfig {
+public struct EngineServerConfig: Service {
     /// Host name the server will bind to.
     public var hostname: String
 
@@ -283,11 +289,11 @@ public struct EngineServerConfig {
 
     /// Creates a new engine server config
     public init(
-        hostname: String = "localhost",
-        port: UInt16 = 8080,
-        backlog: Int32 = 4096,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxConnectionsPerIP: Int = 128
+        hostname: String,
+        port: UInt16,
+        backlog: Int32,
+        workerCount: Int,
+        maxConnectionsPerIP: Int
     ) {
         self.hostname = hostname
         self.port = port
@@ -295,5 +301,24 @@ public struct EngineServerConfig {
         self.backlog = backlog
         self.maxConnectionsPerIP = maxConnectionsPerIP
         // self.ssl = nil
+    }
+}
+
+extension EngineServerConfig {
+    /// Detects `EngineServerConfig` from the environment.
+    public static func detect(
+        hostname: String = "localhost",
+        port: UInt16 = 8080,
+        backlog: Int32 = 4096,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
+        maxConnectionsPerIP: Int = 128
+    ) throws -> EngineServerConfig {
+        return try EngineServerConfig(
+            hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
+            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(UInt16.init) ?? port,
+            backlog: backlog,
+            workerCount: workerCount,
+            maxConnectionsPerIP: maxConnectionsPerIP
+        )
     }
 }

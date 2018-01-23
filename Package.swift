@@ -25,14 +25,23 @@ let package = Package(
         // Cryptography modules
         .package(url: "https://github.com/vapor/crypto.git", .branch("beta")),
 
+        // Core services for creating database integrations.
+        .package(url: "https://github.com/vapor/database-kit.git", .branch("beta")),
+
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", .branch("beta")),
 
-        // FIXME: rely on just TemplateKit
-        .package(url: "https://github.com/vapor/leaf.git", .branch("beta")),
+        // Easy-to-use foundation for building powerful templating languages in Swift.
+        .package(url: "https://github.com/vapor/template-kit.git", .branch("beta")),
 
         // Service container and configuration system.
         .package(url: "https://github.com/vapor/service.git", .branch("beta")),
+
+        // Pure Swift (POSIX) TCP and UDP non-blocking socket layer, with event-driven Server and Client.
+        .package(url: "https://github.com/vapor/sockets.git", .branch("beta")),
+
+        // Swift OpenSSL & macOS Security TLS wrapper
+        .package(url: "https://github.com/vapor/tls.git", .branch("beta")),
     ],
     targets: [
         // Boilerplate
@@ -51,6 +60,7 @@ let package = Package(
             "Command",
             "Console",
             "COperatingSystem",
+            "DatabaseKit",
             "Debugging",
             "FormURLEncoded",
             "HTTP",

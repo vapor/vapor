@@ -2,12 +2,12 @@ import Command
 import Console
 
 /// Starts serving the app's responder over HTTP.
-public struct ServeCommand: Command {
+public struct ServeCommand: Command, Service {
     /// See Command.arguments
-    public let arguments: [Argument] = []
+    public let arguments: [CommandArgument] = []
 
     /// See Runnable.options
-    public let options: [Option] = []
+    public let options: [CommandOption] = []
 
     /// See Runnable.help
     public let help: [String] = ["Begins serving the app over HTTP"]
@@ -23,7 +23,7 @@ public struct ServeCommand: Command {
     }
 
     /// See Runnable.run
-    public func run(using console: Console, with input: Input) throws {
+    public func run(using context: CommandContext) throws {
         try server.start(with: responder)
     }
 }

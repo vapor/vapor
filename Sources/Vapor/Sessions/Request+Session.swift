@@ -1,23 +1,29 @@
-import HTTP
-
-extension SessionCookie {
-    /// Extracts a `SessionCookie` from this `Request`.
-    ///
-    /// Requires the `SessionCookie` to be set by `SessionCookieMiddleware`
-    public init(from request: Request, named cookieName: String? = nil) throws {
-        let extendToken: String
-        
-        // No cookieName means attempting to use the last set cookie
-        if let cookieName = cookieName {
-            extendToken = "vapor:session-cookie:\(cookieName)"
+extension Request {
+    /// Returns the current session or creates one. `nil` if no session exists.
+    public func session() throws -> Session {
+        let cache = try privateContainer.make(SessionCache.self, for: Request.self)
+        guard cache.middlewareFlag else {
+            throw VaporError(
+                identifier: "sessionsMiddlewareFlag",
+                reason: "No `SessionsMiddleware` detected.",
+                suggestedFixes: [
+                    "Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`.",
+                    "Add the `SessionsMiddleware` to a route group."
+                ]
+            )
+        }
+        if let existing = cache.session {
+            return existing
         } else {
-            extendToken = "vapor:last-session-cookie"
+            let new = Session()
+            cache.session = new
+            return new
         }
-        
-        guard let session = request.extend[extendToken] as? Self else {
-            throw SessionsError.cookieNotFound(name: cookieName, type: Self.self)
-        }
-        
-        self = session
+    }
+
+    /// Destroys the current session, if one exists.
+    public func destroySession() throws {
+        let cache = try privateContainer.make(SessionCache.self, for: Request.self)
+        cache.session = nil
     }
 }

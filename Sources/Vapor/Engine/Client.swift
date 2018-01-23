@@ -15,10 +15,11 @@ extension Client {
         headers: HTTPHeaders = [:],
         to url: URI
     ) -> Future<Response> {
-        return Future {
+        return Future.flatMap {
             let req = Request(using: self.container)
             req.http.method = method
             req.http.uri = url
+            req.headers = headers
             return try self.respond(to: req)
         }
     }
@@ -30,11 +31,12 @@ extension Client {
         to url: URI,
         content: C
     ) -> Future<Response> {
-        return Future {
+        return Future.flatMap {
             let req = Request(using: self.container)
             try req.content.encode(content)
             req.http.method = method
             req.http.uri = url
+            req.http.headers = headers
             return try self.respond(to: req)
         }
     }

@@ -1,5 +1,5 @@
 /// Configures which encodings to use for a given transfer encoding.
-public struct TransferEncodingConfig {
+public struct TransferEncodingConfig: Service {
     /// Configured encodings.
     var encodings: [String: TransferEncoding]
     

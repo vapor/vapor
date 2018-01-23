@@ -3,7 +3,7 @@ import Service
 
 /// Configures application middleware.
 /// Middleware will be used in the order they are added.
-public struct MiddlewareConfig {
+public struct MiddlewareConfig: Service {
     /// Lazily initializes a middleware using container.
     typealias LazyMiddleware = (Container) throws -> Middleware
 
@@ -40,5 +40,13 @@ extension MiddlewareConfig {
         return try storage.map { lazy in
             return try lazy(container)
         }
+    }
+    
+    public static func `default`() -> MiddlewareConfig {
+        var config = MiddlewareConfig()
+        config.use(FileMiddleware.self)
+        config.use(DateMiddleware.self)
+        config.use(ErrorMiddleware.self)
+        return config
     }
 }

@@ -28,7 +28,7 @@ fileprivate var cachedTimeComponents: (key: time_t, components: COperatingSystem
 let secondsInDay = 60 * 60 * 24
 
 /// Adds the RFC 1123 date to the response.
-public final class DateMiddleware: Middleware {
+public final class DateMiddleware: Middleware, Service {
     public init() { }
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {

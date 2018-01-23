@@ -1,12 +1,12 @@
 public struct Validations: ExpressibleByDictionaryLiteral {
     /// Store the key and query field.
-    internal var storage: [AnyKeyPath: Validator]
+    internal var storage: [ValidationKey: Validator]
 
     /// See ExpressibleByDictionaryLiteral
     public init(dictionaryLiteral elements: (ValidationKey, Validator)...) {
         self.storage = [:]
         for (key, validator) in elements {
-            storage[key.path] = validator
+            storage[key] = validator
         }
     }
 
@@ -14,9 +14,22 @@ public struct Validations: ExpressibleByDictionaryLiteral {
 
 /// A model property containing the
 /// Swift key path for accessing it.
-public struct ValidationKey {
+public struct ValidationKey: Hashable {
+    /// See `Hashable.hashValue`
+    public var hashValue: Int {
+        return keyPath.hashValue
+    }
+
+    /// See `Equatable.==`
+    public static func ==(lhs: ValidationKey, rhs: ValidationKey) -> Bool {
+        return lhs.keyPath == rhs.keyPath
+    }
+
     /// The Swift keypath
-    public var path: AnyKeyPath
+    public var keyPath: AnyKeyPath
+
+    /// The respective CodingKey path.
+    public var codingPath: [CodingKey]
 
     /// The properties type.
     /// Storing this as any since we lost
@@ -28,8 +41,9 @@ public struct ValidationKey {
     public var isOptional: Bool
 
     /// Create a new model key.
-    internal init<T>(path: AnyKeyPath, type: T.Type, isOptional: Bool) {
-        self.path = path
+    internal init<T>(keyPath: AnyKeyPath, codingPath: [CodingKey], type: T.Type, isOptional: Bool) {
+        self.keyPath = keyPath
+        self.codingPath = codingPath
         self.type = type
         self.isOptional = isOptional
     }
@@ -39,12 +53,22 @@ public struct ValidationKey {
 extension Validatable {
     /// Create a validation key for the supplied key path.
     public static func key<T>(_ path: KeyPath<Self, T>) -> ValidationKey where T: ValidationDataRepresentable {
-        return ValidationKey(path: path, type: T.self, isOptional: false)
+        return ValidationKey(
+            keyPath: path,
+            codingPath: Self.codingPath(forKey: path),
+            type: T.self,
+            isOptional: false
+        )
     }
 
     /// Create a validation key for the supplied key path.
     public static func key<T>(_ path: KeyPath<Self, T?>) -> ValidationKey where T: ValidationDataRepresentable {
-        return ValidationKey(path: path, type: T.self, isOptional: true)
+        return ValidationKey(
+            keyPath: path,
+            codingPath: Self.codingPath(forKey: path),
+            type: T.self,
+            isOptional: true
+        )
     }
 }
 
