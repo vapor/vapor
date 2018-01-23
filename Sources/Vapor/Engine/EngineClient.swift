@@ -40,7 +40,7 @@ public final class EngineClient: Client, Service {
         #if os(macOS)
             let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
         #else
-            let tlsClient = try OenSSLClient(tcp: tcpClient, using: TLSClientSettings())
+            let tlsClient = try OpenSSLClient(tcp: tcpClient, using: TLSClientSettings())
         #endif
         try tlsClient.connect(hostname: req.http.uri.requireHostname(), port: req.http.uri.port ?? 443)
         let client = HTTPClient(
