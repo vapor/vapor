@@ -44,7 +44,6 @@ extension MiddlewareConfig {
     
     public static func `default`() -> MiddlewareConfig {
         var config = MiddlewareConfig()
-        config.use(FileMiddleware.self)
         config.use(DateMiddleware.self)
         config.use(ErrorMiddleware.self)
         return config
