@@ -132,13 +132,11 @@ do {
         return Future(helloRes)
     }
 
-    router.post("login") { req -> Future<Response> in
-        return try req.content.decode(LoginRequest.self).map(to: Response.self) { loginRequest in
-            print(loginRequest.email) // user@vapor.codes
-            print(loginRequest.password) // don't look!
+    router.post(LoginRequest.self, path: "login") { req, loginRequest -> Response in
+        print(loginRequest.email) // user@vapor.codes
+        print(loginRequest.password) // don't look!
 
-            return req.makeResponse()
-        }
+        return req.makeResponse()
     }
 
 //    router.get("leaf") { req -> Future<View> in
@@ -326,9 +324,9 @@ do {
         return try req.view().render("hello")
     }
     
-    router.get(PathComponent.anything) { _ in
-        return "Hello"
-    }
+//    router.get(PathComponent.anything) { _ in
+//        return "Hello"
+//    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]
