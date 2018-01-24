@@ -68,7 +68,6 @@ public final class EngineClient: Client, Service {
         )
         req.http.headers[.host] = req.http.uri.hostname
         return client.send(req.http).map(to: Response.self) { httpRes in
-            print("httpRes: \(httpRes)")
             let res = req.makeResponse()
             res.http = httpRes
             return res
