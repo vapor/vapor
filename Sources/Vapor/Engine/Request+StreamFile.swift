@@ -1,4 +1,5 @@
 import Async
+import Files
 import Bits
 import Foundation
 
@@ -20,19 +21,15 @@ extension Request {
     public func streamFile(at path: String) throws -> Response {
         let reader = try make(FileReader.self, for: Request.self)
         let res = makeResponse()
-
-        guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
-            let modifiedAt = attributes[.modificationDate] as? Date,
-            let fileSize = attributes[.size] as? NSNumber
-        else {
-            throw Abort(.internalServerError)
-        }
-
+        
+        let file = try Files.File(atPath: path, flags: [.read])
+        
+        let details = try file.readDetails()
+        
         var headers: [HTTPHeaders.Name: String] = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-        let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
+        let fileETag = "\(details.lastModification.timeIntervalSince1970)-\(details.size)"
         headers[.eTag] = fileETag
 
         // Check if file has been cached already and return NotModified response if the etags match
@@ -51,9 +48,9 @@ extension Request {
 
         let passthrough = ConnectingStream<ByteBuffer>()
         
-        res.http.body = HTTPBody(
-            chunked: passthrough
-        )
+        let fileStream = AnyOutputStream(file.source(on: self))
+        res.http.body = HTTPBody(size: details.size, stream: fileStream)
+        
         reader.read(at: path, into: passthrough, chunkSize: 2048)
         return res
     }

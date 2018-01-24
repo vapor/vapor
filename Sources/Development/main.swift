@@ -50,13 +50,14 @@ do {
 //    migrationConfig.add(model: AutoUser.self, database: .beta)
 //    services.instance(migrationConfig)
 
-    var middlewareConfig = MiddlewareConfig()
-    middlewareConfig.use(ErrorMiddleware.self)
-//    middlewareConfig.use(SessionsMiddleware.self)
+    let middlewareConfig = MiddlewareConfig.default()
+//    var middlewareConfig = MiddlewareConfig()
+//    middlewareConfig.use(ErrorMiddleware.self)
+//    middlewareConfig.use(FileMiddleware.self)
     services.register(middlewareConfig)
 
 
-    let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
+    let dir = DirectoryConfig(workDir: "/Users/joannisorlandos/Documents/vapor/vapor/")
     services.register(dir)
 
     let app = try Application(environment: .detect(), services: services)
@@ -152,7 +153,7 @@ do {
 //        let user = User(name: "Vapor", age: 3);
 //        return try req.make(ViewRenderer.self).make("/Users/tanner/Desktop/hello", user)
 //    }
-
+//
 //    final class FooController {
 //        func foo(_ req: Request) -> Future<Response> {
 //            return req.withConnection(to: alpha) { db in
@@ -246,7 +247,7 @@ do {
     router.get("error") { req -> Future<String> in
         throw Abort(.internalServerError, reason: "Test error")
     }
-//
+
 //    router.get("users") { req -> Future<Response> in
 //        let marie = User(name: "Marie Curie", age: 66)
 //        let charles = User(name: "Charles Darwin", age: 73)
@@ -268,7 +269,7 @@ do {
     router.get("123") { req in
         return "123"
     }
-//
+
 //    router.get("hello") { req in
 //        return try User.query(on: req).filter(\User.age > 50).all()
 //    }
@@ -284,7 +285,7 @@ do {
             websocket.send(string: string)
         }
     }
-//
+
 //    router.get("first") { req -> Future<User> in
 //        return try User.query(on: req).filter(\User.name == "Vapor").first().map(to: User.self) { user in
 //            guard let user = user else {
@@ -326,9 +327,9 @@ do {
         return try req.view().render("hello")
     }
     
-    router.get(PathComponent.anything) { _ in
-        return "Hello"
-    }
+//    router.get(PathComponent.anything) { _ in
+//        return "Hello"
+//    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]

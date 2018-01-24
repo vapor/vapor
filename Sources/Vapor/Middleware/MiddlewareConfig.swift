@@ -19,16 +19,16 @@ public struct MiddlewareConfig: Service {
     /// The service container will be asked to create this
     /// middleware type upon application boot.
     public mutating func use<M: Middleware>(_ type: M.Type) {
-        storage.append({ container in
+        storage.append { container in
             return try container.make(M.self, for: MiddlewareConfig.self)
-        })
+        }
     }
 
     /// Adds the supplied middleware.
     public mutating func use<M: Middleware>(_ middleware: M) {
-        storage.append({ container in
+        storage.append { container in
             return middleware
-        })
+        }
     }
 }
 
