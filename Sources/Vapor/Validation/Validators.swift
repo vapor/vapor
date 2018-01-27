@@ -67,12 +67,6 @@ public protocol Validator {
 
 public protocol ValidationSuite: Validator {
     /**
-        The type of value that this validator is capable
-        of evaluating
-    */
-    associatedtype InputType: Validatable
-
-    /**
         Used to validate a given input. Should throw
         error if validation fails using:
 

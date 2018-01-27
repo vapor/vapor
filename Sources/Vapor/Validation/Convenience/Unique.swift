@@ -7,6 +7,8 @@ public struct Unique<
     T: Validatable,
     T.Iterator.Element: Equatable
 {
+    public typealias InputType = T
+    
 
     /**
         validate

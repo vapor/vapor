@@ -3,6 +3,8 @@
     given string contains only alphanumeric characters
 */
 public struct OnlyAlphanumeric: ValidationSuite {
+    public typealias InputType = String
+    
     private static let alphanumeric = "abcdefghijklmnopqrstuvwxyz0123456789"
     private static let validCharacters = alphanumeric.characters
 
