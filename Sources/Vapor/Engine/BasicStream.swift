@@ -16,4 +16,3 @@ public struct BasicResponder: Responder {
         return try closure(req)
     }
 }
-

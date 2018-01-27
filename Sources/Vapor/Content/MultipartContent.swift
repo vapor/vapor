@@ -27,8 +27,8 @@ extension MultipartForm: Content {
         }
         
         let data = MultipartSerializer(form: self).serialize()
-        req.body = HTTPBody(data)
-        req.headers[.contentType] = "multipart/form-data; boundary=" + boundary
+        req.http.body = HTTPBody(data)
+        req.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
         
         return .done
     }
@@ -40,30 +40,30 @@ extension MultipartForm: Content {
         }
         
         let data = MultipartSerializer(form: self).serialize()
-        res.body = HTTPBody(data)
-        res.headers[.contentType] = "multipart/form-data; boundary=" + boundary
+        res.http.body = HTTPBody(data)
+        res.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
         
         return .done
     }
     
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<MultipartForm> {
-        guard let boundary = req.headers[.contentType, "boundary"] else {
+        guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
     
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
-        guard let boundary = req.headers[.contentType, "boundary"] else {
+        guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
