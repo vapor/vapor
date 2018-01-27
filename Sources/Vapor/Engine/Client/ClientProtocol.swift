@@ -16,9 +16,9 @@ public protocol ClientProtocol: Responder {
 // MARK: Proxy
 
 public struct Proxy {
-    var hostname: String
-    var port: Port
-    var securityLayer: SecurityLayer
+    public var hostname: String
+    public var port: Port
+    public var securityLayer: SecurityLayer
 }
 
 
