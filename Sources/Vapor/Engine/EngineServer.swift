@@ -30,8 +30,9 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start(with responder: Responder) throws {
-        var tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
-        tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
+        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
+        // leaking, probably because of client capturing itself in closure
+        // tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
         let console = try container.make(Console.self, for: EngineServer.self)
         let logger = try container.make(Logger.self, for: EngineServer.self)

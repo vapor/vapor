@@ -8,47 +8,16 @@ import TCP
 import XCTest
 
 class ApplicationTests: XCTestCase {
-    func testAnyResponse() throws {
-//        let response = "hello"
-//        let app = try Application()
-//        var result = Response(using: app)
-//        let req = Request(using: app)
-//        
-//        AnyResponse(response).map { encodable in
-//            try encodable.encode(to: &result, for: req).blockingAwait()
-//            XCTAssertEqual(result.http.body.data, Data("hello".utf8))
-//        }.catch { error in
-//            XCTFail("\(error)")
-//        }
-//        
-//        let response2: Future<String?> = Future(nil)
-//        let response3: Future<String?> = Future("test")
-//        
-//        AnyResponse(future: response2, or: "fail").map { encodable in
-//            try encodable.encode(to: &result, for: req).blockingAwait()
-//            XCTAssertEqual(result.http.body.data, Data("fail".utf8))
-//        }.catch { error in
-//            XCTFail("\(error)")
-//        }
-//        
-//        AnyResponse(future: response3, or: "fail").map { encodable in
-//            try encodable.encode(to: &result, for: req).blockingAwait()
-//            XCTAssertEqual(result.http.body.data, Data("test".utf8))
-//        }.catch { error in
-//            XCTFail("\(error)")
-//        }
-    }
-
     func testContent() throws {
         let app = try Application()
         let req = Request(using: app)
-        req.http.mediaType = .json
         req.http.body = try """
         {
             "hello": "world"
         }
         """.makeBody()
-        try XCTAssertEqual(req.content["hello"].await(on: app), "world")
+        req.http.mediaType = .json
+        try XCTAssertEqual(req.content.get(at: "hello").await(on: app), "world")
     }
 
     func testComplexContent() throws {
@@ -83,16 +52,15 @@ class ApplicationTests: XCTestCase {
         """
         let app = try Application()
         let req = Request(using: app)
-        req.http.mediaType = .json
         req.http.body = try complexJSON.makeBody()
+        req.http.mediaType = .json
 
-        try XCTAssertEqual(req.content["batters", "batter", 1, "type"].await(on: app), "Chocolate")
+        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").await(on: app), "Chocolate")
     }
 
     func testQuery() throws {
         /// FIXME: https://github.com/vapor/vapor/issues/1419
         return;
-        
         let app = try Application()
         let req = Request(using: app)
         req.http.mediaType = .json
@@ -101,7 +69,6 @@ class ApplicationTests: XCTestCase {
     }
 
     static let allTests = [
-        ("testAnyResponse", testAnyResponse),
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
