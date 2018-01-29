@@ -11,12 +11,12 @@ class ApplicationTests: XCTestCase {
     func testContent() throws {
         let app = try Application()
         let req = Request(using: app)
-        req.http.mediaType = .json
         req.http.body = try """
         {
             "hello": "world"
         }
         """.makeBody()
+        req.http.mediaType = .json
         try XCTAssertEqual(req.content.get(at: "hello").await(on: app), "world")
     }
 
@@ -52,10 +52,10 @@ class ApplicationTests: XCTestCase {
         """
         let app = try Application()
         let req = Request(using: app)
-        req.http.mediaType = .json
         req.http.body = try complexJSON.makeBody()
+        req.http.mediaType = .json
 
-        try XCTAssertEqual(req.content["batters", "batter", 1, "type"].await(on: app), "Chocolate")
+        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").await(on: app), "Chocolate")
     }
 
     func testQuery() throws {
