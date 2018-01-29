@@ -45,8 +45,7 @@ public final class EngineClient: Client, Service {
         try tlsClient.connect(hostname: req.http.uri.requireHostname(), port: req.http.uri.port ?? 443)
         let client = HTTPClient(
             stream: tlsClient.socket.stream(on: self.container),
-            on: self.container,
-            maxResponseSize: self.config.maxResponseSize
+            on: self.container
         )
         req.http.headers[.host] = req.http.uri.hostname
         return client.send(req.http).map(to: Response.self) { httpRes in
@@ -63,8 +62,7 @@ public final class EngineClient: Client, Service {
         try tcpClient.connect(hostname: req.http.uri.requireHostname(), port: req.http.uri.port ?? 80)
         let client = HTTPClient(
             stream: tcpSocket.stream(on: self.container),
-            on: self.container,
-            maxResponseSize: self.config.maxResponseSize
+            on: self.container
         )
         req.http.headers[.host] = req.http.uri.hostname
         return client.send(req.http).map(to: Response.self) { httpRes in
@@ -77,14 +75,8 @@ public final class EngineClient: Client, Service {
 
 /// Configuration option's for the EngineClient.
 public struct EngineClientConfig: Service {
-    /// The maximum response size to allow for
-    /// incoming HTTP responses.
-    public let maxResponseSize: Int
-
     /// Create a new EngineClientConfig.
-    public init(maxResponseSize: Int) {
-        self.maxResponseSize = maxResponseSize
-    }
+    public init() {}
 }
 
 extension URI {
