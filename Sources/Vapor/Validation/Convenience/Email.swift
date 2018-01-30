@@ -1,6 +1,8 @@
 import Foundation
 
 public class Email: ValidationSuite {
+    public typealias InputType = String
+    
     public static func validate(input value: String) throws {
         guard
             let localName = value.components(separatedBy: "@").first,
