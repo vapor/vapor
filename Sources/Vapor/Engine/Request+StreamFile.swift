@@ -23,7 +23,6 @@ extension Request {
         let res = makeResponse()
         
         let file = try Files.File(atPath: path, flags: [.read])
-        
         var headers: [HTTPHeaderName: String] = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"

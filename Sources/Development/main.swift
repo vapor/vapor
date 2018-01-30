@@ -1,6 +1,7 @@
 import COperatingSystem
 import Vapor
 import Dispatch
+import Foundation
 
 
 
@@ -93,27 +94,25 @@ do {
         return "123" as StaticString
     }
 
-    router.get("example") { req -> Future<Response> in
+    router.get("client", "zombo") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
         return client.send(.get, to: "http://www.zombo.com/")
     }
 
-    router.get("example1") { req -> Future<Response> in
+    router.get("client", "romans") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://www.romansgohome.com")
     }
 
-    router.get("example2") { req -> Future<Response> in
+    router.get("client", "example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://example.com")
     }
 
-    router.get("example3") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
-
-        return client.send(.get, to: "https://www.google.com")
+    router.get("client", "google") { req -> Future<HTTPStatus> in
+        return try req.make(Client.self).get("https://www.google.com").transform(to: .ok)
     }
 
 //    router.get("hello2") { req -> Future<[User]> in

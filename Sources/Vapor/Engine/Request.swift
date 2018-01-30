@@ -3,6 +3,7 @@ import Dispatch
 import HTTP
 import Routing
 import Service
+import Foundation
 
 public final class Request: ParameterContainer {
     /// Underlying HTTP request.
@@ -17,45 +18,6 @@ public final class Request: ParameterContainer {
     /// Holds parameters for routing
     public var parameters: Parameters
     
-    /// HTTP requests have a method, like GET or POST
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/method/)
-    public var method: HTTPMethod {
-        get { return http.method }
-        set { http.method = newValue }
-    }
-    
-    /// This is usually just a path like `/foo` but
-    /// may be a full URI in the case of a proxy
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/uri/)
-    public var uri: URI {
-        get { return http.uri }
-        set { http.uri = newValue }
-    }
-    
-    /// See `Message.version`
-    public var version: HTTPVersion {
-        get { return http.version }
-        set { http.version = newValue }
-    }
-    
-    /// See `Message.headers`
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: HTTPHeaders {
-        get { return http.headers }
-        set { http.headers = newValue }
-    }
-    
-    /// See `Message.body`
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: HTTPBody {
-        get { return http.body }
-        set { http.body = newValue }
-    }
-
     /// True if this request has active connections
     internal var hasActiveConnections: Bool
 
@@ -73,6 +35,20 @@ public final class Request: ParameterContainer {
         if hasActiveConnections {
             try! privateContainer.releaseCachedConnections()
         }
+    }
+}
+
+extension Request: CustomStringConvertible {
+    /// See `CustomStringConvertible.description
+    public var description: String {
+        return http.description
+    }
+}
+
+extension Request: CustomDebugStringConvertible {
+    /// See `CustomDebugStringConvertible.debugDescription`
+    public var debugDescription: String {
+        return http.debugDescription
     }
 }
 
