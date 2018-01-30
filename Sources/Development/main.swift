@@ -54,7 +54,7 @@ do {
     var middlewareConfig = MiddlewareConfig.default()
 //    var middlewareConfig = MiddlewareConfig()
 //    middlewareConfig.use(ErrorMiddleware.self)
-    middlewareConfig.use(FileMiddleware.self)
+//    middlewareConfig.use(FileMiddleware.self)
     services.register(middlewareConfig)
 
 
