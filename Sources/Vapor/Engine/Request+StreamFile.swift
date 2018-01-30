@@ -1,4 +1,5 @@
 import Async
+import HTTP
 import Files
 import Bits
 import Foundation
@@ -19,17 +20,14 @@ extension Request {
     ///
     /// For an example of how this is used, look at 'FileMiddleware'
     public func streamFile(at path: String) throws -> Response {
-        let reader = try make(FileReader.self, for: Request.self)
         let res = makeResponse()
         
         let file = try Files.File(atPath: path, flags: [.read])
         
-        let details = try file.readDetails()
-        
-        var headers: [HTTPHeaders.Name: String] = [:]
+        var headers: [HTTPHeaderName: String] = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-        let fileETag = "\(details.lastModification.timeIntervalSince1970)-\(details.size)"
+        let fileETag = "\(file.details.lastModification.timeIntervalSince1970)-\(file.details.size)"
         headers[.eTag] = fileETag
 
         // Check if file has been cached already and return NotModified response if the etags match
@@ -46,12 +44,9 @@ extension Request {
             res.http.mediaType = type
         }
 
-        let passthrough = ConnectingStream<ByteBuffer>()
+        let fileStream = file.source(on: self)
         
-        let fileStream = AnyOutputStream(file.source(on: self))
-        res.http.body = HTTPBody(size: details.size, stream: fileStream)
-        
-        reader.read(at: path, into: passthrough, chunkSize: 2048)
+        res.http.body = HTTPBody(stream: AnyOutputStream(fileStream), count: { file.details.size })
         return res
     }
 }
