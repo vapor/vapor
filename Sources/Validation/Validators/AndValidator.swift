@@ -1,4 +1,4 @@
-/// Combines two validators into an or validator
+/// Combines two validators into an and validator
 public func && (lhs: Validator, rhs: Validator) -> Validator {
     return AndValidator(lhs, rhs)
 }

@@ -31,7 +31,7 @@ public struct ValidationKey: Hashable {
     public var codingPath: [CodingKey]
 
     /// The properties type.
-    /// Storing this as any since we lost
+    /// Storing this as `Any` since we lost
     /// the type info converting to AnyKeyPAth
     public var type: Any.Type
 
