@@ -110,9 +110,17 @@ do {
         return client.send(.get, to: "http://example.com")
     }
 
+    router.get("client", "httpsbin") { req -> Future<String> in
+        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap(to: Data.self) { res in
+            return res.http.body.makeData(max: 2048)
+        }.map(to: String.self) { data in
+            return String(data: data, encoding: .utf8) ?? "n/a"
+        }
+    }
+
+
     router.get("client", "httpbin") { req -> Future<String> in
-        print(req)
-        return try req.make(Client.self).get("https://httpbin.org/ip").flatMap(to: Data.self) { res in
+        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
             return res.http.body.makeData(max: 2048)
         }.map(to: String.self) { data in
             return String(data: data, encoding: .utf8) ?? "n/a"
