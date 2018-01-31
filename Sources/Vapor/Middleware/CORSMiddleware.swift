@@ -20,7 +20,7 @@ public final class CORSMiddleware: Middleware {
     
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         // Check if it's valid CORS request
-        guard request.http.headers["Origin"] != nil else {
+        guard request.http.headers[.origin] != nil else {
             return try next.respond(to: request)
         }
         
@@ -36,15 +36,15 @@ public final class CORSMiddleware: Middleware {
             response.http.headers[.accessControlAllowMethods] = self.configuration.allowedMethods
             
             if let exposedHeaders = self.configuration.exposedHeaders {
-                response.http.headers["Access-Control-Expose-Headers"] = exposedHeaders
+                response.http.headers[.accessControlExpose] = exposedHeaders
             }
             
             if let cacheExpiration = self.configuration.cacheExpiration {
-                response.http.headers["Access-Control-Max-Age"] = String(cacheExpiration)
+                response.http.headers[.accessControlMaxAge] = String(cacheExpiration)
             }
             
             if self.configuration.allowCredentials {
-                response.http.headers["Access-Control-Allow-Credentials"] = "true"
+                response.http.headers[.accessControlAllowCredentials] = "true"
             }
             
             return response
