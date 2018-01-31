@@ -9,7 +9,6 @@ public struct Validations: ExpressibleByDictionaryLiteral {
             storage[key] = validator
         }
     }
-
 }
 
 /// A model property containing the
@@ -49,7 +48,6 @@ public struct ValidationKey: Hashable {
     }
 }
 
-
 extension Validatable {
     /// Create a validation key for the supplied key path.
     public static func key<T>(_ path: KeyPath<Self, T>) -> ValidationKey where T: ValidationDataRepresentable, T: KeyStringDecodable {
@@ -71,4 +69,3 @@ extension Validatable {
         )
     }
 }
-

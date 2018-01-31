@@ -16,4 +16,3 @@ let app = try Application(
 try Boilerplate.boot(app)
 
 try app.run()
-

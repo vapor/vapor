@@ -48,7 +48,6 @@ let package = Package(
         .target(name: "Boilerplate", dependencies: ["Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
-
         // Validation
         .target(name: "Validation", dependencies: ["CodableKit"]),
         .testTarget(name: "ValidationTests", dependencies: ["Validation"]),

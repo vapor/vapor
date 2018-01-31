@@ -34,7 +34,6 @@ internal struct OrValidator: Validator {
                 throw OrValidatorError(left, right)
             }
         }
-
     }
 }
 

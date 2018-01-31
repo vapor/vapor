@@ -74,8 +74,6 @@ public final class EngineServer: Server, Service {
         while true { RunLoop.main.run() }
     }
 
-
-    
 //    private func startPlain(with responder: Responder) throws {
 //        // create a tcp server
 //        let tcp = try TCPServer(Workers: Workers.map { $0.queue }, acceptQueue: acceptQueue)
