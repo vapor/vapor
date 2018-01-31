@@ -110,8 +110,13 @@ do {
         return client.send(.get, to: "http://example.com")
     }
 
-    router.get("client", "google") { req -> Future<HTTPStatus> in
-        return try req.make(Client.self).get("https://www.google.com").transform(to: .ok)
+    router.get("client", "httpbin") { req -> Future<String> in
+        print(req)
+        return try req.make(Client.self).get("https://httpbin.org/ip").flatMap(to: Data.self) { res in
+            return res.http.body.makeData(max: 2048)
+        }.map(to: String.self) { data in
+            return String(data: data, encoding: .utf8) ?? "n/a"
+        }
     }
 
 //    router.get("hello2") { req -> Future<[User]> in

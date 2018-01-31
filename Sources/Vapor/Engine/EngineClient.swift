@@ -37,18 +37,21 @@ public final class EngineClient: Client, Service {
     private func tlsRespond(to req: Request) throws -> Future<Response> {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         let tcpClient = try TCPClient(socket: tcpSocket)
+        var settings = TLSClientSettings()
+        let hostname = try req.http.uri.requireHostname()
+        settings.peerDomainName = hostname
         #if os(macOS)
-            let tlsClient = try AppleTLSClient(tcp: tcpClient, using: TLSClientSettings())
+            let tlsClient = try AppleTLSClient(tcp: tcpClient, using: settings)
         #else
-            let tlsClient = try OpenSSLClient(tcp: tcpClient, using: TLSClientSettings())
+            let tlsClient = try OpenSSLClient(tcp: tcpClient, using: settings)
         #endif
-        try tlsClient.connect(hostname: req.http.uri.requireHostname(), port: req.http.uri.port ?? 443)
+        try tlsClient.connect(hostname: hostname, port: req.http.uri.port ?? 443)
         let client = HTTPClient(
             stream: tlsClient.socket.stream(on: self.container),
             on: self.container,
             maxResponseSize: self.config.maxResponseSize
         )
-        req.http.headers[.host] = req.http.uri.hostname
+        req.http.headers[.host] = hostname
         return client.send(req.http).map(to: Response.self) { httpRes in
             let res = req.makeResponse()
             res.http = httpRes
@@ -60,13 +63,14 @@ public final class EngineClient: Client, Service {
     private func plaintextRespond(to req: Request) throws -> Future<Response> {
         let tcpSocket = try TCPSocket(isNonBlocking: true)
         let tcpClient = try TCPClient(socket: tcpSocket)
-        try tcpClient.connect(hostname: req.http.uri.requireHostname(), port: req.http.uri.port ?? 80)
+        let hostname = try req.http.uri.requireHostname()
+        try tcpClient.connect(hostname: hostname, port: req.http.uri.port ?? 80)
         let client = HTTPClient(
             stream: tcpSocket.stream(on: self.container),
             on: self.container,
             maxResponseSize: self.config.maxResponseSize
         )
-        req.http.headers[.host] = req.http.uri.hostname
+        req.http.headers[.host] = hostname
         return client.send(req.http).map(to: Response.self) { httpRes in
             let res = req.makeResponse()
             res.http = httpRes
