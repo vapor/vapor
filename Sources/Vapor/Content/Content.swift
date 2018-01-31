@@ -136,7 +136,7 @@ extension Float: Content {
     }
 }
 
-extension Array: Content {
+extension Array: Content where Element: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
         return .json

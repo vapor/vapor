@@ -7,7 +7,7 @@ public func configure(
     _ services: inout Services
 ) throws {
     // configure your application here
-    var middlewareConfig = MiddlewareConfig()
+    let middlewareConfig = MiddlewareConfig()
     //middlewareConfig.use(DateMiddleware.self)
     services.register(middlewareConfig)
 }
