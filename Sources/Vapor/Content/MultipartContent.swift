@@ -21,29 +21,29 @@ extension MultipartForm: Content {
     }
     
     /// See RequestEncodable.encode
-    public func encode(to req: inout Request) throws -> Future<Void> {
+    public func encode(using container: Container) throws -> Future<Request> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
         }
-        
+
+        let req = Request(using: container)
         let data = MultipartSerializer(form: self).serialize()
         req.http.body = HTTPBody(data)
         req.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        
-        return .done
+        return Future(req)
     }
     
     /// See ResponseEncodable.encode
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(for req: Request) throws -> Future<Response> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
         }
-        
+
+        let res = req.makeResponse()
         let data = MultipartSerializer(form: self).serialize()
         res.http.body = HTTPBody(data)
         res.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        
-        return .done
+        return Future(res)
     }
     
     /// See RequestDecodable.decode
