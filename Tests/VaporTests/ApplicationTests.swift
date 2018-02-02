@@ -67,10 +67,20 @@ class ApplicationTests: XCTestCase {
         req.http.uri.query = "hello=world"
         XCTAssertEqual(req.query["hello"], "world")
     }
+    
+    func testClientRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://www.google.com/").blockingAwait()
+        XCTAssertEqual(response.http.status, 200)
+    }
 
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
+        ("testClientRedirect", testClientRedirect),
     ]
 }
