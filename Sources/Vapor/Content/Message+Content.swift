@@ -41,7 +41,7 @@ extension ContentContainer {
     private func requireDecoder() throws -> BodyDecoder {
         let coders = try container.superContainer.make(ContentCoders.self, for: ContentContainer.self)
         guard let mediaType = mediaType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without mediatype")
+            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type")
         }
         return try coders.requireDecoder(for: mediaType)
     }

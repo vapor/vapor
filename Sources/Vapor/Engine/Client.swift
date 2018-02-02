@@ -19,8 +19,7 @@ extension Client {
             let req = Request(using: self.container)
             req.http.method = method
             req.http.uri = try uri.makeURI()
-            req.headers = headers
-            print(req)
+            req.http.headers = headers
             return try self.respond(to: req)
         }
     }

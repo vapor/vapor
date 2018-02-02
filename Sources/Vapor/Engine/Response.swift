@@ -16,52 +16,6 @@ public final class Response: EphemeralContainer {
 
     /// This response's private container.
     public let privateContainer: SubContainer
-    
-    /// See Message.version
-    public var version: HTTPVersion {
-        get {
-            return http.version
-        }
-        set {
-            http.version = newValue
-        }
-    }
-    
-    /// HTTP response status code.
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/status/)
-    public var status: HTTPStatus {
-        get {
-            return http.status
-        }
-        set {
-            http.status = newValue
-        }
-    }
-    
-    /// See Message.headers
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/headers/)
-    public var headers: HTTPHeaders {
-        get {
-            return http.headers
-        }
-        set {
-            http.headers = newValue
-        }
-    }
-    
-    /// See Message.body
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/http/body/)
-    public var body: HTTPBody {
-        get {
-            return http.body
-        }
-        set {
-            http.body = newValue
-        }
-    }
 
     /// Create a new Response
     public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
@@ -71,10 +25,23 @@ public final class Response: EphemeralContainer {
         Response.onInit?(self)
     }
 
-
     /// Called when request is deinitializing
     deinit {
         Response.onDeinit?(self)
+    }
+}
+
+extension Response: CustomStringConvertible {
+    /// See `CustomStringConvertible.description
+    public var description: String {
+        return http.description
+    }
+}
+
+extension Response: CustomDebugStringConvertible {
+    /// See `CustomDebugStringConvertible.debugDescription`
+    public var debugDescription: String {
+        return http.debugDescription
     }
 }
 

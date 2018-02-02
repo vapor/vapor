@@ -1,4 +1,5 @@
 import Vapor
+import Foundation
 
 public func configure(
     _ config: inout Config,
@@ -6,4 +7,7 @@ public func configure(
     _ services: inout Services
 ) throws {
     // configure your application here
+    let middlewareConfig = MiddlewareConfig()
+    //middlewareConfig.use(DateMiddleware.self)
+    services.register(middlewareConfig)
 }
