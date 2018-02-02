@@ -165,7 +165,7 @@ public struct EngineClientConfig: Service {
     /// Create a new EngineClientConfig.
     public init(maxResponseSize: Int) {
         self.maxResponseSize = maxResponseSize
-        self.maxRedirections = 3
+        self.maxRedirections = 8
     }
 }
 
