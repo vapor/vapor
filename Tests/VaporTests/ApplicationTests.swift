@@ -68,7 +68,7 @@ class ApplicationTests: XCTestCase {
         XCTAssertEqual(req.query["hello"], "world")
     }
     
-    func testClientRedirect() throws {
+    func testClientBasicRedirect() throws {
         let app = try Application()
         
         let client = try app.make(Client.self)
@@ -76,11 +76,62 @@ class ApplicationTests: XCTestCase {
         let response = try client.get("http://www.google.com/").blockingAwait()
         XCTAssertEqual(response.http.status, 200)
     }
+    
+    func testClientRelativeRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/relative-redirect/5").blockingAwait()
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientManyRelativeRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/relative-redirect/8").blockingAwait()
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientTooManyRelativeRedirects() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        XCTAssertThrowsError(try client.get("http://httpbin.org/relative-redirect/9").blockingAwait())
+    }
+    
+    func testClientAbsoluteRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/absolute-redirect/5").blockingAwait()
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientManyAbsoluteRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/absolute-redirect/8").blockingAwait()
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientTooManyAbsoluteRedirects() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").blockingAwait())
+    }
 
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
-        ("testClientRedirect", testClientRedirect),
     ]
 }

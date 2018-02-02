@@ -68,15 +68,19 @@ public final class EngineClient: Client, Service {
         if newURI.hostname != nil {
             req.http.uri = newURI
         } else {
-            var path = newURI.path
-            path.removeFirst()
-            
-            if req.http.uri.path.last == "/" {
-                req.http.uri.path += path
+            if newURI.path.first == "/" {
+                req.http.uri.path = newURI.path
             } else {
-                var components = req.http.uri.path.split(separator: "/")
-                components.removeLast()
-                req.http.uri.path = components.joined(separator: "/") + "/" + path
+                var path = newURI.path
+                path.removeFirst()
+                
+                if req.http.uri.path.last == "/" {
+                    req.http.uri.path += path
+                } else {
+                    var components = req.http.uri.path.split(separator: "/")
+                    components.removeLast()
+                    req.http.uri.path = components.joined(separator: "/") + "/" + path
+                }
             }
         }
         
