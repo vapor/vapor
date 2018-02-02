@@ -99,6 +99,8 @@ public final class EngineClient: Client, Service {
                 return try redirect(httpRes, for: req, redirecting: redirecting)
             case 302, 303:
                 req.http.method = .get
+                req.http.body = HTTPBody()
+                req.http.mediaType = nil
                 return try redirect(httpRes, for: req, redirecting: redirecting)
             default: break
             }
