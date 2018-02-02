@@ -8,7 +8,12 @@ import TLS
     import AppleTLS
 #endif
 
-/// HTTP/1.1 and HTTP/2 client wrapper.
+/// HTTP/1.1 client wrapper.
+///
+/// Able to more eeasily make request to HTTP servers
+///
+/// Automatically follows redirections as specified in the `EngineClientConfig`
+/// Redirections modify the input `Request`
 public final class EngineClient: Client, Service {
     /// See Client.container
     public let container: Container
@@ -38,29 +43,61 @@ public final class EngineClient: Client, Service {
         }
     }
     
+    /// Rediects the input request with the `Location` in the Response
+    private func redirect(
+        _ response: HTTPResponse,
+        for req: Request,
+        redirecting: Int
+    ) throws -> Future<Response> {
+        guard redirecting > 0 else {
+            throw VaporError(
+                identifier: "excessive-redirects",
+                reason: "The HTTP Client was redirected more than \(config.maxRedirections) times."
+            )
+        }
+        
+        guard let location = response.headers[.location] else {
+            throw VaporError(
+                identifier: "invalid-redirect",
+                reason: "The HTTP Client received a status 3xx without a location to redirect to."
+            )
+        }
+        
+        let newURI = try location.makeURI()
+        
+        if newURI.hostname != nil {
+            req.http.uri = newURI
+        } else {
+            var path = newURI.path
+            path.removeFirst()
+            
+            if req.http.uri.path.last == "/" {
+                req.http.uri.path += path
+            } else {
+                var components = req.http.uri.path.split(separator: "/")
+                components.removeLast()
+                req.http.uri.path = components.joined(separator: "/") + "/" + path
+            }
+        }
+        
+        return self.respond(to: req, redirecting: redirecting - 1)
+    }
+    
+    /// Processes an HTTP esponse and acts upon redirects accordingly
     private func response(
         from httpRes: HTTPResponse,
         for req: Request,
         redirecting: Int
     ) throws -> Future<Response> {
-        if httpRes.status.code >= 301 && httpRes.status.code <= 303 {
-            guard redirecting > 0 else {
-                throw VaporError(
-                    identifier: "excessive-redirects",
-                    reason: "The HTTP Client was redirected more than \(config.maxRedirections) times."
-                )
+        if httpRes.status.code >= 300 && httpRes.status.code < 400 {
+            switch httpRes.status.code {
+            case 301, 307, 308:
+                return try redirect(httpRes, for: req, redirecting: redirecting)
+            case 302, 303:
+                req.http.method = .get
+                return try redirect(httpRes, for: req, redirecting: redirecting)
+            default: break
             }
-            
-            guard let location = httpRes.headers[.location] else {
-                throw VaporError(
-                    identifier: "invalid-redirect",
-                    reason: "The HTTP Client received a status 3xx without a location to redirect to."
-                )
-            }
-            
-            req.http.uri = try location.makeURI()
-            
-            return self.respond(to: req, redirecting: redirecting - 1)
         }
         
         let res = req.makeResponse()
