@@ -133,5 +133,12 @@ class ApplicationTests: XCTestCase {
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
+        ("testClientBasicRedirect", testClientBasicRedirect),
+        ("testClientRelativeRedirect", testClientRelativeRedirect),
+        ("testClientManyRelativeRedirect", testClientManyRelativeRedirect),
+        ("testClientTooManyRelativeRedirects", testClientTooManyRelativeRedirects),
+        ("testClientAbsoluteRedirect", testClientAbsoluteRedirect),
+        ("testClientManyAbsoluteRedirect", testClientManyAbsoluteRedirect),
+        ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
     ]
 }
