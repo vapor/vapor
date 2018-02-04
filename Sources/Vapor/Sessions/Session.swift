@@ -16,7 +16,7 @@ public final class Session {
 /// Codable session data.
 public struct SessionData: Codable {
     /// Session codable object storage.
-    public var storage: [String: Codable]
+    internal var storage: [String: String]
 
     /// Create a new, empty session data.
     public init() {
@@ -25,7 +25,7 @@ public struct SessionData: Codable {
 
     /// See Decodable.init
     public init(from decoder: Decoder) throws {
-        storage = try [String: Codable].init(from: decoder)
+        storage = try [String: String].init(from: decoder)
     }
 
     /// See Encodable.encode
@@ -38,7 +38,7 @@ extension Session {
     /// Convenience [String: String] accessor.
     public subscript(_ key: String) -> String? {
         get {
-            return data.storage[key] as? String
+            return data.storage[key]
         }
         set {
             data.storage[key] = newValue

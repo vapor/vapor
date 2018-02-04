@@ -165,7 +165,7 @@ extension Services {
 
         // directory
         services.register { container -> DirectoryConfig in
-            return DirectoryConfig.default()
+            return DirectoryConfig.detect()
         }
 
         // logging
