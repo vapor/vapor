@@ -143,6 +143,13 @@ extension Array: Content where Element: Content {
     }
 }
 
+extension Dictionary: Content where Key == String, Value: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .json
+    }
+}
+
 extension Request {
     public func makeResponse() -> Response {
         return Response(using: superContainer)
