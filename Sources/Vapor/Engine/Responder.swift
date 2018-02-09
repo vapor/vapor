@@ -29,7 +29,7 @@ public struct RouteResponder<T>: Responder
 }
 
 /// A basic, closure-based responder.
-public struct ContentRouteResponder<C, T>: Responder
+public struct RequestDecodableResponder<C, T>: Responder
     where C: RequestDecodable, T: ResponseEncodable
 {
     /// Responder closure
