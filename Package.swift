@@ -64,6 +64,7 @@ let package = Package(
             "Debugging",
             "FormURLEncoded",
             "HTTP",
+            "Files",
             "Logging",
             "Multipart",
             "Routing",
