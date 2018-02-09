@@ -56,14 +56,19 @@ internal struct AndValidatorError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         if var left = left, var right = right {
-            left.codingPath = codingPath + left.codingPath
-            right.codingPath = codingPath + right.codingPath
+            let leftCodingPath = left.codingPath
+            left.codingPath = codingPath + leftCodingPath
+            
+            let rightCodingPath = right.codingPath
+            right.codingPath = codingPath + rightCodingPath
             return "\(left.reason) and \(right.reason)"
         } else if var left = left {
-            left.codingPath = codingPath + left.codingPath
+            let leftCodingPath = left.codingPath
+            left.codingPath = codingPath + leftCodingPath
             return left.reason
         } else if var right = right {
-            right.codingPath = codingPath + right.codingPath
+            let rightCodingPath = right.codingPath
+            right.codingPath = codingPath + rightCodingPath
             return right.reason
         } else {
             return ""
