@@ -143,7 +143,7 @@ extension Array: Content where Element: Content {
     }
 }
 
-extension Dictionary: Content where Key == String, Value: Codable {
+extension Dictionary: Content where Key == String, Value: Content {
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
         return .json
