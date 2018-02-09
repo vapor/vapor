@@ -49,9 +49,9 @@ internal struct OrValidatorError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         var left = self.left
-        left.codingPath = codingPath + left.codingPath
+        left.codingPath = codingPath + self.left.codingPath
         var right = self.right
-        right.codingPath = codingPath + right.codingPath
+        right.codingPath = codingPath + self.right.codingPath
         return "\(left.reason) and \(right.reason)"
     }
 
