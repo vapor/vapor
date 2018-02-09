@@ -21,49 +21,49 @@ extension MultipartForm: Content {
     }
     
     /// See RequestEncodable.encode
-    public func encode(to req: inout Request) throws -> Future<Void> {
+    public func encode(using container: Container) throws -> Future<Request> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
         }
-        
+
+        let req = Request(using: container)
         let data = MultipartSerializer(form: self).serialize()
-        req.body = HTTPBody(data)
-        req.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        
-        return .done
+        req.http.body = HTTPBody(data)
+        req.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
+        return Future(req)
     }
     
     /// See ResponseEncodable.encode
-    public func encode(to res: inout Response, for req: Request) throws -> Future<Void> {
+    public func encode(for req: Request) throws -> Future<Response> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
         }
-        
+
+        let res = req.makeResponse()
         let data = MultipartSerializer(form: self).serialize()
-        res.body = HTTPBody(data)
-        res.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        
-        return .done
+        res.http.body = HTTPBody(data)
+        res.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
+        return Future(res)
     }
     
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<MultipartForm> {
-        guard let boundary = req.headers[.contentType, "boundary"] else {
+        guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
     
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
-        guard let boundary = req.headers[.contentType, "boundary"] else {
+        guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
         
-        return req.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }

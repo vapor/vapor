@@ -14,5 +14,17 @@ final class Routes: RouteCollection {
             let res = try req.make(Client.self).get("http://httpbin.org/ip").await(on: req)
             return Future(res)
         }
+
+        router.get("ping") { req in
+            return "123" as StaticString
+        }
+
+        router.get("ip") { req -> Future<String> in
+            return try req.make(Client.self).get("http://httpbin.org/ip").map(to: String.self) { res in
+                print(res)
+                debugPrint(res)
+                return "done"
+            }
+        }
     }
 }
