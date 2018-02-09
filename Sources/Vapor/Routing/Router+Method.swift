@@ -24,7 +24,7 @@ extension Router {
         _ method: HTTPMethod,
         to path: [PathComponent],
         use closure: @escaping ContentRouteResponder<C, T>.Closure
-    ) -> Route<Responder> where C: Content, T: ResponseEncodable {
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         let responder = ContentRouteResponder(closure: closure)
         let route = Route<Responder>(
             path: [.constants([.bytes(method.bytes)])] + path,
@@ -110,7 +110,7 @@ extension Router {
         _ content: C.Type,
         path: PathComponent...,
         use closure: @escaping ContentRouteResponder<C, T>.Closure
-    ) -> Route<Responder> where C: Content, T: ResponseEncodable {
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.put, to: path, use: closure)
     }
     
@@ -122,7 +122,7 @@ extension Router {
         _ content: C.Type,
         path: PathComponent...,
         use closure: @escaping ContentRouteResponder<C, T>.Closure
-    ) -> Route<Responder> where C: Content, T: ResponseEncodable {
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.post, to: path, use: closure)
     }
     
@@ -134,7 +134,7 @@ extension Router {
         _ content: C.Type,
         path: PathComponent...,
         use closure: @escaping ContentRouteResponder<C, T>.Closure
-    ) -> Route<Responder> where C: Content, T: ResponseEncodable {
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.patch, to: path, use: closure)
     }
 }

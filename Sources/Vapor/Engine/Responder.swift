@@ -30,7 +30,7 @@ public struct RouteResponder<T>: Responder
 
 /// A basic, closure-based responder.
 public struct ContentRouteResponder<C, T>: Responder
-    where C: Content, T: ResponseEncodable
+    where C: RequestDecodable, T: ResponseEncodable
 {
     /// Responder closure
     public typealias Closure = (Request, C) throws -> T
@@ -45,7 +45,7 @@ public struct ContentRouteResponder<C, T>: Responder
     
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try req.content.decode(C.self).flatMap(to: Response.self) { content in
+        return try C.decode(from: req).flatMap(to: Response.self) { content in
             let encodable = try self.closure(req, content)
             return try encodable.encode(for: req)
         }
