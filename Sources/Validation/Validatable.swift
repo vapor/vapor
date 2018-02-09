@@ -53,7 +53,8 @@ struct ValidatableError: ValidationError {
     var reason: String {
         return errors.map { error in
             var error = error
-            error.codingPath = codingPath + error.codingPath
+            let errorCodingPath = error.codingPath
+            error.codingPath = codingPath + errorCodingPath
             return error.reason
         }.joined(separator: ", ")
     }
