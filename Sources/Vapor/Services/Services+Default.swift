@@ -91,7 +91,7 @@ extension Services {
         }
 
         services.register { container -> EngineClientConfig in
-            return EngineClientConfig(maxResponseSize: 10_000_000)
+            return EngineClientConfig()
         }
 
         // register middleware
