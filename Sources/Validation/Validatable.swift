@@ -51,11 +51,11 @@ struct ValidatableError: ValidationError {
 
     /// See ValidationError.reason
     var reason: String {
-        return errors.map { err in
-            var error = err
-            error.codingPath = codingPath + err.codingPath
-            return error.reason
-        }.joined(separator: ", ")
+        return errors.map { error in
+            var mutableError = error
+            mutableError.codingPath = codingPath + error.codingPath
+            return mutableError.reason
+            }.joined(separator: ", ")
     }
 
     /// creates a new validatable error
