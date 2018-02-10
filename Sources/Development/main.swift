@@ -1,19 +1,4 @@
-import Vapor
-
-extension Dictionary: Content where Key == String, Value: Content { }
-
-let app = try Application()
-
-let router = try app.make(Router.self)
-
-router.get("hello", String.parameter) { req in
-    let name = try req.parameter(String.self)
-    return ["message": "Hello, \(name)!"]
-}
-
-try app.run()
-
-/*import COperatingSystem
+import COperatingSystem
 import Vapor
 import Dispatch
 import Foundation
@@ -373,6 +358,3 @@ do {
     print("Top Level Error: \(error)")
     exit(1)
 }
-
-
-*/

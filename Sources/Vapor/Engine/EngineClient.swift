@@ -65,8 +65,11 @@ public final class EngineClient: Client, Service {
         let tcpClient = try TCPClient(socket: tcpSocket)
         let hostname = try req.http.uri.requireHostname()
         try tcpClient.connect(hostname: hostname, port: req.http.uri.port ?? 80)
+        let stream = tcpSocket.stream(on: self.container) { _, error in
+            print("[Client] \(error)")
+        }
         let client = HTTPClient(
-            stream: tcpSocket.stream(on: self.container),
+            stream: stream,
             on: self.container
         )
         req.http.headers[.host] = hostname

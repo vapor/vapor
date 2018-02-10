@@ -40,8 +40,11 @@ public final class EngineServer: Server, Service {
         for i in 1...config.workerCount {
             let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
             let responder = EngineResponder(container: self.container, responder: responder)
-            let acceptStream = tcpServer.stream(on: eventLoop)
-                .map(to: TCPSocketStream.self) { $0.socket.stream(on: eventLoop) }
+            let acceptStream = tcpServer.stream(on: eventLoop).map(to: TCPSocketStream.self) {
+                $0.socket.stream(on: eventLoop) { _, error in
+                    logger.reportError(error, as: "Server Error")
+                }
+            }
             
             let server = HTTPServer(
                 acceptStream: acceptStream,
