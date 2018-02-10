@@ -55,7 +55,7 @@ struct ValidatableError: ValidationError {
             var mutableError = error
             mutableError.codingPath = codingPath + error.codingPath
             return mutableError.reason
-            }.joined(separator: ", ")
+        }.joined(separator: ", ")
     }
 
     /// creates a new validatable error
