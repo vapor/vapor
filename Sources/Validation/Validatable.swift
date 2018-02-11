@@ -40,7 +40,7 @@ extension Validatable {
     }
 }
 
-/// a collection of errors thrown by a validatable
+/// a collection of errors thrown by validatable
 /// models validations
 struct ValidatableError: ValidationError {
     /// the errors thrown

@@ -1,4 +1,4 @@
-/// Combines two validators into an or validator
+/// Inverts a validator into a not validator
 public prefix func ! (rhs: Validator) -> Validator {
     return NotValidator(rhs)
 }
@@ -13,7 +13,7 @@ internal struct NotValidator: Validator {
     /// right validator
     let rhs: Validator
 
-    /// create a new and validator
+    /// create a new not validator
     init(_ rhs: Validator) {
         self.rhs = rhs
     }

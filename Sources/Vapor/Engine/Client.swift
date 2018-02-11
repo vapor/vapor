@@ -89,7 +89,6 @@ extension Client {
         return send(.post, headers: headers, to: url, content: content)
     }
 
-
     /// Sends a POST request with body
     public func delete<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.delete, headers: headers, to: url, content: content)

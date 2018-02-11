@@ -9,7 +9,6 @@ public struct Validations: ExpressibleByDictionaryLiteral {
             storage[key] = validator
         }
     }
-
 }
 
 /// A model property containing the
@@ -32,7 +31,7 @@ public struct ValidationKey: Hashable {
     public var codingPath: [CodingKey]
 
     /// The properties type.
-    /// Storing this as any since we lost
+    /// Storing this as `Any` since we lost
     /// the type info converting to AnyKeyPAth
     public var type: Any.Type
 
@@ -48,7 +47,6 @@ public struct ValidationKey: Hashable {
         self.isOptional = isOptional
     }
 }
-
 
 extension Validatable {
     /// Create a validation key for the supplied key path.
@@ -71,4 +69,3 @@ extension Validatable {
         )
     }
 }
-
