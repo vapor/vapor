@@ -34,7 +34,6 @@ internal struct OrValidator: Validator {
                 throw OrValidatorError(left, right)
             }
         }
-
     }
 }
 
@@ -49,11 +48,9 @@ internal struct OrValidatorError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         var left = self.left
-        let leftCodingPath = left.codingPath
-        left.codingPath = codingPath + leftCodingPath
+        left.codingPath = codingPath + self.left.codingPath
         var right = self.right
-        let rightCodingPath = right.codingPath
-        right.codingPath = codingPath + rightCodingPath
+        right.codingPath = codingPath + self.right.codingPath
         return "\(left.reason) and \(right.reason)"
     }
 

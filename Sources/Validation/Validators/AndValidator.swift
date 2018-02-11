@@ -1,4 +1,4 @@
-/// Combines two validators into an or validator
+/// Combines two validators into an and validator
 public func && (lhs: Validator, rhs: Validator) -> Validator {
     return AndValidator(lhs, rhs)
 }
@@ -55,21 +55,19 @@ internal struct AndValidatorError: ValidationError {
 
     /// See ValidationError.reason
     var reason: String {
-        if var left = left, var right = right {
-            let leftCodingPath = left.codingPath
-            left.codingPath = codingPath + leftCodingPath
-            
-            let rightCodingPath = right.codingPath
-            right.codingPath = codingPath + rightCodingPath
-            return "\(left.reason) and \(right.reason)"
-        } else if var left = left {
-            let leftCodingPath = left.codingPath
-            left.codingPath = codingPath + leftCodingPath
-            return left.reason
-        } else if var right = right {
-            let rightCodingPath = right.codingPath
-            right.codingPath = codingPath + rightCodingPath
-            return right.reason
+        if let left = left, let right = right {
+            var mutableLeft = left, mutableRight = right
+            mutableLeft.codingPath = codingPath + left.codingPath
+            mutableRight.codingPath = codingPath + right.codingPath
+            return "\(mutableLeft.reason) and \(mutableRight.reason)"
+        } else if let left = left {
+            var mutableLeft = left
+            mutableLeft.codingPath = codingPath + left.codingPath
+            return mutableLeft.reason
+        } else if let right = right {
+            var mutableRight = right
+            mutableRight.codingPath = codingPath + right.codingPath
+            return mutableRight.reason
         } else {
             return ""
         }
@@ -85,4 +83,3 @@ internal struct AndValidatorError: ValidationError {
         self.codingPath = []
     }
 }
-

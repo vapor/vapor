@@ -26,8 +26,6 @@ extension Future: ResponseEncodable where T: ResponseEncodable {
             try exp.encode(for: req)
         }
     }
-
-
 }
 
 extension Router {
@@ -86,4 +84,3 @@ extension Router {
         return self.on(.patch, to: path, use: closure)
     }
 }
-

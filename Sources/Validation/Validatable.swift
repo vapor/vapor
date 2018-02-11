@@ -40,7 +40,7 @@ extension Validatable {
     }
 }
 
-/// a collection of errors thrown by a validatable
+/// a collection of errors thrown by validatable
 /// models validations
 struct ValidatableError: ValidationError {
     /// the errors thrown
@@ -52,10 +52,9 @@ struct ValidatableError: ValidationError {
     /// See ValidationError.reason
     var reason: String {
         return errors.map { error in
-            var error = error
-            let errorCodingPath = error.codingPath
-            error.codingPath = codingPath + errorCodingPath
-            return error.reason
+            var mutableError = error
+            mutableError.codingPath = codingPath + error.codingPath
+            return mutableError.reason
         }.joined(separator: ", ")
     }
 

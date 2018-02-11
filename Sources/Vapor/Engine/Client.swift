@@ -83,7 +83,7 @@ extension Client {
     public func post<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.post, headers: headers, to: url, content: content)
     }
-    
+
     /// Sends a PATCH request with body
     public func patch<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.patch, headers: headers, to: url, content: content)
