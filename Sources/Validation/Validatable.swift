@@ -23,7 +23,10 @@ extension Validatable {
         for (key, validation) in Self.validations.storage {
             /// fetch the value for the key path and
             /// convert it to validation data
-            let data = (self[keyPath: key.keyPath] as ValidationDataRepresentable).makeValidationData()
+            guard let representable = self[keyPath: key.keyPath] as? ValidationDataRepresentable else {
+                throw BasicValidationError("KeyPath result cannot cast to ValidationDataRepresentable")
+            }
+            let data = representable.makeValidationData()
 
             /// run the validation, catching validation errors
             do {

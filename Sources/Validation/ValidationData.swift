@@ -127,36 +127,34 @@ extension Date: ValidationDataRepresentable {
     }
 }
 
-extension Array: ValidationDataRepresentable {
+extension Array: ValidationDataRepresentable where Element: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         var items: [ValidationData] = []
         for el in self {
-            // FIXME: conditional conformance
-            items.append((el as! ValidationDataRepresentable).makeValidationData())
+            items.append(el.makeValidationData())
         }
         return .array(items)
     }
 }
 
-extension Dictionary: ValidationDataRepresentable {
+extension Dictionary: ValidationDataRepresentable where Key == String, Value: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         var items: [String: ValidationData] = [:]
         for (key, el) in self {
-            // FIXME: conditional conformance
-            items[(key as! String)] = (el as! ValidationDataRepresentable).makeValidationData()
+            items[key] = el.makeValidationData()
         }
         return .dictionary(items)
     }
 }
 
-extension Optional: ValidationDataRepresentable {
+extension Optional: ValidationDataRepresentable where Wrapped: ValidationDataRepresentable {
     /// See ValidationDataRepresentable.makeValidationData
     public func makeValidationData() -> ValidationData {
         switch self {
         case .none: return .null
-        case .some(let s): return (s as? ValidationDataRepresentable)?.makeValidationData() ?? .null
+        case .some(let s): return s.makeValidationData()
         }
     }
 }
