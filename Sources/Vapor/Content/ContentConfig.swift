@@ -103,12 +103,32 @@ public struct ContentCoders: Service, ServiceType {
 /// MARK: Default
 
 extension ContentConfig {
+	private static func iso8601Formatter() -> DateFormatter {
+		let formatter = DateFormatter()
+		formatter.calendar = Calendar(identifier: .iso8601)
+		formatter.locale = Locale(identifier: "en_US_POSIX")
+		formatter.timeZone = TimeZone(secondsFromGMT: 0)
+		formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ssXXXXX"
+		return formatter
+	}
+	
     public static func `default`() -> ContentConfig {
         var config = ContentConfig()
 
         // json
-        config.use(encoder: JSONEncoder(), for: .json)
-        config.use(decoder: JSONDecoder(), for: .json)
+		let encoder = JSONEncoder()
+		let decoder = JSONDecoder()
+		
+		if #available(OSX 10.12, *) {
+			encoder.dateEncodingStrategy = .iso8601
+			decoder.dateDecodingStrategy = .iso8601
+		} else {
+			encoder.dateEncodingStrategy = .formatted(iso8601Formatter())
+			decoder.dateDecodingStrategy = .formatted(iso8601Formatter())
+		}
+		
+		config.use(encoder: encoder, for: .json)
+		config.use(decoder: decoder, for: .json)
 
         // data
         config.use(encoder: DataEncoder(), for: .plainText)
