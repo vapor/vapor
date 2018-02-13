@@ -108,7 +108,7 @@ extension Router {
     @discardableResult
     public func put<C, T>(
         _ content: C.Type,
-        path: PathComponent...,
+        at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.put, at: path, use: closure)
@@ -120,7 +120,7 @@ extension Router {
     @discardableResult
     public func post<C, T>(
         _ content: C.Type,
-        path: PathComponent...,
+        at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.post, at: path, use: closure)
@@ -132,7 +132,7 @@ extension Router {
     @discardableResult
     public func patch<C, T>(
         _ content: C.Type,
-        path: PathComponent...,
+        at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         return self.on(.patch, at: path, use: closure)
