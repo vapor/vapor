@@ -47,11 +47,7 @@ extension MultipartForm: Content {
     }
     
     /// See RequestDecodable.decode
-    public static func decode(from req: Request) throws -> Future<MultipartForm> {
-        return try decode(from: req, max: 1_000_000)
-    }
-
-    public static func decode(from req: Request, max: Int) throws -> Future<MultipartForm> {
+    public static func decode(from req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
@@ -62,11 +58,7 @@ extension MultipartForm: Content {
     }
     
     /// See ResponseDecodable.decode
-    public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
-        return try decode(from: res, for: req, max: 1_000_000)
-    }
-
-    public static func decode(from res: Response, for req: Request, max: Int) throws -> Future<MultipartForm> {
+    public static func decode(from res: Response, for req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
