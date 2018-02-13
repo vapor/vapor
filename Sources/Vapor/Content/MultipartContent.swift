@@ -47,23 +47,23 @@ extension MultipartForm: Content {
     }
     
     /// See RequestDecodable.decode
-    public static func decode(from req: Request) throws -> Future<MultipartForm> {
+    public static func decode(from req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
-        
-        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+
+        return req.http.body.makeData(max: max).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
     
     /// See ResponseDecodable.decode
-    public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
+    public static func decode(from res: Response, for req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
-        
-        return req.http.body.makeData(max: 1_000_000).map(to: MultipartForm.self) { data in
+
+        return req.http.body.makeData(max: max).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
