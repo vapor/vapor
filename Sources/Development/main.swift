@@ -144,7 +144,7 @@ do {
         return Future(helloRes)
     }
 
-    router.post(LoginRequest.self, path: "login") { req, loginRequest -> Response in
+    router.post(LoginRequest.self, at: "login") { req, loginRequest -> Response in
         print(loginRequest.email) // user@vapor.codes
         print(loginRequest.password) // don't look!
 
