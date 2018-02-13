@@ -11,8 +11,8 @@ extension Router {
     @discardableResult
     public func websocket(_ path: PathComponent...,
         with settings: WebSocketSettings = WebSocketSettings(),
-        onUpgrade closure: @escaping OnWebsocketUpgradeClosure) -> Route<Responder> {
-
+        onUpgrade closure: @escaping OnWebsocketUpgradeClosure
+    ) -> Route<Responder> {
         let responder = RouteResponder { (request: Request) -> Future<Response> in
             let http = try WebSocket.upgradeResponse(for: request.http, with: settings) { websocket in
                 try closure(request, websocket)

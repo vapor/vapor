@@ -53,7 +53,3 @@ public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable, Helpabl
         )
     }
 }
-
-
-
-

@@ -23,7 +23,7 @@ extension Request {
     ) -> Response {
         let res = makeResponse()
         res.http.status = type.status
-        res.http.headers["Location"] = location
+        res.http.headers[.location] = location
         return res
     }
 }

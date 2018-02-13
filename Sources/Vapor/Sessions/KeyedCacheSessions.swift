@@ -16,7 +16,6 @@ public final class KeyedCacheSessions: Sessions {
         self.config = config
     }
 
-
     public func readSession(for cookie: Cookie.Value) throws -> Future<Session?> {
         return try keyedCache.get(SessionData.self, forKey: cookie.value).map(to: Session?.self) { data in
             return data.flatMap { Session(cookie: cookie, data: $0) }
