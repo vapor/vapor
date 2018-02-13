@@ -10,7 +10,7 @@ import PackageDescription
 let package = Package(
     name: "Vapor",
     products: [
-        .library(name: "Vapor", targets: ["Validation", "Vapor"]),
+        .library(name: "Vapor", targets: ["Vapor"]),
     ],
     dependencies: [
         // Swift Promises, Futures, and Streams.
@@ -42,15 +42,14 @@ let package = Package(
 
         // Swift OpenSSL & macOS Security TLS wrapper
         .package(url: "https://github.com/vapor/tls.git", .exact("3.0.0-beta.1")),
+
+        // Extensible data validation library (email, alphanumeric, UUID, etc)
+        .package(url: "https://github.com/vapor/validation.git", .exact("2.0.0-beta.1")),
     ],
     targets: [
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Service", "Routing", "Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
-
-        // Validation
-        .target(name: "Validation", dependencies: ["CodableKit"]),
-        .testTarget(name: "ValidationTests", dependencies: ["Validation"]),
 
         // Vapor
         .target(name: "Development", dependencies: ["Vapor"]),
