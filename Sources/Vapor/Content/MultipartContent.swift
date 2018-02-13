@@ -72,7 +72,7 @@ extension MultipartForm: Content {
 }
 
 /// Configure Multipart forms.
-public struct MultipartFormConfig {
+public struct MultipartFormConfig: ServiceType {
     /// Max supported message size.
     public var maxSize: Int
 
@@ -85,4 +85,10 @@ public struct MultipartFormConfig {
     public static func `default`() -> MultipartFormConfig {
         return .init(maxSize: 1_000_000)
     }
+
+    /// See `ServiceType.makeService(for:)`
+    public static func makeService(for worker: Container) throws -> MultipartFormConfig {
+        return .default()
+    }
+
 }
