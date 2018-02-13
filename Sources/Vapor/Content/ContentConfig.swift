@@ -6,6 +6,9 @@ public struct ContentConfig: Service, ServiceType {
     /// See `ServiceType.serviceSupports`
     public static let serviceSupports: [Any.Type] = []
 
+    /// See `ServiceType.serviceIsSingleton`
+    public static let serviceIsSingleton: Bool = true
+
     /// See `ServiceType.makeService`
     public static func makeService(for worker: Container) throws -> ContentConfig {
         return ContentConfig.default()
