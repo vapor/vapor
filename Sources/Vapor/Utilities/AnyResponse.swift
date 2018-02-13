@@ -1,7 +1,7 @@
 import Async
 import HTTP
 
-/// A type erased resopnse.
+/// A type erased response.
 public struct AnyResponse: ResponseEncodable {
     /// The wrapped type
     private let encodable: ResponseEncodable

@@ -27,10 +27,10 @@ extension CORSMiddleware {
         public func header(forRequest request: Request) -> String {
             switch self {
             case .none: return ""
-            case .originBased: return request.http.headers["Origin"] ?? ""
+            case .originBased: return request.http.headers[.origin] ?? ""
             case .all: return "*"
             case .custom(let string):
-                guard let origin = request.http.headers["Origin"] else {
+                guard let origin = request.http.headers[.origin] else {
                     return string
                 }
                 return string.contains(origin) ? origin : string
@@ -48,7 +48,7 @@ extension CORSMiddleware {
         public static let `default` = Configuration(
             allowedOrigin: .originBased,
             allowedMethods: [.get, .post, .put, .options, .delete, .patch],
-            allowedHeaders: ["Accept", "Authorization", "Content-Type", "Origin", "X-Requested-With"]
+            allowedHeaders: [.accept, .authorization, .contentType, .origin, .xRequestedWith]
         )
         
         /// Setting that controls which origin values are allowed.
@@ -82,14 +82,14 @@ extension CORSMiddleware {
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPMethod],
-            allowedHeaders: [String],
+            allowedHeaders: [HTTPHeaderName],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
             exposedHeaders: [String]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ $0.string }).joined(separator: ", ")
-            self.allowedHeaders = allowedHeaders.joined(separator: ", ")
+            self.allowedHeaders = allowedHeaders.map({ $0.description }).joined(separator: ", ")
             self.allowCredentials = allowCredentials
             self.cacheExpiration = cacheExpiration
             self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
