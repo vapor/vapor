@@ -61,11 +61,12 @@ public final class Serve: Command {
             
             // don't enforce -> Never on protocol because of Swift warnings
             log.error("server did not block execution")
-            exit(1)
         } catch ServerError.bind(let host, let port, _) {
             console.error("Could not bind to \(host):\(port), it may be in use or require sudo.")
         } catch {
             console.error("Serve error: \(error)")
         }
+
+        exit(1)
     }
 }
