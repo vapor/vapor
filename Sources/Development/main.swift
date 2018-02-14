@@ -118,6 +118,15 @@ do {
         }
     }
 
+    router.get("client", "invalid") { request -> Future<String> in
+        return try request.make(Client.self).get("http://httpbin.org")
+            .flatMap(to: Data.self) { response in
+                return response.http.body.makeData(max: 2048)
+            }
+            .map(to: String.self) { data in
+                return String(data: data, encoding: .utf8) ?? ""
+        }
+    }
 
     router.get("client", "httpbin") { req -> Future<String> in
         return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
