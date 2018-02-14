@@ -62,6 +62,8 @@ extension PathComponent: Equatable {
             return lParam.string == rhs
         case .constants(let lParams):
             return lParams.first?.string == rhs
+        case .anything :
+            return false
         }
     }
     
