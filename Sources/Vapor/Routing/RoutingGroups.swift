@@ -13,7 +13,7 @@ import Routing
 public final class RouteGroup: Router {
     /// All routes registered to this group
     public private(set) var routes: [Route<Responder>] = []
-    
+
     let `super`: Router
     let components: [PathComponent]
     let middleware: [Middleware]
