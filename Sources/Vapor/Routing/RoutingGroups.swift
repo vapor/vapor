@@ -56,7 +56,7 @@ extension Router {
     /// **Example:**
     /// ```
     /// // creating new group on router
-    /// let users = router.group("user")
+    /// let users = router.grouped("user")
     ///
     /// // adding "user/auth/" route to router
     /// users.get("auth", use: userAuthHandler)
@@ -70,7 +70,7 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func group(_ path: PathComponent...) -> RouteGroup {
+    public func grouped(_ path: PathComponent...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, components: path)
     }
     
@@ -81,7 +81,7 @@ extension Router {
     /// **Example:**
     /// ```
     /// // create new group and adds on router
-    /// router.grouped(with: "user") { group in
+    /// router.group(with: "user") { group in
     ///     // adding "user/auth/" route to router
     ///     group.get("auth", use: userAuthHandler)
     ///
@@ -95,7 +95,7 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func grouped(with path: PathComponent..., configure: (RouteGroup) -> ()) {
+    public func group(with path: PathComponent..., configure: (RouteGroup) -> ()) {
         configure(RouteGroup(cascadingTo: self, components: path))
     }
     
@@ -110,9 +110,9 @@ extension Router {
     /// let currentUser = CheckIfCurrentUserMiddleware(....)
     ///
     /// // creating new group on router
-    /// let users = router.group("user")
-    ///     .using(AuthorizationMiddleware)
-    ///     .using(userMustBeCurrentUser)
+    /// let users = router.grouped("user")
+    ///     .grouped(using: AuthorizationMiddleware)
+    ///     .grouped(using: userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -124,7 +124,7 @@ extension Router {
     ///
     /// - Parameter middleware: Middleware
     /// - Returns: RouterGroup with middleware attached
-    public func using(_ middleware: Middleware...) -> RouteGroup {
+    public func grouped(using middleware: Middleware...) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: middleware)
     }
     
@@ -136,7 +136,7 @@ extension Router {
     /// let userMustBeAuthorized = AuthorizationMiddleware()
     ///
     /// // creating new group on router
-    /// router.using(AuthorizationMiddleware) { group in
+    /// router.group(using: AuthorizationMiddleware) { group in
     ///
     ///         // adding "user/profile/" route to router
     ///         // AuthorizationMiddleware is applied
@@ -149,7 +149,7 @@ extension Router {
     ///   - middleware: Middleware
     ///   - configure: Group configuration function
     ///
-    public func using(_ middleware: Middleware..., configure: (RouteGroup) -> ()) {
+    public func group(using middleware: Middleware..., configure: (RouteGroup) -> ()) {
         configure(RouteGroup(cascadingTo: self, middleware: middleware))
     }
     
@@ -170,8 +170,8 @@ extension Router {
     ///
     /// // creating new group on router
     /// let users = router.group("user")
-    ///     .using(userMustBeAuthorized)
-    ///     .using(userMustBeCurrentUser)
+    ///     .grouped(using: userMustBeAuthorized)
+    ///     .grouped(using: userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
@@ -184,7 +184,7 @@ extension Router {
     /// - Parameter respond: `(request: Request, next: Responder) throws -> Future<Response>`
     ///
     /// - Returns: RouterGroup with closure attached
-    public func using(_ respond: @escaping MiddlewareFunction.Respond) -> RouteGroup {
+    public func grouped(using respond: @escaping MiddlewareFunction.Respond) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)])
     }
     
@@ -198,7 +198,7 @@ extension Router {
     ///    }
     ///
     ///    // use functioan as a middleware
-    ///    router.using(userMustBeAuthorized) { group in
+    ///    router.group(using: userMustBeAuthorized) { group in
     ///        group.get("profile", use: userProfileHandler)
     ///    }
     /// ```
@@ -208,7 +208,8 @@ extension Router {
     ///   - respond: respond: `(request: Request, next: Responder) throws -> Future<Response>`
     ///   - configure: Group configuration function
     ///
-    public func using(_ respond: @escaping MiddlewareFunction.Respond, configure: (RouteGroup) -> ()) {
+    public func group(using respond: @escaping MiddlewareFunction.Respond, configure: (RouteGroup) -> ()) {
         configure(RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)]))
     }
 }
+
