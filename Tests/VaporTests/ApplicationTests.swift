@@ -61,11 +61,11 @@ class ApplicationTests: XCTestCase {
     func testQuery() throws {
         /// FIXME: https://github.com/vapor/vapor/issues/1419
         return;
-        let app = try Application()
-        let req = Request(using: app)
-        req.http.mediaType = .json
-        req.http.uri.query = "hello=world"
-        XCTAssertEqual(req.query["hello"], "world")
+//        let app = try Application()
+//        let req = Request(using: app)
+//        req.http.mediaType = .json
+//        req.http.uri.query = "hello=world"
+//        XCTAssertEqual(req.query["hello"], "world")
     }
 
     static let allTests = [

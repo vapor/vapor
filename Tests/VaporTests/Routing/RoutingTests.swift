@@ -20,7 +20,7 @@ class RoutingTests : XCTestCase {
             }
             exp.fulfill()
         }
-        wait(for: [exp], timeout: 1)
+        waitForExpectations(timeout: 1, handler: nil)
     }
     
     func testUsingMiddlewareAsFunction() {
@@ -49,8 +49,7 @@ class RoutingTests : XCTestCase {
             }
             exp.fulfill()
         }
-        
-        wait(for: [exp], timeout: 1)
+        waitForExpectations(timeout: 1, handler: nil)
     }
     
     func testUsingMiddlewareWithConfiguration() {
@@ -64,7 +63,7 @@ class RoutingTests : XCTestCase {
             exp.fulfill()
         }
         
-        wait(for: [exp], timeout: 1)
+        waitForExpectations(timeout: 1, handler: nil)
     }
     
     // FIXME: We need more testable router
