@@ -28,6 +28,30 @@ public struct RouteResponder<T>: Responder
     }
 }
 
+/// A basic, closure-based responder.
+public struct RequestDecodableResponder<C, T>: Responder
+    where C: RequestDecodable, T: ResponseEncodable
+{
+    /// Responder closure
+    public typealias Closure = (Request, C) throws -> T
+    
+    /// The stored responder closure.
+    public let closure: Closure
+    
+    /// Create a new basic responder.
+    public init(closure: @escaping Closure) {
+        self.closure = closure
+    }
+    
+    /// See: HTTP.Responder.respond
+    public func respond(to req: Request) throws -> Future<Response> {
+        return try C.decode(from: req).flatMap(to: Response.self) { content in
+            let encodable = try self.closure(req, content)
+            return try encodable.encode(for: req)
+        }
+    }
+}
+
 /// MARK: Router
 
 /// Converts a router into a responder.

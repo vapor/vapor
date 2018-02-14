@@ -29,7 +29,7 @@ extension Request {
             throw Abort(.internalServerError)
         }
 
-        var headers: [HTTPHeaders.Name: String] = [:]
+        var headers: [HTTPHeaderName: String] = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
         let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
@@ -58,4 +58,3 @@ extension Request {
         return res
     }
 }
-

@@ -1,6 +1,7 @@
 import COperatingSystem
 import Vapor
 import Dispatch
+import Foundation
 
 
 
@@ -92,27 +93,38 @@ do {
         return "123" as StaticString
     }
 
-    router.get("example") { req -> Future<Response> in
+    router.get("client", "zombo") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
         return client.send(.get, to: "http://www.zombo.com/")
     }
 
-    router.get("example1") { req -> Future<Response> in
+    router.get("client", "romans") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://www.romansgohome.com")
     }
 
-    router.get("example2") { req -> Future<Response> in
+    router.get("client", "example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
 
         return client.send(.get, to: "http://example.com")
     }
 
-    router.get("example3") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
+    router.get("client", "httpsbin") { req -> Future<String> in
+        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap(to: Data.self) { res in
+            return res.http.body.makeData(max: 2048)
+        }.map(to: String.self) { data in
+            return String(data: data, encoding: .utf8) ?? "n/a"
+        }
+    }
 
-        return client.send(.get, to: "https://www.google.com")
+
+    router.get("client", "httpbin") { req -> Future<String> in
+        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
+            return res.http.body.makeData(max: 2048)
+        }.map(to: String.self) { data in
+            return String(data: data, encoding: .utf8) ?? "n/a"
+        }
     }
 
 //    router.get("hello2") { req -> Future<[User]> in
@@ -132,13 +144,11 @@ do {
         return Future(helloRes)
     }
 
-    router.post("login") { req -> Future<Response> in
-        return try req.content.decode(LoginRequest.self).map(to: Response.self) { loginRequest in
-            print(loginRequest.email) // user@vapor.codes
-            print(loginRequest.password) // don't look!
+    router.post(LoginRequest.self, at: "login") { req, loginRequest -> Response in
+        print(loginRequest.email) // user@vapor.codes
+        print(loginRequest.password) // don't look!
 
-            return req.makeResponse()
-        }
+        return req.makeResponse()
     }
 
 //    router.get("leaf") { req -> Future<View> in
@@ -326,9 +336,9 @@ do {
         return try req.view().render("hello")
     }
     
-    router.get(PathComponent.anything) { _ in
-        return "Hello"
-    }
+//    router.get(PathComponent.anything) { _ in
+//        return "Hello"
+//    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]
@@ -346,5 +356,3 @@ do {
     print("Top Level Error: \(error)")
     exit(1)
 }
-
-

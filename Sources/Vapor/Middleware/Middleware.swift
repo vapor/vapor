@@ -42,7 +42,6 @@ final class MiddlewareResponder: Responder {
     }
 }
 
-
 // MARK: Convenience
 
 extension Middleware {
