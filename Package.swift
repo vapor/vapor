@@ -54,10 +54,12 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
+            "Async",
             "CodableKit",
             "Command",
             "Console",
             "COperatingSystem",
+            "Crypto",
             "DatabaseKit",
             "Debugging",
             "FormURLEncoded",
@@ -71,7 +73,8 @@ let package = Package(
             "TLS",
             tlsImpl,
             "ServerSecurity",
-             "WebSocket",
+            "WebSocket",
+            "Validation"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
