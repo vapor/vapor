@@ -65,19 +65,21 @@ public final class EngineClient: Client, Service {
         let tcpClient = try TCPClient(socket: tcpSocket)
         let hostname = try req.http.uri.requireHostname()
         try tcpClient.connect(hostname: hostname, port: req.http.uri.port ?? 80)
+        let promise = Promise(Response.self)
         let stream = tcpSocket.stream(on: self.container) { _, error in
-            print("[Client] \(error)")
+            promise.fail(error)
         }
         let client = HTTPClient(
             stream: stream,
             on: self.container
         )
         req.http.headers[.host] = hostname
-        return client.send(req.http).map(to: Response.self) { httpRes in
+        client.send(req.http).map(to: Response.self) { httpRes in
             let res = req.makeResponse()
             res.http = httpRes
             return res
-        }
+        }.chain(to: promise)
+        return promise.future
     }
 }
 

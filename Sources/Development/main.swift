@@ -106,7 +106,6 @@ do {
 
     router.get("client", "example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-
         return client.send(.get, to: "http://example.com")
     }
 
