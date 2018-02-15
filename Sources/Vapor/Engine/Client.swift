@@ -36,7 +36,11 @@ extension Client {
             try req.content.encode(content)
             req.http.method = method
             req.http.uri = try uri.makeURI()
-            req.http.headers = headers
+
+            for header in headers where header.name != .contentLength {
+                req.http.headers[header.name] = header.value
+            }
+
             return try self.respond(to: req)
         }
     }
