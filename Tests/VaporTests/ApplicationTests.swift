@@ -74,7 +74,7 @@ class ApplicationTests: XCTestCase {
         _ = try fakeClient.send(.get, headers: ["foo": "bar"], to: "/baz", content: "hello").await(on: app)
         if let lastReq = fakeClient.lastReq {
             XCTAssertEqual(lastReq.http.headers[.contentLength], "5")
-xes            XCTAssertEqual(lastReq.http.headers["foo"], "bar")
+            XCTAssertEqual(lastReq.http.headers["foo"], "bar")
             XCTAssertEqual(lastReq.http.uri.path, "/baz")
             try XCTAssertEqual(lastReq.http.body.makeData(max: 100).await(on: app), Data("hello".utf8))
         } else {
