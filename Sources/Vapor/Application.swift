@@ -50,10 +50,6 @@ public final class Application: Container {
         self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
         self.router = try self.make(Router.self, for: Application.self)
 
-        Thread.async {
-            self.eventLoop.runLoop()
-        }
-
         // boot all service providers
         for provider in services.providers {
             try provider.boot(self)
@@ -78,7 +74,7 @@ public final class Application: Container {
 
         let console = try make(Console.self)
         try console.run(command, input: &.commandLine)
-
+        
         // Enforce `Never` return.
         // It's possible that this method may actually return, since
         // not all Vapor commands have run loops.

@@ -33,7 +33,7 @@ public final class Request: ParameterContainer {
     /// Called when the request deinitializes
     deinit {
         if hasActiveConnections {
-            try! privateContainer.releaseCachedConnections()
+            try! releaseCachedConnections()
         }
     }
 }
@@ -84,6 +84,6 @@ extension Request: DatabaseConnectable {
             fatalError("Model.defaultDatabase required to use request as worker.")
         }
         hasActiveConnections = true
-        return privateContainer.requestCachedConnection(to: database)
+        return requestCachedConnection(to: database)
     }
 }
