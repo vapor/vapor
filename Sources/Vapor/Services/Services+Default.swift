@@ -91,7 +91,7 @@ extension Services {
         }
 
         services.register { container -> EngineClientConfig in
-            return EngineClientConfig(maxResponseSize: 10_000_000)
+            return EngineClientConfig()
         }
 
         // register middleware
@@ -183,6 +183,9 @@ extension Services {
             let dir = try container.make(DirectoryConfig.self, for: PlaintextRenderer.self)
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
+
+        // multipart
+        services.register(MultipartFormConfig.self)
 
         return services
     }

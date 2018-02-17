@@ -8,4 +8,3 @@ extension Config {
         return config
     }
 }
-

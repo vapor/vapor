@@ -33,10 +33,10 @@ extension Client {
     ) -> Future<Response> where C: Content {
         return Future.flatMap {
             let req = Request(using: self.container)
-            try req.content.encode(content)
             req.http.method = method
             req.http.uri = try uri.makeURI()
             req.http.headers = headers
+            try req.content.encode(content)
             return try self.respond(to: req)
         }
     }
@@ -88,7 +88,6 @@ extension Client {
     public func post<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.post, headers: headers, to: url, content: content)
     }
-
 
     /// Sends a POST request with body
     public func delete<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
