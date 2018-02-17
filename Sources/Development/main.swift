@@ -58,7 +58,13 @@ do {
     services.register(middlewareConfig)
 
 
-    let dir = DirectoryConfig(workDir: "/Users/joannisorlandos/Documents/vapor/vapor/")
+    var middlewareConfig = MiddlewareConfig()
+    middlewareConfig.use(ErrorMiddleware.self)
+    middlewareConfig.use(FileMiddleware.self)
+    services.register(middlewareConfig)
+
+
+    let dir = DirectoryConfig(workDir: "/Users/joannisorlandos/Desktop/")
     services.register(dir)
 
     let app = try Application(environment: .detect(), services: services)
@@ -72,6 +78,13 @@ do {
     router.get("hash", String.parameter) { req -> String in
         let string = try req.parameter(String.self)
         return try req.make(BCryptHasher.self).make(string)
+    }
+    
+    router.websocket("echo") { (req, ws) in
+        ws.onString { ws, msg in
+            print(msg)
+            ws.send(string: msg)
+        }
     }
 
     router.get("set") { req -> String in
@@ -325,6 +338,10 @@ do {
             print(res.http.headers)
             return "done!"
         }
+    }
+    
+    router.get("headers") { req in
+        return req.http.headers[valuesFor: .cookie]
     }
 
     router.get("query") { req -> Future<String> in
