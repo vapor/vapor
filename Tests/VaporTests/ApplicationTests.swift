@@ -129,6 +129,20 @@ class ApplicationTests: XCTestCase {
         XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").blockingAwait())
     }
 
+    func testClientHeaders() throws {
+        let app = try Application()
+        let fakeClient = LastRequestClient(container: app)
+        _ = try fakeClient.send(.get, headers: ["foo": "bar"], to: "/baz", content: "hello").await(on: app)
+        if let lastReq = fakeClient.lastReq {
+            XCTAssertEqual(lastReq.http.headers[.contentLength], "5")
+            XCTAssertEqual(lastReq.http.headers["foo"], "bar")
+            XCTAssertEqual(lastReq.http.uri.path, "/baz")
+            try XCTAssertEqual(lastReq.http.body.makeData(max: 100).await(on: app), Data("hello".utf8))
+        } else {
+            XCTFail("No last request")
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -140,5 +154,21 @@ class ApplicationTests: XCTestCase {
         ("testClientAbsoluteRedirect", testClientAbsoluteRedirect),
         ("testClientManyAbsoluteRedirect", testClientManyAbsoluteRedirect),
         ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
+        ("testClientHeaders", testClientHeaders)
     ]
 }
+
+/// MARK: Utilities
+
+final class LastRequestClient: Client {
+    var container: Container
+    var lastReq: Request?
+    init(container: Container) {
+        self.container = container
+    }
+    func respond(to req: Request) throws -> Future<Response> {
+        lastReq = req
+        return Future(req.makeResponse())
+    }
+}
+

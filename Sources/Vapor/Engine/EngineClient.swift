@@ -142,8 +142,9 @@ public final class EngineClient: Client, Service {
         let tcpClient = try TCPClient(socket: tcpSocket)
         let hostname = try req.http.uri.requireHostname()
         try tcpClient.connect(hostname: hostname, port: req.http.uri.port ?? 80)
+        let promise = Promise(Response.self)
         let stream = tcpSocket.stream(on: self.container) { _, error in
-            print("[Client] \(error)")
+            promise.fail(error)
         }
         let client = HTTPClient(
             stream: stream,

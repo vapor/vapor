@@ -106,7 +106,6 @@ do {
 
     router.get("client", "example") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-
         return client.send(.get, to: "http://example.com")
     }
 
@@ -118,6 +117,15 @@ do {
         }
     }
 
+    router.get("client", "invalid") { request -> Future<String> in
+        return try request.make(Client.self).get("http://httpbin.org")
+            .flatMap(to: Data.self) { response in
+                return response.http.body.makeData(max: 2048)
+            }
+            .map(to: String.self) { data in
+                return String(data: data, encoding: .utf8) ?? ""
+        }
+    }
 
     router.get("client", "httpbin") { req -> Future<String> in
         return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
@@ -144,13 +152,11 @@ do {
         return Future(helloRes)
     }
 
-    router.post("login") { req -> Future<Response> in
-        return try req.content.decode(LoginRequest.self).map(to: Response.self) { loginRequest in
-            print(loginRequest.email) // user@vapor.codes
-            print(loginRequest.password) // don't look!
+    router.post(LoginRequest.self, at: "login") { req, loginRequest -> Response in
+        print(loginRequest.email) // user@vapor.codes
+        print(loginRequest.password) // don't look!
 
-            return req.makeResponse()
-        }
+        return req.makeResponse()
     }
 
 //    router.get("leaf") { req -> Future<View> in
@@ -338,9 +344,9 @@ do {
         return try req.view().render("hello")
     }
     
-    router.get(PathComponent.anything) { _ in
-        return "Hello"
-    }
+//    router.get(PathComponent.anything) { _ in
+//        return "Hello"
+//    }
 
     //router.get("fuzzy") { req -> String in
     //    let data = req.content["foo", 1, "bar", "baz"]
