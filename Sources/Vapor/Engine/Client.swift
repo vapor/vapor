@@ -33,10 +33,10 @@ extension Client {
     ) -> Future<Response> where C: Content {
         return Future.flatMap {
             let req = Request(using: self.container)
-            try req.content.encode(content)
             req.http.method = method
             req.http.uri = try uri.makeURI()
             req.http.headers = headers
+            try req.content.encode(content)
             return try self.respond(to: req)
         }
     }
