@@ -159,55 +159,64 @@ extension Router {
     ///
     ///
     /// **Example:**
+    ///
+    ///
+    /// We can create some authorization closure to check whether user is authorized
     /// ```
     /// let userMustBeAuthorized = { req, next in
-    ///     return try userService.authorized(user)
+    ///     // User is the user model class which can parse request
+    ///     // and returns User instance or nil
+    ///     guard User(from: req) != nil else { throw AuthError.unauthorized }
+    ///     return next.respond(to: request)
     /// }
-    ///
-    /// let currentUser  = { req, next in
-    ///     return try userService.isCurrentUser(req)
-    /// }
-    ///
-    /// // creating new group on router
-    /// let users = router.group("user")
-    ///     .grouped(using: userMustBeAuthorized)
-    ///     .grouped(using: userMustBeCurrentUser)
-    ///
-    /// // adding "user/profile/" route to router
-    /// // both of validations applied
-    /// users.get("auth", use: userAuthHandler)
-    ///
     /// ```
     ///
+    /// Then create new group on router
+    /// ```
+    /// let users = router.group("user")
+    ///     .grouped(using: userMustBeAuthorized)
+    /// ```
+    ///
+    /// And then users *group* will apply this closure to every request to check whether user is unauthorized or not
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
     ///
     /// - Parameter respond: `(request: Request, next: Responder) throws -> Future<Response>`
-    ///
     /// - Returns: RouterGroup with closure attached
     public func grouped(using respond: @escaping MiddlewareFunction.Respond) -> RouteGroup {
         return RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)])
     }
     
     
-    /// Ataches RouteGroup cascading to router with middleware attached
+    /// *Ataches RouteGroup cascading to router with function as a middleware attached*
     /// and call configuaration function with new group provided
-    /// **Example:**
-    /// ```
-    ///    func userMustBeAuthorized(request: Request, next: Responder) throws -> Future<Response> {
-    ///        return try userService.authorized(user)
-    ///    }
     ///
-    ///    // use functioan as a middleware
-    ///    router.group(using: userMustBeAuthorized) { group in
-    ///        group.get("profile", use: userProfileHandler)
-    ///    }
+    /// **Example:**
+    ///
+    /// First of all we need some function which implements authorization logic.
+    /// Function must returns `Future<Response>` to not breaking chaining of middlewares
+    /// It might be static or instance function, or just closure, it doesn't matter
     /// ```
+    /// static func userMustBeAuthorized(request: Request, next: Responder) throws -> Future<Response> {
+    ///     // User is the user model class which can parse request
+    ///     // and returns User instance or nil
+    ///     guard User(from: request) != nil else { throw AuthError.unauthorized }
+    ///     return next.respond(to: request)
+    /// }
+    /// ```
+    ///
+    /// Then we pass function as a parameter
+    /// ```
+    /// router.group(using: userMustBeAuthorized) { group in
+    ///     group.get("profile", use: userProfileHandler)
+    /// }
+    /// ```
+    ///
+    /// And this *router* will apply this function to every request to check whether user is unauthorized or not
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
     /// - Parameters:
     ///   - respond: respond: `(request: Request, next: Responder) throws -> Future<Response>`
     ///   - configure: Group configuration function
-    ///
     public func group(using respond: @escaping MiddlewareFunction.Respond, configure: (RouteGroup) -> ()) {
         configure(RouteGroup(cascadingTo: self, middleware: [MiddlewareFunction(respond)]))
     }
