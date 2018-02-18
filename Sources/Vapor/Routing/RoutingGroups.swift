@@ -107,16 +107,16 @@ extension Router {
     /// **Example:**
     /// ```
     /// let userMustBeAuthorized = AuthorizationMiddleware(....)
-    /// let currentUser = CheckIfCurrentUserMiddleware(....)
+    /// let userMustBeCurrentUser = CheckIfCurrentUserMiddleware(....)
     ///
-    /// // creating new group on router
+    /// // then creating new group on router
     /// let users = router.grouped("user")
-    ///     .grouped(using: AuthorizationMiddleware)
+    ///     .grouped(using: userMustBeAuthorized)
     ///     .grouped(using: userMustBeCurrentUser)
     ///
     /// // adding "user/profile/" route to router
     /// // both of validations applied
-    /// users.get("auth", use: userAuthHandler)
+    /// users.get("profile", use: userProfileHandler)
     ///
     /// ```
     ///
