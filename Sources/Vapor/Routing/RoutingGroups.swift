@@ -136,7 +136,7 @@ extension Router {
     /// let userMustBeAuthorized = AuthorizationMiddleware()
     ///
     /// // creating new group on router
-    /// router.group(using: AuthorizationMiddleware) { group in
+    /// router.group(using: userMustBeAuthorized) { group in
     ///
     ///         // adding "user/profile/" route to router
     ///         // AuthorizationMiddleware is applied
