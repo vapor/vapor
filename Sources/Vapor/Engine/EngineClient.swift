@@ -163,7 +163,7 @@ public final class EngineClient: Client, Service {
 public struct EngineClientConfig: Service {
     /// The maximum response size to allow for
     /// incoming HTTP responses.
-    public let maxResponseSize: Int
+    public var maxResponseHeaderSize: Int
     
     /// The maximum amount of 3xx redirect responses to follow
     ///
@@ -171,8 +171,8 @@ public struct EngineClientConfig: Service {
     public var maxRedirections: Int
 
     /// Create a new EngineClientConfig.
-    public init(maxResponseSize: Int) {
-        self.maxResponseSize = maxResponseSize
+    public init() {
+        self.maxResponseHeaderSize = 100_000
         self.maxRedirections = 8
     }
 }
