@@ -26,7 +26,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/crypto.git", "3.0.0-beta.1"..<"3.0.0-beta.2"),
 
         // Core services for creating database integrations.
-        .package(url: "https://github.com/vapor/database-kit.git", "1.0.0-beta.2"..<"1.0.0-beta.4"),
+        .package(url: "https://github.com/vapor/database-kit.git", "1.0.0-beta.2"..<"1.0.0-beta.5"),
 
         // Non-blocking networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
