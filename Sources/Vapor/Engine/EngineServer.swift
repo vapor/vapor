@@ -30,7 +30,7 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start() throws {
-        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
+        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true, shouldReuseAddress: true))
         // leaking, probably because of client capturing itself in closure
         // tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         

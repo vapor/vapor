@@ -18,7 +18,6 @@ extension Request {
     ///
     /// For an example of how this is used, look at 'FileMiddleware'
     public func streamFile(at path: String) throws -> Response {
-        let reader = try make(FileReader.self, for: Request.self)
         let res = makeResponse()
 
         guard
@@ -49,12 +48,16 @@ extension Request {
             res.http.mediaType = type
         }
 
-        let passthrough = ConnectingStream<ByteBuffer>()
-        
-        res.http.body = HTTPBody(
-            chunked: passthrough
-        )
-        reader.read(at: path, into: passthrough, chunkSize: 2048)
+        res.http.body = HTTPBody(FileManager.default.contents(atPath: path) ?? Data())
         return res
+        // FIXME: actually stream the file
+        // let reader = try make(FileReader.self, for: Request.self)
+//        let passthrough = ConnectingStream<ByteBuffer>()
+//
+//        res.http.body = HTTPBody(
+//            chunked: passthrough
+//        )
+//        reader.read(at: path, into: passthrough, chunkSize: 2048)
+//        return res
     }
 }
