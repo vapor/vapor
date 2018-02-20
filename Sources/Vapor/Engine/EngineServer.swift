@@ -74,7 +74,7 @@ public final class EngineServer: Server, Service {
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        while true { RunLoop.main.run() }
+        container.eventLoop.runLoop()
     }
 
 //    private func startPlain(with responder: Responder) throws {

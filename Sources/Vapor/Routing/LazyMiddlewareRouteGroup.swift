@@ -15,8 +15,8 @@ extension Router {
     /// the first request that invokes it.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#middleware)
-    public func group<M>(_ middleware: M.Type, use: (Router) throws -> ()) rethrows where M: Middleware {
-        try use(LazyMiddlewareRouteGroup(M.self, cascadingTo: self))
+    public func group<M>(_ middleware: M.Type, configure: (Router) throws -> ()) rethrows where M: Middleware {
+        try configure(LazyMiddlewareRouteGroup(M.self, cascadingTo: self))
     }
 }
 

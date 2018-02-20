@@ -33,13 +33,10 @@ public final class DateMiddleware: Middleware, Service {
     var cachedTimestamp: (timestamp: String, createdAt: time_t)?
 
     /// Creates a new `DateMiddleware`
-    public init() {
-        print("Date.init \(unsafeBitCast(self, to: Int.self))")
-    }
+    public init() { }
 
     /// See `Middleware.respond(to:)`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        print("Date.respond \(unsafeBitCast(self, to: Int.self))")
         let promise = Promise<Response>()
         
         try next.respond(to: request).do { res in

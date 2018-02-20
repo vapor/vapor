@@ -363,6 +363,7 @@ do {
     }
 
     services.register(Router.self) { _ in return router }
+
     let app = try Application(environment: .detect(), services: services)
     try app.run()
 } catch {
