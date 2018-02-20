@@ -43,8 +43,9 @@ public final class EngineServer: Server, Service {
             let subResponder = try subContainer.make(Responder.self, for: EngineServer.self)
             let responder = EngineResponder(container: subContainer, responder: subResponder)
             let acceptStream = tcpServer.stream(on: eventLoop).map(to: TCPSocketStream.self) {
-                $0.socket.stream(on: eventLoop) { _, error in
+                $0.socket.stream(on: eventLoop) { sink, error in
                     logger.reportError(error, as: "Server Error")
+                    sink.close()
                 }
             }
             

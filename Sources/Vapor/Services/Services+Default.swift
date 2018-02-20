@@ -195,7 +195,24 @@ public struct ApplicationResponder: Responder, Service {
     }
 
     public func respond(to req: Request) throws -> Future<Response> {
-        return try responder.respond(to: req)
+        let promise = Promise(Response.self)
+        // attempt to respond before, so thrown errors prevent timer creation
+        try responder.respond(to: req).chain(to: promise)
+        // add a global timeout
+        var timer: EventSource?
+        timer = req.eventLoop.onTimeout(timeout: .seconds(30)) { eof in
+            let error = VaporError(
+                identifier: "timeout",
+                reason: "The application timed out waiting for response.",
+                suggestedFixes: [
+                    "Inspect the route responsible for responding to \(req.http.method) \(req.http.uri.path)"
+                ]
+            )
+            promise.fail(error)
+            timer?.cancel()
+        }
+        timer?.resume()
+        return promise.future
     }
 }
 
