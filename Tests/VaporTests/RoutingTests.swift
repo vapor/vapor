@@ -14,7 +14,7 @@ class RoutingTests : XCTestCase {
     func testGroupConfigure() {
         let sut = MockRouter()
         let exp = expectation(description: "Router Group configuration called")
-        sut.group(with: "") { group in
+        sut.group("") { group in
             group.get("") { _ in
                 return Future("test")
             }
@@ -33,17 +33,16 @@ class RoutingTests : XCTestCase {
     
     func testUsingMiddleware() {
         let router = MockRouter()
-        let sut = router.grouped(using: FakeMiddleware())
+        let sut = router.grouped(FakeMiddleware())
         XCTAssertNotNil(sut) // test that there is no error
     }
     
     func testUsingMiddlewareAsFunctionWithConfiguration() {
         let router = MockRouter()
         let exp = expectation(description: "Router Group configuration called")
-        let midfunc: MiddlewareFunction.Respond = { req, next in
+        router.group({ req, next in
             return try next.respond(to: req)
-        }
-        router.group(using: midfunc) { group in
+        }) { group in
             group.get("") { _ in
                 return Future("test")
             }
@@ -56,7 +55,7 @@ class RoutingTests : XCTestCase {
         let router = MockRouter()
         let exp = expectation(description: "Router Group configuration called")
         
-        router.group(using: FakeMiddleware()) { group in
+        router.group(FakeMiddleware()) { group in
             group.get("") { _ in
                 return Future("test")
             }
