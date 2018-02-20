@@ -6,10 +6,26 @@ extension Router {
     @discardableResult
     public func on<T>(
         _ method: HTTPMethod,
-        to path: [PathComponent],
+        at path: [PathComponent],
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
+        let route = Route<Responder>(
+            path: [.constants([.bytes(method.bytes)])] + path,
+            output: responder
+        )
+        self.register(route: route)
+        return route
+    }
+    
+    /// Registers a route handler at the supplied path.
+    @discardableResult
+    fileprivate func on<C, T>(
+        _ method: HTTPMethod,
+        at path: [PathComponent],
+        use closure: @escaping RequestDecodableResponder<C, T>.Closure
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
+        let responder = RequestDecodableResponder(closure: closure)
         let route = Route<Responder>(
             path: [.constants([.bytes(method.bytes)])] + path,
             output: responder
@@ -37,7 +53,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.get, to: path, use: closure)
+        return self.on(.get, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `PUT` method.
@@ -48,7 +64,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.put, to: path, use: closure)
+        return self.on(.put, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `POST` method.
@@ -59,7 +75,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.post, to: path, use: closure)
+        return self.on(.post, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `DELETE` method.
@@ -70,7 +86,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.delete, to: path, use: closure)
+        return self.on(.delete, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `PATCH` method.
@@ -81,6 +97,44 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.patch, to: path, use: closure)
+        return self.on(.patch, at: path, use: closure)
+    }
+}
+
+extension Router {
+    /// Creates a `Route` at the provided path using the `PUT` method.
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
+    @discardableResult
+    public func put<C, T>(
+        _ content: C.Type,
+        at path: PathComponent...,
+        use closure: @escaping RequestDecodableResponder<C, T>.Closure
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
+        return self.on(.put, at: path, use: closure)
+    }
+    
+    /// Creates a `Route` at the provided path using the `POST` method.
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
+    @discardableResult
+    public func post<C, T>(
+        _ content: C.Type,
+        at path: PathComponent...,
+        use closure: @escaping RequestDecodableResponder<C, T>.Closure
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
+        return self.on(.post, at: path, use: closure)
+    }
+    
+    /// Creates a `Route` at the provided path using the `PATCH` method.
+    ///
+    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
+    @discardableResult
+    public func patch<C, T>(
+        _ content: C.Type,
+        at path: PathComponent...,
+        use closure: @escaping RequestDecodableResponder<C, T>.Closure
+    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
+        return self.on(.patch, at: path, use: closure)
     }
 }

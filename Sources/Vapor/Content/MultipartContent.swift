@@ -47,24 +47,48 @@ extension MultipartForm: Content {
     }
     
     /// See RequestDecodable.decode
-    public static func decode(from req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
+    public static func decode(from req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
 
-        return req.http.body.makeData(max: max).map(to: MultipartForm.self) { data in
+        let config = try req.make(MultipartFormConfig.self)
+        return req.http.body.makeData(max: config.maxSize).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
     
     /// See ResponseDecodable.decode
-    public static func decode(from res: Response, for req: Request, max: Int = 1_000_000) throws -> Future<MultipartForm> {
+    public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
         }
 
-        return req.http.body.makeData(max: max).map(to: MultipartForm.self) { data in
+        let config = try req.make(MultipartFormConfig.self)
+        return req.http.body.makeData(max: config.maxSize).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
+}
+
+/// Configure Multipart forms.
+public struct MultipartFormConfig: ServiceType {
+    /// Max supported message size.
+    public var maxSize: Int
+
+    /// Creates a new `MultipartFormConfig`
+    public init(maxSize: Int) {
+        self.maxSize = maxSize
+    }
+
+    /// Creates a default `MultipartFormConfig`
+    public static func `default`() -> MultipartFormConfig {
+        return .init(maxSize: 1_000_000)
+    }
+
+    /// See `ServiceType.makeService(for:)`
+    public static func makeService(for worker: Container) throws -> MultipartFormConfig {
+        return .default()
+    }
+
 }

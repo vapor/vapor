@@ -14,16 +14,14 @@ public struct ServeCommand: Command, Service {
 
     /// The server to boot.
     public let server: Server
-    public let responder: Responder
 
     /// Create a new serve command.
-    public init(server: Server, responder: Responder) {
+    public init(server: Server) {
         self.server = server
-        self.responder = responder
     }
 
     /// See Runnable.run
     public func run(using context: CommandContext) throws {
-        try server.start(with: responder)
+        try server.start()
     }
 }
