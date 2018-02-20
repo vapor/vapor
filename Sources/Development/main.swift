@@ -53,6 +53,7 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
+//    middlewareConfig.use(DateMiddleware.self)
 //    middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
@@ -60,9 +61,7 @@ do {
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
     services.register(dir)
 
-    let app = try Application(environment: .detect(), services: services)
-
-    let router = try app.make(Router.self)
+    let router = EngineRouter.default()
 
     router.get("search") { req -> String in
         return try req.query.get(String.self, at: ["query"])
@@ -359,6 +358,13 @@ do {
 //    }.blockingAwait()
 //    print(foo)
 
+    router.grouped(DateMiddleware.self).get("datetest") { req in
+        return HTTPStatus.ok
+    }
+
+    services.register(Router.self) { _ in return router }
+
+    let app = try Application(environment: .detect(), services: services)
     try app.run()
 } catch {
     print("Top Level Error: \(error)")
