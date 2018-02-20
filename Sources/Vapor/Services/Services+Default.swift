@@ -147,11 +147,8 @@ extension Services {
         }
 
         services.register { worker -> ServeCommand in
-            let responder = try worker.make(Responder.self, for: ServeCommand.self)
-
             return try ServeCommand(
-                server: worker.make(for: ServeCommand.self),
-                responder: responder
+                server: worker.make(for: ServeCommand.self)
             )
         }
         services.register { container -> CommandConfig in
