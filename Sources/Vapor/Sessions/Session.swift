@@ -30,7 +30,10 @@ public struct SessionData: Codable {
 
     /// See Encodable.encode
     public func encode(to encoder: Encoder) throws {
-        try storage.encode(to: encoder)
+        var container = encoder.container(keyedBy: String.self)
+        for (key, val) in storage {
+            try container.encode(val, forKey: key)
+        }
     }
 }
 
@@ -43,5 +46,23 @@ extension Session {
         set {
             data.storage[key] = newValue
         }
+    }
+}
+
+extension String: CodingKey {
+    public var stringValue: String {
+        return self
+    }
+
+    public var intValue: Int? {
+        return Int(self)
+    }
+
+    public init?(stringValue: String) {
+        self = stringValue
+    }
+
+    public init?(intValue: Int) {
+        self = intValue.description
     }
 }

@@ -26,11 +26,16 @@ fileprivate let NUMBERS = [
 fileprivate var cachedTimeComponents: (key: time_t, components: COperatingSystem.tm)?
 
 let secondsInDay = 60 * 60 * 24
+let accuracy: Int = 1 // seconds
 
 /// Adds the RFC 1123 date to the response.
 public final class DateMiddleware: Middleware, Service {
+    var cachedTimestamp: (timestamp: String, createdAt: time_t)?
+
+    /// Creates a new `DateMiddleware`
     public init() { }
-    
+
+    /// See `Middleware.respond(to:)`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         let promise = Promise<Response>()
         
@@ -43,9 +48,14 @@ public final class DateMiddleware: Middleware, Service {
         
         return promise.future
     }
-    
+
+    /// Gets the current RFC 1123 date string.
     fileprivate func getDate() -> String {
         var date = COperatingSystem.time(nil)
+
+        if let (timestamp, createdAt) = cachedTimestamp, createdAt <= date + accuracy {
+            return timestamp
+        }
         
         // generate a key used for caching.
         // this key is a unique id for each day
@@ -91,6 +101,8 @@ public final class DateMiddleware: Middleware, Service {
         rfc1123.append(":")
         rfc1123.append(NUMBERS[seconds])
         rfc1123.append(" GMT")
+
+        cachedTimestamp = (rfc1123, date)
         
         return rfc1123
     }

@@ -53,3 +53,15 @@ public struct VaporError: Traceable, Debuggable, Swift.Error, Encodable, Helpabl
         )
     }
 }
+
+func ERROR(_ message: String, file: StaticString = #file, line: Int = #line) {
+    print("[Vapor] \(message) [\(file.description.split(separator: "/").last!):\(line)]")
+}
+
+/// For printing debug info.
+func DEBUG(_ string: @autoclosure () -> String, file: StaticString = #file, line: Int = #line) {
+    #if VERBOSE
+    print("[VERBOSE] \(string()) [\(file.description.split(separator: "/").last!):\(line)]")
+    #endif
+}
+

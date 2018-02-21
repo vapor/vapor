@@ -53,93 +53,100 @@ extension String: Content {
 }
 
 extension Int: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Int8: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Int16: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Int32: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Int64: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension UInt: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension UInt8: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension UInt16: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension UInt32: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension UInt64: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Double: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Float: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .plainText
     }
 }
 
 extension Array: Content where Element: Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
-        return .json
+        return Element.defaultMediaType
+    }
+}
+
+extension Dictionary: Content where Key == String, Value: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return Value.defaultMediaType
     }
 }
 

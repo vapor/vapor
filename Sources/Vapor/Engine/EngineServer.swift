@@ -29,8 +29,8 @@ public final class EngineServer: Server, Service {
     }
 
     /// Start the server. Server protocol requirement.
-    public func start(with responder: Responder) throws {
-        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true))
+    public func start() throws {
+        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true, shouldReuseAddress: true))
         // leaking, probably because of client capturing itself in closure
         // tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
         
@@ -40,10 +40,12 @@ public final class EngineServer: Server, Service {
         for i in 1...config.workerCount {
             let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
             let subContainer = self.container.subContainer(on: eventLoop)
-            let responder = EngineResponder(container: subContainer, responder: responder)
+            let subResponder = try subContainer.make(Responder.self, for: EngineServer.self)
+            let responder = EngineResponder(container: subContainer, responder: subResponder)
             let acceptStream = tcpServer.stream(on: eventLoop).map(to: TCPSocketStream.self) {
-                $0.socket.stream(on: eventLoop) { _, error in
+                $0.socket.stream(on: eventLoop) { sink, error in
                     logger.reportError(error, as: "Server Error")
+                    sink.close()
                 }
             }
             
@@ -72,7 +74,7 @@ public final class EngineServer: Server, Service {
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        while true { RunLoop.main.run() }
+        container.eventLoop.runLoop()
     }
 
 //    private func startPlain(with responder: Responder) throws {
