@@ -65,7 +65,8 @@ public final class EngineClient: Client, Service {
             )
         }
         
-        try location.makeURI().update(on: req)
+        let newURI = try location.makeURI()
+        req.http.uri.update(with: newURI)
         
         return self.respond(to: req, maxRedirects: redirects - 1)
     }
@@ -169,24 +170,23 @@ extension URI {
         return hostname
     }
     
-    fileprivate func update(on req: Request) throws {
-        let newURI = try makeURI()
-        
+    /// Updates the URI with a new redirect URI
+    fileprivate mutating func update(with newURI: URI) {
         if newURI.hostname != nil {
-            req.http.uri = newURI
+            self = newURI
         } else {
             if newURI.path.first == "/" {
-                req.http.uri.path = newURI.path
+                self.path = newURI.path
             } else {
                 var path = newURI.path
                 path.removeFirst()
                 
-                if req.http.uri.path.last == "/" {
-                    req.http.uri.path += path
+                if self.path.last == "/" {
+                    self.path += path
                 } else {
-                    var components = req.http.uri.path.split(separator: "/")
+                    var components = self.path.split(separator: "/")
                     components.removeLast()
-                    req.http.uri.path = components.joined(separator: "/") + "/" + path
+                    self.path = components.joined(separator: "/") + "/" + path
                 }
             }
         }
