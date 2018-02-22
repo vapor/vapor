@@ -377,6 +377,13 @@ do {
 //    }.blockingAwait()
 //    print(foo)
 
+    router.grouped(DateMiddleware.self).get("datetest") { req in
+        return HTTPStatus.ok
+    }
+
+    services.register(Router.self) { _ in return router }
+
+    let app = try Application(environment: .detect(), services: services)
     try app.run()
 } catch {
     print("Top Level Error: \(error)")

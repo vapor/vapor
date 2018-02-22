@@ -107,8 +107,18 @@ extension ContentConfig {
         var config = ContentConfig()
 
         // json
-        config.use(encoder: JSONEncoder(), for: .json)
-        config.use(decoder: JSONDecoder(), for: .json)
+        do {
+            let encoder = JSONEncoder()
+            let decoder = JSONDecoder()
+            if #available(macOS 10.12, *) {
+                encoder.dateEncodingStrategy = .iso8601
+                decoder.dateDecodingStrategy = .iso8601
+            } else {
+                ERROR("macOS SDK < 10.12 detected, no ISO-8601 JSON support")
+            }
+            config.use(encoder: encoder, for: .json)
+            config.use(decoder: decoder, for: .json)
+        }
 
         // data
         config.use(encoder: DataEncoder(), for: .plainText)
