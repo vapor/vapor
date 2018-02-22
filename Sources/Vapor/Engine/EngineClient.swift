@@ -52,14 +52,16 @@ public final class EngineClient: Client, Service {
         guard redirecting > 0 else {
             throw VaporError(
                 identifier: "excessive-redirects",
-                reason: "The HTTP Client was redirected more than \(config.maxRedirections) times."
+                reason: "The HTTP Client was redirected more than \(config.maxRedirections) times.",
+                source: .capture()
             )
         }
         
         guard let location = response.headers[.location] else {
             throw VaporError(
                 identifier: "invalid-redirect",
-                reason: "The HTTP Client received a status 3xx without a location to redirect to."
+                reason: "The HTTP Client received a status 3xx without a location to redirect to.",
+                source: .capture()
             )
         }
         

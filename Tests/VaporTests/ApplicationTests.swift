@@ -73,7 +73,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        let response = try client.get("http://www.google.com/").blockingAwait()
+        let response = try client.get("http://www.google.com/").await(on: app)
         XCTAssertEqual(response.http.status, 200)
     }
     
@@ -82,7 +82,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        let response = try client.get("http://httpbin.org/relative-redirect/5").blockingAwait()
+        let response = try client.get("http://httpbin.org/relative-redirect/5").await(on: app)
         XCTAssertEqual(response.http.status, 200)
     }
     
@@ -91,7 +91,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        let response = try client.get("http://httpbin.org/relative-redirect/8").blockingAwait()
+        let response = try client.get("http://httpbin.org/relative-redirect/8").await(on: app)
         XCTAssertEqual(response.http.status, 200)
     }
     
@@ -100,7 +100,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        XCTAssertThrowsError(try client.get("http://httpbin.org/relative-redirect/9").blockingAwait())
+        XCTAssertThrowsError(try client.get("http://httpbin.org/relative-redirect/9").await(on: app))
     }
     
     func testClientAbsoluteRedirect() throws {
@@ -108,7 +108,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        let response = try client.get("http://httpbin.org/absolute-redirect/5").blockingAwait()
+        let response = try client.get("http://httpbin.org/absolute-redirect/5").await(on: app)
         XCTAssertEqual(response.http.status, 200)
     }
     
@@ -117,7 +117,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        let response = try client.get("http://httpbin.org/absolute-redirect/8").blockingAwait()
+        let response = try client.get("http://httpbin.org/absolute-redirect/8").await(on: app)
         XCTAssertEqual(response.http.status, 200)
     }
     
@@ -126,7 +126,7 @@ class ApplicationTests: XCTestCase {
         
         let client = try app.make(Client.self)
         
-        XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").blockingAwait())
+        XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").await(on: app))
     }
 
     func testClientHeaders() throws {
