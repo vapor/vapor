@@ -65,26 +65,7 @@ public final class EngineClient: Client, Service {
             )
         }
         
-        let newURI = try location.makeURI()
-        
-        if newURI.hostname != nil {
-            req.http.uri = newURI
-        } else {
-            if newURI.path.first == "/" {
-                req.http.uri.path = newURI.path
-            } else {
-                var path = newURI.path
-                path.removeFirst()
-                
-                if req.http.uri.path.last == "/" {
-                    req.http.uri.path += path
-                } else {
-                    var components = req.http.uri.path.split(separator: "/")
-                    components.removeLast()
-                    req.http.uri.path = components.joined(separator: "/") + "/" + path
-                }
-            }
-        }
+        try location.makeURI().update(on: req)
         
         return self.respond(to: req, maxRedirects: redirects - 1)
     }
@@ -186,5 +167,28 @@ extension URI {
             throw VaporError(identifier: "requireHostname", reason: "URI with hostname required.", source: .capture())
         }
         return hostname
+    }
+    
+    fileprivate func update(on req: Request) throws {
+        let newURI = try makeURI()
+        
+        if newURI.hostname != nil {
+            req.http.uri = newURI
+        } else {
+            if newURI.path.first == "/" {
+                req.http.uri.path = newURI.path
+            } else {
+                var path = newURI.path
+                path.removeFirst()
+                
+                if req.http.uri.path.last == "/" {
+                    req.http.uri.path += path
+                } else {
+                    var components = req.http.uri.path.split(separator: "/")
+                    components.removeLast()
+                    req.http.uri.path = components.joined(separator: "/") + "/" + path
+                }
+            }
+        }
     }
 }
