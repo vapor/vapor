@@ -3,7 +3,7 @@ import HTTP
 
 /// Errors conforming to this protocol will always be displayed by
 /// Vapor to the end-user (even in production mode where most errors are silenced).
-public protocol AbortError: Debuggable, Error {
+public protocol AbortError: Debuggable {
     /// The HTTP status code this error will return.
     var status: HTTPStatus { get }
 
@@ -16,7 +16,7 @@ public protocol AbortError: Debuggable, Error {
 /// Note: we recommend creating your own error
 /// types that conform to `AbortError` and use this
 /// error type minimally.
-public struct Abort: AbortError, Traceable {
+public struct Abort: AbortError {
     /// See Debuggable.identifier
     public var identifier: String
 

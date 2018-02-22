@@ -136,14 +136,14 @@ extension Float: Content {
     }
 }
 
-extension Array: Content where Element: Content {
+extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
     /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return Element.defaultMediaType
     }
 }
 
-extension Dictionary: Content where Key == String, Value: Content {
+extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
     /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return Value.defaultMediaType

@@ -184,23 +184,25 @@ extension Logger {
         } else {
             string += "\(error)"
         }
-        if let traceable = error as? Traceable {
-            self.error(string,
-                file: traceable.file,
-                function: traceable.function,
-                line: traceable.line,
-                column: traceable.column
-            )
+        if let debuggable = error as? Debuggable {
+            if let source = debuggable.sourceLocation {
+                self.error(string,
+                   file: source.file,
+                   function: source.function,
+                   line: source.line,
+                   column: source.column
+                )
+            } else {
+                self.error(string)
+            }
+            if debuggable.suggestedFixes.count > 0 {
+                self.debug("Suggested fixes for \(debuggable.fullIdentifier): " + debuggable.suggestedFixes.joined(separator: " "))
+            }
+            if debuggable.possibleCauses.count > 0 {
+                self.debug("Possible causes for \(debuggable.fullIdentifier): " + debuggable.possibleCauses.joined(separator: " "))
+            }
         } else {
             self.error(string)
-        }
-        if let helpable = error as? Helpable & Debuggable {
-            if helpable.suggestedFixes.count > 0 {
-                self.debug("Suggested fixes for \(helpable.fullIdentifier): " + helpable.suggestedFixes.joined(separator: " "))
-            }
-            if helpable.possibleCauses.count > 0 {
-                self.debug("Possible causes for \(helpable.fullIdentifier): " + helpable.possibleCauses.joined(separator: " "))
-            }
         }
     }
 }

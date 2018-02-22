@@ -3,8 +3,6 @@ import Vapor
 import Dispatch
 import Foundation
 
-
-
 //let beta = DatabaseIdentifier<SQLiteDatabase>("beta")
 //let alpha = DatabaseIdentifier<SQLiteDatabase>("alpha")
 //
@@ -55,7 +53,7 @@ do {
     middlewareConfig.use(ErrorMiddleware.self)
     middlewareConfig.use(DateMiddleware.self)
     middlewareConfig.use(FileMiddleware(publicDirectory: "/Users/tanner/Desktop/"))
-//    middlewareConfig.use(SessionsMiddleware.self)
+    middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
 
@@ -100,7 +98,6 @@ do {
 
     router.get("client", "romans") { req -> Future<Response> in
         let client = try req.make(Client.self, for: Request.self)
-
         return client.send(.get, to: "http://www.romansgohome.com")
     }
 
