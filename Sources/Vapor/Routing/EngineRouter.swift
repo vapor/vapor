@@ -12,13 +12,14 @@ public final class EngineRouter: Router {
     }
 
     /// Create a new engine router
-    public init() {
+    public init(caseInsensitive: Bool) {
         self.router = .init()
+        self.router.caseInsensitive = caseInsensitive
     }
 
     /// Create a new engine router with default settings.
     public static func `default`() -> EngineRouter {
-        let router = EngineRouter()
+        let router = EngineRouter(caseInsensitive: false)
         router.router.fallback = BasicResponder { req in
             let res = req.makeResponse()
             res.http.status = .notFound

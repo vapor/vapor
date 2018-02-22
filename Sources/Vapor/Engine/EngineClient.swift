@@ -93,7 +93,7 @@ extension URI {
     /// Returns the URI hostname, throwing if none exists.
     fileprivate func requireHostname() throws -> String {
         guard let hostname = self.hostname else {
-            throw VaporError(identifier: "requireHostname", reason: "URI with hostname required.")
+            throw VaporError(identifier: "requireHostname", reason: "URI with hostname required.", source: .capture())
         }
         return hostname
     }

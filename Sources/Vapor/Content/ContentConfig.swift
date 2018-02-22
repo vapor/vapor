@@ -84,7 +84,7 @@ public struct ContentCoders: Service, ServiceType {
     /// Returns an encoder for the specified media type or throws an error.
     public func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
         guard let encoder = encoders[mediaType] else {
-            throw VaporError(identifier: "contentEncoder", reason: "There is no configured encoder for \(mediaType)")
+            throw VaporError(identifier: "contentEncoder", reason: "There is no configured encoder for \(mediaType)", source: .capture())
         }
 
         return encoder
@@ -93,7 +93,7 @@ public struct ContentCoders: Service, ServiceType {
     /// Returns a decoder for the specified media type or throws an error.
     public func requireDecoder(for mediaType: MediaType) throws -> BodyDecoder {
         guard let decoder = decoders[mediaType] else {
-            throw VaporError(identifier: "contentDecoder", reason: "There is no configured decoder for \(mediaType)")
+            throw VaporError(identifier: "contentDecoder", reason: "There is no configured decoder for \(mediaType)", source: .capture())
         }
 
         return decoder

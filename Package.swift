@@ -17,34 +17,34 @@ let package = Package(
         .package(url: "https://github.com/vapor/async.git", "1.0.0-beta.1"..<"1.0.0-beta.2"),
 
         // Swift wrapper for Console I/O.
-        .package(url: "https://github.com/vapor/console.git", "3.0.0-beta.1"..<"3.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/console.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
 
         // Core extensions, type-aliases, and functions that facilitate common tasks.
-        .package(url: "https://github.com/vapor/core.git", "3.0.0-beta.1"..<"3.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/core.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
 
         // Cryptography modules
         .package(url: "https://github.com/vapor/crypto.git", "3.0.0-beta.1"..<"3.0.0-beta.2"),
 
         // Core services for creating database integrations.
-        .package(url: "https://github.com/vapor/database-kit.git", "1.0.0-beta.2"..<"1.0.0-beta.5"),
+        .package(url: "https://github.com/vapor/database-kit.git", "1.0.0-beta.2"..<"1.0.0-beta.6"),
 
         // Non-blocking networking for Swift (HTTP and WebSockets).
-        .package(url: "https://github.com/vapor/engine.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
+        .package(url: "https://github.com/vapor/engine.git", "3.0.0-beta.3"..<"3.0.0-beta.4"),
 
         // Easy-to-use foundation for building powerful templating languages in Swift.
-        .package(url: "https://github.com/vapor/template-kit.git", "1.0.0-beta.1"..<"1.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/template-kit.git", "1.0.0-beta.2"..<"1.0.0-beta.3"),
 
         // Service container and configuration system.
-        .package(url: "https://github.com/vapor/service.git", "1.0.0-beta.1"..<"1.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/service.git", "1.0.0-beta.2"..<"1.0.0-beta.3"),
 
         // Pure Swift (POSIX) TCP and UDP non-blocking socket layer, with event-driven Server and Client.
-        .package(url: "https://github.com/vapor/sockets.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
+        .package(url: "https://github.com/vapor/sockets.git", "3.0.0-beta.3"..<"3.0.0-beta.4"),
 
         // Swift OpenSSL & macOS Security TLS wrapper
-        .package(url: "https://github.com/vapor/tls.git", "3.0.0-beta.2"..<"3.0.0-beta.3"),
+        .package(url: "https://github.com/vapor/tls.git", "3.0.0-beta.3"..<"3.0.0-beta.4"),
 
         // Extensible data validation library (email, alphanumeric, UUID, etc)
-        .package(url: "https://github.com/vapor/validation.git", "2.0.0-beta.1"..<"2.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/validation.git", "2.0.0-beta.2"..<"2.0.0-beta.3"),
     ],
     targets: [
         // Boilerplate

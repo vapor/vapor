@@ -23,7 +23,7 @@ extension MultipartForm: Content {
     /// See RequestEncodable.encode
     public func encode(using container: Container) throws -> Future<Request> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
-            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
+            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8", source: .capture())
         }
 
         let req = Request(using: container)
@@ -36,7 +36,7 @@ extension MultipartForm: Content {
     /// See ResponseEncodable.encode
     public func encode(for req: Request) throws -> Future<Response> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
-            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8")
+            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8", source: .capture())
         }
 
         let res = req.makeResponse()
@@ -49,7 +49,7 @@ extension MultipartForm: Content {
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
-            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
+            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers", source: .capture())
         }
 
         let config = try req.make(MultipartFormConfig.self)
@@ -61,7 +61,7 @@ extension MultipartForm: Content {
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
-            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers")
+            throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was found in the headers", source: .capture())
         }
 
         let config = try req.make(MultipartFormConfig.self)

@@ -113,7 +113,7 @@ extension Services {
         }
 
         // register router
-        services.register(Router.self, isSingleton: true) { container -> EngineRouter in
+        services.register(Router.self) { container -> EngineRouter in
             return EngineRouter.default()
         }
 
@@ -206,7 +206,8 @@ public struct ApplicationResponder: Responder, Service {
                 reason: "The application timed out waiting for response.",
                 suggestedFixes: [
                     "Inspect the route responsible for responding to \(req.http.method) \(req.http.uri.path)"
-                ]
+                ],
+                source: .capture()
             )
             promise.fail(error)
             timer?.cancel()
