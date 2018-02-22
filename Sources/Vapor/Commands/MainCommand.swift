@@ -25,7 +25,7 @@ internal struct MainCommand: CommandGroup {
             if let lazy = self.defaultRunnable {
                 try lazy.run(using: context)
             } else {
-                throw VaporError(identifier: "noDefaultCommand", reason: "No default command has been registered.")
+                throw VaporError(identifier: "noDefaultCommand", reason: "No default command has been registered.", source: .capture())
             }
         }
     }

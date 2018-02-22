@@ -16,7 +16,7 @@ public struct TransferEncodingConfig: Service {
     /// Returns an encoding for the specified transfer encoding type or throws an error.
     func requireEncoding(for name: String) throws -> TransferEncoding {
         guard let encoding = encodings[name] else {
-            throw VaporError(identifier: "missing-encoding", reason: "There is no known encoding for \(name)")
+            throw VaporError(identifier: "missing-encoding", reason: "There is no known encoding for \(name)", source: .capture())
         }
         
         return encoding
