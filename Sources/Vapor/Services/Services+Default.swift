@@ -195,6 +195,8 @@ public struct ApplicationResponder: Responder, Service {
     }
 
     public func respond(to req: Request) throws -> Future<Response> {
+        return try responder.respond(to: req);
+        
         let promise = Promise(Response.self)
         // attempt to respond before, so thrown errors prevent timer creation
         try responder.respond(to: req).chain(to: promise)
