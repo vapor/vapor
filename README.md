@@ -1,7 +1,7 @@
 [![Vapor](https://user-images.githubusercontent.com/1342803/36581122-643e5298-1839-11e8-8927-522bdc3a7205.png)](http://vapor.team)
 
 <p align="center">
-	<a href="https://docs.vapor.codes/2.0/">
+	<a href="https://docs.vapor.codes/3.0/">
         <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
     </a>
     <a href="http://vapor.team">
