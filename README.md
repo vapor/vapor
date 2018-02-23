@@ -33,17 +33,15 @@ Join the welcoming community of fellow Vapor developers in [slack](http://vapor.
 
 ### 🚀 Contributing
 
-All developers should feel welcome and encouraged to contribute to Vapor, see our [getting started](/Documents/CONTRIBUTING.md) document here to get involved.
+To contribute a **feature or idea** to Vapor, [create an issue](https://github.com/vapor/vapor/issues/new) explaining your idea or bring it up on [Slack](http://vapor.team).
 
-To contribute a **feature or idea** to Vapor, submit an issue and fill in the template. If the request is approved, you or one of the members of the community can start working on it.
+If you find a **bug**, please [create an issue](https://github.com/vapor/vapor/issues/new). 
 
-If you find a **bug**, please submit a pull request with a failing test case displaying the bug or create an issue.
-
-If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible. We take these matters seriously.
+If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible.
 
 ### 💙 Code of Conduct
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Documents/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
+Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](/Docs/CODE_OF_CONDUCT.md) during your interactions surrounding this project.
 
 ### 🏫 Tutorials
 
