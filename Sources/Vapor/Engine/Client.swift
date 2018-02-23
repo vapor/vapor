@@ -74,12 +74,7 @@ extension Client {
 /// MARK: Content
 
 extension Client {
-    /// Sends a GET request with body
-    public func get<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
-        return send(.get, headers: headers, to: url, content: content)
-    }
-
-    /// Sends a GET request with body
+    /// Sends a PUT request with body
     public func put<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.put, headers: headers, to: url, content: content)
     }
@@ -87,11 +82,6 @@ extension Client {
     /// Sends a POST request with body
     public func post<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
         return send(.post, headers: headers, to: url, content: content)
-    }
-
-    /// Sends a POST request with body
-    public func delete<C>(_ url: URIRepresentable, headers: HTTPHeaders = [:], content: C) -> Future<Response> where C: Content {
-        return send(.delete, headers: headers, to: url, content: content)
     }
 
     /// Sends a PATCH request with body

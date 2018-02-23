@@ -67,6 +67,67 @@ class ApplicationTests: XCTestCase {
 //        req.http.uri.query = "hello=world"
 //        XCTAssertEqual(req.query["hello"], "world")
     }
+    
+    func testClientBasicRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://www.google.com/").await(on: app)
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientRelativeRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/relative-redirect/5").await(on: app)
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientManyRelativeRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/relative-redirect/8").await(on: app)
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientTooManyRelativeRedirects() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        XCTAssertThrowsError(try client.get("http://httpbin.org/relative-redirect/9").await(on: app))
+    }
+    
+    func testClientAbsoluteRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/absolute-redirect/5").await(on: app)
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientManyAbsoluteRedirect() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        let response = try client.get("http://httpbin.org/absolute-redirect/8").await(on: app)
+        XCTAssertEqual(response.http.status, 200)
+    }
+    
+    func testClientTooManyAbsoluteRedirects() throws {
+        let app = try Application()
+        
+        let client = try app.make(Client.self)
+        
+        XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").await(on: app))
+    }
 
     func testClientHeaders() throws {
         let app = try Application()
@@ -86,6 +147,13 @@ class ApplicationTests: XCTestCase {
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
+        ("testClientBasicRedirect", testClientBasicRedirect),
+        ("testClientRelativeRedirect", testClientRelativeRedirect),
+        ("testClientManyRelativeRedirect", testClientManyRelativeRedirect),
+        ("testClientTooManyRelativeRedirects", testClientTooManyRelativeRedirects),
+        ("testClientAbsoluteRedirect", testClientAbsoluteRedirect),
+        ("testClientManyAbsoluteRedirect", testClientManyAbsoluteRedirect),
+        ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
         ("testClientHeaders", testClientHeaders)
     ]
 }
