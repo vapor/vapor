@@ -1,6 +1,6 @@
 <!-- 🚀 Thank you for contributing! --->
 
-<!-- Provide a brief description of the bug here. -->
+<!-- Provide a brief description of the issue here. -->
 <!-- Pretend you are explaining it to a friend, not yourself! -->
 
 ### Steps to reproduce
