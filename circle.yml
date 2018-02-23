@@ -17,6 +17,7 @@ jobs:
       - run: apt-get install -yq libssl-dev
       - run: swift build
       - run: swift test
+      - run: swift build -c release
 workflows:
   version: 2
   tests:

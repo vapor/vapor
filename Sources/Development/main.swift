@@ -50,10 +50,10 @@ do {
 //    services.instance(migrationConfig)
 
     var middlewareConfig = MiddlewareConfig()
-    middlewareConfig.use(ErrorMiddleware.self)
-    middlewareConfig.use(DateMiddleware.self)
-    middlewareConfig.use(FileMiddleware(publicDirectory: "/Users/tanner/Desktop/"))
-    middlewareConfig.use(SessionsMiddleware.self)
+//    middlewareConfig.use(ErrorMiddleware.self)
+//    middlewareConfig.use(DateMiddleware.self)
+//    middlewareConfig.use(FileMiddleware(publicDirectory: "/Users/tanner/Desktop/"))
+//    middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
 
