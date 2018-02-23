@@ -29,7 +29,7 @@ Take a look at some of the [awesome stuff](https://github.com/Cellane/awesome-va
 
 ### 💧 Community
 
-Join the welcoming community of fellow Vapor developers in [slack](http://vapor.team).
+Join the welcoming community of fellow Vapor developers in [Slack](http://vapor.team).
 
 ### 🚀 Contributing
 
