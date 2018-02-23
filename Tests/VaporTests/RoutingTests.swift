@@ -1,58 +1,71 @@
+import Foundation
+import Vapor
 import XCTest
-@testable import Vapor
-import HTTP
-import Routing
 
-class RoutingTests: XCTestCase {
-    static let allTests = [
-        ("testMiddlewareMethod", testMiddlewareMethod)
-    ]
 
-    func testMiddlewareMethod() throws {
-        let drop = try Droplet()
-        drop.group(TestMiddleware()) { test in
-            test.get("foo") { req in
-                return "get"
-            }
-
-            test.post("foo") { req in
-                return "post"
-            }
-        }
-
-        XCTAssertEqual(try drop.responseBody(for: .get, "/foo"), "get")
-        XCTAssertEqual(try drop.responseBody(for: .post, "/foo"), "post")
+class RoutingTests : XCTestCase {
+    
+    func testGroup() {
+        let router = MockRouter()
+        let sut = router.grouped("test")
+        XCTAssertNotNil(sut) // test that there is no error
     }
     
-    func testCollections() throws {
-        let drop = try Droplet()
-        XCTAssertEqual(drop.router.routes.count, 0)
-        try drop.collection(TestCollectionA.self)
-        XCTAssertEqual(drop.router.routes.count, 1)
-        try drop.collection(TestCollectionB())
-        XCTAssertEqual(drop.router.routes.count, 2)
+    func testGroupConfigure() {
+        let sut = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
+        sut.group("") { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1, handler: nil)
+    }
+    
+    func testUsingMiddlewareAsFunction() {
+        let router = MockRouter()
+        let sut = router.grouped { req, next in
+            return try next.respond(to: req)
+        }
+        XCTAssertNotNil(sut) // test that there is no error
+    }
+    
+    func testUsingMiddleware() {
+        let router = MockRouter()
+        let sut = router.grouped(FakeMiddleware())
+        XCTAssertNotNil(sut) // test that there is no error
+    }
+    
+    func testUsingMiddlewareAsFunctionWithConfiguration() {
+        let router = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
+        router.group({ req, next in
+            return try next.respond(to: req)
+        }) { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
+        }
+        waitForExpectations(timeout: 1, handler: nil)
+    }
+    
+    func testUsingMiddlewareWithConfiguration() {
+        let router = MockRouter()
+        let exp = expectation(description: "Router Group configuration called")
         
-    }
-}
-
-private final class TestMiddleware: Middleware {
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        return try next.respond(to: request)
-    }
-}
-
-fileprivate final class TestCollectionA: RouteCollection, EmptyInitializable {
-    func build(_ builder: RouteBuilder) {
-        builder.get("foo") { req in
-            return "bar"
+        router.group(FakeMiddleware()) { group in
+            group.get("") { _ in
+                return Future("test")
+            }
+            exp.fulfill()
         }
+        
+        waitForExpectations(timeout: 1, handler: nil)
     }
+    
+    // FIXME: We need more testable router
 }
 
-fileprivate final class TestCollectionB: RouteCollection {
-    func build(_ builder: RouteBuilder) {
-        builder.get("baz") { req in
-            return "bar"
-        }
-    }
-}
+

@@ -25,21 +25,14 @@ function check_vapor() {
     if [[ $OS == "Darwin" ]]; # macOS
     then
         XCBVERSION=`xcodebuild -version`
-        if [[ $XCBVERSION == *"Xcode 9"* ]];
+        if [[ $XCBVERSION != *"Xcode 8"* ]];
         then
-            echo "✅  Compatible Xcode"
-        elif [[ $XCBVERSION == *"Xcode 8"* ]];
-        then
-            echo "⚠️  Xcode 9 is recommended";
-            echo "";
-            echo "✅  Compatible Xcode"
-        else
             echo "⚠️  It looks like your Command Line Tools version is incorrect."
             echo ""
             echo "Open Xcode and make sure the correct SDK is selected:"
             echo "👀  Xcode > Preferences > Locations > Command Line Tools"
             echo ""
-            echo "Correct: Xcode 9.x (Any Build Number)"
+            echo "Correct: Xcode 8.x (Any Build Number)"
             echo "Current: $XCBVERSION"
             echo ""
             help
@@ -49,23 +42,17 @@ function check_vapor() {
 
     SWIFTV=`swift --version`
 
-    if [[ $SWIFTV == *"4.0"* ]];
+    if [[ $SWIFTV == *"3.1"* ]];
     then
         echo "✅  Compatible with Vapor 2"
         return 0;
-    elif [[ $SWIFTV == *"3.1"* ]];
-    then
-        echo "⚠️  Swift 4.0 is recommended";
-        echo "";
-        echo "✅  Compatible with Vapor 2";
-        return 0;
-    else
-        echo "❌  Swift 4.0 is recommended, 3.1 or later is required.."
+    else    
+        echo "❌  Swift 3.1 is required."
         echo ""
         echo "'swift --version' output:"
         echo $SWIFTV
         echo ""
-        echo "Output does not contain '3.1' or '4.0'."
+        echo "Output does not contain '3.1'."
         echo ""
         help
         return 1;

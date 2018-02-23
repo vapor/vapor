@@ -1,8 +1,8 @@
-[![Vapor](https://cloud.githubusercontent.com/assets/1342803/26107881/b59e7e22-3a42-11e7-82b7-fe869cfdb0b9.png)](http://vapor.team)
+[![Vapor](https://user-images.githubusercontent.com/1342803/36581122-643e5298-1839-11e8-8927-522bdc3a7205.png)](http://vapor.team)
 
 <p align="center">
 	<a href="https://docs.vapor.codes/2.0/">
-        <img src="http://img.shields.io/badge/read_the-docs-92A8D1.svg" alt="Documentation">
+        <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
     </a>
     <a href="http://vapor.team">
         <img src="http://vapor.team/badge.svg" alt="Slack Team">
@@ -14,7 +14,7 @@
         <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
     </a>
     <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-3.1-brightgreen.svg" alt="Swift 3.1">
+        <img src="http://img.shields.io/badge/swift-4.1-brightgreen.svg" alt="Swift 4.1">
     </a>
     <a href="https://twitter.com/codevapor">
         <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
@@ -23,9 +23,7 @@
 
 <br>
 
-Vapor is a web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
-
-Take a look at some of the [awesome stuff](https://github.com/Cellane/awesome-vapor) created with Vapor.
+Vapor is the [most used](https://swiftpkgs.ng.bluemix.net/browse?chart=mostessential) web framework for Swift. It provides a beautifully expressive and easy to use foundation for your next website, API, or cloud project.
 
 ### 💧 Community
 
@@ -87,25 +85,13 @@ Support us with a monthly donation and help us continue our activities. [[Become
 
 ### 🥇 Sponsors
 
-Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://www.skelpo.com) (🥉), and our [Open Collective sponsors](https://opencollective.com/vapor#sponsor).
-
-- 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
-- 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
-- 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
-- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor)
+Proudly sponsored by Nodes
 
 <a href="http://nodesagency.com">
     <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
 </a>
 
-<br>
-
-<a href="https://www.skelpo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
-</a>
-
-<br>
-<br>
+Become a sponsor and get your logo on our README on GitHub with a link to your site. [[Become a sponsor](https://opencollective.com/vapor#sponsor)]
 
 <a href="http://dominickm.com" target="_blank">
     <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">

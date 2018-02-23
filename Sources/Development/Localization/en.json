@@ -1,6 +1,0 @@
-{
-    "welcome": {
-    	"title": "Welcome to Vapor!",
-    	"body": "A web framework for Swift."
-    }
-}

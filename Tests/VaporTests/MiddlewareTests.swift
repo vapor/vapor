@@ -1,116 +1,31 @@
 import Vapor
 import XCTest
-import HTTP
 
-extension String: Swift.Error {}
+class MiddlewareTests : XCTestCase {
+    // https://github.com/vapor/vapor/issues/1371
+    func testNotConfigurable() throws {
+        final class MyMiddleware: Middleware {
+            var flag = false
+            func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+                flag = true
+                return try next.respond(to: request)
+            }
+        }
 
-class MiddlewareTests: XCTestCase {
+        let myMiddleware = MyMiddleware()
+        var services = Services.default()
+        var middlewareConfig = MiddlewareConfig()
+        middlewareConfig.use(myMiddleware)
+        services.register(middlewareConfig)
+
+        let app = try Application(services: services)
+
+        let req = Request(http: .init(), using: app)
+        _ = try app.make(Responder.self).respond(to: req).blockingAwait()
+        XCTAssert(myMiddleware.flag == true)
+    }
+
     static let allTests = [
-        ("testConfigDate", testConfigDate),
-        ("testConfigDateMissing", testConfigDateMissing),
-        ("testConfigDateProvided", testConfigDateProvided),
-        ("testMultiple", testMultiple),
-        ("testConfigClient", testConfigClient),
-        ("testConfigClientNotEnabled", testConfigClientNotEnabled),
+        ("testNotConfigurable", testNotConfigurable),
     ]
-
-    func testConfigDate() throws {
-        let config = Config([
-            "middleware": [
-                "date"
-            ]
-        ])
-
-        let drop = try Droplet(config)
-        drop.get { _ in
-            return "Hello, world"
-        }
-
-        let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
-
-        XCTAssert(res.headers["Date"] != nil)
-    }
-
-    func testConfigDateMissing() throws {
-        var config = Config([:])
-        try config.set("droplet.middleware", ["error"])
-
-        let drop = try Droplet(config)
-        drop.get { _ in
-            return "Hello, world"
-        }
-
-        let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
-
-        XCTAssert(res.headers["Date"] == nil)
-    }
-
-    func testConfigDateProvided() throws {
-        let drop = try Droplet(middleware: [
-            FooMiddleware()
-        ])
-
-        drop.get { _ in
-            return "Hello, world"
-        }
-
-        let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
-
-        XCTAssertEqual(res.headers["bar"], "baz")
-    }
-
-    func testMultiple() throws {
-        let drop = try Droplet(middleware: [
-            FooMiddleware(),
-            DateMiddleware()
-        ])
-
-        drop.get { _ in
-            return "Hello, world"
-        }
-
-        let req = Request(method: .get, path: "/")
-        let res = try drop.respond(to: req)
-
-        XCTAssert(res.headers["bar"] != nil)
-        XCTAssert(res.headers["date"] != nil)
-    }
-
-    func testConfigClient() throws {
-        let foo = FooMiddleware()
-
-        let res = try EngineClient.factory.get("http://httpbin.org/headers", through: [foo])
-
-        // test to make sure basic server saw the
-        // header the middleware added
-        XCTAssert(try res.bodyString().contains("Foo") == true)
-        XCTAssert(try res.bodyString().contains("bar") == true)
-
-        // test to make sure the middleware
-        // added headers to the response
-        XCTAssertEqual(res.headers["bar"], "baz")
-    }
-
-    func testConfigClientNotEnabled() throws {
-        let drop = try Droplet(middleware: [FooMiddleware()])
-
-        let res = try drop.client.request(.get, "http://httpbin.org/headers")
-
-        XCTAssert(try res.bodyString().contains("Foo") != true)
-        XCTAssert(try res.bodyString().contains("bar") != true)
-        XCTAssertNil(res.headers["bar"])
-    }
-}
-
-class FooMiddleware: Middleware {
-    init() {}
-    func respond(to request: Request, chainingTo next: Responder) throws -> Response {
-        request.headers["foo"] = "bar"
-        let response = try next.respond(to: request)
-        response.headers["bar"] = "baz"
-        return response
-    }
 }

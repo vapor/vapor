@@ -2,6 +2,5 @@ Packages
 .build
 .DS_Store
 *.xcodeproj
-Package.pins
 DerivedData/
 Package.resolved

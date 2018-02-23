@@ -1,68 +1,163 @@
-@_exported import PathIndexable
+import Async
+import HTTP
+import Foundation
+import Service
 
-public protocol RequestContentSubscript {}
-
-extension String: RequestContentSubscript { }
-extension Int: RequestContentSubscript {}
-
-/// The data received from the request in json body or url query
-///
-/// Can be extended by third party droplets and middleware
-public final class Content {
-
-    public typealias ContentLoader = ([PathIndexer]) -> Node?
-
-    // MARK: Initialization
-
-    private var content: [ContentLoader] = []
-
-    public init() {}
-
-    // Some closure weirdness to allow more complex capturing or lazy loading internally
-
-    public func append<W: StructuredDataWrapper>(_ element: @escaping () -> W?) {
-        let finder: ContentLoader = { indexes in
-            guard let w = element()?[indexes] else { return nil }
-            return Node(w)
-        }
-        content.append(finder)
-    }
-
-    public func append(_ element: @escaping ContentLoader) {
-        content.append(element)
-    }
-
-    public func append<W: StructuredDataWrapper>(_ element: W?) {
-        guard let element = element else { return }
-        let finder: ContentLoader = { indexes in
-            guard let w = element[indexes] else { return nil }
-            return Node(w)
-        }
-        content.append(finder)
-    }
-
-    // MARK: Subscripting
-
-    public subscript(indexes: PathIndexer...) -> Node? {
-        return self[indexes]
-    }
-
-    public subscript(indexes: [PathIndexer]) -> Node? {
-        return content.lazy.flatMap { loader in loader(indexes) } .first
-    }
+/// Representable as content in an HTTP message.
+public protocol Content: Codable, ResponseCodable, RequestCodable {
+    /// The default media type to use when _encoding_ this
+    /// content. This can be overridden at the encode call.
+    static var defaultMediaType: MediaType { get }
 }
 
 extension Content {
-    public func get<T : NodeInitializable>(
-        _ indexers: PathIndexer...)
-        throws -> T {
-            return try get(indexers)
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .json
     }
 
-    public func get<T : NodeInitializable>(
-        _ indexers: [PathIndexer])
-        throws -> T {
-            let value = self[indexers] ?? .null
-            return try T(node: value)
+    /// See RequestEncodable.encode
+    public func encode(using container: Container) throws -> Future<Request> {
+        let req = Request(using: container)
+        try req.content.encode(self)
+        return Future(req)
+    }
+
+    /// See ResponseEncodable.encode
+    public func encode(for req: Request) throws -> Future<Response> {
+        let res = req.makeResponse()
+        try res.content.encode(self)
+        return Future(res)
+    }
+
+    /// See RequestDecodable.decode
+    public static func decode(from req: Request) throws -> Future<Self> {
+        let content = try req.content.decode(Self.self)
+        return content
+    }
+
+    /// See ResponseDecodable.decode
+    public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
+        let content = try res.content.decode(Self.self)
+        return content
+    }
+}
+
+// MARK: Default Conformance
+
+extension String: Content {
+    /// See Content.defaultMediaType
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int8: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int16: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int32: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Int64: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt8: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt16: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt32: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension UInt64: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Double: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Float: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return .plainText
+    }
+}
+
+extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return Element.defaultMediaType
+    }
+}
+
+extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
+    /// See `Content.defaultMediaType`
+    public static var defaultMediaType: MediaType {
+        return Value.defaultMediaType
+    }
+}
+
+extension Request {
+    public func makeResponse() -> Response {
+        return Response(using: superContainer)
+    }
+}
+
+extension Response {
+    public func makeRequest() -> Request {
+        return Request(using: superContainer)
     }
 }

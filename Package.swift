@@ -1,47 +1,83 @@
+// swift-tools-version:4.0
 import PackageDescription
+
+#if os(macOS)
+    let tlsImpl: Target.Dependency = "AppleTLS"
+#else
+    let tlsImpl: Target.Dependency = "OpenSSL"
+#endif
 
 let package = Package(
     name: "Vapor",
-    targets: [
-        // Framework
-        Target(name: "Vapor", dependencies: [
-            "Cache",
-            "Sessions",
-            "Configs"
-        ]),
-
-        // Misc
-        Target(name: "Cache"),
-        Target(name: "Sessions", dependencies: ["Cache"]),
-        Target(name: "Configs"),
-        Target(name: "Testing", dependencies: ["Vapor"]),
-
-        // Development and Testing
-        // Target(name: "Development", dependencies: ["Vapor"]),
-        // Target(name: "Performance", dependencies: ["Vapor"]),
+    products: [
+        .library(name: "Vapor", targets: ["Vapor"]),
     ],
     dependencies: [
-        // Core vapor transport layer
-        .Package(url: "https://github.com/vapor/engine.git", majorVersion: 2),
+        // ⏱ Promises and reactive-streams in Swift built for high-performance and scalability.
+        .package(url: "https://github.com/vapor/async.git", from: "1.0.0-rc"),
 
-        // Console protocol and implementation for powering command line interface.
-        .Package(url: "https://github.com/vapor/console.git", majorVersion: 2),
+        // 💻 APIs for creating interactive CLI tools.
+        .package(url: "https://github.com/vapor/console.git", from: "3.0.0-rc"),
 
-        // JSON enum wrapper around Foundation JSON
-        .Package(url: "https://github.com/vapor/json.git", majorVersion: 2),
+        // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
+        .package(url: "https://github.com/vapor/core.git", from: "3.0.0-rc"),
 
-        // A type safe routing package including HTTP and TypeSafe routers.
-        .Package(url: "https://github.com/vapor/routing.git", majorVersion: 2),
+        // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
+        .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0-rc"),
 
-        // Parses `Content-Type: multipart` as defined in RFC 2046.
-        .Package(url: "https://github.com/vapor/multipart.git", majorVersion: 2),
+        // 🗄 Core services for creating database integrations.
+        .package(url: "https://github.com/vapor/database-kit.git", from: "1.0.0-rc"),
 
-        // Swift implementation of the BCrypt password hashing function
-        .Package(url: "https://github.com/vapor/bcrypt.git", majorVersion: 1),
+        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
+        .package(url: "https://github.com/vapor/engine.git", from: "3.0.0-rc"),
+
+        // 🚍 High-performance trie-node router.
+        .package(url: "https://github.com/vapor/routing.git", from: "3.0.0-rc"),
+
+        // 📦 Dependency injection / inversion of control framework.
+        .package(url: "https://github.com/vapor/service.git", from: "1.0.0-rc"),
+
+        // 🔌 Non-blocking TCP socket layer, with event-driven server and client.
+        .package(url: "https://github.com/vapor/sockets.git", from: "3.0.0-rc"),
+
+        // 🖋 Easy-to-use foundation for building powerful templating languages in Swift.
+        .package(url: "https://github.com/vapor/template-kit.git", from: "1.0.0-rc"),
+
+        // 🔒 Non-blocking, event-driven TLS built on OpenSSL & macOS security.
+        .package(url: "https://github.com/vapor/tls.git", from: "3.0.0-rc"),
+
+        // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
+        .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc"),
     ],
-    exclude: [
-        "Sources/Development",
-        "Sources/Performance",
-        "Sources/TypeSafeGenerator"
+    targets: [
+        // Boilerplate
+        .target(name: "Boilerplate", dependencies: ["Service", "Routing", "Vapor"]),
+        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+
+        // Vapor
+        .target(name: "Development", dependencies: ["Vapor"]),
+        .target(name: "Vapor", dependencies: [
+            "Async",
+            "CodableKit",
+            "Command",
+            "Console",
+            "COperatingSystem",
+            "Crypto",
+            "DatabaseKit",
+            "Debugging",
+            "FormURLEncoded",
+            "HTTP",
+            "Logging",
+            "Multipart",
+            "Routing",
+            "Service",
+            "TCP",
+            "TemplateKit",
+            "TLS",
+            tlsImpl,
+            "WebSocket",
+            "Validation"
+        ]),
+        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
 )
