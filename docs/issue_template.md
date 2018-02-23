@@ -11,11 +11,11 @@
 
 ### Expected behavior
 
-<!-- Tell us what you expect to happen, i.e., what should happen once we fix the issue. -->
+<!-- Tell us what you expect to happen (what should happen once we fix the issue). -->
 
 ### Actual behavior
 
-<!-- Tell us what is actually happening, i.e., what is broken/not working correctly. -->
+<!-- Tell us what is actually happening (what is broken/not working correctly). -->
 
 ### Environment
 
