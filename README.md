@@ -1,4 +1,4 @@
-[![Vapor](https://user-images.githubusercontent.com/1342803/36581023-dbabbb5a-1838-11e8-8185-3a80d3a63aee.png)](http://vapor.team)
+[![Vapor](https://user-images.githubusercontent.com/1342803/36581122-643e5298-1839-11e8-8927-522bdc3a7205.png)](http://vapor.team)
 
 <p align="center">
 	<a href="https://docs.vapor.codes/2.0/">
