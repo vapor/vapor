@@ -20,7 +20,7 @@
 ### Environment
 
 <!-- We must know your exact environment or it is very difficult to help. -->
-<!-- Hint: use `vapor --version` in the root dir of your Vapor project. -->
+<!-- Hint: use `vapor --version` in the root directory of your Vapor project. -->
 
 * Vapor Framework version:
 * Vapor Toolbox version:
