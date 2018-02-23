@@ -6,7 +6,7 @@
 ### Steps to reproduce
 
 <!-- Tell us how to reproduce this issue. -->
-<!-- Please provide as much detail as possible! -->
+<!-- Please provide as much detail as possible (the more code snippets, the better)! -->
 <!-- If we cannot recreate it, we will not be able to figure out how to fix it. -->
 
 ### Expected behavior
@@ -20,6 +20,7 @@
 ### Environment
 
 <!-- We must know your exact environment or it is very difficult to help. -->
+<!-- Hint: use `vapor --version` in the root dir of your Vapor project. -->
 
 * Vapor Framework version:
 * Vapor Toolbox version:
