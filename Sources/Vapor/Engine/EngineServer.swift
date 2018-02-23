@@ -6,7 +6,6 @@ import Debugging
 import Dispatch
 import Foundation
 import HTTP
-import ServerSecurity
 import Service
 import TCP
 import TLS
@@ -76,84 +75,6 @@ public final class EngineServer: Server, Service {
 
         container.eventLoop.runLoop()
     }
-
-//    private func startPlain(with responder: Responder) throws {
-//        // create a tcp server
-//        let tcp = try TCPServer(Workers: Workers.map { $0.queue }, acceptQueue: acceptQueue)
-//
-//        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-//
-//        let mapStream = MapStream<TCPClient, HTTPPeer>(map: HTTPPeer.init)
-//        let server = HTTPServer<HTTPPeer>(socket: tcp.stream(to: mapStream))
-//
-//        var workersIterator = LoopIterator<[Container]>(collection: Workers)
-//
-//        // setup the server pipeline
-//        server.start {
-//            return ResponderStream(
-//                responder: responder,
-//                using: WorkersIterator.next()!
-//            )
-//        }.catch { err in
-//            logger.reportError(err, as: "Server error")
-//            debugPrint(err)
-//        }.finally {
-//            // on close
-//        }
-//
-//
-//    }
-
-//    private func startSSL(with responder: Responder, sslConfig: EngineServerSSLConfig) throws {
-//        // create a tcp server
-//        let tcp = try TCPServer(Workers: Workers.map { $0.queue }, acceptQueue: acceptQueue)
-//        
-//        tcp.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-//        
-//        let upgrader = try container.make(SSLPeerUpgrader.self, for: EngineServer.self)
-//        
-//        let sslStream = FutureMapStream<TCPClient, BasicSSLPeer> { client in
-//            return try client.Worker.queue.sync {
-//                client.disableReadSource()
-//                return try upgrader.upgrade(socket: client.socket, settings: sslConfig.sslSettings, Worker: client.Worker)
-//            }
-//        }
-//        
-//        let peerStream = tcp.stream(to: sslStream).map(HTTPPeer.init)
-//        
-//        let server = HTTPServer<HTTPPeer>(socket: peerStream)
-//        
-//        let console = try container.make(Console.self, for: EngineServer.self)
-//        let logger = try container.make(Logger.self, for: EngineServer.self)
-//        
-//        var workersIterator = LoopIterator<[Container]>(collection: Workers)
-//        
-//        // setup the server pipeline
-//        server.start {
-//            return ResponderStream(
-//                responder: responder,
-//                using: WorkersIterator.next()!
-//            )
-//        }.catch { err in
-//            logger.reportError(err, as: "Server error")
-//            debugPrint(err)
-//        }.finally {
-//            // on close
-//        }
-//        
-//        console.print("Server starting on ", newLine: false)
-//        console.output("https://" + sslConfig.hostname, style: .custom(.cyan), newLine: false)
-//        console.output(":" + sslConfig.port.description, style: .custom(.cyan))
-//        
-//        // bind, listen, and start accepting
-//        try tcp.start(
-//            hostname: sslConfig.hostname,
-//            port: sslConfig.port,
-//            backlog: config.backlog
-//        )
-//        
-//        strongRef = tcp
-//    }
 }
 
 fileprivate struct EngineResponder: HTTPResponder {
@@ -206,72 +127,6 @@ extension Logger {
         }
     }
 }
-//
-///// The EngineServer's SSL configuration
-//public struct EngineServerSSLConfig {
-//    /// Host name the SSL server will bind to.
-//    public var hostname: String
-//
-//    /// The SSL settings (such as the certificate)
-//    public var sslSettings: SSLServerSettings
-//
-//    /// The port to bind SSL to
-//    public var port: UInt16
-//
-//    public init(settings: SSLServerSettings) {
-//        self.hostname = "localhost"
-//        self.sslSettings = settings
-//        self.port = 443
-//    }
-//}
-//
-//
-//final class FutureMapStream<I, O>: Async.Stream {
-//    public typealias Input = I
-//    public typealias Output = O
-//
-//    public typealias Closure = ((I) throws -> Future<O>)
-//
-//    private let closure: Closure
-//
-//    let outputStream = BasicStream<O>()
-//
-//    public func onInput(_ input: I) {
-//        do {
-//            try closure(input).do(outputStream.onInput).catch(outputStream.onError)
-//        } catch {
-//            outputStream.onError(error)
-//        }
-//    }
-//
-//    public func onError(_ error: Error) {
-//        outputStream.onError(error)
-//    }
-//
-//    public func onOutput<I>(_ input: I) where I : Async.InputStream, O == I.Input {
-//        outputStream.onOutput(input)
-//    }
-//
-//    public func close() {
-//        outputStream.close()
-//    }
-//
-//    public func onClose(_ onClose: ClosableStream) {
-//        outputStream.onClose(onClose)
-//    }
-//
-//    public init(_ closure: @escaping Closure) {
-//        self.closure = closure
-//    }
-//}
-
-//extension Async.OutputStream {
-//    typealias ThenClosure<T> = ((Output) throws -> Future<T>)
-//
-//    func then<T>(_ closure: @escaping ThenClosure<T>) -> FutureMapStream<Output, T> {
-//        return FutureMapStream(closure)
-//    }
-//}
 
 /// Engine server config struct.
 public struct EngineServerConfig: Service {
