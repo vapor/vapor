@@ -42,6 +42,7 @@ extension Content {
         return content
     }
     
+    /// Turns content into JSON data
     public func json() throws -> Data {
         let encoder = JSONEncoder()
         return try encoder.encode(self)
