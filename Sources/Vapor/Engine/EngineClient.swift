@@ -114,8 +114,6 @@ public final class EngineClient: Client, Service {
         )
         req.http.headers[.host] = hostname
         return client.send(req.http).flatMap(to: Response.self) { httpRes in
-            tlsClient.close()
-            
             return try self.response(from: httpRes, for: req, maxRedirects: redirects)
         }
     }
@@ -136,8 +134,6 @@ public final class EngineClient: Client, Service {
         )
         req.http.headers[.host] = hostname
         return client.send(req.http).flatMap(to: Response.self) { httpRes in
-            tcpClient.close()
-            
             return try self.response(from: httpRes, for: req, maxRedirects: redirects)
         }
     }
