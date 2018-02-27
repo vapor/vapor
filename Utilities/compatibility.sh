@@ -33,6 +33,12 @@ function check_vapor() {
         then
             echo "✅  Xcode 9 is compatible with Vapor 2."
             echo "✅  Xcode 9 is compatible with Vapor 3."
+        elif [[ $XCBVERSION == *"Xcode 10"* ]];
+        then
+            echo "⚠️  Xcode 10 support hasn't been tested yet."
+            echo "ℹ️  Xcode 10 should be compatible with Vapor 2."
+            echo "ℹ️  Xcode 10 should be compatible with Vapor 3."
+            echo ""
         else
             echo "⚠️  We don't recognize your Command Line Tools version."
             echo ""
