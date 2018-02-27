@@ -51,6 +51,7 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
+    middlewareConfig.use(HostMiddleware(writer: .static("example.com")))
 //    middlewareConfig.use(DateMiddleware.self)
 //    middlewareConfig.use(FileMiddleware(publicDirectory: "/Users/tanner/Desktop/"))
 //    middlewareConfig.use(SessionsMiddleware.self)

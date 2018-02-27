@@ -1,3 +1,5 @@
+import Service
+
 /// A specification that can write a hostname to a Response
 public struct HostnameWriter {
     /// A closure that can write a Response's Host header based on the `Request`
@@ -22,7 +24,7 @@ public struct HostnameWriter {
 }
 
 /// A middleware that changes the `Host` header field to either a preset hostname or a dynamic one
-public final class HostMiddleware: Middleware {
+public final class HostMiddleware: Middleware, Service {
     /// See `HostnameWriter`
     let hostnameWriter: HostnameWriter
     
