@@ -64,7 +64,7 @@ function check_vapor() {
         echo "✅  Swift 4.1 is compatible with Vapor 2."
         echo "✅  Swift 4.1 is compatible with Vapor 3."
         return 0;
-    elif [[ $SWIFTV == *"Swift version 4.1"* ]];
+    elif [[ $SWIFTV == *"Swift version 4.2"* ]];
     then
         echo "⚠️  Swift 4.2 support hasn't been tested yet."
         echo "ℹ️  Swift 4.2 should be compatible with Vapor 2."
