@@ -89,7 +89,6 @@ public final class EngineClient: Client, Service {
             default: break
             }
         }
-        
         let res = req.makeResponse()
         res.http = httpRes
         return Future(res)
