@@ -143,6 +143,14 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testClientItunesAPI() throws {
+        let app = try Application()
+        let client = try app.make(Client.self)
+        let res = try client.send(.get, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").await(on: app)
+        let data = try res.http.body.makeData(max: 100_000).await(on: app)
+        XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -154,7 +162,8 @@ class ApplicationTests: XCTestCase {
         ("testClientAbsoluteRedirect", testClientAbsoluteRedirect),
         ("testClientManyAbsoluteRedirect", testClientManyAbsoluteRedirect),
         ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
-        ("testClientHeaders", testClientHeaders)
+        ("testClientHeaders", testClientHeaders),
+        ("testClientItunesAPI", testClientItunesAPI),
     ]
 }
 
