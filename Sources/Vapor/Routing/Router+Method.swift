@@ -20,7 +20,7 @@ extension Router {
     
     /// Registers a route handler at the supplied path.
     @discardableResult
-    fileprivate func on<C, T>(
+    public func on<C, T>(
         _ method: HTTPMethod,
         at path: [PathComponent],
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
