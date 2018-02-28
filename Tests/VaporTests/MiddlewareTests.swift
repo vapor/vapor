@@ -40,5 +40,6 @@ class MiddlewareTests : XCTestCase {
 
     static let allTests = [
         ("testNotConfigurable", testNotConfigurable),
+        ("testHostnameMiddlware", testHostnameMiddlware),
     ]
 }
