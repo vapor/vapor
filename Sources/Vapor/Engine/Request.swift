@@ -81,7 +81,17 @@ extension Request: DatabaseConnectable {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
         guard let database = database else {
-            fatalError("Model.defaultDatabase required to use request as worker.")
+            let error = VaporError(
+                identifier: "defaultDB",
+                reason: "Model.defaultDatabase required to use request as worker.",
+                suggestedFixes: [
+                    "Ensure you are using the 'model' label when registering this model to your migration config (if it is a migration): migrations.add(model: ..., database: ...).",
+                    "If the model you are using is not a migration, set the static defaultDatabase property manually in your app's configuration section.",
+                    "Use req.withPooledConnection(to: ...) { ... } instead."
+                ],
+                source: .capture()
+            )
+            return Future(error: error)
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)
