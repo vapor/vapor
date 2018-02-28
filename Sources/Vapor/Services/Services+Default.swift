@@ -89,6 +89,7 @@ extension Services {
                 return try EngineClient(container: container, config: container.make(for: EngineClient.self))
             }
         }
+        services.register(FoundationClient.self)
 
         services.register { container -> EngineClientConfig in
             return EngineClientConfig()
