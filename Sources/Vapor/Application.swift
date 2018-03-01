@@ -25,7 +25,9 @@ public final class Application: Container {
     public let serviceCache: ServiceCache
 
     /// See Worker.queue
-    public let eventLoop: Async.EventLoop
+    public var eventLoop: Async.EventLoop {
+        fatalError()
+    }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -46,7 +48,7 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
+        // self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
         self.router = try self.make(Router.self, for: Application.self)
 
         // boot all service providers

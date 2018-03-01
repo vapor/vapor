@@ -49,10 +49,10 @@ extension Services {
         }
 
         // sessions
-        services.register(SessionCache.self)
-        services.register(SessionsMiddleware.self)
-        services.register(KeyedCacheSessions.self)
-        services.register(SessionsConfig.self)
+//        services.register(SessionCache.self)
+//        services.register(SessionsMiddleware.self)
+//        services.register(KeyedCacheSessions.self)
+//        services.register(SessionsConfig.self)
 
         // keyed cache
         services.register(KeyedCache.self) { container -> MemoryKeyedCache in
@@ -80,30 +80,30 @@ extension Services {
 //            return BasicSSLClient(boxing: client)
 //        }
 
-        services.register(Client.self) { container -> EngineClient in
-            if let sub = container as? SubContainer {
-                /// if a request is creating a client, we should
-                /// use the event loop as the container
-                return try EngineClient(container: sub.superContainer, config: container.make(for: EngineClient.self))
-            } else {
-                return try EngineClient(container: container, config: container.make(for: EngineClient.self))
-            }
-        }
+//        services.register(Client.self) { container -> EngineClient in
+//            if let sub = container as? SubContainer {
+//                /// if a request is creating a client, we should
+//                /// use the event loop as the container
+//                return try EngineClient(container: sub.superContainer, config: container.make(for: EngineClient.self))
+//            } else {
+//                return try EngineClient(container: container, config: container.make(for: EngineClient.self))
+//            }
+//        }
 
-        services.register { container -> EngineClientConfig in
-            return EngineClientConfig()
-        }
+//        services.register { container -> EngineClientConfig in
+//            return EngineClientConfig()
+//        }
 
         // register middleware
         services.register { container -> MiddlewareConfig in
             return MiddlewareConfig.default()
         }
 
-        services.register { container -> FileMiddleware in
-            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
-            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
-        }
-        
+//        services.register { container -> FileMiddleware in
+//            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
+//            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
+//        }
+//
         services.register { container in
             return DateMiddleware()
         }
@@ -121,10 +121,10 @@ extension Services {
         services.register(ContentConfig.self)
         services.register(ContentCoders.self)
         
-        // register transfer encodings
-        services.register { container -> TransferEncodingConfig in
-            return TransferEncodingConfig.default()
-        }
+//        // register transfer encodings
+//        services.register { container -> TransferEncodingConfig in
+//            return TransferEncodingConfig.default()
+//        }
 
         services.register([FileReader.self, FileCache.self]) { container -> File in
             return File(on: container)
@@ -182,7 +182,7 @@ extension Services {
         }
 
         // multipart
-        services.register(MultipartFormConfig.self)
+//        services.register(MultipartFormConfig.self)
 
         return services
     }

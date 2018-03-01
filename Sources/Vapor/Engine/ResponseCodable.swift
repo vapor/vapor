@@ -49,8 +49,10 @@ extension StaticString: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(for req: Request) throws -> Future<Response> {
         let new = req.makeResponse()
-        new.http.headers[.contentType] = "text/plain; charset=utf-8"
-        new.http.body = HTTPBody(staticString: self)
+        new.http.headers.replaceOrAdd(name: "Content-Type", value: "text/plain; charset=utf-8")
+        var buffer = ByteBufferAllocator().buffer(capacity: self.count)
+        _ = buffer.set(staticString: self, at: 0)
+        new.http.body = .byteBuffer(buffer)
         return Future(new)
     }
 }

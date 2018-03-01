@@ -11,7 +11,7 @@ extension Router {
     ) -> Route<Responder> where T: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
         let route = Route<Responder>(
-            path: [.constants([.bytes(method.bytes)])] + path,
+            path: [.constants([.bytes([.G, .E, .T])])] + path,
             output: responder
         )
         self.register(route: route)
@@ -27,7 +27,7 @@ extension Router {
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         let responder = RequestDecodableResponder(closure: closure)
         let route = Route<Responder>(
-            path: [.constants([.bytes(method.bytes)])] + path,
+            path: [.constants([.bytes([.G, .E, .T])])] + path,
             output: responder
         )
         self.register(route: route)
@@ -53,7 +53,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.get, at: path, use: closure)
+        return self.on(.GET, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `PUT` method.
@@ -64,7 +64,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.put, at: path, use: closure)
+        return self.on(.PUT, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `POST` method.
@@ -75,7 +75,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.post, at: path, use: closure)
+        return self.on(.POST, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `DELETE` method.
@@ -86,7 +86,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.delete, at: path, use: closure)
+        return self.on(.DELETE, at: path, use: closure)
     }
 
     /// Creates a `Route` at the provided path using the `PATCH` method.
@@ -97,7 +97,7 @@ extension Router {
         _ path: PathComponent...,
         use closure: @escaping RouteResponder<T>.Closure
     ) -> Route<Responder> where T: ResponseEncodable {
-        return self.on(.patch, at: path, use: closure)
+        return self.on(.PATCH, at: path, use: closure)
     }
 }
 
@@ -111,7 +111,7 @@ extension Router {
         at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.put, at: path, use: closure)
+        return self.on(.PUT, at: path, use: closure)
     }
     
     /// Creates a `Route` at the provided path using the `POST` method.
@@ -123,7 +123,7 @@ extension Router {
         at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.post, at: path, use: closure)
+        return self.on(.POST, at: path, use: closure)
     }
     
     /// Creates a `Route` at the provided path using the `PATCH` method.
@@ -135,6 +135,6 @@ extension Router {
         at path: PathComponent...,
         use closure: @escaping RequestDecodableResponder<C, T>.Closure
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.patch, at: path, use: closure)
+        return self.on(.PATCH, at: path, use: closure)
     }
 }

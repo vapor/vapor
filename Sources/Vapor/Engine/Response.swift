@@ -3,10 +3,10 @@ import Service
 
 public struct HTTPResponse {
     /// The HTTP response status.
-    public let status: HTTPResponseStatus
+    public var status: HTTPResponseStatus
 
     /// The HTTP version that corresponds to this response.
-    public let version: HTTPVersion
+    public var version: HTTPVersion
 
     /// The HTTP headers on this response.
     public var headers: HTTPHeaders
@@ -58,19 +58,19 @@ public final class Response: EphemeralContainer {
     }
 }
 
-extension Response: CustomStringConvertible {
-    /// See `CustomStringConvertible.description
-    public var description: String {
-        return http.description
-    }
-}
-
-extension Response: CustomDebugStringConvertible {
-    /// See `CustomDebugStringConvertible.debugDescription`
-    public var debugDescription: String {
-        return http.debugDescription
-    }
-}
+//extension Response: CustomStringConvertible {
+//    /// See `CustomStringConvertible.description
+//    public var description: String {
+//        return http.description
+//    }
+//}
+//
+//extension Response: CustomDebugStringConvertible {
+//    /// See `CustomDebugStringConvertible.debugDescription`
+//    public var debugDescription: String {
+//        return http.debugDescription
+//    }
+//}
 
 extension Response {
     /// The response's event loop container.
@@ -81,9 +81,9 @@ extension Response {
 
     /// Container for parsing/serializing content
     public var content: ContentContainer {
-        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
+        return ContentContainer(container: self, body: http.body!, mediaType: .json/*http.mediaType*/) { body, mediaType in
             self.http.body = body
-            self.http.mediaType = mediaType
+//            self.http.mediaType = mediaType
         }
     }
 }

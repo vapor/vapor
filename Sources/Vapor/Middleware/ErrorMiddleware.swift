@@ -23,7 +23,7 @@ public final class ErrorMiddleware: Middleware, Service {
 
         func handleError(_ error: Swift.Error) {
             let reason: String
-            let status: HTTPStatus
+            let status: HTTPResponseStatus
 
             switch environment {
             case .production:
@@ -53,7 +53,7 @@ public final class ErrorMiddleware: Middleware, Service {
             }
 
             let res = req.makeResponse()
-            res.http.body = HTTPBody(string: "Oops: \(reason)")
+            // res.http.body = HTTPBody(string: "Oops: \(reason)")
             res.http.status = status
             promise.complete(res)
         }

@@ -40,7 +40,7 @@ public final class DateMiddleware: Middleware, Service {
         let promise = Promise<Response>()
         
         try next.respond(to: request).do { res in
-            res.http.headers[.date] = self.getDate()
+            res.http.headers.replaceOrAdd(name: "Date", value: self.getDate())
             promise.complete(res)
         }.catch { error in
             promise.fail(error)

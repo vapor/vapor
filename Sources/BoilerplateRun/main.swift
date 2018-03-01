@@ -1,5 +1,6 @@
 import Boilerplate
 import Vapor
+import Foundation
 
 var config = Config.default()
 var env = try Environment.detect()
@@ -15,4 +16,6 @@ let app = try Application(
 
 try Boilerplate.boot(app)
 
+Foundation.Thread.current.name = "main"
+print(Foundation.Thread.current.name)
 try app.run()
