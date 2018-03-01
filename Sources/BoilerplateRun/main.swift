@@ -16,6 +16,4 @@ let app = try Application(
 
 try Boilerplate.boot(app)
 
-Foundation.Thread.current.name = "main"
-print(Foundation.Thread.current.name)
 try app.run()

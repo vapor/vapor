@@ -37,16 +37,16 @@ public final class DateMiddleware: Middleware, Service {
 
     /// See `Middleware.respond(to:)`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = Promise<Response>()
+        let promise = request.eventLoop.newPromise(Response.self)
         
         try next.respond(to: request).do { res in
             res.http.headers.replaceOrAdd(name: "Date", value: self.getDate())
-            promise.complete(res)
+            promise.succeed(result: res)
         }.catch { error in
-            promise.fail(error)
+            promise.fail(error: error)
         }
         
-        return promise.future
+        return promise.futureResult
     }
 
     /// Gets the current RFC 1123 date string.

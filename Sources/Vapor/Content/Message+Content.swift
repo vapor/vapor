@@ -68,13 +68,13 @@ extension ContentContainer {
     public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> Future<D?>
         where D: Decodable
     {
-        let promise = Promise(D?.self)
+        let promise = container.eventLoop.newPromise(D?.self)
         get(at: keyPath).do { value in
-            promise.complete(value)
+            promise.succeed(result: value)
         }.catch { err in
-            promise.complete(nil)
+            promise.succeed(result: nil)
         }
-        return promise.future
+        return promise.futureResult
     }
 
     /// Convenience for accessing a single value from the content
@@ -92,7 +92,7 @@ extension ContentContainer {
             let decoder = try requireDecoder()
             return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
         } catch {
-            return Future(error: error)
+            return Future.map(on: container) { throw error }
         }
     }
 }

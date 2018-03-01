@@ -13,9 +13,6 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
     ],
     dependencies: [
-        // ⏱ Promises and reactive-streams in Swift built for high-performance and scalability.
-        .package(url: "https://github.com/vapor/async.git", from: "1.0.0-rc"),
-
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console.git", from: "3.0.0-rc"),
 
@@ -34,7 +31,7 @@ let package = Package(
         // 📦 Dependency injection / inversion of control framework.
         .package(url: "https://github.com/vapor/service.git", from: "1.0.0-rc"),
 
-        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
+        // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "1.0.0"),
 
         // 🖋 Easy-to-use foundation for building powerful templating languages in Swift.

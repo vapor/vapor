@@ -56,7 +56,7 @@ extension Services {
 
         // keyed cache
         services.register(KeyedCache.self) { container -> MemoryKeyedCache in
-            return MemoryKeyedCache()
+            return MemoryKeyedCache(on: container)
         }
         
 //        services.register { container in
@@ -126,9 +126,9 @@ extension Services {
 //            return TransferEncodingConfig.default()
 //        }
 
-        services.register([FileReader.self, FileCache.self]) { container -> File in
-            return File(on: container)
-        }
+//        services.register([FileReader.self, FileCache.self]) { container -> File in
+//            return File(on: container)
+//        }
 
         // register terminal console
         services.register(Console.self) { container -> Terminal in
@@ -199,8 +199,7 @@ public struct ApplicationResponder: Responder, Service {
     }
 }
 
-extension PlaintextRenderer: Service {}
-extension File: Service { }
+extension PlaintextRenderer: Service { }
 extension Terminal: Service { }
 extension EphemeralWorkerConfig: Service { }
 extension DirectoryConfig: Service { }

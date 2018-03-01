@@ -5,7 +5,7 @@ import Routing
 import Service
 import Foundation
 
-public typealias HTTPBody = NIO.IOData
+public typealias HTTPBody = Data
 
 public struct HTTPRequest {
     /// The HTTP method for this request.
@@ -29,7 +29,7 @@ public struct HTTPRequest {
         uri: String = "/",
         version: HTTPVersion = .init(major: 1, minor: 0),
         headers: HTTPHeaders = .init(),
-        body: IOData? = nil
+        body: HTTPBody? = nil
     ) {
         self.method = method
         self.uri = uri
@@ -59,7 +59,7 @@ public final class Request: ParameterContainer {
     public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.privateContainer = container.subContainer(on: container.eventLoop)
+        self.privateContainer = container.subContainer(on: container)
         self.parameters = []
         hasActiveConnections = false
     }
@@ -113,7 +113,7 @@ extension Request {
 
 extension Request: DatabaseConnectable {
     /// See DatabaseConnectable.connect
-    public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
+    public func connect<D>(to database: DatabaseIdentifier<D>?, on worker: Worker) -> Future<D.Connection> {
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",
@@ -125,7 +125,7 @@ extension Request: DatabaseConnectable {
                 ],
                 source: .capture()
             )
-            return Future(error: error)
+            return Future.map(on: worker) { throw error }
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)

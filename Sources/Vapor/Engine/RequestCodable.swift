@@ -15,13 +15,13 @@ public typealias RequestCodable = RequestDecodable & RequestEncodable
 
 extension Request: RequestEncodable {
     public func encode(using container: Container) throws -> Future<Request> {
-        return Future(self)
+        return Future.map(on: container) { self }
     }
 }
 
 extension Request: RequestDecodable {
     /// See RequestInitializable.decode
     public static func decode(from request: Request) throws -> Future<Request> {
-        return Future(request)
+        return Future.map(on: request) { request }
     }
 }

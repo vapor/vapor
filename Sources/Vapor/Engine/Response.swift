@@ -12,14 +12,14 @@ public struct HTTPResponse {
     public var headers: HTTPHeaders
 
     /// The http body
-    public var body: IOData?
+    public var body: HTTPBody?
 
     /// Creates a new HTTP Request
     public init(
         status: HTTPResponseStatus = .ok,
-        version: HTTPVersion = .init(major: 1, minor: 0),
+        version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
-        body: IOData? = nil
+        body: HTTPBody? = nil
     ) {
         self.status = status
         self.version = version
@@ -48,7 +48,7 @@ public final class Response: EphemeralContainer {
     public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.privateContainer = container.subContainer(on: container.eventLoop)
+        self.privateContainer = container.subContainer(on: container)
         Response.onInit?(self)
     }
 

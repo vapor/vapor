@@ -1,4 +1,5 @@
 //import HTTP
+import Foundation
 
 /// Can be converted from a response.
 ///
@@ -23,7 +24,7 @@ public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 extension Response: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(for req: Request) throws -> Future<Response> {
-        return Future(self)
+        return Future.map(on: req) { self }
     }
 }
 
@@ -50,9 +51,9 @@ extension StaticString: ResponseEncodable {
     public func encode(for req: Request) throws -> Future<Response> {
         let new = req.makeResponse()
         new.http.headers.replaceOrAdd(name: "Content-Type", value: "text/plain; charset=utf-8")
-        var buffer = ByteBufferAllocator().buffer(capacity: self.count)
-        _ = buffer.set(staticString: self, at: 0)
-        new.http.body = .byteBuffer(buffer)
-        return Future(new)
+        new.http.body = self.withUTF8Buffer { buffer in
+            return Data(buffer)
+        }
+        return Future.map(on: req) { new }
     }
 }

@@ -6,6 +6,11 @@ public func configure(
     _ env: inout Environment,
     _ services: inout Services
 ) throws {
+    let router = EngineRouter.default()
+    try routes(router)
+    services.register(router, as: Router.self)
+
+
     // configure your application here
     let middlewareConfig = MiddlewareConfig()
     //middlewareConfig.use(DateMiddleware.self)

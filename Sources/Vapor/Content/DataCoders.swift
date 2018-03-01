@@ -17,10 +17,7 @@ public protocol BodyDecoder {
 
 extension JSONEncoder: BodyEncoder {
     public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T : Encodable {
-        let data = try self.encode(encodable)
-        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-        buffer.set(bytes: data, at: 0)
-        return .byteBuffer(buffer)
+        return try self.encode(encodable)
     }
 }
 

@@ -29,7 +29,6 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start() throws {
-        print(Foundation.Thread.current.name)
 //        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true, shouldReuseAddress: true))
         // leaking, probably because of client capturing itself in closure
         // tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
@@ -37,14 +36,8 @@ public final class EngineServer: Server, Service {
 //        let console = try container.make(Console.self, for: EngineServer.self)
 //        let logger = try container.make(Logger.self, for: EngineServer.self)
 
-        let group = MultiThreadedEventLoopGroup(numThreads: System.coreCount)
-        let threadPool = BlockingIOThreadPool(numberOfThreads: 1)
-        threadPool.start()
 
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
-//        let subContainer = container.subContainer(on: container)
-//        let responder = try subContainer.make(Responder.self, for: EngineServer.self)
-
+        let group = MultiThreadedEventLoopGroup(numThreads: 1) // System.coreCount
         let bootstrap = ServerBootstrap(group: group)
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: 256)
@@ -52,8 +45,11 @@ public final class EngineServer: Server, Service {
 
             // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer { channel in
-                channel.pipeline.addHTTPServerHandlers().then {
-                    channel.pipeline.add(handler: EngineResponder())
+                let subContainer = self.container.subContainer(on: wrap(channel.eventLoop))
+                let responder = try! subContainer.make(Responder.self, for: EngineServer.self)
+                // re-use subcontainer for an event loop here
+                return channel.pipeline.addHTTPServerHandlers().then {
+                    channel.pipeline.add(handler: HTTPHandler(container: subContainer, responder: responder))
                 }
             }
 
@@ -113,149 +109,119 @@ public final class EngineServer: Server, Service {
     }
 }
 
-final class EngineResponder: ChannelInboundHandler {
+enum HTTPHandlerState {
+    case ready
+    case parsingBody(HTTPRequestHead, Data?)
+}
+
+final class HTTPHandler: ChannelInboundHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias OutboundOut = HTTPServerResponsePart
-//    let responder: Responder
-//    let container: Container
 
-//    init(container: Container, responder: Responder) {
-//        self.container = container
-//        self.responder = responder
-//    }
+    private let container: Container
+    private let responder: Responder
 
-    init() {
+    private var state: HTTPHandlerState
 
+    public init(container: Container, responder: Responder) {
+        print(#function)
+        self.container = container
+        self.responder = responder
+        self.state = .ready
+    }
+
+    func handleInfo(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
         print(#function)
     }
 
-    /// Called when some data has been read from the remote peer.
-    ///
-    /// This should call `ctx.fireChannelRead` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    ///     - data: The data read from the remote peer, wrapped in a `NIOAny`.
+    func handleEcho(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
+        print(#function)
+    }
+
+    func handleEcho(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, balloonInMemory: Bool = false) {
+        print(#function)
+    }
+
+    func handleJustWrite(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, statusCode: HTTPResponseStatus = .ok, string: String, trailer: (String, String)? = nil, delay: TimeAmount = .nanoseconds(0)) {
+        print(#function)
+    }
+
+    func handleContinuousWrites(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
+        print(#function)
+    }
+
+    func handleMultipleWrites(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, strings: [String], delay: TimeAmount) {
+        print(#function)
+    }
+
     func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
-        print(#function)
-        print(ctx)
-        print(data)
-        let reqPart = unwrapInboundIn(data)
-//        if let handler = self.handler {
-//            handler(ctx, reqPart)
-//            return
-//        }
-        print(reqPart)
+        print(ctx.eventLoop)
+        let req = unwrapInboundIn(data)
+        print(req)
+        switch req {
+        case .head(let head):
+            switch state {
+            case .ready: state = .parsingBody(head, nil)
+            case .parsingBody: fatalError()
+            }
+        case .body(var body):
+            switch state {
+            case .ready: fatalError()
+            case .parsingBody(let head, let existingData):
+                let data: Data
+                if var existing = existingData {
+                    existing += body.readData(length: body.readableBytes) ?? Data()
+                    data = existing
+                } else {
+                    data = body.readData(length: body.readableBytes) ?? Data()
+                }
+                state = .parsingBody(head, data)
+            }
+        case .end(let tailHeaders):
+            assert(tailHeaders == nil)
+            switch state {
+            case .ready: fatalError()
+            case .parsingBody(let head, let data):
+                let httpReq = HTTPRequest(
+                    method: head.method,
+                    uri: head.uri,
+                    version: head.version,
+                    headers: head.headers,
+                    body: data
+                )
+                let req = Request(http: httpReq, using: container)
+                try! responder.respond(to: req).do { res in
+                    var headers = res.http.headers
+                    if let body = res.http.body {
+                        headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
+                    }
+                    let httpHead = HTTPResponseHead.init(version: res.http.version, status: res.http.status, headers: headers)
+                    ctx.write(self.wrapOutboundOut(.head(httpHead)), promise: nil)
+                    if let body = res.http.body {
+                        var buffer = ByteBufferAllocator().buffer(capacity: body.count)
+                        buffer.write(bytes: body)
+                        ctx.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+                    }
+                    ctx.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
+                    ctx.channel.close(promise: nil)
+                }.catch { error in
+                    fatalError("\(error)")
+                }
+            }
+        }
     }
 
-    /// Called when the `Channel` has successfully registered with its `EventLoop` to handle I/O.
-    ///
-    /// This should call `ctx.fireChannelRegistered` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func channelRegistered(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-    /// Called when the `Channel` has unregistered from its `EventLoop`, and so will no longer be receiving I/O events.
-    ///
-    /// This should call `ctx.fireChannelUnregistered` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func channelUnregistered(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-    /// Called when the `Channel` has become active, and is able to send and receive data.
-    ///
-    /// This should call `ctx.fireChannelActive` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func channelActive(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-    /// Called when the `Channel` has become inactive and is no longer able to send and receive data`.
-    ///
-    /// This should call `ctx.fireChannelInactive` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func channelInactive(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-    /// Called when the `Channel` has completed its current read loop, either because no more data is available to read from the transport at this time, or because the `Channel` needs to yield to the event loop to process other I/O events for other `Channel`s.
-    /// If `ChannelOptions.autoRead` is `false` no futher read attempt will be made until `ChannelHandlerContext.read` or `Channel.read` is explicitly called.
-    ///
-    /// This should call `ctx.fireChannelReadComplete` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
     func channelReadComplete(ctx: ChannelHandlerContext) {
         print(#function)
     }
 
-    /// The writability state of the `Channel` has changed, either because it has buffered more data than the writability high water mark, or because the amount of buffered data has dropped below the writability low water mark.
-    /// You can check the state with `Channel.isWritable`.
-    ///
-    /// This should call `ctx.fireChannelWritabilityChanged` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func channelWritabilityChanged(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-    /// Called when a user inbound event has been triggered.
-    ///
-    /// This should call `ctx.fireUserInboundEventTriggered` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the event.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    ///     - event: The event.
-    func userInboundEventTriggered(ctx: ChannelHandlerContext, event: Any) {
-        print(#function)
-    }
-
-    /// An error was encountered earlier in the inbound `ChannelPipeline`.
-    ///
-    /// This should call `ctx.fireErrorCaught` to forward the operation to the next `_ChannelInboundHandler` in the `ChannelPipeline` if you want to allow the next handler to also handle the error.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    ///     - error: The `Error` that was encountered.
-    func errorCaught(ctx: ChannelHandlerContext, error: Error) {
-        print(#function)
-    }
-
-    /// Called when this `ChannelHandler` is added to the `ChannelPipeline`.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
     func handlerAdded(ctx: ChannelHandlerContext) {
         print(#function)
+        print(ctx.eventLoop)
+        print(ctx.channel)
+        print(ctx.name)
+        print(ctx.pipeline)
     }
-
-    /// Called when this `ChannelHandler` is removed from the `ChannelPipeline`.
-    ///
-    /// - parameters:
-    ///     - ctx: The `ChannelHandlerContext` which this `ChannelHandler` belongs to.
-    func handlerRemoved(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
-
-//    func respond(to httpRequest: HTTPRequest, on worker: Worker) throws -> Future<HTTPResponse> {
-//        fatalError()
-//        return Future.flatMap {
-//            let req = Request(http: httpRequest, using: self.container)
-//            return try self.responder.respond(to: req)
-//                .map(to: HTTPResponse.self) { $0.http }
-//        }
-//    }
 }
 
 extension Logger {

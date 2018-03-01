@@ -2,6 +2,7 @@ import Async
 import Debugging
 //import HTTP
 import Service
+import Foundation
 
 /// Captures all errors and transforms them into an internal server error.
 public final class ErrorMiddleware: Middleware, Service {
@@ -19,7 +20,7 @@ public final class ErrorMiddleware: Middleware, Service {
 
     /// See `Middleware.respond`
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = Promise(Response.self)
+        let promise = req.eventLoop.newPromise(Response.self)
 
         func handleError(_ error: Swift.Error) {
             let reason: String
@@ -53,14 +54,14 @@ public final class ErrorMiddleware: Middleware, Service {
             }
 
             let res = req.makeResponse()
-            // res.http.body = HTTPBody(string: "Oops: \(reason)")
+            res.http.body = Data("Oops: \(reason)".utf8)
             res.http.status = status
-            promise.complete(res)
+            promise.succeed(result: res)
         }
 
         do {
             try next.respond(to: req).do { res in
-                promise.complete(res)
+                promise.succeed(result: res)
             }.catch { error in
                 handleError(error)
             }
@@ -68,6 +69,6 @@ public final class ErrorMiddleware: Middleware, Service {
             handleError(error)
         }
 
-        return promise.future
+        return promise.futureResult
     }
 }

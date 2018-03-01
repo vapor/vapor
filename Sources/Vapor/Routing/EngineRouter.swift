@@ -24,11 +24,8 @@ public final class EngineRouter: Router {
         router.router.fallback = BasicResponder { req in
             let res = req.makeResponse()
             res.http.status = .notFound
-            var data = Data("Not found".utf8)
-            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
-            buffer.set(bytes: data, at: 0)
-            res.http.body = .byteBuffer(buffer)
-            return Future(res)
+            res.http.body = Data("Not found".utf8)
+            return Future.map(on: req) { res }
         }
         return router
     }
@@ -40,8 +37,7 @@ public final class EngineRouter: Router {
     
     /// Splits the URI into a substring for each component
     fileprivate func withPathComponents<T>(for request: Request, do closure: ([PathComponent.Parameter]) -> T) -> T {
-        var data = Data(request.http.uri.utf8)
-        return data.withByteBuffer { (uri: Bits.ByteBuffer) in
+        return Data(request.http.uri.utf8).withByteBuffer { (uri: Bits.ByteBuffer) in
             var array = [PathComponent.Parameter]()
             array.reserveCapacity(8)
 
@@ -83,8 +79,9 @@ public final class EngineRouter: Router {
     /// See Router.route
     public func route(request: Request) -> Responder? {
         return withPathComponents(for: request) { components in
+            print(components)
             return router.route(path: [
-                .bytes([.G, .E, .T])
+                .bytes([.g, .e, .t])
             ] + components, parameters: request)
         }
     }
