@@ -28,23 +28,17 @@ let package = Package(
         // 🗄 Core services for creating database integrations.
         .package(url: "https://github.com/vapor/database-kit.git", from: "1.0.0-rc"),
 
-        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
-        .package(url: "https://github.com/vapor/engine.git", from: "3.0.0-rc"),
-
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", from: "3.0.0-rc"),
 
         // 📦 Dependency injection / inversion of control framework.
         .package(url: "https://github.com/vapor/service.git", from: "1.0.0-rc"),
 
-        // 🔌 Non-blocking TCP socket layer, with event-driven server and client.
-        .package(url: "https://github.com/vapor/sockets.git", from: "3.0.0-rc"),
+        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
+        .package(url: "https://github.com/apple/swift-nio.git", from: "1.0.0"),
 
         // 🖋 Easy-to-use foundation for building powerful templating languages in Swift.
         .package(url: "https://github.com/vapor/template-kit.git", from: "1.0.0-rc"),
-
-        // 🔒 Non-blocking, event-driven TLS built on OpenSSL & macOS security.
-        .package(url: "https://github.com/vapor/tls.git", from: "3.0.0-rc"),
 
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
         .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc"),
@@ -65,18 +59,16 @@ let package = Package(
             "Crypto",
             "DatabaseKit",
             "Debugging",
-            "FormURLEncoded",
-            "HTTP",
+            // "FormURLEncoded",
             "Logging",
-            "Multipart",
+            // "Multipart",
             "Routing",
             "Service",
-            "TCP",
             "TemplateKit",
-            "TLS",
-            tlsImpl,
-            "WebSocket",
-            "Validation"
+            "Validation",
+
+            "NIO",
+            "NIOHTTP1"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]

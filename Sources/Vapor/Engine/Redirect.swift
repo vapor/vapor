@@ -1,4 +1,4 @@
-import HTTP
+//import HTTP
 
 /// Specifies the type of redirect
 /// that the client should receive

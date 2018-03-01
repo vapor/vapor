@@ -1,5 +1,5 @@
 import Routing
-import WebSocket
+//import WebSocket
 
 extension Router {
     public typealias OnWebsocketUpgradeClosure = (Request, WebSocket) throws -> Void

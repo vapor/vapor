@@ -1,5 +1,5 @@
-import HTTP
 import Foundation
+import NIO
 
 /// Encodes encodable types to an HTTP body.
 public protocol BodyEncoder {
@@ -18,15 +18,19 @@ public protocol BodyDecoder {
 extension JSONEncoder: BodyEncoder {
     public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T : Encodable {
         let data = try self.encode(encodable)
-        return HTTPBody(data)
+        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+        buffer.set(bytes: data, at: 0)
+        return .byteBuffer(buffer)
     }
 }
 
 extension JSONDecoder: BodyDecoder {
     public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T> where T : Decodable {
-        return body.makeData(max: 100_000).map(to: T.self) { data in
-            return try self.decode(T.self, from: data)
-        }
+        fatalError()
+//        let data = body.
+//        return body.makeData(max: 100_000).map(to: T.self) { data in
+//            return try self.decode(T.self, from: data)
+//        }
     }
 }
 

@@ -1,5 +1,4 @@
 import Async
-import HTTP
 
 /// A type erased response.
 public struct AnyResponse: ResponseEncodable {

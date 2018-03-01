@@ -1,5 +1,4 @@
 import Async
-import HTTP
 import Foundation
 import Service
 

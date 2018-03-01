@@ -3,7 +3,6 @@ import Command
 import Console
 import Dispatch
 import Foundation
-import HTTP
 import Routing
 import Service
 
@@ -26,7 +25,7 @@ public final class Application: Container {
     public let serviceCache: ServiceCache
 
     /// See Worker.queue
-    public let eventLoop: EventLoop
+    public let eventLoop: Async.EventLoop
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend

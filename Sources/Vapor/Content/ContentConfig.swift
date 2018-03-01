@@ -1,5 +1,5 @@
 import Foundation
-import FormURLEncoded
+//import FormURLEncoded
 
 /// Configures which encoders/decoders to use for a given media type.
 public struct ContentConfig: Service, ServiceType {
@@ -100,6 +100,13 @@ public struct ContentCoders: Service, ServiceType {
     }
 }
 
+/// FIXME: port over media type
+public enum MediaType: String {
+    case json = "application/json"
+    case plainText = "text/plain"
+    case html = "text/html"
+}
+
 /// MARK: Default
 
 extension ContentConfig {
@@ -121,16 +128,17 @@ extension ContentConfig {
         }
 
         // data
-        config.use(encoder: DataEncoder(), for: .plainText)
-        config.use(encoder: DataEncoder(), for: .html)
+//        config.use(encoder: DataEncoder(), for: .plainText)
+//        config.use(encoder: DataEncoder(), for: .html)
 
         // form-urlencoded
-        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
-        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+//        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
+//        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
 
         return config
     }
 }
 
-extension FormURLEncoder: BodyEncoder {}
-extension FormURLDecoder: BodyDecoder {}
+//extension FormURLEncoder: BodyEncoder {}
+//extension FormURLDecoder: BodyDecoder {}
+

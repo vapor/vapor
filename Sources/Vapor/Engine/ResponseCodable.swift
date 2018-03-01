@@ -1,4 +1,5 @@
-import HTTP
+//import HTTP
+
 /// Can be converted from a response.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responseinitializable)
@@ -26,23 +27,23 @@ extension Response: ResponseEncodable {
     }
 }
 
-extension HTTPResponse: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
-    public func encode(for req: Request) throws -> Future<Response> {
-        let new = req.makeResponse()
-        new.http = self
-        return Future(new)
-    }
-}
-
-extension HTTPStatus: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
-    public func encode(for req: Request) throws -> Future<Response> {
-        let new = req.makeResponse()
-        new.http = HTTPResponse(status: self)
-        return Future(new)
-    }
-}
+//extension HTTPResponse: ResponseEncodable {
+//    /// See ResponseRepresentable.makeResponse
+//    public func encode(for req: Request) throws -> Future<Response> {
+//        let new = req.makeResponse()
+//        new.http = self
+//        return Future(new)
+//    }
+//}
+//
+//extension HTTPStatus: ResponseEncodable {
+//    /// See ResponseRepresentable.makeResponse
+//    public func encode(for req: Request) throws -> Future<Response> {
+//        let new = req.makeResponse()
+//        new.http = HTTPResponse(status: self)
+//        return Future(new)
+//    }
+//}
 
 extension StaticString: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse

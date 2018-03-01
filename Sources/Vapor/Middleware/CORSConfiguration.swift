@@ -1,4 +1,4 @@
-import HTTP
+//import HTTP
 
 extension CORSMiddleware {
     /// Option for the allow origin header in responses for CORS requests.

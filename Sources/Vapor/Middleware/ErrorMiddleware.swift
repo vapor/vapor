@@ -1,6 +1,6 @@
 import Async
 import Debugging
-import HTTP
+//import HTTP
 import Service
 
 /// Captures all errors and transforms them into an internal server error.

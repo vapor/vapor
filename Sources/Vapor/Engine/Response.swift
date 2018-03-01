@@ -1,6 +1,33 @@
 import Dispatch
 import Service
 
+public struct HTTPResponse {
+    /// The HTTP response status.
+    public let status: HTTPResponseStatus
+
+    /// The HTTP version that corresponds to this response.
+    public let version: HTTPVersion
+
+    /// The HTTP headers on this response.
+    public var headers: HTTPHeaders
+
+    /// The http body
+    public var body: IOData?
+
+    /// Creates a new HTTP Request
+    public init(
+        status: HTTPResponseStatus = .ok,
+        version: HTTPVersion = .init(major: 1, minor: 0),
+        headers: HTTPHeaders = .init(),
+        body: IOData? = nil
+    ) {
+        self.status = status
+        self.version = version
+        self.headers = headers
+        self.body = body
+    }
+}
+
 public final class Response: EphemeralContainer {
     /// See EphemeralWorker.onInit
     public static var onInit: LifecycleHook?

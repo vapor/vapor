@@ -1,7 +1,7 @@
 import Async
 import Bits
 import COperatingSystem
-import HTTP
+//import HTTP
 import Dispatch
 import Foundation
 
