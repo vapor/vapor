@@ -38,34 +38,34 @@ public final class Request: ParameterContainer {
     }
 }
 
-//extension Request: CustomStringConvertible {
-//    /// See `CustomStringConvertible.description
-//    public var description: String {
-//        return http.description
-//    }
-//}
-//
-//extension Request: CustomDebugStringConvertible {
-//    /// See `CustomDebugStringConvertible.debugDescription`
-//    public var debugDescription: String {
-//        return http.debugDescription
-//    }
-//}
+extension Request: CustomStringConvertible {
+    /// See `CustomStringConvertible.description
+    public var description: String {
+        return http.description
+    }
+}
+
+extension Request: CustomDebugStringConvertible {
+    /// See `CustomDebugStringConvertible.debugDescription`
+    public var debugDescription: String {
+        return http.debugDescription
+    }
+}
 
 /// Conform to container by pointing to super container.
 extension Request: SubContainer { }
 
 extension Request {
-//    /// Container for parsing/serializing URI query strings
-//    public var query: QueryContainer {
-//        return QueryContainer(query: http.uri.query ?? "", container: self)
-//    }
+    /// Container for parsing/serializing URI query strings
+    public var query: QueryContainer {
+        return QueryContainer(query: http.url.query ?? "", container: self)
+    }
 
     /// Container for parsing/serializing content
     public var content: ContentContainer {
-        return ContentContainer(container: self, body: http.body!, mediaType: .json /* http.mediaType */) { body, mediaType in
+        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
             self.http.body = body
-            // self.http.mediaType = mediaType
+            self.http.mediaType = mediaType
         }
     }
 }

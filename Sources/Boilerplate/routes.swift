@@ -14,6 +14,10 @@ public func routes(_ router: Router) throws {
         return try req.parameter(String.self)
     }
 
+    router.get("search") { req in
+        return req.query["q"] ?? "none"
+    }
+
     router.get("client") { req in
         return try req.make(FoundationClient.self).get("http://vapor.codes").map(to: String.self) { res in
             return String(data: res.http.body?.data ?? Data(), encoding: .ascii) ?? ""

@@ -126,11 +126,12 @@ extension ContentConfig {
 
         // form-urlencoded
         config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
-   //     config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
 
         return config
     }
 }
 
 extension FormURLEncoder: BodyEncoder {}
-// extension FormURLDecoder: BodyDecoder {}
+extension FormURLDecoder: BodyDecoder {}
+
