@@ -5,7 +5,6 @@ extension Config {
     public static func `default`() -> Config {
         var config = Config()
         config.prefer(ConsoleLogger.self, for: Logger.self)
-        config.prefer(EngineClient.self, for: Client.self)
         return config
     }
 }

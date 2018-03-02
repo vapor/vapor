@@ -21,23 +21,22 @@ public final class FoundationClient: Client {
 
     /// See `Client.respond(to:)`
     public func respond(to req: Request) throws -> Future<Response> {
-        return req.http.makeFoundationRequest().flatMap(to: Response.self) { urlReq in
-            let promise = Promise(Response.self)
-            self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
-                if let error = error {
-                    promise.fail(error, onNextTick: self.container)
-                    return
-                }
+        let urlReq = req.http.makeFoundationRequest()
+        let promise = req.eventLoop.newPromise(Response.self)
+        self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
+            if let error = error {
+                promise.fail(error: error)
+                return
+            }
 
-                guard let httpResponse = urlResponse as? HTTPURLResponse else {
-                    fatalError("URLResponse was not a HTTPURLResponse.")
-                }
+            guard let httpResponse = urlResponse as? HTTPURLResponse else {
+                fatalError("URLResponse was not a HTTPURLResponse.")
+            }
 
-                let response = HTTPResponse.fromFoundationResponse(httpResponse, data: data)
-                promise.complete(Response(http: response, using: self.container), onNextTick: self.container)
-            }.resume()
-            return promise.future
-        }
+            let response = HTTPResponse.fromFoundationResponse(httpResponse, data: data, on: self.container)
+            promise.succeed(result: Response(http: response, using: self.container))
+        }.resume()
+        return promise.futureResult
     }
 }
 
@@ -63,50 +62,29 @@ extension FoundationClient: ServiceType {
 
 extension HTTPRequest {
     /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
-    fileprivate func makeFoundationRequest() -> Future<URLRequest> {
+    fileprivate func makeFoundationRequest() -> URLRequest {
         let http = self
-        return http.body.makeData(max: 100_000).map(to: URLRequest.self) { body in
-            let url = http.uri.makeFoundationURL()
-            var request = URLRequest(url: url)
-            request.httpMethod = http.method.string.uppercased()
-            request.httpBody = body
-            http.headers.forEach { key, val in
-                request.addValue(val, forHTTPHeaderField: key.description)
-            }
-            return request
+        let body = http.body?.data ?? Data()
+        var request = URLRequest(url: http.url)
+        request.httpMethod = "\(http.method)"
+        request.httpBody = body
+        http.headers.forEach { key, val in
+            request.addValue(val, forHTTPHeaderField: key.description)
         }
+        return request
     }
 }
 
 extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
-    fileprivate static func fromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?) -> HTTPResponse {
-        var res = HTTPResponse(status: .init(code: httpResponse.statusCode))
+    fileprivate static func fromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
+        var res = HTTPResponse(status: .custom(code: UInt(httpResponse.statusCode), reasonPhrase: ""), on: worker)
         for (key, value) in httpResponse.allHeaderFields {
-            res.headers[.init("\(key)")] = "\(value)"
+            res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
         }
         if let data = data {
-            res.body = HTTPBody(data)
+            res.body = HTTPBody(data: data)
         }
         return res
-    }
-}
-
-extension URI {
-    /// Converts an `HTTP.URI` to a `Foundation.URL`
-    fileprivate func makeFoundationURL() -> URL {
-        var comps = URLComponents()
-        comps.scheme = scheme
-        comps.user = userInfo?.username
-        comps.password = userInfo?.info
-        comps.host = hostname
-        comps.port = port.flatMap(Int.init)
-        comps.path = path
-        comps.query = query
-        comps.fragment = fragment
-        guard let url = comps.url else {
-            fatalError()
-        }
-        return url
     }
 }

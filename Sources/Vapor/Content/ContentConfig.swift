@@ -121,8 +121,8 @@ extension ContentConfig {
         }
 
         // data
-//        config.use(encoder: DataEncoder(), for: .plainText)
-//        config.use(encoder: DataEncoder(), for: .html)
+        config.use(encoder: DataEncoder(), for: .plainText)
+        config.use(encoder: DataEncoder(), for: .html)
 
         // form-urlencoded
 //        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)

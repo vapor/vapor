@@ -37,7 +37,7 @@ public final class EngineRouter: Router {
     
     /// Splits the URI into a substring for each component
     fileprivate func withPathComponents<T>(for request: Request, do closure: ([PathComponent.Parameter]) -> T) -> T {
-        return Data(request.http.uri.utf8).withByteBuffer { (uri: BytesBufferPointer) in
+        return Data(request.http.url.path.utf8).withByteBuffer { (uri: BytesBufferPointer) in
             var array = [PathComponent.Parameter]()
             array.reserveCapacity(8)
 
