@@ -100,13 +100,6 @@ public struct ContentCoders: Service, ServiceType {
     }
 }
 
-/// FIXME: port over media type
-public enum MediaType: String {
-    case json = "application/json"
-    case plainText = "text/plain"
-    case html = "text/html"
-}
-
 /// MARK: Default
 
 extension ContentConfig {

@@ -145,7 +145,7 @@ extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable,
 extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
     /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
-        return Value.defaultMediaType
+        return .json
     }
 }
 

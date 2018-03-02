@@ -24,7 +24,7 @@ public final class EngineRouter: Router {
         router.router.fallback = BasicResponder { req in
             let res = req.makeResponse()
             res.http.status = .notFound
-            res.http.body = Data("Not found".utf8)
+            res.http.body = HTTPBody(string: "Not found")
             return Future.map(on: req) { res }
         }
         return router
@@ -37,7 +37,7 @@ public final class EngineRouter: Router {
     
     /// Splits the URI into a substring for each component
     fileprivate func withPathComponents<T>(for request: Request, do closure: ([PathComponent.Parameter]) -> T) -> T {
-        return Data(request.http.uri.utf8).withByteBuffer { (uri: Bits.ByteBuffer) in
+        return Data(request.http.uri.utf8).withByteBuffer { (uri: BytesBufferPointer) in
             var array = [PathComponent.Parameter]()
             array.reserveCapacity(8)
 
@@ -54,7 +54,7 @@ public final class EngineRouter: Router {
                 while currentIndex < uri.endIndex {
                     if uri[currentIndex] == .forwardSlash {
                         array.append(.byteBuffer(
-                            ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex)
+                            BytesBufferPointer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex)
                         ))
 
                         baseIndex = uri.index(after: currentIndex)
@@ -67,7 +67,7 @@ public final class EngineRouter: Router {
                 // Add remaining path component
                 if baseIndex != uri.endIndex {
                     array.append(.byteBuffer(
-                        ByteBuffer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex)
+                        BytesBufferPointer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex)
                     ))
                 }
             }
@@ -79,7 +79,6 @@ public final class EngineRouter: Router {
     /// See Router.route
     public func route(request: Request) -> Responder? {
         return withPathComponents(for: request) { components in
-            print(components)
             return router.route(path: [
                 .bytes([.g, .e, .t])
             ] + components, parameters: request)

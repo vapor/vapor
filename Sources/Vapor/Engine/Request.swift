@@ -1,43 +1,9 @@
 import Async
 import Dispatch
-//import HTTP
+import HTTP
 import Routing
 import Service
 import Foundation
-
-public typealias HTTPBody = Data
-
-public struct HTTPRequest {
-    /// The HTTP method for this request.
-    public var method: HTTPMethod
-
-    /// The URI used on this request.
-    public var uri: String
-
-    /// The version for this HTTP request.
-    public var version: HTTPVersion
-
-    /// The header fields for this HTTP request.
-    public var headers: HTTPHeaders
-
-    /// The http body
-    public var body: HTTPBody?
-
-    /// Creates a new HTTP Request
-    public init(
-        method: HTTPMethod = .GET,
-        uri: String = "/",
-        version: HTTPVersion = .init(major: 1, minor: 0),
-        headers: HTTPHeaders = .init(),
-        body: HTTPBody? = nil
-    ) {
-        self.method = method
-        self.uri = uri
-        self.version = version
-        self.headers = headers
-        self.body = body
-    }
-}
 
 public final class Request: ParameterContainer {
     /// Underlying HTTP request.
@@ -56,8 +22,8 @@ public final class Request: ParameterContainer {
     internal var hasActiveConnections: Bool
 
     /// Create a new Request
-    public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
-        self.http = http
+    public init(http: HTTPRequest? = nil, using container: Container) {
+        self.http = http ?? HTTPRequest(on: container)
         self.superContainer = container
         self.privateContainer = container.subContainer(on: container)
         self.parameters = []

@@ -4,7 +4,6 @@ import Dispatch
 import HTTP
 import Routing
 @testable import Vapor
-import TCP
 import XCTest
 
 class ApplicationTests: XCTestCase {

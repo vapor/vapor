@@ -54,7 +54,7 @@ public final class ErrorMiddleware: Middleware, Service {
             }
 
             let res = req.makeResponse()
-            res.http.body = Data("Oops: \(reason)".utf8)
+            res.http.body = HTTPBody(string: "Oops: \(reason)")
             res.http.status = status
             promise.succeed(result: res)
         }

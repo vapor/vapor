@@ -5,10 +5,8 @@ import Command
 import Debugging
 import Dispatch
 import Foundation
-//import HTTP
+import HTTP
 import Service
-//import TCP
-//import TLS
 
 /// A TCP based server with HTTP parsing and serialization pipeline.
 public final class EngineServer: Server, Service {
@@ -29,198 +27,51 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start() throws {
-//        let tcpServer = try TCPServer(socket: TCPSocket(isNonBlocking: true, shouldReuseAddress: true))
-        // leaking, probably because of client capturing itself in closure
-        // tcpServer.willAccept = PeerValidator(maxConnectionsPerIP: config.maxConnectionsPerIP).willAccept
-        
-//        let console = try container.make(Console.self, for: EngineServer.self)
-//        let logger = try container.make(Logger.self, for: EngineServer.self)
+        let console = try container.make(Console.self, for: EngineServer.self)
+        let logger = try container.make(Logger.self, for: EngineServer.self)
 
+        let server = HTTPServer(responder: EngineResponder(rootContainer: container))
 
-        let group = MultiThreadedEventLoopGroup(numThreads: 1) // System.coreCount
-        let bootstrap = ServerBootstrap(group: group)
-            // Specify backlog and enable SO_REUSEADDR for the server itself
-            .serverChannelOption(ChannelOptions.backlog, value: 256)
-            .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
+        console.print("Server starting on ", newLine: false)
+        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+        console.output(":" + config.port.description, style: .init(color: .cyan))
 
-            // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { channel in
-                let subContainer = self.container.subContainer(on: wrap(channel.eventLoop))
-                let responder = try! subContainer.make(Responder.self, for: EngineServer.self)
-                // re-use subcontainer for an event loop here
-                return channel.pipeline.addHTTPServerHandlers().then {
-                    channel.pipeline.add(handler: HTTPHandler(container: subContainer, responder: responder))
-                }
-            }
+        // FIXME: error logging support
+        //            server.onError = { error in
+        //                logger.reportError(error, as: "Server Error")
+        //            }
 
-            // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
-            .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: 1)
-            .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: 1)
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
-
-//        defer {
-//            try! group.syncShutdownGracefully()
-//        }
-
-        let channel = try bootstrap.bind(host: "::1", port: Int(config.port)).wait()
-
-        print("http://" + channel.localAddress!.description)
-//        console.print("Server started on ", newLine: false)
-//        console.output("http://" + channel.localAddress!.description, style: .init(color: .cyan), newLine: false)
-//        console.output(":" + config.port.description, style: .init(color: .cyan))
-
-        try channel.closeFuture.wait()
-
-        
-//        for i in 1...config.workerCount {
-//            let eventLoop = try DefaultEventLoop(label: "codes.vapor.engine.server.worker.\(i)")
-//            let subContainer = self.container.subContainer(on: eventLoop)
-//            let subResponder = try subContainer.make(Responder.self, for: EngineServer.self)
-//            let responder = EngineResponder(container: subContainer, responder: subResponder)
-//            let acceptStream = tcpServer.stream(on: eventLoop).map(to: TCPSocketStream.self) {
-//                $0.socket.stream(on: eventLoop) { sink, error in
-//                    logger.reportError(error, as: "Server Error")
-//                    sink.close()
-//                }
-//            }
-//
-//            let server = HTTPServer(
-//                acceptStream: acceptStream,
-//                worker: eventLoop,
-//                responder: responder
-//            )
-//
-//            server.onError = { error in
-//                logger.reportError(error, as: "Server Error")
-//            }
-//
-//            // non-blocking main thread run
-//            Thread.async { eventLoop.runLoop() }
-//        }
-//
-//        // bind, listen, and start accepting
-//        try tcpServer.start(
-//            hostname: config.hostname,
-//            port: config.port,
-//            backlog: config.backlog
-//        )
-
-        // container.eventLoop.runLoop()
+        try server.start(hostname: config.hostname, port: Int(config.port)).wait()
     }
 }
 
-enum HTTPHandlerState {
-    case ready
-    case parsingBody(HTTPRequestHead, Data?)
-}
-
-final class HTTPHandler: ChannelInboundHandler {
-    typealias InboundIn = HTTPServerRequestPart
-    typealias OutboundOut = HTTPServerResponsePart
-
-    private let container: Container
-    private let responder: Responder
-
-    private var state: HTTPHandlerState
-
-    public init(container: Container, responder: Responder) {
-        print(#function)
-        self.container = container
-        self.responder = responder
-        self.state = .ready
+struct EngineResponder: HTTPResponder {
+    let rootContainer: Container
+    init(rootContainer: Container) {
+        self.rootContainer = rootContainer
     }
 
-    func handleInfo(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
-        print(#function)
-    }
-
-    func handleEcho(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
-        print(#function)
-    }
-
-    func handleEcho(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, balloonInMemory: Bool = false) {
-        print(#function)
-    }
-
-    func handleJustWrite(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, statusCode: HTTPResponseStatus = .ok, string: String, trailer: (String, String)? = nil, delay: TimeAmount = .nanoseconds(0)) {
-        print(#function)
-    }
-
-    func handleContinuousWrites(ctx: ChannelHandlerContext, request: HTTPServerRequestPart) {
-        print(#function)
-    }
-
-    func handleMultipleWrites(ctx: ChannelHandlerContext, request: HTTPServerRequestPart, strings: [String], delay: TimeAmount) {
-        print(#function)
-    }
-
-    func channelRead(ctx: ChannelHandlerContext, data: NIOAny) {
-        print(ctx.eventLoop)
-        let req = unwrapInboundIn(data)
-        print(req)
-        switch req {
-        case .head(let head):
-            switch state {
-            case .ready: state = .parsingBody(head, nil)
-            case .parsingBody: fatalError()
-            }
-        case .body(var body):
-            switch state {
-            case .ready: fatalError()
-            case .parsingBody(let head, let existingData):
-                let data: Data
-                if var existing = existingData {
-                    existing += body.readData(length: body.readableBytes) ?? Data()
-                    data = existing
-                } else {
-                    data = body.readData(length: body.readableBytes) ?? Data()
-                }
-                state = .parsingBody(head, data)
-            }
-        case .end(let tailHeaders):
-            assert(tailHeaders == nil)
-            switch state {
-            case .ready: fatalError()
-            case .parsingBody(let head, let data):
-                let httpReq = HTTPRequest(
-                    method: head.method,
-                    uri: head.uri,
-                    version: head.version,
-                    headers: head.headers,
-                    body: data
-                )
-                let req = Request(http: httpReq, using: container)
-                try! responder.respond(to: req).do { res in
-                    var headers = res.http.headers
-                    if let body = res.http.body {
-                        headers.replaceOrAdd(name: "Content-Length", value: body.count.description)
-                    }
-                    let httpHead = HTTPResponseHead.init(version: res.http.version, status: res.http.status, headers: headers)
-                    ctx.write(self.wrapOutboundOut(.head(httpHead)), promise: nil)
-                    if let body = res.http.body {
-                        var buffer = ByteBufferAllocator().buffer(capacity: body.count)
-                        buffer.write(bytes: body)
-                        ctx.write(self.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
-                    }
-                    ctx.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
-                    ctx.channel.close(promise: nil)
-                }.catch { error in
-                    fatalError("\(error)")
-                }
-            }
+    func respond(to request: HTTPRequest) -> Future<HTTPResponse> {
+        let container: SubContainer
+        if let existing = Thread.current.threadDictionary["subcontainer"] as? SubContainer {
+            container = existing
+        } else {
+            let new = rootContainer.subContainer(on: request)
+            container = new
+            Thread.current.threadDictionary["subcontainer"] = new
         }
-    }
 
-    func channelReadComplete(ctx: ChannelHandlerContext) {
-        print(#function)
-    }
+        let responder: Responder
+        if let existing = Thread.current.threadDictionary["responder"] as? ApplicationResponder {
+            responder = existing
+        } else {
+            let new = try! container.make(Responder.self, for: EngineServer.self)
+            responder = new
+            Thread.current.threadDictionary["responder"] = new
+        }
 
-    func handlerAdded(ctx: ChannelHandlerContext) {
-        print(#function)
-        print(ctx.eventLoop)
-        print(ctx.channel)
-        print(ctx.name)
-        print(ctx.pipeline)
+        let req = Request(http: request, using: container)
+        return try! responder.respond(to: req).map(to: HTTPResponse.self) { $0.http }
     }
 }
 

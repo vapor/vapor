@@ -1,33 +1,6 @@
 import Dispatch
 import Service
 
-public struct HTTPResponse {
-    /// The HTTP response status.
-    public var status: HTTPResponseStatus
-
-    /// The HTTP version that corresponds to this response.
-    public var version: HTTPVersion
-
-    /// The HTTP headers on this response.
-    public var headers: HTTPHeaders
-
-    /// The http body
-    public var body: HTTPBody?
-
-    /// Creates a new HTTP Request
-    public init(
-        status: HTTPResponseStatus = .ok,
-        version: HTTPVersion = .init(major: 1, minor: 1),
-        headers: HTTPHeaders = .init(),
-        body: HTTPBody? = nil
-    ) {
-        self.status = status
-        self.version = version
-        self.headers = headers
-        self.body = body
-    }
-}
-
 public final class Response: EphemeralContainer {
     /// See EphemeralWorker.onInit
     public static var onInit: LifecycleHook?
@@ -45,8 +18,8 @@ public final class Response: EphemeralContainer {
     public let privateContainer: SubContainer
 
     /// Create a new Response
-    public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
-        self.http = http
+    public init(http: HTTPResponse? = nil, using container: Container) {
+        self.http = http ?? HTTPResponse(on: container)
         self.superContainer = container
         self.privateContainer = container.subContainer(on: container)
         Response.onInit?(self)
@@ -81,9 +54,9 @@ extension Response {
 
     /// Container for parsing/serializing content
     public var content: ContentContainer {
-        return ContentContainer(container: self, body: http.body!, mediaType: .json/*http.mediaType*/) { body, mediaType in
+        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
             self.http.body = body
-//            self.http.mediaType = mediaType
+            self.http.mediaType = mediaType
         }
     }
 }

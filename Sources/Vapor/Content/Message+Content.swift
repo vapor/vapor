@@ -3,7 +3,7 @@ import Foundation
 /// Helper for encoding/decoding HTTP content.
 public struct ContentContainer {
     var container: SubContainer
-    var body: HTTPBody
+    var body: HTTPBody?
     let mediaType: MediaType?
     var update: (HTTPBody, MediaType) -> ()
 }
@@ -28,6 +28,9 @@ extension ContentContainer {
     /// Parses the supplied content from the mesage.
     public func decode<D>(_ content: D.Type) throws -> Future<D> where D: Decodable {
         let decoder = try requireDecoder()
+        guard let body = self.body else {
+            throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
+        }
         return try decoder.decode(D.self, from: body)
     }
 
@@ -90,6 +93,9 @@ extension ContentContainer {
     {
         do {
             let decoder = try requireDecoder()
+            guard let body = self.body else {
+                throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
+            }
             return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
         } catch {
             return Future.map(on: container) { throw error }

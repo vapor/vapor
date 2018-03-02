@@ -3,7 +3,6 @@ import Bits
 import Dispatch
 import HTTP
 import Foundation
-import TCP
 import Vapor
 // import WebSocket
 import XCTest

@@ -14,28 +14,28 @@ let package = Package(
     ],
     dependencies: [
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/console.git", .branch("nio")),
 
         // 🌎 Utility package containing tools for byte manipulation, Codable, OS APIs, and debugging.
-        .package(url: "https://github.com/vapor/core.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/core.git", .branch("nio")),
 
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
-        .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/crypto.git", .branch("nio")),
 
         // 🗄 Core services for creating database integrations.
-        .package(url: "https://github.com/vapor/database-kit.git", from: "1.0.0-rc"),
+        .package(url: "https://github.com/vapor/database-kit.git", .branch("nio")),
+
+        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
+        .package(url: "https://github.com/vapor/engine.git", .branch("nio")),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing.git", from: "3.0.0-rc"),
+        .package(url: "https://github.com/vapor/routing.git", .branch("nio")),
 
         // 📦 Dependency injection / inversion of control framework.
-        .package(url: "https://github.com/vapor/service.git", from: "1.0.0-rc"),
-
-        // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "1.0.0"),
+        .package(url: "https://github.com/vapor/service.git", .branch("nio")),
 
         // 🖋 Easy-to-use foundation for building powerful templating languages in Swift.
-        .package(url: "https://github.com/vapor/template-kit.git", from: "1.0.0-rc"),
+        .package(url: "https://github.com/vapor/template-kit.git", .branch("nio")),
 
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
         .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc"),
@@ -56,16 +56,14 @@ let package = Package(
             "Crypto",
             "DatabaseKit",
             "Debugging",
-            // "FormURLEncoded",
+            "FormURLEncoded",
+            "HTTP",
             "Logging",
-            // "Multipart",
+            "Multipart",
             "Routing",
             "Service",
             "TemplateKit",
             "Validation",
-
-            "NIO",
-            "NIOHTTP1"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]

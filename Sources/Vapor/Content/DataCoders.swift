@@ -17,7 +17,7 @@ public protocol BodyDecoder {
 
 extension JSONEncoder: BodyEncoder {
     public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T : Encodable {
-        return try self.encode(encodable)
+        return try HTTPBody(data: encode(encodable))
     }
 }
 
