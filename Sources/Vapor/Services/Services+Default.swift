@@ -90,6 +90,8 @@ extension Services {
 //            }
 //        }
 
+        services.register(FoundationClient.self)
+
 //        services.register { container -> EngineClientConfig in
 //            return EngineClientConfig()
 //        }
