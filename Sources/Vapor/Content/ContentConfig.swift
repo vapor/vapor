@@ -1,5 +1,5 @@
 import Foundation
-//import FormURLEncoded
+import FormURLEncoded
 
 /// Configures which encoders/decoders to use for a given media type.
 public struct ContentConfig: Service, ServiceType {
@@ -125,13 +125,12 @@ extension ContentConfig {
         config.use(encoder: DataEncoder(), for: .html)
 
         // form-urlencoded
-//        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
-//        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
+   //     config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
 
         return config
     }
 }
 
-//extension FormURLEncoder: BodyEncoder {}
-//extension FormURLDecoder: BodyDecoder {}
-
+extension FormURLEncoder: BodyEncoder {}
+// extension FormURLDecoder: BodyDecoder {}
