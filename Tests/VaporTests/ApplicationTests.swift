@@ -151,6 +151,17 @@ class ApplicationTests: XCTestCase {
         XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
     }
 
+    func testFoundationClientItunesAPI() throws {
+        var config = Config.default()
+        config.prefer(FoundationClient.self, for: Client.self)
+        let app = try Application(config: config)
+        let client = try app.make(Client.self)
+        XCTAssert(client is FoundationClient)
+        let res = try client.send(.get, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").await(on: app)
+        let data = try res.http.body.makeData(max: 100_000).await(on: app)
+        XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -164,6 +175,7 @@ class ApplicationTests: XCTestCase {
         ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
         ("testClientHeaders", testClientHeaders),
         ("testClientItunesAPI", testClientItunesAPI),
+        ("testFoundationClientItunesAPI", testFoundationClientItunesAPI),
     ]
 }
 
