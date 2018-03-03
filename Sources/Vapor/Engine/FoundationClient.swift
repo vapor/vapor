@@ -78,7 +78,7 @@ extension HTTPRequest {
 extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
     fileprivate static func fromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
-        var res = HTTPResponse(status: .custom(code: UInt(httpResponse.statusCode), reasonPhrase: ""), on: worker)
+        var res = HTTPResponse(status: .custom(code: UInt(httpResponse.statusCode), reasonPhrase: ""))
         for (key, value) in httpResponse.allHeaderFields {
             res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
         }

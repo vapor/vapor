@@ -34,15 +34,17 @@ public final class EngineServer: Server, Service {
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
+        let group = MultiThreadedEventLoopGroup(numThreads: 1) // config.workerCount
+
         let server = try HTTPServer.start(
             hostname: config.hostname,
             port: config.port,
             responder: EngineResponder(rootContainer: container),
             maxBodySize: config.maxBodySize,
-            threadCount: 1, // config.workerCount
             backlog: config.backlog,
             reuseAddress: config.reuseAddress,
-            tcpNoDelay: config.tcpNoDelay
+            tcpNoDelay: config.tcpNoDelay,
+            on: group
         ) { error in
             logger.reportError(error)
         }.wait()
@@ -58,12 +60,12 @@ struct EngineResponder: HTTPResponder {
         self.rootContainer = rootContainer
     }
 
-    func respond(to request: HTTPRequest) -> Future<HTTPResponse> {
+    func respond(to request: HTTPRequest, on worker: Worker) -> Future<HTTPResponse> {
         let container: SubContainer
         if let existing = Thread.current.threadDictionary["subcontainer"] as? SubContainer {
             container = existing
         } else {
-            let new = rootContainer.subContainer(on: request)
+            let new = rootContainer.subContainer(on: worker)
             container = new
             Thread.current.threadDictionary["subcontainer"] = new
         }

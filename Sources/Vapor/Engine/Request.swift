@@ -22,8 +22,8 @@ public final class Request: ParameterContainer {
     internal var hasActiveConnections: Bool
 
     /// Create a new Request
-    public init(http: HTTPRequest? = nil, using container: Container) {
-        self.http = http ?? HTTPRequest(on: container)
+    public init(http: HTTPRequest = .init(), using container: Container) {
+        self.http = http
         self.superContainer = container
         self.privateContainer = container.subContainer(on: container)
         self.parameters = []

@@ -23,7 +23,7 @@ extension JSONEncoder: BodyEncoder {
 
 extension JSONDecoder: BodyDecoder {
     public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T> where T : Decodable {
-        return Future.map(on: wrap(EmbeddedEventLoop())) { try self.decode(T.self, from: body.data ?? Data()) }
+        return Future.map(on: EmbeddedEventLoop()) { try self.decode(T.self, from: body.data ?? Data()) }
     }
 }
 

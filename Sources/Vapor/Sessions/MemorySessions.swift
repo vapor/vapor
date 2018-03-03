@@ -23,13 +23,13 @@ public final class MemorySessions: Sessions {
     /// See Sessions.readSession
     public func readSession(sessionID: String) throws -> Future<Session?> {
         let session = sessions[sessionID]
-        return Future.map(on: wrap(eventLoop)) { session }
+        return Future.map(on: eventLoop) { session }
     }
 
     /// See Sessions.destroySession
     public func destroySession(sessionID: String) throws -> Future<Void> {
         sessions[sessionID] = nil
-        return .done(on: wrap(eventLoop))
+        return .done(on: eventLoop)
     }
 
     /// See Sessions.updateSession
@@ -42,7 +42,7 @@ public final class MemorySessions: Sessions {
         }
         session.id = sessionID
         sessions[sessionID] = session
-        return Future.map(on: wrap(eventLoop)) { session }
+        return Future.map(on: eventLoop) { session }
     }
 }
 

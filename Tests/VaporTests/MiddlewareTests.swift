@@ -20,7 +20,7 @@ class MiddlewareTests : XCTestCase {
 
         let app = try Application(services: services)
 
-        let req = Request(http: .init(on: app), using: app)
+        let req = Request(using: app)
         _ = try app.make(Responder.self).respond(to: req).wait()
         XCTAssert(myMiddleware.flag == true)
     }
