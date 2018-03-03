@@ -10,3 +10,6 @@
 @_exported import Routing
 @_exported import Service
 @_exported import TemplateKit
+@_exported import class Foundation.URLSession
+@_exported import struct Foundation.Data
+@_exported import struct Foundation.Date

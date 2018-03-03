@@ -36,7 +36,7 @@ public final class ErrorMiddleware: Middleware, Service {
                     reason = "Something went wrong."
                 }
             default:
-                log.reportError(error, as: "Error")
+                log.reportError(error)
 
                 if let debuggable = error as? Debuggable {
                     reason = debuggable.reason
@@ -54,7 +54,14 @@ public final class ErrorMiddleware: Middleware, Service {
             }
 
             let res = req.makeResponse()
-            res.http.body = HTTPBody(string: "Oops: \(reason)")
+            do {
+                let errorResponse = ErrorResponse(error: true, reason: reason)
+                res.http.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
+                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json")
+            } catch {
+                res.http.body = HTTPBody(string: "Oops: \(error)")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain")
+            }
             res.http.status = status
             promise.succeed(result: res)
         }
@@ -71,4 +78,9 @@ public final class ErrorMiddleware: Middleware, Service {
 
         return promise.futureResult
     }
+}
+
+struct ErrorResponse: Encodable {
+    var error: Bool
+    var reason: String
 }

@@ -44,7 +44,7 @@ public final class EngineServer: Server, Service {
             reuseAddress: config.reuseAddress,
             tcpNoDelay: config.tcpNoDelay
         ) { error in
-            logger.reportError(error, as: "Server Error")
+            logger.reportError(error)
         }.wait()
 
         // wait for the server to shutdown
@@ -83,7 +83,7 @@ struct EngineResponder: HTTPResponder {
 }
 
 extension Logger {
-    func reportError(_ error: Error, as label: String) {
+    func reportError(_ error: Error) {
         var string = ""
         if let debuggable = error as? Debuggable {
             string += debuggable.fullIdentifier

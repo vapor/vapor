@@ -31,6 +31,15 @@ public final class Response: EphemeralContainer {
     }
 }
 
+public typealias HTTPStatus = HTTPResponseStatus
+
+extension HTTPStatus: ResponseEncodable {
+    /// See `ResponseEncodable.encode(for:)`
+    public func encode(for req: Request) throws -> Future<Response> {
+        return Future.map(on: req) { Response(http: .init(status: self, on: req), using: req) }
+    }
+}
+
 extension Response: CustomStringConvertible {
     /// See `CustomStringConvertible.description
     public var description: String {

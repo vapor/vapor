@@ -1,16 +1,9 @@
 import Async
 import Console
 import Dispatch
-//import HTTP
 import Foundation
 import Routing
 import Service
-//import TLS
-//#if os(Linux)
-//    import OpenSSL
-//#else
-//    import AppleTLS
-//#endif
 
 extension Services {
     /// The default Services included in the framework.
@@ -49,63 +42,28 @@ extension Services {
         }
 
         // sessions
-//        services.register(SessionCache.self)
-//        services.register(SessionsMiddleware.self)
-//        services.register(KeyedCacheSessions.self)
-//        services.register(SessionsConfig.self)
+        services.register(SessionCache.self)
+        services.register(SessionsMiddleware.self)
+        services.register(KeyedCacheSessions.self)
+        services.register(SessionsConfig.self)
 
         // keyed cache
         services.register(KeyedCache.self) { container -> MemoryKeyedCache in
             return MemoryKeyedCache(on: container)
         }
-        
-//        services.register { container in
-//            return SSLClientSettings()
-//        }
-//        
-//        services.register(SSLClientUpgrader.self) { _ in
-//            return DefaultSSLClientUpgrader()
-//        }
-//        
-//        services.register(SSLPeerUpgrader.self) { _ in
-//            return DefaultSSLPeerUpgrader()
-//        }
-//        
-//        services.register(SSLClient.self) { container -> DefaultSSLClient in
-//            let client = try defaultSSLClient.init(
-//                settings: try container.make(for: SSLClientSettings.self),
-//                on: container
-//            )
-//            
-//            return BasicSSLClient(boxing: client)
-//        }
-
-//        services.register(Client.self) { container -> EngineClient in
-//            if let sub = container as? SubContainer {
-//                /// if a request is creating a client, we should
-//                /// use the event loop as the container
-//                return try EngineClient(container: sub.superContainer, config: container.make(for: EngineClient.self))
-//            } else {
-//                return try EngineClient(container: container, config: container.make(for: EngineClient.self))
-//            }
-//        }
 
         services.register(FoundationClient.self)
-
-//        services.register { container -> EngineClientConfig in
-//            return EngineClientConfig()
-//        }
 
         // register middleware
         services.register { container -> MiddlewareConfig in
             return MiddlewareConfig.default()
         }
 
-//        services.register { container -> FileMiddleware in
-//            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
-//            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
-//        }
-//
+        services.register { container -> FileMiddleware in
+            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
+            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
+        }
+
         services.register { container in
             return DateMiddleware()
         }
@@ -122,15 +80,7 @@ extension Services {
         // register content coders
         services.register(ContentConfig.self)
         services.register(ContentCoders.self)
-        
-//        // register transfer encodings
-//        services.register { container -> TransferEncodingConfig in
-//            return TransferEncodingConfig.default()
-//        }
 
-//        services.register([FileReader.self, FileCache.self]) { container -> File in
-//            return File(on: container)
-//        }
 
         // register terminal console
         services.register(Console.self) { container -> Terminal in
@@ -184,7 +134,7 @@ extension Services {
         }
 
         // multipart
-//        services.register(MultipartFormConfig.self)
+        services.register(MultipartFormConfig.self)
 
         return services
     }
