@@ -80,7 +80,7 @@ public final class EngineRouter: Router {
     public func route(request: Request) -> Responder? {
         return withPathComponents(for: request) { components in
             return router.route(path: [
-                .bytes([.g, .e, .t])
+                .string("\(request.http.method)")
             ] + components, parameters: request)
         }
     }

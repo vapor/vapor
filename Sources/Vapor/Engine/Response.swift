@@ -31,19 +31,19 @@ public final class Response: EphemeralContainer {
     }
 }
 
-//extension Response: CustomStringConvertible {
-//    /// See `CustomStringConvertible.description
-//    public var description: String {
-//        return http.description
-//    }
-//}
-//
-//extension Response: CustomDebugStringConvertible {
-//    /// See `CustomDebugStringConvertible.debugDescription`
-//    public var debugDescription: String {
-//        return http.debugDescription
-//    }
-//}
+extension Response: CustomStringConvertible {
+    /// See `CustomStringConvertible.description
+    public var description: String {
+        return http.description
+    }
+}
+
+extension Response: CustomDebugStringConvertible {
+    /// See `CustomDebugStringConvertible.debugDescription`
+    public var debugDescription: String {
+        return http.debugDescription
+    }
+}
 
 extension Response {
     /// The response's event loop container.

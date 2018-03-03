@@ -11,7 +11,7 @@ extension Router {
     ) -> Route<Responder> where T: ResponseEncodable {
         let responder = RouteResponder(closure: closure)
         let route = Route<Responder>(
-            path: [.constants([.bytes([.g, .e, .t])])] + path,
+            path: [.constants([.string("\(method)")])] + path,
             output: responder
         )
         self.register(route: route)
@@ -27,7 +27,7 @@ extension Router {
     ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
         let responder = RequestDecodableResponder(closure: closure)
         let route = Route<Responder>(
-            path: [.constants([.bytes([.g, .e, .t])])] + path,
+            path: [.constants([.string("\(method)")])] + path,
             output: responder
         )
         self.register(route: route)

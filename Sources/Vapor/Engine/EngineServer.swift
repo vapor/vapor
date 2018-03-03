@@ -28,7 +28,6 @@ public final class EngineServer: Server, Service {
     /// Start the server. Server protocol requirement.
     public func start() throws {
         let console = try container.make(Console.self, for: EngineServer.self)
-        let logger = try container.make(Logger.self, for: EngineServer.self)
 
         let server = HTTPServer(responder: EngineResponder(rootContainer: container))
 
@@ -36,6 +35,7 @@ public final class EngineServer: Server, Service {
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
+        //        let logger = try container.make(Logger.self, for: EngineServer.self)
         // FIXME: error logging support
         //            server.onError = { error in
         //                logger.reportError(error, as: "Server Error")
