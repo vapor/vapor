@@ -128,7 +128,7 @@ extension ApplicationTester {
     @discardableResult
     func test(_ method: HTTPMethod, _ path: String, equals string: String) throws -> ApplicationTester {
         let res = try FoundationClient.default(on: app).send(method, to: "http://localhost:\(port)" + path).wait()
-        XCTAssertEqual(String(data: res.http.body?.data ?? Data(), encoding: .utf8), string)
+        XCTAssertEqual(String(data: res.http.body.data ?? Data(), encoding: .utf8), string)
         return self
     }
 }

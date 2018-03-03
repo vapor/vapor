@@ -28,20 +28,27 @@ public final class EngineServer: Server, Service {
     /// Start the server. Server protocol requirement.
     public func start() throws {
         let console = try container.make(Console.self, for: EngineServer.self)
-
-        let server = HTTPServer(responder: EngineResponder(rootContainer: container))
+        let logger = try container.make(Logger.self, for: EngineServer.self)
 
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        //        let logger = try container.make(Logger.self, for: EngineServer.self)
-        // FIXME: error logging support
-        //            server.onError = { error in
-        //                logger.reportError(error, as: "Server Error")
-        //            }
+        let server = try HTTPServer.start(
+            hostname: config.hostname,
+            port: config.port,
+            responder: EngineResponder(rootContainer: container),
+            maxBodySize: config.maxBodySize,
+            threadCount: 1, // config.workerCount
+            backlog: config.backlog,
+            reuseAddress: config.reuseAddress,
+            tcpNoDelay: config.tcpNoDelay
+        ) { error in
+            logger.reportError(error, as: "Server Error")
+        }.wait()
 
-        try server.start(hostname: config.hostname, port: Int(config.port)).wait()
+        // wait for the server to shutdown
+        try server.onClose.wait()
     }
 }
 
@@ -114,35 +121,41 @@ public struct EngineServerConfig: Service {
     public var hostname: String
 
     /// Port the server will bind to.
-    public var port: UInt16
+    public var port: Int
 
     /// Listen backlog.
-    public var backlog: Int32
+    public var backlog: Int
 
     /// Number of client accepting workers.
     /// Should be equal to the number of logical cores.
     public var workerCount: Int
-    
-    /// Limits the amount of connections per IP address to prevent certain Denial of Service attacks
-    public var maxConnectionsPerIP: Int
-    
-    /// The SSL configuration. If it exists, SSL will be used
-    // public var ssl: EngineServerSSLConfig?
+
+    /// Requests containing bodies larger than this maximum will be rejected, closign the connection.
+    public var maxBodySize: Int
+
+    /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
+    public var reuseAddress: Bool
+
+    /// When `true`, OS will attempt to minimize TCP packet delay.
+    public var tcpNoDelay: Bool
 
     /// Creates a new engine server config
     public init(
         hostname: String,
-        port: UInt16,
-        backlog: Int32,
+        port: Int,
+        backlog: Int,
         workerCount: Int,
-        maxConnectionsPerIP: Int
+        maxBodySize: Int,
+        reuseAddress: Bool,
+        tcpNoDelay: Bool
     ) {
         self.hostname = hostname
         self.port = port
-        self.workerCount = workerCount
         self.backlog = backlog
-        self.maxConnectionsPerIP = maxConnectionsPerIP
-        // self.ssl = nil
+        self.workerCount = workerCount
+        self.maxBodySize = maxBodySize
+        self.reuseAddress = reuseAddress
+        self.tcpNoDelay = tcpNoDelay
     }
 }
 
@@ -150,17 +163,21 @@ extension EngineServerConfig {
     /// Detects `EngineServerConfig` from the environment.
     public static func detect(
         hostname: String = "localhost",
-        port: UInt16 = 8080,
-        backlog: Int32 = 4096,
+        port: Int = 8080,
+        backlog: Int = 256,
         workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxConnectionsPerIP: Int = 128
+        maxBodySize: Int = 1_000_0000,
+        reuseAddress: Bool = true,
+        tcpNoDelay: Bool = true
     ) throws -> EngineServerConfig {
         return try EngineServerConfig(
             hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
-            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(UInt16.init) ?? port,
+            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
             backlog: backlog,
             workerCount: workerCount,
-            maxConnectionsPerIP: maxConnectionsPerIP
+            maxBodySize: maxBodySize,
+            reuseAddress: reuseAddress,
+            tcpNoDelay: tcpNoDelay
         )
     }
 }

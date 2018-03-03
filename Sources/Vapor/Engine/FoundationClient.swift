@@ -64,7 +64,7 @@ extension HTTPRequest {
     /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
     fileprivate func makeFoundationRequest() -> URLRequest {
         let http = self
-        let body = http.body?.data ?? Data()
+        let body = http.body.data ?? Data()
         var request = URLRequest(url: http.url)
         request.httpMethod = "\(http.method)"
         request.httpBody = body

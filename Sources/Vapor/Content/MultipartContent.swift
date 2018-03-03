@@ -51,8 +51,10 @@ extension MultipartForm: Content {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not found in the headers", source: .capture())
         }
 
-        let data = req.http.body?.data ?? Data()
-        return Future.map(on: req) { try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse() }
+        let config = try req.make(MultipartFormConfig.self)
+        return req.http.body.consumeData(max: config.maxSize, on: req).map(to: MultipartForm.self) { data in
+            return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
+        }
     }
 
     /// See ResponseDecodable.decode
@@ -61,8 +63,10 @@ extension MultipartForm: Content {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not found in the headers", source: .capture())
         }
 
-        let data = req.http.body?.data ?? Data()
-        return Future.map(on: req) { try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse() }
+        let config = try req.make(MultipartFormConfig.self)
+        return res.http.body.consumeData(max: config.maxSize, on: req).map(to: MultipartForm.self) { data in
+            return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
+        }
     }
 }
 

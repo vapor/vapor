@@ -59,7 +59,7 @@ class ClientTests: XCTestCase {
         if let lastReq = fakeClient.lastReq {
             XCTAssertEqual(lastReq.http.headers["foo"].first, "bar")
             XCTAssertEqual(lastReq.http.url.path, "/baz")
-            XCTAssertEqual(lastReq.http.body?.data, Data("hello".utf8))
+            XCTAssertEqual(lastReq.http.body.data, Data("hello".utf8))
         } else {
             XCTFail("No last request")
         }
@@ -69,7 +69,7 @@ class ClientTests: XCTestCase {
         let app = try Application()
         let client = try app.make(Client.self)
         let res = try client.send(.GET, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").wait()
-        let data = res.http.body?.data ?? Data()
+        let data = res.http.body.data ?? Data()
         XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
     }
 
@@ -80,7 +80,7 @@ class ClientTests: XCTestCase {
         let client = try app.make(Client.self)
         XCTAssert(client is FoundationClient)
         let res = try client.send(.GET, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").wait()
-        let data = res.http.body?.data ?? Data()
+        let data = res.http.body.data ?? Data()
         XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
     }
 

@@ -79,7 +79,7 @@ extension Request {
 
 extension Request: DatabaseConnectable {
     /// See DatabaseConnectable.connect
-    public func connect<D>(to database: DatabaseIdentifier<D>?, on worker: Worker) -> Future<D.Connection> {
+    public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",
@@ -91,7 +91,7 @@ extension Request: DatabaseConnectable {
                 ],
                 source: .capture()
             )
-            return Future.map(on: worker) { throw error }
+            return Future.map(on: self) { throw error }
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)
