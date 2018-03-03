@@ -14,7 +14,7 @@ jobs:
     steps:
       - checkout
       - run: apt-get update
-      - run: apt-get install -yq libssl-dev
+      - run: apt-get install -yq libssl-dev pkg-config
       - run: swift build
       - run: swift test
       - run: swift build -c release
