@@ -5,6 +5,7 @@
 @_exported import DatabaseKit
 @_exported import HTTP
 @_exported import Logging
+@_exported import Multipart
 @_exported import NIO
 @_exported import NIOHTTP1
 @_exported import Routing
