@@ -46,7 +46,7 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoop = EmbeddedEventLoop()
+        self.eventLoop = MultiThreadedEventLoopGroup(numThreads: 1).next()
         self.router = try self.make(Router.self, for: Application.self)
 
         // boot all service providers
