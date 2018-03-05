@@ -24,8 +24,8 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func grouped(_ path: PathComponent...) -> Router {
-        return RouteGroup(cascadingTo: self, components: path)
+    public func grouped(_ path: DynamicPathComponentRepresentable...) -> Router {
+        return RouteGroup(cascadingTo: self, components: path.makeDynamicPathComponents())
     }
 
 
@@ -49,8 +49,8 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func group(_ path: PathComponent..., configure: (Router) -> ()) {
-        configure(RouteGroup(cascadingTo: self, components: path))
+    public func group(_ path: DynamicPathComponentRepresentable..., configure: (Router) -> ()) {
+        configure(RouteGroup(cascadingTo: self, components: path.makeDynamicPathComponents()))
     }
 
 
@@ -175,7 +175,7 @@ fileprivate final class RouteGroup: Router {
     private(set) var routes: [Route<Responder>] = []
 
     let `super`: Router
-    let components: [PathComponent]
+    let components: [DynamicPathComponent]
     let middleware: [Middleware]
     
     /// Creates a new group
@@ -183,7 +183,7 @@ fileprivate final class RouteGroup: Router {
     /// All path components will be inserted before the Route's path
     ///
     /// All middleware will be applied to the Responder
-    init(cascadingTo router: Router, components: [PathComponent] = [], middleware: [Middleware] = []) {
+    init(cascadingTo router: Router, components: [DynamicPathComponent] = [], middleware: [Middleware] = []) {
         self.super = router
         self.components = components
         self.middleware = middleware

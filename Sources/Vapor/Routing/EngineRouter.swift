@@ -34,54 +34,23 @@ public final class EngineRouter: Router {
     public func register(route: Route<Responder>) {
         router.register(route: route)
     }
-    
-    /// Splits the URI into a substring for each component
-    fileprivate func withPathComponents<T>(for request: Request, do closure: ([PathComponent.Parameter]) -> T) -> T {
-        return Data(request.http.url.path.utf8).withByteBuffer { (uri: BytesBufferPointer) in
-            var array = [PathComponent.Parameter]()
-            array.reserveCapacity(8)
-
-            var baseIndex = uri.startIndex
-            if uri[0] == .forwardSlash {
-                // Skip past the first `/`
-                baseIndex = uri.index(after: uri.startIndex)
-            }
-
-            if baseIndex < uri.endIndex {
-                var currentIndex = baseIndex
-
-                // Split up the path
-                while currentIndex < uri.endIndex {
-                    if uri[currentIndex] == .forwardSlash {
-                        array.append(.byteBuffer(
-                            BytesBufferPointer(start: uri.baseAddress?.advanced(by: baseIndex), count: currentIndex - baseIndex)
-                        ))
-
-                        baseIndex = uri.index(after: currentIndex)
-                        currentIndex = baseIndex
-                    } else {
-                        currentIndex = uri.index(after: currentIndex)
-                    }
-                }
-
-                // Add remaining path component
-                if baseIndex != uri.endIndex {
-                    array.append(.byteBuffer(
-                        BytesBufferPointer(start: uri.baseAddress?.advanced(by: baseIndex), count: uri.endIndex - baseIndex)
-                    ))
-                }
-            }
-
-            return closure(array)
-        }
-    }
 
     /// See Router.route
     public func route(request: Request) -> Responder? {
-        return withPathComponents(for: request) { components in
-            return router.route(path: [
-                .string("\(request.http.method)")
-            ] + components, parameters: request)
+        return router.route(
+            path:  [request.http.method.pathComponent] + request.http.urlString.split(separator: "/").map { .init(substring: $0) },
+            parameters: request
+        )
+    }
+}
+
+extension HTTPMethod {
+    var pathComponent: PathComponent {
+        switch self {
+        case .GET: return .init(bytes: _getData.withByteBuffer { $0 })
+        default: return .init(string: "\(self)")
         }
     }
 }
+
+private let _getData = Data("GET".utf8)

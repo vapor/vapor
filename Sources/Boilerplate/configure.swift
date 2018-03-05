@@ -10,9 +10,8 @@ public func configure(
     try routes(router)
     services.register(router, as: Router.self)
 
-
     // configure your application here
     let middlewareConfig = MiddlewareConfig()
-    //middlewareConfig.use(DateMiddleware.self)
+    // middlewareConfig.use(DateMiddleware.self)
     services.register(middlewareConfig)
 }

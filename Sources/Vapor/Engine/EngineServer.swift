@@ -34,7 +34,7 @@ public final class EngineServer: Server, Service {
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        let group = MultiThreadedEventLoopGroup(numThreads: 1) // config.workerCount
+        let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
 
         let server = try HTTPServer.start(
             hostname: config.hostname,
