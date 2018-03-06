@@ -11,7 +11,7 @@ internal struct MainCommand: CommandGroup {
     init(commands: [String: CommandRunnable], defaultRunnable: CommandRunnable?) {
         self.commands = commands
         self.options = [
-            .flag(name: "version", short: "c", help: ["Displays the framework's version"])
+            .flag(name: "version", short: "v", help: ["Displays the framework's version"])
         ]
         self.help = ["Runs your Vapor application's commands"]
         self.defaultRunnable = defaultRunnable
