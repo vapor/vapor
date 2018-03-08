@@ -70,7 +70,7 @@ class ApplicationTests: XCTestCase {
 
 
     func testParameter() throws {
-        try Application.makeTest(port: 8001) { router in
+        try Application.makeTest(port: 8081) { router in
             router.get("hello", String.parameter) { req in
                 return try req.parameter(String.self)
             }
@@ -80,7 +80,7 @@ class ApplicationTests: XCTestCase {
     }
 
     func testJSON() throws {
-        try Application.makeTest(port: 8002) { router in
+        try Application.makeTest(port: 8082) { router in
             router.get("json") { req in
                 return ["foo": "bar"]
             }
@@ -112,7 +112,7 @@ extension Application {
         services.register(router, as: Router.self)
         let app = try Application(config: .default(), environment: .testing, services: services)
         app.testRun(port: port)
-        usleep(2000)
+        usleep(100_000) // 1/10 of a second
         return ApplicationTester(app: app, port: port)
     }
 
