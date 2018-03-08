@@ -10,32 +10,32 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
 }
 
 extension Content {
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .json
     }
 
-    /// See RequestEncodable.encode
+    /// See `RequestEncodable.encode`
     public func encode(using container: Container) throws -> Future<Request> {
         let req = Request(using: container)
         try req.content.encode(self)
         return Future.map(on: container) { req }
     }
 
-    /// See ResponseEncodable.encode
+    /// See `ResponseEncodable.encode`
     public func encode(for req: Request) throws -> Future<Response> {
         let res = req.makeResponse()
         try res.content.encode(self)
         return Future.map(on: req) { res }
     }
 
-    /// See RequestDecodable.decode
+    /// See `RequestDecodable.decode`
     public static func decode(from req: Request) throws -> Future<Self> {
         let content = try req.content.decode(Self.self)
         return content
     }
 
-    /// See ResponseDecodable.decode
+    /// See `ResponseDecodable.decode`
     public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
         let content = try res.content.decode(Self.self)
         return content
