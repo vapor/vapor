@@ -9,30 +9,7 @@ jobs:
       - run: swift build
       - run: swift test
 
-
   linux:
-    docker:
-      - image: norionomura/swift:swift-4.1-branch
-    steps:
-      - checkout
-      - run:
-          name: Update APT
-          command: apt-get update
-      - run:
-          name: Install Swift NIO dependencies
-          command: apt-get install -yq pkg-config libssl-dev
-      - run: 
-          name: Compile code
-          command: swift build
-      - run: 
-          name: Run unit tests
-          command: swift test
-      - run: 
-          name: Compile code with optimizations
-          command: swift build -c release
-
-
-  linux-vapor:
     docker:
       - image: norionomura/swift:swift-4.1-branch
     steps:
@@ -62,13 +39,13 @@ workflows:
   nightly:
     triggers:
       - schedule:
-        cron: "0 0 * * *"
-        filters:
-        branches:
-          only:
-            - master
-            - nio
+          cron: "0 0 * * *"
+          filters:
+          branches:
+            only:
+              - master
+              - nio
     jobs:
-      - linux-vapor
+      - linux
       # - macos
       
