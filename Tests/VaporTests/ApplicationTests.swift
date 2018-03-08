@@ -112,7 +112,7 @@ extension Application {
         services.register(router, as: Router.self)
         let app = try Application(config: .default(), environment: .testing, services: services)
         app.testRun(port: port)
-        usleep(1000)
+        usleep(2000)
         return ApplicationTester(app: app, port: port)
     }
 
