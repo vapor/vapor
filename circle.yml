@@ -67,6 +67,7 @@ workflows:
         branches:
           only:
             - master
+            - nio
     jobs:
       - linux-vapor
       # - macos
