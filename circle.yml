@@ -8,19 +8,76 @@ jobs:
       - checkout
       - run: swift build
       - run: swift test
+
   linux:
     docker:
       - image: norionomura/swift:swift-4.1-branch
     steps:
       - checkout
-      - run: apt-get update
-      - run: apt-get install -yq libssl-dev pkg-config
-      - run: swift build
-      - run: swift test
-      - run: swift build -c release
+      - run:
+          name: Update APT
+          command: apt-get update
+      - run:
+          name: Install Swift NIO dependencies
+          command: apt-get install -yq pkg-config libssl-dev
+      - run: 
+          name: Compile code
+          command: swift build
+      - run: 
+          name: Run unit tests
+          command: swift test
+      - run: 
+          name: Compile code with optimizations
+          command: swift build -c release
+
+
+  linux-api-template:
+    docker:
+      - image: norionomura/swift:swift-4.1-branch
+      - image: circleci/postgres:latest
+        environment:
+          POSTGRES_USER: postgres
+          POSTGRES_DB: postgres
+          POSTGRES_PASSWORD: ""
+    steps:
+      - run:
+          name: Update APT
+          command: apt-get update
+      - run:
+          name: Install Swift NIO dependencies
+          command: apt-get install -yq pkg-config libssl-dev
+      - run:
+          name: Clone API Template
+          command: git clone -b nio https://github.com/vapor/api-template.git
+          working_directory: ~/
+      - run:
+          name: Switch API Template to this Vapor revision
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/api-template
+      - run:
+          name: Run API Template unit tests
+          command: swift test
+          working_directory: ~/api-template
+
+
 workflows:
   version: 2
   tests:
     jobs:
       - linux
+      - linux-api-template
       # - macos
+
+  nightly:
+    triggers:
+      - schedule:
+          cron: "0 0 * * *"
+          filters:
+            branches:
+              only:
+                - master
+                - nio
+    jobs:
+      - linux
+      # - macos
+      

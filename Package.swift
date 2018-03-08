@@ -38,7 +38,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/template-kit.git", .branch("nio")),
 
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
-        .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc"),
+        .package(url: "https://github.com/vapor/validation.git", .branch("nio")),
     ],
     targets: [
         // Boilerplate
