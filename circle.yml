@@ -25,14 +25,15 @@ workflows:
       - linux
       # - macos
 
-   nightly:
-     triggers:
-       - schedule:
-           cron: "0 0 * * *"
-           filters:
-             branches:
-               only:
-                 - master
-     jobs:
-       - linux
+  nightly:
+    triggers:
+      - schedule:
+        cron: "0 0 * * *"
+        filters:
+        branches:
+          only:
+            - master
+    jobs:
+      - linux
       # - macos
+      
