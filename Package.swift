@@ -64,6 +64,7 @@ let package = Package(
             "Service",
             "TemplateKit",
             "Validation",
+            "WebSocket"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]

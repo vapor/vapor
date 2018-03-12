@@ -10,6 +10,13 @@ public func configure(
     try routes(router)
     services.register(router, as: Router.self)
 
+    let websockets = EngineWebSocketServer.default { ws, req in
+        ws.onText { text in
+            ws.send(text.reversed())
+        }
+    }
+    services.register(websockets, as: WebSocketServer.self)
+
     // configure your application here
     let middlewareConfig = MiddlewareConfig()
     // middlewareConfig.use(DateMiddleware.self)
