@@ -14,6 +14,10 @@ public func routes(_ router: Router) throws {
         return try req.parameter(String.self)
     }
 
+    router.get("users", User.parameter, "foo") { req in
+        return try req.parameter(User.self)
+    }
+
     router.get("search") { req in
         return req.query["q"] ?? "none"
     }
@@ -23,4 +27,17 @@ public func routes(_ router: Router) throws {
             return String(data: res.http.body.data ?? Data(), encoding: .ascii) ?? ""
         }
     }
+}
+
+struct User: Parameter, Content {
+    let string: String
+
+    static func make(for parameter: String, using container: Container) throws -> EventLoopFuture<User> {
+        return Future.map(on: container) {
+            return User(string: parameter)
+        }
+    }
+
+    typealias ResolvedParameter = Future<User>
+
 }
