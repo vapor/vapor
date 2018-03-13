@@ -82,7 +82,7 @@ class ApplicationTests: XCTestCase {
     func testJSON() throws {
         try Application.makeTest(port: 8082) { router in
             router.get("json") { req in
-                return ["foo": "bar"]
+                return ["foo": "bar"] as [String: String]
             }
         }
         .test(.GET, "/json", equals: """

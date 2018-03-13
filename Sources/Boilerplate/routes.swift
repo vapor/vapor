@@ -7,7 +7,7 @@ public func routes(_ router: Router) throws {
     }
 
     router.get("json") { req in
-        return ["foo": "bar"]
+        return ["foo": "bar"] as [String: String]
     }
 
     router.get("hello", String.parameter) { req in

@@ -7,11 +7,9 @@ public protocol Responder {
 /// MARK: Route
 
 /// A basic, closure-based responder.
-public struct RouteResponder<T>: Responder
-    where T: ResponseEncodable
-{
+public struct RouteResponder: Responder {
     /// Responder closure
-    public typealias Closure = (Request) throws -> T
+    public typealias Closure = (Request) throws -> ResponseEncodable
 
     /// The stored responder closure.
     public let closure: Closure
@@ -29,11 +27,11 @@ public struct RouteResponder<T>: Responder
 }
 
 /// A basic, closure-based responder.
-public struct RequestDecodableResponder<C, T>: Responder
-    where C: RequestDecodable, T: ResponseEncodable
+public struct RequestDecodableResponder<C>: Responder
+    where C: RequestDecodable
 {
     /// Responder closure
-    public typealias Closure = (Request, C) throws -> T
+    public typealias Closure = (Request, C) throws -> ResponseEncodable
     
     /// The stored responder closure.
     public let closure: Closure
