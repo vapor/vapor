@@ -12,7 +12,9 @@ Utilities/contributor_test.sh
 
 ## Testing
 
-Once in Xcode, select the `FluentPostgreSQL-Package` scheme and use `CMD+U` to run the tests.
+Once in Xcode, select the `Vapor-Package` scheme and use `CMD+U` to run the tests.
+
+You can use the `Boilerplate...` and `Development` executables for testing out your code.
 
 When adding new tests (please do 😁), don't forget to add the method name to the `allTests` array. 
 If you add a new `XCTestCase` subclass, make sure to add it to the `Tests/LinuxMain.swift` file.
