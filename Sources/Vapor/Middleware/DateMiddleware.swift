@@ -47,7 +47,7 @@ public final class DateMiddleware: Middleware, Service {
     fileprivate func getDate() -> String {
         var date = COperatingSystem.time(nil)
 
-        if let (timestamp, createdAt) = cachedTimestamp, createdAt <= date + accuracy {
+        if let (timestamp, createdAt) = cachedTimestamp, date <= createdAt + accuracy {
             return timestamp
         }
         
