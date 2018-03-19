@@ -24,8 +24,22 @@ class MiddlewareTests : XCTestCase {
         _ = try app.make(Responder.self).respond(to: req).blockingAwait()
         XCTAssert(myMiddleware.flag == true)
     }
+    
+    func testHostnameMiddlware() throws {
+        var services = Services.default()
+        var middlewareConfig = MiddlewareConfig()
+        middlewareConfig.use(HostMiddleware(writer: .static("example.com")))
+        services.register(middlewareConfig)
+        
+        let app = try Application(services: services)
+        
+        let req = Request(http: .init(), using: app)
+        let response = try app.make(Responder.self).respond(to: req).blockingAwait()
+        XCTAssertEqual(response.http.headers[.host], "example.com")
+    }
 
     static let allTests = [
         ("testNotConfigurable", testNotConfigurable),
+        ("testHostnameMiddlware", testHostnameMiddlware),
     ]
 }
