@@ -43,14 +43,14 @@ public struct ContentConfig: Service, ServiceType {
     /// Adds an encoder for the specified media type.
     public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: BodyEncoder {
         self.lazyEncoders[mediaType] = { container in
-            return try container.make(B.self, for: ContentConfig.self)
+            return try container.make(B.self)
         }
     }
 
     /// Adds a decoder for the specified media type.
     public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: BodyDecoder {
         self.lazyDecoders[mediaType] = { container in
-            return try container.make(B.self, for: ContentConfig.self)
+            return try container.make(B.self)
         }
     }
 
@@ -71,7 +71,7 @@ public struct ContentCoders: Service, ServiceType {
 
     /// See `ServiceType.makeService`
     public static func makeService(for worker: Container) throws -> ContentCoders {
-        let config = try worker.make(ContentConfig.self, for: ContentCoders.self)
+        let config = try worker.make(ContentConfig.self)
         return try config.boot(using: worker)
     }
 

@@ -50,7 +50,7 @@ public final class Application: Container {
         self.serviceCache = .init()
         self.extend = Extend()
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
-        self.router = try self.make(Router.self, for: Application.self)
+        self.router = try self.make(Router.self)
 
         // boot all service providers
         for provider in services.providers {
@@ -70,11 +70,6 @@ public final class Application: Container {
                 ERROR("shutting down app event loop: \(error)")
             }
         }
-    }
-
-    /// Make an instance of the provided interface for this Application.
-    public func make<T>(_ interface: T.Type) throws -> T {
-        return try make(T.self, for: Application.self)
     }
 
     /// Runs the Application's commands.

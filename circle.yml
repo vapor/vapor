@@ -11,15 +11,9 @@ jobs:
 
   linux:
     docker:
-      - image: norionomura/swift:swift-4.1-branch
+      - image: codevapor/swift:4.1
     steps:
       - checkout
-      - run:
-          name: Update APT
-          command: apt-get update
-      - run:
-          name: Install Swift NIO dependencies
-          command: apt-get install -yq pkg-config libssl-dev
       - run: 
           name: Compile code
           command: swift build
@@ -33,19 +27,13 @@ jobs:
 
   linux-api-template:
     docker:
-      - image: norionomura/swift:swift-4.1-branch
+      - image: codevapor/swift:4.1
       - image: circleci/postgres:latest
         environment:
           POSTGRES_USER: postgres
           POSTGRES_DB: postgres
           POSTGRES_PASSWORD: ""
     steps:
-      - run:
-          name: Update APT
-          command: apt-get update
-      - run:
-          name: Install Swift NIO dependencies
-          command: apt-get install -yq pkg-config libssl-dev
       - run:
           name: Clone API Template
           command: git clone -b nio https://github.com/vapor/api-template.git
@@ -76,7 +64,7 @@ workflows:
             branches:
               only:
                 - master
-                - nio
+                
     jobs:
       - linux
       # - macos

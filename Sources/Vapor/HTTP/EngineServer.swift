@@ -27,14 +27,30 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start() throws {
-        let console = try container.make(Console.self, for: EngineServer.self)
-        let logger = try container.make(Logger.self, for: EngineServer.self)
+        let console = try container.make(Console.self)
+        let logger = try container.make(Logger.self)
 
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
         console.output(":" + config.port.description, style: .init(color: .cyan))
 
         let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
+
+        /// http upgrade
+        var upgraders: [HTTPProtocolUpgrader] = []
+
+        /// web socket upgrade
+        if let wss = try? container.make(WebSocketServer.self) {
+            let ws = WebSocket.httpProtocolUpgrader(shouldUpgrade: { req in
+                let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
+                return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
+            }, onUpgrade: { ws, req in
+                let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
+                return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: container))
+            })
+            upgraders.append(ws)
+        }
+
 
         let server = try HTTPServer.start(
             hostname: config.hostname,
@@ -44,6 +60,7 @@ public final class EngineServer: Server, Service {
             backlog: config.backlog,
             reuseAddress: config.reuseAddress,
             tcpNoDelay: config.tcpNoDelay,
+            upgraders: upgraders,
             on: group
         ) { error in
             logger.reportError(error)
@@ -61,26 +78,39 @@ struct EngineResponder: HTTPResponder {
     }
 
     func respond(to request: HTTPRequest, on worker: Worker) -> Future<HTTPResponse> {
-        let container: SubContainer
-        if let existing = Thread.current.threadDictionary["subcontainer"] as? SubContainer {
-            container = existing
-        } else {
-            let new = rootContainer.subContainer(on: worker)
-            container = new
-            Thread.current.threadDictionary["subcontainer"] = new
+        let container = Thread.current.cachedSubContainer(for: rootContainer, on: worker)
+        return Future.flatMap(on: worker) {
+            let responder = try Thread.current.cachedResponder(for: container)
+            let req = Request(http: request, using: container)
+            return try responder.respond(to: req).map(to: HTTPResponse.self) { $0.http }
         }
+    }
+}
 
+extension Thread {
+    func cachedSubContainer(for container: Container, on worker: Worker) -> SubContainer {
+        let subContainer: SubContainer
+        if let existing = threadDictionary["subcontainer"] as? SubContainer {
+            subContainer = existing
+        } else {
+            let new = container.subContainer(on: worker)
+            subContainer = new
+            threadDictionary["subcontainer"] = new
+        }
+        return subContainer
+    }
+
+
+    func cachedResponder(for container: Container) throws -> Responder {
         let responder: Responder
-        if let existing = Thread.current.threadDictionary["responder"] as? ApplicationResponder {
+        if let existing = threadDictionary["responder"] as? ApplicationResponder {
             responder = existing
         } else {
-            let new = try! container.make(Responder.self, for: EngineServer.self)
+            let new = try container.make(Responder.self)
             responder = new
-            Thread.current.threadDictionary["responder"] = new
+            threadDictionary["responder"] = new
         }
-
-        let req = Request(http: request, using: container)
-        return try! responder.respond(to: req).map(to: HTTPResponse.self) { $0.http }
+        return responder
     }
 }
 

@@ -70,13 +70,6 @@ extension Request {
     }
 }
 
-extension Request {
-    /// Make an instance of the provided interface for this Request.
-    public func make<T>(_ interface: T.Type = T.self) throws -> T {
-        return try make(T.self, for: Request.self)
-    }
-}
-
 extension Request: DatabaseConnectable {
     /// See DatabaseConnectable.connect
     public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
