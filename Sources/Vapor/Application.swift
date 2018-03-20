@@ -24,8 +24,11 @@ public final class Application: Container {
     /// See ServiceCacheable.serviceCache
     public let serviceCache: ServiceCache
 
+    /// The event loop group that we derive the event loop below from, so we can close it in `deinit`
+    private var eventLoopGroup: EventLoopGroup
+
     /// See Worker.eventLoop
-    public var eventLoop: EventLoop
+    public var eventLoop: EventLoop { return eventLoopGroup.next() }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -46,7 +49,7 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoop = MultiThreadedEventLoopGroup(numThreads: 1).next()
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
         self.router = try self.make(Router.self)
 
         // boot all service providers
@@ -58,6 +61,14 @@ public final class Application: Container {
             let log = try self.make(Logger.self)
             log.warning("Debug build mode detected while configured for release environment: \(environment.name).")
             log.info("Compile your application with `-c release` to enable code optimizations.")
+        }
+    }
+    
+    deinit {
+        eventLoopGroup.shutdownGracefully {
+            if let error = $0 {
+                ERROR("shutting down app event loop: \(error)")
+            }
         }
     }
 
