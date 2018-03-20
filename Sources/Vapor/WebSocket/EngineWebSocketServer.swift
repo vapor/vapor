@@ -81,8 +81,7 @@ public final class EngineWebSocketServer: WebSocketServer, Service {
     }
 }
 
-
-/// MARK: Convenience
+/// MARK: Convenience `get`
 
 extension EngineWebSocketServer {
     /// Registers a new websocket handling route at the supplied dynamic path.
