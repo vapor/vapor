@@ -38,7 +38,7 @@ public final class MemorySessions: Sessions {
         if let existing = session.id {
             sessionID = existing
         } else {
-            sessionID = OSRandom().data(count: 16).base64Encoded()! // should never fail
+            sessionID = OSRandom().data(count: 16).base64Encoded()
         }
         session.id = sessionID
         sessions[sessionID] = session
