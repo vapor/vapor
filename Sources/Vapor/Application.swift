@@ -32,11 +32,6 @@ public final class Application: Container {
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
-    
-    /// An internal reference to the Router to provide routing shortcuts
-    ///
-    /// FIXME: Force unwrapped because you cannot initialize a router before the rest is initialized
-    fileprivate var router: Router!
 
     /// Creates a new Application.
     public init(
@@ -50,17 +45,21 @@ public final class Application: Container {
         self.serviceCache = .init()
         self.extend = Extend()
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
-        self.router = try self.make(Router.self)
 
-        // boot all service providers
+        // will-boot all service providers
         for provider in services.providers {
-            try provider.boot(self)
+            try provider.willBoot(self).wait()
         }
 
         if _isDebugAssertConfiguration() && environment.isRelease {
             let log = try self.make(Logger.self)
             log.warning("Debug build mode detected while configured for release environment: \(environment.name).")
             log.info("Compile your application with `-c release` to enable code optimizations.")
+        }
+
+        // did-boot all service providers
+        for provider in services.providers {
+            try provider.didBoot(self).wait()
         }
     }
     
@@ -74,11 +73,21 @@ public final class Application: Container {
 
     /// Runs the Application's commands.
     public func run() throws -> Never {
+        // will-run all vapor service providers
+        for provider in services.providers.onlyVapor {
+            try provider.willRun(self).wait()
+        }
+
         let command = try make(CommandConfig.self)
             .makeCommandGroup(for: self)
 
         let console = try make(Console.self)
         try console.run(command, input: &.commandLine)
+
+        // did-run all vapor service providers
+        for provider in services.providers.onlyVapor {
+            try provider.didRun(self).wait()
+        }
         
         // Enforce `Never` return.
         // It's possible that this method may actually return, since
@@ -86,22 +95,5 @@ public final class Application: Container {
         // However, because this method likely _can_ result in
         // a run loop, having a `Never` may help reduce bugs.
         exit(0)
-    }
-}
-
-extension Application: Router {
-    /// All routes registered to this router
-    public var routes: [Route<Responder>] {
-        return router.routes
-    }
-    
-    /// Routes a new Request to get a responder that can make a Response
-    public func route(request: Request) -> Responder? {
-        return router.route(request: request)
-    }
-    
-    /// Registers a new route. This should only be done during boot
-    public func register(route: Route<Responder>) {
-        router.register(route: route)
     }
 }
