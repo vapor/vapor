@@ -48,17 +48,17 @@ do {
     }
 
     router.get("client", "zombo") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
+        let client = try req.make(Client.self)
         return client.send(.GET, to: "http://www.zombo.com/")
     }
 
     router.get("client", "romans") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
+        let client = try req.make(Client.self)
         return client.send(.GET, to: "http://www.romansgohome.com")
     }
 
     router.get("client", "example") { req -> Future<Response> in
-        let client = try req.make(Client.self, for: Request.self)
+        let client = try req.make(Client.self)
         return client.send(.GET, to: "http://example.com")
     }
 
