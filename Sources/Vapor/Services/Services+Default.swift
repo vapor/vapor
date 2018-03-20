@@ -13,7 +13,7 @@ extension Services {
         // register engine server and default config settings
         services.register(Server.self) { container -> EngineServer in
             return try EngineServer(
-                config: container.make(for: EngineServer.self),
+                config: container.make(),
                 container: container
             )
         }
@@ -60,7 +60,7 @@ extension Services {
         }
 
         services.register { container -> FileMiddleware in
-            let directory = try container.make(DirectoryConfig.self, for: FileMiddleware.self)
+            let directory = try container.make(DirectoryConfig.self)
             return FileMiddleware(publicDirectory: directory.workDir + "Public/")
         }
 
@@ -69,7 +69,7 @@ extension Services {
         }
         
         services.register { worker in
-            return try ErrorMiddleware(environment: worker.environment, log: worker.make(for: ErrorMiddleware.self))
+            return try ErrorMiddleware(environment: worker.environment, log: worker.make())
         }
 
         // register router
@@ -88,11 +88,11 @@ extension Services {
         }
         services.register(Responder.self) { container -> ApplicationResponder in
             let middleware = try container
-                .make(MiddlewareConfig.self, for: ServeCommand.self)
+                .make(MiddlewareConfig.self)
                 .resolve(for: container)
 
             let router = try RouterResponder(
-                router: container.make(for: Responder.self)
+                router: container.make()
             )
             let wrapped = middleware.makeResponder(chainedto: router)
             return ApplicationResponder(wrapped)
@@ -100,7 +100,7 @@ extension Services {
 
         services.register { worker -> ServeCommand in
             return try ServeCommand(
-                server: worker.make(for: ServeCommand.self)
+                server: worker.make()
             )
         }
         services.register { container -> CommandConfig in
@@ -108,7 +108,7 @@ extension Services {
         }
         services.register { container -> RoutesCommand in
             return try RoutesCommand(
-                router: container.make(for: RoutesCommand.self)
+                router: container.make()
             )
         }
 
@@ -120,7 +120,7 @@ extension Services {
         // logging
         services.register(Logger.self) { container -> ConsoleLogger in
             return try ConsoleLogger(
-                console: container.make(for: ConsoleLogger.self)
+                console: container.make()
             )
         }
         services.register(Logger.self) { container -> PrintLogger in
@@ -129,7 +129,7 @@ extension Services {
 
         // templates
         services.register(TemplateRenderer.self) { container -> PlaintextRenderer in
-            let dir = try container.make(DirectoryConfig.self, for: PlaintextRenderer.self)
+            let dir = try container.make(DirectoryConfig.self)
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
 

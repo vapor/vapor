@@ -47,7 +47,7 @@ public final class Application: Container {
         self.serviceCache = .init()
         self.extend = Extend()
         self.eventLoop = MultiThreadedEventLoopGroup(numThreads: 1).next()
-        self.router = try self.make(Router.self, for: Application.self)
+        self.router = try self.make(Router.self)
 
         // boot all service providers
         for provider in services.providers {
@@ -59,11 +59,6 @@ public final class Application: Container {
             log.warning("Debug build mode detected while configured for release environment: \(environment.name).")
             log.info("Compile your application with `-c release` to enable code optimizations.")
         }
-    }
-
-    /// Make an instance of the provided interface for this Application.
-    public func make<T>(_ interface: T.Type) throws -> T {
-        return try make(T.self, for: Application.self)
     }
 
     /// Runs the Application's commands.

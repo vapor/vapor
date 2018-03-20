@@ -27,8 +27,8 @@ public final class EngineServer: Server, Service {
 
     /// Start the server. Server protocol requirement.
     public func start() throws {
-        let console = try container.make(Console.self, for: EngineServer.self)
-        let logger = try container.make(Logger.self, for: EngineServer.self)
+        let console = try container.make(Console.self)
+        let logger = try container.make(Logger.self)
 
         console.print("Server starting on ", newLine: false)
         console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
@@ -40,7 +40,7 @@ public final class EngineServer: Server, Service {
         var upgraders: [HTTPProtocolUpgrader] = []
 
         /// web socket upgrade
-        if let wss = try? container.make(WebSocketServer.self, for: EngineServer.self) {
+        if let wss = try? container.make(WebSocketServer.self) {
             let ws = WebSocket.httpProtocolUpgrader(shouldUpgrade: { req in
                 let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
                 return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
@@ -106,7 +106,7 @@ extension Thread {
         if let existing = threadDictionary["responder"] as? ApplicationResponder {
             responder = existing
         } else {
-            let new = try container.make(Responder.self, for: EngineServer.self)
+            let new = try container.make(Responder.self)
             responder = new
             threadDictionary["responder"] = new
         }

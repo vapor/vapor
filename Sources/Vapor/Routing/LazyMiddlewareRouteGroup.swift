@@ -33,7 +33,7 @@ fileprivate struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
 
     /// See `Responder.respond(to:)`
     func respond(to req: Request) throws -> Future<Response> {
-        return try req.make(M.self, for: Request.self)
+        return try req.make(M.self)
             .makeResponder(chainedTo: responder)
             .respond(to: req)
     }

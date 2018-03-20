@@ -14,7 +14,7 @@ extension QueryContainer {
 
     /// Gets the query decoder or throws an error
     fileprivate func requireDecoder() throws -> BodyDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self, for: QueryContainer.self)
+        let coders = try container.superContainer.make(ContentCoders.self)
         return try coders.requireDecoder(for: .urlEncodedForm)
     }
 }

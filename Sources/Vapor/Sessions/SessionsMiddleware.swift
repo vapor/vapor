@@ -17,7 +17,7 @@ public final class SessionsMiddleware: Middleware, Service {
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
         /// Create a session cache
-        let cache = try request.privateContainer.make(SessionCache.self, for: Request.self)
+        let cache = try request.privateContainer.make(SessionCache.self)
         cache.middlewareFlag = true
 
         /// Generate a response for the request
@@ -61,10 +61,10 @@ public final class SessionsMiddleware: Middleware, Service {
 extension SessionsMiddleware: ServiceType {
     /// See `ServiceType.makeService(for:)`
     public static func makeService(for container: Container) throws -> SessionsMiddleware {
-        let config = try container.make(SessionsConfig.self, for: SessionsMiddleware.self)
+        let config = try container.make(SessionsConfig.self)
         return try .init(
             cookieName: config.cookieName,
-            sessions: container.make(for: SessionsMiddleware.self)
+            sessions: container.make()
         )
     }
 }
