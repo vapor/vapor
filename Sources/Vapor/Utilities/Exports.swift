@@ -5,6 +5,13 @@
 @_exported import DatabaseKit
 @_exported import HTTP
 @_exported import Logging
+@_exported import Multipart
+@_exported import NIO
+@_exported import NIOHTTP1
 @_exported import Routing
 @_exported import Service
 @_exported import TemplateKit
+@_exported import class Foundation.URLSession
+@_exported import struct Foundation.Data
+@_exported import struct Foundation.Date
+@_exported import WebSocket

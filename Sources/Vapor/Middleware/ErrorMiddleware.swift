@@ -1,7 +1,8 @@
 import Async
 import Debugging
-import HTTP
+//import HTTP
 import Service
+import Foundation
 
 /// Captures all errors and transforms them into an internal server error.
 public final class ErrorMiddleware: Middleware, Service {
@@ -19,11 +20,11 @@ public final class ErrorMiddleware: Middleware, Service {
 
     /// See `Middleware.respond`
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = Promise(Response.self)
+        let promise = req.eventLoop.newPromise(Response.self)
 
         func handleError(_ error: Swift.Error) {
             let reason: String
-            let status: HTTPStatus
+            let status: HTTPResponseStatus
 
             switch environment {
             case .production:
@@ -35,7 +36,7 @@ public final class ErrorMiddleware: Middleware, Service {
                     reason = "Something went wrong."
                 }
             default:
-                log.reportError(error, as: "Error")
+                log.reportError(error)
 
                 if let debuggable = error as? Debuggable {
                     reason = debuggable.reason
@@ -53,14 +54,21 @@ public final class ErrorMiddleware: Middleware, Service {
             }
 
             let res = req.makeResponse()
-            res.http.body = HTTPBody(string: "Oops: \(reason)")
+            do {
+                let errorResponse = ErrorResponse(error: true, reason: reason)
+                res.http.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
+                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json")
+            } catch {
+                res.http.body = HTTPBody(string: "Oops: \(error)")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain")
+            }
             res.http.status = status
-            promise.complete(res)
+            promise.succeed(result: res)
         }
 
         do {
             try next.respond(to: req).do { res in
-                promise.complete(res)
+                promise.succeed(result: res)
             }.catch { error in
                 handleError(error)
             }
@@ -68,6 +76,11 @@ public final class ErrorMiddleware: Middleware, Service {
             handleError(error)
         }
 
-        return promise.future
+        return promise.futureResult
     }
+}
+
+struct ErrorResponse: Encodable {
+    var error: Bool
+    var reason: String
 }

@@ -17,7 +17,7 @@ extension Request {
     /// https://tools.ietf.org/html/rfc7232#section-3.2
     ///
     /// For an example of how this is used, look at 'FileMiddleware'
-    public func streamFile(at path: String) throws -> Response {
+    public func streamFile(at path: String) throws -> Future<Response> {
         let res = makeResponse()
 
         guard
@@ -35,7 +35,7 @@ extension Request {
         headers[.eTag] = fileETag
 
         // Check if file has been cached already and return NotModified response if the etags match
-        if fileETag == http.headers[.ifNoneMatch] {
+        if fileETag == http.headers[.ifNoneMatch].first {
             throw Abort(.notModified)
         }
 
@@ -48,16 +48,7 @@ extension Request {
             res.http.mediaType = type
         }
 
-        res.http.body = HTTPBody(FileManager.default.contents(atPath: path) ?? Data())
-        return res
-        // FIXME: actually stream the file
-        // let reader = try make(FileReader.self, for: Request.self)
-//        let passthrough = ConnectingStream<ByteBuffer>()
-//
-//        res.http.body = HTTPBody(
-//            chunked: passthrough
-//        )
-//        reader.read(at: path, into: passthrough, chunkSize: 2048)
-//        return res
+        res.http.body = HTTPBody(data: FileManager.default.contents(atPath: path) ?? Data())
+        return Future.map(on: self) { res }
     }
 }

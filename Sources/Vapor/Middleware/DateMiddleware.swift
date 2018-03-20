@@ -1,5 +1,5 @@
 import Async
-import HTTP
+//import HTTP
 import COperatingSystem
 
 fileprivate let DAY_NAMES = [
@@ -37,23 +37,17 @@ public final class DateMiddleware: Middleware, Service {
 
     /// See `Middleware.respond(to:)`
     public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = Promise<Response>()
-        
-        try next.respond(to: request).do { res in
-            res.http.headers[.date] = self.getDate()
-            promise.complete(res)
-        }.catch { error in
-            promise.fail(error)
+        return try next.respond(to: request).map(to: Response.self) { res in
+            res.http.headers.replaceOrAdd(name: "Date", value: self.getDate())
+            return res
         }
-        
-        return promise.future
     }
 
     /// Gets the current RFC 1123 date string.
     fileprivate func getDate() -> String {
         var date = COperatingSystem.time(nil)
 
-        if let (timestamp, createdAt) = cachedTimestamp, createdAt <= date + accuracy {
+        if let (timestamp, createdAt) = cachedTimestamp, (createdAt...(createdAt + accuracy)).contains(date) {
             return timestamp
         }
         

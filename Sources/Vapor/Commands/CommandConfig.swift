@@ -37,9 +37,9 @@ public struct CommandConfig: Service {
         as name: String,
         isDefault: Bool = false
     ) where R: CommandRunnable {
-        commands[name] = { try $0.make(R.self, for: CommandConfig.self) }
+        commands[name] = { try $0.make(R.self) }
         if isDefault {
-            defaultRunnable = { try $0.make(R.self, for: CommandConfig.self) }
+            defaultRunnable = { try $0.make(R.self) }
         }
     }
 

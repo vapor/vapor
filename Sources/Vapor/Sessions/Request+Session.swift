@@ -1,7 +1,7 @@
 extension Request {
     /// Returns the current session or creates one. `nil` if no session exists.
     public func session() throws -> Session {
-        let cache = try privateContainer.make(SessionCache.self, for: Request.self)
+        let cache = try privateContainer.make(SessionCache.self)
         guard cache.middlewareFlag else {
             throw VaporError(
                 identifier: "sessionsMiddlewareFlag",
@@ -24,7 +24,8 @@ extension Request {
 
     /// Destroys the current session, if one exists.
     public func destroySession() throws {
-        let cache = try privateContainer.make(SessionCache.self, for: Request.self)
+        let cache = try privateContainer.make(SessionCache.self)
         cache.session = nil
     }
 }
+

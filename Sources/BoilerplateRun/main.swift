@@ -1,5 +1,6 @@
 import Boilerplate
 import Vapor
+import Foundation
 
 var config = Config.default()
 var env = try Environment.detect()

@@ -18,16 +18,25 @@ public final class Response: EphemeralContainer {
     public let privateContainer: SubContainer
 
     /// Create a new Response
-    public init(http: HTTPResponse = HTTPResponse(), using container: Container) {
+    public init(http: HTTPResponse = .init(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.privateContainer = container.subContainer(on: container.eventLoop)
+        self.privateContainer = container.subContainer(on: container)
         Response.onInit?(self)
     }
 
     /// Called when request is deinitializing
     deinit {
         Response.onDeinit?(self)
+    }
+}
+
+public typealias HTTPStatus = HTTPResponseStatus
+
+extension HTTPStatus: ResponseEncodable {
+    /// See `ResponseEncodable.encode(for:)`
+    public func encode(for req: Request) throws -> Future<Response> {
+        return Future.map(on: req) { Response(http: .init(status: self), using: req) }
     }
 }
 

@@ -1,4 +1,4 @@
-import HTTP
+//import HTTP
 import Service
 
 /// Configures application middleware.
@@ -20,7 +20,7 @@ public struct MiddlewareConfig: Service {
     /// middleware type upon application boot.
     public mutating func use<M: Middleware>(_ type: M.Type) {
         storage.append({ container in
-            return try container.make(M.self, for: MiddlewareConfig.self)
+            return try container.make(M.self)
         })
     }
 
@@ -44,7 +44,7 @@ extension MiddlewareConfig {
     
     public static func `default`() -> MiddlewareConfig {
         var config = MiddlewareConfig()
-        config.use(FileMiddleware.self)
+//        config.use(FileMiddleware.self)
         config.use(DateMiddleware.self)
         config.use(ErrorMiddleware.self)
         return config

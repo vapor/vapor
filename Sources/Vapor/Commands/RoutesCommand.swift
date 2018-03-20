@@ -29,23 +29,20 @@ public struct RoutesCommand: Command, Service {
         var longestPath = 0
 
         for route in router.routes {
-            guard let first = route.path.first, case .constants(let method) = first else {
+            guard let first = route.path.first, case .constant(let method) = first else {
                 continue
             }
 
-            if method[0].count > longestMethod {
-                longestMethod = method[0].count
+            if method.count > longestMethod {
+                longestMethod = method.count
             }
 
             var pathLength = 0
 
             for path in route.path[1...] {
                 switch path {
-                case .constants(let consts):
-                    pathLength += consts.count
-                    for const in consts {
-                        pathLength += const.count + 1 // /const
-                    }
+                case .constant(let const):
+                    pathLength += const.count + 1 // /const
                 case .parameter(let param):
                     pathLength += param.count + 2 // /:param
                 case .anything:
@@ -75,12 +72,12 @@ public struct RoutesCommand: Command, Service {
         for route in router.routes {
             console.print("| ", newLine: false)
 
-            guard let first = route.path.first, case .constants(let method) = first else {
+            guard let first = route.path.first, case .constant(let method) = first else {
                 continue
             }
-            console.success(method[0].string, newLine: false)
+            console.success(method.string, newLine: false)
 
-            for _ in 0..<longestMethod - method[0].count {
+            for _ in 0..<longestMethod - method.count {
                 console.print(" ", newLine: false)
             }
 
@@ -90,12 +87,10 @@ public struct RoutesCommand: Command, Service {
 
             route.path[1...].forEach { comp in
                 switch comp {
-                case .constants(let consts):
-                    for const in consts {
-                        console.info("/", newLine: false)
-                        console.print(const.string, newLine: false)
-                        pathLength += const.count + 1
-                    }
+                case .constant(let const):
+                    console.info("/", newLine: false)
+                    console.print(const.string, newLine: false)
+                    pathLength += const.count + 1
                 case .parameter(let param):
                     console.info("/", newLine: false)
                     console.print(":", newLine: false)

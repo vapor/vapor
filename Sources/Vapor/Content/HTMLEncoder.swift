@@ -1,6 +1,5 @@
 import CodableKit
 import Foundation
-import HTTP
 
 /// Encodes encodable items to data.
 public final class DataEncoder {
@@ -17,7 +16,7 @@ public final class DataEncoder {
     {
         try encodable.encode(to: encoder)
         guard let body = encoder.body else {
-            throw VaporError(identifier: "encoding-failed", reason: "An unknown error caused the data not to be encoded", source: .capture())
+            throw VaporError(identifier: "dataEncoding", reason: "An unknown error caused the data not to be encoded", source: .capture())
         }
         return body
     }
@@ -65,19 +64,19 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
 
     func encode(_ value: Bool) throws {
         if let data = value.description.data(using: .utf8) {
-            encoder.body = HTTPBody(data)
+            encoder.body = HTTPBody(data: data)
         }
     }
 
     func encode(_ value: Int) throws {
         if let data = value.description.data(using: .utf8) {
-            encoder.body = HTTPBody(data)
+            encoder.body = HTTPBody(data: data)
         }
     }
 
     func encode(_ value: Double) throws {
         if let data = value.description.data(using: .utf8) {
-            encoder.body = HTTPBody(data)
+            encoder.body = HTTPBody(data: data)
         }
     }
 
@@ -127,7 +126,7 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
 
     func encode<T: Encodable>(_ value: T) throws {
         if let data = value as? Data {
-            encoder.body = HTTPBody(data)
+            encoder.body = HTTPBody(data: data)
         } else {
             try value.encode(to: encoder)
         }
@@ -141,3 +140,4 @@ extension DataEncoder: BodyEncoder {
         return try self.encode(encodable)
     }
 }
+

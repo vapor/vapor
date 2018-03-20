@@ -1,30 +1,43 @@
 import Vapor
+import Foundation
 
-let http = HTTPResponse()
-
-final class Routes: RouteCollection {
-    let app: Application
-
-    init(app: Application) {
-        self.app = app
+public func routes(_ router: Router) throws {
+    router.get("ping") { req in
+        return "123" as StaticString
     }
 
-    func boot(router: Router) throws {
-        router.get("hello") { req -> Future<Response> in
-            let res = try req.make(Client.self).get("http://httpbin.org/ip").await(on: req)
-            return Future(res)
-        }
+    router.get("json") { req in
+        return ["foo": "bar"]
+    }
 
-        router.get("ping") { req in
-            return "123" as StaticString
-        }
+    router.get("hello", String.parameter) { req in
+        return try req.parameter(String.self)
+    }
 
-        router.get("ip") { req -> Future<String> in
-            return try req.make(Client.self).get("http://httpbin.org/ip").map(to: String.self) { res in
-                print(res)
-                debugPrint(res)
-                return "done"
-            }
+    router.get("users", User.parameter, "foo") { req in
+        return try req.parameter(User.self)
+    }
+
+    router.get("search") { req in
+        return req.query["q"] ?? "none"
+    }
+
+    router.get("client") { req in
+        return try req.make(FoundationClient.self).get("http://vapor.codes").map(to: String.self) { res in
+            return String(data: res.http.body.data ?? Data(), encoding: .ascii) ?? ""
         }
     }
+}
+
+struct User: Parameter, Content {
+    let string: String
+
+    static func make(for parameter: String, using container: Container) throws -> EventLoopFuture<User> {
+        return Future.map(on: container) {
+            return User(string: parameter)
+        }
+    }
+
+    typealias ResolvedParameter = Future<User>
+
 }

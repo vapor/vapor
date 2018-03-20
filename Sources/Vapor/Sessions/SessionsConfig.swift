@@ -5,16 +5,16 @@ public struct SessionsConfig {
     /// Generates a new cookie.
     /// Accepts the cookie's string value and returns an
     /// initialized cookie value.
-    public typealias CookieFactory = (String) -> (Cookie.Value)
+    public typealias HTTPCookieValueCookieFactory = (String) -> (HTTPCookieValue)
 
     /// Creates cookie values.
-    public let cookieFactory: CookieFactory
+    public let cookieFactory: HTTPCookieValueCookieFactory
 
     /// The session cookie's name
     public let cookieName: String
 
     /// Create a new `SessionsConfig` with the supplied cookie factory.
-    public init(cookieName: String, cookieFactory: @escaping CookieFactory) {
+    public init(cookieName: String, cookieFactory: @escaping HTTPCookieValueCookieFactory) {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory
     }
@@ -22,8 +22,8 @@ public struct SessionsConfig {
     /// `SessionsConfig` with basic cookie factory.
     public static func `default`() -> SessionsConfig {
         return .init(cookieName: "vapor-sessions") { value in
-            return Cookie.Value(
-                value: value,
+            return HTTPCookieValue(
+                string: value,
                 expires: Date(
                     timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
                 ),
@@ -44,3 +44,4 @@ extension SessionsConfig: ServiceType {
         return .default()
     }
 }
+

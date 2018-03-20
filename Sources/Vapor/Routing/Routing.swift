@@ -1,7 +1,7 @@
 import Async
 import Bits
 import Foundation
-import HTTP
+//import HTTP
 import Routing
 
 /// Groups collections of routes together for adding

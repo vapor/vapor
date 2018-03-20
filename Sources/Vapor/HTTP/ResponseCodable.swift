@@ -1,4 +1,6 @@
-import HTTP
+//import HTTP
+import Foundation
+
 /// Can be converted from a response.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/http/response/#responseinitializable)
@@ -22,34 +24,34 @@ public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 extension Response: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(for req: Request) throws -> Future<Response> {
-        return Future(self)
+        return Future.map(on: req) { self }
     }
 }
 
-extension HTTPResponse: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
-    public func encode(for req: Request) throws -> Future<Response> {
-        let new = req.makeResponse()
-        new.http = self
-        return Future(new)
-    }
-}
-
-extension HTTPStatus: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
-    public func encode(for req: Request) throws -> Future<Response> {
-        let new = req.makeResponse()
-        new.http = HTTPResponse(status: self)
-        return Future(new)
-    }
-}
+//extension HTTPResponse: ResponseEncodable {
+//    /// See ResponseRepresentable.makeResponse
+//    public func encode(for req: Request) throws -> Future<Response> {
+//        let new = req.makeResponse()
+//        new.http = self
+//        return Future(new)
+//    }
+//}
+//
+//extension HTTPStatus: ResponseEncodable {
+//    /// See ResponseRepresentable.makeResponse
+//    public func encode(for req: Request) throws -> Future<Response> {
+//        let new = req.makeResponse()
+//        new.http = HTTPResponse(status: self)
+//        return Future(new)
+//    }
+//}
 
 extension StaticString: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(for req: Request) throws -> Future<Response> {
         let new = req.makeResponse()
-        new.http.headers[.contentType] = "text/plain; charset=utf-8"
+        new.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
         new.http.body = HTTPBody(staticString: self)
-        return Future(new)
+        return Future.map(on: req) { new }
     }
 }

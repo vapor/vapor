@@ -1,5 +1,5 @@
-import HTTP
 import Foundation
+import NIO
 
 /// Encodes encodable types to an HTTP body.
 public protocol BodyEncoder {
@@ -10,22 +10,21 @@ public protocol BodyEncoder {
 /// Decodes decodable types from an HTTP body.
 public protocol BodyDecoder {
     /// Parses a decodable type from the data in the HTTP body.
-    func decode<T: Decodable>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T>
+    func decode<T: Decodable>(_ decodable: T.Type, from body: HTTPBody, on worker: Worker) throws -> Future<T>
 }
 
 // MARK: Foundation
 
 extension JSONEncoder: BodyEncoder {
     public func encodeBody<T>(from encodable: T) throws -> HTTPBody where T : Encodable {
-        let data = try self.encode(encodable)
-        return HTTPBody(data)
+        return try HTTPBody(data: encode(encodable))
     }
 }
 
 extension JSONDecoder: BodyDecoder {
-    public func decode<T>(_ decodable: T.Type, from body: HTTPBody) throws -> Future<T> where T : Decodable {
-        return body.makeData(max: 100_000).map(to: T.self) { data in
-            return try self.decode(T.self, from: data)
+    public func decode<T>(_ decodable: T.Type, from body: HTTPBody, on worker: Worker) throws -> Future<T> where T : Decodable {
+        return Future.map(on: worker) {
+            return try self.decode(T.self, from: body.data ?? Data())
         }
     }
 }
@@ -34,8 +33,8 @@ extension JSONDecoder: BodyDecoder {
 
 extension BodyDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [BasicKey], from body: HTTPBody) throws -> Future<D> where D: Decodable {
-        return try self.decode(DecoderUnwrapper.self, from: body).map(to: D.self) { unwrapper in
+    func get<D>(at keyPath: [BasicKey], from body: HTTPBody, on worker: Worker) throws -> Future<D> where D: Decodable {
+        return try self.decode(DecoderUnwrapper.self, from: body, on: worker).map(to: D.self) { unwrapper in
             var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
 
             var keys = Array(keyPath.reversed())

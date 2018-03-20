@@ -1,4 +1,4 @@
-import HTTP
+//import HTTP
 
 /// Specifies the type of redirect
 /// that the client should receive
@@ -23,14 +23,14 @@ extension Request {
     ) -> Response {
         let res = makeResponse()
         res.http.status = type.status
-        res.http.headers[.location] = location
+        res.http.headers.replaceOrAdd(name: "Location", value: location)
         return res
     }
 }
 
 extension RedirectType {
     /// The HTTP status for this redirect type
-    fileprivate var status: HTTPStatus {
+    fileprivate var status: HTTPResponseStatus {
         switch self {
         case .permanent:
             return .movedPermanently

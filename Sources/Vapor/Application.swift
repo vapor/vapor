@@ -3,7 +3,6 @@ import Command
 import Console
 import Dispatch
 import Foundation
-import HTTP
 import Routing
 import Service
 
@@ -25,8 +24,11 @@ public final class Application: Container {
     /// See ServiceCacheable.serviceCache
     public let serviceCache: ServiceCache
 
-    /// See Worker.queue
-    public let eventLoop: EventLoop
+    /// The event loop group that we derive the event loop below from, so we can close it in `deinit`
+    private var eventLoopGroup: EventLoopGroup
+
+    /// See Worker.eventLoop
+    public var eventLoop: EventLoop { return eventLoopGroup.next() }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -47,8 +49,8 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoop = try DefaultEventLoop(label: "codes.vapor.application")
-        self.router = try self.make(Router.self, for: Application.self)
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
+        self.router = try self.make(Router.self)
 
         // boot all service providers
         for provider in services.providers {
@@ -61,10 +63,13 @@ public final class Application: Container {
             log.info("Compile your application with `-c release` to enable code optimizations.")
         }
     }
-
-    /// Make an instance of the provided interface for this Application.
-    public func make<T>(_ interface: T.Type) throws -> T {
-        return try make(T.self, for: Application.self)
+    
+    deinit {
+        eventLoopGroup.shutdownGracefully {
+            if let error = $0 {
+                ERROR("shutting down app event loop: \(error)")
+            }
+        }
     }
 
     /// Runs the Application's commands.

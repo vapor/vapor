@@ -3,7 +3,7 @@ import Foundation
 /// Helper for encoding/decoding HTTP content.
 public struct ContentContainer {
     var container: SubContainer
-    var body: HTTPBody
+    var body: HTTPBody?
     let mediaType: MediaType?
     var update: (HTTPBody, MediaType) -> ()
 }
@@ -28,18 +28,21 @@ extension ContentContainer {
     /// Parses the supplied content from the mesage.
     public func decode<D>(_ content: D.Type) throws -> Future<D> where D: Decodable {
         let decoder = try requireDecoder()
-        return try decoder.decode(D.self, from: body)
+        guard let body = self.body else {
+            throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
+        }
+        return try decoder.decode(D.self, from: body, on: container)
     }
 
     /// Creates a data encoder from the content config or throws.
     private func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
-        let coders = try container.superContainer.make(ContentCoders.self, for: ContentContainer.self)
+        let coders = try container.superContainer.make(ContentCoders.self)
         return try coders.requireEncoder(for: mediaType)
     }
 
     /// Creates a data decoder from the content config or throws.
     private func requireDecoder() throws -> BodyDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self, for: ContentContainer.self)
+        let coders = try container.superContainer.make(ContentCoders.self)
         guard let mediaType = mediaType else {
             throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
         }
@@ -68,13 +71,13 @@ extension ContentContainer {
     public subscript<D>(_ type: D.Type, at keyPath: [BasicKeyRepresentable]) -> Future<D?>
         where D: Decodable
     {
-        let promise = Promise(D?.self)
+        let promise = container.eventLoop.newPromise(D?.self)
         get(at: keyPath).do { value in
-            promise.complete(value)
+            promise.succeed(result: value)
         }.catch { err in
-            promise.complete(nil)
+            promise.succeed(result: nil)
         }
-        return promise.future
+        return promise.futureResult
     }
 
     /// Convenience for accessing a single value from the content
@@ -90,9 +93,12 @@ extension ContentContainer {
     {
         do {
             let decoder = try requireDecoder()
-            return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
+            guard let body = self.body else {
+                throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
+            }
+            return try decoder.get(at: keyPath.makeBasicKeys(), from: body, on: container)
         } catch {
-            return Future(error: error)
+            return Future.map(on: container) { throw error }
         }
     }
 }

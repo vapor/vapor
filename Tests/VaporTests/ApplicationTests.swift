@@ -3,8 +3,8 @@ import Bits
 import Dispatch
 import HTTP
 import Routing
+import Command
 @testable import Vapor
-import TCP
 import XCTest
 
 class ApplicationTests: XCTestCase {
@@ -17,7 +17,7 @@ class ApplicationTests: XCTestCase {
         }
         """.makeBody()
         req.http.mediaType = .json
-        try XCTAssertEqual(req.content.get(at: "hello").await(on: app), "world")
+        try XCTAssertEqual(req.content.get(at: "hello").wait(), "world")
     }
 
     func testComplexContent() throws {
@@ -55,141 +55,80 @@ class ApplicationTests: XCTestCase {
         req.http.body = try complexJSON.makeBody()
         req.http.mediaType = .json
 
-        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").await(on: app), "Chocolate")
+        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").wait(), "Chocolate")
     }
 
     func testQuery() throws {
-        /// FIXME: https://github.com/vapor/vapor/issues/1419
-        return;
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.mediaType = .json
-//        req.http.uri.query = "hello=world"
-//        XCTAssertEqual(req.query["hello"], "world")
-    }
-    
-    func testClientBasicRedirect() throws {
         let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        let response = try client.get("http://www.google.com/").await(on: app)
-        XCTAssertEqual(response.http.status, 200)
-    }
-    
-    func testClientRelativeRedirect() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        let response = try client.get("http://httpbin.org/relative-redirect/5").await(on: app)
-        XCTAssertEqual(response.http.status, 200)
-    }
-    
-    func testClientManyRelativeRedirect() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        let response = try client.get("http://httpbin.org/relative-redirect/8").await(on: app)
-        XCTAssertEqual(response.http.status, 200)
-    }
-    
-    func testClientTooManyRelativeRedirects() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        XCTAssertThrowsError(try client.get("http://httpbin.org/relative-redirect/9").await(on: app))
-    }
-    
-    func testClientAbsoluteRedirect() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        let response = try client.get("http://httpbin.org/absolute-redirect/5").await(on: app)
-        XCTAssertEqual(response.http.status, 200)
-    }
-    
-    func testClientManyAbsoluteRedirect() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        let response = try client.get("http://httpbin.org/absolute-redirect/8").await(on: app)
-        XCTAssertEqual(response.http.status, 200)
-    }
-    
-    func testClientTooManyAbsoluteRedirects() throws {
-        let app = try Application()
-        
-        let client = try app.make(Client.self)
-        
-        XCTAssertThrowsError(try client.get("http://httpbin.org/absolute-redirect/9").await(on: app))
+        let req = Request(using: app)
+        req.http.mediaType = .json
+        var comps = URLComponents()
+        comps.query = "hello=world"
+        req.http.url = comps.url!
+        XCTAssertEqual(req.query["hello"], "world")
     }
 
-    func testClientHeaders() throws {
-        let app = try Application()
-        let fakeClient = LastRequestClient(container: app)
-        _ = try fakeClient.send(.get, headers: ["foo": "bar"], to: "/baz", content: "hello").await(on: app)
-        if let lastReq = fakeClient.lastReq {
-            XCTAssertEqual(lastReq.http.headers[.contentLength], "5")
-            XCTAssertEqual(lastReq.http.headers["foo"], "bar")
-            XCTAssertEqual(lastReq.http.uri.path, "/baz")
-            try XCTAssertEqual(lastReq.http.body.makeData(max: 100).await(on: app), Data("hello".utf8))
-        } else {
-            XCTFail("No last request")
+
+    func testParameter() throws {
+        try Application.makeTest(port: 8081) { router in
+            router.get("hello", String.parameter) { req in
+                return try req.parameter(String.self)
+            }
         }
+        .test(.GET, "/hello/vapor", equals: "vapor")
+        .test(.POST, "/hello/vapor", equals: "Not found")
     }
 
-    func testClientItunesAPI() throws {
-        let app = try Application()
-        let client = try app.make(Client.self)
-        let res = try client.send(.get, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").await(on: app)
-        let data = try res.http.body.makeData(max: 100_000).await(on: app)
-        XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
-    }
-
-    func testFoundationClientItunesAPI() throws {
-        var config = Config.default()
-        config.prefer(FoundationClient.self, for: Client.self)
-        let app = try Application(config: config)
-        let client = try app.make(Client.self)
-        XCTAssert(client is FoundationClient)
-        let res = try client.send(.get, to: "https://itunes.apple.com/search?term=mapstr&country=fr&entity=software&limit=1").await(on: app)
-        let data = try res.http.body.makeData(max: 100_000).await(on: app)
-        XCTAssertEqual(String(data: data, encoding: .ascii)?.contains("iPhone"), true)
+    func testJSON() throws {
+        try Application.makeTest(port: 8082) { router in
+            router.get("json") { req in
+                return ["foo": "bar"]
+            }
+        }
+        .test(.GET, "/json", equals: """
+        {"foo":"bar"}
+        """)
     }
 
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
-        ("testClientBasicRedirect", testClientBasicRedirect),
-        ("testClientRelativeRedirect", testClientRelativeRedirect),
-        ("testClientManyRelativeRedirect", testClientManyRelativeRedirect),
-        ("testClientTooManyRelativeRedirects", testClientTooManyRelativeRedirects),
-        ("testClientAbsoluteRedirect", testClientAbsoluteRedirect),
-        ("testClientManyAbsoluteRedirect", testClientManyAbsoluteRedirect),
-        ("testClientTooManyAbsoluteRedirects", testClientTooManyAbsoluteRedirects),
-        ("testClientHeaders", testClientHeaders),
-        ("testClientItunesAPI", testClientItunesAPI),
-        ("testFoundationClientItunesAPI", testFoundationClientItunesAPI),
+        ("testParameter", testParameter),
+        ("testJSON", testJSON),
     ]
 }
 
-/// MARK: Utilities
+struct ApplicationTester {
+    let app: Application
+    let port: Int
+}
 
-final class LastRequestClient: Client {
-    var container: Container
-    var lastReq: Request?
-    init(container: Container) {
-        self.container = container
+extension Application {
+    static func makeTest(port: Int, configure: (Router) throws -> ()) throws -> ApplicationTester {
+        let router = EngineRouter.default()
+        try configure(router)
+        var services = Services.default()
+        services.register(router, as: Router.self)
+        let app = try Application(config: .default(), environment: .testing, services: services)
+        app.testRun(port: port)
+        usleep(100_000) // 1/10 of a second
+        return ApplicationTester(app: app, port: port)
     }
-    func respond(to req: Request) throws -> Future<Response> {
-        lastReq = req
-        return Future(req.makeResponse())
+
+    func testRun(port: Int) {
+        Thread.async {
+            CommandInput.commandLine = CommandInput(arguments: ["vapor", "--port", port.description])
+            try! self.run()
+        }
     }
 }
 
+extension ApplicationTester {
+    @discardableResult
+    func test(_ method: HTTPMethod, _ path: String, equals string: String) throws -> ApplicationTester {
+        let res = try FoundationClient.default(on: app).send(method, to: "http://localhost:\(port)" + path).wait()
+        XCTAssertEqual(String(data: res.http.body.data ?? Data(), encoding: .utf8), string)
+        return self
+    }
+}

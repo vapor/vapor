@@ -22,10 +22,10 @@ public final class Request: ParameterContainer {
     internal var hasActiveConnections: Bool
 
     /// Create a new Request
-    public init(http: HTTPRequest = HTTPRequest(), using container: Container) {
+    public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
         self.superContainer = container
-        self.privateContainer = container.subContainer(on: container.eventLoop)
+        self.privateContainer = container.subContainer(on: container)
         self.parameters = []
         hasActiveConnections = false
     }
@@ -58,7 +58,7 @@ extension Request: SubContainer { }
 extension Request {
     /// Container for parsing/serializing URI query strings
     public var query: QueryContainer {
-        return QueryContainer(query: http.uri.query ?? "", container: self)
+        return QueryContainer(query: http.url.query ?? "", container: self)
     }
 
     /// Container for parsing/serializing content
@@ -67,13 +67,6 @@ extension Request {
             self.http.body = body
             self.http.mediaType = mediaType
         }
-    }
-}
-
-extension Request {
-    /// Make an instance of the provided interface for this Request.
-    public func make<T>(_ interface: T.Type = T.self) throws -> T {
-        return try make(T.self, for: Request.self)
     }
 }
 
@@ -91,7 +84,7 @@ extension Request: DatabaseConnectable {
                 ],
                 source: .capture()
             )
-            return Future(error: error)
+            return Future.map(on: self) { throw error }
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)

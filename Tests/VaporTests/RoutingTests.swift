@@ -16,7 +16,7 @@ class RoutingTests : XCTestCase {
         let exp = expectation(description: "Router Group configuration called")
         sut.group("") { group in
             group.get("") { _ in
-                return Future("test")
+                return "test"
             }
             exp.fulfill()
         }
@@ -44,7 +44,7 @@ class RoutingTests : XCTestCase {
             return try next.respond(to: req)
         }) { group in
             group.get("") { _ in
-                return Future("test")
+                return "test"
             }
             exp.fulfill()
         }
@@ -57,7 +57,7 @@ class RoutingTests : XCTestCase {
         
         router.group(FakeMiddleware()) { group in
             group.get("") { _ in
-                return Future("test")
+                return "test"
             }
             exp.fulfill()
         }

@@ -1,5 +1,4 @@
 import Multipart
-import HTTP
 import Foundation
 
 extension MultipartForm: Content {
@@ -7,19 +6,19 @@ extension MultipartForm: Content {
     public func encode(to encoder: Encoder) throws {
         try MultipartSerializer(form: self).serialize().encode(to: encoder)
     }
-    
+
     /// Creates a new MultipartForm from decoded Data
     public init(from decoder: Decoder) throws {
         let data = try Data(from: decoder)
-        
+
         self = try MultipartParser(data: data, boundary: MultipartParser.boundary(for: data)).parse()
     }
-    
+
     /// See Content.defaultMediaType
     public static var defaultMediaType: MediaType {
         return .multipart
     }
-    
+
     /// See RequestEncodable.encode
     public func encode(using container: Container) throws -> Future<Request> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
@@ -28,11 +27,11 @@ extension MultipartForm: Content {
 
         let req = Request(using: container)
         let data = MultipartSerializer(form: self).serialize()
-        req.http.body = HTTPBody(data)
-        req.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        return Future(req)
+        req.http.body = HTTPBody(data: data)
+        req.http.headers.replaceOrAdd(name: .contentType, value: "multipart/form-data; boundary=" + boundary)
+        return Future.map(on: container) { req }
     }
-    
+
     /// See ResponseEncodable.encode
     public func encode(for req: Request) throws -> Future<Response> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
@@ -41,11 +40,11 @@ extension MultipartForm: Content {
 
         let res = req.makeResponse()
         let data = MultipartSerializer(form: self).serialize()
-        res.http.body = HTTPBody(data)
-        res.http.headers[.contentType] = "multipart/form-data; boundary=" + boundary
-        return Future(res)
+        res.http.body = HTTPBody(data: data)
+        req.http.headers.replaceOrAdd(name: .contentType, value: "multipart/form-data; boundary=" + boundary)
+        return Future.map(on: req) { res }
     }
-    
+
     /// See RequestDecodable.decode
     public static func decode(from req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
@@ -53,11 +52,11 @@ extension MultipartForm: Content {
         }
 
         let config = try req.make(MultipartFormConfig.self)
-        return req.http.body.makeData(max: config.maxSize).map(to: MultipartForm.self) { data in
+        return req.http.body.consumeData(max: config.maxSize, on: req).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
-    
+
     /// See ResponseDecodable.decode
     public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
@@ -65,7 +64,7 @@ extension MultipartForm: Content {
         }
 
         let config = try req.make(MultipartFormConfig.self)
-        return req.http.body.makeData(max: config.maxSize).map(to: MultipartForm.self) { data in
+        return res.http.body.consumeData(max: config.maxSize, on: req).map(to: MultipartForm.self) { data in
             return try MultipartParser(data: data, boundary: Array(boundary.utf8)).parse()
         }
     }
@@ -92,3 +91,4 @@ public struct MultipartFormConfig: ServiceType {
     }
 
 }
+

@@ -1,14 +1,14 @@
 /// Something that is convertible between a Cookie and an instance.
 public final class Session {
     /// The cookie value
-    public var cookie: Cookie.Value?
+    public var id: String?
 
     /// This session's data
     public var data: SessionData
 
     /// Create a new session.
-    public init(cookie: Cookie.Value? = nil, data: SessionData = .init()) {
-        self.cookie = cookie
+    public init(id: String? = nil, data: SessionData = .init()) {
+        self.id = id
         self.data = data
     }
 }
@@ -66,3 +66,4 @@ extension String: CodingKey {
         self = intValue.description
     }
 }
+

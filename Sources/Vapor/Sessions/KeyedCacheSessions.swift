@@ -16,27 +16,25 @@ public final class KeyedCacheSessions: Sessions {
         self.config = config
     }
 
-    public func readSession(for cookie: Cookie.Value) throws -> Future<Session?> {
-        return try keyedCache.get(SessionData.self, forKey: cookie.value).map(to: Session?.self) { data in
-            return data.flatMap { Session(cookie: cookie, data: $0) }
+    public func readSession(sessionID: String) throws -> Future<Session?> {
+        return try keyedCache.get(SessionData.self, forKey: sessionID).map(to: Session?.self) { data in
+            return data.flatMap { Session(id: sessionID, data: $0) }
         }
     }
 
-    public func updateSession(_ session: Session) throws -> Future<Cookie.Value> {
-        let cookie: Cookie.Value
-        if let existing = session.cookie {
-            cookie = existing
+    public func updateSession(_ session: Session) throws -> Future<Session> {
+        let sessionID: String
+        if let existing = session.id {
+            sessionID = existing
         } else {
-            /// FIXME: optimize
-            let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
-            cookie = config.cookieFactory(String(data: random, encoding: .utf8)!)
+            sessionID = try CryptoRandom().generateData(count: 16).base64Encoded()!
         }
-        session.cookie = cookie
-        return try keyedCache.set(session.data, forKey: cookie.value).transform(to: cookie)
+        session.id = sessionID
+        return try keyedCache.set(session.data, forKey: sessionID).transform(to: session)
     }
 
-    public func destroySession(for cookie: Cookie.Value) throws -> Future<Void> {
-        return try keyedCache.remove(cookie.value)
+    public func destroySession(sessionID: String) throws -> Future<Void> {
+        return try keyedCache.remove(sessionID)
     }
 }
 
@@ -47,8 +45,9 @@ extension KeyedCacheSessions: ServiceType {
     /// See `ServiceType.makeService(for:)`
     public static func makeService(for worker: Container) throws -> KeyedCacheSessions {
         return try .init(
-            keyedCache: worker.make(for: KeyedCacheSessions.self),
-            config: worker.make(for: KeyedCacheSessions.self)
+            keyedCache: worker.make(),
+            config: worker.make()
         )
     }
 }
+

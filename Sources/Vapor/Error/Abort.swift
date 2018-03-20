@@ -1,11 +1,11 @@
 import Debugging
-import HTTP
+//import HTTP
 
 /// Errors conforming to this protocol will always be displayed by
 /// Vapor to the end-user (even in production mode where most errors are silenced).
 public protocol AbortError: Debuggable {
     /// The HTTP status code this error will return.
-    var status: HTTPStatus { get }
+    var status: HTTPResponseStatus { get }
 
     /// The human-readable (and hopefully understandable)
     /// reason for this error.
@@ -21,7 +21,7 @@ public struct Abort: AbortError {
     public var identifier: String
 
     /// See AbortError.status
-    public var status: HTTPStatus
+    public var status: HTTPResponseStatus
 
     /// See AbortError.reason
     public var reason: String
@@ -43,7 +43,7 @@ public struct Abort: AbortError {
 
     /// Create a new abort error.
     public init(
-        _ status: HTTPStatus,
+        _ status: HTTPResponseStatus,
         reason: String? = nil,
         identifier: String? = nil,
         file: String = #file,
@@ -53,7 +53,7 @@ public struct Abort: AbortError {
     ) {
         self.identifier = status.code.description
         self.status = status
-        self.reason = reason ?? status.message
+        self.reason = reason ?? status.reasonPhrase
         self.file = file
         self.function = function
         self.line = line

@@ -68,7 +68,7 @@ public struct RouterResponder: Responder {
         guard let responder = router.route(request: req) else {
             let res = req.makeResponse()
             res.http.status = .notFound
-            return Future(res)
+            return Future.map(on: req) { res }
         }
 
         return try responder.respond(to: req)

@@ -1,66 +1,57 @@
+import Bits
 import Crypto
-import Foundation
 
 /// Simple in-memory sessions implementation.
 public final class MemorySessions: Sessions {
     /// The internal storage.
     private var sessions: [String: Session]
 
-    /// Generates a new cookie.
-    /// Accepts the cookie's string value and returns an
-    /// initialized cookie value.
-    public typealias CookieFactory = (String) -> (Cookie.Value)
-
-    /// This middleware's cookie factory.
-    private var cookieFactory: CookieFactory
+    /// This session's event loop.
+    private let eventLoop: EventLoop
 
     /// MemorySession with basic cookie factory.
-    public static func `default`() -> MemorySessions {
-        return .init { value in
-            return Cookie.Value(
-                value: value,
-                expires: Date(
-                    timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
-                ),
-                maxAge: nil,
-                domain: nil,
-                path: "/",
-                secure: false,
-                httpOnly: false,
-                sameSite: nil
-            )
-        }
+    public static func `default`(on worker: Worker) -> MemorySessions {
+        return .init(on: worker)
     }
 
     /// Create a new `MemorySessions` with the supplied cookie factory.
-    public init(cookieFactory: @escaping CookieFactory) {
-        self.cookieFactory = cookieFactory
+    public init(on worker: Worker) {
+        self.eventLoop = worker.eventLoop
         sessions = [:]
     }
 
     /// See Sessions.readSession
-    public func readSession(for cookie: Cookie.Value) throws -> Future<Session?> {
-        return Future(sessions[cookie.value])
+    public func readSession(sessionID: String) throws -> Future<Session?> {
+        let session = sessions[sessionID]
+        return Future.map(on: eventLoop) { session }
     }
 
     /// See Sessions.destroySession
-    public func destroySession(for cookie: Cookie.Value) throws -> Future<Void> {
-        sessions[cookie.value] = nil
-        return .done
+    public func destroySession(sessionID: String) throws -> Future<Void> {
+        sessions[sessionID] = nil
+        return .done(on: eventLoop)
     }
 
     /// See Sessions.updateSession
-    public func updateSession(_ session: Session) throws -> Future<Cookie.Value> {
-        let cookie: Cookie.Value
-        if let existing = session.cookie {
-            cookie = existing
+    public func updateSession(_ session: Session) throws -> Future<Session> {
+        let sessionID: String
+        if let existing = session.id {
+            sessionID = existing
         } else {
-            /// FIXME: optimize
-            let random = Base64Encoder().encode(data: OSRandom().data(count: 16))
-            cookie = cookieFactory(String(data: random, encoding: .utf8)!)
+            sessionID = try CryptoRandom().generateData(count: 16).base64Encoded()!
         }
-        session.cookie = cookie
-        sessions[cookie.value] = session
-        return Future(cookie)
+        session.id = sessionID
+        sessions[sessionID] = session
+        return Future.map(on: eventLoop) { session }
+    }
+}
+
+extension MemorySessions: ServiceType {
+    /// See `ServiceType.serviceSupports`
+    public static var serviceSupports: [Any.Type] { return [Sessions.self] }
+
+    /// See `ServiceType.makeService(for:)`
+    public static func makeService(for worker: Container) throws -> MemorySessions {
+        return .default(on: worker)
     }
 }

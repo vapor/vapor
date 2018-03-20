@@ -1,5 +1,4 @@
 import Async
-import HTTP
 
 extension View: Content {
     /// See Content.defaultMediaType
