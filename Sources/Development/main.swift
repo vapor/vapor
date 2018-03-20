@@ -118,12 +118,6 @@ do {
         return "123"
     }
 
-//    router.websocket("foo") { (req, ws) in
-//        ws.onString { websocket, string in
-//            websocket.send(string: string)
-//        }
-//    }
-
     router.get("vapor") { req -> Future<String> in
         return try req.make(Client.self).send(.GET, to: "https://vapor.codes").map(to: String.self) { res in
             print(res.http.headers)

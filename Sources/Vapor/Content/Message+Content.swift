@@ -31,7 +31,7 @@ extension ContentContainer {
         guard let body = self.body else {
             throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
         }
-        return try decoder.decode(D.self, from: body)
+        return try decoder.decode(D.self, from: body, on: container)
     }
 
     /// Creates a data encoder from the content config or throws.
@@ -96,7 +96,7 @@ extension ContentContainer {
             guard let body = self.body else {
                 throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
             }
-            return try decoder.get(at: keyPath.makeBasicKeys(), from: body)
+            return try decoder.get(at: keyPath.makeBasicKeys(), from: body, on: container)
         } catch {
             return Future.map(on: container) { throw error }
         }
