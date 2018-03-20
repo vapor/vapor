@@ -25,10 +25,10 @@ public final class Application: Container {
     public let serviceCache: ServiceCache
 
     /// The event loop group that we derive the event loop below from, so we can close it in `deinit`
-    private var eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
+    private var eventLoopGroup: EventLoopGroup
 
     /// See Worker.eventLoop
-    public var eventLoop: EventLoop
+    public var eventLoop: EventLoop { return eventLoopGroup.next() }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -49,7 +49,7 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoop = eventLoopGroup.next()
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
         self.router = try self.make(Router.self, for: Application.self)
 
         // boot all service providers
@@ -67,7 +67,7 @@ public final class Application: Container {
     deinit {
         eventLoopGroup.shutdownGracefully {
             if let error = $0 {
-                print("[Vapor] shutting down app event loop: \(error)")
+                ERROR("shutting down app event loop: \(error)")
             }
         }
     }
