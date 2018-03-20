@@ -85,13 +85,25 @@ Support us with a monthly donation and help us continue our activities. [[Become
 
 ### 🥇 Sponsors
 
-Proudly sponsored by Nodes
+Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://www.skelpo.com) (🥉), and our [Open Collective sponsors](https://opencollective.com/vapor#sponsor).
+
+- 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
+- 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
+- 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
+- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor)
 
 <a href="http://nodesagency.com">
     <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
 </a>
 
-Become a sponsor and get your logo on our README on GitHub with a link to your site. [[Become a sponsor](https://opencollective.com/vapor#sponsor)]
+<br>
+
+<a href="https://www.skelpo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
+</a>
+
+<br>
+<br>
 
 <a href="http://dominickm.com" target="_blank">
     <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">
@@ -128,4 +140,3 @@ Become a sponsor and get your logo on our README on GitHub with a link to your s
 <a href="https://opencollective.com/vapor/sponsor/29/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/29/avatar.svg"></a>
 
 [![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()
-
