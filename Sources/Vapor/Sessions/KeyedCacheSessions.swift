@@ -27,7 +27,7 @@ public final class KeyedCacheSessions: Sessions {
         if let existing = session.id {
             sessionID = existing
         } else {
-            sessionID = try URandom().data(count: 16).base64Encoded()!
+            sessionID = try CryptoRandom().generateData(count: 16).base64Encoded()!
         }
         session.id = sessionID
         return try keyedCache.set(session.data, forKey: sessionID).transform(to: session)
@@ -45,8 +45,8 @@ extension KeyedCacheSessions: ServiceType {
     /// See `ServiceType.makeService(for:)`
     public static func makeService(for worker: Container) throws -> KeyedCacheSessions {
         return try .init(
-            keyedCache: worker.make(for: KeyedCacheSessions.self),
-            config: worker.make(for: KeyedCacheSessions.self)
+            keyedCache: worker.make(),
+            config: worker.make()
         )
     }
 }

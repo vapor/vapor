@@ -36,13 +36,13 @@ extension ContentContainer {
 
     /// Creates a data encoder from the content config or throws.
     private func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
-        let coders = try container.superContainer.make(ContentCoders.self, for: ContentContainer.self)
+        let coders = try container.superContainer.make(ContentCoders.self)
         return try coders.requireEncoder(for: mediaType)
     }
 
     /// Creates a data decoder from the content config or throws.
     private func requireDecoder() throws -> BodyDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self, for: ContentContainer.self)
+        let coders = try container.superContainer.make(ContentCoders.self)
         guard let mediaType = mediaType else {
             throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
         }
