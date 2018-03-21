@@ -27,7 +27,7 @@ public final class KeyedCacheSessions: Sessions {
         if let existing = session.id {
             sessionID = existing
         } else {
-            sessionID = try CryptoRandom().generateData(count: 16).base64Encoded()!
+            sessionID = try CryptoRandom().generateData(count: 16).base64EncodedString()
         }
         session.id = sessionID
         return try keyedCache.set(session.data, forKey: sessionID).transform(to: session)
