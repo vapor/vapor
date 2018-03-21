@@ -47,10 +47,9 @@ extension Services {
         services.register(KeyedCacheSessions.self)
         services.register(SessionsConfig.self)
 
-        // keyed cache
-        services.register(KeyedCache.self) { container -> MemoryKeyedCache in
-            return MemoryKeyedCache(on: container)
-        }
+        // keyed cache, memory. thread-safe
+        let memoryKeyedCache = MemoryKeyedCache()
+        services.register(memoryKeyedCache, as: KeyedCache.self)
 
         services.register(FoundationClient.self)
 
