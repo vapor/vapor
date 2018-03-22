@@ -30,7 +30,12 @@ public final class FileMiddleware: Middleware, Service {
 
         let filePath = self.publicDirectory + path
 
-        guard FileManager.default.fileExists(atPath: filePath) else {
+        var isDir: ObjCBool = false
+        guard FileManager.default.fileExists(atPath: filePath, isDirectory: &isDir) else {
+            return try next.respond(to: req)
+        }
+
+        guard !isDir.boolValue else {
             return try next.respond(to: req)
         }
 
