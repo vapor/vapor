@@ -90,12 +90,21 @@ class ApplicationTests: XCTestCase {
         """)
     }
 
+    func testGH1537() throws {
+        try Application.makeTest(port: 8083) { router in
+            router.get("todos") { req in
+                return "hi"
+            }
+        }
+        .test(.GET, "/todos?a=b", equals: "hi")
+    }
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
         ("testQuery", testQuery),
         ("testParameter", testParameter),
         ("testJSON", testJSON),
+        ("testGH1537", testGH1537),
     ]
 }
 
@@ -112,7 +121,7 @@ extension Application {
         services.register(router, as: Router.self)
         let app = try Application(config: .default(), environment: .testing, services: services)
         app.testRun(port: port)
-        usleep(100_000) // 1/10 of a second
+        usleep(250_000) // 1/4 of a second
         return ApplicationTester(app: app, port: port)
     }
 

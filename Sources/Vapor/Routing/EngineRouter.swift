@@ -37,8 +37,12 @@ public final class EngineRouter: Router {
 
     /// See Router.route
     public func route(request: Request) -> Responder? {
+        let path: [PathComponent] = request.http.urlString
+            .split(separator: "?")[0]
+            .split(separator: "/").map { .init(substring: $0) }
+
         return router.route(
-            path:  [request.http.method.pathComponent] + request.http.urlString.split(separator: "/").map { .init(substring: $0) },
+            path:  [request.http.method.pathComponent] + path,
             parameters: request
         )
     }
