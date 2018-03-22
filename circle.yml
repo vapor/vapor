@@ -36,7 +36,7 @@ jobs:
     steps:
       - run:
           name: Clone API Template
-          command: git clone -b nio https://github.com/vapor/api-template.git
+          command: git clone -b beta https://github.com/vapor/api-template.git
           working_directory: ~/
       - run:
           name: Switch API Template to this Vapor revision
