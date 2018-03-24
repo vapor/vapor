@@ -2,8 +2,7 @@ import Command
 import Console
 import Foundation
 
-/// Helps configure which commands will
-/// run when the application boots.
+/// Helps configure which commands will run when the application boots.
 public struct CommandConfig: Service {
     /// A not-yet configured runnable.
     public typealias LazyRunnable = (Container) throws -> CommandRunnable

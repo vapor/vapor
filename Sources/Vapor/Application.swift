@@ -1,11 +1,3 @@
-import Async
-import Command
-import Console
-import Dispatch
-import Foundation
-import Routing
-import Service
-
 /// Core framework class. You usually create only one of these per application. Acts as your application's top-level service container.
 ///
 ///     let router = try app.make(Router.self)
