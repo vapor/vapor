@@ -41,11 +41,6 @@ extension Services {
             )
         }
 
-        // form
-        services.register { container -> FormURLDecoder in
-            return FormURLDecoder()
-        }
-
         // sessions
         services.register(SessionCache.self)
         services.register(SessionsMiddleware.self)
@@ -162,4 +157,3 @@ extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}
 extension MemoryKeyedCache: Service {}
-extension FormURLDecoder: Service {}

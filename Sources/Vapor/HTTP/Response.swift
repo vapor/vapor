@@ -61,7 +61,18 @@ extension Response {
         return superContainer
     }
 
-    /// Container for parsing/serializing content
+    /// Helper for encoding and decoding `Content` from an HTTP message.
+    ///
+    /// This helpper can encode data to the HTTP message. Uses the Content's default media type if none is supplied.
+    ///
+    ///     try res.content.encode(user)
+    ///
+    /// This helper can also _decode_ data from the HTTP message.
+    ///
+    ///     let user = try res.content.decode(User.self)
+    ///     print(user) /// Future<User>
+    ///
+    /// See `ContentContainer` methods for more information.
     public var content: ContentContainer {
         return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
             self.http.body = body
