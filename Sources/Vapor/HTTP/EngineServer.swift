@@ -200,11 +200,12 @@ extension EngineServerConfig {
         workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
         maxBodySize: Int = 1_000_0000,
         reuseAddress: Bool = true,
-        tcpNoDelay: Bool = true
+        tcpNoDelay: Bool = true,
+        from env: inout Environment
     ) throws -> EngineServerConfig {
         return try EngineServerConfig(
-            hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
-            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
+            hostname: env.commandInput.parse(option: .value(name: "hostname")) ?? hostname,
+            port: env.commandInput.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
             backlog: backlog,
             workerCount: workerCount,
             maxBodySize: maxBodySize,

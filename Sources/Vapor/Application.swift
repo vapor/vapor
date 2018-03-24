@@ -22,7 +22,7 @@ public final class Application: Container {
 
     /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
     /// See `Environment` for more information.
-    public let environment: Environment
+    public var environment: Environment
 
     /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
     /// form this application (i.e., `Request`, `Response`, etc.)
@@ -61,6 +61,11 @@ public final class Application: Container {
         self.extend = Extend()
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
 
+        // let providers detect and mutate the environment
+        for provider in services.providers {
+            try provider.detect(&self.environment)
+        }
+
         // will-boot all service providers
         for provider in services.providers {
             try provider.willBoot(self).wait()
@@ -96,7 +101,7 @@ public final class Application: Container {
             .makeCommandGroup(for: self)
 
         let console = try make(Console.self)
-        try console.run(command, input: &.commandLine)
+        try console.run(command, input: &environment.commandInput)
 
         // did-run all vapor service providers
         for provider in services.providers.onlyVapor {

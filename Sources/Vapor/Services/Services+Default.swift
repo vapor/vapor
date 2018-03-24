@@ -20,9 +20,9 @@ extension Services {
         
         services.register { container -> EngineServerConfig in
             if container.environment.isRelease {
-                return try EngineServerConfig.detect(port: 80)
+                return try EngineServerConfig.detect(port: 80, from: &container.environment)
             } else {
-                return try EngineServerConfig.detect()
+                return try EngineServerConfig.detect(from: &container.environment)
             }
         }
 

@@ -150,8 +150,10 @@ extension Application {
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)
-        let app = try Application(config: .default(), environment: .testing, services: services)
-        app.testRun(port: port)
+        var env = Environment.testing
+        env.commandInput = CommandInput(arguments: ["vapor", "--port", port.description])
+        let app = try Application(config: .default(), environment: env, services: services)
+        app.testRun()
         usleep(250_000) // 1/4 of a second
         return ApplicationTester(app: app, port: port)
     }
@@ -164,9 +166,8 @@ extension Application {
         return try Application(config: .default(), environment: .testing, services: services)
     }
 
-    func testRun(port: Int) {
+    func testRun() {
         Thread.async {
-            CommandInput.commandLine = CommandInput(arguments: ["vapor", "--port", port.description])
             try! self.run()
         }
     }
