@@ -2,7 +2,11 @@
 /// automatically since are very often also required.
 @_exported import Async
 @_exported import CodableKit
+@_exported import Core
+@_exported import Console
+@_exported import Command
 @_exported import DatabaseKit
+@_exported import FormURLEncoded
 @_exported import HTTP
 @_exported import Logging
 @_exported import Multipart
@@ -11,7 +15,4 @@
 @_exported import Routing
 @_exported import Service
 @_exported import TemplateKit
-@_exported import class Foundation.URLSession
-@_exported import struct Foundation.Data
-@_exported import struct Foundation.Date
 @_exported import WebSocket

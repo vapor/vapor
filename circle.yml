@@ -39,6 +39,10 @@ jobs:
           command: git clone -b beta https://github.com/vapor/api-template.git
           working_directory: ~/
       - run:
+          name: Unpin dependencies
+          command: rm Package.resolved
+          working_directory: ~/api-template
+      - run:
           name: Switch API Template to this Vapor revision
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/api-template

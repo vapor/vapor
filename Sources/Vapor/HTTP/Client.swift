@@ -99,3 +99,9 @@ extension String: URLRepresentable {
         return URL(string: self)
     }
 }
+
+extension URL: URLRepresentable {
+    public func converToURL() -> URL? {
+        return self
+    }
+}

@@ -20,6 +20,8 @@ extension Router {
     }
 }
 
+/// MARK: Private
+
 /// Responder wrapper around middleware type.
 /// Lazily initializes the middleware upon request.
 fileprivate struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
