@@ -1,9 +1,7 @@
-import Async
-import Dispatch
+import Core
 import HTTP
 import Routing
 import Service
-import Foundation
 
 /// `Request` is a service-container wrapper around an `HTTPRequest`.
 ///
@@ -32,7 +30,7 @@ import Foundation
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
 public final class Request: ParameterContainer, SubContainer, DatabaseConnectable, CustomStringConvertible, CustomDebugStringConvertible {
-    /// MARK: Stored
+    // MARK: Stored
 
     /// The wrapped `HTTPRequest`.
     ///
@@ -40,7 +38,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///
     public var http: HTTPRequest
 
-    /// This request's parent container. This is normally the event loop. The `Request` will redirect
+    /// This `Request`'s parent container. This is normally the event loop. The `Request` will redirect
     /// all calls to create services to this container.
     public let superContainer: Container
 
@@ -58,7 +56,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     /// invoking cached connections release.
     internal var hasActiveConnections: Bool
 
-    /// MARK: Computed
+    // MARK: Computed
 
     /// See `CustomStringConvertible.description
     public var description: String {
@@ -113,7 +111,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
         hasActiveConnections = false
     }
 
-    /// MARK: Methods
+    // MARK: Methods
 
     /// Creates a `Response` on the same container as this `Request`.
     ///
@@ -151,7 +149,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
         return requestCachedConnection(to: database)
     }
 
-    /// Called when the request deinitializes
+    /// Called when the `Request` deinitializes.
     deinit {
         if hasActiveConnections {
             try! releaseCachedConnections()

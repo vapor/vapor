@@ -1,9 +1,8 @@
 import CodableKit
 import Foundation
 
-/// Encodes encodable items to data.
+/// Encodes data as plaintext, utf8.
 public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
-
     fileprivate let encoder: _DataEncoder
 
     /// Creates a new data encoder
@@ -11,6 +10,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
         encoder = .init()
     }
 
+    /// See `DataEncoder.encode(_:)`
     public func encode<E>(_ encodable: E) throws -> Data where E : Encodable {
         try encodable.encode(to: encoder)
         guard let data = encoder.data else {
@@ -19,7 +19,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
         return data
     }
 
-
+    /// See `HTTPBodyEncoder.encode(from:)`
     public func encodeBody<E>(from encodable: E) throws -> HTTPBody where E : Encodable {
         return try HTTPBody(data: encode(encodable))
     }
@@ -83,49 +83,17 @@ fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
         }
     }
 
-    func encode(_ value: String) throws {
-        encoder.data = Data(value.utf8)
-    }
-
-    func encode(_ value: Int8) throws {
-        try encode(Int(value))
-    }
-
-    func encode(_ value: Int16) throws {
-        try encode(Int(value))
-    }
-
-    func encode(_ value: Int32) throws {
-        try encode(Int(value))
-    }
-
-    func encode(_ value: Int64) throws {
-        try encode(Int(value))
-    }
-
-    func encode(_ value: UInt) throws {
-        try encode(Int(value))
-    }
-
-    func encode(_ value: UInt8) throws {
-        try encode(UInt(value))
-    }
-
-    func encode(_ value: UInt16) throws {
-        try encode(UInt(value))
-    }
-
-    func encode(_ value: UInt32) throws {
-        try encode(UInt(value))
-    }
-
-    func encode(_ value: UInt64) throws {
-        try encode(UInt(value))
-    }
-
-    func encode(_ value: Float) throws {
-        try encode(Double(value))
-    }
+    func encode(_ value: String) throws { encoder.data = Data(value.utf8) }
+    func encode(_ value: Int8) throws { try encode(Int(value)) }
+    func encode(_ value: Int16) throws { try encode(Int(value)) }
+    func encode(_ value: Int32) throws { try encode(Int(value)) }
+    func encode(_ value: Int64) throws { try encode(Int(value)) }
+    func encode(_ value: UInt) throws { try encode(Int(value)) }
+    func encode(_ value: UInt8) throws { try encode(UInt(value)) }
+    func encode(_ value: UInt16) throws { try encode(UInt(value)) }
+    func encode(_ value: UInt32) throws { try encode(UInt(value)) }
+    func encode(_ value: UInt64) throws { try encode(UInt(value)) }
+    func encode(_ value: Float) throws { try encode(Double(value)) }
 
     func encode<T: Encodable>(_ value: T) throws {
         if let data = value as? Data {

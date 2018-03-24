@@ -14,12 +14,12 @@ extension MultipartForm: Content {
         self = try MultipartParser(data: data, boundary: MultipartParser.boundary(for: data)).parse()
     }
 
-    /// See Content.defaultMediaType
+    /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
         return .multipart
     }
 
-    /// See RequestEncodable.encode
+    /// See `RequestEncodable.encode(using:)`
     public func encode(using container: Container) throws -> Future<Request> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8", source: .capture())
@@ -32,7 +32,7 @@ extension MultipartForm: Content {
         return Future.map(on: container) { req }
     }
 
-    /// See ResponseEncodable.encode
+    /// See `ResponseEncodable.encode(for:)`
     public func encode(for req: Request) throws -> Future<Response> {
         guard let boundary = String(bytes: self.boundary, encoding: .utf8) else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not valid UTF-8", source: .capture())
@@ -45,7 +45,7 @@ extension MultipartForm: Content {
         return Future.map(on: req) { res }
     }
 
-    /// See RequestDecodable.decode
+    /// See `RequestDecodable.decode(from:)`
     public static func decode(from req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not found in the headers", source: .capture())
@@ -57,7 +57,7 @@ extension MultipartForm: Content {
         }
     }
 
-    /// See ResponseDecodable.decode
+    /// See `ResponseDecodable.decode(from:for:)`
     public static func decode(from res: Response, for req: Request) throws -> Future<MultipartForm> {
         guard let boundary = req.http.headers[.contentType, "boundary"] else {
             throw VaporError(identifier: "boundary-utf8", reason: "The Multipart boundary was not found in the headers", source: .capture())

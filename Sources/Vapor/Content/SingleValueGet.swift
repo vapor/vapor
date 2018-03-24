@@ -18,9 +18,8 @@ extension HTTPBodyDecoder {
     }
 }
 
+/// MARK: Private
 
-/// Used to fetch a decoder wrapped in
-/// a non-decoder class
 fileprivate struct DecoderUnwrapper: Decodable {
     let decoder: Decoder
     init(from decoder: Decoder) throws {
@@ -72,16 +71,12 @@ fileprivate struct DecoderUnwrapper: Decodable {
     }
 }
 
-/// All possible states a container can be in
-/// while decoding a single value
 fileprivate enum ContainerState {
     case keyed(KeyedDecodingContainer<BasicKey>)
     case unkeyed(UnkeyedDecodingContainer)
 }
 
 extension UnkeyedDecodingContainer {
-    /// creates and throws away nested containers up
-    /// to the given count.
     fileprivate mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
         for _ in 0..<count {
             _ = try self.nestedContainer(keyedBy: BasicKey.self)

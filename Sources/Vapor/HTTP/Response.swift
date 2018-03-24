@@ -1,60 +1,46 @@
 import Dispatch
 import Service
 
-public final class Response: EphemeralContainer {
-    /// See EphemeralWorker.onInit
-    public static var onInit: LifecycleHook?
+/// `Response` is a service-container wrapper around an `HTTPResponse`.
+///
+/// Use this `Response` to access information about the `HTTPResponse` (`res.http`).
+///
+///     print(res.http.status) // 200 OK
+///
+/// You can also use `Response` to create services you may need while generating a response (`res.make(_:)`.
+///
+///     let client = try res.make(Client.self)
+///     print(client) // Client
+///     client.get("http://vapor.codes")
+///
+/// See `HTTPResponse` and `Container` for more information.
+public final class Response: SubContainer, CustomStringConvertible, CustomDebugStringConvertible {
+    // MARK: Stored
 
-    /// See EphemeralWorker.onDeinit
-    public static var onDeinit: LifecycleHook?
-
-    /// Underlying HTTP response.
+    /// The wrapped `HTTPResponse`.
+    ///
+    ///     print(res.http.status) // 200 OK
+    ///
     public var http: HTTPResponse
 
-    /// This response's worker
+    /// This `Response`'s parent container. This is normally the event loop. The `Response` will redirect
+    /// all calls to create services to this container.
     public let superContainer: Container
 
     /// This response's private container.
     public let privateContainer: SubContainer
 
-    /// Create a new Response
-    public init(http: HTTPResponse = .init(), using container: Container) {
-        self.http = http
-        self.superContainer = container
-        self.privateContainer = container.subContainer(on: container)
-        Response.onInit?(self)
-    }
+    // MARK: Computed
 
-    /// Called when request is deinitializing
-    deinit {
-        Response.onDeinit?(self)
-    }
-}
-
-public typealias HTTPStatus = HTTPResponseStatus
-
-extension HTTPStatus: ResponseEncodable {
-    /// See `ResponseEncodable.encode(for:)`
-    public func encode(for req: Request) throws -> Future<Response> {
-        return Future.map(on: req) { Response(http: .init(status: self), using: req) }
-    }
-}
-
-extension Response: CustomStringConvertible {
     /// See `CustomStringConvertible.description
     public var description: String {
         return http.description
     }
-}
 
-extension Response: CustomDebugStringConvertible {
     /// See `CustomDebugStringConvertible.debugDescription`
     public var debugDescription: String {
         return http.debugDescription
     }
-}
-
-extension Response {
     /// The response's event loop container.
     /// note: convenience name for `.superContainer`
     public var worker: Container {
@@ -79,7 +65,17 @@ extension Response {
             self.http.mediaType = mediaType
         }
     }
-    
+
+    /// Create a new `Response`.
+    public init(http: HTTPResponse = .init(), using container: Container) {
+        self.http = http
+        self.superContainer = container
+        self.privateContainer = container.subContainer(on: container)
+    }
+
+    // MARK: Methods
+
+    /// Creates a `Request` on the same container as this `Response`.
     public func makeRequest() -> Request {
         return Request(using: superContainer)
     }
