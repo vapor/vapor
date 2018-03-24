@@ -100,14 +100,10 @@ class ApplicationTests: XCTestCase {
     }
 
     func testGH1534() throws {
-        let expectedError = """
-        {"error":true,"reason":"Value of type 'Int' required for key 'bar'."}
-        """
-
         let data = """
         {"name":"hi","bar":"asdf"}
         """
-
+        
         try Application.makeTest { router in
             router.get("decode_error") { req -> String in
                 struct Foo: Decodable {
@@ -119,7 +115,7 @@ class ApplicationTests: XCTestCase {
             }
         }.test(.GET, "decode_error") { res in
             XCTAssertEqual(res.http.status.code, 400)
-            XCTAssertEqual(res.http.body.string, expectedError)
+            XCTAssert(res.http.body.string.contains("Value of type 'Int' required for key 'bar'"))
         }
     }
 
