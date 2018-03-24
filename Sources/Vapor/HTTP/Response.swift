@@ -68,4 +68,8 @@ extension Response {
             self.http.mediaType = mediaType
         }
     }
+    
+    public func makeRequest() -> Request {
+        return Request(using: superContainer)
+    }
 }

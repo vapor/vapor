@@ -2,10 +2,10 @@ import Foundation
 
 /// Helper for encoding/decoding HTTP content.
 public struct ContentContainer {
-    var container: SubContainer
-    var body: HTTPBody?
-    let mediaType: MediaType?
-    var update: (HTTPBody, MediaType) -> ()
+    internal var container: SubContainer
+    internal var body: HTTPBody?
+    internal let mediaType: MediaType?
+    internal var update: (HTTPBody, MediaType) -> ()
 }
 
 extension ContentContainer {
@@ -26,22 +26,22 @@ extension ContentContainer {
     }
     
     /// Parses the supplied content from the mesage.
-    public func decode<D>(_ content: D.Type) throws -> Future<D> where D: Decodable {
+    public func decode<D>(_ content: D.Type, maxSize: Int = 65_536) throws -> Future<D> where D: Decodable {
         let decoder = try requireDecoder()
         guard let body = self.body else {
             throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
         }
-        return try decoder.decode(D.self, from: body, on: container)
+        return try decoder.decode(D.self, from: body, maxSize: maxSize, on: container)
     }
 
     /// Creates a data encoder from the content config or throws.
-    private func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
+    private func requireEncoder(for mediaType: MediaType) throws -> HTTPBodyEncoder {
         let coders = try container.superContainer.make(ContentCoders.self)
         return try coders.requireEncoder(for: mediaType)
     }
 
     /// Creates a data decoder from the content config or throws.
-    private func requireDecoder() throws -> BodyDecoder {
+    private func requireDecoder() throws -> HTTPBodyDecoder {
         let coders = try container.superContainer.make(ContentCoders.self)
         guard let mediaType = mediaType else {
             throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
@@ -88,7 +88,7 @@ extension ContentContainer {
     }
 
     /// Convenience for accessing a single value from the content
-    public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) -> Future<D>
+    public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable], maxSize: Int = 65_536) -> Future<D>
         where D: Decodable
     {
         do {
@@ -96,7 +96,7 @@ extension ContentContainer {
             guard let body = self.body else {
                 throw VaporError(identifier: "noBody", reason: "Cannot decode content from an HTTP message with body", source: .capture())
             }
-            return try decoder.get(at: keyPath.makeBasicKeys(), from: body, on: container)
+            return try decoder.get(at: keyPath.makeBasicKeys(), from: body, maxSize: maxSize, on: container)
         } catch {
             return Future.map(on: container) { throw error }
         }

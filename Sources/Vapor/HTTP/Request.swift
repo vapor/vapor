@@ -68,6 +68,19 @@ extension Request {
             self.http.mediaType = mediaType
         }
     }
+
+    /// Creates a `Response` on the same container as this `Request`.
+    ///
+    ///     router.get("greeting2") { req in
+    ///         let res = req.makeResponse()
+    ///         try res.content.encode("hello", as: .plaintext)
+    ///         return res
+    ///     }
+    ///
+    /// returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
+    public func makeResponse() -> Response {
+        return Response(using: superContainer)
+    }
 }
 
 extension Request: DatabaseConnectable {

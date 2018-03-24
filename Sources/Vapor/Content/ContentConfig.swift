@@ -1,7 +1,22 @@
 import Foundation
 import FormURLEncoded
 
-/// Configures which encoders/decoders to use for a given media type.
+/// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
+///
+///     var contentConfig = ContentConfig.default()
+///     contentConfig.use(encoder: JSONEncoder(), for: .json)
+///     services.register(contentConfig)
+///
+/// Each coder is registered to a specific `MediaType`. When _decoding_ content from HTTP messages,
+/// the `MediaType` will be specified by the message itself. When _encoding_ content from HTTP messages,
+/// the `MediaType` should be specified (`MediaType.json` is usually the assumed default).
+///
+///     try res.content.encode("hello", as: .plaintext)
+///     print(res.mediaType) // .plaintext
+///     print(res.http.body) // "hello"
+///
+/// Most often, these configured coders are used to encode and decode types conforming to `Content`.
+/// See the `Content` protocol for more information.
 public struct ContentConfig: Service, ServiceType {
     /// See `ServiceType.serviceSupports`
     public static let serviceSupports: [Any.Type] = []
@@ -15,10 +30,10 @@ public struct ContentConfig: Service, ServiceType {
     typealias Lazy<T> = (Container) throws -> T
 
     /// Configured encoders.
-    private var lazyEncoders: [MediaType: Lazy<BodyEncoder>]
+    private var lazyEncoders: [MediaType: Lazy<HTTPBodyEncoder>]
 
     /// Configured decoders.
-    private var lazyDecoders: [MediaType: Lazy<BodyDecoder>]
+    private var lazyDecoders: [MediaType: Lazy<HTTPBodyDecoder>]
 
     /// Create a new content config.
     public init() {
@@ -27,28 +42,28 @@ public struct ContentConfig: Service, ServiceType {
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use(encoder: BodyEncoder, for mediaType: MediaType) {
+    public mutating func use(encoder: HTTPBodyEncoder, for mediaType: MediaType) {
         self.lazyEncoders[mediaType] = { container in
             return encoder
         }
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use(decoder: BodyDecoder, for mediaType: MediaType) {
+    public mutating func use(decoder: HTTPBodyDecoder, for mediaType: MediaType) {
         self.lazyDecoders[mediaType] = { container in
             return decoder
         }
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: BodyEncoder {
+    public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: HTTPBodyEncoder {
         self.lazyEncoders[mediaType] = { container in
             return try container.make(B.self)
         }
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: BodyDecoder {
+    public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: HTTPBodyDecoder {
         self.lazyDecoders[mediaType] = { container in
             return try container.make(B.self)
         }
@@ -60,43 +75,6 @@ public struct ContentConfig: Service, ServiceType {
             encoders: lazyEncoders.mapValues { try $0(container) },
             decoders: lazyDecoders.mapValues { try $0(container) }
         )
-    }
-}
-
-/// MARK: Coders
-
-public struct ContentCoders: Service, ServiceType {
-    /// See `ServiceType.serviceSupports`
-    public static let serviceSupports: [Any.Type] = []
-
-    /// See `ServiceType.makeService`
-    public static func makeService(for worker: Container) throws -> ContentCoders {
-        let config = try worker.make(ContentConfig.self)
-        return try config.boot(using: worker)
-    }
-
-    /// Configured encoders.
-    var encoders: [MediaType: BodyEncoder]
-
-    /// Configured decoders.
-    var decoders: [MediaType: BodyDecoder]
-
-    /// Returns an encoder for the specified media type or throws an error.
-    public func requireEncoder(for mediaType: MediaType) throws -> BodyEncoder {
-        guard let encoder = encoders[mediaType] else {
-            throw VaporError(identifier: "contentEncoder", reason: "There is no configured encoder for \(mediaType)", source: .capture())
-        }
-
-        return encoder
-    }
-
-    /// Returns a decoder for the specified media type or throws an error.
-    public func requireDecoder(for mediaType: MediaType) throws -> BodyDecoder {
-        guard let decoder = decoders[mediaType] else {
-            throw VaporError(identifier: "contentDecoder", reason: "There is no configured decoder for \(mediaType)", source: .capture())
-        }
-
-        return decoder
     }
 }
 
@@ -121,8 +99,8 @@ extension ContentConfig {
         }
 
         // data
-        config.use(encoder: DataEncoder(), for: .plainText)
-        config.use(encoder: DataEncoder(), for: .html)
+        config.use(encoder: PlaintextEncoder(), for: .plainText)
+        config.use(encoder: PlaintextEncoder(), for: .html)
 
         // form-urlencoded
         config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
@@ -131,7 +109,3 @@ extension ContentConfig {
         return config
     }
 }
-
-extension FormURLEncoder: BodyEncoder {}
-extension FormURLDecoder: BodyDecoder {}
-

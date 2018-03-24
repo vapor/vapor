@@ -65,7 +65,7 @@ class ApplicationTests: XCTestCase {
         var comps = URLComponents()
         comps.query = "hello=world"
         req.http.url = comps.url!
-        XCTAssertEqual(req.query["hello"], "world")
+        try XCTAssertEqual(req.query.get(String.self, at: "hello"), "world")
     }
 
 
