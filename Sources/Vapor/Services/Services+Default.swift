@@ -17,11 +17,12 @@ extension Services {
                 container: container
             )
         }
-        
+
+        // register defualt `EngineServerConfig`
         services.register { container -> EngineServerConfig in
-            /// temporary so that this change is backward compatible
+            /// require app for mutable environment
             guard let app = container as? Application else {
-                fatalError()
+                throw VaporError(identifier: "serverConfig", reason: "Default `EngineServerConfig` can only be created for `Application`.", source: .capture())
             }
             return try .detect(from: &app.environment)
         }
