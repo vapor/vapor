@@ -22,7 +22,7 @@ public final class Application: Container {
 
     /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
     /// See `Environment` for more information.
-    public let environment: Environment
+    public var environment: Environment
 
     /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
     /// form this application (i.e., `Request`, `Response`, etc.)
@@ -42,18 +42,80 @@ public final class Application: Container {
     /// Use this to create stored properties in extensions.
     public var extend: Extend
 
-    /// Creates a new `Application`.
+    // MARK: Boot
+
+    /// Asynchronously creates and boots a new `Application`.
     ///
     /// - parameters:
     ///     - config: Configuration preferences for this service container.
     ///     - environment: Application's environment type (i.e., testing, production).
     ///                    Different environments can trigger different application behavior (for example, supressing verbose logs in production mode).
     ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public init(
+    public static func asyncBoot(config: Config = .default(), environment: Environment = .development, services: Services = .default()) -> Future<Application> {
+        let app = Application(config, environment, services)
+        return app.boot().map(to: Application.self) { app }
+    }
+
+    /// Synchronously creates and boots a new `Application`.
+    ///
+    /// - parameters:
+    ///     - config: Configuration preferences for this service container.
+    ///     - environment: Application's environment type (i.e., testing, production).
+    ///                    Different environments can trigger different application behavior (for example, supressing verbose logs in production mode).
+    ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
+    public convenience init(
         config: Config = .default(),
         environment: Environment = .development,
         services: Services = .default()
     ) throws {
+        self.init(config, environment, services)
+        try boot().wait()
+    }
+
+    // MARK: Run
+
+    /// Asynchronously runs the `Application`'s commands. This method will call the `willRun(_:)` methods of all
+    /// registered `VaporProvider's` before running.
+    ///
+    /// Normally this command will boot an `HTTPServer`. However, depending on configuration and command-line arguments/flags, this method may run a different command.
+    /// See `CommandConfig` for more information about customizing the commands that this method runs.
+    ///
+    ///     try app.asyncRun().wait()
+    ///
+    /// Note: When running a server, `asyncRun()` will return when the server has finished _booting_. Use the `runningServer` property on `Application` to wait
+    /// for the server to close. The synchronous `run()` method will call this automatically.
+    ///
+    ///     try app.runningServer?.onClose().wait()
+    ///
+    /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
+    public func asyncRun() -> Future<Void> {
+        return Future.flatMap(on: self) {
+            // will-run all vapor service providers
+            return try self.services.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
+        }.flatMap(to: Void.self) {
+            let command = try self.make(CommandConfig.self)
+                .makeCommandGroup(for: self)
+            let console = try self.make(Console.self)
+
+            /// Create a mutable copy of the environment input for this run.
+            var runInput = self.environment.commandInput
+            return try console.run(command, input: &runInput, on: self)
+        }.flatMap(to: Void.self) {
+            // did-run all vapor service providers
+            return try self.services.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+        }
+    }
+
+    /// Synchronously calls `asyncRun()` and waits for the running server to close (if one exists).
+    public func run() throws {
+        try asyncRun().wait()
+        try runningServer?.onClose.wait()
+    }
+
+    // MARK: Internal
+
+    /// Internal initializer. Creates an `Application` without booting providers.
+    internal init(_ config: Config, _ environment: Environment, _ services: Services) {
         self.config = config
         self.environment = environment
         self.services = services
@@ -61,56 +123,29 @@ public final class Application: Container {
         self.extend = Extend()
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
 
-        // will-boot all service providers
-        for provider in services.providers {
-            try provider.willBoot(self).wait()
-        }
+    }
 
-        if _isDebugAssertConfiguration() && environment.isRelease {
-            let log = try self.make(Logger.self)
-            log.warning("Debug build mode detected while configured for release environment: \(environment.name).")
-            log.info("Compile your application with `-c release` to enable code optimizations.")
-        }
-
-        // did-boot all service providers
-        for provider in services.providers {
-            try provider.didBoot(self).wait()
+    /// Internal method. Boots the application and its providers.
+    internal func boot() -> Future<Void> {
+        return Future.map(on: self) {
+            // let providers detect and mutate the environment
+            try self.services.providers.forEach { try $0.detect(&self.environment) }
+        }.flatMap(to: Void.self) {
+            // will-boot all service providers
+            return try self.services.providers.map { try $0.willBoot(self) }.flatten(on: self)
+        }.map(to: Void.self) {
+            if _isDebugAssertConfiguration() && self.environment.isRelease {
+                let log = try self.make(Logger.self)
+                log.warning("Debug build mode detected while configured for release environment: \(self.environment.name).")
+                log.info("Compile your application with `-c release` to enable code optimizations.")
+            }
+        }.flatMap(to: Void.self) {
+            // did-boot all service providers
+            return try self.services.providers.map { try $0.didBoot(self) }.flatten(on: self)
         }
     }
 
-    /// Runs the `Application`'s commands. This method will call the `willRun(_:)` methods of all registered `VaporProvider's` before running.
-    ///
-    /// Normally this command will boot an `HTTPServer` that will run indefinitely. However, depending on configuration and command-line arguments/flags, this method may run a different command.
-    /// To prevent confusion, this method will call `exit` before finishing and returns `Never`.
-    ///
-    /// See `CommandConfig` for more information about customizing the commands that this method runs.
-    ///
-    /// All `VaporProvider`'s `didRun(_:)` methods will be called before the `Application` calls `exit`.
-    public func run() throws -> Never {
-        // will-run all vapor service providers
-        for provider in services.providers.onlyVapor {
-            try provider.willRun(self).wait()
-        }
-
-        let command = try make(CommandConfig.self)
-            .makeCommandGroup(for: self)
-
-        let console = try make(Console.self)
-        try console.run(command, input: &.commandLine)
-
-        // did-run all vapor service providers
-        for provider in services.providers.onlyVapor {
-            try provider.didRun(self).wait()
-        }
-        
-        // Enforce `Never` return.
-        // It's possible that this method may actually return, since
-        // not all Vapor commands have run loops.
-        // However, because this method likely _can_ result in
-        // a run loop, having a `Never` may help reduce bugs.
-        exit(0)
-    }
-
+    /// Called when the app deinitializes.
     deinit {
         eventLoopGroup.shutdownGracefully {
             if let error = $0 {

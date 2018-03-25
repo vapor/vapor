@@ -26,48 +26,53 @@ public final class EngineServer: Server, Service {
     }
 
     /// Start the server. Server protocol requirement.
-    public func start() throws {
-        let console = try container.make(Console.self)
-        let logger = try container.make(Logger.self)
+    public func start() -> Future<Void> {
+        let container = self.container
+        let config = self.config
 
-        console.print("Server starting on ", newLine: false)
-        console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
-        console.output(":" + config.port.description, style: .init(color: .cyan))
+        return Future.flatMap(on: container) {
+            let console = try container.make(Console.self)
+            let logger = try container.make(Logger.self)
 
-        let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
+            console.print("Server starting on ", newLine: false)
+            console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
+            console.output(":" + config.port.description, style: .init(color: .cyan))
 
-        /// http upgrade
-        var upgraders: [HTTPProtocolUpgrader] = []
+            let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
 
-        /// web socket upgrade
-        if let wss = try? container.make(WebSocketServer.self) {
-            let ws = WebSocket.httpProtocolUpgrader(shouldUpgrade: { req in
-                let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
-                return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
-            }, onUpgrade: { ws, req in
-                let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
-                return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: container))
-            })
-            upgraders.append(ws)
+            /// http upgrade
+            var upgraders: [HTTPProtocolUpgrader] = []
+
+            /// web socket upgrade
+            if let wss = try? container.make(WebSocketServer.self) {
+                let ws = WebSocket.httpProtocolUpgrader(shouldUpgrade: { req in
+                    let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
+                    return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
+                }, onUpgrade: { ws, req in
+                    let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
+                    return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: container))
+                })
+                upgraders.append(ws)
+            }
+
+            return HTTPServer.start(
+                hostname: config.hostname,
+                port: config.port,
+                responder: EngineResponder(rootContainer: container),
+                maxBodySize: config.maxBodySize,
+                backlog: config.backlog,
+                reuseAddress: config.reuseAddress,
+                tcpNoDelay: config.tcpNoDelay,
+                upgraders: upgraders,
+                on: group
+            ) { error in
+                logger.reportError(error)
+            }.map(to: Void.self) { server in
+                if let app = container as? Application {
+                    app.runningServer = RunningServer(onClose: server.onClose, close: server.close)
+                }
+            }
         }
-
-
-        let server = try HTTPServer.start(
-            hostname: config.hostname,
-            port: config.port,
-            responder: EngineResponder(rootContainer: container),
-            maxBodySize: config.maxBodySize,
-            backlog: config.backlog,
-            reuseAddress: config.reuseAddress,
-            tcpNoDelay: config.tcpNoDelay,
-            upgraders: upgraders,
-            on: group
-        ) { error in
-            logger.reportError(error)
-        }.wait()
-
-        // wait for the server to shutdown
-        try server.onClose.wait()
     }
 }
 
@@ -149,6 +154,28 @@ extension Logger {
 
 /// Engine server config struct.
 public struct EngineServerConfig: Service {
+    /// Detects `EngineServerConfig` from the environment.
+    public static func detect(
+        from env: inout Environment,
+        hostname: String = "localhost",
+        port: Int = 8080,
+        backlog: Int = 256,
+        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
+        maxBodySize: Int = 1_000_0000,
+        reuseAddress: Bool = true,
+        tcpNoDelay: Bool = true
+    ) throws -> EngineServerConfig {
+        return try EngineServerConfig(
+            hostname: env.commandInput.parse(option: .value(name: "hostname")) ?? hostname,
+            port: env.commandInput.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
+            backlog: backlog,
+            workerCount: workerCount,
+            maxBodySize: maxBodySize,
+            reuseAddress: reuseAddress,
+            tcpNoDelay: tcpNoDelay
+        )
+    }
+
     /// Host name the server will bind to.
     public var hostname: String
 
@@ -188,28 +215,5 @@ public struct EngineServerConfig: Service {
         self.maxBodySize = maxBodySize
         self.reuseAddress = reuseAddress
         self.tcpNoDelay = tcpNoDelay
-    }
-}
-
-extension EngineServerConfig {
-    /// Detects `EngineServerConfig` from the environment.
-    public static func detect(
-        hostname: String = "localhost",
-        port: Int = 8080,
-        backlog: Int = 256,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxBodySize: Int = 1_000_0000,
-        reuseAddress: Bool = true,
-        tcpNoDelay: Bool = true
-    ) throws -> EngineServerConfig {
-        return try EngineServerConfig(
-            hostname: CommandInput.commandLine.parse(option: .value(name: "hostname")) ?? hostname,
-            port: CommandInput.commandLine.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
-            backlog: backlog,
-            workerCount: workerCount,
-            maxBodySize: maxBodySize,
-            reuseAddress: reuseAddress,
-            tcpNoDelay: tcpNoDelay
-        )
     }
 }

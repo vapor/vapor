@@ -61,31 +61,3 @@ public struct CommandConfig: Service {
         )
     }
 }
-
-extension Environment {
-    /// Detects the environment from command line arguments
-    /// or returns development if none was passed.
-    public static func detect() throws -> Environment {
-        var env: Environment = .development
-        if let value = try CommandInput.commandLine.parse(option: .value(name: "env")) {
-            env = Environment(commandLine: value)
-        }
-        return env
-    }
-}
-
-extension Environment {
-    /// Initialize the environment from a command line argument.
-    internal init(commandLine string: String) {
-        switch string {
-        case "prod", "production":
-            self = .production
-        case "dev", "development":
-            self = .development
-        case "test", "testing":
-            self = .testing
-        default:
-            self = .custom(name: string)
-        }
-    }
-}

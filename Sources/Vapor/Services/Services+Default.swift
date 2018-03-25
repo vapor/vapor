@@ -17,13 +17,14 @@ extension Services {
                 container: container
             )
         }
-        
+
+        // register defualt `EngineServerConfig`
         services.register { container -> EngineServerConfig in
-            if container.environment.isRelease {
-                return try EngineServerConfig.detect(port: 80)
-            } else {
-                return try EngineServerConfig.detect()
+            /// require app for mutable environment
+            guard let app = container as? Application else {
+                throw VaporError(identifier: "serverConfig", reason: "Default `EngineServerConfig` can only be created for `Application`.", source: .capture())
             }
+            return try .detect(from: &app.environment)
         }
 
         // bcrypt
@@ -46,6 +47,8 @@ extension Services {
         services.register(SessionsMiddleware.self)
         services.register(KeyedCacheSessions.self)
         services.register(SessionsConfig.self)
+
+        services.register(RunningServerCache())
 
         // keyed cache, memory. thread-safe
         let memoryKeyedCache = MemoryKeyedCache()

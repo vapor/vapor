@@ -17,16 +17,17 @@ internal struct MainCommand: CommandGroup {
         self.defaultRunnable = defaultRunnable
     }
 
-    func run(using context: CommandContext) throws {
+    func run(using context: CommandContext) throws -> Future<Void> {
         if context.options["version"] == "true" {
             context.console.info("Vapor Framework v", newLine: false)
             context.console.print("3.0")
         } else {
             if let lazy = self.defaultRunnable {
-                try lazy.run(using: context)
+                return try lazy.run(using: context)
             } else {
                 throw VaporError(identifier: "noDefaultCommand", reason: "No default command has been registered.", source: .capture())
             }
         }
+        return .done(on: context.container)
     }
 }
