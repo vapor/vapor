@@ -70,33 +70,44 @@ class ApplicationTests: XCTestCase {
 
 
     func testParameter() throws {
-        try Application.makeTest(port: 8081) { router in
+        let app = try Application.runningTest(port: 8081) { router in
             router.get("hello", String.parameter) { req in
                 return try req.parameter(String.self)
             }
         }
-        .test(.GET, "/hello/vapor", equals: "vapor")
-        .test(.POST, "/hello/vapor", equals: "Not found")
+
+        try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
+        try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
     }
 
     func testJSON() throws {
-        try Application.makeTest(port: 8082) { router in
+        let app = try Application.runningTest(port: 8082) { router in
             router.get("json") { req in
                 return ["foo": "bar"]
             }
         }
-        .test(.GET, "/json", equals: """
+
+        let expected = """
         {"foo":"bar"}
-        """)
+        """
+        try app.clientTest(.GET, "/json", equals: expected)
     }
 
     func testGH1537() throws {
-        try Application.makeTest(port: 8083) { router in
+        let app = try Application.runningTest(port: 8083) { router in
             router.get("todos") { req in
                 return "hi"
             }
         }
-        .test(.GET, "/todos?a=b", equals: "hi")
+
+        try app.clientTest(.GET, "/todos?a=b", equals: "hi")
+
+        DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1) {
+            print("stop")
+            try! app.runningServer!.close().wait()
+        }
+
+        try app.runningServer!.onClose.wait()
     }
 
     func testGH1534() throws {
@@ -104,7 +115,7 @@ class ApplicationTests: XCTestCase {
         {"name":"hi","bar":"asdf"}
         """
         
-        try Application.makeTest { router in
+        let app = try Application.makeTest { router in
             router.get("decode_error") { req -> String in
                 struct Foo: Decodable {
                     var name: String
@@ -113,7 +124,9 @@ class ApplicationTests: XCTestCase {
                 let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
                 return foo.name
             }
-        }.test(.GET, "decode_error") { res in
+        }
+
+        try app.test(.GET, "decode_error") { res in
             XCTAssertEqual(res.http.status.code, 400)
             XCTAssert(res.http.body.string.contains("Value of type 'Int' required for key 'bar'"))
         }
@@ -130,11 +143,6 @@ class ApplicationTests: XCTestCase {
     ]
 }
 
-struct ApplicationTester {
-    let app: Application
-    let port: Int
-}
-
 extension HTTPBody {
     var string: String {
         guard let data = self.data else {
@@ -145,17 +153,24 @@ extension HTTPBody {
 }
 
 extension Application {
-    static func makeTest(port: Int, configure: (Router) throws -> ()) throws -> ApplicationTester {
+    static func runningTest(port: Int, configure: (Router) throws -> ()) throws -> Application {
         let router = EngineRouter.default()
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)
-        var env = Environment.testing
-        env.commandInput = CommandInput(arguments: ["vapor", "--port", port.description])
-        let app = try Application(config: .default(), environment: env, services: services)
-        app.testRun()
-        usleep(250_000) // 1/4 of a second
-        return ApplicationTester(app: app, port: port)
+        let serverConfig = EngineServerConfig(
+            hostname: "localhost",
+            port: port,
+            backlog: 8,
+            workerCount: 1,
+            maxBodySize: 128_000,
+            reuseAddress: true,
+            tcpNoDelay: true
+        )
+        services.register(serverConfig)
+        let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
+        try app.asyncRun().wait()
+        return app
     }
 
     static func makeTest(configure: (Router) throws -> ()) throws -> Application {
@@ -163,32 +178,34 @@ extension Application {
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)
-        return try Application(config: .default(), environment: .testing, services: services)
-    }
-
-    func testRun() {
-        Thread.async {
-            try! self.run()
-        }
+        return try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
     }
 }
 
 extension Application {
-    @discardableResult
-    func test(_ method: HTTPMethod, _ path: String, check: (Response) throws -> ()) throws -> Application {
+    func test(_ method: HTTPMethod, _ path: String, check: (Response) throws -> ()) throws {
         let http = HTTPRequest(method: method, url: URL(string: path)!)
         let req = Request(http: http, using: self)
         let res = try make(Responder.self).respond(to: req).wait()
         try check(res)
-        return self
+    }
+
+    func clientTest(_ method: HTTPMethod, _ path: String, check: (Response) throws -> ()) throws {
+        let config = try make(EngineServerConfig.self)
+        let res = try FoundationClient.default(on: self).send(method, to: "http://localhost:\(config.port)" + path).wait()
+        try check(res)
+    }
+
+
+    func clientTest(_ method: HTTPMethod, _ path: String, equals: String) throws {
+        return try clientTest(method, path) { res in
+            XCTAssertEqual(res.http.body.string, equals)
+        }
     }
 }
 
-extension ApplicationTester {
-    @discardableResult
-    func test(_ method: HTTPMethod, _ path: String, equals string: String) throws -> ApplicationTester {
-        let res = try FoundationClient.default(on: app).send(method, to: "http://localhost:\(port)" + path).wait()
-        XCTAssertEqual(String(data: res.http.body.data ?? Data(), encoding: .utf8), string)
-        return self
+extension Environment {
+    static var xcode: Environment {
+        return .init(name: "xcode", isRelease: false, arguments: ["xcode"])
     }
 }

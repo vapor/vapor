@@ -21,7 +21,7 @@ public struct ServeCommand: Command, Service {
     }
 
     /// See Runnable.run
-    public func run(using context: CommandContext) throws {
-        try server.start()
+    public func run(using context: CommandContext) throws -> Future<Void> {
+        return server.start()
     }
 }

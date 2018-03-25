@@ -19,11 +19,11 @@ extension Services {
         }
         
         services.register { container -> EngineServerConfig in
-            if container.environment.isRelease {
-                return try EngineServerConfig.detect(port: 80, from: &container.environment)
-            } else {
-                return try EngineServerConfig.detect(from: &container.environment)
+            /// temporary so that this change is backward compatible
+            guard let app = container as? Application else {
+                fatalError()
             }
+            return try .detect(from: &app.environment)
         }
 
         // bcrypt
@@ -46,6 +46,8 @@ extension Services {
         services.register(SessionsMiddleware.self)
         services.register(KeyedCacheSessions.self)
         services.register(SessionsConfig.self)
+
+        services.register(RunningServerCache())
 
         // keyed cache, memory. thread-safe
         let memoryKeyedCache = MemoryKeyedCache()

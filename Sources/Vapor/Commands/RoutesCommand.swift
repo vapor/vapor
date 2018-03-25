@@ -22,7 +22,7 @@ public struct RoutesCommand: Command, Service {
     }
 
     /// See Runnable.run
-    public func run(using context: CommandContext) throws {
+    public func run(using context: CommandContext) throws -> Future<Void> {
         let console = context.console
         
         var longestMethod = 0
@@ -109,6 +109,8 @@ public struct RoutesCommand: Command, Service {
             console.print(" |")
             hr()
         }
+
+        return .done(on: context.container)
     }
 }
 
