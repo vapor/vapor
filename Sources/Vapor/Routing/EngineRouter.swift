@@ -4,6 +4,7 @@ import Foundation
 
 /// An HTTP wrapper around the TrieNodeRouter
 public final class EngineRouter: Router {
+
     /// The internal router
     private let router: TrieRouter<Responder>
 
@@ -18,8 +19,8 @@ public final class EngineRouter: Router {
         self.router.caseInsensitive = caseInsensitive
     }
 
-    /// Create a new engine router with default settings.
-    public static func `default`() -> EngineRouter {
+    /// A static engine router instance with default settings.
+    public static let `default`: EngineRouter = {
         let router = EngineRouter(caseInsensitive: false)
         router.router.fallback = BasicResponder { req in
             let res = req.makeResponse()
@@ -28,7 +29,7 @@ public final class EngineRouter: Router {
             return Future.map(on: req) { res }
         }
         return router
-    }
+    }()
 
     /// See Router.register
     public func register(route: Route<Responder>) {
