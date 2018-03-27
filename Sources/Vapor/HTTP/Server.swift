@@ -4,8 +4,13 @@ public protocol Server {
     ///
     /// Upon starting, the `Server` must set the application's `runningServer` property.
     ///
+    /// - parameters:
+    ///     - hostname: Optional hostname override.
+    ///                 If set, the server should bind to this hostname instead of its configured hostname.
+    ///     - port: Optional port override.
+    ///             If set, the server should bind to this port instead of its configured port.
     /// - returns: A future notification that will complete when the `Server` has started successfully.
-    func start() -> Future<Void>
+    func start(hostname: String?, port: Int?) -> Future<Void>
 }
 
 extension Application {
