@@ -154,7 +154,7 @@ extension HTTPBody {
 
 extension Application {
     static func runningTest(port: Int, configure: (Router) throws -> ()) throws -> Application {
-        let router = EngineRouter.default
+        let router = EngineRouter.default()
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)
@@ -174,7 +174,7 @@ extension Application {
     }
 
     static func makeTest(configure: (Router) throws -> ()) throws -> Application {
-        let router = EngineRouter.default
+        let router = EngineRouter.default()
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)

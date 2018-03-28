@@ -16,7 +16,7 @@ do {
     let dir = DirectoryConfig(workDir: "/Users/tanner/dev/vapor/vapor/Sources/Development/")
     services.register(dir)
 
-    let router = EngineRouter.default
+    let router = EngineRouter.default()
 
     router.get("search") { req -> String in
         return try req.query.get(String.self, at: ["query"])
