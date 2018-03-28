@@ -1,4 +1,3 @@
-import CodableKit
 import Foundation
 
 /// Encodes data as plaintext, utf8.
