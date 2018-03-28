@@ -75,7 +75,7 @@ extension Services {
         }
 
         // register router
-        services.register(EngineRouter.default())
+        services.register(EngineRouter.default(), as: Router.self)
 
         // register content coders
         services.register(ContentConfig.self)
