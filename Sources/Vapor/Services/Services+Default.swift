@@ -75,9 +75,7 @@ extension Services {
         }
 
         // register router
-        services.register(Router.self) { container -> EngineRouter in
-            return EngineRouter.default()
-        }
+        services.register(EngineRouter.default())
 
         // register content coders
         services.register(ContentConfig.self)
