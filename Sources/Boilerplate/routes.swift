@@ -27,6 +27,10 @@ public func routes(_ router: Router) throws {
             return String(data: res.http.body.data ?? Data(), encoding: .ascii) ?? ""
         }
     }
+
+    router.get("image") { req in
+        return try req.streamFile(at: "/Users/tanner/Desktop/test.png")
+    }
 }
 
 struct User: Parameter, Content {

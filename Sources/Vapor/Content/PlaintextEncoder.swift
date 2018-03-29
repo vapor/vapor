@@ -1,8 +1,7 @@
-import Foundation
-
-/// Encodes data as plaintext, utf8.
+/// Encodes `Encodable` objects to plaintext strings.
 public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
-    fileprivate let encoder: _DataEncoder
+    /// The internal encoder.
+    fileprivate let encoder: _PlaintextEncoder
 
     /// Creates a new data encoder
     public init() {
@@ -12,10 +11,10 @@ public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
     /// See `DataEncoder.encode(_:)`
     public func encode<E>(_ encodable: E) throws -> Data where E : Encodable {
         try encodable.encode(to: encoder)
-        guard let data = encoder.data else {
+        guard let plaintext = encoder.plaintext else {
             throw VaporError(identifier: "dataEncoding", reason: "An unknown error caused the data not to be encoded", source: .capture())
         }
-        return data
+        return Data(plaintext.utf8)
     }
 
     /// See `HTTPBodyEncoder.encode(from:)`
@@ -24,18 +23,18 @@ public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
     }
 }
 
-/// MARK: Private
-
-fileprivate final class _DataEncoder: Encoder {
-    public var codingPath: [CodingKey]
-    public var userInfo: [CodingUserInfoKey: Any]
-    public var data: Data?
-
-    public init() {
-        self.codingPath = []
-        self.userInfo = [:]
-        self.data = nil
+/// Private encoder implementation.
+fileprivate final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
+    public var codingPath: [CodingKey] {
+        return []
     }
+
+    public var userInfo: [CodingUserInfoKey: Any] {
+        return [:]
+    }
+
+    public var plaintext: String?
+    public init() { }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
         fatalError("HTML encoding does not support nested dictionaries")
@@ -46,59 +45,14 @@ fileprivate final class _DataEncoder: Encoder {
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
-        return DataEncodingContainer(encoder: self)
-    }
-}
-
-fileprivate final class DataEncodingContainer: SingleValueEncodingContainer {
-    var codingPath: [CodingKey] {
-        return encoder.codingPath
-    }
-
-    let encoder: _DataEncoder
-    init(encoder: _DataEncoder) {
-        self.encoder = encoder
+        return self
     }
 
     func encodeNil() throws {
-        encoder.data = nil
+        plaintext = nil
     }
 
-    func encode(_ value: Bool) throws {
-        if let data = value.description.data(using: .utf8) {
-            encoder.data = data
-        }
-    }
-
-    func encode(_ value: Int) throws {
-        if let data = value.description.data(using: .utf8) {
-            encoder.data = data
-        }
-    }
-
-    func encode(_ value: Double) throws {
-        if let data = value.description.data(using: .utf8) {
-            encoder.data = data
-        }
-    }
-
-    func encode(_ value: String) throws { encoder.data = Data(value.utf8) }
-    func encode(_ value: Int8) throws { try encode(Int(value)) }
-    func encode(_ value: Int16) throws { try encode(Int(value)) }
-    func encode(_ value: Int32) throws { try encode(Int(value)) }
-    func encode(_ value: Int64) throws { try encode(Int(value)) }
-    func encode(_ value: UInt) throws { try encode(Int(value)) }
-    func encode(_ value: UInt8) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt16) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt32) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt64) throws { try encode(UInt(value)) }
-    func encode(_ value: Float) throws { try encode(Double(value)) }
-
-    func encode<T: Encodable>(_ value: T) throws {
-        if let data = value as? Data {
-            encoder.data = data
-        } else {
-            try value.encode(to: encoder)
-        }
+    func encode<T>(_ value: T) throws where T: Encodable {
+        plaintext = "\(value)"
     }
 }

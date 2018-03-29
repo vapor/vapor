@@ -1,25 +1,30 @@
-import Foundation
-
 /// `Client` wrapper around `Foundation.URLSession`.
 public final class FoundationClient: Client {
-    /// See `Client.container`
+    /// See `Client`
     public var container: Container
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
 
-    /// Creates a new `FoundationClient`
+    /// Creates a new `FoundationClient`.
+    ///
+    /// - parameters:
+    ///     - urlSession: Underlying `URLSession` that will power this client.
+    ///     - container: `Container` to use for creating services.
     public init(_ urlSession: URLSession, on container: Container) {
         self.urlSession = urlSession
         self.container = container
     }
 
     /// Creates a `FoundationClient` with default settings.
+    ///
+    /// - parameters:
+    ///     - container: `Container` to use for creating services.
     public static func `default`(on container: Container) -> FoundationClient {
         return .init(.init(configuration: .default), on: container)
     }
 
-    /// See `Client.respond(to:)`
+    /// See `Client`
     public func respond(to req: Request) throws -> Future<Response> {
         let urlReq = req.http.makeFoundationRequest()
         let promise = req.eventLoop.newPromise(Response.self)

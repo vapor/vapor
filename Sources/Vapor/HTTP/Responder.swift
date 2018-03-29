@@ -21,7 +21,7 @@ public struct RouteResponder<T>: Responder
         self.closure = closure
     }
 
-    /// See: HTTP.Responder.respond
+    /// See `Responder`
     public func respond(to req: Request) throws -> Future<Response> {
         let encodable = try closure(req)
         return try encodable.encode(for: req)

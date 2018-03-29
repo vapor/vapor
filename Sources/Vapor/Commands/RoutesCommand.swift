@@ -1,19 +1,28 @@
-import Command
-import Console
-import Foundation
-
-/// Displays all registered routes.
+/// A `Command` that prints a table listing all of this application's registered routes.
+///
+///     $ swift run Run routes
+///
+///     +--------+---------------+
+///     | GET    | /hello        |
+///     +--------+---------------+
+///
 public struct RoutesCommand: Command, Service {
-    /// See Command.arguments
-    public let arguments: [CommandArgument] = []
+    /// See `Command`.
+    public var arguments: [CommandArgument] {
+        return []
+    }
 
-    /// See Runnable.options
-    public let options: [CommandOption] = []
+    /// See `Command`.
+    public var options: [CommandOption] {
+        return []
+    }
 
-    /// See Runnable.help
-    public let help: [String] = ["Displays all registered routes"]
+    /// See `Command`.
+    public var help: [String] {
+        return ["Displays all registered routes"]
+    }
 
-    /// The server to boot.
+    /// See `Command`.
     public let router: Router
 
     /// Create a new serve command.
@@ -21,7 +30,7 @@ public struct RoutesCommand: Command, Service {
         self.router = router
     }
 
-    /// See Runnable.run
+    /// See `CommandGroup`.
     public func run(using context: CommandContext) throws -> Future<Void> {
         let console = context.console
         

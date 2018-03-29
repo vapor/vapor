@@ -1,26 +1,22 @@
-import Foundation
-import NIO
-
 extension DataDecoder {
-    /// Gets a single decodable value at the supplied key path from the data.
+    /// Gets a single `Decodable` value at the supplied key path from the data.
     internal func get<D>(at keyPath: [BasicKey], from data: Data) throws -> D where D: Decodable {
-        return try self.decode(DecoderUnwrapper.self, from: data).get(at: keyPath)
+        return try self.decode(SingleValueDecoder.self, from: data).get(at: keyPath)
 
     }
 }
 
 extension HTTPBodyDecoder {
-    /// Gets a single decodable value at the supplied key path from the data.
+    /// Gets a single `Decodable` value at the supplied key path from the data.
     internal func get<D>(at keyPath: [BasicKey], from body: HTTPBody, maxSize: Int, on worker: Worker) throws -> Future<D> where D: Decodable {
-        return try self.decode(DecoderUnwrapper.self, from: body, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
+        return try self.decode(SingleValueDecoder.self, from: body, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
             return try decoder.get(at: keyPath)
         }
     }
 }
 
-/// MARK: Private
-
-fileprivate struct DecoderUnwrapper: Decodable {
+/// Private encoder implementation.
+fileprivate struct SingleValueDecoder: Decodable {
     let decoder: Decoder
     init(from decoder: Decoder) throws {
         self.decoder = decoder
