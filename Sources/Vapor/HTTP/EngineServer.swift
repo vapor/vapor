@@ -1,22 +1,21 @@
-import Async
-import Bits
-import Console
-import Command
-import Debugging
-import Dispatch
-import Foundation
-import HTTP
-import Service
-
-/// A TCP based server with HTTP parsing and serialization pipeline.
+/// An `Engine` based `Server` implementation. This is Vapor's default and recommended HTTP server.
+///
+/// Use `EngineServerConfig` to configure how this server behaves. You should rarely need to use the `EngineServer` class directly.
 public final class EngineServer: Server, Service {
-    /// Chosen configuration for this server.
+    /// Specified configuration for this server.
+    ///
+    /// See `EngineServerConfig`.
     public let config: EngineServerConfig
 
-    /// Container for setting on event loops.
+    /// Main container for this server. All `EventLoop` containers will be created as `SubContainer`s
+    /// from this parent `Container`.
     public let container: Container
 
-    /// Create a new EngineServer using config struct.
+    /// Create a new `EngineServer` using `EngineServerConfig` struct.
+    ///
+    /// - parameters:
+    ///     - config: `EngineServerConfig` specifying this server's behavior.
+    ///     - container: The server's main `Container`.
     public init(
         config: EngineServerConfig,
         container: Container
@@ -25,7 +24,9 @@ public final class EngineServer: Server, Service {
         self.container = container
     }
 
-    /// Start the server. Server protocol requirement.
+    /// Start the server. `Server` protocol requirement.
+    ///
+    /// See `Server`.
     public func start(hostname: String?, port: Int?) -> Future<Void> {
         let container = self.container
         let config = self.config
@@ -79,12 +80,19 @@ public final class EngineServer: Server, Service {
     }
 }
 
-struct EngineResponder: HTTPResponder {
+// MARK: Private
+
+/// Private `HTTPResponder` implementation for `EngineServer`.
+fileprivate struct EngineResponder: HTTPResponder {
+    /// The engine's root responder.
     let rootContainer: Container
+
+    /// Creates a new `EngineResponder`.
     init(rootContainer: Container) {
         self.rootContainer = rootContainer
     }
 
+    /// See `HTTPResponder`
     func respond(to request: HTTPRequest, on worker: Worker) -> Future<HTTPResponse> {
         let container = Thread.current.cachedSubContainer(for: rootContainer, on: worker)
         return Future.flatMap(on: worker) {
@@ -96,7 +104,8 @@ struct EngineResponder: HTTPResponder {
 }
 
 extension Thread {
-    func cachedSubContainer(for container: Container, on worker: Worker) -> SubContainer {
+    /// Returns this `EventLoop`'s `SubContainer`, or creates a new one and caches it.
+    fileprivate func cachedSubContainer(for container: Container, on worker: Worker) -> SubContainer {
         let subContainer: SubContainer
         if let existing = threadDictionary["subcontainer"] as? SubContainer {
             subContainer = existing
@@ -108,8 +117,8 @@ extension Thread {
         return subContainer
     }
 
-
-    func cachedResponder(for container: Container) throws -> Responder {
+    /// Returns this `EventLoop`'s `Responder`, or creates a new one and caches it.
+    fileprivate func cachedResponder(for container: Container) throws -> Responder {
         let responder: Responder
         if let existing = threadDictionary["responder"] as? ApplicationResponder {
             responder = existing
@@ -119,103 +128,5 @@ extension Thread {
             threadDictionary["responder"] = new
         }
         return responder
-    }
-}
-
-extension Logger {
-    func reportError(_ error: Error) {
-        var string = ""
-        if let debuggable = error as? Debuggable {
-            string += debuggable.fullIdentifier
-            string += ": "
-            string += debuggable.reason
-        } else {
-            string += "\(error)"
-        }
-        if let debuggable = error as? Debuggable {
-            if let source = debuggable.sourceLocation {
-                self.error(string,
-                   file: source.file,
-                   function: source.function,
-                   line: source.line,
-                   column: source.column
-                )
-            } else {
-                self.error(string)
-            }
-            if debuggable.suggestedFixes.count > 0 {
-                self.debug("Suggested fixes for \(debuggable.fullIdentifier): " + debuggable.suggestedFixes.joined(separator: " "))
-            }
-            if debuggable.possibleCauses.count > 0 {
-                self.debug("Possible causes for \(debuggable.fullIdentifier): " + debuggable.possibleCauses.joined(separator: " "))
-            }
-        } else {
-            self.error(string)
-        }
-    }
-}
-
-/// Engine server config struct.
-public struct EngineServerConfig: Service {
-    /// Detects `EngineServerConfig` from the environment.
-    public static func `default`(
-        hostname: String = "localhost",
-        port: Int = 8080,
-        backlog: Int = 256,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxBodySize: Int = 1_000_0000,
-        reuseAddress: Bool = true,
-        tcpNoDelay: Bool = true
-    ) -> EngineServerConfig {
-        return EngineServerConfig(
-            hostname: hostname,
-            port: port,
-            backlog: backlog,
-            workerCount: workerCount,
-            maxBodySize: maxBodySize,
-            reuseAddress: reuseAddress,
-            tcpNoDelay: tcpNoDelay
-        )
-    }
-
-    /// Host name the server will bind to.
-    public var hostname: String
-
-    /// Port the server will bind to.
-    public var port: Int
-
-    /// Listen backlog.
-    public var backlog: Int
-
-    /// Number of client accepting workers.
-    /// Should be equal to the number of logical cores.
-    public var workerCount: Int
-
-    /// Requests containing bodies larger than this maximum will be rejected, closign the connection.
-    public var maxBodySize: Int
-
-    /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
-    public var reuseAddress: Bool
-
-    /// When `true`, OS will attempt to minimize TCP packet delay.
-    public var tcpNoDelay: Bool
-
-    /// Creates a new engine server config
-    public init(
-        hostname: String,
-        port: Int,
-        backlog: Int,
-        workerCount: Int,
-        maxBodySize: Int,
-        reuseAddress: Bool,
-        tcpNoDelay: Bool
-    ) {
-        self.hostname = hostname
-        self.port = port
-        self.backlog = backlog
-        self.workerCount = workerCount
-        self.maxBodySize = maxBodySize
-        self.reuseAddress = reuseAddress
-        self.tcpNoDelay = tcpNoDelay
     }
 }

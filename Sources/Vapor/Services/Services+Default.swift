@@ -38,6 +38,16 @@ extension Services {
             )
         }
 
+        // file
+        let blockingPool = BlockingIOThreadPool(numberOfThreads: 2)
+        blockingPool.start()
+        services.register(blockingPool)
+        
+        services.register { container -> File in
+            let io = try NonBlockingFileIO(threadPool: container.make())
+            return File(io: io, on: container)
+        }
+
         // sessions
         services.register(SessionCache.self)
         services.register(SessionsMiddleware.self)
@@ -160,3 +170,4 @@ extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}
 extension MemoryKeyedCache: Service {}
+extension BlockingIOThreadPool: Service { }

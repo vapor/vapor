@@ -4,22 +4,25 @@
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
 public struct Abort: AbortError {
-    /// See `Debuggable.identifier`
+    /// See `Debuggable`
     public var identifier: String
 
-    /// See `AbortError.status`
+    /// See `AbortError`
     public var status: HTTPResponseStatus
 
-    /// See `AbortError.reason`
+    /// See `AbortError`
     public var reason: String
 
-    /// See `Debuggable.sourceLocation`
+    /// See `Debuggable.`
     public var sourceLocation: SourceLocation?
 
-    /// See `Debuggable.stackTrace`
+    /// See `Debuggable`
     public var stackTrace: [String]
 
     /// Create a new `Abort`, capturing current source location info.
+    ///
+    ///     throw Abort(.badRequest, reason: "Something's not quite right...")
+    ///
     public init(
         _ status: HTTPResponseStatus,
         reason: String? = nil,

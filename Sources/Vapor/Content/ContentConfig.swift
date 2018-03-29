@@ -1,6 +1,3 @@
-import Foundation
-import FormURLEncoded
-
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
 ///     var contentConfig = ContentConfig.default()
@@ -144,6 +141,7 @@ public struct ContentConfig: Service, ServiceType {
 /// MARK: Default
 
 extension ContentConfig {
+    /// Creates a `ContentConfig` with default coders already registered.
     public static func `default`() -> ContentConfig {
         var config = ContentConfig()
 

@@ -1,22 +1,31 @@
 import Console
 import Command
 
-/// Vapor's main command.
+/// Vapor's main command group.
 internal struct MainCommand: CommandGroup {
+    /// See `CommandGroup`.
     var commands: [String: CommandRunnable]
-    var defaultRunnable: CommandRunnable?
-    var options: [CommandOption]
-    var help: [String]
 
+    /// Command that will run if no other commands are specified.
+    var defaultRunnable: CommandRunnable?
+
+    /// See `CommandGroup`.
+    var options: [CommandOption] {
+        return [.flag(name: "version", short: "v", help: ["Displays the framework's version"])]
+    }
+
+    /// See `CommandGroup`.
+    var help: [String] {
+        return ["Runs your Vapor application's commands"]
+    }
+
+    /// Creates a new `MainCommand`.
     init(commands: [String: CommandRunnable], defaultRunnable: CommandRunnable?) {
         self.commands = commands
-        self.options = [
-            .flag(name: "version", short: "v", help: ["Displays the framework's version"])
-        ]
-        self.help = ["Runs your Vapor application's commands"]
         self.defaultRunnable = defaultRunnable
     }
 
+    /// See `CommandGroup`.
     func run(using context: CommandContext) throws -> Future<Void> {
         if context.options["version"] == "true" {
             context.console.info("Vapor Framework v", newLine: false)

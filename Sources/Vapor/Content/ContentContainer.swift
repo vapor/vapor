@@ -1,5 +1,3 @@
-import Foundation
-
 /// Helper for encoding and decoding `Content` from an HTTP message.
 ///
 /// See `Response.content` and `Request.content` for more information.

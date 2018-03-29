@@ -1,17 +1,14 @@
 /// A basic, closure-based responder.
 public struct BasicResponder: Responder {
-    /// Responder closure
-    public typealias Closure = (Request) throws -> Future<Response>
-
     /// The stored responder closure.
-    public let closure: Closure
+    public let closure: (Request) throws -> Future<Response>
 
-    /// Create a new basic responder.
-    public init(closure: @escaping Closure) {
+    /// Create a new `BasicResponder`.
+    public init(closure: @escaping (Request) throws -> Future<Response>) {
         self.closure = closure
     }
 
-    /// See: .Responder.respond
+    /// See `Responder`.
     public func respond(to req: Request) throws -> Future<Response> {
         return try closure(req)
     }

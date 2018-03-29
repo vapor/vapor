@@ -1,7 +1,3 @@
-import Async
-import Foundation
-import Service
-
 /// Representable as content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -184,7 +180,7 @@ extension Float: Content {
 extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
     /// See `Content.defaultMediaType`
     public static var defaultMediaType: MediaType {
-        return Element.defaultMediaType
+        return .json
     }
 }
 

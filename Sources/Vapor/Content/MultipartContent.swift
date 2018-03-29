@@ -1,6 +1,3 @@
-import Multipart
-import Foundation
-
 extension MultipartForm: Content {
     /// Encodes a MultipartForm as Data
     public func encode(to encoder: Encoder) throws {
