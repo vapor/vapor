@@ -49,7 +49,6 @@ let package = Package(
         .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
             "Async",
-            "CodableKit",
             "Command",
             "Console",
             "COperatingSystem",

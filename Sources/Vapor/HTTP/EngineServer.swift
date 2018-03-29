@@ -26,7 +26,7 @@ public final class EngineServer: Server, Service {
     }
 
     /// Start the server. Server protocol requirement.
-    public func start() -> Future<Void> {
+    public func start(hostname: String?, port: Int?) -> Future<Void> {
         let container = self.container
         let config = self.config
 
@@ -34,9 +34,12 @@ public final class EngineServer: Server, Service {
             let console = try container.make(Console.self)
             let logger = try container.make(Logger.self)
 
+            let hostname = hostname ?? config.hostname
+            let port = port ?? config.port
+
             console.print("Server starting on ", newLine: false)
-            console.output("http://" + config.hostname, style: .init(color: .cyan), newLine: false)
-            console.output(":" + config.port.description, style: .init(color: .cyan))
+            console.output("http://" + hostname, style: .init(color: .cyan), newLine: false)
+            console.output(":" + port.description, style: .init(color: .cyan))
 
             let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
 
@@ -56,8 +59,8 @@ public final class EngineServer: Server, Service {
             }
 
             return HTTPServer.start(
-                hostname: config.hostname,
-                port: config.port,
+                hostname: hostname,
+                port: port,
                 responder: EngineResponder(rootContainer: container),
                 maxBodySize: config.maxBodySize,
                 backlog: config.backlog,
@@ -155,8 +158,7 @@ extension Logger {
 /// Engine server config struct.
 public struct EngineServerConfig: Service {
     /// Detects `EngineServerConfig` from the environment.
-    public static func detect(
-        from env: inout Environment,
+    public static func `default`(
         hostname: String = "localhost",
         port: Int = 8080,
         backlog: Int = 256,
@@ -164,10 +166,10 @@ public struct EngineServerConfig: Service {
         maxBodySize: Int = 1_000_0000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true
-    ) throws -> EngineServerConfig {
-        return try EngineServerConfig(
-            hostname: env.commandInput.parse(option: .value(name: "hostname")) ?? hostname,
-            port: env.commandInput.parse(option: .value(name: "port")).flatMap(Int.init) ?? port,
+    ) -> EngineServerConfig {
+        return EngineServerConfig(
+            hostname: hostname,
+            port: port,
             backlog: backlog,
             workerCount: workerCount,
             maxBodySize: maxBodySize,

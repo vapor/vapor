@@ -20,11 +20,7 @@ extension Services {
 
         // register defualt `EngineServerConfig`
         services.register { container -> EngineServerConfig in
-            /// require app for mutable environment
-            guard let app = container as? Application else {
-                throw VaporError(identifier: "serverConfig", reason: "Default `EngineServerConfig` can only be created for `Application`.", source: .capture())
-            }
-            return try .detect(from: &app.environment)
+            return .default()
         }
 
         // bcrypt
@@ -106,6 +102,10 @@ extension Services {
         services.register { container -> CommandConfig in
             return CommandConfig.default()
         }
+        services.register { container -> ConfiguredCommands in
+            return try container.make(CommandConfig.self).resolve(for: container)
+        }
+
         services.register { container -> RoutesCommand in
             return try RoutesCommand(
                 router: container.make()

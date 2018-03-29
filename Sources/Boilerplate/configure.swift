@@ -10,8 +10,6 @@ public func configure(
     try routes(router) 
     services.register(router, as: Router.self)
 
-    try services.register(EngineServerConfig.detect(from: &env))
-
     let websockets = EngineWebSocketServer.default()
     websockets.get(.anything) { ws, req in
         ws.onText { text in

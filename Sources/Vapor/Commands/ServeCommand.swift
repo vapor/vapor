@@ -7,7 +7,10 @@ public struct ServeCommand: Command, Service {
     public let arguments: [CommandArgument] = []
 
     /// See Runnable.options
-    public let options: [CommandOption] = []
+    public let options: [CommandOption] = [
+        .value(name: "hostname", short: "h", help: ["Set the hostname the server will run on."]),
+        .value(name: "port", short: "p", help: ["Set the port the server will run on."])
+    ]
 
     /// See Runnable.help
     public let help: [String] = ["Begins serving the app over HTTP"]
@@ -22,6 +25,9 @@ public struct ServeCommand: Command, Service {
 
     /// See Runnable.run
     public func run(using context: CommandContext) throws -> Future<Void> {
-        return server.start()
+        return server.start(
+            hostname: context.options["hostname"],
+            port: context.options["port"].flatMap { Int($0) }
+        )
     }
 }
