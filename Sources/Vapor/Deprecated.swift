@@ -15,3 +15,8 @@ extension ContentCoders {
         return try requireBodyDecoder(for: mediaType)
     }
 }
+
+import Crypto
+
+@available(*, deprecated, renamed: "BCryptDigest")
+public typealias BCryptHasher = BCryptDigest
