@@ -14,7 +14,10 @@ import Service
 ///     client.get("http://vapor.codes")
 ///
 /// See `HTTPResponse` and `Container` for more information.
-public final class Response: SubContainer, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Response: ContainerAlias, CustomStringConvertible, CustomDebugStringConvertible {
+    /// See `ContainerAlias`.
+    public static let aliasedContainer: KeyPath<Response, Container> = \.sharedContainer
+
     // MARK: Stored
 
     /// The wrapped `HTTPResponse`.
@@ -25,7 +28,7 @@ public final class Response: SubContainer, CustomStringConvertible, CustomDebugS
 
     /// This `Response`'s parent container. This is normally the event loop. The `Response` will redirect
     /// all calls to create services to this container.
-    public let superContainer: Container
+    public let sharedContainer: Container
 
     /// This response's private container.
     public let privateContainer: SubContainer
@@ -40,11 +43,6 @@ public final class Response: SubContainer, CustomStringConvertible, CustomDebugS
     /// See `CustomDebugStringConvertible.debugDescription`
     public var debugDescription: String {
         return http.debugDescription
-    }
-    /// The response's event loop container.
-    /// note: convenience name for `.superContainer`
-    public var worker: Container {
-        return superContainer
     }
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
@@ -69,7 +67,7 @@ public final class Response: SubContainer, CustomStringConvertible, CustomDebugS
     /// Create a new `Response`.
     public init(http: HTTPResponse = .init(), using container: Container) {
         self.http = http
-        self.superContainer = container
+        self.sharedContainer = container
         self.privateContainer = container.subContainer(on: container)
     }
 
@@ -77,6 +75,6 @@ public final class Response: SubContainer, CustomStringConvertible, CustomDebugS
 
     /// Creates a `Request` on the same container as this `Response`.
     public func makeRequest() -> Request {
-        return Request(using: superContainer)
+        return Request(using: sharedContainer)
     }
 }

@@ -146,7 +146,6 @@ public struct ApplicationResponder: Responder, Service {
 
 extension PlaintextRenderer: Service { }
 extension Terminal: Service { }
-extension EphemeralWorkerConfig: Service { }
 extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}

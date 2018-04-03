@@ -5,7 +5,7 @@ import Foundation
 /// See `Response.content` and `Request.content` for more information.
 public struct ContentContainer {
     /// Service container, used to access `ContentCoders`.
-    internal var container: SubContainer
+    internal var container: Container
 
     /// HTTP body being decoded.
     internal var body: HTTPBody
@@ -240,13 +240,13 @@ extension ContentContainer {
 extension ContentContainer {
     /// Looks up a `HTTPBodyEncoder` for the supplied `MediaType`.
     internal func requireBodyEncoder(for mediaType: MediaType) throws -> HTTPBodyEncoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
+        let coders = try container.make(ContentCoders.self)
         return try coders.requireBodyEncoder(for: mediaType)
     }
 
     /// Looks up a `HTTPBodyDecoder` for the supplied `MediaType`.
     internal func requireBodyDecoder() throws -> HTTPBodyDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
+        let coders = try container.make(ContentCoders.self)
         guard let mediaType = mediaType else {
             throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
         }
@@ -255,7 +255,7 @@ extension ContentContainer {
 
     /// Looks up a `DataDecoder` for the supplied `MediaType`.
     internal func requireDataDecoder() throws -> DataDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
+        let coders = try container.make(ContentCoders.self)
         guard let mediaType = mediaType else {
             throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
         }

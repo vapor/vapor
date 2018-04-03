@@ -5,7 +5,7 @@ import Foundation
 /// See `Request.query` for more information.
 public struct QueryContainer {
     /// Service container, used to access `ContentCoders`.
-    internal var container: SubContainer
+    internal var container: Container
 
     /// HTTP request query string being decoded.
     internal var query: String
@@ -29,7 +29,7 @@ extension QueryContainer {
 
     /// Gets the`DataDecoder` or throws an error
     fileprivate func requireDataDecoder() throws -> DataDecoder {
-        return try container.superContainer.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
+        return try container.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
     }
 }
 

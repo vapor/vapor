@@ -29,7 +29,10 @@ import Service
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ParameterContainer, SubContainer, DatabaseConnectable, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ParameterContainer, ContainerAlias, DatabaseConnectable, CustomStringConvertible, CustomDebugStringConvertible {
+    /// See `ContainerAlias`.
+    public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
+
     // MARK: Stored
 
     /// The wrapped `HTTPRequest`.
@@ -40,7 +43,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
 
     /// This `Request`'s parent container. This is normally the event loop. The `Request` will redirect
     /// all calls to create services to this container.
-    public let superContainer: Container
+    public let sharedContainer: Container
 
     /// This request's private container. Use this container to create services that will be cached
     /// only for the lifetime of this request. For all other services, use the request directly.
@@ -105,7 +108,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     /// Create a new `Request`.
     public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
-        self.superContainer = container
+        self.sharedContainer = container
         self.privateContainer = container.subContainer(on: container)
         self.parameters = []
         hasActiveConnections = false
@@ -123,7 +126,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///
     /// returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
     public func makeResponse() -> Response {
-        return Response(using: superContainer)
+        return Response(using: sharedContainer)
     }
 
     /// Creates a `DatabaseConnection` to the database specified by the supplied `DatabaseIdentifier`.
