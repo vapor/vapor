@@ -91,7 +91,7 @@ public final class Application: Container {
     public func asyncRun() -> Future<Void> {
         return Future.flatMap(on: self) {
             // will-run all vapor service providers
-            return try self.services.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
+            return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
         }.flatMap(to: Void.self) {
             let command = try self.make(ConfiguredCommands.self)
                 .makeMainCommand()
@@ -102,7 +102,7 @@ public final class Application: Container {
             return try console.run(command, input: &runInput, on: self)
         }.flatMap(to: Void.self) {
             // did-run all vapor service providers
-            return try self.services.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+            return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
         }
     }
 
@@ -127,12 +127,9 @@ public final class Application: Container {
 
     /// Internal method. Boots the application and its providers.
     internal func boot() -> Future<Void> {
-        return Future.map(on: self) {
-            // let providers detect and mutate the environment
-            try self.services.providers.forEach { try $0.detect(&self.environment) }
-        }.flatMap(to: Void.self) {
+        return Future.flatMap(on: self) {
             // will-boot all service providers
-            return try self.services.providers.map { try $0.willBoot(self) }.flatten(on: self)
+            return try self.providers.map { try $0.willBoot(self) }.flatten(on: self)
         }.map(to: Void.self) {
             if _isDebugAssertConfiguration() && self.environment.isRelease {
                 let log = try self.make(Logger.self)
@@ -141,7 +138,7 @@ public final class Application: Container {
             }
         }.flatMap(to: Void.self) {
             // did-boot all service providers
-            return try self.services.providers.map { try $0.didBoot(self) }.flatten(on: self)
+            return try self.providers.map { try $0.didBoot(self) }.flatten(on: self)
         }
     }
 
