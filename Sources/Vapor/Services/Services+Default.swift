@@ -95,7 +95,7 @@ extension Services {
         services.register { container -> CommandConfig in
             return CommandConfig.default()
         }
-        services.register { container -> ConfiguredCommands in
+        services.register { container -> Commands in
             return try container.make(CommandConfig.self).resolve(for: container)
         }
 

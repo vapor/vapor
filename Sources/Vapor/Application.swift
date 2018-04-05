@@ -93,13 +93,13 @@ public final class Application: Container {
             // will-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
         }.flatMap(to: Void.self) {
-            let command = try self.make(ConfiguredCommands.self)
-                .makeMainCommand()
+            let command = try self.make(Commands.self)
+                .group()
             let console = try self.make(Console.self)
 
             /// Create a mutable copy of the environment input for this run.
             var runInput = self.environment.commandInput
-            return try console.run(command, input: &runInput, on: self)
+            return console.run(command, input: &runInput, on: self)
         }.flatMap(to: Void.self) {
             // did-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
