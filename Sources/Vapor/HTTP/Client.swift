@@ -18,7 +18,7 @@ extension Client {
         return Future.flatMap(on: container) {
             let req = Request(using: self.container)
             req.http.method = method
-            req.http.url = url.converToURL()!
+            req.http.url = url.convertToURL()!
             req.http.headers = headers
             return try self.respond(to: req)
         }
@@ -34,7 +34,7 @@ extension Client {
         return Future.flatMap(on: container) {
             let req = Request(using: self.container)
             req.http.method = method
-            req.http.url = url.converToURL()!
+            req.http.url = url.convertToURL()!
             req.http.headers = headers
             try req.content.encode(content)
             return try self.respond(to: req)
@@ -91,17 +91,17 @@ extension Client {
 }
 
 public protocol URLRepresentable {
-    func converToURL() -> URL?
+    func convertToURL() -> URL?
 }
 
 extension String: URLRepresentable {
-    public func converToURL() -> URL? {
+    public func convertToURL() -> URL? {
         return URL(string: self)
     }
 }
 
 extension URL: URLRepresentable {
-    public func converToURL() -> URL? {
+    public func convertToURL() -> URL? {
         return self
     }
 }
