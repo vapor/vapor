@@ -188,7 +188,7 @@ extension ContentContainer {
     ///           An error will also be thrown if this HTTP message's body type is streaming.
     public func syncDecode<D>(_ content: D.Type) throws -> D where D: Decodable {
         guard let data = body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from stremaing body.", source: .capture())
+            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
         }
         return try requireDataDecoder().decode(D.self, from: data)
     }
@@ -229,7 +229,7 @@ extension ContentContainer {
         where D: Decodable
     {
         guard let data = body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from stremaing body.", source: .capture())
+            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
         }
         return try requireDataDecoder().get(at: keyPath.makeBasicKeys(), from: data)
     }
