@@ -43,7 +43,7 @@ extension Request {
         // Only set Content-Type if file not modified and returned above.
         if
             let fileExtension = path.components(separatedBy: ".").last,
-            let type = MediaType.from(fileExtension: fileExtension)
+            let type = MediaType.fileExtension(fileExtension)
         {
             res.http.mediaType = type
         }
