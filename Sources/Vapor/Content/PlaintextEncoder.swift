@@ -4,9 +4,13 @@ import Foundation
 public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     fileprivate let encoder: _DataEncoder
 
+    /// The specific plaintext media type to use.
+    private let mediaType: MediaType
+
     /// Creates a new data encoder
-    public init() {
+    public init(mediaType: MediaType = .plainText) {
         encoder = .init()
+        self.mediaType = mediaType
     }
 
     /// See `DataEncoder`
@@ -22,7 +26,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     public func encode<E, M>(_ encodable: E, to message: inout M, on worker: Worker) throws
         where E: Encodable, M: HTTPMessage
     {
-        message.mediaType = .plainText
+        message.mediaType = self.mediaType
         message.body = try HTTPBody(data: encode(encodable))
     }
 }

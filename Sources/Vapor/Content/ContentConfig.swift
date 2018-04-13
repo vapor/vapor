@@ -163,7 +163,7 @@ extension ContentConfig {
 
         // data
         config.use(encoder: PlaintextEncoder(), for: .plainText)
-        config.use(encoder: PlaintextEncoder(), for: .html)
+        config.use(encoder: PlaintextEncoder(mediaType: .html), for: .html)
 
         // form-urlencoded
         config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
