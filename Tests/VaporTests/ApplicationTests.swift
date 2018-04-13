@@ -243,6 +243,20 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testViewResponse() throws {
+        let app = try Application.makeTest { router in
+            router.get("view") { req -> View in
+                return View(data: "<h1>hello</h1>".convertToData())
+            }
+        }
+
+        try app.test(.GET, "view") { res in
+            XCTAssertEqual(res.http.status.code, 200)
+            XCTAssertEqual(res.http.mediaType, .html)
+            XCTAssertEqual(res.http.body.string, "<h1>hello</h1>")
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -254,6 +268,7 @@ class ApplicationTests: XCTestCase {
         ("testContentContainer", testContentContainer),
         ("testMultipartDecode", testMultipartDecode),
         ("testMultipartEncode", testMultipartEncode),
+        ("testViewResponse", testViewResponse),
     ]
 }
 
