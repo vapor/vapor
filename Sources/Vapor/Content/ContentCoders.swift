@@ -9,11 +9,11 @@ public struct ContentCoders: Service, ServiceType {
         return try config.boot(using: worker)
     }
 
-    /// Configured `HTTPBodyEncoder`s.
-    private let bodyEncoders: [MediaType: HTTPBodyEncoder]
+    /// Configured `HTTPMessageEncoder`s.
+    private let httpEncoders: [MediaType: HTTPMessageEncoder]
 
-    /// Configured `HTTPBodyDecoder`s.
-    private var bodyDecoders: [MediaType: HTTPBodyDecoder]
+    /// Configured `HTTPMessageDecoder`s.
+    private var httpDecoders: [MediaType: HTTPMessageDecoder]
 
     /// Configured `DataEncoder`s.
     private var dataEncoders: [MediaType: DataEncoder]
@@ -23,30 +23,30 @@ public struct ContentCoders: Service, ServiceType {
 
     /// Internal init for creating a `ContentCoders`.
     internal init(
-        bodyEncoders: [MediaType: HTTPBodyEncoder],
-        bodyDecoders: [MediaType: HTTPBodyDecoder],
+        httpEncoders: [MediaType: HTTPMessageEncoder],
+        httpDecoders: [MediaType: HTTPMessageDecoder],
         dataEncoders: [MediaType: DataEncoder],
         dataDecoders: [MediaType: DataDecoder]
     ) {
-        self.bodyEncoders = bodyEncoders
-        self.bodyDecoders = bodyDecoders
+        self.httpEncoders = httpEncoders
+        self.httpDecoders = httpDecoders
         self.dataEncoders = dataEncoders
         self.dataDecoders = dataDecoders
     }
 
-    /// Returns a `HTTPBodyEncoder` for the specified `MediaType` or throws an error.
-    public func requireBodyEncoder(for mediaType: MediaType) throws -> HTTPBodyEncoder {
-        guard let encoder = bodyEncoders[mediaType] else {
-            throw VaporError(identifier: "httpBodyEncoder", reason: "There is no configured HTTP body encoder for \(mediaType)", source: .capture())
+    /// Returns a `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    public func requireHTTPEncoder(for mediaType: MediaType) throws -> HTTPMessageEncoder {
+        guard let encoder = httpEncoders[mediaType] else {
+            throw VaporError(identifier: "httpEncoder", reason: "There is no configured HTTP encoder for \(mediaType)", source: .capture())
         }
 
         return encoder
     }
 
-    /// Returns a `HTTPBodyDecoder` for the specified `MediaType` or throws an error.
-    public func requireBodyDecoder(for mediaType: MediaType) throws -> HTTPBodyDecoder {
-        guard let decoder = bodyDecoders[mediaType] else {
-            throw VaporError(identifier: "httpBodyDecoder", reason: "There is no configured HTTP body decoder for \(mediaType)", source: .capture())
+    /// Returns a `HTTPMessageDecoder` for the specified `MediaType` or throws an error.
+    public func requireHTTPDecoder(for mediaType: MediaType) throws -> HTTPMessageDecoder {
+        guard let decoder = httpDecoders[mediaType] else {
+            throw VaporError(identifier: "httpDecoder", reason: "There is no configured HTTP decoder for \(mediaType)", source: .capture())
         }
 
         return decoder

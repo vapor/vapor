@@ -126,9 +126,6 @@ extension Services {
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
 
-        // multipart
-        services.register(MultipartFormConfig.self)
-
         return services
     }
 }

@@ -28,6 +28,9 @@ let package = Package(
         // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
         .package(url: "https://github.com/vapor/engine.git", from: "3.0.0-rc.2"),
 
+        // 🏞 Parses and serializes multipart-encoded data with Codable support.
+        .package(url: "https://github.com/vapor/multipart.git", from: "3.0.0"),
+
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", from: "3.0.0-rc.2"),
 

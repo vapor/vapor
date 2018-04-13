@@ -29,11 +29,11 @@ public struct ContentConfig: Service, ServiceType {
     /// Represents a yet-to-be-configured object.
     typealias Lazy<T> = (Container) throws -> T
 
-    /// Configured `HTTPBodyEncoder`s.
-    private var bodyEncoders: [MediaType: Lazy<HTTPBodyEncoder>]
+    /// Configured `HTTPMessageEncoder`s.
+    private var httpEncoders: [MediaType: Lazy<HTTPMessageEncoder>]
 
-    /// Configured `HTTPBodyDecoder`s.
-    private var bodyDecoders: [MediaType: Lazy<HTTPBodyDecoder>]
+    /// Configured `HTTPMessageDecoder`s.
+    private var httpDecoders: [MediaType: Lazy<HTTPMessageDecoder>]
 
     /// Configured `DataEncoder`s.
     private var dataEncoders: [MediaType: Lazy<DataEncoder>]
@@ -43,61 +43,61 @@ public struct ContentConfig: Service, ServiceType {
 
     /// Create a new content config.
     public init() {
-        self.bodyEncoders = [:]
-        self.bodyDecoders = [:]
+        self.httpEncoders = [:]
+        self.httpDecoders = [:]
         self.dataEncoders = [:]
         self.dataDecoders = [:]
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use(encoder: HTTPBodyEncoder & DataEncoder, for mediaType: MediaType) {
-        use(bodyEncoder: encoder, for: mediaType)
+    public mutating func use(encoder: HTTPMessageEncoder & DataEncoder, for mediaType: MediaType) {
+        use(httpEncoder: encoder, for: mediaType)
         use(dataEncoder: encoder, for: mediaType)
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use(decoder: HTTPBodyDecoder & DataDecoder, for mediaType: MediaType) {
-        use(bodyDecoder: decoder, for: mediaType)
+    public mutating func use(decoder: HTTPMessageDecoder & DataDecoder, for mediaType: MediaType) {
+        use(httpDecoder: decoder, for: mediaType)
         use(dataDecoder: decoder, for: mediaType)
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: HTTPBodyEncoder & DataEncoder {
-        use(bodyEncoder: encoder, for: mediaType)
+    public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: HTTPMessageEncoder & DataEncoder {
+        use(httpEncoder: encoder, for: mediaType)
         use(dataEncoder: encoder, for: mediaType)
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: HTTPBodyDecoder & DataDecoder {
-        use(bodyDecoder: decoder, for: mediaType)
+    public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: HTTPMessageDecoder & DataDecoder {
+        use(httpDecoder: decoder, for: mediaType)
         use(dataDecoder: decoder, for: mediaType)
     }
 
 
     /// Adds an encoder for the specified media type.
-    public mutating func use(bodyEncoder: HTTPBodyEncoder, for mediaType: MediaType) {
-        self.bodyEncoders[mediaType] = { container in
-            return bodyEncoder
+    public mutating func use(httpEncoder: HTTPMessageEncoder, for mediaType: MediaType) {
+        self.httpEncoders[mediaType] = { container in
+            return httpEncoder
         }
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use(bodyDecoder: HTTPBodyDecoder, for mediaType: MediaType) {
-        self.bodyDecoders[mediaType] = { container in
-            return bodyDecoder
+    public mutating func use(httpDecoder: HTTPMessageDecoder, for mediaType: MediaType) {
+        self.httpDecoders[mediaType] = { container in
+            return httpDecoder
         }
     }
 
     /// Adds an encoder for the specified media type.
-    public mutating func use<B>(bodyEncoder: B.Type, for mediaType: MediaType) where B: HTTPBodyEncoder {
-        self.bodyEncoders[mediaType] = { container in
+    public mutating func use<B>(httpEncoder: B.Type, for mediaType: MediaType) where B: HTTPMessageEncoder {
+        self.httpEncoders[mediaType] = { container in
             return try container.make(B.self)
         }
     }
 
     /// Adds a decoder for the specified media type.
-    public mutating func use<B>(bodyDecoder: B.Type, for mediaType: MediaType) where B: HTTPBodyDecoder {
-        self.bodyDecoders[mediaType] = { container in
+    public mutating func use<B>(httpDecoder: B.Type, for mediaType: MediaType) where B: HTTPMessageDecoder {
+        self.httpDecoders[mediaType] = { container in
             return try container.make(B.self)
         }
     }
@@ -133,8 +133,8 @@ public struct ContentConfig: Service, ServiceType {
     /// Converts all of the `Lazy<T>` coders to initialized instances using the supplied container.
     internal func boot(using container: Container) throws -> ContentCoders {
         return try ContentCoders(
-            bodyEncoders: bodyEncoders.mapValues { try $0(container) },
-            bodyDecoders: bodyDecoders.mapValues { try $0(container) },
+            httpEncoders: httpEncoders.mapValues { try $0(container) },
+            httpDecoders: httpDecoders.mapValues { try $0(container) },
             dataEncoders: dataEncoders.mapValues { try $0(container) },
             dataDecoders: dataDecoders.mapValues { try $0(container) }
         )
@@ -168,6 +168,10 @@ extension ContentConfig {
         // form-urlencoded
         config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
         config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+
+        // form-data, doesn't support `Data{En|De}coder` because a predefined boundary is required
+        config.use(httpEncoder: FormDataEncoder(), for: .formData)
+        config.use(httpDecoder: FormDataDecoder(), for: .formData)
 
         return config
     }

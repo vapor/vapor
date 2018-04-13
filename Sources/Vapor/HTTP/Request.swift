@@ -29,7 +29,7 @@ import Service
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ParameterContainer, ContainerAlias, DatabaseConnectable, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ParameterContainer, ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
     /// See `ContainerAlias`.
     public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
 
@@ -98,11 +98,8 @@ public final class Request: ParameterContainer, ContainerAlias, DatabaseConnecta
     ///     print(user) /// Future<User>
     ///
     /// See `ContentContainer` methods for more information.
-    public var content: ContentContainer {
-        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
-            self.http.body = body
-            self.http.mediaType = mediaType
-        }
+    public var content: ContentContainer<Request> {
+        return ContentContainer(self)
     }
 
     /// Create a new `Request`.
