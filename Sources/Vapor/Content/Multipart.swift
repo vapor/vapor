@@ -1,3 +1,5 @@
+import Random
+
 extension FormDataDecoder: HTTPMessageDecoder {
     /// See `HTTPMessageDecoder`
     public func decode<D, M>(_ decodable: D.Type, from message: M, maxSize: Int, on worker: Worker) throws -> EventLoopFuture<D>
@@ -20,7 +22,8 @@ extension FormDataEncoder: HTTPMessageEncoder {
     public func encode<E, M>(_ encodable: E, to message: inout M, on worker: Worker) throws
         where E: Encodable, M: HTTPMessage
     {
-        let boundary: String = "asdf" // FIXME: get random one
+        let random = OSRandom().generateData(count: 16)
+        let boundary: String = "---vaporBoundary\(random.hexEncodedString())"
         message.mediaType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
         message.body = try HTTPBody(data: encode(encodable, boundary: boundary))
     }

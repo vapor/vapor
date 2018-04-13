@@ -236,6 +236,7 @@ class ApplicationTests: XCTestCase {
         }
 
         try app.test(.GET, "multipart") { res in
+            debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
             let boundary = res.http.mediaType?.parameters["boundary"] ?? "none"
             XCTAssertEqual(res.http.body.string, expected(boundary))
