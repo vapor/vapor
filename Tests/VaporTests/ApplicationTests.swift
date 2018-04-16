@@ -287,7 +287,6 @@ class ApplicationTests: XCTestCase {
     }
 
     func testURLEncodedFormEncode() throws {
-
         let expected = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
 
         struct User: Content {
@@ -311,6 +310,30 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testURLEncodedFormDecodeQuery() throws {
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
+        struct User: Content {
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = try Application.makeTest { router in
+            router.get("urlencodedform") { req -> HTTPStatus in
+                let foo = try req.query.decode(User.self)
+                XCTAssertEqual(foo.name, "Vapor")
+                XCTAssertEqual(foo.age, 3)
+                XCTAssertEqual(foo.luckyNumbers, [5, 7])
+                return .ok
+            }
+        }
+
+        let req = HTTPRequest(method: .GET, url: URL(string: "/urlencodedform?\(data)")!)
+        try app.test(req) { res in
+            XCTAssertEqual(res.http.status.code, 200)
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -325,6 +348,7 @@ class ApplicationTests: XCTestCase {
         ("testViewResponse", testViewResponse),
         ("testURLEncodedFormDecode", testURLEncodedFormDecode),
         ("testURLEncodedFormEncode", testURLEncodedFormEncode),
+        ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
     ]
 }
 
