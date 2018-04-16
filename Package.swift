@@ -40,6 +40,9 @@ let package = Package(
         // 🖋 Easy-to-use foundation for building powerful templating languages in Swift.
         .package(url: "https://github.com/vapor/template-kit.git", from: "1.0.0-rc.2"),
 
+        // 📝 Parses and serializes url-encoded form data with Codable support.
+        .package(url: "https://github.com/vapor/url-encoded-form.git", from: "1.0.0"),
+
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
         .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc.2"),
     ],
@@ -58,13 +61,13 @@ let package = Package(
             "Crypto",
             "DatabaseKit",
             "Debugging",
-            "FormURLEncoded",
             "HTTP",
             "Logging",
             "Multipart",
             "Routing",
             "Service",
             "TemplateKit",
+            "URLEncodedForm",
             "Validation",
             "WebSocket"
         ]),

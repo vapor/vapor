@@ -2,7 +2,7 @@ import Random
 
 extension FormDataDecoder: HTTPMessageDecoder {
     /// See `HTTPMessageDecoder`
-    public func decode<D, M>(_ decodable: D.Type, from message: M, maxSize: Int, on worker: Worker) throws -> EventLoopFuture<D>
+    public func decode<D, M>(_ decodable: D.Type, from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
         where D: Decodable, M: HTTPMessage
     {
         guard message.mediaType == .formData else {

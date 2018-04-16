@@ -1,6 +1,3 @@
-import Foundation
-import FormURLEncoded
-
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
 ///     var contentConfig = ContentConfig.default()
@@ -166,8 +163,8 @@ extension ContentConfig {
         config.use(encoder: PlaintextEncoder(mediaType: .html), for: .html)
 
         // form-urlencoded
-        config.use(encoder: FormURLEncoder(), for: .urlEncodedForm)
-        config.use(decoder: FormURLDecoder(), for: .urlEncodedForm)
+        config.use(encoder: URLEncodedFormEncoder(), for: .urlEncodedForm)
+        config.use(decoder: URLEncodedFormDecoder(), for: .urlEncodedForm)
 
         // form-data, doesn't support `Data{En|De}coder` because a predefined boundary is required
         config.use(httpEncoder: FormDataEncoder(), for: .formData)
