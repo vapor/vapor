@@ -205,21 +205,21 @@ class ApplicationTests: XCTestCase {
     func testMultipartEncode() throws {
         func expected(_ boundary: String) -> String {
             return  """
-                    --\(boundary)\r
-                    Content-Disposition: form-data; name=name\r
-                    \r
-                    Vapor\r
-                    --\(boundary)\r
-                    Content-Disposition: form-data; name=age\r
-                    \r
-                    3\r
-                    --\(boundary)\r
-                    Content-Disposition: form-data; filename=droplet.png; name=image\r
-                    \r
-                    <contents of image>\r
-                    --\(boundary)--\r
+            --\(boundary)\r
+            Content-Disposition: form-data; name=name\r
+            \r
+            Vapor\r
+            --\(boundary)\r
+            Content-Disposition: form-data; name=age\r
+            \r
+            3\r
+            --\(boundary)\r
+            Content-Disposition: form-data; filename=droplet.png; name=image\r
+            \r
+            <contents of image>\r
+            --\(boundary)--\r
 
-                    """
+            """
         }
 
         struct User: Content {
@@ -257,6 +257,60 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testURLEncodedFormDecode() throws {
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
+
+        struct User: Content {
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = try Application.makeTest { router in
+            router.get("urlencodedform") { req -> Future<HTTPStatus> in
+                return try req.content.decode(User.self).map(to: HTTPStatus.self) { foo in
+                    XCTAssertEqual(foo.name, "Vapor")
+                    XCTAssertEqual(foo.age, 3)
+                    XCTAssertEqual(foo.luckyNumbers, [5, 7])
+                    return .ok
+                }
+            }
+        }
+
+        var req = HTTPRequest(method: .GET, url: URL(string: "/urlencodedform")!)
+        req.mediaType = .urlEncodedForm
+        req.body = HTTPBody(string: data)
+
+        try app.test(req) { res in
+            XCTAssertEqual(res.http.status.code, 200)
+        }
+    }
+
+    func testURLEncodedFormEncode() throws {
+
+        let expected = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
+
+        struct User: Content {
+            static let defaultMediaType: MediaType = .urlEncodedForm
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = try Application.makeTest { router in
+            router.get("urlencodedform") { req -> User in
+                return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
+            }
+        }
+
+        try app.test(.GET, "urlencodedform") { res in
+            debugPrint(res)
+            XCTAssertEqual(res.http.status.code, 200)
+            XCTAssertEqual(res.http.mediaType, .urlEncodedForm)
+            XCTAssertEqual(res.http.body.string, expected)
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -269,6 +323,8 @@ class ApplicationTests: XCTestCase {
         ("testMultipartDecode", testMultipartDecode),
         ("testMultipartEncode", testMultipartEncode),
         ("testViewResponse", testViewResponse),
+        ("testURLEncodedFormDecode", testURLEncodedFormDecode),
+        ("testURLEncodedFormEncode", testURLEncodedFormEncode),
     ]
 }
 
