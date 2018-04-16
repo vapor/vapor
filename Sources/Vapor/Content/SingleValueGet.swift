@@ -9,10 +9,12 @@ extension DataDecoder {
     }
 }
 
-extension HTTPBodyDecoder {
+extension HTTPMessageDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    internal func get<D>(at keyPath: [BasicKey], from body: HTTPBody, maxSize: Int, on worker: Worker) throws -> Future<D> where D: Decodable {
-        return try self.decode(DecoderUnwrapper.self, from: body, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
+    internal func get<D, M>(at keyPath: [BasicKey], from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
+        where D: Decodable, M: HTTPMessage
+    {
+        return try self.decode(DecoderUnwrapper.self, from: message, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
             return try decoder.get(at: keyPath)
         }
     }
