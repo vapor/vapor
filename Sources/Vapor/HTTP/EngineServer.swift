@@ -79,7 +79,7 @@ public final class EngineServer: Server, Service {
     }
 }
 
-struct EngineResponder: HTTPResponder {
+struct EngineResponder: HTTPServerResponder {
     let rootContainer: Container
     init(rootContainer: Container) {
         self.rootContainer = rootContainer

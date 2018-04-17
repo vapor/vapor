@@ -306,7 +306,10 @@ class ApplicationTests: XCTestCase {
             debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
             XCTAssertEqual(res.http.mediaType, .urlEncodedForm)
-            XCTAssertEqual(res.http.body.string, expected)
+            XCTAssert(res.http.body.string.contains("luckyNumbers[]=5"))
+            XCTAssert(res.http.body.string.contains("luckyNumbers[]=7"))
+            XCTAssert(res.http.body.string.contains("age=3"))
+            XCTAssert(res.http.body.string.contains("name=Vapor"))
         }
     }
 

@@ -22,11 +22,11 @@ let package = Package(
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
         .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0-rc.2"),
 
-        // 🗄 Core services for creating database integrations.
+        // 🗄 Core services for creating database integrations.tttttttttttt
         .package(url: "https://github.com/vapor/database-kit.git", from: "1.0.0-rc.2"),
 
-        // 🚀 Non-blocking, event-driven networking for Swift (HTTP and WebSockets).
-        .package(url: "https://github.com/vapor/engine.git", from: "3.0.0-rc.2"),
+        // 🚀 Non-blocking, event-driven HTTP for Swift built on Swift NIO.
+        .package(url: "https://github.com/vapor/http.git", .branch("gm")),
 
         // 🏞 Parses and serializes multipart-encoded data with Codable support.
         .package(url: "https://github.com/vapor/multipart.git", from: "3.0.0"),
@@ -45,6 +45,9 @@ let package = Package(
 
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
         .package(url: "https://github.com/vapor/validation.git", from: "2.0.0-rc.2"),
+
+        // 🔌 Non-blocking, event-driven WebSocket client and server built on Swift NIO.
+        .package(url: "https://github.com/vapor/websocket.git", .branch("gm")),
     ],
     targets: [
         // Boilerplate

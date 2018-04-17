@@ -1,5 +1,3 @@
-import Foundation
-
 /// Checks the cookies for each `Request`
 public final class SessionsMiddleware: Middleware, Service {
     /// The cookie to work with
@@ -69,18 +67,10 @@ extension SessionsMiddleware: ServiceType {
     }
 }
 
-extension HTTPCookieValue {
-    public static var expired: HTTPCookieValue {
-        return .init(
-            string: "",
-            expires: Date(timeIntervalSince1970: 0),
-            maxAge: nil,
-            domain: nil,
-            path: nil,
-            secure: false,
-            httpOnly: false,
-            sameSite: nil
-        )
+extension HTTP.HTTPCookie {
+    /// An expired `HTTPCookie`.
+    public static func expired(name: String) -> HTTP.HTTPCookie {
+        return .init(name: name, value: "", expires: Date(timeIntervalSince1970: 0))
     }
 }
 

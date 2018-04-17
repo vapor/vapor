@@ -39,7 +39,7 @@ public struct SessionsConfig {
 }
 
 extension SessionsConfig: ServiceType {
-    /// See `ServiceType.makeService(for:)`
+    /// See `ServiceType`
     public static func makeService(for worker: Container) throws -> SessionsConfig {
         return .default()
     }
