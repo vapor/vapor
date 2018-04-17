@@ -12,12 +12,12 @@ public func configure(
 
     let websockets = EngineWebSocketServer.default()
     websockets.get(.anything) { ws, req in
-        ws.onText { text in
+        ws.onText { ws, text in
             ws.send(text.reversed())
         }
     }
     websockets.get("hi") { ws, req in
-        ws.onText { text in
+        ws.onText { ws, text in
             ws.send("hi")
         }
     }

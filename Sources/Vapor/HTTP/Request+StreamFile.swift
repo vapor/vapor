@@ -45,7 +45,7 @@ extension Request {
             let fileExtension = path.components(separatedBy: ".").last,
             let type = MediaType.fileExtension(fileExtension)
         {
-            res.http.mediaType = type
+            res.http.contentType = type
         }
 
         res.http.body = HTTPBody(data: FileManager.default.contents(atPath: path) ?? Data())

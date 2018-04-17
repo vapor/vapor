@@ -25,7 +25,7 @@ public final class SessionsMiddleware: Middleware, Service {
                     /// A session exists or has been created. we must
                     /// set a cookie value on the response
                     return try self.sessions.updateSession(session).map(to: Response.self) { value in
-                        res.http.cookies[self.cookieName] = try value.id?.makeCookieValue()
+                        res.http.cookies[self.cookieName] = value.id.flatMap(HTTPCookieValue.init)
                         return res
                     }
                 } else if let cookieValue = request.http.cookies[self.cookieName] {
@@ -66,11 +66,3 @@ extension SessionsMiddleware: ServiceType {
         )
     }
 }
-
-extension HTTP.HTTPCookie {
-    /// An expired `HTTPCookie`.
-    public static func expired(name: String) -> HTTP.HTTPCookie {
-        return .init(name: name, value: "", expires: Date(timeIntervalSince1970: 0))
-    }
-}
-

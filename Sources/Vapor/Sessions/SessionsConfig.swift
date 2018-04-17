@@ -30,8 +30,8 @@ public struct SessionsConfig {
                 maxAge: nil,
                 domain: nil,
                 path: "/",
-                secure: false,
-                httpOnly: false,
+                isSecure: false,
+                isHTTPOnly: false,
                 sameSite: nil
             )
         }
