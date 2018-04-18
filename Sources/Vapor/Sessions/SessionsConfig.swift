@@ -30,8 +30,8 @@ public struct SessionsConfig {
                 maxAge: nil,
                 domain: nil,
                 path: "/",
-                secure: false,
-                httpOnly: false,
+                isSecure: false,
+                isHTTPOnly: false,
                 sameSite: nil
             )
         }
@@ -39,7 +39,7 @@ public struct SessionsConfig {
 }
 
 extension SessionsConfig: ServiceType {
-    /// See `ServiceType.makeService(for:)`
+    /// See `ServiceType`
     public static func makeService(for worker: Container) throws -> SessionsConfig {
         return .default()
     }

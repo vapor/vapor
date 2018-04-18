@@ -1,9 +1,3 @@
-import Async
-import Bits
-import Dispatch
-import HTTP
-import Routing
-import Command
 @testable import Vapor
 import XCTest
 
@@ -11,12 +5,12 @@ class ApplicationTests: XCTestCase {
     func testContent() throws {
         let app = try Application()
         let req = Request(using: app)
-        req.http.body = try """
+        req.http.body = """
         {
             "hello": "world"
         }
-        """.makeBody()
-        req.http.mediaType = .json
+        """.convertToHTTPBody()
+        req.http.contentType = .json
         try XCTAssertEqual(req.content.get(at: "hello").wait(), "world")
     }
 
@@ -52,8 +46,8 @@ class ApplicationTests: XCTestCase {
         """
         let app = try Application()
         let req = Request(using: app)
-        req.http.body = try complexJSON.makeBody()
-        req.http.mediaType = .json
+        req.http.body = complexJSON.convertToHTTPBody()
+        req.http.contentType = .json
 
         try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").wait(), "Chocolate")
     }
@@ -61,7 +55,7 @@ class ApplicationTests: XCTestCase {
     func testQuery() throws {
         let app = try Application()
         let req = Request(using: app)
-        req.http.mediaType = .json
+        req.http.contentType = .json
         var comps = URLComponents()
         comps.query = "hello=world"
         req.http.url = comps.url!
@@ -193,7 +187,7 @@ class ApplicationTests: XCTestCase {
         }
 
         var req = HTTPRequest(method: .GET, url: URL(string: "/multipart")!)
-        req.mediaType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
+        req.contentType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
         req.body = HTTPBody(string: data)
 
         try app.test(req) { res in
@@ -238,7 +232,7 @@ class ApplicationTests: XCTestCase {
         try app.test(.GET, "multipart") { res in
             debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
-            let boundary = res.http.mediaType?.parameters["boundary"] ?? "none"
+            let boundary = res.http.contentType?.parameters["boundary"] ?? "none"
             XCTAssertEqual(res.http.body.string, expected(boundary))
         }
     }
@@ -252,7 +246,7 @@ class ApplicationTests: XCTestCase {
 
         try app.test(.GET, "view") { res in
             XCTAssertEqual(res.http.status.code, 200)
-            XCTAssertEqual(res.http.mediaType, .html)
+            XCTAssertEqual(res.http.contentType, .html)
             XCTAssertEqual(res.http.body.string, "<h1>hello</h1>")
         }
     }
@@ -278,7 +272,7 @@ class ApplicationTests: XCTestCase {
         }
 
         var req = HTTPRequest(method: .GET, url: URL(string: "/urlencodedform")!)
-        req.mediaType = .urlEncodedForm
+        req.contentType = .urlEncodedForm
         req.body = HTTPBody(string: data)
 
         try app.test(req) { res in
@@ -287,8 +281,6 @@ class ApplicationTests: XCTestCase {
     }
 
     func testURLEncodedFormEncode() throws {
-        let expected = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
-
         struct User: Content {
             static let defaultMediaType: MediaType = .urlEncodedForm
             var name: String
@@ -305,8 +297,11 @@ class ApplicationTests: XCTestCase {
         try app.test(.GET, "urlencodedform") { res in
             debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
-            XCTAssertEqual(res.http.mediaType, .urlEncodedForm)
-            XCTAssertEqual(res.http.body.string, expected)
+            XCTAssertEqual(res.http.contentType, .urlEncodedForm)
+            XCTAssert(res.http.body.string.contains("luckyNumbers[]=5"))
+            XCTAssert(res.http.body.string.contains("luckyNumbers[]=7"))
+            XCTAssert(res.http.body.string.contains("age=3"))
+            XCTAssert(res.http.body.string.contains("name=Vapor"))
         }
     }
 

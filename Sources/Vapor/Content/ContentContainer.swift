@@ -229,19 +229,19 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
     private func requireHTTPDecoder() throws -> HTTPMessageDecoder {
         let coders = try container.make(ContentCoders.self)
-        guard let mediaType = container.http.mediaType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
+        guard let contentType = container.http.contentType else {
+            throw VaporError(identifier: "contentType", reason: "Cannot decode content without content-type", source: .capture())
         }
-        return try coders.requireHTTPDecoder(for: mediaType)
+        return try coders.requireHTTPDecoder(for: contentType)
     }
 
     /// Looks up a `DataDecoder` for the supplied `MediaType`.
     private func requireDataDecoder() throws -> DataDecoder {
         let coders = try container.make(ContentCoders.self)
-        guard let mediaType = container.http.mediaType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
+        guard let contentType = container.http.contentType else {
+            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without content-type", source: .capture())
         }
-        return try coders.requireDataDecoder(for: mediaType)
+        return try coders.requireDataDecoder(for: contentType)
     }
 }
 

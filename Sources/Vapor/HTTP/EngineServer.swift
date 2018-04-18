@@ -16,6 +16,9 @@ public final class EngineServer: Server, Service {
     /// Container for setting on event loops.
     public let container: Container
 
+    /// Hold the current worker.
+    private var currentWorker: Worker?
+
     /// Create a new EngineServer using config struct.
     public init(
         config: EngineServerConfig,
@@ -42,13 +45,14 @@ public final class EngineServer: Server, Service {
             console.output(":" + port.description, style: .init(color: .cyan))
 
             let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
+            self.currentWorker = group
 
             /// http upgrade
             var upgraders: [HTTPProtocolUpgrader] = []
 
             /// web socket upgrade
             if let wss = try? container.make(WebSocketServer.self) {
-                let ws = WebSocket.httpProtocolUpgrader(shouldUpgrade: { req in
+                let ws = HTTPServer.webSocketUpgrader(shouldUpgrade: { req in
                     let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
                     return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
                 }, onUpgrade: { ws, req in
@@ -77,9 +81,18 @@ public final class EngineServer: Server, Service {
             }
         }
     }
+
+    /// Called when the server deinitializes.
+    deinit {
+        currentWorker?.shutdownGracefully {
+            if let error = $0 {
+                ERROR("shutting down server event loop: \(error)")
+            }
+        }
+    }
 }
 
-struct EngineResponder: HTTPResponder {
+struct EngineResponder: HTTPServerResponder {
     let rootContainer: Container
     init(rootContainer: Container) {
         self.rootContainer = rootContainer

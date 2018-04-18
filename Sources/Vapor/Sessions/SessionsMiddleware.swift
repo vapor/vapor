@@ -1,5 +1,3 @@
-import Foundation
-
 /// Checks the cookies for each `Request`
 public final class SessionsMiddleware: Middleware, Service {
     /// The cookie to work with
@@ -27,7 +25,7 @@ public final class SessionsMiddleware: Middleware, Service {
                     /// A session exists or has been created. we must
                     /// set a cookie value on the response
                     return try self.sessions.updateSession(session).map(to: Response.self) { value in
-                        res.http.cookies[self.cookieName] = try value.id?.makeCookieValue()
+                        res.http.cookies[self.cookieName] = value.id.flatMap(HTTPCookieValue.init)
                         return res
                     }
                 } else if let cookieValue = request.http.cookies[self.cookieName] {
@@ -68,19 +66,3 @@ extension SessionsMiddleware: ServiceType {
         )
     }
 }
-
-extension HTTPCookieValue {
-    public static var expired: HTTPCookieValue {
-        return .init(
-            string: "",
-            expires: Date(timeIntervalSince1970: 0),
-            maxAge: nil,
-            domain: nil,
-            path: nil,
-            secure: false,
-            httpOnly: false,
-            sameSite: nil
-        )
-    }
-}
-

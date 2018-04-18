@@ -5,11 +5,11 @@ extension FormDataDecoder: HTTPMessageDecoder {
     public func decode<D, M>(_ decodable: D.Type, from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
         where D: Decodable, M: HTTPMessage
     {
-        guard message.mediaType == .formData else {
-            throw HTTPError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data content-type.", source: .capture())
+        guard message.contentType == .formData else {
+            throw VaporError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data content-type.", source: .capture())
         }
-        guard let boundary = message.mediaType?.parameters["boundary"] else {
-            throw HTTPError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data boundary.", source: .capture())
+        guard let boundary = message.contentType?.parameters["boundary"] else {
+            throw VaporError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data boundary.", source: .capture())
         }
         return message.body.consumeData(max: maxSize, on: worker).map(to: D.self) { data in
             return try self.decode(D.self, from: data, boundary: boundary)
@@ -24,7 +24,7 @@ extension FormDataEncoder: HTTPMessageEncoder {
     {
         let random = OSRandom().generateData(count: 16)
         let boundary: String = "---vaporBoundary\(random.hexEncodedString())"
-        message.mediaType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
+        message.contentType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
         message.body = try HTTPBody(data: encode(encodable, boundary: boundary))
     }
 }
