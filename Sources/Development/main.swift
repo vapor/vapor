@@ -25,8 +25,7 @@ do {
 
     router.get("hash", String.parameter) { req -> String in
         let string = try req.parameters.next(String.self)
-        let hash = try BCrypt.hash(string)
-        return String(data: hash, encoding: .ascii)!
+        return try BCrypt.hash(string)
     }
 
     router.get("set") { req -> String in
