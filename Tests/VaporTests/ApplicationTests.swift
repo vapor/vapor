@@ -66,7 +66,7 @@ class ApplicationTests: XCTestCase {
     func testParameter() throws {
         let app = try Application.runningTest(port: 8081) { router in
             router.get("hello", String.parameter) { req in
-                return try req.parameter(String.self)
+                return try req.parameters.next(String.self)
             }
         }
 

@@ -11,11 +11,11 @@ public func routes(_ router: Router) throws {
     }
 
     router.get("hello", String.parameter) { req in
-        return try req.parameter(String.self)
+        return try req.parameters.next(String.self)
     }
 
     router.get("users", User.parameter, "foo") { req in
-        return try req.parameter(User.self)
+        return try req.parameters.next(User.self)
     }
 
     router.get("search") { req in
@@ -31,13 +31,7 @@ public func routes(_ router: Router) throws {
 
 struct User: Parameter, Content {
     let string: String
-
-    static func make(for parameter: String, using container: Container) throws -> EventLoopFuture<User> {
-        return Future.map(on: container) {
-            return User(string: parameter)
-        }
+    static func resolveParameter(_ parameter: String, on container: Container) throws -> Future<User> {
+        return container.eventLoop.newSucceededFuture(result: User(string: parameter))
     }
-
-    typealias ResolvedParameter = Future<User>
-
 }

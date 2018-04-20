@@ -24,8 +24,8 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func grouped(_ path: DynamicPathComponentRepresentable...) -> Router {
-        return RouteGroup(cascadingTo: self, components: path.makeDynamicPathComponents())
+    public func grouped(_ path: PathComponentsRepresentable...) -> Router {
+        return RouteGroup(cascadingTo: self, components: path.convertToPathComponents())
     }
 
 
@@ -49,8 +49,8 @@ extension Router {
     ///
     /// - Parameter path: Group path components separated by commas
     /// - Returns: created RouteGroup
-    public func group(_ path: DynamicPathComponentRepresentable..., configure: (Router) -> ()) {
-        configure(RouteGroup(cascadingTo: self, components: path.makeDynamicPathComponents()))
+    public func group(_ path: PathComponentsRepresentable..., configure: (Router) -> ()) {
+        configure(RouteGroup(cascadingTo: self, components: path.convertToPathComponents()))
     }
 
 
@@ -170,12 +170,12 @@ extension Router {
 /// All middleware will be applied to the Responder
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/)
-fileprivate final class RouteGroup: Router {
+private final class RouteGroup: Router {
     /// All routes registered to this group
     private(set) var routes: [Route<Responder>] = []
 
     let `super`: Router
-    let components: [DynamicPathComponent]
+    let components: [PathComponent]
     let middleware: [Middleware]
     
     /// Creates a new group
@@ -183,7 +183,7 @@ fileprivate final class RouteGroup: Router {
     /// All path components will be inserted before the Route's path
     ///
     /// All middleware will be applied to the Responder
-    init(cascadingTo router: Router, components: [DynamicPathComponent] = [], middleware: [Middleware] = []) {
+    init(cascadingTo router: Router, components: [PathComponent] = [], middleware: [Middleware] = []) {
         self.super = router
         self.components = components
         self.middleware = middleware

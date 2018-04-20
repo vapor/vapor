@@ -29,7 +29,7 @@ import Service
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ParameterContainer, ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
     /// See `ContainerAlias`.
     public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
 
@@ -51,9 +51,6 @@ public final class Request: ParameterContainer, ContainerAlias, DatabaseConnecta
     ///     let authCache = req.privateContainer.make(AuthCache.self)
     ///
     public let privateContainer: SubContainer
-
-    /// Holds parameters for routing. See `ParameterContainer` for more information.
-    public var parameters: Parameters
     
     /// `true` if this request has active connections. This is used to avoid unnecessarily
     /// invoking cached connections release.
@@ -83,7 +80,7 @@ public final class Request: ParameterContainer, ContainerAlias, DatabaseConnecta
     ///
     /// See `QueryContainer` methods for more information.
     public var query: QueryContainer {
-        return QueryContainer(container: self, query: http.url.query ?? "")
+        return .init(container: self, query: http.url.query ?? "")
     }
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
@@ -99,15 +96,26 @@ public final class Request: ParameterContainer, ContainerAlias, DatabaseConnecta
     ///
     /// See `ContentContainer` methods for more information.
     public var content: ContentContainer<Request> {
-        return ContentContainer(self)
+        return .init(self)
     }
+
+    /// Helper for accessing route parameters from this HTTP request.
+    ///
+    ///     let id = try req.parameters.next(Int.self)
+    ///
+    public var parameters: ParametersContainer {
+        return .init(self)
+    }
+
+    /// Internal storage for routing parameters.
+    internal var _parameters: Parameters
 
     /// Create a new `Request`.
     public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
         self.sharedContainer = container
         self.privateContainer = container.subContainer(on: container)
-        self.parameters = []
+        self._parameters = .init()
         hasActiveConnections = false
     }
 
