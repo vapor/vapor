@@ -19,7 +19,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     /// - parameters:
     ///     - content: Instance of generic `Content` to serialize to this HTTP message.
     /// - throws: Errors making encoder for the `Content` or errors during serialization.
-    public func encode<C>(_ content: C, as mediaType: MediaType = C.defaultMediaType) throws where C: Content {
+    public func encode<C>(_ content: C, as mediaType: MediaType = C.defaultContentType) throws where C: Content {
         try requireHTTPEncoder(for: mediaType).encode(content, to: &container.http, on: container)
     }
 

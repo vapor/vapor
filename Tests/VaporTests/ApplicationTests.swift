@@ -198,7 +198,7 @@ class ApplicationTests: XCTestCase {
 
     func testMultipartEncode() throws {
         struct User: Content {
-            static var defaultMediaType: MediaType = .formData
+            static var defaultContentType: MediaType = .formData
             var name: String
             var age: Int
             var image: File
@@ -266,7 +266,7 @@ class ApplicationTests: XCTestCase {
 
     func testURLEncodedFormEncode() throws {
         struct User: Content {
-            static let defaultMediaType: MediaType = .urlEncodedForm
+            static let defaultContentType: MediaType = .urlEncodedForm
             var name: String
             var age: Int
             var luckyNumbers: [Int]
