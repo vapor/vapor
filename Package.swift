@@ -22,7 +22,7 @@ let package = Package(
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
         .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0-rc.2"),
 
-        // 🗄 Core services for creating database integrations.tttttttttttt
+        // 🗄 Core services for creating database integrations.
         .package(url: "https://github.com/vapor/database-kit.git", from: "1.0.0-rc.2"),
 
         // 🚀 Non-blocking, event-driven HTTP for Swift built on Swift NIO.
@@ -32,7 +32,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/multipart.git", from: "3.0.0"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing.git", from: "3.0.0-rc.2"),
+        .package(url: "https://github.com/vapor/routing.git", from: "3.0.0"),
 
         // 📦 Dependency injection / inversion of control framework.
         .package(url: "https://github.com/vapor/service.git", from: "1.0.0-rc.2"),

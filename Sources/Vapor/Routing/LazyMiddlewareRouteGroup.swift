@@ -1,3 +1,5 @@
+import Routing
+
 extension Router {
     /// Creates a group with the provided middleware type.
     ///

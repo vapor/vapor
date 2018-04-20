@@ -38,14 +38,8 @@ class FakeMiddleware: Middleware {
 /// Equatable
 // FIXME: move to Engine
 
-extension PathComponent : Equatable {
+extension PathComponent: Equatable {
     public static func ==(lhs: PathComponent, rhs: PathComponent) -> Bool {
-        return rhs.bytes == lhs.bytes
-    }
-}
-
-extension DynamicPathComponent: Equatable {
-    public static func ==(lhs: DynamicPathComponent, rhs: DynamicPathComponent) -> Bool {
         switch (lhs, rhs) {
         case (.constant(let lParams), .constant(let rParams)):
             return lParams == rParams
