@@ -6,6 +6,11 @@ public struct ParametersContainer {
     /// Private `Request`.
     private let request: Request
 
+    /// The `ParameterValue`s that this request collected as it was being routed.
+    public var values: [ParameterValue] {
+        return request._parameters.values
+    }
+
     /// Creates a new `ParametersContainer`. Use `Request.parameters`.
     init(_ request: Request) {
         self.request = request
