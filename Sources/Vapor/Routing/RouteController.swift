@@ -1,7 +1,7 @@
 import Routing
 
 /// RouteCollection conformance provides a convenient way of organizing registration of a group of request handlers from
-/// a controller instance onto router objects.
+/// a controller instance onto `Router` objects.
 ///
 ///     router.register(MyRouteCollection.self)
 ///
@@ -11,7 +11,7 @@ import Routing
 public typealias RouteCollection = RouteController
 
 /// RouteController conformance provides a convenient way of organizing registration of a group of request handlers from
-/// a controller instance onto router objects.
+/// a controller instance onto `Router` objects.
 ///
 ///     router.register(MyRouteController.self)
 ///
@@ -27,7 +27,7 @@ public protocol RouteController {
     ///         // etc.
     ///     }
     ///
-    ///     // Or don't
+    ///     // or don't
     ///     router.get(use: getAllHandler)
     ///     router.get(Int.parameter, use: getHandler)
     ///
@@ -44,7 +44,7 @@ public protocol RouteController {
     ///         // etc.
     ///     }
     ///
-    ///     // Or don't
+    ///     // or don't
     ///     router.get(use: getAllHandler)
     ///     router.get(Int.parameter, use: getHandler)
     ///
@@ -53,15 +53,15 @@ public protocol RouteController {
 }
 
 extension Router {
-    /// Calls `RouteCollection.boot(router:)` to allow the provided type to manage how its route handlers are registered to
+    /// Calls `RouteCollection.boot(router:)` to allow the provided object to manage how its route handlers are registered to
     /// this instance.
     @available(*, deprecated, renamed: "register(_:)")
     public func register(collection: RouteCollection) throws {
         try collection.boot(router: self)
     }
 
-    /// Calls the `RouteController.boot(on:)` hook to allow the provided type to manage how its route handlers
-    /// are registered to this instance.
+    /// Calls the `RouteController.boot(on:)` hook to allow the provided object to manage how its route handlers are
+    /// registered to this instance.
     public func register(_ controller: RouteController) throws {
         try controller.boot(on: self)
     }
