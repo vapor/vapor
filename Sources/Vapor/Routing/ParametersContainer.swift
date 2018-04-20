@@ -1,3 +1,5 @@
+import Routing
+
 /// Helper for accessing route parameters from an HTTP request.
 ///
 ///     let id = try req.parameters.next(Int.self)
