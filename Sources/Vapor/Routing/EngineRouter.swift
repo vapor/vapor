@@ -5,7 +5,7 @@ import Foundation
 /// An HTTP wrapper around the TrieNodeRouter
 public final class EngineRouter: Router {
     /// The internal router
-    private let router: Routing.Router<Responder>
+    private let router: TrieRouter<Responder>
 
     private let notFound: Responder
 

@@ -1,5 +1,3 @@
-import Routing
-
 /// Vapor's default `WebSocketServer` implementation. Includes conformance to `WebSocketServer`
 /// that is backed by a `TrieRouter` for registering multiple different websocket handlers.
 ///
@@ -16,7 +14,7 @@ import Routing
 public final class EngineWebSocketServer: WebSocketServer, Service {
     /// The internal trie-node router backing this server.
     /// This will be used to register and retreive all websocket responding routes.
-    private let router: Routing.Router<WebSocketResponder>
+    private let router: TrieRouter<WebSocketResponder>
 
     /// All websocket responder routes that have been added to this `EngineWebSocketServer`.
     public var routes: [Route<WebSocketResponder>]

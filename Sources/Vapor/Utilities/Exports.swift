@@ -10,13 +10,9 @@
 @_exported import Multipart
 @_exported import NIO
 @_exported import NIOHTTP1
+@_exported import Routing
 @_exported import Service
 @_exported import TemplateKit
 @_exported import URLEncodedForm
 @_exported import Validation
 @_exported import WebSocket
-
-/// Only import `Parameter` from routing because both modules
-/// declare a `Router` type.
-import Routing
-public typealias Parameter = Routing.Parameter
