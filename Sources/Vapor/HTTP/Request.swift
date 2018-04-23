@@ -18,7 +18,7 @@ import Service
 /// `Request` is also the `ParameterContainer` for routing. Use `.parameter(...)` to fetch parameterized values.
 ///
 ///     router.get("hello", String.parameter) { req in
-///         let name = try req.parameter(String.self)
+///         let name = try req.parameters.next(String.self)
 ///         return "Hello, \(name)!"
 ///     }
 ///
