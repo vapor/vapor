@@ -21,7 +21,7 @@ extension QueryContainer {
     ///
     /// - parameters:
     ///     - content: `Decodable` type to decode from this HTTP message.
-    /// - returns: Instace of the `Decodable` type.
+    /// - returns: Instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the query string.
     public func decode<D>(_ decodable: D.Type) throws -> D where D: Decodable {
         return try requireDataDecoder().decode(D.self, from: query)
