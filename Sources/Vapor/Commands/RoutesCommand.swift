@@ -45,7 +45,7 @@ public struct RoutesCommand: Command, Service {
                     pathLength += const.count + 1 // /const
                 case .parameter(let param):
                     pathLength += param.count + 2 // /:param
-                case .anything:
+                case .anything, .catchall:
                     pathLength += 2 // /*
                 }
             }
@@ -97,6 +97,9 @@ public struct RoutesCommand: Command, Service {
                     console.info(param, newLine: false)
                     pathLength += param.count + 2
                 case .anything:
+                    console.info("/:", newLine: false)
+                    pathLength += 2
+                case .catchall:
                     console.info("/*", newLine: false)
                     pathLength += 2
                 }
