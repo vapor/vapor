@@ -13,17 +13,20 @@ public final class ConsoleLogger: Logger {
 
     /// See ConsoleLogger.log
     public func log(_ string: String, at level: LogLevel, file: String, function: String, line: UInt, column: UInt) {
-        console.output("[ ", style: level.style, newLine: false)
-        console.output(level.description, style: level.style, newLine: false)
-        console.output(" ] ", style: level.style, newLine: false)
-        console.print(string, newLine: false)
-        let file = String(file.split(separator: "/").last!)
-        console.output(" (", style: .info, newLine: false)
-        console.output(file, style: .info, newLine: false)
-        console.output(":", style: .info, newLine: false)
-        console.output(line.description, style: .info, newLine: false)
-        console.output(")", style: .info, newLine: false)
-        console.print()
+        console.output(
+            ConsoleText(fragments: [
+                ConsoleTextFragment(string: "[ ", style: level.style),
+                ConsoleTextFragment(string: level.description, style: level.style),
+                ConsoleTextFragment(string: " ] ", style: level.style),
+                ConsoleTextFragment(string: string),
+                ConsoleTextFragment(string: " (", style: .info),
+                ConsoleTextFragment(string: String(file.split(separator: "/").last!), style: .info),
+                ConsoleTextFragment(string: ":", style: .info),
+                ConsoleTextFragment(string: line.description, style: .info),
+                ConsoleTextFragment(string: ")", style: .info),
+                ]
+            )
+        )
     }
 }
 

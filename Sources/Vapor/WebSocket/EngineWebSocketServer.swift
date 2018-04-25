@@ -50,10 +50,9 @@ public final class EngineWebSocketServer: WebSocketServer, Service {
     /// - returns: HTTPHeaders to include in the 101 switching protocols HTTP response.
     ///            If `nil`, the HTTP upgrade request will be denied.
     public func webSocketShouldUpgrade(for request: Request) -> HTTPHeaders? {
-        guard let route = router.route(
-            path: request.http.urlString.split(separator: "/").map { .init(substring: $0) },
-            parameters: request
-        ) else {
+        // FIXME: move to using uri bytes when possible
+        let path: [String] = request.http.urlString.split(separator: "/").map { String($0) }
+        guard let route = router.route(path: path, parameters: &request._parameters) else {
             return nil
         }
         return route.shouldUpgrade(request)
@@ -66,12 +65,10 @@ public final class EngineWebSocketServer: WebSocketServer, Service {
     ///     - webSocket: The newly connected websocket client. Use this to send and receive messages from the client.
     ///     - request: The HTTP request that initiated the websocket protocol upgrade.
     public func webSocketOnUpgrade(_ webSocket: WebSocket, for request: Request) {
+        let path: [String] = request.http.urlString.split(separator: "/").map { String($0) }
         do {
-            guard let route = router.route(
-                path: request.http.urlString.split(separator: "/").map { .init(substring: $0) },
-                parameters: request
-                ) else {
-                    throw VaporError(identifier: "websocketOnUpgrade", reason: "Could not find route for upgraded WebSocket", source: .capture())
+            guard let route = router.route(path: path, parameters: &request._parameters) else {
+                throw VaporError(identifier: "websocketOnUpgrade", reason: "Could not find route for upgraded WebSocket", source: .capture())
             }
             try route.onUpgrade(webSocket, request)
         } catch {
@@ -95,7 +92,7 @@ extension EngineWebSocketServer {
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
     @discardableResult
-    public func get(at path: [DynamicPathComponent], use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
+    public func get(at path: [PathComponent], use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
         let responder = WebSocketResponder(
             shouldUpgrade: { _ in [:] },
             onUpgrade: closure
@@ -116,8 +113,8 @@ extension EngineWebSocketServer {
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
     @discardableResult
-    public func get(_ path: DynamicPathComponent..., use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
-        return self.get(at: path, use: closure)
+    public func get(_ path: PathComponent..., use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
+        return get(at: path, use: closure)
     }
 
     /// Registers a new websocket handling route at the supplied dynamic path.
@@ -131,7 +128,7 @@ extension EngineWebSocketServer {
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
     @discardableResult
-    public func get(_ path: DynamicPathComponentRepresentable..., use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
-        return self.get(at: path.makeDynamicPathComponents(), use: closure)
+    public func get(_ path: PathComponentsRepresentable..., use closure: @escaping (WebSocket, Request) throws -> ()) -> Route<WebSocketResponder> {
+        return get(at: path.convertToPathComponents(), use: closure)
     }
 }

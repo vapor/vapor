@@ -1,8 +1,8 @@
 import Async
 
 extension View: Content {
-    /// See Content.defaultMediaType
-    public static var defaultMediaType: MediaType {
+    /// See Content.defaultContentType
+    public static var defaultContentType: MediaType {
         return .html
     }
 }

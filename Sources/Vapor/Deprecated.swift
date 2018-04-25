@@ -1,17 +1,17 @@
-@available(*, deprecated, renamed: "HTTPBodyEncoder")
-public typealias BodyEncoder = HTTPBodyEncoder
-@available(*, deprecated, renamed: "HTTPBodyDecoder")
-public typealias BodyDecoder = HTTPBodyDecoder
-
-
-extension ContentCoders {
-    @available(*, deprecated, renamed: "requireBodyEncoder(for:)")
-    public func requireEncoder(for mediaType: MediaType) throws -> HTTPBodyEncoder {
-        return try requireBodyEncoder(for: mediaType)
+extension Request {
+    /// Use `Request.parameters`.
+    @available(*, deprecated, renamed: "parameters.next")
+    public func parameter<P>() throws -> P
+        where P: Parameter, P.ResolvedParameter == P
+    {
+        return try parameters.next(P.self)
     }
 
-    @available(*, deprecated, renamed: "requireBodyDecoder(for:)")
-    public func requireDecoder(for mediaType: MediaType) throws -> HTTPBodyDecoder {
-        return try requireBodyDecoder(for: mediaType)
+    /// Use `Request.parameters`.
+    @available(*, deprecated, renamed: "parameters.next")
+    public func parameter<P>(_ parameter: P.Type) throws -> P.ResolvedParameter
+        where P: Parameter
+    {
+        return try parameters.next(P.self)
     }
 }

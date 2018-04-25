@@ -12,13 +12,3 @@ extension CommandConfig {
         return config
     }
 }
-
-extension ConfiguredCommands {
-    /// Converts the config into a command group.
-    internal func makeMainCommand() -> MainCommand {
-        return MainCommand(
-            commands: commands,
-            defaultRunnable: defaultCommand
-        )
-    }
-}

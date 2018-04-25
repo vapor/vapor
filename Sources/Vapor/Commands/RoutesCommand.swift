@@ -45,7 +45,7 @@ public struct RoutesCommand: Command, Service {
                     pathLength += const.count + 1 // /const
                 case .parameter(let param):
                     pathLength += param.count + 2 // /:param
-                case .anything:
+                case .anything, .catchall:
                     pathLength += 2 // /*
                 }
             }
@@ -75,7 +75,7 @@ public struct RoutesCommand: Command, Service {
             guard let first = route.path.first, case .constant(let method) = first else {
                 continue
             }
-            console.success(method.string, newLine: false)
+            console.success(method, newLine: false)
 
             for _ in 0..<longestMethod - method.count {
                 console.print(" ", newLine: false)
@@ -89,14 +89,17 @@ public struct RoutesCommand: Command, Service {
                 switch comp {
                 case .constant(let const):
                     console.info("/", newLine: false)
-                    console.print(const.string, newLine: false)
+                    console.print(const, newLine: false)
                     pathLength += const.count + 1
                 case .parameter(let param):
                     console.info("/", newLine: false)
                     console.print(":", newLine: false)
-                    console.info(param.string, newLine: false)
+                    console.info(param, newLine: false)
                     pathLength += param.count + 2
                 case .anything:
+                    console.info("/:", newLine: false)
+                    pathLength += 2
+                case .catchall:
                     console.info("/*", newLine: false)
                     pathLength += 2
                 }

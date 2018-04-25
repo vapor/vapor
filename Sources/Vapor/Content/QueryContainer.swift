@@ -5,7 +5,7 @@ import Foundation
 /// See `Request.query` for more information.
 public struct QueryContainer {
     /// Service container, used to access `ContentCoders`.
-    internal var container: SubContainer
+    internal var container: Container
 
     /// HTTP request query string being decoded.
     internal var query: String
@@ -21,7 +21,7 @@ extension QueryContainer {
     ///
     /// - parameters:
     ///     - content: `Decodable` type to decode from this HTTP message.
-    /// - returns: Instace of the `Decodable` type.
+    /// - returns: Instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the query string.
     public func decode<D>(_ decodable: D.Type) throws -> D where D: Decodable {
         return try requireDataDecoder().decode(D.self, from: query)
@@ -29,7 +29,7 @@ extension QueryContainer {
 
     /// Gets the`DataDecoder` or throws an error
     fileprivate func requireDataDecoder() throws -> DataDecoder {
-        return try container.superContainer.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
+        return try container.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
     }
 }
 

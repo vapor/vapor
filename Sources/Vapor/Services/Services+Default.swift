@@ -1,5 +1,6 @@
 import Async
 import Console
+import Crypto
 import Dispatch
 import Foundation
 import Routing
@@ -24,18 +25,8 @@ extension Services {
         }
 
         // bcrypt
-        services.register { container -> BCryptHasher in
-            let cost: UInt
-
-            switch container.environment {
-            case .production: cost = 12
-            default: cost = 4
-            }
-            
-            return BCryptHasher(
-                version: .two(.y),
-                cost: cost
-            )
+        services.register { container -> BCryptDigest in
+            return .init()
         }
 
         // sessions
@@ -102,7 +93,7 @@ extension Services {
         services.register { container -> CommandConfig in
             return CommandConfig.default()
         }
-        services.register { container -> ConfiguredCommands in
+        services.register { container -> Commands in
             return try container.make(CommandConfig.self).resolve(for: container)
         }
 
@@ -133,9 +124,6 @@ extension Services {
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
 
-        // multipart
-        services.register(MultipartFormConfig.self)
-
         return services
     }
 }
@@ -153,8 +141,7 @@ public struct ApplicationResponder: Responder, Service {
 
 extension PlaintextRenderer: Service { }
 extension Terminal: Service { }
-extension EphemeralWorkerConfig: Service { }
 extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}
-extension MemoryKeyedCache: Service {}
+extension BCryptDigest: Service { }

@@ -5,7 +5,6 @@
 @_exported import Console
 @_exported import Command
 @_exported import DatabaseKit
-@_exported import FormURLEncoded
 @_exported import HTTP
 @_exported import Logging
 @_exported import Multipart
@@ -14,4 +13,6 @@
 @_exported import Routing
 @_exported import Service
 @_exported import TemplateKit
+@_exported import URLEncodedForm
+@_exported import Validation
 @_exported import WebSocket

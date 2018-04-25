@@ -18,7 +18,7 @@ import Service
 /// `Request` is also the `ParameterContainer` for routing. Use `.parameter(...)` to fetch parameterized values.
 ///
 ///     router.get("hello", String.parameter) { req in
-///         let name = try req.parameter(String.self)
+///         let name = try req.parameters.next(String.self)
 ///         return "Hello, \(name)!"
 ///     }
 ///
@@ -29,7 +29,10 @@ import Service
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ParameterContainer, SubContainer, DatabaseConnectable, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
+    /// See `ContainerAlias`.
+    public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
+
     // MARK: Stored
 
     /// The wrapped `HTTPRequest`.
@@ -40,7 +43,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
 
     /// This `Request`'s parent container. This is normally the event loop. The `Request` will redirect
     /// all calls to create services to this container.
-    public let superContainer: Container
+    public let sharedContainer: Container
 
     /// This request's private container. Use this container to create services that will be cached
     /// only for the lifetime of this request. For all other services, use the request directly.
@@ -48,9 +51,6 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///     let authCache = req.privateContainer.make(AuthCache.self)
     ///
     public let privateContainer: SubContainer
-
-    /// Holds parameters for routing. See `ParameterContainer` for more information.
-    public var parameters: Parameters
     
     /// `true` if this request has active connections. This is used to avoid unnecessarily
     /// invoking cached connections release.
@@ -80,7 +80,7 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///
     /// See `QueryContainer` methods for more information.
     public var query: QueryContainer {
-        return QueryContainer(container: self, query: http.url.query ?? "")
+        return .init(container: self, query: http.url.query ?? "")
     }
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
@@ -95,19 +95,27 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///     print(user) /// Future<User>
     ///
     /// See `ContentContainer` methods for more information.
-    public var content: ContentContainer {
-        return ContentContainer(container: self, body: http.body, mediaType: http.mediaType) { body, mediaType in
-            self.http.body = body
-            self.http.mediaType = mediaType
-        }
+    public var content: ContentContainer<Request> {
+        return .init(self)
     }
+
+    /// Helper for accessing route parameters from this HTTP request.
+    ///
+    ///     let id = try req.parameters.next(Int.self)
+    ///
+    public var parameters: ParametersContainer {
+        return .init(self)
+    }
+
+    /// Internal storage for routing parameters.
+    internal var _parameters: Parameters
 
     /// Create a new `Request`.
     public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
-        self.superContainer = container
+        self.sharedContainer = container
         self.privateContainer = container.subContainer(on: container)
-        self.parameters = []
+        self._parameters = .init()
         hasActiveConnections = false
     }
 
@@ -123,15 +131,11 @@ public final class Request: ParameterContainer, SubContainer, DatabaseConnectabl
     ///
     /// returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
     public func makeResponse() -> Response {
-        return Response(using: superContainer)
+        return Response(using: sharedContainer)
     }
 
-    /// Creates a `DatabaseConnection` to the database specified by the supplied `DatabaseIdentifier`.
-    ///
-    /// This connection will be cached for the lifetime of this request.
-    ///
-    /// See `DatabaseConnectable.connect(to:)`
-    public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
+    /// See `DatabaseConnectable`.
+    public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection>{
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",

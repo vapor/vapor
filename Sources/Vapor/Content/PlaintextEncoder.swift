@@ -1,15 +1,19 @@
 import Foundation
 
 /// Encodes data as plaintext, utf8.
-public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
+public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     fileprivate let encoder: _DataEncoder
 
+    /// The specific plaintext media type to use.
+    private let contentType: MediaType
+
     /// Creates a new data encoder
-    public init() {
+    public init(_ contentType: MediaType = .plainText) {
         encoder = .init()
+        self.contentType = contentType
     }
 
-    /// See `DataEncoder.encode(_:)`
+    /// See `DataEncoder`
     public func encode<E>(_ encodable: E) throws -> Data where E : Encodable {
         try encodable.encode(to: encoder)
         guard let data = encoder.data else {
@@ -18,9 +22,12 @@ public final class PlaintextEncoder: DataEncoder, HTTPBodyEncoder {
         return data
     }
 
-    /// See `HTTPBodyEncoder.encode(from:)`
-    public func encodeBody<E>(from encodable: E) throws -> HTTPBody where E : Encodable {
-        return try HTTPBody(data: encode(encodable))
+    /// See `HTTPMessageEncoder`.
+    public func encode<E, M>(_ encodable: E, to message: inout M, on worker: Worker) throws
+        where E: Encodable, M: HTTPMessage
+    {
+        message.contentType = self.contentType
+        message.body = try HTTPBody(data: encode(encodable))
     }
 }
 

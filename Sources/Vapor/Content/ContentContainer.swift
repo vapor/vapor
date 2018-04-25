@@ -1,25 +1,17 @@
-import Foundation
-
 /// Helper for encoding and decoding `Content` from an HTTP message.
 ///
 /// See `Response.content` and `Request.content` for more information.
-public struct ContentContainer {
-    /// Service container, used to access `ContentCoders`.
-    internal var container: SubContainer
+public struct ContentContainer<M> where M: HTTPMessageContainer {
+    /// The wrapped message container.
+    var container: M
 
-    /// HTTP body being decoded.
-    internal var body: HTTPBody
+    /// Creates a new `ContentContainer`.
+    init(_ container: M) {
+        self.container = container
+    }
 
-    /// This HTTP message's media type, if it was set. This will determine which HTTP body coder to use.
-    internal let mediaType: MediaType?
+    // MARK: Encode & Decode
 
-    /// Called with updated body/media type when something is encoded.
-    internal var update: (HTTPBody, MediaType) -> ()
-}
-
-/// MARK: Encode & Decoder
-
-extension ContentContainer {
     /// Serializes `Content` to this HTTP message. Uses the Content's default media type if none is supplied.
     ///
     ///     try req.content.encode(user)
@@ -27,10 +19,8 @@ extension ContentContainer {
     /// - parameters:
     ///     - content: Instance of generic `Content` to serialize to this HTTP message.
     /// - throws: Errors making encoder for the `Content` or errors during serialization.
-    public func encode<C>(_ content: C) throws where C: Content {
-        let encoder = try requireBodyEncoder(for: C.defaultMediaType)
-        let body = try encoder.encodeBody(from: content)
-        update(body, C.defaultMediaType)
+    public func encode<C>(_ content: C, as mediaType: MediaType = C.defaultContentType) throws where C: Content {
+        try requireHTTPEncoder(for: mediaType).encode(content, to: &container.http, on: container)
     }
 
     /// Serializes an `Encodable` object to this message using specific `MediaType`.
@@ -42,9 +32,7 @@ extension ContentContainer {
     ///     - mediaType: Specific `MediaType` to encode. This will be used to lookup an appropriate encoder from `ContentConfig`.
     /// - throws: Errors making encoder for the `Content` or errors during serialization.
     public func encode<E>(_ encodable: E, as mediaType: MediaType) throws where E: Encodable {
-        let encoder = try requireBodyEncoder(for: mediaType)
-        let body = try encoder.encodeBody(from: encodable)
-        update(body, mediaType)
+        try requireHTTPEncoder(for: mediaType).encode(encodable, to: &container.http, on: container)
     }
     
     /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously
@@ -61,13 +49,11 @@ extension ContentContainer {
     /// - returns: Future instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the message.
     public func decode<D>(_ content: D.Type, maxSize: Int = 65_536) throws -> Future<D> where D: Decodable {
-        return try requireBodyDecoder().decode(D.self, from: body, maxSize: maxSize, on: container)
+        return try requireHTTPDecoder().decode(D.self, from: container.http, maxSize: maxSize, on: container)
     }
-}
 
-// MARK: Decode Single Value
+    // MARK: Single Value
 
-extension ContentContainer {
     /// Fetches a single `Decodable` value at the supplied key-path from this HTTP message's data.
     /// This method supports streaming HTTP bodies (chunked) and runs asynchronously.
     /// See `syncGet(_:at:)` for the streaming version.
@@ -165,14 +151,12 @@ extension ContentContainer {
         where D: Decodable
     {
         return Future.flatMap(on: container) {
-            return try self.requireBodyDecoder().get(at: keyPath.makeBasicKeys(), from: self.body, maxSize: maxSize, on: self.container)
+            return try self.requireHTTPDecoder().get(at: keyPath.makeBasicKeys(), from: self.container.http, maxSize: maxSize, on: self.container)
         }
     }
-}
 
-// MARK: Sync Decode & Single Value
+    // MARK: Sync
 
-extension ContentContainer {
     /// Parses a `Decodable` type from this HTTP message. This method does _not_ support streaming HTTP bodies (chunked) and runs synchronously.
     /// See `decode(_:maxSize:)` for the streaming version.
     ///
@@ -187,8 +171,8 @@ extension ContentContainer {
     /// - throws: Any errors making the decoder for this media type or parsing the message.
     ///           An error will also be thrown if this HTTP message's body type is streaming.
     public func syncDecode<D>(_ content: D.Type) throws -> D where D: Decodable {
-        guard let data = body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from stremaing body.", source: .capture())
+        guard let data = container.http.body.data else {
+            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
         }
         return try requireDataDecoder().decode(D.self, from: data)
     }
@@ -228,38 +212,36 @@ extension ContentContainer {
     public func syncGet<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        guard let data = body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from stremaing body.", source: .capture())
+        guard let data = container.http.body.data else {
+            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
         }
         return try requireDataDecoder().get(at: keyPath.makeBasicKeys(), from: data)
     }
-}
 
-/// MARK: Encoder / Decoder
+    // MARK: Private
 
-extension ContentContainer {
-    /// Looks up a `HTTPBodyEncoder` for the supplied `MediaType`.
-    internal func requireBodyEncoder(for mediaType: MediaType) throws -> HTTPBodyEncoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
-        return try coders.requireBodyEncoder(for: mediaType)
+    /// Looks up a `HTTPMessageEncoder` for the supplied `MediaType`.
+    private func requireHTTPEncoder(for mediaType: MediaType) throws -> HTTPMessageEncoder {
+        let coders = try container.make(ContentCoders.self)
+        return try coders.requireHTTPEncoder(for: mediaType)
     }
 
-    /// Looks up a `HTTPBodyDecoder` for the supplied `MediaType`.
-    internal func requireBodyDecoder() throws -> HTTPBodyDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
-        guard let mediaType = mediaType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
+    /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
+    private func requireHTTPDecoder() throws -> HTTPMessageDecoder {
+        let coders = try container.make(ContentCoders.self)
+        guard let contentType = container.http.contentType else {
+            throw VaporError(identifier: "contentType", reason: "Cannot decode content without content-type", source: .capture())
         }
-        return try coders.requireBodyDecoder(for: mediaType)
+        return try coders.requireHTTPDecoder(for: contentType)
     }
 
     /// Looks up a `DataDecoder` for the supplied `MediaType`.
-    internal func requireDataDecoder() throws -> DataDecoder {
-        let coders = try container.superContainer.make(ContentCoders.self)
-        guard let mediaType = mediaType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without Media Type", source: .capture())
+    private func requireDataDecoder() throws -> DataDecoder {
+        let coders = try container.make(ContentCoders.self)
+        guard let contentType = container.http.contentType else {
+            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without content-type", source: .capture())
         }
-        return try coders.requireDataDecoder(for: mediaType)
+        return try coders.requireDataDecoder(for: contentType)
     }
 }
 

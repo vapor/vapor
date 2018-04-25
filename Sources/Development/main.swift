@@ -2,6 +2,7 @@ import COperatingSystem
 import Vapor
 import Dispatch
 import Foundation
+import Crypto
 
 do {
     var services = Services.default()
@@ -23,8 +24,8 @@ do {
     }
 
     router.get("hash", String.parameter) { req -> String in
-        let string = try req.parameter(String.self)
-        return try req.make(BCryptHasher.self).make(string)
+        let string = try req.parameters.next(String.self)
+        return try BCrypt.hash(string)
     }
 
     router.get("set") { req -> String in
@@ -101,7 +102,7 @@ do {
     }
 
     router.get("string", String.parameter) { req -> String in
-        return try req.parameter(String.self)
+        return try req.parameters.next(String.self)
     }
 
     router.get("error") { req -> Future<String> in
