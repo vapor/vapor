@@ -26,7 +26,7 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
     /// Default implementation is `MediaType.json` for all types.
     ///
     ///     struct Hello: Content {
-    ///         static let defaultMediaType = .urlEncodedForm
+    ///         static let defaultContentType = .urlEncodedForm
     ///         let message = "Hello!"
     ///     }
     ///
@@ -40,7 +40,7 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
     ///         return res /// {"message":"Hello!"}
     ///     }
     ///
-    static var defaultMediaType: MediaType { get }
+    static var defaultContentType: MediaType { get }
 }
 
 /// MARK: Default Implementations
@@ -48,8 +48,8 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
 extension Content {
     /// Default implementation is `MediaType.json` for all types.
     ///
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .json
     }
 
@@ -91,106 +91,106 @@ extension Content {
 // MARK: Default Conformances
 
 extension String: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int8: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int16: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int32: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int64: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt8: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt16: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt32: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt64: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Double: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Float: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
-        return Element.defaultMediaType
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
+        return Element.defaultContentType
     }
 }
 
 extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
-    /// See `Content.defaultMediaType`
-    public static var defaultMediaType: MediaType {
+    /// See `Content.defaultContentType`
+    public static var defaultContentType: MediaType {
         return .json
     }
 }
