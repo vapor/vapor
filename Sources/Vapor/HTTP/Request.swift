@@ -134,12 +134,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         return Response(using: sharedContainer)
     }
 
-    /// Creates a `DatabaseConnection` to the database specified by the supplied `DatabaseIdentifier`.
-    ///
-    /// This connection will be cached for the lifetime of this request.
-    ///
-    /// See `DatabaseConnectable.connect(to:)`
-    public func connect<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
+    /// See `DatabaseConnectable`.
+    public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection>{
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",

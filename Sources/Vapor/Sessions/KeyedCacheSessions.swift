@@ -2,7 +2,6 @@ import Crypto
 
 /// `Sessions` protocol implemented by a `KeyedCache`.
 public final class KeyedCacheSessions: Sessions {
-
     /// The underlying `KeyedCache` this class uses to implement
     /// the `Sessions` protocol.
     public let keyedCache: KeyedCache
@@ -17,7 +16,7 @@ public final class KeyedCacheSessions: Sessions {
     }
 
     public func readSession(sessionID: String) throws -> Future<Session?> {
-        return try keyedCache.get(SessionData.self, forKey: sessionID).map(to: Session?.self) { data in
+        return keyedCache.get(sessionID, as: SessionData.self).map(to: Session?.self) { data in
             return data.flatMap { Session(id: sessionID, data: $0) }
         }
     }
@@ -30,11 +29,11 @@ public final class KeyedCacheSessions: Sessions {
             sessionID = try CryptoRandom().generateData(count: 16).base64EncodedString()
         }
         session.id = sessionID
-        return try keyedCache.set(session.data, forKey: sessionID).transform(to: session)
+        return keyedCache.set(sessionID, to: session.data).transform(to: session)
     }
 
     public func destroySession(sessionID: String) throws -> Future<Void> {
-        return try keyedCache.remove(sessionID)
+        return keyedCache.remove(sessionID)
     }
 }
 

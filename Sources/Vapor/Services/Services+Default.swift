@@ -144,5 +144,4 @@ extension Terminal: Service { }
 extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
 extension PrintLogger: Service {}
-extension MemoryKeyedCache: Service {}
 extension BCryptDigest: Service { }

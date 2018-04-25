@@ -20,6 +20,12 @@ jobs:
       - run: 
           name: Run unit tests
           command: swift test
+
+  linux-release:
+    docker:
+      - image: codevapor/swift:4.1
+    steps:
+      - checkout
       - run: 
           name: Compile code with optimizations
           command: swift build -c release
@@ -57,6 +63,7 @@ workflows:
   tests:
     jobs:
       - linux
+      - linux-release
       - linux-api-template
       # - macos
 
