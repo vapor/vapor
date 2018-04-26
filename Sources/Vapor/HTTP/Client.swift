@@ -74,6 +74,19 @@ extension Client {
 /// MARK: Content
 
 extension Client {
+    /// Sends a GET request with query parameters
+    func get<C: Content>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), query: C) -> Future<Response> {
+        let queryMirror = Mirror(reflecting: query)
+        let url = "\(url)?"
+        var queryStrings = [String]()
+        
+        for child in queryMirror.children {
+            queryStrings.append("\(child.label!)=\(child.value)")
+        }
+        
+        return self.get("\(url)\(queryStrings.joined(separator: "&"))", headers: headers)
+    }
+    
     /// Sends a PUT request with body
     public func put<C>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), content: C) -> Future<Response> where C: Content {
         return send(.PUT, headers: headers, to: url, content: content)
