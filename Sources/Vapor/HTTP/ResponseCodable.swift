@@ -28,30 +28,21 @@ extension Response: ResponseEncodable {
     }
 }
 
-//extension HTTPResponse: ResponseEncodable {
-//    /// See ResponseRepresentable.makeResponse
-//    public func encode(for req: Request) throws -> Future<Response> {
-//        let new = req.makeResponse()
-//        new.http = self
-//        return Future(new)
-//    }
-//}
-//
-//extension HTTPStatus: ResponseEncodable {
-//    /// See ResponseRepresentable.makeResponse
-//    public func encode(for req: Request) throws -> Future<Response> {
-//        let new = req.makeResponse()
-//        new.http = HTTPResponse(status: self)
-//        return Future(new)
-//    }
-//}
+extension HTTPResponse: ResponseEncodable {
+    /// See ResponseRepresentable.makeResponse
+    public func encode(for req: Request) throws -> Future<Response> {
+        let new = req.makeResponse()
+        new.http = self
+        return req.eventLoop.newSucceededFuture(result: new)
+    }
+}
 
 extension StaticString: ResponseEncodable {
     /// See ResponseRepresentable.makeResponse
     public func encode(for req: Request) throws -> Future<Response> {
         let new = req.makeResponse()
-        new.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+        new.http.contentType = .plainText
         new.http.body = HTTPBody(staticString: self)
-        return Future.map(on: req) { new }
+        return req.eventLoop.newSucceededFuture(result: new)
     }
 }

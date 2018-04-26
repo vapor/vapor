@@ -124,6 +124,11 @@ extension Services {
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
 
+        // file
+        services.register(NonBlockingFileIO.self)
+        services.register(BlockingIOThreadPool.self)
+
+
         return services
     }
 }

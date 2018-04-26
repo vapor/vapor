@@ -148,6 +148,25 @@ do {
         return HTTPStatus.ok
     }
 
+    router.get("image") { req -> Future<String> in
+        return try req.fileio().read(file: "/Users/tanner/Desktop/test.png").map { data in
+            return "done: \(data)"
+        }
+    }
+
+    router.get("image-chunk") { req -> Future<String> in
+        return try req.fileio().readChunked(file: "/Users/tanner/Desktop/test.png") { data in
+            print("chunk: \(data)")
+        }.map { "done" }
+    }
+
+    router.get("image-stream") { req -> HTTPResponse in
+        let stream = try req.fileio().chunkedStream(file: "/Users/tanner/Desktop/test.png", chunkSize: 5)
+        var res = HTTPResponse(status: .ok, body: stream)
+        res.contentType = .png
+        return res
+    }
+
     services.register(Router.self) { _ in return router }
 
     let app = try Application(environment: .detect(), services: services)
