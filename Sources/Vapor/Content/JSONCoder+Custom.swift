@@ -1,8 +1,10 @@
+/* FIXME: add key strategy support once avaialble on Linux */
+
 extension JSONEncoder {
     public static func custom(
         dates dateStrategy: JSONEncoder.DateEncodingStrategy? = nil,
         data dataStrategy: JSONEncoder.DataEncodingStrategy? = nil,
-        keys keyStrategy: JSONEncoder.KeyEncodingStrategy? = nil,
+        // keys keyStrategy: JSONEncoder.KeyEncodingStrategy? = nil,
         format outputFormatting: JSONEncoder.OutputFormatting? = nil,
         floats floatStrategy: JSONEncoder.NonConformingFloatEncodingStrategy? = nil
     ) -> JSONEncoder {
@@ -13,9 +15,9 @@ extension JSONEncoder {
         if let dataStrategy = dataStrategy {
             json.dataEncodingStrategy = dataStrategy
         }
-        if let keyStrategy = keyStrategy {
-            json.keyEncodingStrategy = keyStrategy
-        }
+        // if let keyStrategy = keyStrategy {
+        //     json.keyEncodingStrategy = keyStrategy
+        // }
         if let outputFormatting = outputFormatting {
             json.outputFormatting = outputFormatting
         }
@@ -30,7 +32,7 @@ extension JSONDecoder {
     public static func custom(
         dates dateStrategy: JSONDecoder.DateDecodingStrategy? = nil,
         data dataStrategy: JSONDecoder.DataDecodingStrategy? = nil,
-        keys keyStrategy: JSONDecoder.KeyDecodingStrategy? = nil,
+        // keys keyStrategy: JSONDecoder.KeyDecodingStrategy? = nil,
         floats floatStrategy: JSONDecoder.NonConformingFloatDecodingStrategy? = nil
     ) -> JSONDecoder {
         let json = JSONDecoder()
@@ -40,9 +42,9 @@ extension JSONDecoder {
         if let dataStrategy = dataStrategy {
             json.dataDecodingStrategy = dataStrategy
         }
-        if let keyStrategy = keyStrategy {
-            json.keyDecodingStrategy = keyStrategy
-        }
+        // if let keyStrategy = keyStrategy {
+        //     json.keyDecodingStrategy = keyStrategy
+        // }
         if let floatStrategy = floatStrategy {
             json.nonConformingFloatDecodingStrategy = floatStrategy
         }
