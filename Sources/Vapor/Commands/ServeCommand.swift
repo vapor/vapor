@@ -1,29 +1,34 @@
-import Command
-import Console
-
-/// Starts serving the app's responder over HTTP.
+/// Starts serving the `Application`'s `Responder` over HTTP.
+///
+///     $ swift run Run serve
+///     Server starting on http://localhost:8080
+///
 public struct ServeCommand: Command, Service {
-    /// See Command.arguments
-    public let arguments: [CommandArgument] = []
+    /// See `Command`.
+    public var arguments: [CommandArgument] {
+        return []
+    }
 
-    /// See Runnable.options
-    public let options: [CommandOption] = [
-        .value(name: "hostname", short: "h", help: ["Set the hostname the server will run on."]),
-        .value(name: "port", short: "p", help: ["Set the port the server will run on."])
-    ]
+    /// See `Command`.
+    public var options: [CommandOption] {
+        return [
+            .value(name: "hostname", short: "h", help: ["Set the hostname the server will run on."]),
+            .value(name: "port", short: "p", help: ["Set the port the server will run on."])
+        ]
+    }
 
-    /// See Runnable.help
+    /// See `Command`.
     public let help: [String] = ["Begins serving the app over HTTP"]
 
     /// The server to boot.
-    public let server: Server
+    private let server: Server
 
-    /// Create a new serve command.
+    /// Create a new `ServeCommand`.
     public init(server: Server) {
         self.server = server
     }
 
-    /// See Runnable.run
+    /// See `Command`.
     public func run(using context: CommandContext) throws -> Future<Void> {
         return server.start(
             hostname: context.options["hostname"],

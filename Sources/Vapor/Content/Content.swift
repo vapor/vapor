@@ -1,7 +1,3 @@
-import Async
-import Foundation
-import Service
-
 /// Representable as content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -17,7 +13,7 @@ import Service
 ///     }
 ///
 ///     router.get("greeting") { req in
-///         return Hello() /// {"message":"Hello!"}
+///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
 public protocol Content: Codable, ResponseCodable, RequestCodable {
@@ -31,13 +27,13 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
     ///     }
     ///
     ///     router.get("greeting") { req in
-    ///         return Hello() /// message=Hello!
+    ///         return Hello() // message=Hello!
     ///     }
     ///
     ///     router.get("greeting2") { req in
     ///         let res = req.makeResponse()
     ///         try res.content.encode(Hello(), as: .json)
-    ///         return res /// {"message":"Hello!"}
+    ///         return res // {"message":"Hello!"}
     ///     }
     ///
     static var defaultContentType: MediaType { get }
