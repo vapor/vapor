@@ -85,6 +85,8 @@ extension Services {
             return ApplicationResponder(wrapped)
         }
 
+        // commands
+        services.register(BootCommand.self)
         services.register { worker -> ServeCommand in
             return try ServeCommand(
                 server: worker.make()

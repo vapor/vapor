@@ -8,17 +8,14 @@
 /// the `MediaType` will be specified by the message itself. When _encoding_ content from HTTP messages,
 /// the `MediaType` should be specified (`MediaType.json` is usually the assumed default).
 ///
-///     try res.content.encode("hello", as: .plaintext)
-///     print(res.mediaType) // .plaintext
+///     try res.content.encode("hello", as: .plainText)
+///     print(res.mediaType) // .plainText
 ///     print(res.http.body) // "hello"
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to `Content`.
 /// See the `Content` protocol for more information.
 public struct ContentConfig: Service, ServiceType {
-    /// See `ServiceType.serviceSupports`
-    public static let serviceSupports: [Any.Type] = []
-
-    /// See `ServiceType.makeService`
+    /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> ContentConfig {
         return ContentConfig.default()
     }

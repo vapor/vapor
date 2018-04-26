@@ -1,12 +1,8 @@
-/// Stores configured `HTTPBodyDecoder` and `HTTPBodyEncoder`.
-public struct ContentCoders: Service, ServiceType {
-    /// See `ServiceType.serviceSupports`
-    public static let serviceSupports: [Any.Type] = []
-
-    /// See `ServiceType.makeService`
+/// Stores configured `HTTPMessage` and `Data` coders.
+public struct ContentCoders: ServiceType {
+    /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> ContentCoders {
-        let config = try worker.make(ContentConfig.self)
-        return try config.boot(using: worker)
+        return try worker.make(ContentConfig.self).boot(using: worker)
     }
 
     /// Configured `HTTPMessageEncoder`s.
@@ -34,7 +30,10 @@ public struct ContentCoders: Service, ServiceType {
         self.dataDecoders = dataDecoders
     }
 
-    /// Returns a `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    /// Returns an `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    ///
+    /// - parameters:
+    ///     - mediaType: An encoder for this `MediaType` will be returned.
     public func requireHTTPEncoder(for mediaType: MediaType) throws -> HTTPMessageEncoder {
         guard let encoder = httpEncoders[mediaType] else {
             throw VaporError(identifier: "httpEncoder", reason: "There is no configured HTTP encoder for \(mediaType)", source: .capture())
@@ -44,6 +43,9 @@ public struct ContentCoders: Service, ServiceType {
     }
 
     /// Returns a `HTTPMessageDecoder` for the specified `MediaType` or throws an error.
+    ///
+    /// - parameters:
+    ///     - mediaType: A decoder for this `MediaType` will be returned.
     public func requireHTTPDecoder(for mediaType: MediaType) throws -> HTTPMessageDecoder {
         guard let decoder = httpDecoders[mediaType] else {
             throw VaporError(identifier: "httpDecoder", reason: "There is no configured HTTP decoder for \(mediaType)", source: .capture())

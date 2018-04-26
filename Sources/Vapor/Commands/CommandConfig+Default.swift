@@ -9,6 +9,7 @@ extension CommandConfig {
         var config = CommandConfig()
         config.use(ServeCommand.self, as: "serve", isDefault: true)
         config.use(RoutesCommand.self, as: "routes")
+        config.use(BootCommand.self, as: "boot")
         return config
     }
 }

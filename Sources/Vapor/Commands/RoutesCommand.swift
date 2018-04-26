@@ -24,7 +24,7 @@ public struct RoutesCommand: Command, Service {
 
     /// See `Command`.
     public var help: [String] {
-        return ["Displays all registered routes"]
+        return ["Displays all registered routes."]
     }
 
     /// `Router` to use for printing routes.

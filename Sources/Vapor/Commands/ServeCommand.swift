@@ -18,7 +18,7 @@ public struct ServeCommand: Command, Service {
     }
 
     /// See `Command`.
-    public let help: [String] = ["Begins serving the app over HTTP"]
+    public let help: [String] = ["Begins serving the app over HTTP."]
 
     /// The server to boot.
     private let server: Server
