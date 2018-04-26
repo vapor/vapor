@@ -51,7 +51,7 @@ extension Content {
 
     /// Default `RequestEncodable` conformance.
     ///
-    /// See `RequestEncodable`
+    /// See `RequestEncodable`.
     public func encode(using container: Container) throws -> Future<Request> {
         let req = Request(using: container)
         try req.content.encode(self)
@@ -60,7 +60,7 @@ extension Content {
 
     /// Default `ResponseEncodable` conformance.
     ///
-    /// See `ResponseEncodable`
+    /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
         let res = req.makeResponse()
         try res.content.encode(self)
@@ -69,7 +69,7 @@ extension Content {
 
     /// Default `RequestDecodable` conformance.
     ///
-    /// See `RequestDecodable`
+    /// See `RequestDecodable`.
     public static func decode(from req: Request) throws -> Future<Self> {
         let content = try req.content.decode(Self.self)
         return content
@@ -77,7 +77,7 @@ extension Content {
 
     /// Default `ResponseDecodable` conformance.
     ///
-    /// See `ResponseDecodable`
+    /// See `ResponseDecodable`.
     public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
         let content = try res.content.decode(Self.self)
         return content
