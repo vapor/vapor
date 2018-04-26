@@ -2,18 +2,42 @@
 ///
 /// See `Request.query` for more information.
 public struct QueryContainer {
-    /// Service container, used to access `ContentCoders`.
-    internal var container: Container
+    /// Wrapped `Request`
+    internal var req: Request
 
-    /// HTTP request query string being decoded.
-    internal var query: String
-}
+    /// URL query string or ""
+    internal var query: String {
+        return req.http.url.query ?? ""
+    }
 
-extension QueryContainer {
+    // MARK: Content
+
+    /// Serializes an `Encodable` type to this HTTP request query string.
+    ///
+    ///     let flags: Flags ...
+    ///     try req.query.encode(flags)
+    ///
+    /// A `MediaType.urlEncodedForm` encoder will be used.
+    ///
+    /// - parameters:
+    ///     - encodable: `Encodable` type to encode to this HTTP message.
+    /// - throws: Any errors making the decoder for this media type or serializing the query string.
+    public func encode<E>(_ encodable: E) throws where E: Encodable {
+        guard var comps = URLComponents.init(string: req.http.urlString) else {
+            throw VaporError(identifier: "parseURL", reason: "Could not parse URL components.")
+        }
+        let data = try requireDataEncoder().encode(encodable)
+        comps.query = String(data: data, encoding: .utf8)
+        guard let url = comps.url else {
+            throw VaporError(identifier: "serializeURL", reason: "Could not serialize URL components.")
+        }
+        req.http.url = url
+    }
+
     /// Parses a `Decodable` type from this HTTP request query string.
     ///
     ///     let flags = try req.query.decode(Flags.self)
-    ///     print(flags) /// Flags
+    ///     print(flags) // Flags
     ///
     /// A `MediaType.urlEncodedForm` decoder will be used.
     ///
@@ -25,15 +49,8 @@ extension QueryContainer {
         return try requireDataDecoder().decode(D.self, from: query)
     }
 
-    /// Gets the`DataDecoder` or throws an error
-    fileprivate func requireDataDecoder() throws -> DataDecoder {
-        return try container.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
-    }
-}
+    // MARK: Single Value
 
-// MARK: Single value
-
-extension QueryContainer {
     /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
     ///
     /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`.
@@ -114,5 +131,17 @@ extension QueryContainer {
         where D: Decodable
     {
         return try requireDataDecoder().get(at: keyPath.makeBasicKeys(), from: Data(query.utf8))
+    }
+
+    // MARK: Private
+
+    /// Gets the`DataDecoder` or throws an error.
+    private func requireDataDecoder() throws -> DataDecoder {
+        return try req.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
+    }
+
+    /// Gets the`DataEncoder` or throws an error.
+    private func requireDataEncoder() throws -> DataEncoder {
+        return try req.make(ContentCoders.self).requireDataEncoder(for: .urlEncodedForm)
     }
 }

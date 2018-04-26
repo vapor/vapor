@@ -19,8 +19,8 @@ public final class FoundationClient: Client {
         return .init(.init(configuration: .default), on: container)
     }
 
-    /// See `Client.respond(to:)`
-    public func respond(to req: Request) throws -> Future<Response> {
+    /// See `Client`.
+    public func send(_ req: Request) -> Future<Response> {
         let urlReq = req.http.makeFoundationRequest()
         let promise = req.eventLoop.newPromise(Response.self)
         self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in

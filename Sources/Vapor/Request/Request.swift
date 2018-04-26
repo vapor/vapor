@@ -80,7 +80,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///
     /// See `QueryContainer` methods for more information.
     public var query: QueryContainer {
-        return .init(container: self, query: http.url.query ?? "")
+        return .init(req: self)
     }
 
     /// Helper for encoding and decoding `Content` from an HTTP message.

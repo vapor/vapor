@@ -104,7 +104,7 @@ final class LastRequestClient: Client {
     init(container: Container) {
         self.container = container
     }
-    func respond(to req: Request) throws -> Future<Response> {
+    func send(_ req: Request) -> Future<Response> {
         lastReq = req
         return Future.map(on: req) { req.makeResponse() }
     }
