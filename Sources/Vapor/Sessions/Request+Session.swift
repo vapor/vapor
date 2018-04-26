@@ -9,8 +9,7 @@ extension Request {
                 suggestedFixes: [
                     "Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`.",
                     "Add the `SessionsMiddleware` to a route group."
-                ],
-                source: .capture()
+                ]
             )
         }
         if let existing = cache.session {

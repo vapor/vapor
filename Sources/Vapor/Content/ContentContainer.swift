@@ -249,7 +249,13 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     ///           An error will also be thrown if this HTTP message's body type is streaming.
     public func syncDecode<D>(_ content: D.Type) throws -> D where D: Decodable {
         guard let data = container.http.body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
+            throw VaporError(
+                identifier: "syncDecode",
+                reason: "Cannot use sync decode on a streaming body.",
+                suggestedFixes: [
+                    "Use `decode` instead of `syncDecode`."
+                ]
+            )
         }
         return try requireDataDecoder().decode(D.self, from: data)
     }
@@ -290,7 +296,11 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
         where D: Decodable
     {
         guard let data = container.http.body.data else {
-            throw VaporError(identifier: "streamingUnsupported", reason: "Cannot decode \(D.self) from streaming body.", source: .capture())
+            throw VaporError(
+                identifier: "syncGet",
+                reason: "Cannot use sync decode on a streaming body.",
+                suggestedFixes: [ "Use `get` instead of `syncGet`."]
+            )
         }
         return try requireDataDecoder().get(at: keyPath.makeBasicKeys(), from: data)
     }
@@ -307,7 +317,11 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     private func requireHTTPDecoder() throws -> HTTPMessageDecoder {
         let coders = try container.make(ContentCoders.self)
         guard let contentType = container.http.contentType else {
-            throw VaporError(identifier: "contentType", reason: "Cannot decode content without content-type", source: .capture())
+            throw VaporError(
+                identifier: "contentType",
+                reason: "\(M.self) does not have a content type.",
+                possibleCauses: ["The 'Content-Type' header is not present."]
+            )
         }
         return try coders.requireHTTPDecoder(for: contentType)
     }
@@ -316,7 +330,11 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     private func requireDataDecoder() throws -> DataDecoder {
         let coders = try container.make(ContentCoders.self)
         guard let contentType = container.http.contentType else {
-            throw VaporError(identifier: "mediaType", reason: "Cannot decode content without content-type", source: .capture())
+            throw VaporError(
+                identifier: "mediaType",
+                reason: "\(M.self) does not have a content type.",
+                possibleCauses: ["The 'Content-Type' header is not present."]
+            )
         }
         return try coders.requireDataDecoder(for: contentType)
     }

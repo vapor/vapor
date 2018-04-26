@@ -68,7 +68,7 @@ public final class EngineWebSocketServer: WebSocketServer, Service {
         let path: [String] = request.http.urlString.split(separator: "/").map { String($0) }
         do {
             guard let route = router.route(path: path, parameters: &request._parameters) else {
-                throw VaporError(identifier: "websocketOnUpgrade", reason: "Could not find route for upgraded WebSocket", source: .capture())
+                throw VaporError(identifier: "websocketOnUpgrade", reason: "Could not find route for upgraded WebSocket.")
             }
             try route.onUpgrade(webSocket, request)
         } catch {

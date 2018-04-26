@@ -193,7 +193,7 @@ public struct FileIO {
     private func _read(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> Future<Void>) -> Future<Void> {
         do {
             guard let attributes = try? FileManager.default.attributesOfItem(atPath: file), let fileSize = attributes[.size] as? NSNumber else {
-                throw VaporError(identifier: "fileSize", reason: "Could not determine file size of: \(file)", source: .capture())
+                throw VaporError(identifier: "fileSize", reason: "Could not determine file size of: \(file).")
             }
 
             let fd = try FileHandle(path: file)

@@ -6,10 +6,23 @@ extension FormDataDecoder: HTTPMessageDecoder {
         where D: Decodable, M: HTTPMessage
     {
         guard message.contentType == .formData else {
-            throw VaporError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data content-type.", source: .capture())
+            throw VaporError(
+                identifier: "contentType",
+                reason: "\(M.self)'s content type does not indicate multipart/form-data: \(message.contentType?.description ?? "none")",
+                possibleCauses: [
+                    "\(M.self) does not contain multipart/form-data.",
+                    "\(M.self) is missing the 'Content-Type' header.",
+                ]
+            )
         }
         guard let boundary = message.contentType?.parameters["boundary"] else {
-            throw VaporError(identifier: "contentType", reason: "HTTP message did not have multipart/form-data boundary.", source: .capture())
+            throw VaporError(
+                identifier: "contentType",
+                reason: "\(M.self) did not have multipart/form-data boundary.",
+                possibleCauses: [
+                    "\(M.self) is incorrectly formatted."
+                ]
+            )
         }
         return message.body.consumeData(max: maxSize, on: worker).map(to: D.self) { data in
             return try self.decode(D.self, from: data, boundary: boundary)

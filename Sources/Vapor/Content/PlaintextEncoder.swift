@@ -20,7 +20,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     public func encode<E>(_ encodable: E) throws -> Data where E : Encodable {
         try encodable.encode(to: encoder)
         guard let string = encoder.plaintext else {
-            throw VaporError(identifier: "dataEncoding", reason: "An unknown error caused the data not to be encoded", source: .capture())
+            throw VaporError(identifier: "plaintextEncode", reason: "The data could not be encoded as plaintext.")
         }
         return Data(string.utf8)
     }

@@ -141,15 +141,14 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",
-                reason: "Model.defaultDatabase required to use request as worker.",
+                reason: "`Model.defaultDatabase` is required to use request as `DatabaseConnectable`.",
                 suggestedFixes: [
                     "Ensure you are using the 'model' label when registering this model to your migration config (if it is a migration): migrations.add(model: ..., database: ...).",
-                    "If the model you are using is not a migration, set the static defaultDatabase property manually in your app's configuration section.",
-                    "Use req.withPooledConnection(to: ...) { ... } instead."
-                ],
-                source: .capture()
+                    "If the model you are using is not a migration, set the static `defaultDatabase` property manually in your app's configuration section.",
+                    "Use `req.withPooledConnection(to: ...) { ... }` instead."
+                ]
             )
-            return Future.map(on: self) { throw error }
+            return eventLoop.newFailedFuture(error: error)
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)

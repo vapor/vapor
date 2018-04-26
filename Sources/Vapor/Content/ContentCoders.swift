@@ -40,7 +40,14 @@ public struct ContentCoders: ServiceType {
     ///     - mediaType: An encoder for this `MediaType` will be returned.
     public func requireHTTPEncoder(for mediaType: MediaType) throws -> HTTPMessageEncoder {
         guard let encoder = httpEncoders[mediaType] else {
-            throw VaporError(identifier: "httpEncoder", reason: "There is no configured HTTP encoder for \(mediaType)", source: .capture())
+            throw VaporError(
+                identifier: "httpEncoder",
+                reason: "There is no configured `HTTPMessageEncoder` encoder for content type: \(mediaType).",
+                suggestedFixes: [
+                    "Register an `HTTPMessageEncoder` using `ContentConfig`.",
+                    "Use one of the encoding methods that accepts a custom encoder."
+                ]
+            )
         }
 
         return encoder
@@ -54,7 +61,14 @@ public struct ContentCoders: ServiceType {
     ///     - mediaType: A decoder for this `MediaType` will be returned.
     public func requireHTTPDecoder(for mediaType: MediaType) throws -> HTTPMessageDecoder {
         guard let decoder = httpDecoders[mediaType] else {
-            throw VaporError(identifier: "httpDecoder", reason: "There is no configured HTTP decoder for \(mediaType)", source: .capture())
+            throw VaporError(
+                identifier: "httpDecoder",
+                reason: "There is no configured `HTTPMessageDecoder` for content type: \(mediaType).",
+                suggestedFixes: [
+                    "Register an `HTTPMessageDecoder` using `ContentConfig`.",
+                    "Use one of the decoding methods that accepts a custom decoder."
+                ]
+            )
         }
 
         return decoder
@@ -68,7 +82,14 @@ public struct ContentCoders: ServiceType {
     ///     - mediaType: An encoder for this `MediaType` will be returned.
     public func requireDataEncoder(for mediaType: MediaType) throws -> DataEncoder {
         guard let encoder = dataEncoders[mediaType] else {
-            throw VaporError(identifier: "dataEncoder", reason: "There is no configured data encoder for \(mediaType)", source: .capture())
+            throw VaporError(
+                identifier: "dataEncoder",
+                reason: "There is no configured `DataEncoder` for content type: \(mediaType).",
+                suggestedFixes: [
+                    "Register an `DataEncoder` using `ContentConfig`.",
+                    "Use one of the encoding methods that accepts a custom encoder."
+                ]
+            )
         }
 
         return encoder
@@ -82,7 +103,14 @@ public struct ContentCoders: ServiceType {
     ///     - mediaType: A decoder for this `MediaType` will be returned.
     public func requireDataDecoder(for mediaType: MediaType) throws -> DataDecoder {
         guard let decoder = dataDecoders[mediaType] else {
-            throw VaporError(identifier: "dataDecoder", reason: "There is no configured data decoder for \(mediaType)", source: .capture())
+            throw VaporError(
+                identifier: "dataDecoder",
+                reason: "There is no configured `DataDecoder` for content type: \(mediaType).",
+                suggestedFixes: [
+                    "Register an `DataDecoder` using `ContentConfig`.",
+                    "Use one of the decoding methods that accepts a custom decoder."
+                ]
+            )
         }
 
         return decoder
