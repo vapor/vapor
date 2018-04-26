@@ -18,7 +18,7 @@ extension QueryContainer {
     /// A `MediaType.urlEncodedForm` decoder will be used.
     ///
     /// - parameters:
-    ///     - content: `Decodable` type to decode from this HTTP message.
+    ///     - decodable: `Decodable` type to decode from this HTTP message.
     /// - returns: Instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the query string.
     public func decode<D>(_ decodable: D.Type) throws -> D where D: Decodable {

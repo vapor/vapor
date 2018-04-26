@@ -1,10 +1,7 @@
-import Foundation
-import NIO
-
 extension DataDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
     internal func get<D>(at keyPath: [BasicKey], from data: Data) throws -> D where D: Decodable {
-        return try self.decode(DecoderUnwrapper.self, from: data).get(at: keyPath)
+        return try self.decode(SingleValueDecoder.self, from: data).get(at: keyPath)
 
     }
 }
@@ -14,7 +11,7 @@ extension HTTPMessageDecoder {
     internal func get<D, M>(at keyPath: [BasicKey], from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
         where D: Decodable, M: HTTPMessage
     {
-        return try self.decode(DecoderUnwrapper.self, from: message, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
+        return try self.decode(SingleValueDecoder.self, from: message, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
             return try decoder.get(at: keyPath)
         }
     }
@@ -22,7 +19,8 @@ extension HTTPMessageDecoder {
 
 /// MARK: Private
 
-fileprivate struct DecoderUnwrapper: Decodable {
+/// Decodes nested, single values from data at a key path.
+private struct SingleValueDecoder: Decodable {
     let decoder: Decoder
     init(from decoder: Decoder) throws {
         self.decoder = decoder
@@ -73,15 +71,15 @@ fileprivate struct DecoderUnwrapper: Decodable {
     }
 }
 
-fileprivate enum ContainerState {
+private enum ContainerState {
     case keyed(KeyedDecodingContainer<BasicKey>)
     case unkeyed(UnkeyedDecodingContainer)
 }
 
-extension UnkeyedDecodingContainer {
-    fileprivate mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
+private extension UnkeyedDecodingContainer {
+     mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
         for _ in 0..<count {
-            _ = try self.nestedContainer(keyedBy: BasicKey.self)
+            _ = try nestedContainer(keyedBy: BasicKey.self)
         }
         return self
     }
