@@ -1,7 +1,7 @@
 import Random
 
 extension FormDataDecoder: HTTPMessageDecoder {
-    /// See `HTTPMessageDecoder`
+    /// See `HTTPMessageDecoder`.
     public func decode<D, M>(_ decodable: D.Type, from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
         where D: Decodable, M: HTTPMessage
     {
@@ -18,7 +18,7 @@ extension FormDataDecoder: HTTPMessageDecoder {
 }
 
 extension FormDataEncoder: HTTPMessageEncoder {
-    /// See `HTTPMessageEncoder`
+    /// See `HTTPMessageEncoder`.
     public func encode<E, M>(_ encodable: E, to message: inout M, on worker: Worker) throws
         where E: Encodable, M: HTTPMessage
     {

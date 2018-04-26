@@ -4,7 +4,7 @@
 public struct ContentCoders: ServiceType {
     /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> ContentCoders {
-        return try worker.make(ContentConfig.self).boot(using: worker)
+        return try worker.make(ContentConfig.self).resolve(on: worker)
     }
 
     /// Configured `HTTPMessageEncoder`s.

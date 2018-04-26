@@ -1,5 +1,3 @@
-import Foundation
-
 /// Helper for encoding and decoding data from an HTTP request query string.
 ///
 /// See `Request.query` for more information.

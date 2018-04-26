@@ -325,6 +325,22 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testCustomEncode() throws {
+        try Application.makeTest { router in
+            router.get("custom-encode") { req -> Response in
+                let res = req.makeResponse(http: .init(status: .ok))
+                try res.content.encode(json: ["hello": "world"], using: .custom(format: .prettyPrinted))
+                return res
+            }
+        }.test(.GET, "custom-encode") { res in
+            XCTAssertEqual(res.http.body.string, """
+            {
+              "hello" : "world"
+            }
+            """)
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -341,6 +357,7 @@ class ApplicationTests: XCTestCase {
         ("testURLEncodedFormEncode", testURLEncodedFormEncode),
         ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
         ("testStreamFile", testStreamFile),
+        ("testCustomEncode", testCustomEncode),
     ]
 }
 

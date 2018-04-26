@@ -129,9 +129,11 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///         return res
     ///     }
     ///
-    /// returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
-    public func makeResponse() -> Response {
-        return Response(using: sharedContainer)
+    /// - parameters:
+    ///     - http: Optional `HTTPResponse` to use.
+    /// - returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
+    public func makeResponse(http: HTTPResponse = .init()) -> Response {
+        return Response(http: http, using: sharedContainer)
     }
 
     /// See `DatabaseConnectable`.
