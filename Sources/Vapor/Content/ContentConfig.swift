@@ -1,6 +1,6 @@
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
-///     var contentConfig = ContentConfig.default()
+///     var contentConfig = ContentConfig()
 ///     contentConfig.use(encoder: JSONEncoder(), for: .json)
 ///     services.register(contentConfig)
 ///
@@ -15,13 +15,55 @@
 /// Most often, these configured coders are used to encode and decode types conforming to `Content`.
 /// See the `Content` protocol for more information.
 public struct ContentConfig: Service, ServiceType {
+    // MARK: Default
+
+    /// Creates a `ContentConfig` containing all of Vapor's default coders.
+    ///
+    ///     var contentConfig = ContentConfig.default()
+    ///     // add or replace coders
+    ///     services.register(contentConfig)
+    ///
+    public static func `default`() -> ContentConfig {
+        var config = ContentConfig()
+
+        // json
+        do {
+            let encoder = JSONEncoder()
+            let decoder = JSONDecoder()
+            if #available(macOS 10.12, *) {
+                encoder.dateEncodingStrategy = .iso8601
+                decoder.dateDecodingStrategy = .iso8601
+            } else {
+                ERROR("macOS SDK < 10.12 detected, no ISO-8601 JSON support")
+            }
+            config.use(encoder: encoder, for: .json)
+            config.use(decoder: decoder, for: .json)
+        }
+
+        // data
+        config.use(encoder: PlaintextEncoder(), for: .plainText)
+        config.use(encoder: PlaintextEncoder(.html), for: .html)
+
+        // form-urlencoded
+        config.use(encoder: URLEncodedFormEncoder(), for: .urlEncodedForm)
+        config.use(decoder: URLEncodedFormDecoder(), for: .urlEncodedForm)
+
+        // form-data, doesn't support `Data{En|De}coder` because a predefined boundary is required
+        config.use(httpEncoder: FormDataEncoder(), for: .formData)
+        config.use(httpDecoder: FormDataDecoder(), for: .formData)
+
+        return config
+    }
+
+    // MARK: Service
+
     /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> ContentConfig {
         return ContentConfig.default()
     }
 
-    /// Represents a yet-to-be-configured object.
-    typealias Lazy<T> = (Container) throws -> T
+    /// Represents a yet-to-be-configured coder.
+    private typealias Lazy<T> = (Container) throws -> T
 
     /// Configured `HTTPMessageEncoder`s.
     private var httpEncoders: [MediaType: Lazy<HTTPMessageEncoder>]
@@ -35,7 +77,9 @@ public struct ContentConfig: Service, ServiceType {
     /// Configured `DataDecoder`s.
     private var dataDecoders: [MediaType: Lazy<DataDecoder>]
 
-    /// Create a new content config.
+    // MARK: Init
+
+    /// Create a new, empty `ContentConfig`.
     public init() {
         self.httpEncoders = [:]
         self.httpDecoders = [:]
@@ -43,30 +87,59 @@ public struct ContentConfig: Service, ServiceType {
         self.dataDecoders = [:]
     }
 
-    /// Adds an encoder for the specified media type.
+    // MARK: Message & Data
+
+    /// Adds an `HTTPMessage` and `Data` `Encoder` for the specified `MediaType`.
+    ///
+    ///     contentConfig.use(encoder: JSONEncoder(), for: .json)
+    ///
+    /// - parameters:
+    ///     - encoder: `Encoder` to use.
+    ///     - mediaType: `Encoder` will be used to encode this `MediaType`.
     public mutating func use(encoder: HTTPMessageEncoder & DataEncoder, for mediaType: MediaType) {
         use(httpEncoder: encoder, for: mediaType)
         use(dataEncoder: encoder, for: mediaType)
     }
 
-    /// Adds a decoder for the specified media type.
+    /// Adds an `HTTPMessage` and `Data` `Decoder` for the specified `MediaType`.
+    ///
+    ///     contentConfig.use(decoder: JSONDecoder(), for: .json)
+    ///
+    /// - parameters:
+    ///     - decoder: `Decoder` to use.
+    ///     - mediaType: `Decoder` will be used to decode this `MediaType`.
     public mutating func use(decoder: HTTPMessageDecoder & DataDecoder, for mediaType: MediaType) {
         use(httpDecoder: decoder, for: mediaType)
         use(dataDecoder: decoder, for: mediaType)
     }
 
-    /// Adds an encoder for the specified media type.
+    /// Adds an `HTTPMessage` and `Data` `Encoder` by type for the specified `MediaType`.
+    /// - note: The type will be resolved from the service-container at boot.
+    ///
+    ///     contentConfig.use(encoder: JSONEncoder.self, for: .json)
+    ///
+    /// - parameters:
+    ///     - encoder: `Encoder` type to use.
+    ///     - mediaType: `Encoder` will be used to encode this `MediaType`.
     public mutating func use<B>(encoder: B.Type, for mediaType: MediaType) where B: HTTPMessageEncoder & DataEncoder {
         use(httpEncoder: encoder, for: mediaType)
         use(dataEncoder: encoder, for: mediaType)
     }
 
-    /// Adds a decoder for the specified media type.
+    /// Adds an `HTTPMessage` and `Data` `Decoder` by type for the specified `MediaType`.
+    /// - note: The type will be resolved from the service-container at boot.
+    ///
+    ///     contentConfig.use(decoder: JSONDecoder.self, for: .json)
+    ///
+    /// - parameters:
+    ///     - decoder: `Decoder` type to use.
+    ///     - mediaType: `Decoder` will be used to decode this `MediaType`.
     public mutating func use<B>(decoder: B.Type, for mediaType: MediaType) where B: HTTPMessageDecoder & DataDecoder {
         use(httpDecoder: decoder, for: mediaType)
         use(dataDecoder: decoder, for: mediaType)
     }
 
+    // MARK: Message
 
     /// Adds an encoder for the specified media type.
     public mutating func use(httpEncoder: HTTPMessageEncoder, for mediaType: MediaType) {
@@ -95,6 +168,8 @@ public struct ContentConfig: Service, ServiceType {
             return try container.make(B.self)
         }
     }
+
+    // MARK: Data
 
     /// Adds an encoder for the specified media type.
     public mutating func use(dataEncoder: DataEncoder, for mediaType: MediaType) {
@@ -132,41 +207,5 @@ public struct ContentConfig: Service, ServiceType {
             dataEncoders: dataEncoders.mapValues { try $0(container) },
             dataDecoders: dataDecoders.mapValues { try $0(container) }
         )
-    }
-}
-
-/// MARK: Default
-
-extension ContentConfig {
-    public static func `default`() -> ContentConfig {
-        var config = ContentConfig()
-
-        // json
-        do {
-            let encoder = JSONEncoder()
-            let decoder = JSONDecoder()
-            if #available(macOS 10.12, *) {
-                encoder.dateEncodingStrategy = .iso8601
-                decoder.dateDecodingStrategy = .iso8601
-            } else {
-                ERROR("macOS SDK < 10.12 detected, no ISO-8601 JSON support")
-            }
-            config.use(encoder: encoder, for: .json)
-            config.use(decoder: decoder, for: .json)
-        }
-
-        // data
-        config.use(encoder: PlaintextEncoder(), for: .plainText)
-        config.use(encoder: PlaintextEncoder(.html), for: .html)
-
-        // form-urlencoded
-        config.use(encoder: URLEncodedFormEncoder(), for: .urlEncodedForm)
-        config.use(decoder: URLEncodedFormDecoder(), for: .urlEncodedForm)
-
-        // form-data, doesn't support `Data{En|De}coder` because a predefined boundary is required
-        config.use(httpEncoder: FormDataEncoder(), for: .formData)
-        config.use(httpDecoder: FormDataDecoder(), for: .formData)
-
-        return config
     }
 }
