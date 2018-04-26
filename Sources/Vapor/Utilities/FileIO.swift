@@ -5,8 +5,12 @@ extension Request {
     ///
     /// See `FileIO` for more information.
     public func fileio() throws -> FileIO {
-        guard let allocator = http.channel?.allocator else {
-            throw VaporError(identifier: "httpChannel", reason: "No Channel on HTTP request.", source: .capture())
+        let allocator: ByteBufferAllocator
+        if let channel = http.channel {
+            allocator = channel.allocator
+        } else {
+            debugOnly { WARNING("FileIO: No channel on HTTPRequest. Initializing a new ByteBufferAllocator.") }
+            allocator = .init()
         }
         return try .init(io: make(), allocator: allocator, on: self)
     }

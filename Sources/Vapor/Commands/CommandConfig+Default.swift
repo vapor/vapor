@@ -1,10 +1,10 @@
-import Command
-import Console
-import Foundation
-
-/// Helps configure which commands will run when the application boots.
 extension CommandConfig {
-    /// A command config with default commands already included.
+    /// Creates a `CommandConfig` containing all of Vapor's default commands.
+    ///
+    ///     var commandConfig = CommandConfig.default()
+    ///     // add other commands...
+    ///     services.register(commandConfig)
+    ///
     public static func `default`() -> CommandConfig {
         var config = CommandConfig()
         config.use(ServeCommand.self, as: "serve", isDefault: true)

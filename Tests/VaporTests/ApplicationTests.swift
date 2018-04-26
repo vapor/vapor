@@ -313,6 +313,18 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testStreamFile() throws {
+        try Application.runningTest(port: 8085) { router in
+            router.get("file-stream") { req -> Future<Response> in
+                return try req.streamFile(at: #file)
+            }
+        }.clientTest(.GET, "file-stream") { res in
+            let test = "the quick brown fox"
+            XCTAssertNotNil(res.http.headers[.eTag])
+            XCTAssert(res.http.body.string.contains(test))
+        }
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -328,6 +340,7 @@ class ApplicationTests: XCTestCase {
         ("testURLEncodedFormDecode", testURLEncodedFormDecode),
         ("testURLEncodedFormEncode", testURLEncodedFormEncode),
         ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
+        ("testStreamFile", testStreamFile),
     ]
 }
 
@@ -390,6 +403,7 @@ extension Application {
 
     func clientTest(_ method: HTTPMethod, _ path: String, _ check: (Response) throws -> ()) throws {
         let config = try make(EngineServerConfig.self)
+        let path = path.hasPrefix("/") ? path : "/\(path)"
         let res = try FoundationClient.default(on: self).send(method, to: "http://localhost:\(config.port)" + path).wait()
         try check(res)
     }

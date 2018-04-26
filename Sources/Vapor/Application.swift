@@ -2,7 +2,7 @@
 ///
 ///     let router = try app.make(Router.self)
 ///
-/// Note: When generating responses to requests, you should use the `Request` as your service-container.
+/// - note: When generating responses to requests, you should use the `Request` as your service-container.
 ///
 /// Call the `run()` method to run this `Application`'s commands. By default, this will boot an `HTTPServer` and begin serving requests.
 /// Which command is run depends on the command-line arguments and flags.
@@ -10,34 +10,31 @@
 ///     try app.run()
 ///
 /// The `Application` is responsible for calling `Provider` (and `VaporProvider`) boot methods. The `willBoot` and `didBoot` methods
-/// will be called on `Application.init(_:)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
+/// will be called on `Application.init(...)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
 /// called on `Application.run()`
-///
-/// https://docs.vapor.codes/3.0/getting-started/application/
 public final class Application: Container {
     /// Config preferences and requirements for available services. Used to disambiguate which service should be used
     /// for a given interface when multiple are available.
-    /// See `Config` for more information.
     public let config: Config
 
     /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
-    /// See `Environment` for more information.
     public var environment: Environment
 
     /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
     /// form this application (i.e., `Request`, `Response`, etc.)
-    /// See `Services` for more information.
     public let services: Services
 
     /// The `Application`'s private service cache. This cache will not be shared with any sub-containers created by this application.
     public let serviceCache: ServiceCache
 
-    /// The event loop group that we derive the event loop below from, so we can close it in `deinit`.
+    /// The `EventLoopGroup` that we derive the event loop below from, so we can close it in `deinit`.
     private var eventLoopGroup: EventLoopGroup
 
     /// This `Application`'s event loop. This event-loop is separate from the `HTTPServer`'s event loop group and should only be used
     /// for creating services during boot / configuration phases. Never use this event loop while responding to requests.
-    public var eventLoop: EventLoop { return eventLoopGroup.next() }
+    public var eventLoop: EventLoop {
+        return eventLoopGroup.next()
+    }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
