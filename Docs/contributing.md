@@ -47,6 +47,15 @@ _swift_linux() {
     docker run -it -v $PWD:/root/code -w /root/code norionomura/swift:swift-4.1-branch /usr/bin/swift $1
 }
 alias swift-linux='_swift_linux'
+
+# Cleans out all temporary SPM files
+_spm_clean() {
+	rm Package.resolved
+	rm -rf .build
+	rm -rf *.xcodeproj
+	rm -rf Packages
+}
+alias spm-clean='_spm_clean'
 ```
 
 You can add these methods to your `~/.bash_profile`. Just run `source ~/.bash_profile` after or restart your terminal.
