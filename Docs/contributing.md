@@ -33,6 +33,8 @@ Code that is only additive and will not break any existing code can be included 
 
 Here are some bash functions to help you test Swift on Linux easily from macOS (you must have Docker installed).
 
+### Swift Linux
+
 ```bash
 # Starts docker-machine and exports env variables.
 _docker_start() {
@@ -47,7 +49,22 @@ _swift_linux() {
     docker run -it -v $PWD:/root/code -w /root/code norionomura/swift:swift-4.1-branch /usr/bin/swift $1
 }
 alias swift-linux='_swift_linux'
+```
 
+You can add these methods to your `~/.bash_profile`. Just run `source ~/.bash_profile` after or restart your terminal.
+
+Once added, you can run the following to test Swift projects on both macOS and Linux.
+
+```sh
+swift test
+swift-linux test
+```
+
+### Clean SPM
+
+Add the following code to your bash profile to make cleaning SPM temporary files easy.
+
+```bash
 # Cleans out all temporary SPM files
 _spm_clean() {
 	rm Package.resolved
@@ -58,13 +75,10 @@ _spm_clean() {
 alias spm-clean='_spm_clean'
 ```
 
-You can add these methods to your `~/.bash_profile`. Just run `source ~/.bash_profile` after or restart your terminal.
-
-Once added, you can run the following to test Swift projects on both macOS and Linux.
+Once added, you can run `spm-clean`.
 
 ```sh
-swift test
-swift-linux test
+spm-clean
 ```
 
 ----------
