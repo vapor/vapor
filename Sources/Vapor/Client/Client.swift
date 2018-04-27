@@ -1,4 +1,10 @@
 extension Request {
+    /// Creates a `Client` for this `Request`.
+    ///
+    ///     let res = try req.client().get("http://vapor.codes")
+    ///     print(res) // Future<Response>
+    ///
+    /// See `Client` for more information.
     public func client() throws -> Client {
         return try make()
     }
@@ -9,7 +15,6 @@ extension Request {
 ///     let res = try req.client().get("http://vapor.codes")
 ///     print(res) // Future<Response>
 ///
-/// See `FoundationClient` and `EngineClient`.
 public protocol Client {
     /// The `Container` to use for creating `Request`s.
     var container: Container { get }
@@ -18,138 +23,125 @@ public protocol Client {
 }
 
 extension Client {
-    // MARK: Basic
-
-    /// Sends a GET request without body
-    public func get(_ url: URLRepresentable, headers: HTTPHeaders = .init()) -> Future<Response> {
-        return send(.GET, headers: headers, to: url)
+    /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let res = try client.get("http://api.vapor.codes/users")
+    ///     print(res) // Future<Response>
+    ///
+    /// HTTP `GET` requests are typically used for fetching information and do not have bodies.
+    /// However, the `beforeSend` closure is a great place for encoding query string parameters.
+    ///
+    ///     let res = try client.get("http://api.vapor.codes/users") { get in
+    ///         try get.query.encode(["name": "vapor"])
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+        return send(.GET, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    /// Sends a PUT request without body
-    public func put(_ url: URLRepresentable, headers: HTTPHeaders = .init()) -> Future<Response> {
-        return send(.PUT, headers: headers, to: url)
+    /// Sends an HTTP `POST` `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let user: User ...
+    ///     let res = try client.post("http://api.vapor.codes/users") { post in
+    ///         try post.content.encode(user)
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+        return send(.POST, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    /// Sends a POST request without body
-    public func post(_ url: URLRepresentable, headers: HTTPHeaders = .init()) -> Future<Response> {
-        return send(.POST, headers: headers, to: url)
+    /// Sends an HTTP `PATCH` `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let user: User ...
+    ///     let res = try client.patch("http://api.vapor.codes/users/42") { patch in
+    ///         try patch.content.encode(user)
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+        return send(.PATCH, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    /// Sends a DELETE request without body
-    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = .init()) -> Future<Response> {
-        return send(.DELETE, headers: headers, to: url)
+    /// Sends an HTTP `PUT` `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let user: User ...
+    ///     let res = try client.put("http://api.vapor.codes/users/42") { put in
+    ///         try put.content.encode(user)
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+        return send(.PUT, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    /// Sends a PATCH request without body
-    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = .init()) -> Future<Response> {
-        return send(.PATCH, headers: headers, to: url)
+    /// Sends an HTTP `DELETE` `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let res = try client.delete("http://api.vapor.codes/users/42")
+    ///     print(res) // Future<Response>
+    ///
+    /// HTTP `DELETE` requests are typically used for deleting information and do not have bodies.
+    /// However, the `beforeSend` closure is a great place for encoding query string parameters.
+    ///
+    ///     let res = try client.delete("http://api.vapor.codes/users") { get in
+    ///         try get.query.encode(["name": "vapor"])
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    return send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
     }
 
-    // MARK: Content
-
-    /// Sends a GET request without body
-    public func get<Q>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), query: Q) -> Future<Response> where Q: Encodable {
-        return send(.GET, headers: headers, to: url, query: query)
-    }
-
-    /// Sends a PUT request with body
-    public func put<C>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), content: C) -> Future<Response> where C: Content {
-        return send(.PUT, headers: headers, to: url, content: content)
-    }
-
-    /// Sends a POST request with body
-    public func post<C>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), content: C) -> Future<Response> where C: Content {
-        return send(.POST, headers: headers, to: url, content: content)
-    }
-
-    /// Sends a PATCH request with body
-    public func patch<C>(_ url: URLRepresentable, headers: HTTPHeaders = .init(), content: C) -> Future<Response> where C: Content {
-        return send(.PATCH, headers: headers, to: url, content: content)
-    }
-
-    // MARK: Custom
-
-    /// Sends an HTTP request from the client using the method and url.
-    public func send(_ method: HTTPMethod, headers: HTTPHeaders = .init(), to url: URLRepresentable) -> Future<Response> {
-        return _send(method, headers: headers, to: url) { _ in }
-    }
-
-    public func send<C>(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders = .init(),
-        to url: URLRepresentable,
-        content: C
-    ) -> Future<Response> where C: Content {
-        return send(method, headers: headers, to: url, as: C.defaultContentType, content: content)
-    }
-
-    public func send<C, Q>(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders = .init(),
-        to url: URLRepresentable,
-        content: C,
-        query: Q
-    ) -> Future<Response> where C: Content, Q: Encodable {
-        return send(method, headers: headers, to: url, content: content, as: C.defaultContentType, query: query)
-    }
-
-    public func send<Q>(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders = .init(),
-        to url: URLRepresentable,
-        query: Q
-    ) -> Future<Response> where Q: Encodable {
-        return _send(method, headers: headers, to: url) { req in
-            try req.query.encode(query)
-        }
-    }
-
-    public func send<C>(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders = .init(),
-        to url: URLRepresentable,
-        as mediaType: MediaType,
-        content: C
-    ) -> Future<Response> where C: Encodable {
-        return _send(method, headers: headers, to: url) { req in
-            try req.content.encode(content, as: mediaType)
-        }
-    }
-
-    public func send<C, Q>(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders = .init(),
-        to url: URLRepresentable,
-        content: C,
-        as mediaType: MediaType,
-        query: Q
-    ) -> Future<Response> where C: Encodable, Q: Encodable {
-        return _send(method, headers: headers, to: url) { req in
-            try req.content.encode(content, as: mediaType)
-            try req.query.encode(query)
-        }
-    }
-
-    public func send(http: HTTPRequest) -> Future<Response> {
-        let req = Request(http: http, using: container)
-        return send(req)
-    }
-
-    // MARK: Private
-
-    /// Private send that has a closure for accessing request containers.
-    private func _send(
-        _ method: HTTPMethod,
-        headers: HTTPHeaders,
-        to url: URLRepresentable,
-        closure: (Request) throws -> ()
-    ) -> Future<Response> {
+    /// Sends an HTTP `Request` to a server with an optional configuration closure that will run before sending.
+    ///
+    ///     let user: User ...
+    ///     let res = try client.send(.POST, to: "http://api.vapor.codes/users") { post in
+    ///         try post.content.encode(user)
+    ///     }
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - method: `HTTPMethod` to use for the request.
+    ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
+    ///     - url: Something `URLRepresentable` that will be converted to a `URL`.
+    ///            This `URL` should contain a scheme, hostname, and port.
+    ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
+    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
         do {
-            let req = Request(using: container)
-            req.http.method = method
-            req.http.url = url.convertToURL() ?? .root
-            req.http.headers = headers
-            try closure(req)
+            let req = Request(http: .init(method: method, url: url, headers: headers), using: container)
+            try beforeSend(req)
             return send(req)
         } catch {
             return container.eventLoop.newFailedFuture(error: error)

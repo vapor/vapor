@@ -1,7 +1,8 @@
-// MARK: Request
-
 extension Request {
-    /// Creates a `FileIO` for this `Container`.
+    /// Creates a `FileIO` for this `Request`.
+    ///
+    ///     let data = try req.fileio().read(file: "/path/to/file.txt")
+    ///     print(data) // Future<Data>
     ///
     /// See `FileIO` for more information.
     public func fileio() throws -> FileIO {
