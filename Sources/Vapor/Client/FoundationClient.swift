@@ -1,14 +1,22 @@
-import Foundation
-
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient: Client {
-    /// See `Client.container`
+public final class FoundationClient: Client, ServiceType {
+    /// See `ServiceType`.
+    public static var serviceSupports: [Any.Type] {
+        return [Client.self]
+    }
+
+    /// See `ServiceType`.
+    public static func makeService(for worker: Container) throws -> FoundationClient {
+        return .default(on: worker)
+    }
+
+    /// See `Client`.
     public var container: Container
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
 
-    /// Creates a new `FoundationClient`
+    /// Creates a new `FoundationClient`.
     public init(_ urlSession: URLSession, on container: Container) {
         self.urlSession = urlSession
         self.container = container
@@ -21,7 +29,7 @@ public final class FoundationClient: Client {
 
     /// See `Client`.
     public func send(_ req: Request) -> Future<Response> {
-        let urlReq = req.http.makeFoundationRequest()
+        let urlReq = req.http.convertToFoundationRequest()
         let promise = req.eventLoop.newPromise(Response.self)
         self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
             if let error = error {
@@ -33,36 +41,18 @@ public final class FoundationClient: Client {
                 fatalError("URLResponse was not a HTTPURLResponse.")
             }
 
-            let response = HTTPResponse.fromFoundationResponse(httpResponse, data: data, on: self.container)
+            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container)
             promise.succeed(result: Response(http: response, using: self.container))
         }.resume()
         return promise.futureResult
     }
 }
 
-/// MARK: Service
+// MARK: Private
 
-extension FoundationClient: ServiceType {
-    /// See `ServiceType.serviceSupports`
-    public static var serviceSupports: [Any.Type] { return [Client.self] }
-
-    /// See `ServiceType.makeService(for:)`
-    public static func makeService(for worker: Container) throws -> FoundationClient {
-        if let sub = worker as? SubContainer {
-            /// if a request is creating a client, we should
-            /// use the event loop as the container
-            return .default(on: sub.superContainer)
-        } else {
-            return .default(on: worker)
-        }
-    }
-}
-
-/// MARK: Utility
-
-extension HTTPRequest {
+private extension HTTPRequest {
     /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
-    fileprivate func makeFoundationRequest() -> URLRequest {
+    func convertToFoundationRequest() -> URLRequest {
         let http = self
         let body = http.body.data ?? Data()
         var request = URLRequest(url: http.url)
@@ -75,9 +65,9 @@ extension HTTPRequest {
     }
 }
 
-extension HTTPResponse {
+private extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
-    fileprivate static func fromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
+    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
         var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
         for (key, value) in httpResponse.allHeaderFields {
             res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")

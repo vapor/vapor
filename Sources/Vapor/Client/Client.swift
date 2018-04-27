@@ -19,6 +19,15 @@ public protocol Client {
     /// The `Container` to use for creating `Request`s.
     var container: Container { get }
 
+    /// Sends an HTTP `Request` to a server.
+    ///
+    ///     let req: Request ...
+    ///     let res = try client.send(req)
+    ///     print(res) // Future<Response>
+    ///
+    /// - parameters:
+    ///     - request: `Request` to send.
+    /// - returns: A `Future` containing the requested `Response` or an `Error`.
     func send(_ req: Request) -> Future<Response>
 }
 
