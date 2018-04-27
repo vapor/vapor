@@ -341,6 +341,7 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    // https://github.com/vapor/vapor/issues/1609
     func testGH1609() throws {
         struct DecodeFail: Content {
             var here: String
