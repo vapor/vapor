@@ -1,57 +1,55 @@
-//import HTTP
-import Service
-
-/// Configures application middleware.
+/// Configures an application's active `Middleware`.
 /// Middleware will be used in the order they are added.
 public struct MiddlewareConfig: ServiceType {
+    /// Creates a new `MiddlewareConfig` with default settings.
+    ///
+    /// Currently this includes `DateMiddleware` and default `ErrorMiddleware`.
+    public static func `default`() -> MiddlewareConfig {
+        var config = MiddlewareConfig()
+        config.use(DateMiddleware.self)
+        config.use(ErrorMiddleware.self)
+        return config
+    }
+
     /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> MiddlewareConfig {
         return .default()
     }
 
-    /// Lazily initializes a middleware using container.
-    typealias LazyMiddleware = (Container) throws -> Middleware
-
     /// The configured middleware.
-    var storage: [LazyMiddleware]
+    private var storage: [(Container) throws -> Middleware]
 
-    /// Create a new middleware config.
+    /// Create a new, empty `MiddlewareConfig`.
     public init() {
         self.storage = []
     }
 
-    /// Adds the supplied middleware type.
-    /// The service container will be asked to create this
-    /// middleware type upon application boot.
-    public mutating func use<M: Middleware>(_ type: M.Type) {
-        storage.append({ container in
-            return try container.make(M.self)
-        })
+    /// Adds the supplied `Middleware` type.
+    ///
+    ///     var middlewareConfig = MiddlewareConfig.default()
+    ///     middlewareConfig.use(FooMiddleware.self)
+    ///     services.register(middlewareConfig)
+    ///
+    /// The service container will be asked to create this type upon application boot.
+    public mutating func use<M>(_ type: M.Type) where M: Middleware {
+        storage.append { try $0.make(M.self) }
     }
 
-    /// Adds the supplied middleware.
-    public mutating func use<M: Middleware>(_ middleware: M) {
-        storage.append({ container in
-            return middleware
-        })
+    /// Adds a pre-initialized `Middleware` instance.
+    ///
+    ///     var middlewareConfig = MiddlewareConfig.default()
+    ///     middlewareConfig.use(fooMiddleware)
+    ///     services.register(middlewareConfig)
+    ///
+    /// - warning: Ensure the `Middleware` is thread-safe when using this method.
+    ///            Otherwise, use the type-based method and register the `Middleware`
+    ///            using factory method to `Services`.
+    public mutating func use<M>(_ middleware: M) where M: Middleware {
+        storage.append { _ in middleware }
     }
-}
 
-// MARK: Service
-
-extension MiddlewareConfig {
-    /// Resolves the desired middleware for a given container
+    /// Resolves the configured middleware for a given container
     internal func resolve(for container: Container) throws -> [Middleware] {
-        return try storage.map { lazy in
-            return try lazy(container)
-        }
-    }
-    
-    public static func `default`() -> MiddlewareConfig {
-        var config = MiddlewareConfig()
-//        config.use(FileMiddleware.self)
-        config.use(DateMiddleware.self)
-        config.use(ErrorMiddleware.self)
-        return config
+        return try storage.map { try $0(container) }
     }
 }
