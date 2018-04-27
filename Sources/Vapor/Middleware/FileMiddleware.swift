@@ -1,4 +1,10 @@
 /// Serves static files from a public directory.
+///
+///     middlewareConfig = MiddlewareConfig()
+///     middlewareConfig.use(FileMiddleware.self)
+///     services.register(middlewareConfig)
+///
+/// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
 public final class FileMiddleware: Middleware, ServiceType {
     /// See `ServiceType`.
     public static func makeService(for container: Container) throws -> FileMiddleware {

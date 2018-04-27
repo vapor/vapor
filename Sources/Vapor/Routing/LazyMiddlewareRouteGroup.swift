@@ -35,10 +35,10 @@ fileprivate struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
         self.responder = responder
     }
 
-    /// See `Responder.respond(to:)`
+    /// See `Responder`
     func respond(to req: Request) throws -> Future<Response> {
         return try req.make(M.self)
-            .makeResponder(chainedTo: responder)
+            .makeResponder(chainingTo: responder)
             .respond(to: req)
     }
 }
