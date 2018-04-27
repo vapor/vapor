@@ -407,15 +407,24 @@ extension Application {
 }
 
 extension Application {
-    func test(_ method: HTTPMethod, _ path: String, _ check: (Response) throws -> ()) throws {
+    func test(_ method: HTTPMethod, _ path: String, _ check: @escaping (Response) throws -> ()) throws {
         let http = HTTPRequest(method: method, url: URL(string: path)!)
         try test(http, check)
     }
 
-    func test(_ http: HTTPRequest, _ check: (Response) throws -> ()) throws {
-        let req = Request(http: http, using: self)
-        let res = try make(Responder.self).respond(to: req).wait()
-        try check(res)
+    func test(_ http: HTTPRequest, _ check: @escaping (Response) throws -> ()) throws {
+        let promise = eventLoop.newPromise(Void.self)
+        eventLoop.execute {
+            let req = Request(http: http, using: self)
+            do {
+                try self.make(Responder.self).respond(to: req).thenThrowing { res in
+                    try check(res)
+                }.cascade(promise: promise)
+            } catch {
+                promise.fail(error: error)
+            }
+        }
+        try promise.futureResult.wait()
     }
 
     func clientTest(_ method: HTTPMethod, _ path: String, _ check: (Response) throws -> ()) throws {

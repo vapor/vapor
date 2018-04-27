@@ -43,19 +43,15 @@ extension Services {
 
         services.register(FoundationClient.self)
 
-        // register middleware
-        services.register { container -> MiddlewareConfig in
-            return MiddlewareConfig.default()
-        }
+        // middleware
+        services.register(MiddlewareConfig.self)
+        services.register(DateMiddleware.self)
 
         services.register { container -> FileMiddleware in
             let directory = try container.make(DirectoryConfig.self)
             return FileMiddleware(publicDirectory: directory.workDir + "Public/")
         }
 
-        services.register { container in
-            return DateMiddleware()
-        }
         
         services.register { worker in
             return try ErrorMiddleware(environment: worker.environment, log: worker.make())

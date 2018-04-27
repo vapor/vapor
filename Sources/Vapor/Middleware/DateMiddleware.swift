@@ -1,57 +1,43 @@
-import Async
-//import HTTP
 import COperatingSystem
 
-fileprivate let DAY_NAMES = [
-    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
-]
+/// Adds the RFC 1123 date to outgoing `Response`s.
+public final class DateMiddleware: Middleware, ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for container: Container) throws -> DateMiddleware {
+        return .init(on: container)
+    }
 
-fileprivate let MONTH_NAMES = [
-    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
-]
+    /// Currently cached timestamp.
+    private var cachedTimestamp: (timestamp: String, createdAt: time_t)?
 
-fileprivate let NUMBERS = [
-    "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
-    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
-    "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
-    "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
-    "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
-    "50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
-    "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
-    "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
-    "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
-    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
-]
+    /// The event loop this `DateMiddleware` is running on.
+    private let eventLoop: EventLoop
 
-fileprivate var cachedTimeComponents: (key: time_t, components: COperatingSystem.tm)?
+    /// Creates a new `DateMiddleware`.
+    private init(on worker: Worker) {
+        self.eventLoop = worker.eventLoop
+    }
 
-let secondsInDay = 60 * 60 * 24
-let accuracy: Int = 1 // seconds
-
-/// Adds the RFC 1123 date to the response.
-public final class DateMiddleware: Middleware, Service {
-    var cachedTimestamp: (timestamp: String, createdAt: time_t)?
-
-    /// Creates a new `DateMiddleware`
-    public init() { }
-
-    /// See `Middleware.respond(to:)`
-    public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        return try next.respond(to: request).map(to: Response.self) { res in
-            res.http.headers.replaceOrAdd(name: "Date", value: self.getDate())
+    /// See `Middleware`.
+    public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+        assert(eventLoop.inEventLoop, "`DateMiddleware` is not thread safe. You must create one for each event loop.")
+        return try next.respond(to: req).map { res in
+            res.http.headers.replaceOrAdd(name: .date, value: self.getDate())
             return res
         }
     }
 
     /// Gets the current RFC 1123 date string.
-    fileprivate func getDate() -> String {
+    private func getDate() -> String {
+        // get the current time
         var date = COperatingSystem.time(nil)
 
+        // check if the cached timestamp is still valid
         if let (timestamp, createdAt) = cachedTimestamp, (createdAt...(createdAt + accuracy)).contains(date) {
             return timestamp
         }
         
-        // generate a key used for caching.
+        // generate a key used for caching
         // this key is a unique id for each day
         let key = date / secondsInDay
         
@@ -76,28 +62,57 @@ public final class DateMiddleware: Middleware, Service {
         let hours: Int = numericCast(time / 3600)
         let minutes: Int = numericCast((time / 60) % 60)
         let seconds: Int = numericCast(time % 60)
-        
+
+        // generate the RFC 1123 formatted string
         var rfc1123 = ""
         rfc1123.reserveCapacity(30)
-        
-        rfc1123.append(DAY_NAMES[weekDay])
+        rfc1123.append(dayNames[weekDay])
         rfc1123.append(", ")
-        rfc1123.append(NUMBERS[monthDay])
+        rfc1123.append(stringNumbers[monthDay])
         rfc1123.append(" ")
-        rfc1123.append(MONTH_NAMES[month])
+        rfc1123.append(monthNames[month])
         rfc1123.append(" ")
-        rfc1123.append(NUMBERS[year / 100])
-        rfc1123.append(NUMBERS[year % 100])
+        rfc1123.append(stringNumbers[year / 100])
+        rfc1123.append(stringNumbers[year % 100])
         rfc1123.append(" ")
-        rfc1123.append(NUMBERS[hours])
+        rfc1123.append(stringNumbers[hours])
         rfc1123.append(":")
-        rfc1123.append(NUMBERS[minutes])
+        rfc1123.append(stringNumbers[minutes])
         rfc1123.append(":")
-        rfc1123.append(NUMBERS[seconds])
+        rfc1123.append(stringNumbers[seconds])
         rfc1123.append(" GMT")
 
+        // cache the new timestamp
         cachedTimestamp = (rfc1123, date)
         
         return rfc1123
     }
 }
+
+// MARK: Private
+
+private let dayNames = [
+    "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"
+]
+
+private let monthNames = [
+    "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+]
+
+private let stringNumbers = [
+    "00", "01", "02", "03", "04", "05", "06", "07", "08", "09",
+    "10", "11", "12", "13", "14", "15", "16", "17", "18", "19",
+    "20", "21", "22", "23", "24", "25", "26", "27", "28", "29",
+    "30", "31", "32", "33", "34", "35", "36", "37", "38", "39",
+    "40", "41", "42", "43", "44", "45", "46", "47", "48", "49",
+    "50", "51", "52", "53", "54", "55", "56", "57", "58", "59",
+    "60", "61", "62", "63", "64", "65", "66", "67", "68", "69",
+    "70", "71", "72", "73", "74", "75", "76", "77", "78", "79",
+    "80", "81", "82", "83", "84", "85", "86", "87", "88", "89",
+    "90", "91", "92", "93", "94", "95", "96", "97", "98", "99"
+]
+
+private var cachedTimeComponents: (key: time_t, components: COperatingSystem.tm)?
+
+private let secondsInDay = 60 * 60 * 24
+private let accuracy: Int = 1 // seconds
