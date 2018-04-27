@@ -1,8 +1,3 @@
-import Core
-import HTTP
-import Routing
-import Service
-
 /// `Request` is a service-container wrapper around an `HTTPRequest`.
 ///
 /// Use this `Request` to access information about the `HTTPRequest` (`req.http`).
