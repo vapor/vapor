@@ -45,11 +45,7 @@ extension Services {
             let directory = try container.make(DirectoryConfig.self)
             return FileMiddleware(publicDirectory: directory.workDir + "Public/")
         }
-
-        
-        services.register { worker in
-            return try ErrorMiddleware(environment: worker.environment, log: worker.make())
-        }
+        services.register(ErrorMiddleware.self)
 
         // register router
         services.register(EngineRouter.default(), as: Router.self)

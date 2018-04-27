@@ -73,7 +73,7 @@ public final class EngineServer: Server, Service {
                 upgraders: upgraders,
                 on: group
             ) { error in
-                logger.reportError(error)
+                logger.report(error: error, verbose: !self.container.environment.isRelease)
             }.map(to: Void.self) { server in
                 if let app = container as? Application {
                     app.runningServer = RunningServer(onClose: server.onClose, close: server.close)
@@ -132,39 +132,6 @@ extension Thread {
             threadDictionary["responder"] = new
         }
         return responder
-    }
-}
-
-extension Logger {
-    func reportError(_ error: Error) {
-        var string = ""
-        if let debuggable = error as? Debuggable {
-            string += debuggable.fullIdentifier
-            string += ": "
-            string += debuggable.reason
-        } else {
-            string += "\(error)"
-        }
-        if let debuggable = error as? Debuggable {
-            if let source = debuggable.sourceLocation {
-                self.error(string,
-                   file: source.file,
-                   function: source.function,
-                   line: source.line,
-                   column: source.column
-                )
-            } else {
-                self.error(string)
-            }
-            if debuggable.suggestedFixes.count > 0 {
-                self.debug("Suggested fixes for \(debuggable.fullIdentifier): " + debuggable.suggestedFixes.joined(separator: " "))
-            }
-            if debuggable.possibleCauses.count > 0 {
-                self.debug("Possible causes for \(debuggable.fullIdentifier): " + debuggable.possibleCauses.joined(separator: " "))
-            }
-        } else {
-            self.error(string)
-        }
     }
 }
 

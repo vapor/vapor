@@ -1,86 +1,94 @@
-import Async
-import Debugging
-//import HTTP
-import Service
-import Foundation
-
-/// Captures all errors and transforms them into an internal server error.
-public final class ErrorMiddleware: Middleware, Service {
-    /// The environment to respect when presenting errors.
-    let environment: Environment
-
-    /// Log destination
-    let log: Logger
-
-    /// Create a new ErrorMiddleware for the supplied environment.
-    public init(environment: Environment, log: Logger) {
-        self.environment = environment
-        self.log = log
+/// Captures all errors and transforms them into an internal server error HTTP response.
+public final class ErrorMiddleware: Middleware, ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for worker: Container) throws -> ErrorMiddleware {
+        return try .default(environment: worker.environment, log: worker.make())
     }
 
-    /// See `Middleware.respond`
-    public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = req.eventLoop.newPromise(Response.self)
+    /// Create a default `ErrorMiddleware`. Logs errors to a `Logger` based on `Environment`
+    /// and converts `Error` to `Response` based on conformance to `AbortError` and `Debuggable`.
+    ///
+    /// - parameters:
+    ///     - environment: The environment to respect when presenting errors.
+    ///     - log: Log destination.
+    public static func `default`(environment: Environment, log: Logger) -> ErrorMiddleware {
+        /// Structure of `ErrorMiddleware` default response.
+        struct ErrorResponse: Encodable {
+            /// Always `true` to indicate this is a non-typical JSON response.
+            var error: Bool
 
-        func handleError(_ error: Swift.Error) {
-            let reason: String
+            /// The reason for the error.
+            var reason: String
+        }
+
+        return .init { req, error in
+            // log the error
+            log.report(error: error, verbose: !environment.isRelease)
+
+            // variables to determine
             let status: HTTPResponseStatus
+            let reason: String
+            let headers: HTTPHeaders
 
-            switch environment {
-            case .production:
-                if let abort = error as? AbortError {
-                    reason = abort.reason
-                    status = abort.status
-                } else {
-                    status = .internalServerError
-                    reason = "Something went wrong."
-                }
+            // inspect the error type
+            switch error {
+            case let abort as AbortError:
+                // this is an abort error, we should use its status, reason, and headers
+                reason = abort.reason
+                status = abort.status
+                headers = abort.headers
+            case let debuggable as Debuggable where !environment.isRelease:
+                // if not release mode, and error is debuggable, provide debug
+                // info directly to the developer
+                reason = debuggable.reason
+                status = .internalServerError
+                headers = [:]
             default:
-                log.reportError(error)
-
-                if let debuggable = error as? Debuggable {
-                    reason = debuggable.reason
-                } else if let abort = error as? AbortError {
-                    reason = abort.reason
-                } else {
-                    reason = "Something went wrong."
-                }
-
-                if let abort = error as? AbortError {
-                    status = abort.status
-                } else {
-                    status = .internalServerError
-                }
+                // not an abort error, and not debuggable or in dev mode
+                // just deliver a generic 500 to avoid exposing any sensitive error info
+                reason = "Something went wrong."
+                status = .internalServerError
+                headers = [:]
             }
 
-            let res = req.makeResponse()
+            // create a Response with appropriate status
+            let res = req.makeResponse(http: .init(status: status, headers: headers))
+
+            // attempt to serialize the error to json
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
                 res.http.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
-                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf8")
             } catch {
                 res.http.body = HTTPBody(string: "Oops: \(error)")
-                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf8")
             }
-            res.http.status = status
-            promise.succeed(result: res)
+            return res
         }
-
-        do {
-            try next.respond(to: req).do { res in
-                promise.succeed(result: res)
-            }.catch { error in
-                handleError(error)
-            }
-        } catch {
-            handleError(error)
-        }
-
-        return promise.futureResult
     }
-}
 
-struct ErrorResponse: Encodable {
-    var error: Bool
-    var reason: String
+    /// Error-handling closure.
+    private let closure: (Request, Error) -> (Response)
+
+    /// Create a new `ErrorMiddleware`.
+    ///
+    /// - parameters:
+    ///     - closure: Error-handling closure. Converts `Error` to `Response`.
+    public init(_ closure: @escaping (Request, Error) -> (Response)) {
+        self.closure = closure
+    }
+
+    /// See `Middleware`.
+    public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+        let promise = req.eventLoop.newPromise(Response.self)
+        do {
+            try next.respond(to: req).cascade(promise: promise)
+        } catch {
+            promise.fail(error: error)
+        }
+
+        return promise.futureResult.catchMap { error in
+            return self.closure(req, error)
+        }
+    }
 }

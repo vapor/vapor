@@ -1,6 +1,7 @@
 import COperatingSystem
 
 /// Adds the RFC 1123 date to outgoing `Response`s.
+/// - warning: `DateMiddleware` is not thread safe.
 public final class DateMiddleware: Middleware, ServiceType {
     /// See `ServiceType`.
     public static func makeService(for container: Container) throws -> DateMiddleware {
