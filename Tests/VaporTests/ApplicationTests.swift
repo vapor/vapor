@@ -341,6 +341,22 @@ class ApplicationTests: XCTestCase {
         }
     }
 
+    func testGH1609() throws {
+        struct DecodeFail: Content {
+            var here: String
+            var missing: String
+        }
+        try Application.runningTest(port: 8086) { router in
+            router.post(DecodeFail.self, at: "decode-fail") { req, fail -> String in
+                return "ok"
+            }
+        }.clientTest(.POST, "decode-fail", beforeSend: { try $0.content.encode(["here": "hi"]) }) { res in
+            XCTAssertEqual(res.http.status, .badRequest)
+            XCTAssert(res.http.body.string.contains("missing"))
+        }
+
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -358,6 +374,7 @@ class ApplicationTests: XCTestCase {
         ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
         ("testStreamFile", testStreamFile),
         ("testCustomEncode", testCustomEncode),
+        ("testGH1609", testGH1609),
     ]
 }
 
@@ -427,11 +444,16 @@ extension Application {
         try promise.futureResult.wait()
     }
 
-    func clientTest(_ method: HTTPMethod, _ path: String, _ check: (Response) throws -> ()) throws {
+    func clientTest(_ method: HTTPMethod, _ path: String, beforeSend: (Request) throws -> () = { _ in }, afterSend: (Response) throws -> ()) throws {
         let config = try make(EngineServerConfig.self)
         let path = path.hasPrefix("/") ? path : "/\(path)"
-        let res = try FoundationClient.default(on: self).send(method, to: "http://localhost:\(config.port)" + path).wait()
-        try check(res)
+        let req = Request(
+            http: .init(method: method, url: "http://localhost:\(config.port)" + path),
+            using: self
+        )
+        try beforeSend(req)
+        let res = try FoundationClient.default(on: self).send(req).wait()
+        try afterSend(res)
     }
 
 
