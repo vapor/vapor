@@ -16,7 +16,7 @@ public final class KeyedCacheSessions: Sessions {
     }
 
     public func readSession(sessionID: String) throws -> Future<Session?> {
-        return keyedCache.get(sessionID, as: SessionData.self).map(to: Session?.self) { data in
+        return keyedCache.get(sessionID, as: SessionData.self).map { data in
             return data.flatMap { Session(id: sessionID, data: $0) }
         }
     }

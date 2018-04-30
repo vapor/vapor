@@ -74,7 +74,7 @@ public final class EngineServer: Server, Service {
                 on: group
             ) { error in
                 logger.report(error: error, verbose: !self.container.environment.isRelease)
-            }.map(to: Void.self) { server in
+            }.map { server in
                 if let app = container as? Application {
                     app.runningServer = RunningServer(onClose: server.onClose, close: server.close)
                 }
@@ -103,7 +103,7 @@ struct EngineResponder: HTTPServerResponder {
         return Future.flatMap(on: worker) {
             let responder = try Thread.current.cachedResponder(for: container)
             let req = Request(http: request, using: container)
-            return try responder.respond(to: req).map(to: HTTPResponse.self) { $0.http }
+            return try responder.respond(to: req).map { $0.http }
         }
     }
 }

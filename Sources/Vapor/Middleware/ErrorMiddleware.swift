@@ -37,6 +37,11 @@ public final class ErrorMiddleware: Middleware, ServiceType {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
+            case let validation as ValidationError:
+                // this is a validation error
+                reason = validation.reason
+                status = .badRequest
+                headers = [:]
             case let debuggable as Debuggable where !environment.isRelease:
                 // if not release mode, and error is debuggable, provide debug
                 // info directly to the developer

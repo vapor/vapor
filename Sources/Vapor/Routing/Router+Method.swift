@@ -28,7 +28,7 @@ extension Router {
 extension Future: ResponseEncodable where T: ResponseEncodable {
     /// See ResponseEncodable.encode
     public func encode(for req: Request) throws -> Future<Response> {
-        return flatMap(to: Response.self) { exp in
+        return flatMap { exp in
             try exp.encode(for: req)
         }
     }

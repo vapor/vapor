@@ -11,7 +11,7 @@ extension HTTPMessageDecoder {
     internal func get<D, M>(at keyPath: [BasicKey], from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
         where D: Decodable, M: HTTPMessage
     {
-        return try self.decode(SingleValueDecoder.self, from: message, maxSize: maxSize, on: worker).map(to: D.self) { decoder in
+        return try self.decode(SingleValueDecoder.self, from: message, maxSize: maxSize, on: worker).map { decoder in
             return try decoder.get(at: keyPath)
         }
     }

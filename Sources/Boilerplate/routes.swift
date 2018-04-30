@@ -23,7 +23,7 @@ public func routes(_ router: Router) throws {
     }
 
     router.get("client") { req in
-        return try req.make(FoundationClient.self).get("http://vapor.codes").map(to: String.self) { res in
+        return try req.make(FoundationClient.self).get("http://vapor.codes").map { res in
             return String(data: res.http.body.data ?? Data(), encoding: .ascii) ?? ""
         }
     }

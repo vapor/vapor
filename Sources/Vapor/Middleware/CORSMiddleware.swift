@@ -126,7 +126,7 @@ public final class CORSMiddleware: Middleware {
             ? request.eventLoop.newSucceededFuture(result: request.makeResponse())
             : try next.respond(to: request)
         
-        return response.map(to: Response.self) { response in
+        return response.map { response in
             // Modify response headers based on CORS settings
             response.http.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: request))
             response.http.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)

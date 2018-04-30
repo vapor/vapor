@@ -45,7 +45,7 @@ public struct RequestDecodableResponder<C, T>: Responder
     
     /// See: HTTP.Responder.respond
     public func respond(to req: Request) throws -> Future<Response> {
-        return try C.decode(from: req).flatMap(to: Response.self) { content in
+        return try C.decode(from: req).flatMap { content in
             let encodable = try self.closure(req, content)
             return try encodable.encode(for: req)
         }

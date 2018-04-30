@@ -1,18 +1,18 @@
 /// `Request` is a service-container wrapper around an `HTTPRequest`.
 ///
-/// Use this `Request` to access information about the `HTTPRequest` (`req.http`).
+/// Use `Request` to access information about the `HTTPRequest` (`req.http`).
 ///
 ///     print(req.http.url.path) // "/hello"
 ///
-/// You can also use `Request` to create services you may need while generating a response (`req.make(_:)`.
+/// You can also use `Request` to create services you may need while generating a response (`req.make()`).
 ///
 ///     let client = try req.make(Client.self)
 ///     print(client) // Client
 ///     client.get("http://vapor.codes")
 ///
-/// `Request` is also the `ParameterContainer` for routing. Use `.parameter(...)` to fetch parameterized values.
+/// `Request` is also the `ParameterContainer` for routing. Use `parameters` to fetch parameterized values.
 ///
-///     router.get("hello", String.parameter) { req in
+///     router.get("hello", String.parameter) { req -> String in
 ///         let name = try req.parameters.next(String.self)
 ///         return "Hello, \(name)!"
 ///     }
@@ -43,7 +43,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// This request's private container. Use this container to create services that will be cached
     /// only for the lifetime of this request. For all other services, use the request directly.
     ///
-    ///     let authCache = req.privateContainer.make(AuthCache.self)
+    ///     let authCache = try req.privateContainer.make(AuthCache.self)
     ///
     public let privateContainer: SubContainer
     
@@ -53,12 +53,12 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
 
     // MARK: Computed
 
-    /// See `CustomStringConvertible.description
+    /// See `CustomStringConvertible`.
     public var description: String {
         return http.description
     }
 
-    /// See `CustomDebugStringConvertible.debugDescription`
+    /// See `CustomDebugStringConvertible`.
     public var debugDescription: String {
         return http.debugDescription
     }
@@ -66,12 +66,12 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// Helper for encoding and decoding data from an HTTP request query string.
     ///
     ///     let flags = try req.query.decode(Flags.self)
-    ///     print(flags) /// Flags
+    ///     print(flags) // Flags
     ///
     /// This helper can also decode single values from specific key paths.
     ///
     ///     let name = try req.query.get(String.self, at: "user", "name")
-    ///     print(name) /// String
+    ///     print(name) // String
     ///
     /// See `QueryContainer` methods for more information.
     public var query: QueryContainer {

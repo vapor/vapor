@@ -50,7 +50,7 @@ public final class Application: Container {
     ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
     public static func asyncBoot(config: Config = .default(), environment: Environment = .development, services: Services = .default()) -> Future<Application> {
         let app = Application(config, environment, services)
-        return app.boot().map(to: Application.self) { app }
+        return app.boot().transform(to: app)
     }
 
     /// Synchronously creates and boots a new `Application`.
@@ -89,7 +89,7 @@ public final class Application: Container {
         return Future.flatMap(on: self) {
             // will-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             let command = try self.make(Commands.self)
                 .group()
             let console = try self.make(Console.self)
@@ -97,7 +97,7 @@ public final class Application: Container {
             /// Create a mutable copy of the environment input for this run.
             var runInput = self.environment.commandInput
             return console.run(command, input: &runInput, on: self)
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             // did-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
         }
@@ -127,13 +127,13 @@ public final class Application: Container {
         return Future.flatMap(on: self) {
             // will-boot all service providers
             return try self.providers.map { try $0.willBoot(self) }.flatten(on: self)
-        }.map(to: Void.self) {
+        }.map {
             if _isDebugAssertConfiguration() && self.environment.isRelease {
                 let log = try self.make(Logger.self)
                 log.warning("Debug build mode detected while configured for release environment: \(self.environment.name).")
                 log.info("Compile your application with `-c release` to enable code optimizations.")
             }
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             // did-boot all service providers
             return try self.providers.map { try $0.didBoot(self) }.flatten(on: self)
         }

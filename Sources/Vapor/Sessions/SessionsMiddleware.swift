@@ -20,18 +20,18 @@ public final class SessionsMiddleware: Middleware, Service {
 
         /// Generate a response for the request
         func respond() throws -> Future<Response> {
-            return try next.respond(to: request).flatMap(to: Response.self) { res in
+            return try next.respond(to: request).flatMap { res in
                 if let session = cache.session {
                     /// A session exists or has been created. we must
                     /// set a cookie value on the response
-                    return try self.sessions.updateSession(session).map(to: Response.self) { value in
+                    return try self.sessions.updateSession(session).map { value in
                         res.http.cookies[self.cookieName] = value.id.flatMap(HTTPCookieValue.init)
                         return res
                     }
                 } else if let cookieValue = request.http.cookies[self.cookieName] {
                     /// Yhe request had a session cookie, but now there is no session.
                     /// we need to perform cleanup.
-                    return try self.sessions.destroySession(sessionID: cookieValue.string).map(to: Response.self) {
+                    return try self.sessions.destroySession(sessionID: cookieValue.string).map {
                         res.http.cookies[self.cookieName] = .expired
                         return res
                     }
@@ -45,7 +45,7 @@ public final class SessionsMiddleware: Middleware, Service {
         /// Check for an existing session
         if let cookieValue = request.http.cookies[cookieName] {
             /// A cookie value exists, get the session for it.
-            return try sessions.readSession(sessionID: cookieValue.string).flatMap(to: Response.self) { session in
+            return try sessions.readSession(sessionID: cookieValue.string).flatMap { session in
                 cache.session = session
                 return try respond()
             }

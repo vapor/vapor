@@ -64,27 +64,26 @@ do {
     }
 
     router.get("client", "httpsbin") { req -> Future<String> in
-        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap(to: Data.self) { res in
+        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap { res in
             return res.http.body.consumeData(max: 2048, on: req)
-        }.map(to: String.self) { data in
+        }.map { data in
             return String(data: data, encoding: .utf8) ?? "n/a"
         }
     }
 
     router.get("client", "invalid") { request -> Future<String> in
         return try request.make(Client.self).get("http://httpbin.org")
-            .flatMap(to: Data.self) { response in
-                return response.http.body.consumeData(max: 2048, on: request)
-            }
-            .map(to: String.self) { data in
-                return String(data: data, encoding: .utf8) ?? ""
+        .flatMap { response in
+            return response.http.body.consumeData(max: 2048, on: request)
+        }.map { data in
+            return String(data: data, encoding: .utf8) ?? ""
         }
     }
 
     router.get("client", "httpbin") { req -> Future<String> in
-        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
+        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap { res in
             return res.http.body.consumeData(max: 2048, on: req)
-        }.map(to: String.self) { data in
+        }.map { data in
             return String(data: data, encoding: .utf8) ?? "n/a"
         }
     }
@@ -119,10 +118,9 @@ do {
         return "123"
     }
 
-    router.get("vapor") { req -> Future<String> in
-        return try req.make(Client.self).send(.GET, to: "https://vapor.codes").map(to: String.self) { res in
-            print(res.http.headers)
-            return "done!"
+    router.get("vapor") { req in
+        return try req.client().get("https://vapor.codes").map { res in
+            return res.description
         }
     }
 

@@ -13,7 +13,7 @@ extension URLEncodedFormDecoder: HTTPMessageDecoder {
                 ]
             )
         }
-        return message.body.consumeData(max: maxSize, on: worker).map(to: D.self) { data in
+        return message.body.consumeData(max: maxSize, on: worker).map { data in
             return try self.decode(D.self, from: data)
         }
     }

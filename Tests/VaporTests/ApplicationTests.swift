@@ -355,7 +355,30 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status, .badRequest)
             XCTAssert(res.http.body.string.contains("missing"))
         }
+    }
 
+    func testValidationError() throws {
+        struct User: Content, Validatable, Reflectable {
+            static func validations() throws -> Validations<User> {
+                var validations = Validations(User.self)
+                try validations.add(\.email, .email)
+                return validations
+            }
+
+            var name: String
+            var email: String
+        }
+        try Application.makeTest { router in
+            router.post(User.self, at: "users") { req, user -> String in
+                try user.validate()
+                return "ok"
+            }
+        }.test(.POST, "users", beforeSend: {
+            try $0.content.encode(["name": "vapor", "email": "foo"])
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .badRequest)
+            XCTAssert(res.http.body.string.contains("'email' is not a valid email address"))
+        })
     }
 
     static let allTests = [
@@ -425,18 +448,19 @@ extension Application {
 }
 
 extension Application {
-    func test(_ method: HTTPMethod, _ path: String, _ check: @escaping (Response) throws -> ()) throws {
+    func test(_ method: HTTPMethod, _ path: String, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws {
         let http = HTTPRequest(method: method, url: URL(string: path)!)
-        try test(http, check)
+        try test(http, beforeSend: beforeSend, afterSend: afterSend)
     }
 
-    func test(_ http: HTTPRequest, _ check: @escaping (Response) throws -> ()) throws {
+    func test(_ http: HTTPRequest, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws {
         let promise = eventLoop.newPromise(Void.self)
         eventLoop.execute {
             let req = Request(http: http, using: self)
             do {
-                try self.make(Responder.self).respond(to: req).thenThrowing { res in
-                    try check(res)
+                try beforeSend(req)
+                try self.make(Responder.self).respond(to: req).map { res in
+                    try afterSend(res)
                 }.cascade(promise: promise)
             } catch {
                 promise.fail(error: error)

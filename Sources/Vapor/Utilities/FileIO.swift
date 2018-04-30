@@ -180,7 +180,7 @@ public struct FileIO {
         let chunkStream = HTTPChunkedStream(on: eventLoop)
         _read(file: file, chunkSize: chunkSize) { chunk in
             return chunkStream.write(.chunk(chunk))
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             return chunkStream.write(.end)
         }.catch { error in
             // we can't wait for the error
