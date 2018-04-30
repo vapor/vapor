@@ -1,6 +1,3 @@
-//import HTTP
-import Routing
-
 extension Router {
     // MARK: - Create new group
 
@@ -161,15 +158,9 @@ extension Router {
     }
 }
 
+// MARK: Private
+
 /// Groups routes
-///
-/// Every route will have the properties of this Group added
-///
-/// All path components will be inserted before the Route's path
-///
-/// All middleware will be applied to the Responder
-///
-/// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/)
 private final class RouteGroup: Router {
     /// All routes registered to this group
     private(set) var routes: [Route<Responder>] = []
