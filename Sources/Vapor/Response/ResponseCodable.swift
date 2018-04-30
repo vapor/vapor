@@ -35,6 +35,13 @@ extension HTTPResponse: ResponseEncodable {
     }
 }
 
+extension Future: ResponseEncodable where T: ResponseEncodable {
+    /// See `ResponseEncodable`.
+    public func encode(for req: Request) throws -> Future<Response> {
+        return flatMap { try $0.encode(for: req) }
+    }
+}
+
 extension StaticString: ResponseEncodable {
     /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
