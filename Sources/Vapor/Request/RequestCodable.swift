@@ -1,27 +1,38 @@
-/// Can be converted from a request.
+/// Can be initialized from a `Request`.
 public protocol RequestDecodable {
+    /// Decodes an instance of `Self` asynchronously from a `Request`.
+    ///
+    /// - parameters:
+    ///     - req: The `Request` to initialize from.
+    /// - returns: A `Future` containing an instance of `Self`.
     static func decode(from req: Request) throws -> Future<Self>
 }
 
-/// Can be converted to a request
+/// Can convert `self` to a `Request`.
 public protocol RequestEncodable {
+    /// Encodes an instance of `Self` asynchronously to a `Request`.
+    ///
+    /// - parameters:
+    ///     - container: `Container` to use for initializing the `Request`.
+    /// - returns: A `Future` containing the `Request`.
     func encode(using container: Container) throws -> Future<Request>
 }
 
-/// Can be converted from and to a request
+/// Can be converted to and from a `Request`.
 public typealias RequestCodable = RequestDecodable & RequestEncodable
 
-// MARK: Request Conformance
+// MARK: Default Conformances
 
-extension Request: RequestEncodable {
-    public func encode(using container: Container) throws -> Future<Request> {
-        return Future.map(on: container) { self }
+extension HTTPRequest: RequestCodable {
+    /// See `RequestDecodable`.
+    public static func decode(from req: Request) throws -> EventLoopFuture<HTTPRequest> {
+        return req.eventLoop.newSucceededFuture(result: req.http)
     }
-}
 
-extension Request: RequestDecodable {
-    /// See RequestInitializable.decode
-    public static func decode(from request: Request) throws -> Future<Request> {
-        return Future.map(on: request) { request }
+    /// See `RequestEncodable`.
+    public func encode(using container: Container) throws -> Future<Request> {
+        return container.eventLoop.newSucceededFuture(
+            result: .init(http: self, using: container)
+        )
     }
 }

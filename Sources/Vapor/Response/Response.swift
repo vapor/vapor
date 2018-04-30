@@ -1,6 +1,3 @@
-import Dispatch
-import Service
-
 /// `Response` is a service-container wrapper around an `HTTPResponse`.
 ///
 /// Use this `Response` to access information about the `HTTPResponse` (`res.http`).
@@ -14,17 +11,19 @@ import Service
 ///     client.get("http://vapor.codes")
 ///
 /// See `HTTPResponse` and `Container` for more information.
-public final class Response: ContainerAlias, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Response: ContainerAlias, HTTPMessageContainer, ResponseCodable, CustomStringConvertible, CustomDebugStringConvertible {
     /// See `ContainerAlias`.
     public static let aliasedContainer: KeyPath<Response, Container> = \.sharedContainer
 
-    // MARK: Stored
+    // MARK: HTTP
 
     /// The wrapped `HTTPResponse`.
     ///
     ///     print(res.http.status) // 200 OK
     ///
     public var http: HTTPResponse
+
+    // MARK: Services
 
     /// This `Response`'s parent container. This is normally the event loop. The `Response` will redirect
     /// all calls to create services to this container.
@@ -33,17 +32,19 @@ public final class Response: ContainerAlias, HTTPMessageContainer, CustomStringC
     /// This response's private container.
     public let privateContainer: SubContainer
 
-    // MARK: Computed
+    // MARK: Descriptions
 
-    /// See `CustomStringConvertible.description
+    /// See `CustomStringConvertible`.
     public var description: String {
         return http.description
     }
 
-    /// See `CustomDebugStringConvertible.debugDescription`
+    /// See `CustomDebugStringConvertible`.
     public var debugDescription: String {
         return http.debugDescription
     }
+
+    // MARK: Content
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
     ///
@@ -61,6 +62,8 @@ public final class Response: ContainerAlias, HTTPMessageContainer, CustomStringC
         return ContentContainer(self)
     }
 
+    // MARK: Init
+
     /// Create a new `Response`.
     public init(http: HTTPResponse = .init(), using container: Container) {
         self.http = http
@@ -68,10 +71,22 @@ public final class Response: ContainerAlias, HTTPMessageContainer, CustomStringC
         self.privateContainer = container.subContainer(on: container)
     }
 
-    // MARK: Methods
+    // MARK: Request
 
     /// Creates a `Request` on the same container as this `Response`.
     public func makeRequest() -> Request {
         return Request(using: sharedContainer)
+    }
+
+    // MARK: Codable
+
+    /// See `ResponseDecodable`.
+    public static func decode(from res: Response, for req: Request) throws -> EventLoopFuture<Response> {
+        return req.eventLoop.newSucceededFuture(result: res)
+    }
+
+    /// See `ResponseEncodable`.
+    public func encode(for req: Request) throws -> Future<Response> {
+        return req.eventLoop.newSucceededFuture(result: self)
     }
 }

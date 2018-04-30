@@ -1,22 +1,21 @@
-import Routing
-
 extension Router {
-    /// Creates a group with the provided middleware type.
+    /// Creates a group with the provided `Middleware` type.
     ///
-    /// This middleware will be lazily initialized using the container upon
-    /// the first request that invokes it.
+    ///     let group = router.grouped(DateMiddleware.self)
+    ///     group.get("date") { ... }
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#middleware)
+    /// This middleware will be lazily initialized using the container upon the first request that invokes it.
     public func grouped<M>(_ middleware: M.Type) -> Router where M: Middleware {
         return LazyMiddlewareRouteGroup(M.self, cascadingTo: self)
     }
 
-    /// Creates a group with the provided middleware type.
+    /// Creates a group with the provided `Middleware` type.
     ///
-    /// This middleware will be lazily initialized using the container upon
-    /// the first request that invokes it.
+    ///     router.group(DateMiddleware.self) { group in
+    ///         group.get("date") { ... }
+    ///     }
     ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#middleware)
+    /// This middleware will be lazily initialized using the container upon the first request that invokes it.
     public func group<M>(_ middleware: M.Type, configure: (Router) throws -> ()) rethrows where M: Middleware {
         try configure(LazyMiddlewareRouteGroup(M.self, cascadingTo: self))
     }
@@ -24,9 +23,8 @@ extension Router {
 
 /// MARK: Private
 
-/// Responder wrapper around middleware type.
-/// Lazily initializes the middleware upon request.
-fileprivate struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
+/// Responder wrapper around middleware type. Lazily initializes the middleware upon request.
+private struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
     /// The responder to chain to.
     var responder: Responder
 
@@ -44,7 +42,7 @@ fileprivate struct LazyMiddlewareResponder<M>: Responder where M: Middleware {
 }
 
 /// Lazy initialized route group
-fileprivate final class LazyMiddlewareRouteGroup<M>: Router where M: Middleware {
+private final class LazyMiddlewareRouteGroup<M>: Router where M: Middleware {
     /// All routes registered to this group
     private(set) var routes: [Route<Responder>] = []
 

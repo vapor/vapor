@@ -3,7 +3,8 @@
 public struct MiddlewareConfig: ServiceType {
     /// Creates a new `MiddlewareConfig` with default settings.
     ///
-    /// Currently this includes `DateMiddleware` and default `ErrorMiddleware`.
+    /// Currently this includes `DateMiddleware` and default `ErrorMiddleware` but this
+    /// may change in the future.
     public static func `default`() -> MiddlewareConfig {
         var config = MiddlewareConfig()
         config.use(DateMiddleware.self)

@@ -1,28 +1,33 @@
-/// Can be converted from a response.
+/// Can create an instance of `Self` from a `Response`.
 public protocol ResponseDecodable {
+    /// Decodes an instance of `Self` asynchronously from a `Response`.
+    ///
+    /// - parameters:
+    ///     - res: `Response` to decode.
+    ///     - req: The `Request` associated with this `Response`.
+    /// - returns: A `Future` containing the decoded instance of `Self`.
     static func decode(from res: Response, for req: Request) throws -> Future<Self>
 }
 
-/// Can be converted to a response
+/// Can convert `self` to a `Response`.
+///
+/// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable {
-    /// Makes a response using the context provided by the HTTPRequest
+    /// Encodes an instance of `Self` asynchronously to a `Response`.
+    ///
+    /// - parameters:
+    ///     - req: The `Request` associated with this `Response`.
+    /// - returns: A `Future` containing the `Response`.
     func encode(for req: Request) throws -> Future<Response>
 }
 
-/// Can be converted from and to a response
+/// Can be converted to and from a `Response`.
 public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 
-// MARK: Response Conformance
-
-extension Response: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
-    public func encode(for req: Request) throws -> Future<Response> {
-        return Future.map(on: req) { self }
-    }
-}
+// MARK: Default Conformances
 
 extension HTTPResponse: ResponseEncodable {
-    /// See ResponseRepresentable.makeResponse
+    /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
         let new = req.makeResponse()
         new.http = self

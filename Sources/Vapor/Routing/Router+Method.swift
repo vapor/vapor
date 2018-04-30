@@ -7,7 +7,7 @@ extension Router {
     public func on<T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (Request) throws -> T) -> Route<Responder>
         where T: ResponseEncodable
     {
-        let responder = RouteResponder(closure: closure)
+        let responder = BasicResponder { try closure($0).encode(for: $0) }
         let route = Route<Responder>(path: [method.pathComponent] + path, output: responder)
         register(route: route)
         return route
@@ -18,7 +18,12 @@ extension Router {
     public func on<C, T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
         where C: RequestDecodable, T: ResponseEncodable
     {
-        let responder = RequestDecodableResponder(closure: closure)
+        let responder = BasicResponder { req in
+            return try C.decode(from: req).flatMap { content in
+                let encodable = try closure(req, content)
+                return try encodable.encode(for: req)
+            }
+        }
         let route = Route<Responder>(path: [method.pathComponent] + path, output: responder)
         register(route: route)
         return route
@@ -35,6 +40,8 @@ extension Future: ResponseEncodable where T: ResponseEncodable {
 }
 
 extension Router {
+    // MARK: HTTP
+
     /// Creates a `Route` at the provided path using the `GET` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
@@ -84,42 +91,43 @@ extension Router {
     {
         return on(.PATCH, at: path.convertToPathComponents(), use: closure)
     }
-}
 
-extension Router {
+    // MARK: Content
+
     /// Creates a `Route` at the provided path using the `PUT` method.
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func put<C, T>(
-        _ content: C.Type,
-        at path: PathComponentsRepresentable...,
-        use closure: @escaping RequestDecodableResponder<C, T>.Closure
-    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.PUT, at: path.convertToPathComponents(), use: closure)
+    public func put<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
+        where C: RequestDecodable, T: ResponseEncodable
+    {
+        return on(.PUT, at: path.convertToPathComponents(), use: closure)
     }
     
     /// Creates a `Route` at the provided path using the `POST` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func post<C, T>(
-        _ content: C.Type,
-        at path: PathComponentsRepresentable...,
-        use closure: @escaping RequestDecodableResponder<C, T>.Closure
-    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.POST, at: path.convertToPathComponents(), use: closure)
+    public func post<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
+        where C: RequestDecodable, T: ResponseEncodable
+    {
+        return on(.POST, at: path.convertToPathComponents(), use: closure)
     }
     
     /// Creates a `Route` at the provided path using the `PATCH` method.
     ///
     /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/routing/)
     @discardableResult
-    public func patch<C, T>(
-        _ content: C.Type,
-        at path: PathComponentsRepresentable...,
-        use closure: @escaping RequestDecodableResponder<C, T>.Closure
-    ) -> Route<Responder> where C: RequestDecodable, T: ResponseEncodable {
-        return self.on(.PATCH, at: path.convertToPathComponents(), use: closure)
+    public func patch<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
+        where C: RequestDecodable, T: ResponseEncodable
+    {
+        return on(.PATCH, at: path.convertToPathComponents(), use: closure)
+    }
+}
+
+// MARK: Private
+
+private extension HTTPMethod {
+    /// Creates a 
+    var pathComponent: PathComponent {
+        return .constant(string)
     }
 }

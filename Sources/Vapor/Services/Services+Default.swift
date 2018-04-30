@@ -59,17 +59,7 @@ extension Services {
         services.register(Console.self) { container -> Terminal in
             return Terminal()
         }
-        services.register(Responder.self) { container -> ApplicationResponder in
-            let middleware = try container
-                .make(MiddlewareConfig.self)
-                .resolve(for: container)
-
-            let router = try RouterResponder(
-                router: container.make()
-            )
-            let wrapped = middleware.makeResponder(chainedto: router)
-            return ApplicationResponder(wrapped)
-        }
+        services.register(ApplicationResponder.self)
 
         // commands
         services.register(BootCommand.self)
@@ -118,17 +108,6 @@ extension Services {
 
 
         return services
-    }
-}
-
-public struct ApplicationResponder: Responder, Service {
-    private let responder: Responder
-    init(_ responder: Responder) {
-        self.responder = responder
-    }
-
-    public func respond(to req: Request) throws -> Future<Response> {
-        return try responder.respond(to: req)
     }
 }
 

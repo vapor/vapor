@@ -10,7 +10,7 @@
 ///     print(client) // Client
 ///     client.get("http://vapor.codes")
 ///
-/// `Request` is also the `ParameterContainer` for routing. Use `parameters` to fetch parameterized values.
+/// `Request` also carries a `ParametersContainer` for routing. Use `parameters` to fetch parameterized values.
 ///
 ///     router.get("hello", String.parameter) { req -> String in
 ///         let name = try req.parameters.next(String.self)
@@ -24,17 +24,19 @@
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, RequestCodable, CustomStringConvertible, CustomDebugStringConvertible {
     /// See `ContainerAlias`.
     public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
 
-    // MARK: Stored
+    // MARK: HTTP
 
     /// The wrapped `HTTPRequest`.
     ///
     ///     print(req.http.url.path) // "/hello"
     ///
     public var http: HTTPRequest
+
+    // MARK: Services
 
     /// This `Request`'s parent container. This is normally the event loop. The `Request` will redirect
     /// all calls to create services to this container.
@@ -51,7 +53,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// invoking cached connections release.
     internal var hasActiveConnections: Bool
 
-    // MARK: Computed
+    // MARK: Descriptions
 
     /// See `CustomStringConvertible`.
     public var description: String {
@@ -62,6 +64,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     public var debugDescription: String {
         return http.debugDescription
     }
+
+    // MARK: Content
 
     /// Helper for encoding and decoding data from an HTTP request query string.
     ///
@@ -94,6 +98,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         return .init(self)
     }
 
+    // MARK: Routing
+
     /// Helper for accessing route parameters from this HTTP request.
     ///
     ///     let id = try req.parameters.next(Int.self)
@@ -105,6 +111,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// Internal storage for routing parameters.
     internal var _parameters: Parameters
 
+    // MARK: Init
+
     /// Create a new `Request`.
     public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
@@ -114,7 +122,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         hasActiveConnections = false
     }
 
-    // MARK: Methods
+    // MARK: Response
 
     /// Creates a `Response` on the same container as this `Request`.
     ///
@@ -130,6 +138,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     public func makeResponse(http: HTTPResponse = .init()) -> Response {
         return Response(http: http, using: sharedContainer)
     }
+
+    // MARK: Database
 
     /// See `DatabaseConnectable`.
     public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection>{
@@ -147,6 +157,18 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)
+    }
+
+    // MARK: Request Codable
+
+    /// See `RequestDecodable`.
+    public static func decode(from request: Request) throws -> Future<Request> {
+        return Future.map(on: request) { request }
+    }
+
+    /// See `RequestEncodable`.
+    public func encode(using container: Container) throws -> Future<Request> {
+        return Future.map(on: container) { self }
     }
 
     /// Called when the `Request` deinitializes.

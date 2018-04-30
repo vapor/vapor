@@ -13,7 +13,7 @@ public final class FileMiddleware: Middleware, ServiceType {
 
     /// The public directory.
     /// - note: Must end with a slash.
-    let publicDirectory: String
+    private let publicDirectory: String
 
     /// Creates a new `FileMiddleware`.
     public init(publicDirectory: String) {
