@@ -1,26 +1,18 @@
 extension Router {
-    // MARK: - Create new group
+    // MARK: Path
 
     /// Creates a group cascading to router or group with the provided path components
     ///
+    ///     // Creating new group on router.
+    ///     let users = router.grouped("user")
+    ///     // Adding "user/auth/" route to router.
+    ///     users.get("auth") { ... }
+    ///     // adding "user/profile/" route to router
+    ///     users.get("profile") { ... }
     ///
-    /// **Example:**
-    /// ```
-    /// // creating new group on router
-    /// let users = router.grouped("user")
-    ///
-    /// // adding "user/auth/" route to router
-    /// users.get("auth", use: userAuthHandler)
-    ///
-    /// // adding "user/profile/" route to router
-    /// users.get("profile", use: userProfileHandler)
-    ///
-    /// ```
-    ///
-    /// [Learn More →](https://docs.vapor.codes/3.0/vapor/route-group/#path-components)
-    ///
-    /// - Parameter path: Group path components separated by commas
-    /// - Returns: created RouteGroup
+    /// - parameters:
+    ///     - path: Group path components separated by commas.
+    /// - returns: Newly created `Router` wrapped in the path.
     public func grouped(_ path: PathComponentsRepresentable...) -> Router {
         return RouteGroup(cascadingTo: self, components: path.convertToPathComponents())
     }

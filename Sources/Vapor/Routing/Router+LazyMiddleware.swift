@@ -1,4 +1,6 @@
 extension Router {
+    // MARK: Lazy Middleware
+    
     /// Creates a group with the provided `Middleware` type.
     ///
     ///     let group = router.grouped(DateMiddleware.self)

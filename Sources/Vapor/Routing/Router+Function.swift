@@ -1,4 +1,6 @@
 extension Router {
+    // MARK: Middleware Function
+    
     /// Creates a sub `Router` wrapped in the supplied middleware function.
     ///
     ///     let group = router.grouped { req, next in
