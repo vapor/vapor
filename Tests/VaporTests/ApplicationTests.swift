@@ -381,6 +381,61 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    func testAnyResponse() throws {
+        try Application.makeTest { router in
+            router.get("foo") { req -> AnyResponse in
+                if try req.query.get(String.self, at: "number").bool == true {
+                    return AnyResponse(42)
+                } else {
+                    return AnyResponse("string")
+                }
+            }
+        }.test(.GET, "foo", beforeSend: {
+            try $0.query.encode(["number": "true"])
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.body.string, "42")
+        }).test(.GET, "foo", beforeSend: {
+            try $0.query.encode(["number": "false"])
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.body.string, "string")
+        })
+    }
+
+    func testEnumResponse() throws {
+        enum IntOrString: ResponseEncodable {
+            case int(Int)
+            case string(String)
+
+            func encode(for req: Request) throws -> EventLoopFuture<Response> {
+                switch self {
+                case .int(let i): return try i.encode(for: req)
+                case .string(let s): return try s.encode(for: req)
+                }
+            }
+        }
+        try Application.makeTest { router in
+            router.get("foo") { req -> IntOrString in
+                if try req.query.get(String.self, at: "number").bool == true {
+                    return .int(42)
+                } else {
+                    return .string("string")
+                }
+            }
+            }.test(.GET, "foo", beforeSend: {
+                try $0.query.encode(["number": "true"])
+            }, afterSend: { res in
+                XCTAssertEqual(res.http.status, .ok)
+                XCTAssertEqual(res.http.body.string, "42")
+            }).test(.GET, "foo", beforeSend: {
+                try $0.query.encode(["number": "false"])
+            }, afterSend: { res in
+                XCTAssertEqual(res.http.status, .ok)
+                XCTAssertEqual(res.http.body.string, "string")
+            })
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -399,6 +454,7 @@ class ApplicationTests: XCTestCase {
         ("testStreamFile", testStreamFile),
         ("testCustomEncode", testCustomEncode),
         ("testGH1609", testGH1609),
+        ("testAnyResponse", testAnyResponse),
     ]
 }
 
@@ -448,12 +504,14 @@ extension Application {
 }
 
 extension Application {
-    func test(_ method: HTTPMethod, _ path: String, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws {
+    @discardableResult
+    func test(_ method: HTTPMethod, _ path: String, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws  -> Application {
         let http = HTTPRequest(method: method, url: URL(string: path)!)
-        try test(http, beforeSend: beforeSend, afterSend: afterSend)
+        return try test(http, beforeSend: beforeSend, afterSend: afterSend)
     }
 
-    func test(_ http: HTTPRequest, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws {
+    @discardableResult
+    func test(_ http: HTTPRequest, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws -> Application {
         let promise = eventLoop.newPromise(Void.self)
         eventLoop.execute {
             let req = Request(http: http, using: self)
@@ -467,6 +525,7 @@ extension Application {
             }
         }
         try promise.futureResult.wait()
+        return self
     }
 
     func clientTest(_ method: HTTPMethod, _ path: String, beforeSend: (Request) throws -> () = { _ in }, afterSend: (Response) throws -> ()) throws {
