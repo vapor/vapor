@@ -423,17 +423,17 @@ class ApplicationTests: XCTestCase {
                     return .string("string")
                 }
             }
-            }.test(.GET, "foo", beforeSend: {
-                try $0.query.encode(["number": "true"])
-            }, afterSend: { res in
-                XCTAssertEqual(res.http.status, .ok)
-                XCTAssertEqual(res.http.body.string, "42")
-            }).test(.GET, "foo", beforeSend: {
-                try $0.query.encode(["number": "false"])
-            }, afterSend: { res in
-                XCTAssertEqual(res.http.status, .ok)
-                XCTAssertEqual(res.http.body.string, "string")
-            })
+        }.test(.GET, "foo", beforeSend: {
+            try $0.query.encode(["number": "true"])
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.body.string, "42")
+        }).test(.GET, "foo", beforeSend: {
+            try $0.query.encode(["number": "false"])
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.body.string, "string")
+        })
     }
 
     func testVaporProvider() throws {
@@ -473,6 +473,28 @@ class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didRun, true)
     }
 
+    func testResponseEncodableStatus() throws {
+        struct User: Content {
+            var name: String
+        }
+
+        try Application.makeTest { router in
+            router.post("users") { req -> Future<Response> in
+                return try req.content
+                    .decode(User.self)
+                    .encode(status: .created, for: req)
+            }
+        }.test(.POST, "users", beforeSend: {
+            try $0.content.encode(User(name: "vapor"))
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .created)
+            XCTAssertEqual(res.http.contentType, .json)
+            XCTAssertEqual(res.http.body.string, """
+            {"name":"vapor"}
+            """)
+        })
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -493,6 +515,7 @@ class ApplicationTests: XCTestCase {
         ("testGH1609", testGH1609),
         ("testAnyResponse", testAnyResponse),
         ("testVaporProvider", testVaporProvider),
+        ("testResponseEncodableStatus", testResponseEncodableStatus),
     ]
 }
 

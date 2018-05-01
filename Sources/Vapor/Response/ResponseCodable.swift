@@ -24,6 +24,37 @@ public protocol ResponseEncodable {
 /// Can be converted to and from a `Response`.
 public typealias ResponseCodable = ResponseDecodable & ResponseEncodable
 
+// MARK: Convenience
+
+extension ResponseEncodable {
+    /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
+    ///
+    ///     router.post("users") { req -> Future<Response> in
+    ///         return try req.content
+    ///             .decode(User.self)
+    ///             .save(on: req)
+    ///             .encode(status: .created, for: req)
+    ///     }
+    ///
+    /// - parameters:
+    ///     - status: `HTTPStatus` to set on the `Response`.
+    ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
+    /// - returns: Newly encoded `Response`.
+    public func encode(status: HTTPStatus, headers: HTTPHeaders = [:], for req: Request) -> Future<Response> {
+        do {
+            return try encode(for: req).map { res in
+                for (name, value) in headers {
+                    res.http.headers.replaceOrAdd(name: name, value: value)
+                }
+                res.http.status = status
+                return res
+            }
+        } catch {
+            return req.eventLoop.newFailedFuture(error: error)
+        }
+    }
+}
+
 // MARK: Default Conformances
 
 extension HTTPResponse: ResponseEncodable {
