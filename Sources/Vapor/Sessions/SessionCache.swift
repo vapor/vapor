@@ -1,4 +1,9 @@
-internal final class SessionCache {
+internal final class SessionCache: ServiceType {
+    /// See `ServiceType`.
+    static func makeService(for worker: Container) throws -> SessionCache {
+        return .init()
+    }
+
     var middlewareFlag: Bool
     var session: Session?
 
@@ -7,14 +12,3 @@ internal final class SessionCache {
         middlewareFlag = false
     }
 }
-
-extension SessionCache: ServiceType {
-    /// See `ServiceType.serviceIsSingleton`
-    static var serviceIsSingleton: Bool { return true }
-
-    /// See `ServiceType.makeService`
-    static func makeService(for worker: Container) throws -> SessionCache {
-        return .init()
-    }
-}
-

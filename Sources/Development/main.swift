@@ -23,6 +23,12 @@ do {
         return try req.query.get(String.self, at: ["query"])
     }
 
+    router.get("foo") { req -> String in
+        let session = try req.session()
+        session["name"] = "Vapor"
+        return "Session set"
+    }
+
     router.get("hash", String.parameter) { req -> String in
         let string = try req.parameters.next(String.self)
         return try BCrypt.hash(string)
