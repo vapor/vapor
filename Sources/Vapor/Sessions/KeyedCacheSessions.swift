@@ -7,19 +7,22 @@ public final class KeyedCacheSessions: Sessions, ServiceType {
 
     /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> KeyedCacheSessions {
-        return try .init(keyedCache: worker.make(), config: worker.make())
+        return try .init(keyedCache: worker.make())
     }
 
     /// The underlying `KeyedCache` this class uses to implement the `Sessions` protocol.
     public let keyedCache: KeyedCache
 
-    /// The session config options.
-    public let config: SessionsConfig
-
     /// Creates a new `KeyedCacheSessions`
-    public init(keyedCache: KeyedCache, config: SessionsConfig) {
+    public init(keyedCache: KeyedCache) {
         self.keyedCache = keyedCache
-        self.config = config
+    }
+
+    /// See `Sessions`.
+    public func createSession(_ session: Session) throws -> Future<Void> {
+        let sessionID = try CryptoRandom().generateData(count: 16).base64EncodedString()
+        session.id = sessionID
+        return keyedCache.set(sessionID, to: session.data)
     }
 
     /// See `Sessions`.
@@ -30,15 +33,12 @@ public final class KeyedCacheSessions: Sessions, ServiceType {
     }
 
     /// See `Sessions`.
-    public func updateSession(_ session: Session) throws -> Future<Session> {
-        let sessionID: String
-        if let existing = session.id {
-            sessionID = existing
-        } else {
-            sessionID = try CryptoRandom().generateData(count: 16).base64EncodedString()
+    public func updateSession(_ session: Session) throws -> Future<Void> {
+        guard let sessionID = session.id else {
+            throw VaporError(identifier: "sessionID", reason: "Cannot update `Session` with `nil` ID.")
         }
         session.id = sessionID
-        return keyedCache.set(sessionID, to: session.data).transform(to: session)
+        return keyedCache.set(sessionID, to: session.data)
     }
 
     /// See `Sessions`.

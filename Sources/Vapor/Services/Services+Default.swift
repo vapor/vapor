@@ -29,11 +29,11 @@ extension Services {
         services.register(SessionCache.self)
         services.register(SessionsMiddleware.self)
         services.register(KeyedCacheSessions.self)
+        services.register(MemorySessions(), as: Sessions.self)
         services.register(SessionsConfig.self)
 
         // keyed cache
-        let memoryKeyedCache = MemoryKeyedCache()
-        services.register(memoryKeyedCache, as: KeyedCache.self)
+        services.register(MemoryKeyedCache(), as: KeyedCache.self)
 
         // middleware
         services.register(MiddlewareConfig.self)
@@ -44,7 +44,6 @@ extension Services {
         // content
         services.register(ContentConfig.self)
         services.register(ContentCoders.self)
-
 
         // console
         services.register(Console.self) { container -> Terminal in

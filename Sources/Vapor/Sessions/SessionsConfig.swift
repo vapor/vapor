@@ -1,27 +1,33 @@
-import Foundation
-
 /// Configuration options for sessions.
-public struct SessionsConfig {
-    /// Generates a new cookie.
-    /// Accepts the cookie's string value and returns an
-    /// initialized cookie value.
-    public typealias HTTPCookieValueCookieFactory = (String) -> (HTTPCookieValue)
+public struct SessionsConfig: ServiceType {
+    /// See `ServiceType`
+    public static func makeService(for worker: Container) throws -> SessionsConfig {
+        return .default()
+    }
 
-    /// Creates cookie values.
-    public let cookieFactory: HTTPCookieValueCookieFactory
+    /// Creates a new `HTTPCookieValue` for the supplied value `String`.
+    public let cookieFactory: (String) -> HTTPCookieValue
 
-    /// The session cookie's name
+    /// Name of HTTP cookie, used as a key for the cookie value.
     public let cookieName: String
 
     /// Create a new `SessionsConfig` with the supplied cookie factory.
-    public init(cookieName: String, cookieFactory: @escaping HTTPCookieValueCookieFactory) {
+    ///
+    ///     let sessionsConfig = SessionsConfig(cookieName: "vapor-session") { value in
+    ///         return HTTPCookieValue(string: value, isSecure: true)
+    ///     }
+    ///
+    /// - parameters:
+    ///     - cookieName: Name of HTTP cookie, used as a key for the cookie value.
+    ///     - cookieFactory: Creates a new `HTTPCookieValue` for the supplied value `String`.
+    public init(cookieName: String, cookieFactory: @escaping (String) -> HTTPCookieValue) {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory
     }
 
     /// `SessionsConfig` with basic cookie factory.
     public static func `default`() -> SessionsConfig {
-        return .init(cookieName: "vapor-sessions") { value in
+        return .init(cookieName: "vapor-session") { value in
             return HTTPCookieValue(
                 string: value,
                 expires: Date(
@@ -37,11 +43,3 @@ public struct SessionsConfig {
         }
     }
 }
-
-extension SessionsConfig: ServiceType {
-    /// See `ServiceType`
-    public static func makeService(for worker: Container) throws -> SessionsConfig {
-        return .default()
-    }
-}
-
