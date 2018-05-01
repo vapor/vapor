@@ -1,4 +1,4 @@
-@testable import Vapor
+import Vapor
 import XCTest
 
 class ApplicationTests: XCTestCase {
@@ -458,22 +458,54 @@ class ApplicationTests: XCTestCase {
     ]
 }
 
-extension HTTPBody {
-    var string: String {
-        guard let data = self.data else {
-            return "<streaming>"
+// MARK: Private
+
+private extension Application {
+    // MARK: Static
+
+    static func makeTest(configure: (Router) throws -> ()) throws -> Application {
+        let router = EngineRouter.default()
+        try configure(router)
+        var services = Services.default()
+        services.register(router, as: Router.self)
+        return try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
+    }
+
+    @discardableResult
+    func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        beforeSend: @escaping (Request) throws -> () = { _ in },
+        afterSend: @escaping (Response) throws -> ()
+    ) throws  -> Application {
+        let http = HTTPRequest(method: method, url: URL(string: path)!)
+        return try test(http, beforeSend: beforeSend, afterSend: afterSend)
+    }
+
+    @discardableResult
+    func test(
+        _ http: HTTPRequest,
+        beforeSend: @escaping (Request) throws -> () = { _ in },
+        afterSend: @escaping (Response) throws -> ()
+    ) throws -> Application {
+        let promise = eventLoop.newPromise(Void.self)
+        eventLoop.execute {
+            let req = Request(http: http, using: self)
+            do {
+                try beforeSend(req)
+                try self.make(Responder.self).respond(to: req).map { res in
+                    try afterSend(res)
+                }.cascade(promise: promise)
+            } catch {
+                promise.fail(error: error)
+            }
         }
-        return String(data: data, encoding: .ascii) ?? "<non-ascii>"
+        try promise.futureResult.wait()
+        return self
     }
-}
 
-extension Data {
-    var utf8: String? {
-        return String(data: self, encoding: .utf8)
-    }
-}
+    // MARK: Live
 
-extension Application {
     static func runningTest(port: Int, configure: (Router) throws -> ()) throws -> Application {
         let router = EngineRouter.default()
         try configure(router)
@@ -494,41 +526,12 @@ extension Application {
         return app
     }
 
-    static func makeTest(configure: (Router) throws -> ()) throws -> Application {
-        let router = EngineRouter.default()
-        try configure(router)
-        var services = Services.default()
-        services.register(router, as: Router.self)
-        return try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
-    }
-}
-
-extension Application {
-    @discardableResult
-    func test(_ method: HTTPMethod, _ path: String, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws  -> Application {
-        let http = HTTPRequest(method: method, url: URL(string: path)!)
-        return try test(http, beforeSend: beforeSend, afterSend: afterSend)
-    }
-
-    @discardableResult
-    func test(_ http: HTTPRequest, beforeSend: @escaping (Request) throws -> () = { _ in }, afterSend: @escaping (Response) throws -> ()) throws -> Application {
-        let promise = eventLoop.newPromise(Void.self)
-        eventLoop.execute {
-            let req = Request(http: http, using: self)
-            do {
-                try beforeSend(req)
-                try self.make(Responder.self).respond(to: req).map { res in
-                    try afterSend(res)
-                }.cascade(promise: promise)
-            } catch {
-                promise.fail(error: error)
-            }
-        }
-        try promise.futureResult.wait()
-        return self
-    }
-
-    func clientTest(_ method: HTTPMethod, _ path: String, beforeSend: (Request) throws -> () = { _ in }, afterSend: (Response) throws -> ()) throws {
+    func clientTest(
+        _ method: HTTPMethod,
+        _ path: String,
+        beforeSend: (Request) throws -> () = { _ in },
+        afterSend: (Response) throws -> ()
+    ) throws {
         let config = try make(EngineServerConfig.self)
         let path = path.hasPrefix("/") ? path : "/\(path)"
         let req = Request(
@@ -540,7 +543,6 @@ extension Application {
         try afterSend(res)
     }
 
-
     func clientTest(_ method: HTTPMethod, _ path: String, equals: String) throws {
         return try clientTest(method, path) { res in
             XCTAssertEqual(res.http.body.string, equals)
@@ -548,8 +550,23 @@ extension Application {
     }
 }
 
-extension Environment {
+private extension Environment {
     static var xcode: Environment {
         return .init(name: "xcode", isRelease: false, arguments: ["xcode"])
+    }
+}
+
+private extension HTTPBody {
+    var string: String {
+        guard let data = self.data else {
+            return "<streaming>"
+        }
+        return String(data: data, encoding: .ascii) ?? "<non-ascii>"
+    }
+}
+
+private extension Data {
+    var utf8: String? {
+        return String(data: self, encoding: .utf8)
     }
 }
