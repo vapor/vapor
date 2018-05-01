@@ -1,5 +1,3 @@
-import NIOConcurrencyHelpers
-
 /// Vapor's default `Server` implementation. Built on SwiftNIO-based `HTTPServer`.
 public final class EngineServer: Server, ServiceType {
     /// See `ServiceType`.
@@ -19,7 +17,11 @@ public final class EngineServer: Server, ServiceType {
     /// Hold the current worker. Used for deinit.
     private var currentWorker: Worker?
 
-    /// Create a new EngineServer using config struct.
+    /// Create a new `EngineServer`.
+    ///
+    /// - parameters:
+    ///     - config: Server preferences such as hostname, port, max body size, etc.
+    ///     - container: Root service-container to use for all event loops the server will create.
     public init(config: EngineServerConfig, container: Container) {
         self.config = config
         self.container = container

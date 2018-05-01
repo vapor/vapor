@@ -4,7 +4,7 @@ public protocol VaporProvider: Provider {
     func willRun(_ worker: Container) throws -> Future<Void>
 
     /// Called after the application has finished running.
-    /// note: This may never happen if the server runs infinitely.
+    /// - note: This may never happen if the server runs infinitely.
     func didRun(_ worker: Container) throws -> Future<Void>
 }
 

@@ -11,7 +11,12 @@
 /// is a parameter whose result will be discarded.
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
-public struct RoutesCommand: Command, Service {
+public struct RoutesCommand: Command, ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for container: Container) throws -> RoutesCommand {
+        return try RoutesCommand(router: container.make())
+    }
+
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []

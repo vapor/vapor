@@ -3,7 +3,12 @@
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public struct ServeCommand: Command, Service {
+public struct ServeCommand: Command, ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for container: Container) throws -> ServeCommand {
+        return try ServeCommand(server: container.make())
+    }
+
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []

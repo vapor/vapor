@@ -1,17 +1,24 @@
 import Crypto
 
 extension Services {
-    /// The default Services included in the framework.
+    /// Vapor's default services. This includes many services required to succesfully
+    /// boot an Application. Only for special use cases should you create an empty `Services` struct.
     public static func `default`() -> Services {
         var services = Services()
 
         // server
         services.register(EngineServer.self)
+        services.register(EngineServerConfig.self)
+        services.register(RunningServerCache.self)
 
-        // register defualt `EngineServerConfig`
-        services.register { container -> EngineServerConfig in
-            return .default()
-        }
+        // client
+        services.register(FoundationClient.self)
+
+        // router
+        services.register(EngineRouter.default(), as: Router.self)
+
+        // responder
+        services.register(ApplicationResponder.self)
 
         // bcrypt
         services.register { container -> BCryptDigest in
@@ -24,56 +31,35 @@ extension Services {
         services.register(KeyedCacheSessions.self)
         services.register(SessionsConfig.self)
 
-        services.register(RunningServerCache())
-
-        // keyed cache, memory. thread-safe
+        // keyed cache
         let memoryKeyedCache = MemoryKeyedCache()
         services.register(memoryKeyedCache, as: KeyedCache.self)
-
-        services.register(FoundationClient.self)
 
         // middleware
         services.register(MiddlewareConfig.self)
         services.register(DateMiddleware.self)
-
-        services.register { container -> FileMiddleware in
-            let directory = try container.make(DirectoryConfig.self)
-            return FileMiddleware(publicDirectory: directory.workDir + "Public/")
-        }
+        services.register(FileMiddleware.self)
         services.register(ErrorMiddleware.self)
 
-        // register router
-        services.register(EngineRouter.default(), as: Router.self)
-
-        // register content coders
+        // content
         services.register(ContentConfig.self)
         services.register(ContentCoders.self)
 
 
-        // register terminal console
+        // console
         services.register(Console.self) { container -> Terminal in
             return Terminal()
         }
-        services.register(ApplicationResponder.self)
 
         // commands
         services.register(BootCommand.self)
-        services.register { worker -> ServeCommand in
-            return try ServeCommand(
-                server: worker.make()
-            )
-        }
+        services.register(ServeCommand.self)
+        services.register(RoutesCommand.self)
         services.register { container -> CommandConfig in
-            return CommandConfig.default()
+            return .default()
         }
         services.register { container -> Commands in
             return try container.make(CommandConfig.self).resolve(for: container)
-        }
-
-        services.register { container -> RoutesCommand in
-            return try RoutesCommand(
-                router: container.make()
-            )
         }
 
         // directory
@@ -83,16 +69,14 @@ extension Services {
 
         // logging
         services.register(Logger.self) { container -> ConsoleLogger in
-            return try ConsoleLogger(
-                console: container.make()
-            )
+            return try ConsoleLogger(console: container.make())
         }
         services.register(Logger.self) { container -> PrintLogger in
             return PrintLogger()
         }
 
         // templates
-        services.register(TemplateRenderer.self) { container -> PlaintextRenderer in
+        services.register(ViewRenderer.self) { container -> PlaintextRenderer in
             let dir = try container.make(DirectoryConfig.self)
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
@@ -100,7 +84,6 @@ extension Services {
         // file
         services.register(NonBlockingFileIO.self)
         services.register(BlockingIOThreadPool.self)
-
 
         return services
     }

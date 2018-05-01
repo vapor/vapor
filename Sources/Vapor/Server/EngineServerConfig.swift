@@ -1,6 +1,26 @@
 /// Engine server config struct.
-public struct EngineServerConfig: Service {
+///
+///     let serverConfig = EngineServerConfig.default(port: 8123)
+///     services.register(serverConfig)
+///
+public struct EngineServerConfig: ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for worker: Container) throws -> EngineServerConfig {
+        return .default()
+    }
+
     /// Detects `EngineServerConfig` from the environment.
+    ///
+    /// - parameters:
+    ///     - hostname: Socket hostname to bind to. Usually `localhost` or `::1`.
+    ///     - port: Socket port to bind to. Usually `8080` for development and `80` for production.
+    ///     - backlog: OS socket backlog size.
+    ///     - workerCount: Number of `Worker`s to use for responding to incoming requests.
+    ///                    This should be (and is by default) equal to the number of logical cores.
+    ///     - maxBodySize: Requests with bodies larger than this maximum will be rejected.
+    ///                    Streaming bodies, like chunked bodies, ignore this maximum.
+    ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
+    ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
     public static func `default`(
         hostname: String = "localhost",
         port: Int = 8080,
@@ -43,7 +63,7 @@ public struct EngineServerConfig: Service {
     /// When `true`, OS will attempt to minimize TCP packet delay.
     public var tcpNoDelay: Bool
 
-    /// Creates a new engine server config
+    /// Creates a new `EngineServerConfig`.
     public init(
         hostname: String,
         port: Int,
