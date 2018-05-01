@@ -5,13 +5,8 @@ extension Services {
     public static func `default`() -> Services {
         var services = Services()
 
-        // register engine server and default config settings
-        services.register(Server.self) { container -> EngineServer in
-            return try EngineServer(
-                config: container.make(),
-                container: container
-            )
-        }
+        // server
+        services.register(EngineServer.self)
 
         // register defualt `EngineServerConfig`
         services.register { container -> EngineServerConfig in

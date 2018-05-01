@@ -1,71 +1,93 @@
-import Async
-import Bits
-import Console
-import Command
-import Debugging
-import Dispatch
-import Foundation
-import HTTP
-import Service
+import NIOConcurrencyHelpers
 
-/// A TCP based server with HTTP parsing and serialization pipeline.
-public final class EngineServer: Server, Service {
+/// Vapor's default `Server` implementation. Built on SwiftNIO-based `HTTPServer`.
+public final class EngineServer: Server, ServiceType {
+    /// See `ServiceType`.
+    public static var serviceSupports: [Any.Type] { return [Server.self] }
+
+    /// See `ServiceType`.
+    public static func makeService(for container: Container) throws -> EngineServer {
+        return try EngineServer(config: container.make(), container: container)
+    }
+
     /// Chosen configuration for this server.
     public let config: EngineServerConfig
 
     /// Container for setting on event loops.
     public let container: Container
 
-    /// Hold the current worker.
+    /// Hold the current worker. Used for deinit.
     private var currentWorker: Worker?
 
     /// Create a new EngineServer using config struct.
-    public init(
-        config: EngineServerConfig,
-        container: Container
-    ) {
+    public init(config: EngineServerConfig, container: Container) {
         self.config = config
         self.container = container
     }
 
-    /// Start the server. Server protocol requirement.
+    /// See `Server`.
     public func start(hostname: String?, port: Int?) -> Future<Void> {
-        let container = self.container
-        let config = self.config
-
-        return Future.flatMap(on: container) {
+        do {
+            // console + logger required for outputting messages and error info
             let console = try container.make(Console.self)
             let logger = try container.make(Logger.self)
 
+            // determine which hostname / port to bind to
             let hostname = hostname ?? config.hostname
             let port = port ?? config.port
 
+            // print starting message
             console.print("Server starting on ", newLine: false)
             console.output("http://" + hostname, style: .init(color: .cyan), newLine: false)
             console.output(":" + port.description, style: .init(color: .cyan))
 
-            let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
-            self.currentWorker = group
+            // create caches
+            let containerCache = ThreadSpecificVariable<ThreadContainer>()
+            let responderCache = ThreadSpecificVariable<ThreadResponder>()
 
-            /// http upgrade
+            // create this server's own event loop group
+            let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
+            for _ in 0..<config.workerCount {
+                // initialize each event loop
+                let eventLoop = group.next()
+                let subContainer = container.subContainer(on: eventLoop)
+                let responder = try subContainer.make(Responder.self)
+                // perform cache set on the event loop
+                try eventLoop.submit {
+                    containerCache.currentValue = ThreadContainer(container: subContainer)
+                    responderCache.currentValue = ThreadResponder(responder: responder)
+                }.wait()
+            }
+
+            // http upgrade
             var upgraders: [HTTPProtocolUpgrader] = []
 
-            /// web socket upgrade
+            // web socket upgrade
             if let wss = try? container.make(WebSocketServer.self) {
                 let ws = HTTPServer.webSocketUpgrader(shouldUpgrade: { req in
-                    let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
-                    return wss.webSocketShouldUpgrade(for: Request(http: req, using: container))
+                    guard let subContainer = containerCache.currentValue?.container else {
+                        ERROR("[WebSocket Upgrader] Missing container (shouldUpgrade).")
+                        return nil
+                    }
+                    return wss.webSocketShouldUpgrade(for: Request(http: req, using: subContainer))
                 }, onUpgrade: { ws, req in
-                    let container = Thread.current.cachedSubContainer(for: self.container, on: group.next())
-                    return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: container))
+                    guard let subContainer = containerCache.currentValue?.container else {
+                        ERROR("[WebSocket Upgrader] Missing container (onUpgrade).")
+                        return
+                    }
+                    return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: subContainer))
                 })
                 upgraders.append(ws)
             }
 
+            // http responder
+            let httpResponder = EngineServerResponder(containerCache: containerCache, responderCache: responderCache)
+
+            // start the actual HTTPServer
             return HTTPServer.start(
                 hostname: hostname,
                 port: port,
-                responder: EngineResponder(rootContainer: container),
+                responder: httpResponder,
                 maxBodySize: config.maxBodySize,
                 backlog: config.backlog,
                 reuseAddress: config.reuseAddress,
@@ -75,10 +97,12 @@ public final class EngineServer: Server, Service {
             ) { error in
                 logger.report(error: error, verbose: !self.container.environment.isRelease)
             }.map { server in
-                if let app = container as? Application {
+                if let app = self.container as? Application {
                     app.runningServer = RunningServer(onClose: server.onClose, close: server.close)
                 }
             }
+        } catch {
+            return container.eventLoop.newFailedFuture(error: error)
         }
     }
 
@@ -92,110 +116,40 @@ public final class EngineServer: Server, Service {
     }
 }
 
-struct EngineResponder: HTTPServerResponder {
-    let rootContainer: Container
-    init(rootContainer: Container) {
-        self.rootContainer = rootContainer
-    }
+// MARK: Private
 
-    func respond(to request: HTTPRequest, on worker: Worker) -> Future<HTTPResponse> {
-        let container = Thread.current.cachedSubContainer(for: rootContainer, on: worker)
-        return Future.flatMap(on: worker) {
-            let responder = try Thread.current.cachedResponder(for: container)
-            let req = Request(http: request, using: container)
+private struct EngineServerResponder: HTTPServerResponder {
+    let containerCache: ThreadSpecificVariable<ThreadContainer>
+    let responderCache: ThreadSpecificVariable<ThreadResponder>
+
+    func respond(to http: HTTPRequest, on worker: Worker) -> EventLoopFuture<HTTPResponse> {
+        guard let container = containerCache.currentValue?.container else {
+            let error = VaporError(identifier: "serverContainer", reason: "Missing server container.")
+            return worker.eventLoop.newFailedFuture(error: error)
+        }
+        let req = Request(http: http, using: container)
+        guard let responder = responderCache.currentValue?.responder else {
+            let error = VaporError(identifier: "serverResponder", reason: "Missing responder.")
+            return worker.eventLoop.newFailedFuture(error: error)
+        }
+        do {
             return try responder.respond(to: req).map { $0.http }
+        } catch {
+            return worker.eventLoop.newFailedFuture(error: error)
         }
     }
 }
 
-extension Thread {
-    func cachedSubContainer(for container: Container, on worker: Worker) -> SubContainer {
-        let subContainer: SubContainer
-        if let existing = threadDictionary["subcontainer"] as? SubContainer {
-            subContainer = existing
-        } else {
-            let new = container.subContainer(on: worker)
-            subContainer = new
-            threadDictionary["subcontainer"] = new
-        }
-        return subContainer
-    }
-
-
-    func cachedResponder(for container: Container) throws -> Responder {
-        let responder: Responder
-        if let existing = threadDictionary["responder"] as? ApplicationResponder {
-            responder = existing
-        } else {
-            let new = try container.make(Responder.self)
-            responder = new
-            threadDictionary["responder"] = new
-        }
-        return responder
+private final class ThreadContainer {
+    var container: SubContainer
+    init(container: SubContainer) {
+        self.container = container
     }
 }
 
-/// Engine server config struct.
-public struct EngineServerConfig: Service {
-    /// Detects `EngineServerConfig` from the environment.
-    public static func `default`(
-        hostname: String = "localhost",
-        port: Int = 8080,
-        backlog: Int = 256,
-        workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxBodySize: Int = 1_000_0000,
-        reuseAddress: Bool = true,
-        tcpNoDelay: Bool = true
-    ) -> EngineServerConfig {
-        return EngineServerConfig(
-            hostname: hostname,
-            port: port,
-            backlog: backlog,
-            workerCount: workerCount,
-            maxBodySize: maxBodySize,
-            reuseAddress: reuseAddress,
-            tcpNoDelay: tcpNoDelay
-        )
-    }
-
-    /// Host name the server will bind to.
-    public var hostname: String
-
-    /// Port the server will bind to.
-    public var port: Int
-
-    /// Listen backlog.
-    public var backlog: Int
-
-    /// Number of client accepting workers.
-    /// Should be equal to the number of logical cores.
-    public var workerCount: Int
-
-    /// Requests containing bodies larger than this maximum will be rejected, closign the connection.
-    public var maxBodySize: Int
-
-    /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
-    public var reuseAddress: Bool
-
-    /// When `true`, OS will attempt to minimize TCP packet delay.
-    public var tcpNoDelay: Bool
-
-    /// Creates a new engine server config
-    public init(
-        hostname: String,
-        port: Int,
-        backlog: Int,
-        workerCount: Int,
-        maxBodySize: Int,
-        reuseAddress: Bool,
-        tcpNoDelay: Bool
-    ) {
-        self.hostname = hostname
-        self.port = port
-        self.backlog = backlog
-        self.workerCount = workerCount
-        self.maxBodySize = maxBodySize
-        self.reuseAddress = reuseAddress
-        self.tcpNoDelay = tcpNoDelay
+private final class ThreadResponder {
+    var responder: Responder
+    init(responder: Responder) {
+        self.responder = responder
     }
 }
