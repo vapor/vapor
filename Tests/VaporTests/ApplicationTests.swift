@@ -436,6 +436,43 @@ class ApplicationTests: XCTestCase {
             })
     }
 
+    func testVaporProvider() throws {
+        final class FooProvider: VaporProvider {
+            var willRun: Bool = false
+            var didRun: Bool = false
+            var didBoot: Bool = false
+
+            func register(_ services: inout Services) throws {
+                //
+            }
+
+            func didBoot(_ container: Container) throws -> Future<Void> {
+                didBoot = true
+                return .done(on: container)
+            }
+
+            func willRun(_ worker: Container) throws -> Future<Void> {
+                willRun = true
+                return .done(on: worker)
+            }
+
+            func didRun(_ worker: Container) throws -> Future<Void> {
+                didRun = true
+                return .done(on: worker)
+            }
+        }
+        let foo = FooProvider()
+        var services = Services.default()
+        try services.register(foo)
+        let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
+        XCTAssertEqual(foo.didBoot, true)
+        XCTAssertEqual(foo.didRun, false)
+        XCTAssertEqual(foo.willRun, false)
+        try app.asyncRun().wait()
+        XCTAssertEqual(foo.willRun, true)
+        XCTAssertEqual(foo.didRun, true)
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -455,6 +492,7 @@ class ApplicationTests: XCTestCase {
         ("testCustomEncode", testCustomEncode),
         ("testGH1609", testGH1609),
         ("testAnyResponse", testAnyResponse),
+        ("testVaporProvider", testVaporProvider),
     ]
 }
 

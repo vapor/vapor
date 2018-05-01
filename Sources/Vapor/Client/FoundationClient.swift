@@ -38,7 +38,9 @@ public final class FoundationClient: Client, ServiceType {
             }
 
             guard let httpResponse = urlResponse as? HTTPURLResponse else {
-                fatalError("URLResponse was not a HTTPURLResponse.")
+                let error = VaporError(identifier: "httpURLResponse", reason: "URLResponse was not a HTTPURLResponse.")
+                promise.fail(error: error)
+                return
             }
 
             let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container)
