@@ -9,7 +9,7 @@ public final class DateMiddleware: Middleware, ServiceType {
     }
 
     /// Currently cached timestamp.
-    private var cachedTimestamp: (timestamp: String, createdAt: time_t)?
+    private var cachedTimestamp: (timestamp: String, createdAt: Int)?
 
     /// The event loop this `DateMiddleware` is running on.
     private let eventLoop: EventLoop
@@ -34,7 +34,7 @@ public final class DateMiddleware: Middleware, ServiceType {
         var date = COperatingSystem.time(nil)
 
         // check if the cached timestamp is still valid
-        if let (timestamp, createdAt) = cachedTimestamp, (createdAt...(createdAt + accuracy)).contains(date) {
+        if let (timestamp, createdAt) = cachedTimestamp, date < createdAt + accuracy {
             return timestamp
         }
         

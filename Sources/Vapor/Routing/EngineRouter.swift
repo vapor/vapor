@@ -34,13 +34,12 @@ public final class EngineRouter: Router {
 
     /// See `Router`.
     public func route(request: Request) -> Responder? {
-        let method = Substring(request.http.method.string)
         // FIXME: use NIO's underlying uri byte buffer when possible
         // instead of converting to string. `router.route` accepts conforming to `RoutableComponent`
         let path: [Substring] = request.http.urlString
-            .split(separator: "?")[0]
+            .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
-        return router.route(path:  [method] + path, parameters: &request._parameters)
+        return router.route(path: [request.http.method.substring] + path, parameters: &request._parameters)
     }
 }
 
@@ -50,6 +49,39 @@ extension Substring: RoutableComponent {
 
     /// See `RoutableComponent`.
     public func routerCompare(to buffer: UnsafeRawBufferPointer, options: Set<RouterOption>) -> Bool {
-        return Data(utf8).routerCompare(to: buffer, options: options)
+        if count != buffer.count {
+            return false
+        }
+
+        let a = utf8
+        let b = buffer.bindMemory(to: UInt8.self)
+
+        if options.contains(.caseInsensitive) {
+            for i in 0..<a.count {
+                if a[a.index(a.startIndex, offsetBy: i)] & 0xdf != b[i] & 0xdf {
+                    return false
+                }
+            }
+        } else {
+            for i in 0..<a.count {
+                if a[a.index(a.startIndex, offsetBy: i)] != b[i] {
+                    return false
+                }
+            }
+        }
+
+        return true
+    }
+}
+
+// MARK: Private
+
+private extension HTTPMethod {
+    /// Converts `HTTPMethod` to a `Substring`.
+    var substring: Substring {
+        switch self {
+        case .GET: return "GET"
+        default: return .init(string)
+        }
     }
 }
