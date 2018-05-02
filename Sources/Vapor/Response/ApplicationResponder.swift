@@ -48,9 +48,8 @@ private struct RouterResponder: Responder {
     /// See `Responder`.
     func respond(to req: Request) throws -> Future<Response> {
         guard let responder = router.route(request: req) else {
-            let res = req.makeResponse()
-            res.http.status = .notFound
-            return Future.map(on: req) { res }
+            let res = req.makeResponse(http: .init(status: .notFound, body: "Not found"))
+            return req.eventLoop.newSucceededFuture(result: res)
         }
 
         return try responder.respond(to: req)

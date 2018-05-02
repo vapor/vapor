@@ -71,11 +71,11 @@ private extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
     static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
         var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
-        for (key, value) in httpResponse.allHeaderFields {
-            res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
-        }
         if let data = data {
             res.body = HTTPBody(data: data)
+        }
+        for (key, value) in httpResponse.allHeaderFields {
+            res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
         }
         return res
     }

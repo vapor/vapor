@@ -495,6 +495,18 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    func testHeadRequest() throws {
+        try Application.runningTest(port: 8007) { router in
+            router.get("hello") { req -> String in
+                return "hi"
+            }
+        }.clientTest(.HEAD, "hello", afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.headers[.contentLength].first, "2")
+            XCTAssertEqual(res.http.body.count, 0)
+        })
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -516,6 +528,7 @@ class ApplicationTests: XCTestCase {
         ("testAnyResponse", testAnyResponse),
         ("testVaporProvider", testVaporProvider),
         ("testResponseEncodableStatus", testResponseEncodableStatus),
+        ("testHeadRequest", testHeadRequest),
     ]
 }
 

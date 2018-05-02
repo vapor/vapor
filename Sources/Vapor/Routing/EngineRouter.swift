@@ -11,9 +11,6 @@ public final class EngineRouter: Router {
     /// The internal router
     private let router: TrieRouter<Responder>
 
-    /// Default not found responder.
-    private let notFound: Responder
-
     /// See `Router`.
     public var routes: [Route<Responder>] {
         return router.routes
@@ -28,12 +25,6 @@ public final class EngineRouter: Router {
         if caseInsensitive {
             self.router.options.insert(.caseInsensitive)
         }
-        let notFoundRes = HTTPResponse(status: .notFound, body: "Not found")
-        self.notFound = BasicResponder { req in
-            let res = req.makeResponse()
-            res.http = notFoundRes
-            return req.eventLoop.newSucceededFuture(result: res)
-        }
     }
 
     /// See `Router`.
@@ -43,11 +34,22 @@ public final class EngineRouter: Router {
 
     /// See `Router`.
     public func route(request: Request) -> Responder? {
+        let method = Substring(request.http.method.string)
         // FIXME: use NIO's underlying uri byte buffer when possible
-        // instead of converting to string. `router.route` accepts conforming to `RoutablePath`
-        let path: [String] = request.http.urlString
+        // instead of converting to string. `router.route` accepts conforming to `RoutableComponent`
+        let path: [Substring] = request.http.urlString
             .split(separator: "?")[0]
-            .split(separator: "/").map { .init($0) }
-        return router.route(path:  [request.http.method.string] + path, parameters: &request._parameters) ?? notFound
+            .split(separator: "/")
+        return router.route(path:  [method] + path, parameters: &request._parameters)
+    }
+}
+
+extension Substring: RoutableComponent {
+    /// See `RoutableComponent`.
+    public var routerParameterValue: String { return .init(self) }
+
+    /// See `RoutableComponent`.
+    public func routerCompare(to buffer: UnsafeRawBufferPointer, options: Set<RouterOption>) -> Bool {
+        return Data(utf8).routerCompare(to: buffer, options: options)
     }
 }
