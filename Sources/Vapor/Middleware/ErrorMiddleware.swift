@@ -63,10 +63,10 @@ public final class ErrorMiddleware: Middleware, ServiceType {
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
                 res.http.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
-                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf8")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
             } catch {
                 res.http.body = HTTPBody(string: "Oops: \(error)")
-                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf8")
+                res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
             }
             return res
         }

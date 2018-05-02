@@ -81,4 +81,4 @@ extension StaticString: ResponseEncodable {
     }
 }
 
-private let staticStringHeaders: HTTPHeaders = ["content-type": "text/plain; charset=utf8"]
+private let staticStringHeaders: HTTPHeaders = ["content-type": "text/plain; charset=utf-8"]

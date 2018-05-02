@@ -48,11 +48,11 @@ private final class _DataEncoder: Encoder {
     }
 
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        fatalError("Plaintext encoding does not support nested dictionaries")
+        fatalError("Plaintext encoding does not support dictionaries.")
     }
 
     public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError("Plaintext encoding does not support nested arrays")
+        fatalError("Plaintext encoding does not support arrays.")
     }
 
     public func singleValueContainer() -> SingleValueEncodingContainer {
