@@ -7,7 +7,6 @@ public struct MiddlewareConfig: ServiceType {
     /// may change in the future.
     public static func `default`() -> MiddlewareConfig {
         var config = MiddlewareConfig()
-        config.use(DateMiddleware.self)
         config.use(ErrorMiddleware.self)
         return config
     }

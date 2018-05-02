@@ -37,7 +37,6 @@ extension Services {
 
         // middleware
         services.register(MiddlewareConfig.self)
-        services.register(DateMiddleware.self)
         services.register(FileMiddleware.self)
         services.register(ErrorMiddleware.self)
 

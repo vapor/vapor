@@ -85,14 +85,14 @@ public final class ErrorMiddleware: Middleware, ServiceType {
 
     /// See `Middleware`.
     public func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-        let promise = req.eventLoop.newPromise(Response.self)
+        let response: Future<Response>
         do {
-            try next.respond(to: req).cascade(promise: promise)
+            response = try next.respond(to: req)
         } catch {
-            promise.fail(error: error)
+            response = req.eventLoop.newFailedFuture(error: error)
         }
 
-        return promise.futureResult.catchMap { error in
+        return response.mapIfError { error in
             return self.closure(req, error)
         }
     }
