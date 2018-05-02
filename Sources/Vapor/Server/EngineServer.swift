@@ -135,7 +135,8 @@ private struct EngineServerResponder: HTTPServerResponder {
             return worker.eventLoop.newFailedFuture(error: error)
         }
         do {
-            return try responder.respond(to: req).map { $0.http }
+            // use #file to explicitly utilize NIO's non-throwing map
+            return try responder.respond(to: req).map(file: #file) { $0.http }
         } catch {
             return worker.eventLoop.newFailedFuture(error: error)
         }

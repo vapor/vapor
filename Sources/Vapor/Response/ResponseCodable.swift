@@ -77,8 +77,8 @@ extension StaticString: ResponseEncodable {
     /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
         let res = Response(http: .init(headers: staticStringHeaders, body: self), using: req.sharedContainer)
-        return req.eventLoop.newSucceededFuture(result: res)
+        return req.sharedContainer.eventLoop.newSucceededFuture(result: res)
     }
 }
 
-private let staticStringHeaders: HTTPHeaders = ["Content-Type": "text/plain"]
+private let staticStringHeaders: HTTPHeaders = ["content-type": "text/plain; charset=utf8"]
