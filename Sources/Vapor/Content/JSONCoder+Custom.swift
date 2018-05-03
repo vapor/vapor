@@ -1,6 +1,16 @@
 /* FIXME: add key strategy support once avaialble on Linux */
 
 extension JSONEncoder {
+    /// Convenience for creating a customized `JSONEncoder`.
+    ///
+    ///     let encoder: JSONEncoder = .custom(dates: .millisecondsSince1970)
+    ///
+    /// - parameters:
+    ///     - dates: Date encoding strategy.
+    ///     - data: Data encoding strategy.
+    ///     - format: Output formatting.
+    ///     - floats: Non-conforming float encoding strategy.
+    /// - returns: Newly created `JSONEncoder`.
     public static func custom(
         dates dateStrategy: JSONEncoder.DateEncodingStrategy? = nil,
         data dataStrategy: JSONEncoder.DataEncodingStrategy? = nil,
@@ -29,6 +39,15 @@ extension JSONEncoder {
 }
 
 extension JSONDecoder {
+    /// Convenience for creating a customized `JSONDecoder`.
+    ///
+    ///     let decoder: JSONDecoder = .custom(dates: .millisecondsSince1970)
+    ///
+    /// - parameters:
+    ///     - dates: Date encoding strategy.
+    ///     - data: Data encoding strategy.
+    ///     - floats: Non-conforming float encoding strategy.
+    /// - returns: Newly created `JSONDecoder`.
     public static func custom(
         dates dateStrategy: JSONDecoder.DateDecodingStrategy? = nil,
         data dataStrategy: JSONDecoder.DataDecodingStrategy? = nil,

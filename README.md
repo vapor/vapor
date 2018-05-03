@@ -8,7 +8,7 @@
         <img src="http://vapor.team/badge.svg" alt="Slack Team">
     </a>
     <a href="LICENSE">
-        <img src="http://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+        <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
     <a href="https://circleci.com/gh/vapor/vapor">
         <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">

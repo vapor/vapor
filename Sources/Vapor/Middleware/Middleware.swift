@@ -6,6 +6,11 @@
 /// `MiddlewareConfig` is used to configure which `Middleware` are active for a given
 /// service-container and in which order they should be run.
 public protocol Middleware {
+    /// Called with each `Request` that passes through this middleware.
+    /// - parameters:
+    ///     - request: The incoming `Request`.
+    ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
+    /// - returns: An asynchronous `Response`.
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
 }
 
