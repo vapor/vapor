@@ -17,7 +17,7 @@ public struct ServeCommand: Command, ServiceType {
     /// See `Command`.
     public var options: [CommandOption] {
         return [
-            .value(name: "hostname", short: "h", help: ["Set the hostname the server will run on."]),
+            .value(name: "hostname", short: "n", help: ["Set the hostname the server will run on."]),
             .value(name: "port", short: "p", help: ["Set the port the server will run on."])
         ]
     }

@@ -83,6 +83,9 @@ extension Services {
         services.register(NonBlockingFileIO.self)
         services.register(BlockingIOThreadPool.self)
 
+        // websocket
+        services.register(NIOWebSocketClient.self)
+
         return services
     }
 }

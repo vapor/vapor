@@ -1,5 +1,5 @@
-extension Request {
-    /// Creates a `Client` for this `Request`.
+extension Container {
+    /// Creates a `Client` for this `Container`.
     ///
     ///     let res = try req.client().get("http://vapor.codes")
     ///     print(res) // Future<Response>
