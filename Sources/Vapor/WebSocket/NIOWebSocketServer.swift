@@ -11,26 +11,26 @@
 /// Should the HTTP upgrade request be denied, the request will continue through Vapor's HTTP pipeline normally.
 ///
 /// Note: The `WebSocketServer` _always_ runs behind an HTTP server and will only be invoked when HTTP requests request an uprade.
-public final class EngineWebSocketServer: WebSocketServer, Service {
+public final class NIOWebSocketServer: WebSocketServer, Service {
     /// The internal trie-node router backing this server.
     /// This will be used to register and retreive all websocket responding routes.
     private let router: TrieRouter<WebSocketResponder>
 
-    /// All websocket responder routes that have been added to this `EngineWebSocketServer`.
+    /// All websocket responder routes that have been added to this `NIOWebSocketServer`.
     public var routes: [Route<WebSocketResponder>]
 
-    /// Creates a new `EngineWebSocketServer` with default settings.
-    public static func `default`() -> EngineWebSocketServer {
+    /// Creates a new `NIOWebSocketServer` with default settings.
+    public static func `default`() -> NIOWebSocketServer {
         return .init()
     }
 
-    /// Creates a new `EngineWebSocketServer`. Use the `.default()` static method to do this publicly.
+    /// Creates a new `NIOWebSocketServer`. Use the `.default()` static method to do this publicly.
     internal init() {
         router = .init()
         routes = .init()
     }
 
-    /// Registers a new `Route<WebSocketResponder>` to this `EngineWebSocketServer`.
+    /// Registers a new `Route<WebSocketResponder>` to this `NIOWebSocketServer`.
     ///
     /// This is normally done using the convenience `.get(...)` methods. However, this method is
     /// useful for registering custom routes.
@@ -80,7 +80,7 @@ public final class EngineWebSocketServer: WebSocketServer, Service {
 
 /// MARK: Convenience `get`
 
-extension EngineWebSocketServer {
+extension NIOWebSocketServer {
     /// Registers a new websocket handling route at the supplied dynamic path.
     ///
     /// - parameters:

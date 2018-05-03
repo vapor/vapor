@@ -9,7 +9,6 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
-    middlewareConfig.use(DateMiddleware.self)
     middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
@@ -148,7 +147,7 @@ do {
         return try req.view().render("hello")
     }
 
-    router.grouped(DateMiddleware.self).get("datetest") { req in
+    router.grouped(ErrorMiddleware.self).get("datetest") { req in
         return HTTPStatus.ok
     }
 

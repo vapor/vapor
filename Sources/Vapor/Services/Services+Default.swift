@@ -7,8 +7,8 @@ extension Services {
         var services = Services()
 
         // server
-        services.register(EngineServer.self)
-        services.register(EngineServerConfig.self)
+        services.register(NIOServer.self)
+        services.register(NIOServerConfig.self)
         services.register(RunningServerCache.self)
 
         // client

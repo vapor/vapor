@@ -1,15 +1,15 @@
 /// Vapor's default `Server` implementation. Built on SwiftNIO-based `HTTPServer`.
-public final class EngineServer: Server, ServiceType {
+public final class NIOServer: Server, ServiceType {
     /// See `ServiceType`.
     public static var serviceSupports: [Any.Type] { return [Server.self] }
 
     /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> EngineServer {
-        return try EngineServer(config: container.make(), container: container)
+    public static func makeService(for container: Container) throws -> NIOServer {
+        return try NIOServer(config: container.make(), container: container)
     }
 
     /// Chosen configuration for this server.
-    public let config: EngineServerConfig
+    public let config: NIOServerConfig
 
     /// Container for setting on event loops.
     public let container: Container
@@ -17,12 +17,12 @@ public final class EngineServer: Server, ServiceType {
     /// Hold the current worker. Used for deinit.
     private var currentWorker: Worker?
 
-    /// Create a new `EngineServer`.
+    /// Create a new `NIOServer`.
     ///
     /// - parameters:
     ///     - config: Server preferences such as hostname, port, max body size, etc.
     ///     - container: Root service-container to use for all event loops the server will create.
-    public init(config: EngineServerConfig, container: Container) {
+    public init(config: NIOServerConfig, container: Container) {
         self.config = config
         self.container = container
     }
@@ -83,7 +83,7 @@ public final class EngineServer: Server, ServiceType {
             }
 
             // http responder
-            let httpResponder = EngineServerResponder(containerCache: containerCache, responderCache: responderCache)
+            let httpResponder = NIOServerResponder(containerCache: containerCache, responderCache: responderCache)
 
             // start the actual HTTPServer
             return HTTPServer.start(
@@ -120,7 +120,7 @@ public final class EngineServer: Server, ServiceType {
 
 // MARK: Private
 
-private struct EngineServerResponder: HTTPServerResponder {
+private struct NIOServerResponder: HTTPServerResponder {
     let containerCache: ThreadSpecificVariable<ThreadContainer>
     let responderCache: ThreadSpecificVariable<ThreadResponder>
 

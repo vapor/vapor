@@ -585,7 +585,7 @@ private extension Application {
         try configure(router)
         var services = Services.default()
         services.register(router, as: Router.self)
-        let serverConfig = EngineServerConfig(
+        let serverConfig = NIOServerConfig(
             hostname: "localhost",
             port: port,
             backlog: 8,
@@ -606,7 +606,7 @@ private extension Application {
         beforeSend: (Request) throws -> () = { _ in },
         afterSend: (Response) throws -> ()
     ) throws {
-        let config = try make(EngineServerConfig.self)
+        let config = try make(NIOServerConfig.self)
         let path = path.hasPrefix("/") ? path : "/\(path)"
         let req = Request(
             http: .init(method: method, url: "http://localhost:\(config.port)" + path),

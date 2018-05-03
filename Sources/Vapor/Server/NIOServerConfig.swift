@@ -1,15 +1,15 @@
 /// Engine server config struct.
 ///
-///     let serverConfig = EngineServerConfig.default(port: 8123)
+///     let serverConfig = NIOServerConfig.default(port: 8123)
 ///     services.register(serverConfig)
 ///
-public struct EngineServerConfig: ServiceType {
+public struct NIOServerConfig: ServiceType {
     /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> EngineServerConfig {
+    public static func makeService(for worker: Container) throws -> NIOServerConfig {
         return .default()
     }
 
-    /// Detects `EngineServerConfig` from the environment.
+    /// Detects `NIOServerConfig` from the environment.
     ///
     /// - parameters:
     ///     - hostname: Socket hostname to bind to. Usually `localhost` or `::1`.
@@ -29,8 +29,8 @@ public struct EngineServerConfig: ServiceType {
         maxBodySize: Int = 1_000_0000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true
-    ) -> EngineServerConfig {
-        return EngineServerConfig(
+    ) -> NIOServerConfig {
+        return NIOServerConfig(
             hostname: hostname,
             port: port,
             backlog: backlog,
@@ -63,7 +63,7 @@ public struct EngineServerConfig: ServiceType {
     /// When `true`, OS will attempt to minimize TCP packet delay.
     public var tcpNoDelay: Bool
 
-    /// Creates a new `EngineServerConfig`.
+    /// Creates a new `NIOServerConfig`.
     public init(
         hostname: String,
         port: Int,
