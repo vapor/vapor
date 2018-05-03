@@ -14,7 +14,7 @@
         <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
     </a>
     <a href="https://swift.org">
-        <img src="http://img.shields.io/badge/swift-4.1-brightgreen.svg" alt="Swift 4.1">
+        <img src="https://img.shields.io/badge/swift-4.1-brightgreen.svg" alt="Swift 4.1">
     </a>
     <a href="https://twitter.com/codevapor">
         <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
