@@ -82,6 +82,12 @@ extension Content {
         let content = try res.content.decode(Self.self)
         return content
     }
+    
+    /// Turns content into JSON data
+    public func json() throws -> Data {
+        let encoder = JSONEncoder()
+        return try encoder.encode(self)
+    }
 }
 
 // MARK: Default Conformances
