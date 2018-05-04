@@ -1,8 +1,4 @@
-import Async
-import Foundation
-import Service
-
-/// Representable as content in an HTTP message.
+/// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
 /// - `ResponseEncodable`
@@ -17,7 +13,7 @@ import Service
 ///     }
 ///
 ///     router.get("greeting") { req in
-///         return Hello() /// {"message":"Hello!"}
+///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
 public protocol Content: Codable, ResponseCodable, RequestCodable {
@@ -31,13 +27,13 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
     ///     }
     ///
     ///     router.get("greeting") { req in
-    ///         return Hello() /// message=Hello!
+    ///         return Hello() // message=Hello!
     ///     }
     ///
     ///     router.get("greeting2") { req in
     ///         let res = req.makeResponse()
     ///         try res.content.encode(Hello(), as: .json)
-    ///         return res /// {"message":"Hello!"}
+    ///         return res // {"message":"Hello!"}
     ///     }
     ///
     static var defaultContentType: MediaType { get }
@@ -48,14 +44,14 @@ public protocol Content: Codable, ResponseCodable, RequestCodable {
 extension Content {
     /// Default implementation is `MediaType.json` for all types.
     ///
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .json
     }
 
     /// Default `RequestEncodable` conformance.
     ///
-    /// See `RequestEncodable.encode(using:)`
+    /// See `RequestEncodable`.
     public func encode(using container: Container) throws -> Future<Request> {
         let req = Request(using: container)
         try req.content.encode(self)
@@ -64,7 +60,7 @@ extension Content {
 
     /// Default `ResponseEncodable` conformance.
     ///
-    /// See `ResponseEncodable.encode(for:)`
+    /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
         let res = req.makeResponse()
         try res.content.encode(self)
@@ -73,7 +69,7 @@ extension Content {
 
     /// Default `RequestDecodable` conformance.
     ///
-    /// See `RequestDecodable.decode(from:)`
+    /// See `RequestDecodable`.
     public static func decode(from req: Request) throws -> Future<Self> {
         let content = try req.content.decode(Self.self)
         return content
@@ -81,7 +77,7 @@ extension Content {
 
     /// Default `ResponseDecodable` conformance.
     ///
-    /// See `ResponseDecodable.decode(from:for:)`
+    /// See `ResponseDecodable`.
     public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
         let content = try res.content.decode(Self.self)
         return content
@@ -91,105 +87,105 @@ extension Content {
 // MARK: Default Conformances
 
 extension String: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int8: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int16: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int32: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Int64: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt8: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt16: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt32: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension UInt64: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Double: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Float: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .plainText
     }
 }
 
 extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return Element.defaultContentType
     }
 }
 
 extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
-    /// See `Content.defaultContentType`
+    /// See `Content`.
     public static var defaultContentType: MediaType {
         return .json
     }

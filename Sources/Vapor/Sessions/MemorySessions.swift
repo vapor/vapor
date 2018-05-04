@@ -1,57 +1,30 @@
-import Bits
-import Crypto
-
 /// Simple in-memory sessions implementation.
-public final class MemorySessions: Sessions {
-    /// The internal storage.
-    private var sessions: [String: Session]
-
-    /// This session's event loop.
-    private let eventLoop: EventLoop
-
-    /// MemorySession with basic cookie factory.
-    public static func `default`(on worker: Worker) -> MemorySessions {
-        return .init(on: worker)
-    }
+public final class MemorySessions: Sessions, Service {
+    /// Actual implementation.
+    private let keyedCacheSessions: KeyedCacheSessions
 
     /// Create a new `MemorySessions` with the supplied cookie factory.
-    public init(on worker: Worker) {
-        self.eventLoop = worker.eventLoop
-        sessions = [:]
+    public init() {
+        self.keyedCacheSessions = KeyedCacheSessions(keyedCache: MemoryKeyedCache())
     }
 
-    /// See Sessions.readSession
+    /// See `Sessions`.
+    public func createSession(_ session: Session) throws -> Future<Void> {
+        return try keyedCacheSessions.createSession(session)
+    }
+
+    /// See `Sessions`.
     public func readSession(sessionID: String) throws -> Future<Session?> {
-        let session = sessions[sessionID]
-        return Future.map(on: eventLoop) { session }
+        return try keyedCacheSessions.readSession(sessionID: sessionID)
     }
 
-    /// See Sessions.destroySession
+    /// See `Sessions`.
+    public func updateSession(_ session: Session) throws -> Future<Void> {
+        return try keyedCacheSessions.updateSession(session)
+    }
+
+    /// See `Sessions`.
     public func destroySession(sessionID: String) throws -> Future<Void> {
-        sessions[sessionID] = nil
-        return .done(on: eventLoop)
-    }
-
-    /// See Sessions.updateSession
-    public func updateSession(_ session: Session) throws -> Future<Session> {
-        let sessionID: String
-        if let existing = session.id {
-            sessionID = existing
-        } else {
-            sessionID = try CryptoRandom().generateData(count: 16).base64EncodedString()
-        }
-        session.id = sessionID
-        sessions[sessionID] = session
-        return Future.map(on: eventLoop) { session }
-    }
-}
-
-extension MemorySessions: ServiceType {
-    /// See `ServiceType.serviceSupports`
-    public static var serviceSupports: [Any.Type] { return [Sessions.self] }
-
-    /// See `ServiceType.makeService(for:)`
-    public static func makeService(for worker: Container) throws -> MemorySessions {
-        return .default(on: worker)
+        return try keyedCacheSessions.destroySession(sessionID: sessionID)
     }
 }

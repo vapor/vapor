@@ -12,8 +12,18 @@ public protocol AbortError: Debuggable {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
+    /// Optional `HTTPHeaders` to add to the error response.
+    var headers: HTTPHeaders { get }
+
     /// The human-readable (and hopefully understandable) reason for this error.
     var reason: String { get }
+}
+
+extension AbortError {
+    /// See `AbortError`.
+    public var headers: HTTPHeaders {
+        return [:]
+    }
 }
 
 // MARK: Default Conformances

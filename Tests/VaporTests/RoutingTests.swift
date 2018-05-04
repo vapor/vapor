@@ -4,7 +4,6 @@ import XCTest
 
 
 class RoutingTests : XCTestCase {
-    
     func testGroup() {
         let router = MockRouter()
         let sut = router.grouped("test")

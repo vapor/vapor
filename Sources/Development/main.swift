@@ -9,7 +9,6 @@ do {
 
     var middlewareConfig = MiddlewareConfig()
     middlewareConfig.use(ErrorMiddleware.self)
-    middlewareConfig.use(DateMiddleware.self)
     middlewareConfig.use(SessionsMiddleware.self)
     services.register(middlewareConfig)
 
@@ -21,6 +20,12 @@ do {
 
     router.get("search") { req -> String in
         return try req.query.get(String.self, at: ["query"])
+    }
+
+    router.get("foo") { req -> String in
+        let session = try req.session()
+        session["name"] = "Vapor"
+        return "Session set"
     }
 
     router.get("hash", String.parameter) { req -> String in
@@ -64,27 +69,26 @@ do {
     }
 
     router.get("client", "httpsbin") { req -> Future<String> in
-        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap(to: Data.self) { res in
+        return try req.make(Client.self).get("https://httpbin.org/anything").flatMap { res in
             return res.http.body.consumeData(max: 2048, on: req)
-        }.map(to: String.self) { data in
+        }.map { data in
             return String(data: data, encoding: .utf8) ?? "n/a"
         }
     }
 
     router.get("client", "invalid") { request -> Future<String> in
         return try request.make(Client.self).get("http://httpbin.org")
-            .flatMap(to: Data.self) { response in
-                return response.http.body.consumeData(max: 2048, on: request)
-            }
-            .map(to: String.self) { data in
-                return String(data: data, encoding: .utf8) ?? ""
+        .flatMap { response in
+            return response.http.body.consumeData(max: 2048, on: request)
+        }.map { data in
+            return String(data: data, encoding: .utf8) ?? ""
         }
     }
 
     router.get("client", "httpbin") { req -> Future<String> in
-        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap(to: Data.self) { res in
+        return try req.make(Client.self).get("http://httpbin.org/anything").flatMap { res in
             return res.http.body.consumeData(max: 2048, on: req)
-        }.map(to: String.self) { data in
+        }.map { data in
             return String(data: data, encoding: .utf8) ?? "n/a"
         }
     }
@@ -119,10 +123,9 @@ do {
         return "123"
     }
 
-    router.get("vapor") { req -> Future<String> in
-        return try req.make(Client.self).send(.GET, to: "https://vapor.codes").map(to: String.self) { res in
-            print(res.http.headers)
-            return "done!"
+    router.get("vapor") { req in
+        return try req.client().get("https://vapor.codes").map { res in
+            return res.description
         }
     }
 
@@ -144,8 +147,27 @@ do {
         return try req.view().render("hello")
     }
 
-    router.grouped(DateMiddleware.self).get("datetest") { req in
+    router.grouped(ErrorMiddleware.self).get("datetest") { req in
         return HTTPStatus.ok
+    }
+
+    router.get("image") { req -> Future<String> in
+        return try req.fileio().read(file: "/Users/tanner/Desktop/test.png").map { data in
+            return "done: \(data)"
+        }
+    }
+
+    router.get("image-chunk") { req -> Future<String> in
+        return try req.fileio().readChunked(file: "/Users/tanner/Desktop/test.png") { data in
+            print("chunk: \(data)")
+        }.map { "done" }
+    }
+
+    router.get("image-stream") { req -> HTTPResponse in
+        let stream = try req.fileio().chunkedStream(file: "/Users/tanner/Desktop/test.png", chunkSize: 5)
+        var res = HTTPResponse(status: .ok, body: stream)
+        res.contentType = .png
+        return res
     }
 
     services.register(Router.self) { _ in return router }

@@ -35,9 +35,6 @@ class FakeMiddleware: Middleware {
     }
 }
 
-/// Equatable
-// FIXME: move to Engine
-
 extension PathComponent: Equatable {
     public static func ==(lhs: PathComponent, rhs: PathComponent) -> Bool {
         switch (lhs, rhs) {

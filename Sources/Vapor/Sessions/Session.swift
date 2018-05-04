@@ -1,69 +1,27 @@
-/// Something that is convertible between a Cookie and an instance.
+/// Sessions are a method for associating data with a client accessing your app.
+///
+/// Each session has a unique identifier that is used to look it up with each request
+/// to your app. This is usually done via HTTP cookies.
+///
+/// See `Request.session()` and `SessionsMiddleware` for more information.
 public final class Session {
-    /// The cookie value
+    /// This session's unique identifier. Usually a cookie value.
     public var id: String?
 
-    /// This session's data
+    /// This session's data.
     public var data: SessionData
 
-    /// Create a new session.
+    /// Create a new `Session`.
+    ///
+    /// Normally you will use `Request.session()` to do this.
     public init(id: String? = nil, data: SessionData = .init()) {
         self.id = id
         self.data = data
     }
-}
 
-/// Codable session data.
-public struct SessionData: Codable {
-    /// Session codable object storage.
-    internal var storage: [String: String]
-
-    /// Create a new, empty session data.
-    public init() {
-        storage = [:]
-    }
-
-    /// See Decodable.init
-    public init(from decoder: Decoder) throws {
-        storage = try [String: String].init(from: decoder)
-    }
-
-    /// See Encodable.encode
-    public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: String.self)
-        for (key, val) in storage {
-            try container.encode(val, forKey: key)
-        }
-    }
-}
-
-extension Session {
-    /// Convenience [String: String] accessor.
+    /// Convenience `[String: String]` accessor.
     public subscript(_ key: String) -> String? {
-        get {
-            return data.storage[key]
-        }
-        set {
-            data.storage[key] = newValue
-        }
+        get { return data.storage[key] }
+        set { data.storage[key] = newValue }
     }
 }
-
-extension String: CodingKey {
-    public var stringValue: String {
-        return self
-    }
-
-    public var intValue: Int? {
-        return Int(self)
-    }
-
-    public init?(stringValue: String) {
-        self = stringValue
-    }
-
-    public init?(intValue: Int) {
-        self = intValue.description
-    }
-}
-

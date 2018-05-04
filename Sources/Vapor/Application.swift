@@ -2,7 +2,7 @@
 ///
 ///     let router = try app.make(Router.self)
 ///
-/// Note: When generating responses to requests, you should use the `Request` as your service-container.
+/// - note: When generating responses to requests, you should use the `Request` as your service-container.
 ///
 /// Call the `run()` method to run this `Application`'s commands. By default, this will boot an `HTTPServer` and begin serving requests.
 /// Which command is run depends on the command-line arguments and flags.
@@ -10,34 +10,31 @@
 ///     try app.run()
 ///
 /// The `Application` is responsible for calling `Provider` (and `VaporProvider`) boot methods. The `willBoot` and `didBoot` methods
-/// will be called on `Application.init(_:)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
+/// will be called on `Application.init(...)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
 /// called on `Application.run()`
-///
-/// https://docs.vapor.codes/3.0/getting-started/application/
 public final class Application: Container {
     /// Config preferences and requirements for available services. Used to disambiguate which service should be used
     /// for a given interface when multiple are available.
-    /// See `Config` for more information.
     public let config: Config
 
     /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
-    /// See `Environment` for more information.
     public var environment: Environment
 
     /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
     /// form this application (i.e., `Request`, `Response`, etc.)
-    /// See `Services` for more information.
     public let services: Services
 
     /// The `Application`'s private service cache. This cache will not be shared with any sub-containers created by this application.
     public let serviceCache: ServiceCache
 
-    /// The event loop group that we derive the event loop below from, so we can close it in `deinit`.
+    /// The `EventLoopGroup` that we derive the event loop below from, so we can close it in `deinit`.
     private var eventLoopGroup: EventLoopGroup
 
     /// This `Application`'s event loop. This event-loop is separate from the `HTTPServer`'s event loop group and should only be used
     /// for creating services during boot / configuration phases. Never use this event loop while responding to requests.
-    public var eventLoop: EventLoop { return eventLoopGroup.next() }
+    public var eventLoop: EventLoop {
+        return eventLoopGroup.next()
+    }
 
     /// Use this to create stored properties in extensions.
     public var extend: Extend
@@ -53,7 +50,7 @@ public final class Application: Container {
     ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
     public static func asyncBoot(config: Config = .default(), environment: Environment = .development, services: Services = .default()) -> Future<Application> {
         let app = Application(config, environment, services)
-        return app.boot().map(to: Application.self) { app }
+        return app.boot().transform(to: app)
     }
 
     /// Synchronously creates and boots a new `Application`.
@@ -92,7 +89,7 @@ public final class Application: Container {
         return Future.flatMap(on: self) {
             // will-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             let command = try self.make(Commands.self)
                 .group()
             let console = try self.make(Console.self)
@@ -100,7 +97,7 @@ public final class Application: Container {
             /// Create a mutable copy of the environment input for this run.
             var runInput = self.environment.commandInput
             return console.run(command, input: &runInput, on: self)
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             // did-run all vapor service providers
             return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
         }
@@ -130,13 +127,13 @@ public final class Application: Container {
         return Future.flatMap(on: self) {
             // will-boot all service providers
             return try self.providers.map { try $0.willBoot(self) }.flatten(on: self)
-        }.map(to: Void.self) {
+        }.map {
             if _isDebugAssertConfiguration() && self.environment.isRelease {
                 let log = try self.make(Logger.self)
                 log.warning("Debug build mode detected while configured for release environment: \(self.environment.name).")
                 log.info("Compile your application with `-c release` to enable code optimizations.")
             }
-        }.flatMap(to: Void.self) {
+        }.flatMap {
             // did-boot all service providers
             return try self.providers.map { try $0.didBoot(self) }.flatten(on: self)
         }

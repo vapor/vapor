@@ -1,5 +1,4 @@
 import Vapor
-import Foundation
 
 public func routes(_ router: Router) throws {
     router.get("ping") { req in
@@ -14,24 +13,25 @@ public func routes(_ router: Router) throws {
         return try req.parameters.next(String.self)
     }
 
-    router.get("users", User.parameter, "foo") { req in
-        return try req.parameters.next(User.self)
-    }
-
     router.get("search") { req in
         return req.query["q"] ?? "none"
     }
 
-    router.get("client") { req in
-        return try req.make(FoundationClient.self).get("http://vapor.codes").map(to: String.self) { res in
-            return String(data: res.http.body.data ?? Data(), encoding: .ascii) ?? ""
-        }
+    let sessions = router.grouped("sessions").grouped(SessionsMiddleware.self)
+    sessions.get("get") { req -> String in
+        return try req.session()["name"] ?? "n/a"
     }
-}
+    sessions.get("set", String.parameter) { req -> String in
+        let name = try req.parameters.next(String.self)
+        try req.session()["name"] = name
+        return name
+    }
+    sessions.get("del") { req -> String in
+        try req.destroySession()
+        return "done"
+    }
 
-struct User: Parameter, Content {
-    let string: String
-    static func resolveParameter(_ parameter: String, on container: Container) throws -> Future<User> {
-        return container.eventLoop.newSucceededFuture(result: User(string: parameter))
+    router.get("client") { req in
+        return try req.client().get("http://vapor.codes").map { $0.description }
     }
 }

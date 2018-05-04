@@ -55,7 +55,7 @@ class ClientTests: XCTestCase {
     func testClientHeaders() throws {
         let app = try Application()
         let fakeClient = LastRequestClient(container: app)
-        _ = try fakeClient.send(.GET, headers: ["foo": "bar"], to: "/baz", content: "hello").wait()
+        _ = try fakeClient.send(.POST, headers: ["foo": "bar"], to: "/baz") { try $0.content.encode("hello") }.wait()
         if let lastReq = fakeClient.lastReq {
             XCTAssertEqual(lastReq.http.headers["foo"].first, "bar")
             XCTAssertEqual(lastReq.http.url.path, "/baz")
@@ -104,7 +104,7 @@ final class LastRequestClient: Client {
     init(container: Container) {
         self.container = container
     }
-    func respond(to req: Request) throws -> Future<Response> {
+    func send(_ req: Request) -> Future<Response> {
         lastReq = req
         return Future.map(on: req) { req.makeResponse() }
     }

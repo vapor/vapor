@@ -1,23 +1,18 @@
-import Core
-import HTTP
-import Routing
-import Service
-
 /// `Request` is a service-container wrapper around an `HTTPRequest`.
 ///
-/// Use this `Request` to access information about the `HTTPRequest` (`req.http`).
+/// Use `Request` to access information about the `HTTPRequest` (`req.http`).
 ///
 ///     print(req.http.url.path) // "/hello"
 ///
-/// You can also use `Request` to create services you may need while generating a response (`req.make(_:)`.
+/// You can also use `Request` to create services you may need while generating a response (`req.make()`).
 ///
 ///     let client = try req.make(Client.self)
 ///     print(client) // Client
 ///     client.get("http://vapor.codes")
 ///
-/// `Request` is also the `ParameterContainer` for routing. Use `.parameter(...)` to fetch parameterized values.
+/// `Request` also carries a `ParametersContainer` for routing. Use `parameters` to fetch parameterized values.
 ///
-///     router.get("hello", String.parameter) { req in
+///     router.get("hello", String.parameter) { req -> String in
 ///         let name = try req.parameters.next(String.self)
 ///         return "Hello, \(name)!"
 ///     }
@@ -29,17 +24,19 @@ import Service
 ///     let users = User.query(on: req).all()
 ///
 /// See `HTTPRequest`, `Container`, `ParameterContainer`, and `DatabaseConnectable` for more information.
-public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, CustomStringConvertible, CustomDebugStringConvertible {
+public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageContainer, RequestCodable, CustomStringConvertible, CustomDebugStringConvertible {
     /// See `ContainerAlias`.
     public static let aliasedContainer: KeyPath<Request, Container> = \.sharedContainer
 
-    // MARK: Stored
+    // MARK: HTTP
 
     /// The wrapped `HTTPRequest`.
     ///
     ///     print(req.http.url.path) // "/hello"
     ///
     public var http: HTTPRequest
+
+    // MARK: Services
 
     /// This `Request`'s parent container. This is normally the event loop. The `Request` will redirect
     /// all calls to create services to this container.
@@ -48,7 +45,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// This request's private container. Use this container to create services that will be cached
     /// only for the lifetime of this request. For all other services, use the request directly.
     ///
-    ///     let authCache = req.privateContainer.make(AuthCache.self)
+    ///     let authCache = try req.privateContainer.make(AuthCache.self)
     ///
     public let privateContainer: SubContainer
     
@@ -56,31 +53,33 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// invoking cached connections release.
     internal var hasActiveConnections: Bool
 
-    // MARK: Computed
+    // MARK: Descriptions
 
-    /// See `CustomStringConvertible.description
+    /// See `CustomStringConvertible`.
     public var description: String {
         return http.description
     }
 
-    /// See `CustomDebugStringConvertible.debugDescription`
+    /// See `CustomDebugStringConvertible`.
     public var debugDescription: String {
         return http.debugDescription
     }
 
+    // MARK: Content
+
     /// Helper for encoding and decoding data from an HTTP request query string.
     ///
     ///     let flags = try req.query.decode(Flags.self)
-    ///     print(flags) /// Flags
+    ///     print(flags) // Flags
     ///
     /// This helper can also decode single values from specific key paths.
     ///
     ///     let name = try req.query.get(String.self, at: "user", "name")
-    ///     print(name) /// String
+    ///     print(name) // String
     ///
     /// See `QueryContainer` methods for more information.
     public var query: QueryContainer {
-        return .init(container: self, query: http.url.query ?? "")
+        return .init(req: self)
     }
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
@@ -99,6 +98,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         return .init(self)
     }
 
+    // MARK: Routing
+
     /// Helper for accessing route parameters from this HTTP request.
     ///
     ///     let id = try req.parameters.next(Int.self)
@@ -110,6 +111,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// Internal storage for routing parameters.
     internal var _parameters: Parameters
 
+    // MARK: Init
+
     /// Create a new `Request`.
     public init(http: HTTPRequest = .init(), using container: Container) {
         self.http = http
@@ -119,7 +122,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         hasActiveConnections = false
     }
 
-    // MARK: Methods
+    // MARK: Response
 
     /// Creates a `Response` on the same container as this `Request`.
     ///
@@ -129,28 +132,43 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///         return res
     ///     }
     ///
-    /// returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
-    public func makeResponse() -> Response {
-        return Response(using: sharedContainer)
+    /// - parameters:
+    ///     - http: Optional `HTTPResponse` to use.
+    /// - returns: A new, empty 200 OK `Response` on the same container as the current `Request`.
+    public func makeResponse(http: HTTPResponse = .init()) -> Response {
+        return Response(http: http, using: sharedContainer)
     }
+
+    // MARK: Database
 
     /// See `DatabaseConnectable`.
     public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection>{
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",
-                reason: "Model.defaultDatabase required to use request as worker.",
+                reason: "`Model.defaultDatabase` is required to use request as `DatabaseConnectable`.",
                 suggestedFixes: [
                     "Ensure you are using the 'model' label when registering this model to your migration config (if it is a migration): migrations.add(model: ..., database: ...).",
-                    "If the model you are using is not a migration, set the static defaultDatabase property manually in your app's configuration section.",
-                    "Use req.withPooledConnection(to: ...) { ... } instead."
-                ],
-                source: .capture()
+                    "If the model you are using is not a migration, set the static `defaultDatabase` property manually in your app's configuration section.",
+                    "Use `req.withPooledConnection(to: ...) { ... }` instead."
+                ]
             )
-            return Future.map(on: self) { throw error }
+            return eventLoop.newFailedFuture(error: error)
         }
         hasActiveConnections = true
         return requestCachedConnection(to: database)
+    }
+
+    // MARK: Request Codable
+
+    /// See `RequestDecodable`.
+    public static func decode(from request: Request) throws -> Future<Request> {
+        return Future.map(on: request) { request }
+    }
+
+    /// See `RequestEncodable`.
+    public func encode(using container: Container) throws -> Future<Request> {
+        return Future.map(on: container) { self }
     }
 
     /// Called when the `Request` deinitializes.

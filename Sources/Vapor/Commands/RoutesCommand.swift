@@ -1,27 +1,46 @@
-import Command
-import Console
-import Foundation
+/// Displays all routes registered to the `Application`'s `Router` in an ASCII-formatted table.
+///
+///     $ swift run Run routes
+///     +------+------------------+
+///     | GET  | /search          |
+///     +------+------------------+
+///     | GET  | /hash/:string    |
+///     +------+------------------+
+///
+/// A colon preceeding a path component indicates a variable parameter. A colon with no text following
+/// is a parameter whose result will be discarded.
+///
+/// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
+public struct RoutesCommand: Command, ServiceType {
+    /// See `ServiceType`.
+    public static func makeService(for container: Container) throws -> RoutesCommand {
+        return try RoutesCommand(router: container.make())
+    }
 
-/// Displays all registered routes.
-public struct RoutesCommand: Command, Service {
-    /// See Command.arguments
-    public let arguments: [CommandArgument] = []
+    /// See `Command`.
+    public var arguments: [CommandArgument] {
+        return []
+    }
 
-    /// See Runnable.options
-    public let options: [CommandOption] = []
+    /// See `Command`.
+    public var options: [CommandOption] {
+        return []
+    }
 
-    /// See Runnable.help
-    public let help: [String] = ["Displays all registered routes"]
+    /// See `Command`.
+    public var help: [String] {
+        return ["Displays all registered routes."]
+    }
 
-    /// The server to boot.
-    public let router: Router
+    /// `Router` to use for printing routes.
+    private let router: Router
 
-    /// Create a new serve command.
+    /// Create a new `RoutesCommand`.
     public init(router: Router) {
         self.router = router
     }
 
-    /// See Runnable.run
+    /// See `Command`.
     public func run(using context: CommandContext) throws -> Future<Void> {
         let console = context.console
         
@@ -117,8 +136,9 @@ public struct RoutesCommand: Command, Service {
     }
 }
 
-extension Data {
-    fileprivate var string: String {
-        return String(data: self, encoding: .utf8)!
+private extension Data {
+    /// Converts `Data` to a `String`.
+    var string: String {
+        return String(data: self, encoding: .utf8) ?? "<invalid utf8>"
     }
 }
