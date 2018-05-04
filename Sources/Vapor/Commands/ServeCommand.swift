@@ -17,8 +17,9 @@ public struct ServeCommand: Command, ServiceType {
     /// See `Command`.
     public var options: [CommandOption] {
         return [
-            .value(name: "hostname", short: "b", help: ["Set the hostname the server will run on."]),
-            .value(name: "port", short: "p", help: ["Set the port the server will run on."])
+            .value(name: "hostname", short: "H", help: ["Set the hostname the server will run on."]),
+            .value(name: "port", short: "p", help: ["Set the port the server will run on."]),
+            .value(name: "bind", short: "b", help: ["Convenience for setting hostname and port together."]),
         ]
     }
 
@@ -36,8 +37,12 @@ public struct ServeCommand: Command, ServiceType {
     /// See `Command`.
     public func run(using context: CommandContext) throws -> Future<Void> {
         return server.start(
-            hostname: context.options["hostname"],
-            port: context.options["port"].flatMap { Int($0) }
+            hostname: context.options["hostname"]
+                // 0.0.0.0:8080, 0.0.0.0, parse hostname
+                ?? context.options["bind"]?.split(separator: ":").first.flatMap(String.init),
+            port: context.options["port"].flatMap(Int.init)
+                // 0.0.0.0:8080, :8080, parse port
+                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
     }
 }
