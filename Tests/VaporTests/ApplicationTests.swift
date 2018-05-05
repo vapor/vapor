@@ -507,6 +507,20 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    func testInvalidCookie() throws {
+        try Application.makeTest { router in
+            router.grouped(SessionsMiddleware.self).get("get") { req -> String in
+                return try req.session()["name"] ?? "n/a"
+            }
+        }.test(.GET, "get", beforeSend: { req in
+            req.http.cookies["vapor-session"] = "asdf"
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertNotNil(res.http.headers[.setCookie])
+            XCTAssertEqual(res.http.body.string, "n/a")
+        })
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -529,6 +543,7 @@ class ApplicationTests: XCTestCase {
         ("testVaporProvider", testVaporProvider),
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testHeadRequest", testHeadRequest),
+        ("testInvalidCookie", testInvalidCookie),
     ]
 }
 
