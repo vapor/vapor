@@ -515,7 +515,6 @@ class ApplicationTests: XCTestCase {
         }.test(.GET, "get", beforeSend: { req in
             req.http.cookies["vapor-session"] = "asdf"
         }, afterSend: { res in
-            print(res)
             XCTAssertEqual(res.http.status, .ok)
             XCTAssertNotNil(res.http.headers[.setCookie])
             XCTAssertEqual(res.http.body.string, "n/a")
