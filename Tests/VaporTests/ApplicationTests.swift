@@ -520,6 +520,29 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.body.string, "n/a")
         })
     }
+    
+    func testDataResponses() throws {
+        // without specific content type
+        try Application.makeTest { router in
+            router.get("hello") { req -> Data in
+                return "Hello!".data(using: .utf8)!
+            }
+        }.test(.GET, "hello") { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.body.string, "Hello!")
+        }
+
+        // with specific content type
+        try Application.makeTest { router in
+            router.get("hey") { req -> TypedDataResponse in
+                return "Hey!".data(using: .utf8)!.response(type: .html)
+            }
+        }.test(.GET, "hey") { res in
+            XCTAssertEqual(res.http.status, .ok)
+            XCTAssertEqual(res.http.contentType, MediaType.html)
+            XCTAssertEqual(res.http.body.string, "Hey!")
+        }
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -544,6 +567,7 @@ class ApplicationTests: XCTestCase {
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testHeadRequest", testHeadRequest),
         ("testInvalidCookie", testInvalidCookie),
+        ("testDataResponses", testDataResponses)
     ]
 }
 
