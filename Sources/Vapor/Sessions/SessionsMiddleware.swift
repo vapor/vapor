@@ -44,9 +44,6 @@ public final class SessionsMiddleware: Middleware, ServiceType {
         if let cookieValue = req.http.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
             return try sessions.readSession(sessionID: cookieValue.string).flatMap { session in
-                guard let session = session else {
-                    throw Abort(.badRequest, reason: "No session was found for the supplied cookie value.")
-                }
                 cache.session = session
                 return try next.respond(to: req).flatMap { res in
                     return try self.addCookies(to: res, for: req, cache: cache)
@@ -66,21 +63,22 @@ public final class SessionsMiddleware: Middleware, ServiceType {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let createOrUpdate: Future<Void>
-            if req.http.cookies[self.config.cookieName] == nil {
+            if session.id == nil {
                 // No cookie, this is a new session.
                 createOrUpdate = try sessions.createSession(session)
-            } else if session.id != nil {
+            } else {
                 // A cookie exists, just update this session.
                 createOrUpdate = try sessions.updateSession(session)
-            } else {
-                // this should have been caught earlier, so its an internal error
-                throw VaporError(identifier: "invalidSession", reason: "No session was found for the supplied cookie value.")
             }
 
             // After create or update, set cookie on the response.
             return createOrUpdate.map {
                 if let id = session.id {
+                    // the session has an id, set the cookie
                     res.http.cookies[self.config.cookieName] = self.config.cookieFactory(id)
+                } else {
+                    // the sessions has no id, expire any existing cookie
+                    res.http.cookies[self.config.cookieName] = .expired
                 }
                 return res
             }
