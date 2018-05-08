@@ -79,9 +79,12 @@ extension Services {
             return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
         }
 
+        // blocking IO pool is thread safe
+        let sharedThreadPool = BlockingIOThreadPool(numberOfThreads: 2)
+        services.register(sharedThreadPool)
+
         // file
         services.register(NonBlockingFileIO.self)
-        services.register(BlockingIOThreadPool.self)
 
         // websocket
         services.register(NIOWebSocketClient.self)

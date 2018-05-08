@@ -38,6 +38,7 @@ class ClientTests: XCTestCase {
         let app = try Application()
 
         let client = try app.make(Client.self)
+        print(type(of: client))
 
         let response = try client.get("http://httpbin.org/absolute-redirect/5").wait()
         XCTAssertEqual(response.http.status.code, 200)
