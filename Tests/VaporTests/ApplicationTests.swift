@@ -534,7 +534,7 @@ class ApplicationTests: XCTestCase {
 
         // with specific content type
         try Application.makeTest { router in
-            router.get("hey") { req -> TypedDataResponse in
+            router.get("hey") { req -> Response in
                 return "Hey!".data(using: .utf8)!.response(type: .html)
             }
         }.test(.GET, "hey") { res in
@@ -542,6 +542,86 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.contentType, MediaType.html)
             XCTAssertEqual(res.http.body.string, "Hey!")
         }
+    }
+
+    func testMiddlewareOrder() throws {
+        final class OrderMiddleware: Middleware {
+            static var order: [String] = []
+            let pos: String
+            init(_ pos: String) {
+                self.pos = pos
+            }
+            func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+                OrderMiddleware.order.append(pos)
+                return try next.respond(to: req)
+            }
+        }
+
+        try Application.makeTest { router in
+            router.grouped(
+                OrderMiddleware("a"), OrderMiddleware("b"), OrderMiddleware("c")
+            ).get("order") { req -> String in
+                return "done"
+            }
+        }.test(.GET, "order", afterSend: { res in
+            XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
+        })
+    }
+
+    func testSessionDestroy() throws {
+        final class MockKeyedCache: KeyedCache, Service {
+            var ops: [String]
+            init() { self.ops = [] }
+            func get<D>(_ key: String, as decodable: D.Type) -> Future<D?> where D : Decodable {
+                ops.append("get \(key) as \(D.self)")
+                return EmbeddedEventLoop().newSucceededFuture(result: nil)
+            }
+
+            func set<E>(_ key: String, to encodable: E) -> Future<Void> where E : Encodable {
+                ops.append("set \(key) to \(E.self)")
+                return EmbeddedEventLoop().newSucceededFuture(result: ())
+            }
+
+            func remove(_ key: String) -> Future<Void> {
+                ops.append("del \(key)")
+                return EmbeddedEventLoop().newSucceededFuture(result: ())
+            }
+        }
+
+        let mockCache = MockKeyedCache()
+        var cookie: HTTPCookieValue?
+
+        try Application.makeTest(configure: { config, services in
+            config.prefer(KeyedCacheSessions.self, for: Sessions.self)
+            config.prefer(MockKeyedCache.self, for: KeyedCache.self)
+            services.register(mockCache, as: KeyedCache.self)
+        }, routes: { router in
+            let sessions = router.grouped(SessionsMiddleware.self)
+            sessions.get("set") { req -> String in
+                try req.session()["foo"] = "bar"
+                return "set"
+            }
+            sessions.get("del") { req  -> String in
+                try req.destroySession()
+                return "del"
+            }
+        }).test(.GET, "set", afterSend: { res in
+            XCTAssertEqual(res.http.body.string, "set")
+            cookie = res.http.cookies["vapor-session"]
+            XCTAssertNotNil(cookie)
+            XCTAssertEqual(mockCache.ops, [
+                "set \(cookie?.string ?? "n/a") to SessionData",
+            ])
+            mockCache.ops = []
+        }).test(.GET, "del", beforeSend: { req in
+            req.http.cookies["vapor-session"] = cookie
+        }, afterSend: { res in
+            XCTAssertEqual(res.http.body.string, "del")
+            XCTAssertEqual(mockCache.ops, [
+                "get \(cookie?.string ?? "n/a") as SessionData",
+                "del \(cookie?.string ?? "n/a")",
+            ])
+        })
     }
 
     static let allTests = [
@@ -567,7 +647,9 @@ class ApplicationTests: XCTestCase {
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testHeadRequest", testHeadRequest),
         ("testInvalidCookie", testInvalidCookie),
-        ("testDataResponses", testDataResponses)
+        ("testDataResponses", testDataResponses),
+        ("testMiddlewareOrder", testMiddlewareOrder),
+        ("testSessionDestroy", testSessionDestroy),
     ]
 }
 
@@ -576,12 +658,15 @@ class ApplicationTests: XCTestCase {
 private extension Application {
     // MARK: Static
 
-    static func makeTest(configure: (Router) throws -> ()) throws -> Application {
-        let router = EngineRouter.default()
-        try configure(router)
+    static func makeTest(configure: (inout Config, inout Services) throws -> () = { _, _ in }, routes: (Router) throws -> ()) throws -> Application {
         var services = Services.default()
+        var config = Config.default()
+        try configure(&config, &services)
+
+        let router = EngineRouter.default()
+        try routes(router)
         services.register(router, as: Router.self)
-        return try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
+        return try Application.asyncBoot(config: config, environment: .xcode, services: services).wait()
     }
 
     @discardableResult
