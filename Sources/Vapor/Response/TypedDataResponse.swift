@@ -1,7 +1,8 @@
 /// A container representing `Data` with a specific content type (used for returning as a `Response`).
-public struct TypedDataResponse: ResponseEncodable {
+private struct TypedDataResponse: ResponseEncodable {
     /// The data held by this container.
     let data: Data
+
     /// The type of the data held by this container.
     let contentType: MediaType
     
@@ -20,11 +21,13 @@ extension Data: ResponseEncodable {
         return try response(type: .any).encode(for: req)
     }
     
-    /**
-     Get a `ResponseEncodable` container holding this data with your provided contentType.
-     - parameter contentType: The type of data to return the container with.
-     */
-    public func response(type: MediaType) -> TypedDataResponse {
+    /// Get a `ResponseEncodable` container holding this data with your provided contentType.
+    ///
+    ///     data.response(type: .html)
+    ///
+    /// - parameters:
+    ///     - type: The type of data to return the container with.
+    public func response(type: MediaType) -> ResponseEncodable {
         return TypedDataResponse(data: self, contentType: type)
     }
 }
