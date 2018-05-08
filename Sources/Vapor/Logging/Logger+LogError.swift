@@ -27,11 +27,11 @@ extension Logger {
             switch e {
             case let localized as LocalizedError: reason = localized.localizedDescription
             case let convertible as CustomStringConvertible: reason = convertible.description
-            default: reason = "\(error)"
+            default: reason = "\(e)"
             }
             error(reason)
             if verbose {
-                debug("Conform `\(type(of: error))` to `Debuggable` for better debug info.")
+                debug("Conform `\(type(of: e))` to `Debuggable` for better debug info.")
             }
         }
 
