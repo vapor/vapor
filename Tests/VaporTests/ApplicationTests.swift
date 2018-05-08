@@ -524,8 +524,8 @@ class ApplicationTests: XCTestCase {
     func testDataResponses() throws {
         // without specific content type
         try Application.makeTest { router in
-            router.get("hello") { req -> Data in
-                return "Hello!".data(using: .utf8)!
+            router.get("hello") { req in
+                return req.makeResponse("Hello!")
             }
         }.test(.GET, "hello") { res in
             XCTAssertEqual(res.http.status, .ok)
@@ -535,7 +535,7 @@ class ApplicationTests: XCTestCase {
         // with specific content type
         try Application.makeTest { router in
             router.get("hey") { req -> Response in
-                return "Hey!".data(using: .utf8)!.response(type: .html)
+                return req.makeResponse("Hey!", as: .html)
             }
         }.test(.GET, "hey") { res in
             XCTAssertEqual(res.http.status, .ok)

@@ -139,6 +139,20 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         return Response(http: http, using: sharedContainer)
     }
 
+    /// Generate a `Response` for a `HTTPBody` convertible object using the supplied `MediaType`.
+    ///
+    ///     router.get("html") { req in
+    ///         return req.makeResponse("<h1>Hello, world!</h1>", as: .html)
+    ///     }
+    ///
+    /// - parameters:
+    ///     - type: The type of data to return the container with.
+    public func makeResponse(_ body: LosslessHTTPBodyRepresentable, as contentType: MediaType = .plainText) -> Response {
+        let res = makeResponse(http: .init(body: body))
+        res.http.contentType = contentType
+        return res
+    }
+
     // MARK: Database
 
     /// See `DatabaseConnectable`.
