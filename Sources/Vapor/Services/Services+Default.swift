@@ -81,6 +81,7 @@ extension Services {
 
         // blocking IO pool is thread safe
         let sharedThreadPool = BlockingIOThreadPool(numberOfThreads: 2)
+        sharedThreadPool.start()
         services.register(sharedThreadPool)
 
         // file
