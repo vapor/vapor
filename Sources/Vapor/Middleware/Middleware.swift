@@ -19,7 +19,7 @@ extension Array where Element == Middleware {
     /// - note: The array of middleware must be `[Middleware]` not `[M] where M: Middleware`.
     public func makeResponder(chainedto responder: Responder) -> Responder {
         var responder = responder
-        for middleware in self {
+        for middleware in reversed() {
             responder = middleware.makeResponder(chainingTo: responder)
         }
         return responder
