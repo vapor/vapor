@@ -171,6 +171,35 @@ extension Router {
         return _on(method, at: path.convertToPathComponents(), use: closure)
     }
 
+    /// Creates a `Route` at the provided path using an HTTP method.
+    ///
+    ///     router.on(.GET, at: ["hello", "world"]) { req in
+    ///         return "Hello, world!"
+    ///     }
+    ///
+    /// The above route closure would return `"Hello, world"` to requests to `GET /hello/world`.
+    ///
+    /// You can use anything `PathComponentsRepresentable` to create the path, including dynamic parameters.
+    ///
+    ///     router.on(.GET, at: ["users", Int.parameter]) { req in
+    ///         let id = try req.parameters.next(Int.self)
+    ///         return "User #\(id)"
+    ///     }
+    ///
+    /// See `ParametersContainer` for more information on using dynamic parameters.
+    ///
+    /// - parameters:
+    ///     - method: `HTTPMethod` to accept.
+    ///     - path: Variadic `PathComponentsRepresentable` items.
+    ///     - closure: Creates a `Response` for the incoming `Request`.
+    /// - returns: Discardable `Route` that was just created.
+    @discardableResult
+    private func on<T>(_ method: HTTPMethod, at path: [PathComponentsRepresentable], use closure: @escaping (Request) throws -> T) -> Route<Responder>
+        where T: ResponseEncodable
+    {
+        return _on(method, at: path.convertToPathComponents(), use: closure)
+    }
+    
     /// Registers a route handler at the supplied path.
     ///
     /// Use the HTTP prefixed methods instead of this method. See `get(...)`, `post(...)`, etc.
