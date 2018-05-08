@@ -521,6 +521,30 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    func testMiddlewareOrder() throws {
+        final class OrderMiddleware: Middleware {
+            static var order: [String] = []
+            let pos: String
+            init(_ pos: String) {
+                self.pos = pos
+            }
+            func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
+                OrderMiddleware.order.append(pos)
+                return try next.respond(to: req)
+            }
+        }
+
+        try Application.makeTest { router in
+            router.grouped(
+                OrderMiddleware("a"), OrderMiddleware("b"), OrderMiddleware("c")
+            ).get("order") { req -> String in
+                return "done"
+            }
+        }.test(.GET, "order", afterSend: { res in
+            XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
+        })
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -544,6 +568,7 @@ class ApplicationTests: XCTestCase {
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testHeadRequest", testHeadRequest),
         ("testInvalidCookie", testInvalidCookie),
+        ("testMiddlewareOrder", testMiddlewareOrder),
     ]
 }
 
