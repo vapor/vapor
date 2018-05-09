@@ -534,10 +534,10 @@ class ApplicationTests: XCTestCase {
 
         // with specific content type
         try Application.makeTest { router in
-            router.get("hey") { req -> Response in
+            router.get("hello-html") { req -> Response in
                 return req.makeResponse("Hey!", as: .html)
             }
-        }.test(.GET, "hey") { res in
+        }.test(.GET, "hello-html") { res in
             XCTAssertEqual(res.http.status, .ok)
             XCTAssertEqual(res.http.contentType, MediaType.html)
             XCTAssertEqual(res.http.body.string, "Hey!")
