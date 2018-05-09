@@ -136,7 +136,7 @@ class ApplicationTests: XCTestCase {
 
         let app = try Application.makeTest { router in
             router.get("encode") { req -> Response in
-                let res = req.makeResponse()
+                let res = req.response()
                 try res.content.encode(FooContent())
                 try res.content.encode(FooContent(), as: .json)
                 try res.content.encode(FooEncodable(), as: .json)
@@ -328,7 +328,7 @@ class ApplicationTests: XCTestCase {
     func testCustomEncode() throws {
         try Application.makeTest { router in
             router.get("custom-encode") { req -> Response in
-                let res = req.makeResponse(http: .init(status: .ok))
+                let res = req.response(http: .init(status: .ok))
                 try res.content.encode(json: ["hello": "world"], using: .custom(format: .prettyPrinted))
                 return res
             }
@@ -525,7 +525,7 @@ class ApplicationTests: XCTestCase {
         // without specific content type
         try Application.makeTest { router in
             router.get("hello") { req in
-                return req.makeResponse("Hello!")
+                return req.response("Hello!")
             }
         }.test(.GET, "hello") { res in
             XCTAssertEqual(res.http.status, .ok)
@@ -535,7 +535,7 @@ class ApplicationTests: XCTestCase {
         // with specific content type
         try Application.makeTest { router in
             router.get("hello-html") { req -> Response in
-                return req.makeResponse("Hey!", as: .html)
+                return req.response("Hey!", as: .html)
             }
         }.test(.GET, "hello-html") { res in
             XCTAssertEqual(res.http.status, .ok)

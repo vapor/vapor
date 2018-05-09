@@ -33,7 +33,7 @@ extension Request {
     ///
     /// See `FileIO` for more information.
     public func streamFile(at path: String) throws -> Future<Response> {
-        let res = makeResponse()
+        let res = response()
         res.http = try fileio().chunkedResponse(file: path, for: http)
         return eventLoop.newSucceededFuture(result: res)
     }

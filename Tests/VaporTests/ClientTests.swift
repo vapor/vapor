@@ -107,7 +107,7 @@ final class LastRequestClient: Client {
     }
     func send(_ req: Request) -> Future<Response> {
         lastReq = req
-        return Future.map(on: req) { req.makeResponse() }
+        return Future.map(on: req) { req.response() }
     }
 }
 
