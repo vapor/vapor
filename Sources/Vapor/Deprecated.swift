@@ -36,3 +36,17 @@ extension MemorySessions {
         self.init()
     }
 }
+
+extension Request {
+    /// See `req.response(http:)`.
+    @available(*, deprecated, renamed: "response(http:)")
+    public func makeResponse(http: HTTPResponse = .init()) -> Response {
+        return response(http: http)
+    }
+    
+    /// See `req.response(_ body:as:)`.
+    @available(*, deprecated, renamed: "response(_body:as:)")
+    public func makeResponse(_ body: LosslessHTTPBodyRepresentable, as contentType: MediaType = .plainText) -> Response {
+        return response(body, as: contentType)
+    }
+}

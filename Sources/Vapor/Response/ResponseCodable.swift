@@ -60,7 +60,7 @@ extension ResponseEncodable {
 extension HTTPResponse: ResponseEncodable {
     /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
-        let new = req.makeResponse()
+        let new = req.response()
         new.http = self
         return req.eventLoop.newSucceededFuture(result: new)
     }

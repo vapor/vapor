@@ -6,7 +6,7 @@ public struct BasicResponder: Responder {
     /// Create a new `BasicResponder`.
     ///
     ///     let notFound: Responder = BasicResponder { req in
-    ///         let res = req.makeResponse(http: .init(status: .notFound))
+    ///         let res = req.response(http: .init(status: .notFound))
     ///         return req.eventLoop.newSucceededFuture(result: res)
     ///     }
     ///
