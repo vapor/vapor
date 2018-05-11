@@ -60,6 +60,7 @@ private extension HTTPRequest {
         var request = URLRequest(url: http.url)
         request.httpMethod = "\(http.method)"
         request.httpBody = body
+        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
         http.headers.forEach { key, val in
             request.addValue(val, forHTTPHeaderField: key.description)
         }
