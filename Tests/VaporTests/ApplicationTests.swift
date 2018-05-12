@@ -214,10 +214,10 @@ class ApplicationTests: XCTestCase {
             debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
             let boundary = res.http.contentType?.parameters["boundary"] ?? "none"
-            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=name"), true)
+            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=\"name\""), true)
             XCTAssertEqual(res.http.body.string.contains("--\(boundary)"), true)
-            XCTAssertEqual(res.http.body.string.contains("filename=droplet.png"), true)
-            XCTAssertEqual(res.http.body.string.contains("name=image"), true)
+            XCTAssertEqual(res.http.body.string.contains("filename=\"droplet.png\""), true)
+            XCTAssertEqual(res.http.body.string.contains("name=\"image\""), true)
         }
     }
 
