@@ -165,7 +165,7 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    private func on<T>(_ method: HTTPMethod, at path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
+    public func on<T>(_ method: HTTPMethod, at path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
         where T: ResponseEncodable
     {
         return _on(method, at: path.convertToPathComponents(), use: closure)
