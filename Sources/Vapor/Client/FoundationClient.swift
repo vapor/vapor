@@ -15,10 +15,14 @@ public final class FoundationClient: Client, ServiceType {
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
+    
+    /// Default caching policy
+    public let cachePolicy: URLRequest.CachePolicy
 
     /// Creates a new `FoundationClient`.
-    public init(_ urlSession: URLSession, on container: Container) {
+    public init(_ urlSession: URLSession, cachePolicy: URLRequest.CachePolicy = .reloadIgnoringLocalAndRemoteCacheData, on container: Container) {
         self.urlSession = urlSession
+        self.cachePolicy = cachePolicy
         self.container = container
     }
 
@@ -29,7 +33,7 @@ public final class FoundationClient: Client, ServiceType {
 
     /// See `Client`.
     public func send(_ req: Request) -> Future<Response> {
-        let urlReq = req.http.convertToFoundationRequest()
+        let urlReq = req.http.convertToFoundationRequest(defaultCachePolicy: cachePolicy)
         let promise = req.eventLoop.newPromise(Response.self)
         self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
             if let error = error {
@@ -54,13 +58,13 @@ public final class FoundationClient: Client, ServiceType {
 
 private extension HTTPRequest {
     /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
-    func convertToFoundationRequest() -> URLRequest {
+    func convertToFoundationRequest(defaultCachePolicy cachePolicy: URLRequest.CachePolicy) -> URLRequest {
         let http = self
         let body = http.body.data ?? Data()
         var request = URLRequest(url: http.url)
         request.httpMethod = "\(http.method)"
         request.httpBody = body
-        request.cachePolicy = .reloadIgnoringLocalAndRemoteCacheData
+        request.cachePolicy = cachePolicy
         http.headers.forEach { key, val in
             request.addValue(val, forHTTPHeaderField: key.description)
         }
