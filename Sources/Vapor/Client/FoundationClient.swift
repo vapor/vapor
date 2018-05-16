@@ -58,13 +58,13 @@ public final class FoundationClient: Client, ServiceType {
 
 private extension HTTPRequest {
     /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
-    func convertToFoundationRequest(defaultCachePolicy cachePolicy: URLRequest.CachePolicy) -> URLRequest {
+    func convertToFoundationRequest(defaultCachePolicy: URLRequest.CachePolicy) -> URLRequest {
         let http = self
         let body = http.body.data ?? Data()
         var request = URLRequest(url: http.url)
         request.httpMethod = "\(http.method)"
         request.httpBody = body
-        request.cachePolicy = cachePolicy
+        request.cachePolicy = cachePolicy ?? defaultCachePolicy
         http.headers.forEach { key, val in
             request.addValue(val, forHTTPHeaderField: key.description)
         }
