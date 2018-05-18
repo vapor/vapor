@@ -29,11 +29,11 @@ Take a look at some of the [awesome stuff](https://github.com/Cellane/awesome-va
 
 ### 💧 Community
 
-Join the welcoming community of fellow Vapor developers in [Slack](http://vapor.team).
+Join the welcoming community of fellow Vapor developers on [Discord](http://vapor.team).
 
 ### 🚀 Contributing
 
-To contribute a **feature or idea** to Vapor, [create an issue](https://github.com/vapor/vapor/issues/new) explaining your idea or bring it up on [Slack](http://vapor.team).
+To contribute a **feature or idea** to Vapor, [create an issue](https://github.com/vapor/vapor/issues/new) explaining your idea or bring it up on [Discord](http://vapor.team).
 
 If you find a **bug**, please [create an issue](https://github.com/vapor/vapor/issues/new). 
 
