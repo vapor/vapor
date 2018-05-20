@@ -73,9 +73,15 @@ extension Config {
         // access the config at the suppplied file and
         // path to see which items were chosen by the user.
         let path = [file] + keyPath
+        #if swift(>=4.1)
+        guard let chosen = self[path]?.array?.compactMap({ $0.string }) else {
+            return try d(self)
+        }
+        #else
         guard let chosen = self[path]?.array?.flatMap({ $0.string }) else {
             return try d(self)
         }
+        #endif
         
         // iterator over the array of chosen items
         // and find their configurables

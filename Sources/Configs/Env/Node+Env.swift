@@ -34,7 +34,11 @@ extension StructuredData {
             guard !mapped.isEmpty else { return nil }
             return .object(mapped)
         case let .array(arr):
+            #if swift(>=4.1)
+            let mapped = arr.compactMap { $0.hydratedEnv() }
+            #else
             let mapped = arr.flatMap { $0.hydratedEnv() }
+            #endif
             return .array(mapped)
         case let .string(str):
             return str.hydratedEnv().flatMap(StructuredData.string)
