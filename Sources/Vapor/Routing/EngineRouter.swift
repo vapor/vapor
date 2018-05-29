@@ -26,6 +26,10 @@ public final class EngineRouter: Router {
             self.router.options.insert(.caseInsensitive)
         }
     }
+    
+    public init(type: Responder.Type) {
+        self.router = TrieRouter<Responder>.init(type, options: [])   
+    }
 
     /// See `Router`.
     public func register(route: Route<Responder>) {
