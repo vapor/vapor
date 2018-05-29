@@ -27,7 +27,7 @@ public final class EngineRouter: Router {
         }
     }
     
-    public init(type: Responder.Type) {
+    public init(type: Responder.Protocol) {
         self.router = TrieRouter<Responder>.init(type, options: [])   
     }
 
