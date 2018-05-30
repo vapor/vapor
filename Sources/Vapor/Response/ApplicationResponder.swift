@@ -1,5 +1,5 @@
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct ApplicationResponder: Responder, ServiceType {
+public struct ApplicationResponder: Responder, ServiceType {
     /// See `ServiceType`.
     static var serviceSupports: [Any.Type] { return [Responder.self] }
 
