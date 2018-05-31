@@ -69,17 +69,25 @@ class ApplicationTests: XCTestCase {
                 return try req.parameters.next(String.self)
             }
             
-            router.get("world", String.parameter, String.parameter) { req -> Response in
-                let res = req.makeResponse()
-                try res.content.encode(req.parameters[String.routingSlug], as: .json)
-                return res
+            router.get("slug", String.parameter, String.parameter) { req in
+                return req.parameters["string"].description
+            }
+            
+            router.get("component", String.parameter, String.parameter) { req in
+                return req.parameters[String.parameter].description
+            }
+            
+            router.get("constant", String.parameter, String.parameter) { req in
+                return req.parameters[.constant("string")].description
             }
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
         try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
         
-        try app.clientTest(.GET, "/world/vapor/development", equals: "[\"vapor\",\"development\"]")
+        try app.clientTest(.GET, "/slug/vapor/development", equals: "[\"vapor\", \"development\"]")
+        try app.clientTest(.GET, "/component/vapor/development", equals: "[\"vapor\", \"development\"]")
+        try app.clientTest(.GET, "/constant/vapor/development", equals: "[]")
     }
 
     func testJSON() throws {
