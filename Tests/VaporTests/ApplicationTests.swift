@@ -68,10 +68,18 @@ class ApplicationTests: XCTestCase {
             router.get("hello", String.parameter) { req in
                 return try req.parameters.next(String.self)
             }
+            
+            router.get("world", String.parameter, String.parameter) { req -> Response in
+                let res = req.makeResponse()
+                try res.content.encode(req.parameters[String.routingSlug], as: .json)
+                return res
+            }
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
         try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
+        
+        try app.clientTest(.GET, "/world/vapor/development", equals: "[\"vapor\",\"development\"]")
     }
 
     func testJSON() throws {
