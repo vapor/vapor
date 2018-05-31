@@ -16,6 +16,33 @@ public struct ParametersContainer {
         self.request = request
     }
 
+    /// Gets all parameters from the parameter bag that have the
+    /// associated slug.
+    ///
+    ///     let ids: [String] = request.parameters["id"]
+    ///
+    /// - parameters:
+    ///   - slug: The slug for the value(s) to fetch.
+    ///
+    /// - returns: All associated parameter values for the slug.
+    public subscript (_ slug: String) -> [String] {
+        return self.request._parameters[slug]
+    }
+    
+    /// Gets all parameters from the parameter bag that have the
+    /// associated slug and resolves them using the connected request
+    /// as the container.
+    ///
+    ///     let comments: [Comments.ResolvedParameter] = request.parameters["comment", as: Comment.self]
+    ///
+    /// - parameters:
+    ///   - slug: The slug for the value(s) to fetch.
+    ///
+    /// - returns: All associated resolved parameter values for the slug.
+    public subscript <P>(_ slug: String, as type: P.Type) -> [P.ResolvedParameter] where P: Parameter {
+        return self.request._parameters[slug, as: P.self, on: self.request]
+    }
+    
     /// Grabs the next parameter from the parameter bag.
     ///
     ///     let id = try req.parameters.next(Int.self)
