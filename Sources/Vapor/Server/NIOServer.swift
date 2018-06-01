@@ -48,7 +48,7 @@ public final class NIOServer: Server, ServiceType {
             let responderCache = ThreadSpecificVariable<ThreadResponder>()
 
             // create this server's own event loop group
-            let group = MultiThreadedEventLoopGroup(numThreads: config.workerCount)
+            let group = MultiThreadedEventLoopGroup(numberOfThreads: config.workerCount)
             for _ in 0..<config.workerCount {
                 // initialize each event loop
                 let eventLoop = group.next()
