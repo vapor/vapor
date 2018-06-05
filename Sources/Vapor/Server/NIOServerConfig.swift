@@ -26,7 +26,7 @@ public struct NIOServerConfig: ServiceType {
         port: Int = 8080,
         backlog: Int = 256,
         workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxBodySize: Int = 1_000_0000,
+        maxBodySize: Int = 1_000_000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true
     ) -> NIOServerConfig {
