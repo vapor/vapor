@@ -84,7 +84,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
     ///
-    /// This helpper can encode data to the HTTP message. Uses the Content's default media type if none is supplied.
+    /// This helper can _encode_ data to the HTTP message. Uses the Content's default media type if none is supplied.
     ///
     ///     try req.content.encode(user)
     ///
