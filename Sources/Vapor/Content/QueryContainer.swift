@@ -27,7 +27,7 @@ public struct QueryContainer {
             throw VaporError(identifier: "parseURL", reason: "Could not parse URL components.")
         }
         let data = try requireDataEncoder().encode(encodable)
-        comps.query = String(data: data, encoding: .utf8)
+        comps.percentEncodedQuery = String(data: data, encoding: .utf8)
         guard let url = comps.url else {
             throw VaporError(identifier: "serializeURL", reason: "Could not serialize URL components.")
         }
