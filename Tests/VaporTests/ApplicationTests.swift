@@ -214,10 +214,10 @@ class ApplicationTests: XCTestCase {
             debugPrint(res)
             XCTAssertEqual(res.http.status.code, 200)
             let boundary = res.http.contentType?.parameters["boundary"] ?? "none"
-            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=name"), true)
+            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=\"name\""), true)
             XCTAssertEqual(res.http.body.string.contains("--\(boundary)"), true)
-            XCTAssertEqual(res.http.body.string.contains("filename=droplet.png"), true)
-            XCTAssertEqual(res.http.body.string.contains("name=image"), true)
+            XCTAssertEqual(res.http.body.string.contains("filename=\"droplet.png\""), true)
+            XCTAssertEqual(res.http.body.string.contains("name=\"image\""), true)
         }
     }
 
@@ -624,6 +624,18 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    // https://github.com/vapor/vapor/issues/1687
+    func testRequestQueryStringPercentEncoding() throws {
+        struct TestQueryStringContainer: Content {
+            var name: String
+        }
+        let app = try Application()
+        let req = Request(using: app)
+        req.http.url = URLComponents().url!
+        try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
+        XCTAssertEqual(req.http.url.query, "name=Vapor%20Test")
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -650,6 +662,7 @@ class ApplicationTests: XCTestCase {
         ("testDataResponses", testDataResponses),
         ("testMiddlewareOrder", testMiddlewareOrder),
         ("testSessionDestroy", testSessionDestroy),
+        ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
     ]
 }
 

@@ -4,7 +4,7 @@ function help() {
     echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
     echo "http://docs.vapor.codes"
     echo ""
-    echo "👋  or Join our Slack and we'll help you get setup."
+    echo "👋  or Join our Discord and we'll help you get setup."
     echo "http://vapor.team"
 }
 

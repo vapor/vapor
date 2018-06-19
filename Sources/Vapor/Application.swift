@@ -118,8 +118,7 @@ public final class Application: Container {
         self.services = services
         self.serviceCache = .init()
         self.extend = Extend()
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numThreads: 1)
-
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
     }
 
     /// Internal method. Boots the application and its providers.
