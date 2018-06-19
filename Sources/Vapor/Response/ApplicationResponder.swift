@@ -14,14 +14,14 @@ public struct ApplicationResponder: Responder, ServiceType {
         let router = try container.make(Router.self)
 
         // return new responder
-        return ApplicationResponder(router, middleware: middleware)
+        return ApplicationResponder(router, middleware)
     }
 
     /// Wrapped `Responder`.
     private let responder: Responder
 
     /// Creates a new `ApplicationResponder`.
-    public init(_ router: Router, middleware: [Middleware]) {
+    public init(_ router: Router, _ middleware: [Middleware] = []) {
         let router = RouterResponder(router: router)
         let wrapped = middleware.makeResponder(chainedto: router)
         self.responder = wrapped
