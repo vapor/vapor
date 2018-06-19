@@ -11,21 +11,20 @@ public struct ApplicationResponder: Responder, ServiceType {
             .resolve(for: container)
 
         // create router and wrap in a responder
-        let router = try RouterResponder(router: container.make())
-
-        // chain middleware to router
-        let wrapped = middleware.makeResponder(chainedto: router)
+        let router = try container.make(Router.self)
 
         // return new responder
-        return ApplicationResponder(wrapped)
+        return ApplicationResponder(router, middleware: middleware)
     }
 
     /// Wrapped `Responder`.
     private let responder: Responder
 
     /// Creates a new `ApplicationResponder`.
-    public init(_ responder: Responder) {
-        self.responder = responder
+    public init(_ router: Router, middleware: [Middleware]) {
+        let router = RouterResponder(router: router)
+        let wrapped = middleware.makeResponder(chainedto: router)
+        self.responder = wrapped
     }
 
     /// See `Responder`.
