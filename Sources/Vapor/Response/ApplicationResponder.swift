@@ -1,35 +1,34 @@
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct ApplicationResponder: Responder, ServiceType {
+public struct ApplicationResponder: Responder, ServiceType {
     /// See `ServiceType`.
-    static var serviceSupports: [Any.Type] { return [Responder.self] }
+    public static var serviceSupports: [Any.Type] { return [Responder.self] }
 
     /// See `ServiceType`.
-    static func makeService(for container: Container) throws -> ApplicationResponder {
+    public static func makeService(for container: Container) throws -> ApplicationResponder {
         // initialize all `[Middleware]` from config
         let middleware = try container
             .make(MiddlewareConfig.self)
             .resolve(for: container)
 
         // create router and wrap in a responder
-        let router = try RouterResponder(router: container.make())
-
-        // chain middleware to router
-        let wrapped = middleware.makeResponder(chainedto: router)
+        let router = try container.make(Router.self)
 
         // return new responder
-        return ApplicationResponder(wrapped)
+        return ApplicationResponder(router, middleware)
     }
 
     /// Wrapped `Responder`.
     private let responder: Responder
 
     /// Creates a new `ApplicationResponder`.
-    init(_ responder: Responder) {
-        self.responder = responder
+    public init(_ router: Router, _ middleware: [Middleware] = []) {
+        let router = RouterResponder(router: router)
+        let wrapped = middleware.makeResponder(chainedto: router)
+        self.responder = wrapped
     }
 
     /// See `Responder`.
-    func respond(to req: Request) throws -> Future<Response> {
+    public func respond(to req: Request) throws -> Future<Response> {
         return try responder.respond(to: req)
     }
 }
