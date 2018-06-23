@@ -42,6 +42,9 @@ let package = Package(
 
         // 🔌 Non-blocking, event-driven WebSocket client and server built on Swift NIO.
         .package(url: "https://github.com/vapor/websocket.git", from: "1.0.0"),
+
+        // Swift ORM framework (queries, models, and relations) for building NoSQL and SQL database integrations.
+        .package(url: "https://github.com/vapor/fluent.git", from: "3.0.0-rc"),
     ],
     targets: [
         // Boilerplate
@@ -66,7 +69,8 @@ let package = Package(
             "TemplateKit",
             "URLEncodedForm",
             "Validation",
-            "WebSocket"
+            "WebSocket",
+	    "FluentSQL"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
