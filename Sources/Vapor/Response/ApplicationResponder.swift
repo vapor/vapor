@@ -23,7 +23,7 @@ public struct ApplicationResponder: Responder, ServiceType {
     /// Creates a new `ApplicationResponder`.
     public init(_ router: Router, _ middleware: [Middleware] = []) {
         let router = RouterResponder(router: router)
-        let wrapped = middleware.makeResponder(chainedto: router)
+        let wrapped = middleware.makeResponder(chainedTo: router)
         self.responder = wrapped
     }
 
