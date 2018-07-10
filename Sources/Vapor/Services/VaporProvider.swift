@@ -8,7 +8,6 @@ public protocol VaporProvider: Provider {
     func didRun(_ worker: Container) throws -> Future<Void>
 }
 
-
 extension Array where Element == Provider {
     /// Returns only the `VaporProvider` service providers.
     internal var onlyVapor: [VaporProvider] {

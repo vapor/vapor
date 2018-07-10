@@ -89,7 +89,7 @@ public struct ContentConfig: Service, ServiceType {
 
     // MARK: Message & Data
 
-    /// Adds an `HTTPMessage` and `Data` `Encoder` for the specified `MediaType`.
+    /// Adds an `HTTPMessage` and `DataEncoder` for the specified `MediaType`.
     ///
     ///     contentConfig.use(encoder: JSONEncoder(), for: .json)
     ///
@@ -101,7 +101,7 @@ public struct ContentConfig: Service, ServiceType {
         use(dataEncoder: encoder, for: mediaType)
     }
 
-    /// Adds an `HTTPMessage` and `Data` `Decoder` for the specified `MediaType`.
+    /// Adds an `HTTPMessage` and `DataDecoder` for the specified `MediaType`.
     ///
     ///     contentConfig.use(decoder: JSONDecoder(), for: .json)
     ///
@@ -113,7 +113,7 @@ public struct ContentConfig: Service, ServiceType {
         use(dataDecoder: decoder, for: mediaType)
     }
 
-    /// Adds an `HTTPMessage` and `Data` `Encoder` by type for the specified `MediaType`.
+    /// Adds an `HTTPMessage` and `DataEncoder` by type for the specified `MediaType`.
     /// - note: The type will be resolved from the service-container at boot.
     ///
     ///     contentConfig.use(encoder: JSONEncoder.self, for: .json)
@@ -126,7 +126,7 @@ public struct ContentConfig: Service, ServiceType {
         use(dataEncoder: encoder, for: mediaType)
     }
 
-    /// Adds an `HTTPMessage` and `Data` `Decoder` by type for the specified `MediaType`.
+    /// Adds an `HTTPMessage` and `DataDecoder` by type for the specified `MediaType`.
     /// - note: The type will be resolved from the service-container at boot.
     ///
     ///     contentConfig.use(decoder: JSONDecoder.self, for: .json)
@@ -146,7 +146,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(httpEncoder: JSONEncoder(), for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `HTTPMessageEncoder` to use.
+    ///     - httpEncoder: `HTTPMessageEncoder` to use.
     ///     - mediaType: `HTTPMessageEncoder` will be used to encode this `MediaType`.
     public mutating func use(httpEncoder: HTTPMessageEncoder, for mediaType: MediaType) {
         self.httpEncoders[mediaType] = { container in
@@ -159,7 +159,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(httpDecoder: JSONDecoder(), for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `HTTPMessageDecoder` to use.
+    ///     - httpDecoder: `HTTPMessageDecoder` to use.
     ///     - mediaType: `HTTPMessageDecoder` will be used to decode this `MediaType`.
     public mutating func use(httpDecoder: HTTPMessageDecoder, for mediaType: MediaType) {
         self.httpDecoders[mediaType] = { container in
@@ -172,7 +172,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(httpEncoder: JSONEncoder.self, for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `HTTPMessageEncoder` type to use.
+    ///     - httpEncoder: `HTTPMessageEncoder` type to use.
     ///     - mediaType: `HTTPMessageEncoder` will be used to encode this `MediaType`.
     public mutating func use<B>(httpEncoder: B.Type, for mediaType: MediaType) where B: HTTPMessageEncoder {
         self.httpEncoders[mediaType] = { container in
@@ -185,7 +185,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(httpDecoder: JSONDecoder.self, for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `HTTPMessageDecoder` type to use.
+    ///     - httpDecoder: `HTTPMessageDecoder` type to use.
     ///     - mediaType: `HTTPMessageDecoder` will be used to decode this `MediaType`.
     public mutating func use<B>(httpDecoder: B.Type, for mediaType: MediaType) where B: HTTPMessageDecoder {
         self.httpDecoders[mediaType] = { container in
@@ -200,7 +200,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(dataEncoder: JSONEncoder(), for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `DataEncoder` to use.
+    ///     - dataEncoder: `DataEncoder` to use.
     ///     - mediaType: `DataEncoder` will be used to encode this `MediaType`.
     public mutating func use(dataEncoder: DataEncoder, for mediaType: MediaType) {
         self.dataEncoders[mediaType] = { container in
@@ -213,7 +213,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(dataDecoder: JSONDecoder(), for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `DataDecoder` to use.
+    ///     - dataDecoder: `DataDecoder` to use.
     ///     - mediaType: `DataDecoder` will be used to decode this `MediaType`.
     public mutating func use(dataDecoder: DataDecoder, for mediaType: MediaType) {
         self.dataDecoders[mediaType] = { container in
@@ -226,7 +226,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(dataEncoder: JSONEncoder.self, for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `DataEncoder` type to use.
+    ///     - dataEncoder: `DataEncoder` type to use.
     ///     - mediaType: `DataEncoder` will be used to encode this `MediaType`.
     public mutating func use<D>(dataEncoder: D.Type, for mediaType: MediaType) where D: DataEncoder {
         self.dataEncoders[mediaType] = { container in
@@ -239,7 +239,7 @@ public struct ContentConfig: Service, ServiceType {
     ///     contentConfig.use(dataDecoder: JSONDecoder.self, for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `DataDecoder` type to use.
+    ///     - dataDecoder: `DataDecoder` type to use.
     ///     - mediaType: `DataDecoder` will be used to decode this `MediaType`.
     public mutating func use<D>(dataDecoder: D.Type, for mediaType: MediaType) where D: DataDecoder {
         self.dataDecoders[mediaType] = { container in

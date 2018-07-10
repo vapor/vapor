@@ -1,7 +1,7 @@
 import Crypto
 
 extension Services {
-    /// Vapor's default services. This includes many services required to succesfully
+    /// Vapor's default services. This includes many services required to successfully
     /// boot an Application. Only for special use cases should you create an empty `Services` struct.
     public static func `default`() -> Services {
         var services = Services()
@@ -98,5 +98,5 @@ extension PlaintextRenderer: Service { }
 extension Terminal: Service { }
 extension DirectoryConfig: Service { }
 extension ConsoleLogger: Service { }
-extension PrintLogger: Service {}
+extension PrintLogger: Service { }
 extension BCryptDigest: Service { }
