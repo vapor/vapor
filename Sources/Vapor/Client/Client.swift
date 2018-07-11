@@ -129,7 +129,7 @@ extension Client {
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
     public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
-    return send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
+        return send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
     }
 
     /// Sends an HTTP `Request` to a server with an optional configuration closure that will run before sending.

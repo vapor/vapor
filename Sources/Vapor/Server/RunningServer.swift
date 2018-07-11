@@ -16,7 +16,7 @@ extension Application {
     }
 }
 
-/// A context for the currently running `Server` protocol. When a `Server` succesfully boots,
+/// A context for the currently running `Server` protocol. When a `Server` successfully boots,
 /// it sets one of these on the `runningServer` property of the `Application`.
 ///
 /// This struct can be used to close the server.

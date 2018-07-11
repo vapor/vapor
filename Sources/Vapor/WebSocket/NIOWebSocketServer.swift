@@ -10,10 +10,10 @@
 /// (including middleware). Should an HTTP upgrade request be accepted, no other parts of Vapor's pipeline will be invoked.
 /// Should the HTTP upgrade request be denied, the request will continue through Vapor's HTTP pipeline normally.
 ///
-/// Note: The `WebSocketServer` _always_ runs behind an HTTP server and will only be invoked when HTTP requests request an uprade.
+/// Note: The `WebSocketServer` _always_ runs behind an HTTP server and will only be invoked when HTTP requests request an upgrade.
 public final class NIOWebSocketServer: WebSocketServer, Service {
     /// The internal trie-node router backing this server.
-    /// This will be used to register and retreive all websocket responding routes.
+    /// This will be used to register and retrieve all websocket responding routes.
     private let router: TrieRouter<WebSocketResponder>
 
     /// All websocket responder routes that have been added to this `NIOWebSocketServer`.
@@ -87,7 +87,7 @@ extension NIOWebSocketServer {
     ///     - path: Dynamic path to associate with this websocket upgrade closure.
     ///             HTTP upgrade requests that contain a matching path will invoke the supplied on upgrade
     ///             closure when the websocket client connects.
-    ///             Any parameterized values can be retreived from the HTTP request supplied to the closure.
+    ///             Any parameterized values can be retrieved from the HTTP request supplied to the closure.
     ///     - closure: Websocket on upgrade closure. Accepts newly upgraded websocket connections.
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
@@ -108,7 +108,7 @@ extension NIOWebSocketServer {
     ///     - path: Dynamic path to associate with this websocket upgrade closure.
     ///             HTTP upgrade requests that contain a matching path will invoke the supplied on upgrade
     ///             closure when the websocket client connects.
-    ///             Any parameterized values can be retreived from the HTTP request supplied to the closure.
+    ///             Any parameterized values can be retrieved from the HTTP request supplied to the closure.
     ///     - closure: Websocket on upgrade closure. Accepts newly upgraded websocket connections.
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
@@ -123,7 +123,7 @@ extension NIOWebSocketServer {
     ///     - path: Dynamic path to associate with this websocket upgrade closure.
     ///             HTTP upgrade requests that contain a matching path will invoke the supplied on upgrade
     ///             closure when the websocket client connects.
-    ///             Any parameterized values can be retreived from the HTTP request supplied to the closure.
+    ///             Any parameterized values can be retrieved from the HTTP request supplied to the closure.
     ///     - closure: Websocket on upgrade closure. Accepts newly upgraded websocket connections.
     ///
     /// - returns: Discardable websocket responder route. Use this route reference to append metadata to the route.
