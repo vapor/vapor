@@ -17,7 +17,7 @@ public protocol Middleware {
 extension Array where Element == Middleware {
     /// Wraps a `Responder` in an array of `Middleware` creating a new `Responder`.
     /// - note: The array of middleware must be `[Middleware]` not `[M] where M: Middleware`.
-    public func makeResponder(chainedTo responder: Responder) -> Responder {
+    public func makeResponder(chainingTo responder: Responder) -> Responder {
         var responder = responder
         for middleware in reversed() {
             responder = middleware.makeResponder(chainingTo: responder)
