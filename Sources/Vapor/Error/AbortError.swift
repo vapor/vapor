@@ -32,7 +32,7 @@ extension AbortError {
 extension DecodingError: AbortError {
     /// See `AbortError.status`
     public var status: HTTPResponseStatus {
-        return .badRequest
+        return .unprocessableEntity
     }
 
     /// See `AbortError.identifier`
