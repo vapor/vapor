@@ -2,6 +2,7 @@
 public typealias HTTPStatus = HTTPResponseStatus
 
 extension HTTPStatus: Codable {
+    
     /// See [`Decodable.init(from:)`](https://developer.apple.com/documentation/swift/decodable/2894081-init).
     public init(from decoder: Decoder) throws {
         let container = try decoder.singleValueContainer()
@@ -16,7 +17,13 @@ extension HTTPStatus: Codable {
     }
 }
 
-extension HTTPStatus: ResponseEncodable {
+extension HTTPStatus: Content {
+    
+    /// See `ResponseDecodable`.
+    public static func decode(from res: Response, for req: Request) throws -> Future<HTTPStatus> {
+        return req.future(res.http.status)
+    }
+    
     /// See `ResponseEncodable`.
     public func encode(for req: Request) throws -> Future<Response> {
         let res = Response(http: .init(status: self), using: req)
