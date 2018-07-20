@@ -48,7 +48,7 @@ public final class Response: ContainerAlias, HTTPMessageContainer, ResponseCodab
 
     /// Helper for encoding and decoding `Content` from an HTTP message.
     ///
-    /// This helpper can encode data to the HTTP message. Uses the Content's default media type if none is supplied.
+    /// This helper can encode data to the HTTP message. Uses the Content's default media type if none is supplied.
     ///
     ///     try res.content.encode(user)
     ///

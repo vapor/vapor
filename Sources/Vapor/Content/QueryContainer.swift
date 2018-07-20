@@ -12,7 +12,7 @@ public struct QueryContainer {
 
     // MARK: Content
 
-    /// Serializes an `Encodable` type to this HTTP request query string.
+    /// Serializes an `Encodable` type to this HTTP request query string.
     ///
     ///     let flags: Flags ...
     ///     try req.query.encode(flags)
@@ -34,7 +34,7 @@ public struct QueryContainer {
         req.http.url = url
     }
 
-    /// Parses a `Decodable` type from this HTTP request query string.
+    /// Parses a `Decodable` type from this HTTP request query string.
     ///
     ///     let flags = try req.query.decode(Flags.self)
     ///     print(flags) // Flags
@@ -140,7 +140,7 @@ public struct QueryContainer {
         return try req.make(ContentCoders.self).requireDataDecoder(for: .urlEncodedForm)
     }
 
-    /// Gets the`DataEncoder` or throws an error.
+    /// Gets the `DataEncoder` or throws an error.
     private func requireDataEncoder() throws -> DataEncoder {
         return try req.make(ContentCoders.self).requireDataEncoder(for: .urlEncodedForm)
     }

@@ -58,7 +58,7 @@ public final class Application: Container {
     /// - parameters:
     ///     - config: Configuration preferences for this service container.
     ///     - environment: Application's environment type (i.e., testing, production).
-    ///                    Different environments can trigger different application behavior (for example, supressing verbose logs in production mode).
+    ///                    Different environments can trigger different application behavior (for example, suppressing verbose logs in production mode).
     ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
     public convenience init(
         config: Config = .default(),

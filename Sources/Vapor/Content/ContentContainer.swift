@@ -39,7 +39,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
         try encode(json, using: encoder)
     }
 
-    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously
+    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously.
     /// See `syncDecode(_:)` for the non-streaming, synchronous version.
     ///
     ///     let user = req.content.decode(json: User.self, using: .custom(dates: .iso8601))
@@ -93,8 +93,8 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     public func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
         try encoder.encode(encodable, to: &container.http, on: container)
     }
-    
-    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously
+
+    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously.
     /// See `syncDecode(_:)` for the non-streaming, synchronous version.
     ///
     ///     let user = try req.content.decode(User.self)
@@ -111,7 +111,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
         return try decode(D.self, maxSize: maxSize, using: requireHTTPDecoder())
     }
 
-    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously
+    /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously.
     /// See `syncDecode(_:)` for the non-streaming, synchronous version.
     ///
     ///     let user = req.content.decode(json: User.self, using: JSONDecoder())
@@ -234,7 +234,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
 
     // MARK: Sync
 
-    /// Parses a `Decodable` type from this HTTP message. This method does _not_ support streaming HTTP bodies (chunked) and runs synchronously.
+    /// Parses a `Decodable` type from this HTTP message. This method does _not_ support streaming HTTP bodies (chunked) and runs synchronously.
     /// See `decode(_:maxSize:)` for the streaming version.
     ///
     ///     let user = try req.content.syncDecode(User.self)
@@ -244,7 +244,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     ///
     /// - parameters:
     ///     - content: `Decodable` type to decode from this HTTP message.
-    /// - returns: Instace of the `Decodable` type.
+    /// - returns: Instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the message.
     ///           An error will also be thrown if this HTTP message's body type is streaming.
     public func syncDecode<D>(_ content: D.Type) throws -> D where D: Decodable {
@@ -299,7 +299,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
             throw VaporError(
                 identifier: "syncGet",
                 reason: "Cannot use sync decode on a streaming body.",
-                suggestedFixes: [ "Use `get` instead of `syncGet`."]
+                suggestedFixes: ["Use `get` instead of `syncGet`."]
             )
         }
         return try requireDataDecoder().get(at: keyPath.makeBasicKeys(), from: data)
