@@ -65,6 +65,21 @@ extension DecodingError: AbortError {
     }
 }
 
+extension NotFound: AbortError {
+    public var status: HTTPResponseStatus {
+        return .notFound
+    }
+    
+    public var reason: String {
+        return rootCause.map { $0.localizedDescription } ?? "Not found"
+    }
+    
+    public var identifier: String {
+        return "NotFound"
+    }
+    
+}
+
 extension Array where Element == CodingKey {
     fileprivate var dotPath: String {
         return map { $0.stringValue }.joined(separator: ".")
