@@ -66,14 +66,22 @@ extension DecodingError: AbortError {
 }
 
 extension NotFound: AbortError {
+    /// See `AbortError.status`
     public var status: HTTPResponseStatus {
         return .notFound
     }
     
+    /// See `AbortError.reason`
     public var reason: String {
-        return rootCause.map { $0.localizedDescription } ?? "Not found"
+        switch self {
+        case let rootCase as Debuggable:
+            return rootCase.failureReason ?? rootCase.reason
+        default:
+            return rootCause?.localizedDescription ?? "Not found."
+        }
     }
     
+    /// See `AbortError.identifier`
     public var identifier: String {
         return "NotFound"
     }
