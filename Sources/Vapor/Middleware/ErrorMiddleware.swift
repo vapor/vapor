@@ -12,15 +12,6 @@ public final class ErrorMiddleware: Middleware, ServiceType {
     ///     - environment: The environment to respect when presenting errors.
     ///     - log: Log destination.
     public static func `default`(environment: Environment, log: Logger) -> ErrorMiddleware {
-        /// Structure of `ErrorMiddleware` default response.
-        struct ErrorResponse: Encodable {
-            /// Always `true` to indicate this is a non-typical JSON response.
-            var error: Bool
-
-            /// The reason for the error.
-            var reason: String
-        }
-
         return .init { req, error in
             // log the error
             log.report(error: error, verbose: !environment.isRelease)
@@ -96,4 +87,13 @@ public final class ErrorMiddleware: Middleware, ServiceType {
             return self.closure(req, error)
         }
     }
+}
+
+/// Structure of `ErrorMiddleware` default response.
+public struct ErrorResponse: Encodable, Decodable {
+    /// Always `true` to indicate this is a non-typical JSON response.
+    var error: Bool
+
+    /// The reason for the error.
+    var reason: String
 }
