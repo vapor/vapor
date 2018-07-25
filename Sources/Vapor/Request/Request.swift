@@ -170,7 +170,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
             return eventLoop.newFailedFuture(error: error)
         }
         hasActiveConnections = true
-        return privateContainer.requestCachedConnection(to: database)
+        return privateContainer.requestCachedConnection(to: database, poolContainer: self)
     }
 
     // MARK: Request Codable
