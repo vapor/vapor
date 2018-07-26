@@ -83,7 +83,7 @@ extension NotFound: AbortError {
     
     /// See `AbortError.identifier`
     public var identifier: String {
-        return "NotFound"
+        return "notFound"
     }
     
 }
