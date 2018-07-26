@@ -73,9 +73,9 @@ extension NotFound: AbortError {
     
     /// See `AbortError.reason`
     public var reason: String {
-        switch self {
-        case let rootCase as Debuggable:
-            return rootCase.failureReason ?? rootCase.reason
+        switch rootCause {
+        case let rootCause as Debuggable:
+            return rootCause.reason
         default:
             return rootCause?.localizedDescription ?? "Not found."
         }
