@@ -78,7 +78,7 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int,
         reuseAddress: Bool,
         tcpNoDelay: Bool,
-        webSocketMaxFrameSize: Int
+        webSocketMaxFrameSize: Int = 1 << 14
     ) {
         self.hostname = hostname
         self.port = port
