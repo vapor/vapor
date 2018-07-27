@@ -66,7 +66,7 @@ public final class NIOServer: Server, ServiceType {
 
             // web socket upgrade
             if let wss = try? container.make(WebSocketServer.self) {
-                let ws = HTTPServer.webSocketUpgrader(shouldUpgrade: { req in
+                let ws = HTTPServer.webSocketUpgrader(maxFrameSize: config.webSocketMaxFrameSize, shouldUpgrade: { req in
                     guard let subContainer = containerCache.currentValue?.container else {
                         ERROR("[WebSocket Upgrader] Missing container (shouldUpgrade).")
                         return nil
