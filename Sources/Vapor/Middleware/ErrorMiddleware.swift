@@ -1,5 +1,14 @@
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware, ServiceType {
+    /// Structure of `ErrorMiddleware` default response.
+    public struct ErrorResponse: Encodable, Decodable {
+        /// Always `true` to indicate this is a non-typical JSON response.
+        var error: Bool
+
+        /// The reason for the error.
+        var reason: String
+    }
+
     /// See `ServiceType`.
     public static func makeService(for worker: Container) throws -> ErrorMiddleware {
         return try .default(environment: worker.environment, log: worker.make())
@@ -87,13 +96,4 @@ public final class ErrorMiddleware: Middleware, ServiceType {
             return self.closure(req, error)
         }
     }
-}
-
-/// Structure of `ErrorMiddleware` default response.
-public struct ErrorResponse: Encodable, Decodable {
-    /// Always `true` to indicate this is a non-typical JSON response.
-    var error: Bool
-
-    /// The reason for the error.
-    var reason: String
 }
