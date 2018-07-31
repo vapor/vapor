@@ -48,7 +48,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///     let authCache = try req.privateContainer.make(AuthCache.self)
     ///
     public let privateContainer: SubContainer
-    
+
     /// `true` if this request has active connections. This is used to avoid unnecessarily
     /// invoking cached connections release.
     internal var hasActiveConnections: Bool
@@ -156,7 +156,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     // MARK: Database
 
     /// See `DatabaseConnectable`.
-    public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection>{
+    public func databaseConnection<D>(to database: DatabaseIdentifier<D>?) -> Future<D.Connection> {
         guard let database = database else {
             let error = VaporError(
                 identifier: "defaultDB",
@@ -170,7 +170,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
             return eventLoop.newFailedFuture(error: error)
         }
         hasActiveConnections = true
-        return requestCachedConnection(to: database)
+        return privateContainer.requestCachedConnection(to: database, poolContainer: self)
     }
 
     // MARK: Request Codable
@@ -188,7 +188,7 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     /// Called when the `Request` deinitializes.
     deinit {
         if hasActiveConnections {
-            try! releaseCachedConnections()
+            try! privateContainer.releaseCachedConnections()
         }
     }
 }

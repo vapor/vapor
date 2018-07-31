@@ -2,7 +2,6 @@ extension DataDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
     internal func get<D>(at keyPath: [BasicKey], from data: Data) throws -> D where D: Decodable {
         return try self.decode(SingleValueDecoder.self, from: data).get(at: keyPath)
-
     }
 }
 
@@ -25,7 +24,7 @@ private struct SingleValueDecoder: Decodable {
     init(from decoder: Decoder) throws {
         self.decoder = decoder
     }
-    
+
     func get<D>(at keyPath: [BasicKey]) throws -> D where D: Decodable {
         let unwrapper = self
         var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicKey.self))
@@ -77,7 +76,7 @@ private enum ContainerState {
 }
 
 private extension UnkeyedDecodingContainer {
-     mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
+    mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
         for _ in 0..<count {
             _ = try nestedContainer(keyedBy: BasicKey.self)
         }

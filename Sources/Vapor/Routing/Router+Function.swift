@@ -55,6 +55,6 @@ private class MiddlewareFunction: Middleware {
 
     /// See `Middleware`.
     func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        return try self.respond(request,next)
+        return try self.respond(request, next)
     }
 }

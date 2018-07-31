@@ -54,7 +54,7 @@ public struct NIOServerConfig: ServiceType {
     /// Should be equal to the number of logical cores.
     public var workerCount: Int
 
-    /// Requests containing bodies larger than this maximum will be rejected, closign the connection.
+    /// Requests containing bodies larger than this maximum will be rejected, closing the connection.
     public var maxBodySize: Int
 
     /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
