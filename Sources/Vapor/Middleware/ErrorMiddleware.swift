@@ -1,7 +1,7 @@
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware, ServiceType {
     /// Structure of `ErrorMiddleware` default response.
-    internal struct ErrorResponse: Encodable, Decodable {
+    internal struct ErrorResponse: Codable {
         /// Always `true` to indicate this is a non-typical JSON response.
         var error: Bool
 
