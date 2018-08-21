@@ -16,6 +16,14 @@ public struct ParametersContainer {
         self.request = request
     }
 
+    /// Gets the raw parameter values from the request URI
+    /// that match a given parameter type slug.
+    ///
+    ///     let ids: [String] = request.parameters.rawValues(User.self)
+    public func rawValues<P>(_ paramter: P.Type) -> [String] where P: Parameter {
+        return self.values.filter { value in value.slug == paramter.routingSlug }.map { $0.value }
+    }
+    
     /// Grabs the next parameter from the parameter bag.
     ///
     ///     let id = try req.parameters.next(Int.self)
