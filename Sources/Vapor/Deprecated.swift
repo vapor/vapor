@@ -37,6 +37,20 @@ extension MemorySessions {
     }
 }
 
+extension Request {
+    /// See `req.response(http:)`.
+    @available(*, deprecated, renamed: "response(http:)")
+    public func makeResponse(http: HTTPResponse = .init()) -> Response {
+        return response(http: http)
+    }
+    
+    /// See `req.response(_ body:as:)`.
+    @available(*, deprecated, renamed: "response(_body:as:)")
+    public func makeResponse(_ body: LosslessHTTPBodyRepresentable, as contentType: MediaType = .plainText) -> Response {
+        return response(body, as: contentType)
+    }
+}
+
 extension Array where Element == Middleware {
     /// Wraps a `Responder` in an array of `Middleware` creating a new `Responder`.
     /// - note: The array of middleware must be `[Middleware]` not `[M] where M: Middleware`.
@@ -45,4 +59,3 @@ extension Array where Element == Middleware {
         return makeResponder(chainingTo: responder)
     }
 }
-
