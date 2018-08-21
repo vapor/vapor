@@ -180,7 +180,7 @@ extension Float: Content {
 extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
     /// See `Content`.
     public static var defaultContentType: MediaType {
-        return Element.defaultContentType
+        return .json
     }
 }
 
