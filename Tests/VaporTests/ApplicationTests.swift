@@ -666,6 +666,18 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status.code, 204)
         })
     }
+    
+    // https://github.com/vapor/vapor/issues/1786
+    func testMissingBody() throws {
+        struct User: Content { }
+        try Application.makeTest(routes: { router in
+            router.get("user") { req -> Future<User> in
+                return try req.content.decode(User.self)
+            }
+        }).test(.GET, "user", afterSend: { res in
+            XCTAssertEqual(res.http.status, .unsupportedMediaType)
+        })
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -696,6 +708,7 @@ class ApplicationTests: XCTestCase {
         ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
         ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
         ("testGH1787", testGH1787),
+        ("testMissingBody", testMissingBody),
     ]
 }
 

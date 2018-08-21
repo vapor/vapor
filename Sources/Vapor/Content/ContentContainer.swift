@@ -317,11 +317,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     private func requireHTTPDecoder() throws -> HTTPMessageDecoder {
         let coders = try container.make(ContentCoders.self)
         guard let contentType = container.http.contentType else {
-            throw VaporError(
-                identifier: "contentType",
-                reason: "\(M.self) does not have a content type.",
-                possibleCauses: ["The 'Content-Type' header is not present."]
-            )
+            throw Abort(.unsupportedMediaType, reason: "No 'Content-Type' header is present.", identifier: "httpContentType")
         }
         return try coders.requireHTTPDecoder(for: contentType)
     }
@@ -330,11 +326,7 @@ public struct ContentContainer<M> where M: HTTPMessageContainer {
     private func requireDataDecoder() throws -> DataDecoder {
         let coders = try container.make(ContentCoders.self)
         guard let contentType = container.http.contentType else {
-            throw VaporError(
-                identifier: "mediaType",
-                reason: "\(M.self) does not have a content type.",
-                possibleCauses: ["The 'Content-Type' header is not present."]
-            )
+            throw Abort(.unsupportedMediaType, reason: "No 'Content-Type' header is present.", identifier: "dataContentType")
         }
         return try coders.requireDataDecoder(for: contentType)
     }

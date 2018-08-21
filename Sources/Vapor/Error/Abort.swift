@@ -33,6 +33,9 @@ public struct Abort: AbortError {
 
     /// See `Debuggable`
     public var stackTrace: [String]
+    
+    /// See `Debuggable`
+    public var suggestedFixes: [String]
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
@@ -40,6 +43,7 @@ public struct Abort: AbortError {
         headers: HTTPHeaders = [:],
         reason: String? = nil,
         identifier: String? = nil,
+        suggestedFixes: [String] = [],
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
@@ -49,6 +53,7 @@ public struct Abort: AbortError {
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
+        self.suggestedFixes = suggestedFixes
         self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
         self.stackTrace = Abort.makeStackTrace()
     }
