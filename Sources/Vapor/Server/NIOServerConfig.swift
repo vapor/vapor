@@ -21,14 +21,16 @@ public struct NIOServerConfig: ServiceType {
     ///                    Streaming bodies, like chunked bodies, ignore this maximum.
     ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
     ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
+    ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
     public static func `default`(
         hostname: String = "localhost",
         port: Int = 8080,
         backlog: Int = 256,
         workerCount: Int = ProcessInfo.processInfo.activeProcessorCount,
-        maxBodySize: Int = 1_000_0000,
+        maxBodySize: Int = 1_000_000,
         reuseAddress: Bool = true,
-        tcpNoDelay: Bool = true
+        tcpNoDelay: Bool = true,
+        webSocketMaxFrameSize: Int = 1 << 14
     ) -> NIOServerConfig {
         return NIOServerConfig(
             hostname: hostname,
@@ -37,7 +39,8 @@ public struct NIOServerConfig: ServiceType {
             workerCount: workerCount,
             maxBodySize: maxBodySize,
             reuseAddress: reuseAddress,
-            tcpNoDelay: tcpNoDelay
+            tcpNoDelay: tcpNoDelay,
+            webSocketMaxFrameSize: webSocketMaxFrameSize
         )
     }
 
@@ -54,7 +57,7 @@ public struct NIOServerConfig: ServiceType {
     /// Should be equal to the number of logical cores.
     public var workerCount: Int
 
-    /// Requests containing bodies larger than this maximum will be rejected, closign the connection.
+    /// Requests containing bodies larger than this maximum will be rejected, closing the connection.
     public var maxBodySize: Int
 
     /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
@@ -62,6 +65,9 @@ public struct NIOServerConfig: ServiceType {
 
     /// When `true`, OS will attempt to minimize TCP packet delay.
     public var tcpNoDelay: Bool
+
+    /// Number of webSocket maxFrameSize.
+    public var webSocketMaxFrameSize: Int
 
     /// Creates a new `NIOServerConfig`.
     public init(
@@ -71,7 +77,8 @@ public struct NIOServerConfig: ServiceType {
         workerCount: Int,
         maxBodySize: Int,
         reuseAddress: Bool,
-        tcpNoDelay: Bool
+        tcpNoDelay: Bool,
+        webSocketMaxFrameSize: Int = 1 << 14
     ) {
         self.hostname = hostname
         self.port = port
@@ -80,5 +87,6 @@ public struct NIOServerConfig: ServiceType {
         self.maxBodySize = maxBodySize
         self.reuseAddress = reuseAddress
         self.tcpNoDelay = tcpNoDelay
+        self.webSocketMaxFrameSize = webSocketMaxFrameSize
     }
 }

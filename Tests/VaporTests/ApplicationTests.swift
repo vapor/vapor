@@ -640,6 +640,32 @@ class ApplicationTests: XCTestCase {
         })
     }
 
+    // https://github.com/vapor/vapor/issues/1687
+    func testRequestQueryStringPercentEncoding() throws {
+        struct TestQueryStringContainer: Content {
+            var name: String
+        }
+        let app = try Application()
+        let req = Request(using: app)
+        req.http.url = URLComponents().url!
+        try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
+        XCTAssertEqual(req.http.url.query, "name=Vapor%20Test")
+    }
+    
+    func testErrorMiddlewareRespondsToNotFoundError() throws {
+        class NotFoundThrowingResponder: Responder {
+            func respond(to req: Request) throws -> EventLoopFuture<Response> {
+                throw NotFound(rootCause: nil)
+            }
+        }
+        let app = try Application()
+        let errorMiddleware = ErrorMiddleware.default(environment: app.environment, log: try app.make())
+
+        let result = try errorMiddleware.respond(to: Request(using: app), chainingTo: NotFoundThrowingResponder()).wait()
+
+        XCTAssertEqual(result.http.status, .notFound)
+    }
+
     static let allTests = [
         ("testContent", testContent),
         ("testComplexContent", testComplexContent),
@@ -666,6 +692,8 @@ class ApplicationTests: XCTestCase {
         ("testDataResponses", testDataResponses),
         ("testMiddlewareOrder", testMiddlewareOrder),
         ("testSessionDestroy", testSessionDestroy),
+        ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
+        ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
     ]
 }
 
@@ -732,7 +760,8 @@ private extension Application {
             workerCount: 1,
             maxBodySize: 128_000,
             reuseAddress: true,
-            tcpNoDelay: true
+            tcpNoDelay: true,
+            webSocketMaxFrameSize: 1 << 14
         )
         services.register(serverConfig)
         let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()

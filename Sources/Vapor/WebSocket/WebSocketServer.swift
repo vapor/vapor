@@ -7,7 +7,7 @@
 /// (including middleware). Should an HTTP upgrade request be accepted, no other parts of Vapor's pipeline will be invoked.
 /// Should the HTTP upgrade request be denied, the request will continue through Vapor's HTTP pipeline normally.
 ///
-/// Note: The `WebSocketServer` _always_ runs behind an HTTP server and will only be invoked when HTTP requests request an uprade.
+/// Note: The `WebSocketServer` _always_ runs behind an HTTP server and will only be invoked when HTTP requests request an upgrade.
 public protocol WebSocketServer {
     /// Determines whether the HTTP request should be upgraded or not.
     /// Only HTTP requests that have requested websocket protocol upgrade will be supplied to this method.

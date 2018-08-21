@@ -83,7 +83,7 @@ private final class MiddlewareGroup: Router {
     /// See `Router`.
     func register(route: Route<Responder>) {
         // chain the output to this middleware
-        route.output = middleware.makeResponder(chainedto: route.output)
+        route.output = middleware.makeResponder(chainingTo: route.output)
         // then register
         root.register(route: route)
     }

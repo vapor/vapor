@@ -36,3 +36,13 @@ extension MemorySessions {
         self.init()
     }
 }
+
+extension Array where Element == Middleware {
+    /// Wraps a `Responder` in an array of `Middleware` creating a new `Responder`.
+    /// - note: The array of middleware must be `[Middleware]` not `[M] where M: Middleware`.
+    @available(*, deprecated, message: "label 'chainedto' was renamed 'chainingTo'.")
+    public func makeResponder(chainedto responder: Responder) -> Responder {
+        return makeResponder(chainingTo: responder)
+    }
+}
+
