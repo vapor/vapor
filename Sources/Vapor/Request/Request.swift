@@ -1,3 +1,6 @@
+import FluentSQL
+
+
 /// `Request` is a service-container wrapper around an `HTTPRequest`.
 ///
 /// Use `Request` to access information about the `HTTPRequest` (`req.http`).
@@ -151,6 +154,25 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
         let res = makeResponse(http: .init(body: body))
         res.http.contentType = contentType
         return res
+    }
+
+    /// Generate a creation `Response` for a `Model` that includes the new object as well as a 201 status code.
+    ///
+    /// - Parameters:
+    ///   - obj: The newly created object.
+    ///   - mediaType: The type of data to return the container with.
+    ///   - customLocation: A customer path location.
+    /// - Returns: A new 201 `Response` on the same container as the current `Request` populated with the new `Model`
+    /// - Throws: `FluentError` if the `Model` doesn't have an object ID.
+    func makeCreatedLocationResponse<T>(obj: T, as mediaType: MediaType = .json, customLocation: String? = nil) throws -> Response where T: Model {
+        let id = try obj.requireID()
+
+        let location = customLocation ?? "\(http.url.absoluteString)/\(id)"
+        let headers = HTTPHeaders([("Location", location)])
+        let response = makeResponse(http: HTTPResponse(status: .created, headers: headers))
+        try response.content.encode(obj , as: mediaType)
+
+        return response
     }
 
     // MARK: Database
