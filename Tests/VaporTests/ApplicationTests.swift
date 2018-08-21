@@ -655,6 +655,17 @@ class ApplicationTests: XCTestCase {
 
         XCTAssertEqual(result.http.status, .notFound)
     }
+    
+    // https://github.com/vapor/vapor/issues/1787
+    func testGH1787() throws {
+        try Application.runningTest(port: 8008, routes: { router in
+            router.get("no-content") { req -> String in
+                throw Abort(.noContent)
+            }
+        }).clientTest(.GET, "no-content", afterSend: { res in
+            XCTAssertEqual(res.http.status.code, 204)
+        })
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -684,6 +695,7 @@ class ApplicationTests: XCTestCase {
         ("testSessionDestroy", testSessionDestroy),
         ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
         ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
+        ("testGH1787", testGH1787),
     ]
 }
 
@@ -738,9 +750,9 @@ private extension Application {
 
     // MARK: Live
 
-    static func runningTest(port: Int, configure: (Router) throws -> ()) throws -> Application {
+    static func runningTest(port: Int, routes: (Router) throws -> ()) throws -> Application {
         let router = EngineRouter.default()
-        try configure(router)
+        try routes(router)
         var services = Services.default()
         services.register(router, as: Router.self)
         let serverConfig = NIOServerConfig(
