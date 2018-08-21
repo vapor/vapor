@@ -1,4 +1,4 @@
-/* FIXME: add key strategy support once avaialble on Linux */
+/* FIXME: add key strategy support once available on Linux */
 
 extension JSONEncoder {
     /// Convenience for creating a customized `JSONEncoder`.

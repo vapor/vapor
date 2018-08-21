@@ -68,10 +68,16 @@ class ApplicationTests: XCTestCase {
             router.get("hello", String.parameter) { req in
                 return try req.parameters.next(String.self)
             }
+            
+            router.get("raw", String.parameter, String.parameter) { req in
+                return req.parameters.rawValues(for: String.self)
+            }
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
         try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
+        
+        try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
     }
 
     func testJSON() throws {
@@ -635,6 +641,20 @@ class ApplicationTests: XCTestCase {
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.http.url.query, "name=Vapor%20Test")
     }
+    
+    func testErrorMiddlewareRespondsToNotFoundError() throws {
+        class NotFoundThrowingResponder: Responder {
+            func respond(to req: Request) throws -> EventLoopFuture<Response> {
+                throw NotFound(rootCause: nil)
+            }
+        }
+        let app = try Application()
+        let errorMiddleware = ErrorMiddleware.default(environment: app.environment, log: try app.make())
+
+        let result = try errorMiddleware.respond(to: Request(using: app), chainingTo: NotFoundThrowingResponder()).wait()
+
+        XCTAssertEqual(result.http.status, .notFound)
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -663,6 +683,7 @@ class ApplicationTests: XCTestCase {
         ("testMiddlewareOrder", testMiddlewareOrder),
         ("testSessionDestroy", testSessionDestroy),
         ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
+        ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
     ]
 }
 
@@ -729,7 +750,8 @@ private extension Application {
             workerCount: 1,
             maxBodySize: 128_000,
             reuseAddress: true,
-            tcpNoDelay: true
+            tcpNoDelay: true,
+            webSocketMaxFrameSize: 1 << 14
         )
         services.register(serverConfig)
         let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()

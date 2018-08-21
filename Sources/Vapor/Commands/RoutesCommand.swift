@@ -7,7 +7,7 @@
 ///     | GET  | /hash/:string    |
 ///     +------+------------------+
 ///
-/// A colon preceeding a path component indicates a variable parameter. A colon with no text following
+/// A colon preceding a path component indicates a variable parameter. A colon with no text following
 /// is a parameter whose result will be discarded.
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.

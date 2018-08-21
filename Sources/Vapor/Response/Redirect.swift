@@ -15,7 +15,6 @@ extension Request {
     }
 }
 
-
 /// Specifies the type of redirect that the client should receive.
 public enum RedirectType {
     /// A cacheable redirect.

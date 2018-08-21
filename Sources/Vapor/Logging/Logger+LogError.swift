@@ -34,6 +34,5 @@ extension Logger {
                 debug("Conform `\(type(of: e))` to `Debuggable` for better debug info.")
             }
         }
-
     }
 }

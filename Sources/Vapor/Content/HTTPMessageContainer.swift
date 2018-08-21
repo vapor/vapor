@@ -3,6 +3,6 @@ public protocol HTTPMessageContainer: Container {
     /// Associated `HTTPMessage` type.
     associatedtype HTTPMessageType: HTTPMessage
 
-    /// This `Container`'s mutable `HTTPMesage`.
+    /// This `Container`'s mutable `HTTPMessage`.
     var http: HTTPMessageType { get set }
 }

@@ -98,7 +98,7 @@ public struct FileIO {
     ///
     /// - parameters:
     ///     - file: Path to file on the disk.
-    ///     - chunkSize: Maxiumum size for the file data chunks.
+    ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
     public func readChunked(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (Data) -> Void) -> Future<Void> {
@@ -123,7 +123,7 @@ public struct FileIO {
     /// - parameters:
     ///     - file: Path to file on the disk.
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
-    ///     - chunkSize: Maxiumum size for the file data chunks.
+    ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func chunkedResponse(file: String, for req: HTTPRequest, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPResponse {
         // Get file attributes for this file.
@@ -174,7 +174,7 @@ public struct FileIO {
     ///
     /// - parameters:
     ///     - file: Path to file on the disk.
-    ///     - chunkSize: Maxiumum size for the file data chunks.
+    ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: An `HTTPChunkedStream` containing the file stream.
     public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPChunkedStream {
         let chunkStream = HTTPChunkedStream(on: eventLoop)

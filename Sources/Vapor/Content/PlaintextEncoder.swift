@@ -34,7 +34,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     }
 }
 
-/// MARK: Private
+// MARK: Private
 
 private final class _DataEncoder: Encoder {
     public var codingPath: [CodingKey]
