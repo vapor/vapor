@@ -69,25 +69,15 @@ class ApplicationTests: XCTestCase {
                 return try req.parameters.next(String.self)
             }
             
-            router.get("slug", String.parameter, String.parameter) { req in
-                return req.parameters["string"].description
-            }
-            
-            router.get("component", String.parameter, String.parameter) { req in
-                return req.parameters[String.parameter].description
-            }
-            
-            router.get("constant", String.parameter, String.parameter) { req in
-                return req.parameters[.constant("string")].description
+            router.get("raw", String.parameter, String.parameter) { req in
+                return req.parameters.rawValues(for: String.self)
             }
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
         try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
         
-        try app.clientTest(.GET, "/slug/vapor/development", equals: "[\"vapor\", \"development\"]")
-        try app.clientTest(.GET, "/component/vapor/development", equals: "[\"vapor\", \"development\"]")
-        try app.clientTest(.GET, "/constant/vapor/development", equals: "[]")
+        try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\", \"development\"]")
     }
 
     func testJSON() throws {
