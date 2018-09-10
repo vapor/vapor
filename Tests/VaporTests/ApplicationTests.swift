@@ -330,6 +330,28 @@ class ApplicationTests: XCTestCase {
             XCTAssert(res.http.body.string.contains(test))
         }
     }
+    
+    func testStreamFileConnectionClose() throws {
+        let app = try Application.runningTest(port: 8085) { router in
+            router.get("file-stream") { req -> Future<Response> in
+                return try req.streamFile(at: #file)
+            }
+        }
+        
+        let client = try HTTPClient.connect(
+            scheme: .http,
+            hostname: "localhost",
+            port: 8085,
+            on: app,
+            onError: { XCTFail("\($0)") }
+        ).wait()
+        var req = HTTPRequest(method: .GET, url: "/file-stream")
+        req.headers.replaceOrAdd(name: .connection, value: "close")
+        let res = try client.send(req).wait()
+        let test = "the quick brown fox"
+        XCTAssertNotNil(res.headers[.eTag])
+        XCTAssert(res.body.string.contains(test))
+    }
 
     func testCustomEncode() throws {
         try Application.makeTest { router in
@@ -695,6 +717,7 @@ class ApplicationTests: XCTestCase {
         ("testURLEncodedFormEncode", testURLEncodedFormEncode),
         ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
         ("testStreamFile", testStreamFile),
+        ("testStreamFileConnectionClose", testStreamFileConnectionClose),
         ("testCustomEncode", testCustomEncode),
         ("testGH1609", testGH1609),
         ("testAnyResponse", testAnyResponse),
@@ -784,12 +807,13 @@ private extension Application {
         return app
     }
 
+    @discardableResult
     func clientTest(
         _ method: HTTPMethod,
         _ path: String,
         beforeSend: (Request) throws -> () = { _ in },
         afterSend: (Response) throws -> ()
-    ) throws {
+    ) throws -> Application {
         let config = try make(NIOServerConfig.self)
         let path = path.hasPrefix("/") ? path : "/\(path)"
         let req = Request(
@@ -799,9 +823,11 @@ private extension Application {
         try beforeSend(req)
         let res = try FoundationClient.default(on: self).send(req).wait()
         try afterSend(res)
+        return self
     }
 
-    func clientTest(_ method: HTTPMethod, _ path: String, equals: String) throws {
+    @discardableResult
+    func clientTest(_ method: HTTPMethod, _ path: String, equals: String) throws -> Application {
         return try clientTest(method, path) { res in
             XCTAssertEqual(res.http.body.string, equals)
         }
