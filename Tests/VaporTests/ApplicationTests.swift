@@ -332,7 +332,7 @@ class ApplicationTests: XCTestCase {
     }
     
     func testStreamFileConnectionClose() throws {
-        let app = try Application.runningTest(port: 8085) { router in
+        let app = try Application.runningTest(port: 8087) { router in
             router.get("file-stream") { req -> Future<Response> in
                 return try req.streamFile(at: #file)
             }
@@ -341,7 +341,7 @@ class ApplicationTests: XCTestCase {
         let client = try HTTPClient.connect(
             scheme: .http,
             hostname: "localhost",
-            port: 8085,
+            port: 8087,
             on: app,
             onError: { XCTFail("\($0)") }
         ).wait()
