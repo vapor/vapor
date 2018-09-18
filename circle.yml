@@ -21,6 +21,18 @@ jobs:
           name: Run unit tests
           command: swift test
 
+  linux-42:
+    docker:
+      - image: swift:4.2
+    steps:
+      - checkout
+      - run: 
+          name: Compile code
+          command: swift build
+      - run: 
+          name: Run unit tests
+          command: swift test
+
   linux-release:
     docker:
       - image: codevapor/swift:4.1
