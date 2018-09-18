@@ -129,10 +129,30 @@ public struct FileIO {
         // Get file attributes for this file.
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: file),
+            let fileType = attributes[.type] as? FileAttributeType
+            else {
+                return HTTPResponse(status: .internalServerError)
+        }
+
+        // Resolve symbolic links.
+        if fileType == .typeSymbolicLink {
+            // Get the absolute destination file path based upon the symbolic link location in the case of relative contents.
+            guard
+                let destinationFile = try? FileManager.default.destinationOfSymbolicLink(atPath: file),
+                let destinationURL = URL(string: destinationFile, relativeTo: URL(fileURLWithPath: file))
+                else {
+                    return HTTPResponse(status: .internalServerError)
+            }
+
+            return chunkedResponse(file: destinationURL.path, for: req, chunkSize: chunkSize)
+        }
+
+        guard
+            fileType == .typeRegular, // Prevent serving other file types, such as sockets.
             let modifiedAt = attributes[.modificationDate] as? Date,
             let fileSize = attributes[.size] as? NSNumber
-        else {
-            return HTTPResponse(status: .internalServerError)
+            else {
+                return HTTPResponse(status: .internalServerError)
         }
 
         // Create empty headers array.
