@@ -76,6 +76,7 @@ workflows:
   tests:
     jobs:
       - linux
+      - linux-42
       - linux-release
       - linux-api-template
       # - macos
