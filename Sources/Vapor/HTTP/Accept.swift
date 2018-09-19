@@ -34,47 +34,29 @@ extension Request {
         }
 
         #if swift(>=4.1)
-        let accepts: [Accept] = acceptString.toCharacterSequence().split(separator: ",").compactMap { acceptSlice in
-            let pieces = acceptSlice.split(separator: ";")
-            guard let mediaType = pieces.first.flatMap({ String($0) }) else { return nil }
-
-            let preference: Double
-            if pieces.count == 2 {
-                let q = pieces[1].split(separator: "=")
-                if q.count == 2 {
-                    let preferenceString = String(q[1])
-                    preference = Double(preferenceString) ?? 1.0
-                } else {
-                    preference = 1.0
-                }
-            } else {
-                preference = 1.0
-            }
-
-            return Accept(mediaType: mediaType, preference: preference)
-        }
+        return acceptString.toCharacterSequence().split(separator: ",").compactMap(sliceMap)
         #else
-        let accepts: [Accept] = acceptString.toCharacterSequence().split(separator: ",").flatMap { acceptSlice in
-            let pieces = acceptSlice.split(separator: ";")
-            guard let mediaType = pieces.first.flatMap({ String($0) }) else { return nil }
+        return acceptString.toCharacterSequence().split(separator: ",").flatMap(sliceMap)
+        #endif
+    }
 
-            let preference: Double
-            if pieces.count == 2 {
-                let q = pieces[1].split(separator: "=")
-                if q.count == 2 {
-                    let preferenceString = String(q[1])
-                    preference = Double(preferenceString) ?? 1.0
-                } else {
-                    preference = 1.0
-                }
+    private func sliceMap(_ acceptSlice: String.SubSequence) -> Accept? {
+        let pieces = acceptSlice.split(separator: ";")
+        guard let mediaType = pieces.first.flatMap(String.init) else { return nil }
+
+        let preference: Double
+        if pieces.count == 2 {
+            let q = pieces[1].split(separator: "=")
+            if q.count == 2 {
+                let preferenceString = String(q[1])
+                preference = Double(preferenceString) ?? 1.0
             } else {
                 preference = 1.0
             }
-
-            return Accept(mediaType: mediaType, preference: preference)
+        } else {
+            preference = 1.0
         }
-        #endif
 
-        return accepts
+        return Accept(mediaType: mediaType, preference: preference)
     }
 }
