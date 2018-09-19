@@ -700,6 +700,44 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status, .unsupportedMediaType)
         })
     }
+    
+    func testSwiftError() throws {
+        struct Foo: Error { }
+        try Application.makeTest(routes: { router in
+            router.get("error") { req -> String in
+                throw Foo()
+            }
+        }).test(.GET, "error", afterSend: { res in
+            XCTAssertEqual(res.http.status, .internalServerError)
+        })
+    }
+    
+    func testDebuggableError() throws {
+        struct Foo: Debuggable, Error {
+            var identifier: String
+            var reason: String
+            var sourceLocation: SourceLocation?
+            init(
+                identifier: String,
+                reason: String,
+                file: String = #file,
+                function: String = #function,
+                line: UInt = #line,
+                column: UInt = #column
+            ) {
+                self.identifier = identifier
+                self.reason = reason
+                self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
+            }
+        }
+        try Application.makeTest(routes: { router in
+            router.get("error") { req -> String in
+                throw Foo(identifier: "test", reason: "For testing error output.")
+            }
+        }).test(.GET, "error", afterSend: { res in
+            XCTAssertEqual(res.http.status, .internalServerError)
+        })
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -732,6 +770,8 @@ class ApplicationTests: XCTestCase {
         ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
         ("testGH1787", testGH1787),
         ("testMissingBody", testMissingBody),
+        ("testSwiftError", testSwiftError),
+        ("testDebuggableError", testDebuggableError),
     ]
 }
 
