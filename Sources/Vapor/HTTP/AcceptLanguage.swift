@@ -12,46 +12,30 @@ extension Request {
         }
         
         #if swift(>=4.1)
-        return acceptLanguageString.toCharacterSequence().split(separator: ",").compactMap { acceptLanguageSlice in
-            let pieces = acceptLanguageSlice.split(separator: ";")
-            guard let languageRange = pieces.first.flatMap({ String($0).trimmingCharacters(in: .whitespaces) }) else { return nil }
-            
-            let quality: Double
-            if pieces.count == 2 {
-                let q = pieces[1].split(separator: "=")
-                if q.count == 2 {
-                    let valueString = String(q[1])
-                    quality = Double(valueString) ?? 1.0
-                } else {
-                    quality = 1.0
-                }
-            } else {
-                quality = 1.0
-            }
-            
-            return AcceptLanguage(languageRange: languageRange, quality: quality)
-        }
+        return acceptLanguageString.toCharacterSequence().split(separator: ",").compactMap(sliceMap)
         #else
-        return acceptLanguageString.toCharacterSequence().split(separator: ",").flatMap { acceptLanguageSlice in
-            let pieces = acceptLanguageSlice.split(separator: ";")
-            guard let languageRange = pieces.first.flatMap({ String($0).trimmingCharacters(in: .whitespaces) }) else { return nil }
-            
-            let quality: Double
-            if pieces.count == 2 {
-                let q = pieces[1].split(separator: "=")
-                if q.count == 2 {
-                    let valueString = String(q[1])
-                    quality = Double(valueString) ?? 1.0
-                } else {
-                    quality = 1.0
-                }
+        return acceptLanguageString.toCharacterSequence().split(separator: ",").flatMap(sliceMap)
+        #endif
+    }
+
+    private func sliceMap(_ acceptLanguageSlice: String.SubSequence) -> AcceptLanguage? {
+        let pieces = acceptLanguageSlice.split(separator: ";")
+        guard let languageRange = pieces.first.flatMap({ String($0).trimmingCharacters(in: .whitespaces) }) else { return nil }
+
+        let quality: Double
+        if pieces.count == 2 {
+            let q = pieces[1].split(separator: "=")
+            if q.count == 2 {
+                let valueString = String(q[1])
+                quality = Double(valueString) ?? 1.0
             } else {
                 quality = 1.0
             }
-            
-            return AcceptLanguage(languageRange: languageRange, quality: quality)
+        } else {
+            quality = 1.0
         }
-        #endif
+
+        return AcceptLanguage(languageRange: languageRange, quality: quality)
     }
 }
 
