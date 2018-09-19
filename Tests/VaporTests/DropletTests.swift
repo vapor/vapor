@@ -39,7 +39,11 @@ class DropletTests: XCTestCase {
     */
     func testMediaType() throws {
         // drop /Tests/VaporTests/DropletTests.swift to reach top level directory
+        #if swift(>=4.0)
+        let parent = #file.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
+        #else
         let parent = #file.characters.split(separator: "/").map(String.init).dropLast(3).joined(separator: "/")
+        #endif
         let workDir = "/\(parent)/Sources/Development/"
 
         let config = try Config(node: [

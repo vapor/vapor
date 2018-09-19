@@ -3,7 +3,11 @@ import Node
 @testable import Configs
 
 var configDir: String {
+    #if swift(>=4.0)
+    let parent = #file.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+    #else
     let parent = #file.characters.split(separator: "/").map(String.init).dropLast().joined(separator: "/")
+    #endif
     let path = "/\(parent)/../../Sources/Configs/TestFiles"
     return path
 }

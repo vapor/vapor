@@ -160,7 +160,11 @@ extension CORSConfiguration: ConfigInitializable {
             case .string(let string):
                 self.exposedHeaders = string
             case .array(let array):
+                #if swift(>=4.1)
+                self.exposedHeaders = array.compactMap { $0.string }.joined(separator: ", ")
+                #else
                 self.exposedHeaders = array.flatMap { $0.string }.joined(separator: ", ")
+                #endif
             default:
                 throw CORSConfigurationError.missingRequiredConfigurationKey("`exposedHeaders` must be either a string or an array of strings.")
             }
