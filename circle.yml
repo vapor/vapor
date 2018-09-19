@@ -45,7 +45,7 @@ jobs:
 
   linux-api-template:
     docker:
-      - image: codevapor/swift:4.2
+      - image: swift:4.2
       - image: circleci/postgres:latest
         environment:
           POSTGRES_USER: postgres
