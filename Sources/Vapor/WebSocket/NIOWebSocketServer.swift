@@ -51,7 +51,7 @@ public final class NIOWebSocketServer: WebSocketServer, Service {
     ///            If `nil`, the HTTP upgrade request will be denied.
     public func webSocketShouldUpgrade(for request: Request) -> HTTPHeaders? {
         // FIXME: move to using uri bytes when possible
-        let path: [Substring] = request.http.urlString.split(separator: "/")
+        let path: [Substring] = request.http.url.path.split(separator: "/")
         guard let route = router.route(path: path, parameters: &request._parameters) else {
             return nil
         }
