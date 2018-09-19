@@ -44,3 +44,9 @@ extension Request {
         return headers["Accept-Language"]?.string ?? ""
     }
 }
+
+#if swift(<4)
+    extension String {
+        typealias SubSequence = Substring
+    }
+#endif
