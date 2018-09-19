@@ -7,20 +7,29 @@ extension Logger {
     ///     - verbose: If `true`, extra lines of debug information will be printed containing
     ///                things like suggested fixes, possible causes, or other info.
     ///                Defaults to `true`.
-    public func report(error e: Error, verbose: Bool = true) {
+    public func report(
+        error e: Error,
+        verbose: Bool = true,
+        file: String = #file,
+        function: String = #function,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
         switch e {
         case let debuggable as Debuggable:
             let errorString = "\(debuggable.fullIdentifier): \(debuggable.reason)"
             if let source = debuggable.sourceLocation {
-                error(errorString, file: source.file, function: source.function, line: source.line, column: source.column)
+                error(errorString, file: source.file.lastPart, function: source.function, line: source.line, column: source.column)
             } else {
-                error(errorString)
+                error(errorString, file: file.lastPart, function: function, line: line, column: column)
             }
             if verbose, debuggable.suggestedFixes.count > 0 {
-                debug("Suggested fixes for \(debuggable.fullIdentifier): " + debuggable.suggestedFixes.joined(separator: " "))
+                let str = "Suggested fixes for \(debuggable.fullIdentifier): " + debuggable.suggestedFixes.joined(separator: " ")
+                debug(str, file: file.lastPart, function: function, line: line, column: column)
             }
             if verbose, debuggable.possibleCauses.count > 0 {
-                debug("Possible causes for \(debuggable.fullIdentifier): " + debuggable.possibleCauses.joined(separator: " "))
+                let str = "Possible causes for \(debuggable.fullIdentifier): " + debuggable.possibleCauses.joined(separator: " ")
+                debug(str, file: file.lastPart, function: function, line: line, column: column)
             }
         default:
             let reason: String
@@ -29,10 +38,17 @@ extension Logger {
             case let convertible as CustomStringConvertible: reason = convertible.description
             default: reason = "\(e)"
             }
-            error(reason)
+            error(reason, file: file.lastPart, function: function, line: line, column: column)
             if verbose {
-                debug("Conform `\(type(of: e))` to `Debuggable` for better debug info.")
+                let str = "Conform `\(type(of: e))` to `Debuggable` for better debug info."
+                debug(str, file: file.lastPart, function: function, line: line, column: column)
             }
         }
+    }
+}
+
+private extension String {
+    var lastPart: String {
+        return split(separator: "/").last.map(String.init) ?? self
     }
 }
