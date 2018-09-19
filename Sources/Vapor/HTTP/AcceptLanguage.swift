@@ -45,7 +45,8 @@ extension Request {
     }
 }
 
-#if swift(<4)
+#if swift(>=4)
+#else
     extension String {
         typealias SubSequence = Substring
     }
