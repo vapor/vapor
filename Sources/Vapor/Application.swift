@@ -140,10 +140,12 @@ public final class Application: Container {
 
     /// Called when the app deinitializes.
     deinit {
-        eventLoopGroup.shutdownGracefully {
-            if let error = $0 {
-                ERROR("shutting down app event loop: \(error)")
-            }
+        do {
+            try eventLoopGroup.syncShutdownGracefully()
+            let threadPool = try make(BlockingIOThreadPool.self)
+            try threadPool.syncShutdownGracefully()
+        } catch {
+            ERROR("shutting down app event loop: \(error)")
         }
     }
 }
