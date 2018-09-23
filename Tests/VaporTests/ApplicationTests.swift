@@ -380,6 +380,34 @@ class ApplicationTests: XCTestCase {
             XCTAssert(res.http.body.string.contains("'email' is not a valid email address"))
         })
     }
+    
+    func testCustomError() throws {
+        struct UserDefinedError: CustomizedError {
+            var status: HTTPResponseStatus
+            var content: AnyEncodable
+        }
+        struct ErrorFormat: Codable, Equatable {
+            let errorMessage: String = "error message to be presented"
+            let reason: String = "reason this error occured"
+            let documentation: String = "link.documentation.com/path"
+        }
+        let customError = ErrorFormat()
+        let error = UserDefinedError(status: .badRequest, content: AnyEncodable(customError))
+        try Application.makeTest { router in
+            router.get("errorRoute") { req -> String in
+                throw error
+            }
+            }.test(.GET, "errorRoute", afterSend: { res in
+                XCTAssertEqual(res.http.status, .badRequest)
+                guard let body = res.http.body.data else {
+                    XCTFail()
+                    return
+                    
+                }
+                
+                XCTAssertEqual(try? JSONDecoder().decode(ErrorFormat.self, from: body), customError)
+            })
+    }
 
     func testAnyResponse() throws {
         try Application.makeTest { router in
@@ -663,6 +691,7 @@ class ApplicationTests: XCTestCase {
         ("testMiddlewareOrder", testMiddlewareOrder),
         ("testSessionDestroy", testSessionDestroy),
         ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
+        ("testCustomError", testCustomError),
     ]
 }
 

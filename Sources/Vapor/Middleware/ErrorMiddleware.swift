@@ -48,14 +48,23 @@ public final class ErrorMiddleware: Middleware, ServiceType {
                 reason = debuggable.reason
                 status = .internalServerError
                 headers = [:]
+            case let custom as CustomizedError:
+                // this is a custom error
+                let res = req.makeResponse(http: .init(status: custom.status, headers: custom.headers))
+                do {
+                    res.http.body = try HTTPBody(data: JSONEncoder().encode(custom.content))
+                    res.http.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                    return res
+                } catch {
+                    fallthrough
+                }
             default:
-                // not an abort error, and not debuggable or in dev mode
+                // not an abort error, and not custom error or debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
                 reason = "Something went wrong."
                 status = .internalServerError
                 headers = [:]
             }
-
             // create a Response with appropriate status
             let res = req.makeResponse(http: .init(status: status, headers: headers))
 
