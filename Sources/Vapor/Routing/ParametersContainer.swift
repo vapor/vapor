@@ -16,6 +16,15 @@ public struct ParametersContainer {
         self.request = request
     }
 
+    /// Removes the first _n_ values from the request's paramaters.
+    ///
+    ///     request.parameters.advance(2)
+    ///
+    /// - parameter next: The number of values to remove. This defaults to `1`, removing the first value.
+    public func advance(_ next: Int = 1) {
+        self.request._parameters.values.removeFirst(next)
+    }
+    
     /// Gets the raw parameter values from the request URI
     /// that match a given parameter type slug.
     ///
