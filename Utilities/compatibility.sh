@@ -38,10 +38,10 @@ function check_vapor() {
                 echo "✅  Xcode 9.3 is compatible with Vapor 3."
                 echo ""
             elif [[ $XCBVERSION == *"Xcode 9.4"* ]];
+            then
                 echo "✅  Xcode 9.4 is compatible with Vapor 2."
                 echo "✅  Xcode 9.4 is compatible with Vapor 3."
                 echo ""
-            then
             else
                 echo "✅  Xcode 9 is compatible with Vapor 2."
                 echo "❌  Xcode 9.3 or later is required for Vapor 3."
