@@ -96,6 +96,8 @@ public final class NIOServer: Server, ServiceType {
                 backlog: config.backlog,
                 reuseAddress: config.reuseAddress,
                 tcpNoDelay: config.tcpNoDelay,
+                supportCompression: config.supportCompression,
+                supportPipelining: config.supportPipelining,
                 upgraders: upgraders,
                 on: group
             ) { error in

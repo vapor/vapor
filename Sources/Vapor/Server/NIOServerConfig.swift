@@ -22,6 +22,8 @@ public struct NIOServerConfig: ServiceType {
     ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
     ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
     ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
+    ///     - supportCompression: When `true`, HTTP server will support gzip and deflate compression.
+    ///     - supportPipelining: When `true`, HTTP server will support pipelined HTTP requests.
     public static func `default`(
         hostname: String = "localhost",
         port: Int = 8080,
@@ -30,7 +32,9 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int = 1_000_000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true,
-        webSocketMaxFrameSize: Int = 1 << 14
+        webSocketMaxFrameSize: Int = 1 << 14,
+        supportCompression: Bool = false,
+        supportPipelining: Bool = false
     ) -> NIOServerConfig {
         return NIOServerConfig(
             hostname: hostname,
@@ -40,7 +44,9 @@ public struct NIOServerConfig: ServiceType {
             maxBodySize: maxBodySize,
             reuseAddress: reuseAddress,
             tcpNoDelay: tcpNoDelay,
-            webSocketMaxFrameSize: webSocketMaxFrameSize
+            webSocketMaxFrameSize: webSocketMaxFrameSize,
+            supportCompression: supportCompression,
+            supportPipelining: supportPipelining
         )
     }
 
@@ -68,6 +74,12 @@ public struct NIOServerConfig: ServiceType {
 
     /// Number of webSocket maxFrameSize.
     public var webSocketMaxFrameSize: Int
+    
+    /// When `true`, HTTP server will support gzip and deflate compression.
+    public var supportCompression: Bool
+    
+    /// When `true`, HTTP server will support pipelined HTTP requests.
+    public var supportPipelining: Bool
 
     /// Creates a new `NIOServerConfig`.
     public init(
@@ -78,7 +90,9 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int,
         reuseAddress: Bool,
         tcpNoDelay: Bool,
-        webSocketMaxFrameSize: Int = 1 << 14
+        webSocketMaxFrameSize: Int = 1 << 14,
+        supportCompression: Bool = false,
+        supportPipelining: Bool = false
     ) {
         self.hostname = hostname
         self.port = port
@@ -88,5 +102,7 @@ public struct NIOServerConfig: ServiceType {
         self.reuseAddress = reuseAddress
         self.tcpNoDelay = tcpNoDelay
         self.webSocketMaxFrameSize = webSocketMaxFrameSize
+        self.supportCompression = supportCompression
+        self.supportPipelining = supportPipelining
     }
 }
