@@ -18,8 +18,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func post<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
-        where C: RequestDecodable, T: ResponseEncodable
+    public func post<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequestContext, C) throws -> T) -> Route<Responder>
+        where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
         return _on(.POST, at: path.convertToPathComponents(), use: closure)
     }
@@ -43,8 +43,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func patch<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
-        where C: RequestDecodable, T: ResponseEncodable
+    public func patch<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequestContext, C) throws -> T) -> Route<Responder>
+        where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
         return _on(.PATCH, at: path.convertToPathComponents(), use: closure)
     }
@@ -68,8 +68,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func put<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
-        where C: RequestDecodable, T: ResponseEncodable
+    public func put<C, T>(_ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequestContext, C) throws -> T) -> Route<Responder>
+        where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
         return _on(.PUT, at: path.convertToPathComponents(), use: closure)
     }
@@ -94,8 +94,8 @@ extension Router {
     ///     - closure: Converts `Request` to a `Response`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func on<C, T>(_ method: HTTPMethod, _ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
-        where C: RequestDecodable, T: ResponseEncodable
+    public func on<C, T>(_ method: HTTPMethod, _ content: C.Type, at path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequestContext, C) throws -> T) -> Route<Responder>
+        where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
         return _on(method, at: path.convertToPathComponents(), use: closure)
     }
@@ -110,13 +110,14 @@ extension Router {
     ///     - closure: Converts `Request` to a `Response`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    private func _on<C, T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (Request, C) throws -> T) -> Route<Responder>
-        where C: RequestDecodable, T: ResponseEncodable
+    private func _on<C, T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (HTTPRequestContext, C) throws -> T) -> Route<Responder>
+        where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
         let responder = BasicResponder { req in
-            return try C.decode(from: req).flatMap { content in
-                let encodable = try closure(req, content)
-                return try encodable.encode(for: req)
+            return C.decode(from: req.http, on: req.eventLoop).then { content in
+                #warning("TODO: fix force try")
+                let encodable = try! closure(req, content)
+                return encodable.encode(for: req)
             }
         }
         let route = Route<Responder>(path: [.constant(method.string)] + path, output: responder)

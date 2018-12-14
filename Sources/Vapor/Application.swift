@@ -1,3 +1,8 @@
+import Console
+import Command
+import NIO
+import ServiceKit
+
 /// Core framework class. You usually create only one of these per application. Acts as your application's top-level service container.
 ///
 ///     let router = try app.make(Router.self)
@@ -12,61 +17,56 @@
 /// The `Application` is responsible for calling `Provider` (and `VaporProvider`) boot methods. The `willBoot` and `didBoot` methods
 /// will be called on `Application.init(...)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
 /// called on `Application.run()`
-public final class Application: Container {
-    /// Config preferences and requirements for available services. Used to disambiguate which service should be used
-    /// for a given interface when multiple are available.
-    public let config: Config
-
+public final class Application {
     /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
     public var environment: Environment
-
-    /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
-    /// form this application (i.e., `Request`, `Response`, etc.)
-    public let services: Services
-
-    /// The `Application`'s private service cache. This cache will not be shared with any sub-containers created by this application.
-    public let serviceCache: ServiceCache
-
-    /// The `EventLoopGroup` that we derive the event loop below from, so we can close it in `deinit`.
-    private var eventLoopGroup: EventLoopGroup
-
-    /// This `Application`'s event loop. This event-loop is separate from the `HTTPServer`'s event loop group and should only be used
-    /// for creating services during boot / configuration phases. Never use this event loop while responding to requests.
-    public var eventLoop: EventLoop {
-        return eventLoopGroup.next()
-    }
+    
+    private let configure: () throws -> Services
 
     /// Use this to create stored properties in extensions.
-    public var extend: Extend
+    public var userInfo: [AnyHashable: Any]
+    
+    public var runningServer: RunningServer?
 
-    // MARK: Boot
-
-    /// Asynchronously creates and boots a new `Application`.
-    ///
-    /// - parameters:
-    ///     - config: Configuration preferences for this service container.
-    ///     - environment: Application's environment type (i.e., testing, production).
-    ///                    Different environments can trigger different application behavior (for example, supressing verbose logs in production mode).
-    ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public static func asyncBoot(config: Config = .default(), environment: Environment = .development, services: Services = .default()) -> Future<Application> {
-        let app = Application(config, environment, services)
-        return app.boot().transform(to: app)
-    }
-
-    /// Synchronously creates and boots a new `Application`.
+    /// Creates and a new `Application`.
     ///
     /// - parameters:
     ///     - config: Configuration preferences for this service container.
     ///     - environment: Application's environment type (i.e., testing, production).
     ///                    Different environments can trigger different application behavior (for example, suppressing verbose logs in production mode).
     ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public convenience init(
-        config: Config = .default(),
-        environment: Environment = .development,
-        services: Services = .default()
+    public init(
+        _ environment: Environment = .development,
+        _ configure: @escaping () throws -> Services
     ) throws {
-        self.init(config, environment, services)
-        try boot().wait()
+        self.environment = environment
+        self.configure = configure
+        self.userInfo = [:]
+        self.runningServer = nil
+        
+        #warning("TODO: use logger")
+        if _isDebugAssertConfiguration() && environment.isRelease {
+            print("Debug build mode detected while configured for release environment: \(environment.name).")
+            print("Compile your application with `-c release` to enable code optimizations.")
+        }
+    }
+    
+    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
+        do {
+            var services = try self.configure()
+            services.register(Application.self) { c in
+                return self
+            }
+            let container = BasicContainer(environment: self.environment, services: services, on: eventLoop)
+            #warning("TODO: make willBoot and didBoot non-throwing")
+            let willBoots = container.providers.map { try! $0.willBoot(container) }
+            return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).then { () -> EventLoopFuture<Void> in
+                let didBoots = container.providers.map { try! $0.didBoot(container) }
+                return .andAll(didBoots, eventLoop: eventLoop)
+            }.map { _ in container }
+        } catch {
+            return eventLoop.makeFailedFuture(error: error)
+        }
     }
 
     // MARK: Run
@@ -77,7 +77,7 @@ public final class Application: Container {
     /// Normally this command will boot an `HTTPServer`. However, depending on configuration and command-line arguments/flags, this method may run a different command.
     /// See `CommandConfig` for more information about customizing the commands that this method runs.
     ///
-    ///     try app.asyncRun().wait()
+    ///     try app.run().wait()
     ///
     /// Note: When running a server, `asyncRun()` will return when the server has finished _booting_. Use the `runningServer` property on `Application` to wait
     /// for the server to close. The synchronous `run()` method will call this automatically.
@@ -85,67 +85,65 @@ public final class Application: Container {
     ///     try app.runningServer?.onClose().wait()
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
-    public func asyncRun() -> Future<Void> {
-        return Future.flatMap(on: self) {
-            // will-run all vapor service providers
-            return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
-        }.flatMap {
-            let command = try self.make(Commands.self)
-                .group()
-            let console = try self.make(Console.self)
-
-            /// Create a mutable copy of the environment input for this run.
+    public func run() -> EventLoopFuture<Void> {
+        let eventLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next()
+        return self.makeContainer(on: eventLoop).thenThrowing { c -> (Console, CommandGroup) in
+            #warning("TODO: run VaporProvider willRuns")
+            let command = try c.make(Commands.self).group()
+            let console = try c.make(Console.self)
+            return (console, command)
+        }.then { res -> EventLoopFuture<Void> in
             var runInput = self.environment.commandInput
-            return console.run(command, input: &runInput, on: self)
-        }.flatMap {
-            // did-run all vapor service providers
-            return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+            return res.0.run(res.1, input: &runInput)
+        }.thenThrowing { () -> Void in
+            return try eventLoop.syncShutdownGracefully()
         }
-    }
-
-    /// Synchronously calls `asyncRun()` and waits for the running server to close (if one exists).
-    public func run() throws {
-        try asyncRun().wait()
-        try runningServer?.onClose.wait()
-    }
-
-    // MARK: Internal
-
-    /// Internal initializer. Creates an `Application` without booting providers.
-    internal init(_ config: Config, _ environment: Environment, _ services: Services) {
-        self.config = config
-        self.environment = environment
-        self.services = services
-        self.serviceCache = .init()
-        self.extend = Extend()
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-    }
-
-    /// Internal method. Boots the application and its providers.
-    internal func boot() -> Future<Void> {
-        return Future.flatMap(on: self) {
-            // will-boot all service providers
-            return try self.providers.map { try $0.willBoot(self) }.flatten(on: self)
-        }.map {
-            if _isDebugAssertConfiguration() && self.environment.isRelease {
-                let log = try self.make(Logger.self)
-                log.warning("Debug build mode detected while configured for release environment: \(self.environment.name).")
-                log.info("Compile your application with `-c release` to enable code optimizations.")
-            }
-        }.flatMap {
-            // did-boot all service providers
-            return try self.providers.map { try $0.didBoot(self) }.flatten(on: self)
-        }
-    }
-
-    /// Called when the app deinitializes.
-    deinit {
-        do {
-            try eventLoopGroup.syncShutdownGracefully()
-            let threadPool = try make(BlockingIOThreadPool.self)
-            try threadPool.syncShutdownGracefully()
-        } catch {
-            ERROR("shutting down app event loop: \(error)")
-        }
+//        // will-run all vapor service providers
+//        return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
+//        // did-run all vapor service providers
+//        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
     }
 }
+
+// MARK: Environment
+
+#warning("TODO: move this to separate file")
+
+extension Environment {
+    /// Exposes the `Environment`'s `arguments` property as a `CommandInput`.
+    public var commandInput: CommandInput {
+        get { return CommandInput(arguments: arguments) }
+        set { arguments = newValue.executablePath + newValue.arguments }
+    }
+
+    /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
+    /// - parameters:
+    ///     - arguments: Command line arguments to detect environment from.
+    /// - returns: The detected environment, or default env.
+    public static func detect(arguments: [String] = CommandLine.arguments) throws -> Environment {
+        var commandInput = CommandInput(arguments: arguments)
+        return try Environment.detect(from: &commandInput)
+    }
+
+    /// Detects the environment from `CommandInput`. Parses the `--env` flag.
+    /// - parameters:
+    ///     - arguments: `CommandInput` to parse `--env` flag from.
+    /// - returns: The detected environment, or default env.
+    public static func detect(from commandInput: inout CommandInput) throws -> Environment {
+        var env: Environment
+        if let value = try commandInput.parse(option: .value(name: "env", short: "e")) {
+            switch value {
+            case "prod", "production": env = .production
+            case "dev", "development": env = .development
+            case "test", "testing": env = .testing
+            default: env = .init(name: value, isRelease: false)
+            }
+        } else {
+            env = .development
+        }
+        env.commandInput = commandInput
+        return env
+    }
+}
+
+

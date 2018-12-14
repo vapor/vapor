@@ -27,12 +27,6 @@ public struct Abort: AbortError {
 
     /// See `AbortError`
     public var reason: String
-
-    /// See `Debuggable`
-    public var sourceLocation: SourceLocation?
-
-    /// See `Debuggable`
-    public var stackTrace: [String]
     
     /// See `Debuggable`
     public var suggestedFixes: [String]
@@ -54,7 +48,5 @@ public struct Abort: AbortError {
         self.status = status
         self.reason = reason ?? status.reasonPhrase
         self.suggestedFixes = suggestedFixes
-        self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
-        self.stackTrace = Abort.makeStackTrace()
     }
 }

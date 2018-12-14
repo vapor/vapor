@@ -62,7 +62,7 @@ private final class PathGroup: Router {
     }
 
     /// See `Router`.
-    func route(request: Request) -> Responder? {
+    func route(request: HTTPRequestContext) -> Responder? {
         return root.route(request: request)
     }
 }

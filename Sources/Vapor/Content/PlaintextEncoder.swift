@@ -1,17 +1,20 @@
+import Foundation
+import HTTP
+
 /// Encodes data as plaintext, utf8.
 public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     /// Private encoder.
     private let encoder: _DataEncoder
 
     /// The specific plaintext `MediaType` to use.
-    private let contentType: MediaType
+    private let contentType: HTTPMediaType
 
     /// Creates a new `PlaintextEncoder`.
     ///
     /// - parameters:
     ///     - contentType: Plaintext `MediaType` to use.
     ///                    Usually `.plainText` or `.html`.
-    public init(_ contentType: MediaType = .plainText) {
+    public init(_ contentType: HTTPMediaType = .plainText) {
         encoder = .init()
         self.contentType = contentType
     }
@@ -26,7 +29,7 @@ public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     }
 
     /// See `HTTPMessageEncoder`.
-    public func encode<E, M>(_ encodable: E, to message: inout M, on worker: Worker) throws
+    public func encode<E, M>(_ encodable: E, to message: inout M, on eventLoop: EventLoop) throws
         where E: Encodable, M: HTTPMessage
     {
         message.contentType = self.contentType

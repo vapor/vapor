@@ -1,5 +1,5 @@
 /// A `Container` that has a reference to a mutable `HTTPMessage`.
-public protocol HTTPMessageContainer: Container {
+public protocol HTTPMessageContainer {
     /// Associated `HTTPMessage` type.
     associatedtype HTTPMessageType: HTTPMessage
 

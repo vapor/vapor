@@ -1,10 +1,5 @@
 /// Configuration options for sessions.
-public struct SessionsConfig: ServiceType {
-    /// See `ServiceType`
-    public static func makeService(for worker: Container) throws -> SessionsConfig {
-        return .default()
-    }
-
+public struct SessionsConfig {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
     public let cookieFactory: (String) -> HTTPCookieValue
 

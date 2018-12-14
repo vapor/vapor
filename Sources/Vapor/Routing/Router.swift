@@ -1,5 +1,5 @@
 /// Capable of registering `Responder` routes and returning appropriate responders for a given request.
-public protocol Router: class, Service {
+public protocol Router: class {
     /// An array of `Route`s that have been registered to this router.
     var routes: [Route<Responder>] { get }
 
@@ -14,5 +14,5 @@ public protocol Router: class, Service {
     /// - parameters:
     ///     - request: `Request` to route.
     /// - returns: Matching `Responder` or `nil` if none was found.
-    func route(request: Request) -> Responder?
+    func route(request: HTTPRequestContext) -> Responder?
 }

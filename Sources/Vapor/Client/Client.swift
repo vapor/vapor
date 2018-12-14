@@ -1,3 +1,9 @@
+import Foundation
+import HTTP
+import NIO
+import NIOHTTP1
+import ServiceKit
+
 extension Container {
     /// Creates a `Client` for this `Container`.
     ///
@@ -28,7 +34,7 @@ public protocol Client {
     /// - parameters:
     ///     - request: `Request` to send.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    func send(_ req: Request) -> Future<Response>
+    func send(_ req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse>
 }
 
 extension Client {
@@ -51,7 +57,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         return send(.GET, headers: headers, to: url, beforeSend: beforeSend)
     }
 
@@ -69,7 +75,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         return send(.POST, headers: headers, to: url, beforeSend: beforeSend)
     }
 
@@ -87,7 +93,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         return send(.PATCH, headers: headers, to: url, beforeSend: beforeSend)
     }
 
@@ -105,7 +111,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         return send(.PUT, headers: headers, to: url, beforeSend: beforeSend)
     }
 
@@ -128,7 +134,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:], beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         return send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
     }
 
@@ -147,13 +153,13 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, beforeSend: (Request) throws -> () = { _ in }) -> Future<Response> {
+    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable, beforeSend: (HTTPRequestContext) throws -> () = { _ in }) -> EventLoopFuture<HTTPResponse> {
         do {
-            let req = Request(http: .init(method: method, url: url, headers: headers), using: container)
+            let req = HTTPRequestContext(http: .init(method: method, url: url, headers: headers), on: self.container.eventLoop)
             try beforeSend(req)
             return send(req)
         } catch {
-            return container.eventLoop.newFailedFuture(error: error)
+            return self.container.eventLoop.makeFailedFuture(error: error)
         }
     }
 }

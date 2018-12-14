@@ -5,5 +5,5 @@ public protocol Responder {
     /// - parameters:
     ///     - req: `Request` to respond to.
     /// - returns: A `Future` that contains the returned `Response`.
-    func respond(to req: Request) throws -> Future<Response>
+    func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse>
 }

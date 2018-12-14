@@ -1,4 +1,4 @@
-extension Request {
+extension HTTPRequestContext {
     /// Creates a redirect `Response`.
     ///
     ///     router.get("redirect") { req in
@@ -7,10 +7,10 @@ extension Request {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
-    public func redirect(to location: String, type: RedirectType = .normal) -> Response {
-        let res = response()
-        res.http.status = type.status
-        res.http.headers.replaceOrAdd(name: .location, value: location)
+    public func redirect(to location: String, type: RedirectType = .normal) -> HTTPResponse {
+        var res = HTTPResponse()
+        res.status = type.status
+        res.headers.replaceOrAdd(name: .location, value: location)
         return res
     }
 }

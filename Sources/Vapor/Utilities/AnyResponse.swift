@@ -1,3 +1,6 @@
+import NIO
+import HTTP
+
 /// A type erased response useful for routes that can return more than one type.
 ///
 ///     router.get("foo") { req -> AnyResponse in
@@ -30,20 +33,20 @@
 ///         }
 ///     }
 ///
-public struct AnyResponse: ResponseEncodable {
+public struct AnyResponse: HTTPResponseEncodable {
     /// The wrapped `ResponseEncodable` type.
-    private let encodable: ResponseEncodable
+    private let encodable: HTTPResponseEncodable
 
     /// Creates a new `AnyResponse`.
     ///
     /// - parameters:
     ///     - encodable: Something `ResponseEncodable`.
-    public init(_ encodable: ResponseEncodable) {
+    public init(_ encodable: HTTPResponseEncodable) {
         self.encodable = encodable
     }
 
     /// See `ResponseEncodable`.
-    public func encode(for req: Request) throws -> Future<Response> {
-        return try encodable.encode(for: req)
+    public func encode(for req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
+        return encodable.encode(for: req)
     }
 }

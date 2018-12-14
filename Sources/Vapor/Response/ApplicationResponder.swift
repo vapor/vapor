@@ -1,22 +1,5 @@
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-public struct ApplicationResponder: Responder, ServiceType {
-    /// See `ServiceType`.
-    public static var serviceSupports: [Any.Type] { return [Responder.self] }
-
-    /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> ApplicationResponder {
-        // initialize all `[Middleware]` from config
-        let middleware = try container
-            .make(MiddlewareConfig.self)
-            .resolve(for: container)
-
-        // create router and wrap in a responder
-        let router = try container.make(Router.self)
-
-        // return new responder
-        return ApplicationResponder(router, middleware)
-    }
-
+public struct ApplicationResponder: Responder {
     /// Wrapped `Responder`.
     private let responder: Responder
 
@@ -28,8 +11,8 @@ public struct ApplicationResponder: Responder, ServiceType {
     }
 
     /// See `Responder`.
-    public func respond(to req: Request) throws -> Future<Response> {
-        return try responder.respond(to: req)
+    public func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
+        return responder.respond(to: req)
     }
 }
 
@@ -45,12 +28,12 @@ private struct RouterResponder: Responder {
     }
 
     /// See `Responder`.
-    func respond(to req: Request) throws -> Future<Response> {
-        guard let responder = router.route(request: req) else {
-            let res = req.response(http: .init(status: .notFound, body: "Not found"))
-            return req.eventLoop.newSucceededFuture(result: res)
+    func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
+        guard let responder = self.router.route(request: req) else {
+            let res = HTTPResponse(status: .notFound, body: "Not found")
+            return req.eventLoop.makeSucceededFuture(result: res)
         }
 
-        return try responder.respond(to: req)
+        return responder.respond(to: req)
     }
 }

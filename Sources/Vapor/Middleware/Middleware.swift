@@ -11,7 +11,7 @@ public protocol Middleware {
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response>
+    func respond(to request: HTTPRequestContext, chainingTo next: Responder) -> Future<Response>
 }
 
 extension Array where Element == Middleware {

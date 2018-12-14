@@ -1,3 +1,6 @@
 import Boilerplate
 
-try app(.detect()).run()
+let a = try app(.detect())
+try a.run().wait()
+print(a.runningServer)
+try a.runningServer?.onClose.wait()

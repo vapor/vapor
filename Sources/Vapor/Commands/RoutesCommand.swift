@@ -11,12 +11,7 @@
 /// is a parameter whose result will be discarded.
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
-public struct RoutesCommand: Command, ServiceType {
-    /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> RoutesCommand {
-        return try RoutesCommand(router: container.make())
-    }
-
+public struct RoutesCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -41,7 +36,7 @@ public struct RoutesCommand: Command, ServiceType {
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> Future<Void> {
+    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
         let console = context.console
         
         var longestMethod = 0
@@ -132,7 +127,7 @@ public struct RoutesCommand: Command, ServiceType {
             hr()
         }
 
-        return .done(on: context.container)
+        return context.eventLoop.makeSucceededFuture(result: ())
     }
 }
 

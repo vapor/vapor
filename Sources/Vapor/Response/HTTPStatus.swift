@@ -1,10 +1,10 @@
 /// Less verbose typealias for `HTTPResponseStatus`.
 public typealias HTTPStatus = HTTPResponseStatus
 
-extension HTTPStatus: ResponseEncodable {
+extension HTTPStatus: HTTPResponseEncodable {
     /// See `ResponseEncodable`.
-    public func encode(for req: Request) throws -> Future<Response> {
-        let res = Response(http: .init(status: self), using: req)
-        return req.eventLoop.newSucceededFuture(result: res)
+    public func encode(for req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
+        let res = HTTPResponse(status: self)
+        return req.eventLoop.makeSucceededFuture(result: res)
     }
 }

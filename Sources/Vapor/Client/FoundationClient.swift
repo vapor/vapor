@@ -1,5 +1,7 @@
+import Foundation
+
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient: Client, ServiceType {
+public final class FoundationClient: Client {
     /// See `ServiceType`.
     public static var serviceSupports: [Any.Type] {
         return [Client.self]
@@ -28,9 +30,9 @@ public final class FoundationClient: Client, ServiceType {
     }
 
     /// See `Client`.
-    public func send(_ req: Request) -> Future<Response> {
+    public func send(_ req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
         let urlReq = req.http.convertToFoundationRequest()
-        let promise = req.eventLoop.newPromise(Response.self)
+        let promise = req.eventLoop.makePromise(of: HTTPResponse.self)
         self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
             if let error = error {
                 promise.fail(error: error)
@@ -43,8 +45,8 @@ public final class FoundationClient: Client, ServiceType {
                 return
             }
 
-            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container)
-            promise.succeed(result: Response(http: response, using: self.container))
+            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container.eventLoop)
+            promise.succeed(result: response)
         }.resume()
         return promise.futureResult
     }
@@ -69,7 +71,7 @@ private extension HTTPRequest {
 
 private extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
-    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
+    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: EventLoop) -> HTTPResponse {
         var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
         if let data = data {
             res.body = HTTPBody(data: data)

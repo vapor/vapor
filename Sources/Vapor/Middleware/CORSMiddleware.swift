@@ -27,7 +27,7 @@ public final class CORSMiddleware: Middleware {
         ///
         /// - Parameter request: Request for which the allow origin header should be created.
         /// - Returns: Header string to be used in response for allowed origin.
-        public func header(forRequest request: Request) -> String {
+        public func header(forRequest request: HTTPRequestContext) -> String {
             switch self {
             case .none: return ""
             case .originBased: return request.http.headers[.origin].first ?? ""
@@ -114,44 +114,45 @@ public final class CORSMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
+    public func respond(to req: HTTPRequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         // Check if it's valid CORS request
-        guard request.http.headers[.origin].first != nil else {
-            return try next.respond(to: request)
+        guard req.http.headers[.origin].first != nil else {
+            return next.respond(to: req)
         }
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let response = request.isPreflight
-            ? request.eventLoop.newSucceededFuture(result: request.response())
-            : try next.respond(to: request)
+        let res = req.isPreflight
+            ? req.eventLoop.makeSucceededFuture(result: .init())
+            : next.respond(to: req)
         
-        return response.map { response in
+        return res.map { res in
+            var res = res
             // Modify response headers based on CORS settings
-            response.http.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: request))
-            response.http.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
-            response.http.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
+            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req))
+            res.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
+            res.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
             
             if let exposedHeaders = self.configuration.exposedHeaders {
-                response.http.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
+                res.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
             }
             
             if let cacheExpiration = self.configuration.cacheExpiration {
-                response.http.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
+                res.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
             }
             
             if self.configuration.allowCredentials {
-                response.http.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
+                res.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
             }
             
-            return response
+            return res
         }
     }
 }
 
 // MARK: Private
 
-private extension Request {
+private extension HTTPRequestContext {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
         return http.method == .OPTIONS && http.headers[.accessControlRequestMethod].first != nil

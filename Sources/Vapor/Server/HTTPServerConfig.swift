@@ -3,12 +3,7 @@
 ///     let serverConfig = NIOServerConfig.default(port: 8123)
 ///     services.register(serverConfig)
 ///
-public struct NIOServerConfig: ServiceType {
-    /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> NIOServerConfig {
-        return .default()
-    }
-
+public struct HTTPServerConfig {
     /// Detects `NIOServerConfig` from the environment.
     ///
     /// - parameters:
@@ -31,8 +26,8 @@ public struct NIOServerConfig: ServiceType {
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true,
         webSocketMaxFrameSize: Int = 1 << 14
-    ) -> NIOServerConfig {
-        return NIOServerConfig(
+    ) -> HTTPServerConfig {
+        return HTTPServerConfig(
             hostname: hostname,
             port: port,
             backlog: backlog,

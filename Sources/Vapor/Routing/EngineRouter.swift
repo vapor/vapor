@@ -33,7 +33,7 @@ public final class EngineRouter: Router {
     }
 
     /// See `Router`.
-    public func route(request: Request) -> Responder? {
+    public func route(request: HTTPRequestContext) -> Responder? {
         // FIXME: use NIO's underlying uri byte buffer when possible
         // instead of converting to string. `router.route` accepts conforming to `RoutableComponent`
         let path: [Substring] = request.http.urlString
