@@ -15,8 +15,16 @@ extension Services {
         }
 
         // router
+        s.register(Router.self) { c in
+            return try c.make(EngineRouter.self)
+        }
         s.register(EngineRouter.self) { c in
             return .init(caseInsensitive: false, eventLoop: c.eventLoop)
+        }
+        
+        // routes
+        s.register(HTTPRoutes.self) { c in
+            return .init(eventLoop: c.eventLoop)
         }
 
         // responder
@@ -26,11 +34,11 @@ extension Services {
                 .make(MiddlewareConfig.self)
                 .resolve()
             
-            // create router and wrap in a responder
-            let router = try c.make(Router.self)
+            // create HTTP routes
+            let routes = try c.make(HTTPRoutes.self)
             
             // return new responder
-            return ApplicationResponder(router, middleware)
+            return ApplicationResponder(routes: routes, middleware: middleware)
         }
 
         // bcrypt
@@ -91,7 +99,7 @@ extension Services {
             )
         }
         s.register(RoutesCommand.self) { c in
-            return try .init(router: c.make())
+            return try .init(routes: c.make())
         }
         s.register(BootCommand.self) { c in
             return .init()

@@ -1,6 +1,6 @@
 import Vapor
 
-public func routes(_ r: Router, _ c: Container) throws {
+public func routes(_ r: HTTPRoutes, _ c: Container) throws {
     r.get("ping") { req -> StaticString in
         return "123"
     }
@@ -14,14 +14,14 @@ public func routes(_ r: Router, _ c: Container) throws {
         let creds = try req.content.decode(Creds.self)
         return "\(creds)"
     }
-//
-//    router.get("json") { req in
-//        return ["foo": "bar"]
-//    }
-//
-//    router.get("hello", String.parameter) { req in
-//        return try req.parameters.next(String.self)
-//    }
+
+    r.get("json") { req in
+        return ["foo": "bar"]
+    }
+
+    r.get("hello", String.parameter) { req in
+        return try req.parameters.next(String.self)
+    }
 //
 //    router.get("search") { req in
 //        return req.query["q"] ?? "none"
@@ -41,7 +41,15 @@ public func routes(_ r: Router, _ c: Container) throws {
 //        return "done"
 //    }
 //
-//    router.get("client") { req in
-//        return try req.client().get("http://vapor.codes").map { $0.description }
-//    }
+    r.get("client") { req in
+        return try c.client().get("http://vapor.codes").map { $0.description }
+    }
+    
+    let users = r.grouped("users")
+    users.get { req in
+        return "users"
+    }
+    users.get(.parameter("userID")) { req in
+        return "user"
+    }
 }

@@ -6,7 +6,7 @@ extension Container {
     ///
     /// See `Client` for more information.
     public func client() throws -> HTTPResponder {
-        return FoundationClient(.init(), eventLoop: self.eventLoop)
+        return FoundationClient(.init(configuration: .default), eventLoop: self.eventLoop)
     }
 }
 

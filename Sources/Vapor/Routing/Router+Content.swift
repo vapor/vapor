@@ -113,12 +113,9 @@ extension Router {
     private func _on<C, T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (HTTPRequest, C) throws -> T) -> Route<HTTPResponder>
         where C: HTTPRequestDecodable, T: HTTPResponseEncodable
     {
-        let responder = BasicResponder { req in
-            return C.decode(from: req, on: req.channel!.eventLoop).then { content in
-                #warning("TODO: fix force try")
-                let encodable = try! closure(req, content)
-                return encodable.encode(for: req)
-            }
+        let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
+            let res = try closure(req, C.decode(from: req)).encode(for: req)
+            return eventLoop.makeSucceededFuture(result: res)
         }
         let route = Route<HTTPResponder>(path: [.constant(method.string)] + path, output: responder)
         register(route: route)

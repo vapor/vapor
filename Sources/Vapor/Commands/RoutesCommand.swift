@@ -28,11 +28,11 @@ public struct RoutesCommand: Command {
     }
 
     /// `Router` to use for printing routes.
-    private let router: Router
+    private let routes: HTTPRoutes
 
     /// Create a new `RoutesCommand`.
-    public init(router: Router) {
-        self.router = router
+    public init(routes: HTTPRoutes) {
+        self.routes = routes
     }
 
     /// See `Command`.
@@ -42,18 +42,15 @@ public struct RoutesCommand: Command {
         var longestMethod = 0
         var longestPath = 0
 
-        for route in router.routes {
-            guard let first = route.path.first, case .constant(let method) = first else {
-                continue
-            }
-
+        for route in self.routes.routes {
+            let method = route.method.string
             if method.count > longestMethod {
                 longestMethod = method.count
             }
 
             var pathLength = 0
 
-            for path in route.path[1...] {
+            for path in route.path {
                 switch path {
                 case .constant(let const):
                     pathLength += const.count + 1 // /const
@@ -83,12 +80,10 @@ public struct RoutesCommand: Command {
 
         hr()
 
-        for route in router.routes {
+        for route in routes.routes {
             console.print("| ", newLine: false)
 
-            guard let first = route.path.first, case .constant(let method) = first else {
-                continue
-            }
+            let method = route.method.string
             console.success(method, newLine: false)
 
             for _ in 0..<longestMethod - method.count {
@@ -99,7 +94,7 @@ public struct RoutesCommand: Command {
 
             var pathLength = 0
 
-            route.path[1...].forEach { comp in
+            route.path.forEach { comp in
                 switch comp {
                 case .constant(let const):
                     console.info("/", newLine: false)

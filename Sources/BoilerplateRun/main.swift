@@ -1,5 +1,5 @@
 import Boilerplate
 
-let a = try app(.detect())
-try a.run().wait()
-try a.runningServer?.onClose.wait()
+let app = try Boilerplate.app(.detect())
+try app.run().wait()
+try app.runningServer?.onClose.wait()

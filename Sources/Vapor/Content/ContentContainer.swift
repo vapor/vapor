@@ -33,7 +33,7 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     /// - parameters:
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     /// - throws: Errors during serialization.
-    public mutating func encode<C>(_ encodable: C) throws
+    public func encode<C>(_ encodable: C) throws
         where C: Content
     {
         try self.encode(encodable, as: C.defaultContentType)
@@ -48,7 +48,7 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     ///     - encoder: Specific `HTTPMessageEncoder` to use.
     /// - throws: Errors during serialization.
-    public mutating func encode<E>(_ encodable: E, as contentType: HTTPMediaType) throws
+    public func encode<E>(_ encodable: E, as contentType: HTTPMediaType) throws
         where E: Encodable
     {
         try self.encode(encodable, using: self.requireEncoder(for: contentType))
@@ -62,8 +62,8 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     ///     - encoder: Specific `HTTPMessageEncoder` to use.
     /// - throws: Errors during serialization.
-    public mutating func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
-        try encoder.encode(encodable, to: &self.message)
+    public func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
+        try encoder.encode(encodable, to: self.message)
     }
     
     // MARK: Decode

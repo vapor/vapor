@@ -29,6 +29,20 @@ extension Array where Element == HTTPMiddleware {
 public extension HTTPMiddleware {
     /// Wraps a `Responder` in a single `Middleware` creating a new `Responder`.
     func makeResponder(chainingTo responder: HTTPResponder) -> HTTPResponder {
-        return BasicResponder { try self.respond(to: $0, chainingTo: responder) }
+        return HTTPMiddlewareResponder(middleware: self, responder: responder)
+    }
+}
+
+private struct HTTPMiddlewareResponder: HTTPResponder {
+    var middleware: HTTPMiddleware
+    var responder: HTTPResponder
+    
+    init(middleware: HTTPMiddleware, responder: HTTPResponder) {
+        self.middleware = middleware
+        self.responder = responder
+    }
+    
+    func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+        return self.middleware.respond(to: req, chainingTo: self.responder)
     }
 }

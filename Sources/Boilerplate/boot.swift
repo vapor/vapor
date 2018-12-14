@@ -1,6 +1,6 @@
 import Vapor
 
-public func boot(_ app: Application) throws {
+public func boot(_ app: Application) {
 //    // your code here
 //    try app.client().webSocket("ws://echo.websocket.org").flatMap { ws -> Future<Void> in
 //        ws.send("hi")
