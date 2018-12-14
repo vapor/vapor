@@ -16,7 +16,7 @@ extension Router {
     /// - parameters:
     ///     - respond: Closure accepting a `Request` and `Responder` and returning a `Future<Response>`.
     /// - returns: `Router` with closure attached
-    public func grouped(_ respond: @escaping (Request, Responder) throws -> Future<Response>) -> Router {
+    public func grouped(_ respond: @escaping (HTTPRequest, HTTPResponder) throws -> EventLoopFuture<HTTPResponse>) -> Router {
         return grouped([MiddlewareFunction(respond)])
     }
 
@@ -36,7 +36,7 @@ extension Router {
     /// - parameters:
     ///     - respond: Closure accepting a `Request` and `Responder` and returning a `Future<Response>`.
     ///     - configure: Closure to configure the newly created sub `Router`.
-    public func group(_ respond: @escaping (Request, Responder) throws -> Future<Response>, configure: (Router) -> ()) {
+    public func group(_ respond: @escaping (HTTPRequest, HTTPResponder) throws -> EventLoopFuture<HTTPResponse>, configure: (Router) -> ()) {
         group([MiddlewareFunction(respond)], configure: configure)
     }
 }
@@ -44,17 +44,21 @@ extension Router {
 // MARK: Private
 
 /// Wrapper to create Middleware from function
-private class MiddlewareFunction: Middleware {
+private class MiddlewareFunction: HTTPMiddleware {
     /// Internal request handler.
-    private let respond: (Request, Responder) throws -> Future<Response>
+    private let respond: (HTTPRequest, HTTPResponder) throws -> EventLoopFuture<HTTPResponse>
 
     /// Creates a new `MiddlewareFunction`
-    init(_ function: @escaping (Request, Responder) throws -> Future<Response>) {
+    init(_ function: @escaping (HTTPRequest, HTTPResponder) throws -> EventLoopFuture<HTTPResponse>) {
         self.respond = function
     }
 
     /// See `Middleware`.
-    func respond(to request: Request, chainingTo next: Responder) throws -> Future<Response> {
-        return try self.respond(request, next)
+    func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+        do {
+            return try self.respond(req, next)
+        } catch {
+            return req.channel!.eventLoop.makeFailedFuture(error: error)
+        }
     }
 }

@@ -1,18 +1,10 @@
-extension DataDecoder {
-    /// Gets a single decodable value at the supplied key path from the data.
-    internal func get<D>(at keyPath: [BasicKey], from data: Data) throws -> D where D: Decodable {
-        return try self.decode(SingleValueDecoder.self, from: data).get(at: keyPath)
-    }
-}
-
 extension HTTPMessageDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    internal func get<D, M>(at keyPath: [BasicKey], from message: M, maxSize: Int, on worker: Worker) throws -> Future<D>
+    internal func get<D, M>(at keyPath: [BasicKey], from message: M) throws -> D
         where D: Decodable, M: HTTPMessage
     {
-        return try self.decode(SingleValueDecoder.self, from: message, maxSize: maxSize, on: worker).map { decoder in
-            return try decoder.get(at: keyPath)
-        }
+        let decoder = try self.decode(SingleValueDecoder.self, from: message)
+        return try decoder.get(at: keyPath)
     }
 }
 

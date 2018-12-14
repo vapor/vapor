@@ -193,7 +193,7 @@ class ApplicationTests: XCTestCase {
         }
 
         var req = HTTPRequest(method: .GET, url: URL(string: "/multipart")!)
-        req.contentType = MediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
+        req.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
         req.body = HTTPBody(string: data)
 
         try app.test(req) { res in
@@ -204,7 +204,7 @@ class ApplicationTests: XCTestCase {
 
     func testMultipartEncode() throws {
         struct User: Content {
-            static var defaultContentType: MediaType = .formData
+            static var defaultContentType: HTTPMediaType = .formData
             var name: String
             var age: Int
             var image: File
@@ -272,7 +272,7 @@ class ApplicationTests: XCTestCase {
 
     func testURLEncodedFormEncode() throws {
         struct User: Content {
-            static let defaultContentType: MediaType = .urlEncodedForm
+            static let defaultContentType: HTTPMediaType = .urlEncodedForm
             var name: String
             var age: Int
             var luckyNumbers: [Int]
@@ -567,7 +567,7 @@ class ApplicationTests: XCTestCase {
             }
         }.test(.GET, "hello-html") { res in
             XCTAssertEqual(res.http.status, .ok)
-            XCTAssertEqual(res.http.contentType, MediaType.html)
+            XCTAssertEqual(res.http.contentType, HTTPMediaType.html)
             XCTAssertEqual(res.http.body.string, "Hey!")
         }
     }

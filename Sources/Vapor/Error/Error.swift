@@ -1,7 +1,6 @@
-import Debugging
-
+#warning("TODO: consider moving to enum")
 /// Errors that can be thrown while working with Vapor.
-public struct VaporError: Debuggable {
+public struct VaporError: Error {
     /// See `Debuggable`.
     public static let readableName = "Vapor Error"
 
@@ -10,12 +9,6 @@ public struct VaporError: Debuggable {
 
     /// See `Debuggable`.
     public var reason: String
-
-    /// See `Debuggable`.
-    public var sourceLocation: SourceLocation?
-
-    /// See `Debuggable`.
-    public var stackTrace: [String]
 
     /// See `Debuggable`.
     public var suggestedFixes: [String]
@@ -36,8 +29,6 @@ public struct VaporError: Debuggable {
     ) {
         self.identifier = identifier
         self.reason = reason
-        self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
-        self.stackTrace = VaporError.makeStackTrace()
         self.suggestedFixes = suggestedFixes
         self.possibleCauses = possibleCauses
     }

@@ -24,8 +24,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func get<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func get<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(.GET, at: path.convertToPathComponents(), use: closure)
     }
@@ -52,8 +52,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func post<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func post<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(.POST, at: path.convertToPathComponents(), use: closure)
     }
@@ -80,8 +80,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func patch<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func patch<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(.PATCH, at: path.convertToPathComponents(), use: closure)
     }
@@ -108,8 +108,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func put<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func put<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(.PUT, at: path.convertToPathComponents(), use: closure)
     }
@@ -136,8 +136,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func delete<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func delete<T>(_ path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(.DELETE, at: path.convertToPathComponents(), use: closure)
     }
@@ -165,8 +165,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func on<T>(_ method: HTTPMethod, at path: PathComponentsRepresentable..., use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func on<T>(_ method: HTTPMethod, at path: PathComponentsRepresentable..., use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(method, at: path.convertToPathComponents(), use: closure)
     }
@@ -194,8 +194,8 @@ extension Router {
     ///     - closure: Creates a `Response` for the incoming `Request`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    public func on<T>(_ method: HTTPMethod, at path: [PathComponentsRepresentable], use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    public func on<T>(_ method: HTTPMethod, at path: [PathComponentsRepresentable], use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
         return _on(method, at: path.convertToPathComponents(), use: closure)
     }
@@ -210,12 +210,15 @@ extension Router {
     ///     - closure: Converts `Request` to a `Response`.
     /// - returns: Discardable `Route` that was just created.
     @discardableResult
-    private func _on<T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (Request) throws -> T) -> Route<Responder>
-        where T: ResponseEncodable
+    private func _on<T>(_ method: HTTPMethod, at path: [PathComponent], use closure: @escaping (HTTPRequest) throws -> T) -> Route<HTTPResponder>
+        where T: HTTPResponseEncodable
     {
-        let responder = BasicResponder { try closure($0).encode(for: $0) }
-        let route = Route<Responder>(path: [.constant(method.string)] + path, output: responder)
-        register(route: route)
+        let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
+            let res = try closure(req).encode(for: req)
+            return eventLoop.makeSucceededFuture(result: res)
+        }
+        let route = Route<HTTPResponder>(path: [.constant(method.string)] + path, output: responder)
+        self.register(route: route)
         return route
     }
 }
