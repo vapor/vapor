@@ -1,5 +1,7 @@
 /// Capable of managing CRUD operations for `Session`s.
 public protocol Sessions {
+    var eventLoop: EventLoop { get }
+    
     /// Stores a newly created `Session`.
     ///
     /// - parameters:

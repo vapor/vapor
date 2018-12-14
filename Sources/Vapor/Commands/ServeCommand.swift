@@ -64,30 +64,6 @@ public final class HTTPServeCommand: Command {
         self.console.output("http://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
-        // create caches
-        let containerCache = ThreadSpecificVariable<ThreadContainer>()
-        let responderCache = ThreadSpecificVariable<ThreadResponder>()
-        
-        // create this server's own event loop group
-        let group = MultiThreadedEventLoopGroup(numberOfThreads: config.workerCount)
-        self.currentWorker = group
-        for _ in 0..<self.config.workerCount {
-            // initialize each event loop
-            let eventLoop = group.next()
-            // perform cache set on the event loop
-            _ = eventLoop.submit {
-                _ = self.application.makeContainer(on: eventLoop).thenThrowing { container in
-                    let responder = try container.make(Responder.self)
-                    containerCache.currentValue = ThreadContainer(container: container)
-                    responderCache.currentValue = ThreadResponder(responder: responder)
-                }.mapIfError {
-                    ERROR("Could not boot EventLoop: \($0).")
-                }
-            }.mapIfError {
-                ERROR("Could not boot EventLoop: \($0).")
-            }
-        }
-        
         // http upgrade
         var upgraders: [HTTPProtocolUpgrader] = []
         
@@ -111,34 +87,21 @@ public final class HTTPServeCommand: Command {
 //            }
         
         // http responder
-        let httpResponder = NIOServerResponder(containerCache: containerCache, responderCache: responderCache)
+        let responderCache = ThreadSpecificVariable<ThreadResponder>()
+        let httpResponder = NIOServerResponder(responderCache: responderCache, application: self.application)
         
         // start the actual HTTPServer
         return HTTPServer.start(
-            hostname: hostname,
-            port: port,
-            responder: httpResponder,
-            maxBodySize: config.maxBodySize,
-            backlog: config.backlog,
-            reuseAddress: config.reuseAddress,
-            tcpNoDelay: config.tcpNoDelay,
-            upgraders: upgraders,
-            on: group
-        ) { error in
-            #warning("TODO: use sswg logger")
-            print(error)
-            // logger.report(error: error, verbose: !self.container.environment.isRelease)
-        }.map { server in
+            config: self.config,
+            responder: httpResponder
+        ).map { server in
             self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
-        }
-    }
-
-    
-    /// Called when the server deinitializes.
-    deinit {
-        currentWorker?.shutdownGracefully {
-            if let error = $0 {
-                ERROR("shutting down server event loop: \(error)")
+            server.onClose.whenComplete {
+                self.currentWorker?.shutdownGracefully {
+                    if let error = $0 {
+                        ERROR("shutting down server event loop: \(error)")
+                    }
+                }
             }
         }
     }
@@ -146,34 +109,32 @@ public final class HTTPServeCommand: Command {
 
 // MARK: Private
 
-private struct NIOServerResponder: HTTPServerResponder {
-    let containerCache: ThreadSpecificVariable<ThreadContainer>
+private struct NIOServerResponder: HTTPResponder {
     let responderCache: ThreadSpecificVariable<ThreadResponder>
+    let application: Application
     
-    func respond(to http: HTTPRequest, on eventLoop: EventLoop) -> EventLoopFuture<HTTPResponse> {
-        guard let container = containerCache.currentValue?.container else {
-            let error = VaporError(identifier: "serverContainer", reason: "Missing server container.")
-            return eventLoop.makeFailedFuture(error: error)
+    func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+        if let responder = responderCache.currentValue?.responder {
+            return responder.respond(to: req)
+        } else {
+            guard let eventLoop = req.channel?.eventLoop else {
+                fatalError("no event loop")
+            }
+            return self.application.makeContainer(on: eventLoop).thenThrowing { container -> HTTPResponder in
+                let responder = try container.make(HTTPResponder.self)
+                self.responderCache.currentValue = ThreadResponder(responder: responder)
+                return responder
+            }.then { responder in
+                return responder.respond(to: req)
+            }
         }
-        let req = HTTPRequestContext(http: http, on: eventLoop)
-        guard let responder = responderCache.currentValue?.responder else {
-            let error = VaporError(identifier: "serverResponder", reason: "Missing responder.")
-            return eventLoop.makeFailedFuture(error: error)
-        }
-        return responder.respond(to: req)
-    }
-}
-
-private final class ThreadContainer {
-    var container: Container
-    init(container: Container) {
-        self.container = container
+        
     }
 }
 
 private final class ThreadResponder {
-    var responder: Responder
-    init(responder: Responder) {
+    var responder: HTTPResponder
+    init(responder: HTTPResponder) {
         self.responder = responder
     }
 }

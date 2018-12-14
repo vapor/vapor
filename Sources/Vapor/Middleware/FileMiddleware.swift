@@ -5,7 +5,7 @@
 ///     services.register(middlewareConfig)
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: Middleware {
+public final class FileMiddleware: HTTPMiddleware {
     /// The public directory.
     /// - note: Must end with a slash.
     private let publicDirectory: String
@@ -19,9 +19,9 @@ public final class FileMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         // make a copy of the path
-        var path = req.http.url.path
+        var path = req.url.path
 
         // path must be relative.
         while path.hasPrefix("/") {
@@ -30,7 +30,7 @@ public final class FileMiddleware: Middleware {
 
         // protect against relative paths
         guard !path.contains("../") else {
-            return req.eventLoop.makeFailedFuture(error: Abort(.forbidden))
+            return self.fileio.eventLoop.makeFailedFuture(error: Abort(.forbidden))
         }
 
         // create absolute file path
@@ -43,7 +43,7 @@ public final class FileMiddleware: Middleware {
         }
 
         // stream the file
-        let res = self.fileio.chunkedResponse(file: filePath, for: req.http)
-        return req.eventLoop.makeSucceededFuture(result: res)
+        let res = self.fileio.chunkedResponse(file: filePath, for: req)
+        return self.fileio.eventLoop.makeSucceededFuture(result: res)
     }
 }

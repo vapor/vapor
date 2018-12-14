@@ -1,4 +1,4 @@
-extension HTTPRequestContext {
+extension HTTPRequest {
     /// Creates a redirect `Response`.
     ///
     ///     router.get("redirect") { req in

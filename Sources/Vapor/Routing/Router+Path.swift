@@ -37,8 +37,12 @@ extension Router {
 
 /// Groups routes
 private final class PathGroup: Router {
+    var eventLoop: EventLoop {
+        return self.root.eventLoop
+    }
+    
     /// See `Router`.
-    var routes: [Route<Responder>] {
+    var routes: [Route<HTTPResponder>] {
         return root.routes
     }
 
@@ -55,14 +59,14 @@ private final class PathGroup: Router {
     }
 
     /// See `Router`.
-    func register(route: Route<Responder>) {
+    func register(route: Route<HTTPResponder>) {
         // insert _after_ the method
         route.path.insert(contentsOf: components, at: 1)
         root.register(route: route)
     }
 
     /// See `Router`.
-    func route(request: HTTPRequestContext) -> Responder? {
+    func route(request: HTTPRequest) -> HTTPResponder? {
         return root.route(request: request)
     }
 }

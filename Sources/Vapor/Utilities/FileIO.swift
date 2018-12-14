@@ -66,7 +66,7 @@ public struct FileIO {
     private let allocator: ByteBufferAllocator
 
     /// Event loop for async work.
-    private let eventLoop: EventLoop
+    public let eventLoop: EventLoop
 
     /// Creates a new `FileIO`.
     ///

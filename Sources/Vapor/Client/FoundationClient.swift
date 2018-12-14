@@ -1,38 +1,23 @@
 import Foundation
 
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient: Client {
-    /// See `ServiceType`.
-    public static var serviceSupports: [Any.Type] {
-        return [Client.self]
-    }
-
-    /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> FoundationClient {
-        return .default(on: worker)
-    }
-
+public final class FoundationClient: HTTPResponder {
     /// See `Client`.
-    public var container: Container
+    public var eventLoop: EventLoop
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
 
     /// Creates a new `FoundationClient`.
-    public init(_ urlSession: URLSession, on container: Container) {
+    public init(_ urlSession: URLSession, eventLoop: EventLoop) {
         self.urlSession = urlSession
-        self.container = container
-    }
-
-    /// Creates a `FoundationClient` with default settings.
-    public static func `default`(on container: Container) -> FoundationClient {
-        return .init(.init(configuration: .default), on: container)
+        self.eventLoop = eventLoop
     }
 
     /// See `Client`.
-    public func send(_ req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
-        let urlReq = req.http.convertToFoundationRequest()
-        let promise = req.eventLoop.makePromise(of: HTTPResponse.self)
+    public func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+        let urlReq = req.convertToFoundationRequest()
+        let promise = self.eventLoop.makePromise(of: HTTPResponse.self)
         self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
             if let error = error {
                 promise.fail(error: error)
@@ -45,7 +30,7 @@ public final class FoundationClient: Client {
                 return
             }
 
-            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container.eventLoop)
+            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data)
             promise.succeed(result: response)
         }.resume()
         return promise.futureResult
@@ -71,8 +56,8 @@ private extension HTTPRequest {
 
 private extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
-    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: EventLoop) -> HTTPResponse {
-        var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
+    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?) -> HTTPResponse {
+        let res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
         if let data = data {
             res.body = HTTPBody(data: data)
         }

@@ -1,5 +1,5 @@
 /// Captures all errors and transforms them into an internal server error HTTP response.
-public final class ErrorMiddleware: Middleware {
+public final class ErrorMiddleware: HTTPMiddleware {
     /// Structure of `ErrorMiddleware` default response.
     internal struct ErrorResponse: Codable {
         /// Always `true` to indicate this is a non-typical JSON response.
@@ -71,18 +71,18 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// Error-handling closure.
-    private let closure: (HTTPRequestContext, Error) -> (HTTPResponse)
+    private let closure: (HTTPRequest, Error) -> (HTTPResponse)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (HTTPRequestContext, Error) -> (HTTPResponse)) {
+    public init(_ closure: @escaping (HTTPRequest, Error) -> (HTTPResponse)) {
         self.closure = closure
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         return next.respond(to: req).mapIfError { error in
             return self.closure(req, error)
         }

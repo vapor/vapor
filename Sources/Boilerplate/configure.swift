@@ -1,6 +1,11 @@
 import Vapor
 
 public func configure(_ s: inout Services) throws {
+    s.register(Router.self) { c in
+        let r = try c.make(EngineRouter.self)
+        try routes(r, c)
+        return r
+    }
 //    let serverConfig = NIOServerConfig.default(hostname: "127.0.0.1")
 //    services.register(serverConfig)
 //

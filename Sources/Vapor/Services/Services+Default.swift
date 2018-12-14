@@ -6,21 +6,21 @@ extension Services {
 
         // server
         s.register(HTTPServerConfig.self) { c in
-            return .default()
+            return .init()
         }
 
         // client
         s.register(FoundationClient.self) { c in
-            return FoundationClient(.shared, on: c)
+            return FoundationClient(.shared, eventLoop: c.eventLoop)
         }
 
         // router
-        s.register(Router.self) { c in
-            return EngineRouter.default()
+        s.register(EngineRouter.self) { c in
+            return .init(caseInsensitive: false, eventLoop: c.eventLoop)
         }
 
         // responder
-        s.register(Responder.self) { c in
+        s.register(HTTPResponder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
                 .make(MiddlewareConfig.self)

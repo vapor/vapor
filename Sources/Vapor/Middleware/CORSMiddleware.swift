@@ -3,7 +3,7 @@
 ///
 /// - note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
-public final class CORSMiddleware: Middleware {
+public final class CORSMiddleware: HTTPMiddleware {
     /// Option for the allow origin header in responses for CORS requests.
     ///
     /// - none: Disallows any origin.
@@ -27,13 +27,13 @@ public final class CORSMiddleware: Middleware {
         ///
         /// - Parameter request: Request for which the allow origin header should be created.
         /// - Returns: Header string to be used in response for allowed origin.
-        public func header(forRequest request: HTTPRequestContext) -> String {
+        public func header(forRequest req: HTTPRequest) -> String {
             switch self {
             case .none: return ""
-            case .originBased: return request.http.headers[.origin].first ?? ""
+            case .originBased: return req.headers[.origin].first ?? ""
             case .all: return "*"
             case .custom(let string):
-                guard let origin = request.http.headers[.origin].first else {
+                guard let origin = req.headers[.origin].first else {
                     return string
                 }
                 return string.contains(origin) ? origin : string
@@ -114,16 +114,16 @@ public final class CORSMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         // Check if it's valid CORS request
-        guard req.http.headers[.origin].first != nil else {
+        guard req.headers[.origin].first != nil else {
             return next.respond(to: req)
         }
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
         let res = req.isPreflight
-            ? req.eventLoop.makeSucceededFuture(result: .init())
+            ? req.channel!.eventLoop.makeSucceededFuture(result: .init())
             : next.respond(to: req)
         
         return res.map { res in
@@ -152,10 +152,10 @@ public final class CORSMiddleware: Middleware {
 
 // MARK: Private
 
-private extension HTTPRequestContext {
+private extension HTTPRequest {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
-        return http.method == .OPTIONS && http.headers[.accessControlRequestMethod].first != nil
+        return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil
     }
 }
 

@@ -5,19 +5,19 @@
 ///
 /// `MiddlewareConfig` is used to configure which `Middleware` are active for a given
 /// service-container and in which order they should be run.
-public protocol Middleware {
+public protocol HTTPMiddleware {
     /// Called with each `Request` that passes through this middleware.
     /// - parameters:
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: HTTPRequestContext, chainingTo next: Responder) -> Future<Response>
+    func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse>
 }
 
-extension Array where Element == Middleware {
+extension Array where Element == HTTPMiddleware {
     /// Wraps a `Responder` in an array of `Middleware` creating a new `Responder`.
     /// - note: The array of middleware must be `[Middleware]` not `[M] where M: Middleware`.
-    public func makeResponder(chainingTo responder: Responder) -> Responder {
+    public func makeResponder(chainingTo responder: HTTPResponder) -> HTTPResponder {
         var responder = responder
         for middleware in reversed() {
             responder = middleware.makeResponder(chainingTo: responder)
@@ -26,9 +26,9 @@ extension Array where Element == Middleware {
     }
 }
 
-public extension Middleware {
+public extension HTTPMiddleware {
     /// Wraps a `Responder` in a single `Middleware` creating a new `Responder`.
-    func makeResponder(chainingTo responder: Responder) -> Responder {
+    func makeResponder(chainingTo responder: HTTPResponder) -> HTTPResponder {
         return BasicResponder { try self.respond(to: $0, chainingTo: responder) }
     }
 }

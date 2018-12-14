@@ -1,7 +1,7 @@
 /// A basic, closure-based `Responder`.
-public struct BasicResponder: Responder {
+public struct BasicResponder: HTTPResponder {
     /// The stored responder closure.
-    private let closure: (HTTPRequestContext) throws -> EventLoopFuture<Response>
+    private let closure: (HTTPRequest) throws -> EventLoopFuture<HTTPResponse>
 
     /// Create a new `BasicResponder`.
     ///
@@ -12,16 +12,17 @@ public struct BasicResponder: Responder {
     ///
     /// - parameters:
     ///     - closure: Responder closure.
-    public init(closure: @escaping (HTTPRequestContext) throws -> EventLoopFuture<Response>) {
+    public init(closure: @escaping (HTTPRequest) throws -> EventLoopFuture<HTTPResponse>) {
         self.closure = closure
     }
 
     /// See `Responder`.
-    public func respond(to req: HTTPRequestContext) -> EventLoopFuture<Response> {
+    public func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
         do {
             return try closure(req)
         } catch {
-            return req.eventLoop.makeFailedFuture(error: error)
+            #warning("TODO: fix force cast")
+            return req.channel!.eventLoop.makeFailedFuture(error: error)
         }
     }
 }

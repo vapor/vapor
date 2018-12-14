@@ -1,8 +1,18 @@
 import Vapor
 
-public func routes(_ router: Router) throws {
-    router.get("ping") { req in
-        return "123" as StaticString
+public func routes(_ r: Router, _ c: Container) throws {
+    r.get("ping") { req -> StaticString in
+        return "123"
+    }
+    
+    r.post("login") { req -> String in
+        struct Creds: Codable {
+            var email: String
+            var password: String
+        }
+        
+        let creds = try req.content.decode(Creds.self)
+        return "\(creds)"
     }
 //
 //    router.get("json") { req in

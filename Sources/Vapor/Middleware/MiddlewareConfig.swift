@@ -3,7 +3,7 @@
 /// Middleware will be used in the order they are added.
 public struct MiddlewareConfig {
     /// The configured middleware.
-    private var storage: [Middleware]
+    private var storage: [HTTPMiddleware]
 
     /// Create a new, empty `MiddlewareConfig`.
     public init() {
@@ -19,12 +19,12 @@ public struct MiddlewareConfig {
     /// - warning: Ensure the `Middleware` is thread-safe when using this method.
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
-    public mutating func use<M>(_ middleware: M) where M: Middleware {
+    public mutating func use<M>(_ middleware: M) where M: HTTPMiddleware {
         storage.append(middleware)
     }
 
     /// Resolves the configured middleware for a given container
-    internal func resolve() throws -> [Middleware] {
+    internal func resolve() throws -> [HTTPMiddleware] {
         return self.storage
     }
 }

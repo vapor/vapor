@@ -2,7 +2,7 @@ import Foundation
 import HTTP
 
 /// Encodes data as plaintext, utf8.
-public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
+public final class PlaintextEncoder: HTTPMessageEncoder {
     /// Private encoder.
     private let encoder: _DataEncoder
 
@@ -20,16 +20,16 @@ public final class PlaintextEncoder: DataEncoder, HTTPMessageEncoder {
     }
 
     /// See `DataEncoder`.
-    public func encode<E>(_ encodable: E) throws -> Data where E : Encodable {
+    public func encode<E>(_ encodable: E) throws -> Data where E: Encodable {
         try encodable.encode(to: encoder)
-        guard let string = encoder.plaintext else {
+        guard let string = self.encoder.plaintext else {
             throw VaporError(identifier: "plaintextEncode", reason: "The data could not be encoded as plaintext.")
         }
         return Data(string.utf8)
     }
 
     /// See `HTTPMessageEncoder`.
-    public func encode<E, M>(_ encodable: E, to message: inout M, on eventLoop: EventLoop) throws
+    public func encode<E, M>(_ encodable: E, to message: inout M) throws
         where E: Encodable, M: HTTPMessage
     {
         message.contentType = self.contentType
