@@ -29,6 +29,12 @@ existing code to stop compiling _must_ wait until the next major version to be i
 
 Code that is only additive and will not break any existing code can be included in the next minor release.
 
+## Opening a PR
+
+// Need to write someting here, but I don't know what.
+
+[Check out the guide for maintainers!][maintainers.md]
+
 ## Extras
 
 Here are some bash functions to help you test Swift on Linux easily from macOS (you must have Docker installed).
