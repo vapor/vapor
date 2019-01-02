@@ -33,7 +33,7 @@ Code that is only additive and will not break any existing code can be included 
 
 // Need to write someting here, but I don't know what.
 
-[Check out the guide for maintainers!][maintainers.md]
+[Check out the guide for maintainers!](maintainers.md)
 
 ## Extras
 
