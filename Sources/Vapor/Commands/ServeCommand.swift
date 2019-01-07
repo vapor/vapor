@@ -96,7 +96,7 @@ public final class HTTPServeCommand: Command {
             responder: httpResponder
         ).map { server in
             self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
-            server.onClose.whenComplete {
+            server.onClose.whenComplete { _ in
                 self.currentWorker?.shutdownGracefully {
                     if let error = $0 {
                         ERROR("shutting down server event loop: \(error)")
