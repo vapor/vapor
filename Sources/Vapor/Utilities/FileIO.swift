@@ -202,7 +202,7 @@ public struct FileIO {
             let done = io.readChunked(fileHandle: fd, byteCount: fileSize.intValue, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
                 return onRead(chunk)
             }
-            done.whenComplete {
+            done.whenComplete { _ in
                 try? fd.close()
             }
             return done
