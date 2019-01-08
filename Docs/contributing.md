@@ -29,9 +29,9 @@ existing code to stop compiling _must_ wait until the next major version to be i
 
 Code that is only additive and will not break any existing code can be included in the next minor release.
 
-## Opening a PR
+## Maintainers
 
-// Need to write someting here, but I don't know what.
+Each repo under the Vapor organization has at least one volunteer maintainer.
 
 [Check out the guide for maintainers!](maintainers.md)
 
