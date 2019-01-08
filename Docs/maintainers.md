@@ -60,6 +60,6 @@ Because Vapor follows semantic versioning, the Maintainer of a repo will make su
 | sqlite | - | - | - |
 | nio-kit | calebkleveter | LotU | - |
 | codable-kit | calebkleveter | LotU | - |
-| api-template | 0xTime | - | - |
-| web-template | 0xTime | - | - |
-| auth-template | 0xTime | - | - |
+| api-template | 0xTim | - | - |
+| web-template | 0xTim | - | - |
+| auth-template | 0xTim | - | - |
