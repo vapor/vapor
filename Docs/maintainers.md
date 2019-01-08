@@ -24,3 +24,42 @@ If a Maintainer notes that an incoming bugfix is indicative of the need for a la
 Public API Changes will likely require updates to both tutorial docs and API docs. Maintainers may want to either guide contributors to make these updates and then act as editor afterwards, or make these updates for them, especially in cases where the contributor’s English isn’t the best. Poor documentation wording should not block acceptance of a PR. We don’t want to discourage code contributions from folks with English as their second language.
 
 Because Vapor follows semantic versioning, the Maintainer of a repo will make sure no breaking changes are merged for minor releases. A breaking change is when an update to the API will cause a compiler error to occur where code originally compiled (with or without warnings).
+
+## Current maintainers
+
+| Repository | Maintainer 1 | Maintainer 2 | Maintainer 3 |
+| ---------- | ------------ | ------------ | ------------ |
+| auth | 0xTim | - | - |
+| routing | twof | - | - |
+| documentation | mcdappdev | 0xTim | - |
+| database-kit | - | - | - |
+| http | - | - | - |
+| redis | - | - | - |
+| postgresql | - | - | - |
+| fluent | - | - | - |
+| apt | jonas | - | - |
+| sql | - | - | - |
+| vapor | LotU | - | - |
+| service | - | - | - |
+| console | calebkleveter | - | - |
+| homebrew-tab | - | - | - |
+| toolbox | - | - | - |
+| fluent-sqlite | - | - | - |
+| fluent-postgresql | - | - | - |
+| url-encoded-form | - | - | - |
+| mysql | - | - | - |
+| jwt | - | - | - |
+| core | LotU | - | - |
+| template-kit | - | - | - |
+| multipart | - | - | - |
+| leaf | - | - | - |
+| api-documentation | bygri | - | - |
+| validation | - | - | - |
+| websocket | - | - | - |
+| crypto | - | - | - |
+| sqlite | - | - | - |
+| nio-kit | calebkleveter | LotU | - |
+| codable-kit | calebkleveter | LotU | - |
+| api-template | 0xTime | - | - |
+| web-template | 0xTime | - | - |
+| auth-template | 0xTime | - | - |
