@@ -8,6 +8,11 @@ extension Services {
         s.register(HTTPServerConfig.self) { c in
             return .init()
         }
+        s.register(HTTPServersConfig.self) { c in
+            var servers = HTTPServersConfig()
+            try servers.add(c.make())
+            return servers
+        }
 
         // client
         s.register(FoundationClient.self) { c in

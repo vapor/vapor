@@ -16,3 +16,16 @@ public struct RunningServer {
     /// Stops the currently running server, if one is running.
     public let close: () -> EventLoopFuture<Void>
 }
+
+
+public struct HTTPServersConfig {
+    internal var servers: [HTTPServerConfig]
+    
+    public init() {
+        self.servers = []
+    }
+    
+    public mutating func add(_ server: HTTPServerConfig) {
+        self.servers.append(server)
+    }
+}

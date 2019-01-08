@@ -22,7 +22,7 @@ public final class HTTPServeCommand: Command {
     public let help: [String] = ["Begins serving the app over HTTP."]
 
     /// The server to boot.
-    private let config: HTTPServerConfig
+    private let config: HTTPServersConfig
     
     private let console: Console
     
@@ -33,7 +33,7 @@ public final class HTTPServeCommand: Command {
 
     /// Create a new `ServeCommand`.
     public init(
-        config: HTTPServerConfig,
+        config: HTTPServersConfig,
         console: Console,
         application: Application
     ) {
@@ -44,24 +44,33 @@ public final class HTTPServeCommand: Command {
 
     /// See `Command`.
     public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+        #warning("handle > 1 server where port is specified")
         return self.start(
             hostname: context.options["hostname"]
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
                 ?? context.options["bind"]?.split(separator: ":").first.flatMap(String.init),
             port: context.options["port"].flatMap(Int.init)
                 // 0.0.0.0:8080, :8080, parse port
-                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
+                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init),
+            on: context.eventLoop
         )
     }
     
-    private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
+    private func start(hostname: String?, port: Int?, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return .andAll(self.config.servers.map { server in
+            return self.start(config: server, hostname: hostname, port: port)
+        }, eventLoop: eventLoop)
+    }
+    
+    private func start(config: HTTPServerConfig, hostname: String?, port: Int?) -> EventLoopFuture<Void> {
         // determine which hostname / port to bind to
-        let hostname = hostname ?? self.config.hostname
-        let port = port ?? self.config.port
+        let hostname = hostname ?? config.hostname
+        let port = port ?? config.port
         
         // print starting message
         self.console.print("Server starting on ", newLine: false)
-        self.console.output("http://" + hostname, style: .init(color: .cyan), newLine: false)
+        let scheme = config.tlsConfig == nil ? "http" : "https"
+        self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
         // http upgrade
@@ -92,7 +101,7 @@ public final class HTTPServeCommand: Command {
         
         // start the actual HTTPServer
         return HTTPServer.start(
-            config: self.config,
+            config: config,
             responder: httpResponder
         ).map { server in
             self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
