@@ -19,13 +19,9 @@ public struct RunningServer {
 
 
 public struct HTTPServersConfig {
-    internal var servers: [HTTPServerConfig]
+    public var servers: [HTTPServerConfig]
     
-    public init() {
-        self.servers = []
-    }
-    
-    public mutating func add(_ server: HTTPServerConfig) {
-        self.servers.append(server)
+    public init(servers: [HTTPServerConfig] = []) {
+        self.servers = servers
     }
 }

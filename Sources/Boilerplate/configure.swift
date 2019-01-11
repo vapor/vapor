@@ -11,9 +11,6 @@ public func configure(_ s: inout Services) throws {
             certificateChain: [.file("/Users/tanner0101/dev/vapor/http/certs/cert.pem")],
             privateKey: .file("/Users/tanner0101/dev/vapor/http/certs/key.pem")
         ))
-        var servers = HTTPServersConfig()
-        servers.add(plaintext)
-        servers.add(tls)
-        return servers
+        return HTTPServersConfig(servers: [plaintext, tls])
     }
 }
