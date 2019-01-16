@@ -21,7 +21,7 @@
 - PRs will be open for 24 hours before they are closed or merged to allow time for review by all maintainers.
 
 ## Current Maintainers
-@MrLotU 
+[@MrLotU](https://github.com/MrLotU)
 
 ## Applying To Be A Maintainer
 If you would like to volunteer to be a maintainer for this repo, or any other repo under the Vapor org, submit
