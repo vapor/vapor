@@ -12,7 +12,7 @@
 - Merge PRs.
 - Tag releases. 
 - Resolve issues.
-- Curate `contribuating.md` and related docs.
+- Curate `contributing.md` and related docs.
 
 ## Rules
 - Maintainers can review, approve, merge, and tag any `0.0.x`, or "patch", releases. 
