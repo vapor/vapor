@@ -214,7 +214,7 @@ extension Router {
         where T: HTTPResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            let res = try closure(req).encode(for: req)
+            let res = try closure(req.http).encode(for: req.http)
             return eventLoop.makeSucceededFuture(result: res)
         }
         let route = Route<HTTPResponder>(path: [.constant(method.string)] + path, output: responder)

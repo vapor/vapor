@@ -16,5 +16,5 @@ public protocol Router: class {
     /// - parameters:
     ///     - request: `Request` to route.
     /// - returns: Matching `Responder` or `nil` if none was found.
-    func route(request: HTTPRequest) -> HTTPResponder?
+    func route(request: HTTPRequestContext) -> HTTPResponder?
 }

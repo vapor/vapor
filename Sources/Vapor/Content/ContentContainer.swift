@@ -15,7 +15,7 @@ extension HTTPRequest {
 ///     req.content.decode(User.self)
 ///
 /// See `Request` and `Response` for more information.
-public struct HTTPContentContainer<Message> where Message: HTTPMessage {
+public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     /// The wrapped message container.
     internal var message: Message
 
@@ -63,7 +63,7 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     ///     - encoder: Specific `HTTPMessageEncoder` to use.
     /// - throws: Errors during serialization.
     public func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
-        try encoder.encode(encodable, to: self.message)
+        try encoder.encode(encodable, to: &self.message)
     }
     
     // MARK: Decode
@@ -101,7 +101,7 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     /// - returns: Future instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the message.
     public func decode<D>(_ content: D.Type, using decoder: HTTPMessageDecoder) throws -> D where D: Decodable {
-        return try decoder.decode(D.self, from: self.message)
+        return try decoder.decode(D.self, from: &self.message)
     }
 
     // MARK: Single Value
@@ -199,7 +199,7 @@ public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        return try self.requireDecoder().get(at: keyPath.makeBasicKeys(), from: self.message)
+        return try self.requireDecoder().get(at: keyPath.makeBasicKeys(), from: &self.message)
     }
     
     // MARK: Private

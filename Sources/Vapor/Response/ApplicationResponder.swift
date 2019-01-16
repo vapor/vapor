@@ -14,7 +14,7 @@ public struct ApplicationResponder: HTTPResponder {
     }
 
     /// See `Responder`.
-    public func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
         return self.responder.respond(to: req)
     }
 }
@@ -41,7 +41,7 @@ public struct HTTPRoutesResponder: HTTPResponder {
     }
 
     /// See `Responder`.
-    public func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
         guard let responder = self.route(request: req) else {
             return self.eventLoop.makeFailedFuture(error: Abort(.notFound))
         }
@@ -49,13 +49,13 @@ public struct HTTPRoutesResponder: HTTPResponder {
     }
     
     /// See `Router`.
-    private func route(request: HTTPRequest) -> HTTPResponder? {
+    private func route(request: HTTPRequestContext) -> HTTPResponder? {
         // FIXME: use NIO's underlying uri byte buffer when possible
         // instead of converting to string. `router.route` accepts conforming to `RoutableComponent`
-        let path: [Substring] = request.urlString
+        let path: [Substring] = request.http.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
-        return self.router.route(path: [request.method.substring] + path, parameters: &request._parameters)
+        return self.router.route(path: [request.http.method.substring] + path, parameters: &request._parameters)
     }
 }
 

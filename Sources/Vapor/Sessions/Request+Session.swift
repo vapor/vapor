@@ -1,4 +1,4 @@
-extension HTTPRequest {
+extension HTTPRequestContext {
     /// Returns the current `Session` or creates one.
     ///
     ///     router.get("session") { req -> String in

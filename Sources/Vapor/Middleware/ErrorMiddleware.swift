@@ -71,18 +71,18 @@ public final class ErrorMiddleware: HTTPMiddleware {
     }
 
     /// Error-handling closure.
-    private let closure: (HTTPRequest, Error) -> (HTTPResponse)
+    private let closure: (HTTPRequestContext, Error) -> (HTTPResponse)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (HTTPRequest, Error) -> (HTTPResponse)) {
+    public init(_ closure: @escaping (HTTPRequestContext, Error) -> (HTTPResponse)) {
         self.closure = closure
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         return next.respond(to: req).mapIfError { error in
             return self.closure(req, error)
         }

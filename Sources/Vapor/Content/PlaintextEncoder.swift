@@ -29,7 +29,7 @@ public final class PlaintextEncoder: HTTPMessageEncoder {
     }
 
     /// See `HTTPMessageEncoder`.
-    public func encode<E, M>(_ encodable: E, to message: M) throws
+    public func encode<E, M>(_ encodable: E, to message: inout M) throws
         where E: Encodable, M: HTTPMessage
     {
         message.contentType = self.contentType

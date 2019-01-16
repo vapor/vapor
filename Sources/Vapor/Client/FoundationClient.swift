@@ -1,7 +1,7 @@
 import Foundation
 
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient: HTTPResponder {
+public final class FoundationClient {
     /// See `Client`.
     public var eventLoop: EventLoop
 
@@ -57,7 +57,7 @@ private extension HTTPRequest {
 private extension HTTPResponse {
     /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
     static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?) -> HTTPResponse {
-        let res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
+        var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
         if let data = data {
             res.body = HTTPBody(data: data)
         }

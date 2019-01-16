@@ -30,14 +30,14 @@ public final class SessionsMiddleware: HTTPMiddleware {
     }
 
     /// See `Middleware.respond`
-    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         // Create a session cache
         let cache = SessionCache()
         req._session = cache
         cache.middlewareFlag = true
 
         // Check for an existing session
-        if let cookieValue = req.cookies[config.cookieName] {
+        if let cookieValue = req.http.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
             return sessions.readSession(sessionID: cookieValue.string).then { session in
                 cache.session = session
@@ -54,7 +54,8 @@ public final class SessionsMiddleware: HTTPMiddleware {
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to res: HTTPResponse, for req: HTTPRequest, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
+    private func addCookies(to res: HTTPResponse, for req: HTTPRequestContext, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
+        var res = res
         if let session = cache.session {
             // A session exists or has been created. we must
             // set a cookie value on the response
@@ -78,7 +79,7 @@ public final class SessionsMiddleware: HTTPMiddleware {
                 }
                 return res
             }
-        } else if let cookieValue = req.cookies[self.config.cookieName] {
+        } else if let cookieValue = req.http.cookies[self.config.cookieName] {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             return self.sessions.destroySession(sessionID: cookieValue.string).map {

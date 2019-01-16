@@ -36,13 +36,13 @@ public final class EngineRouter: Router {
     }
 
     /// See `Router`.
-    public func route(request: HTTPRequest) -> HTTPResponder? {
+    public func route(request: HTTPRequestContext) -> HTTPResponder? {
         // FIXME: use NIO's underlying uri byte buffer when possible
         // instead of converting to string. `router.route` accepts conforming to `RoutableComponent`
-        let path: [Substring] = request.urlString
+        let path: [Substring] = request.http.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
-        return router.route(path: [request.method.substring] + path, parameters: &request._parameters)
+        return router.route(path: [request.http.method.substring] + path, parameters: &request._parameters)
     }
 }
 

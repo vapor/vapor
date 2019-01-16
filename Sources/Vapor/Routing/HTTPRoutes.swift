@@ -117,7 +117,7 @@ extension HTTPRoutesBuilder {
         where Response: HTTPResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            let res = try closure(req).encode(for: req)
+            let res = try closure(req.http).encode(for: req.http)
             return eventLoop.makeSucceededFuture(result: res)
         }
         let route = HTTPRoute(method: method, path: path, responder: responder)
@@ -133,8 +133,9 @@ extension HTTPRoutesBuilder {
     ) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
+        #warning("TODO: combine sync + async route closure returns by conforming Future to HTTPResponseEncodable")
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            return try closure(req).thenThrowing { try $0.encode(for: req) }
+            return try closure(req.http).thenThrowing { try $0.encode(for: req.http) }
         }
         let route = HTTPRoute(method: method, path: path, responder: responder)
         self.add(route)

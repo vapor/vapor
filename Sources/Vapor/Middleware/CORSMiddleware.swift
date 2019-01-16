@@ -114,22 +114,22 @@ public final class CORSMiddleware: HTTPMiddleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
         // Check if it's valid CORS request
-        guard req.headers[.origin].first != nil else {
+        guard req.http.headers[.origin].first != nil else {
             return next.respond(to: req)
         }
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let res = req.isPreflight
-            ? req.channel!.eventLoop.makeSucceededFuture(result: .init())
+        let res = req.http.isPreflight
+            ? req.eventLoop.makeSucceededFuture(result: .init())
             : next.respond(to: req)
         
         return res.map { res in
             var res = res
             // Modify response headers based on CORS settings
-            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req))
+            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req.http))
             res.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
             res.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
             

@@ -11,7 +11,7 @@ public protocol HTTPMiddleware {
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to req: HTTPRequest, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse>
+    func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse>
 }
 
 extension Array where Element == HTTPMiddleware {
@@ -42,7 +42,7 @@ private struct HTTPMiddlewareResponder: HTTPResponder {
         self.responder = responder
     }
     
-    func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+    func respond(to req: HTTPRequestContext) -> EventLoopFuture<HTTPResponse> {
         return self.middleware.respond(to: req, chainingTo: self.responder)
     }
 }

@@ -9,9 +9,7 @@ extension Services {
             return .init()
         }
         s.register(HTTPServersConfig.self) { c in
-            var servers = HTTPServersConfig()
-            try servers.add(c.make())
-            return servers
+            return try HTTPServersConfig(servers: [c.make()])
         }
 
         // client

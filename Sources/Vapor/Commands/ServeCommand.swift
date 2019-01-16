@@ -102,7 +102,7 @@ public final class HTTPServeCommand: Command {
         // start the actual HTTPServer
         return HTTPServer.start(
             config: config,
-            responder: httpResponder
+            delegate: httpResponder
         ).map { server in
             self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
             server.onClose.whenComplete { _ in
@@ -118,18 +118,17 @@ public final class HTTPServeCommand: Command {
 
 // MARK: Private
 
-private struct NIOServerResponder: HTTPResponder {
+private struct NIOServerResponder: HTTPServerDelegate {
     let responderCache: ThreadSpecificVariable<ThreadResponder>
     let application: Application
     
-    func respond(to req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+    func respond(to http: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
+        let req = HTTPRequestContext(http: http, channel: channel)
         if let responder = responderCache.currentValue?.responder {
             return responder.respond(to: req)
         } else {
-            guard let eventLoop = req.channel?.eventLoop else {
-                fatalError("no event loop")
-            }
-            return self.application.makeContainer(on: eventLoop).thenThrowing { container -> HTTPResponder in
+            print("new container")
+            return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> HTTPResponder in
                 let responder = try container.make(HTTPResponder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
                 return responder

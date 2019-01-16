@@ -19,9 +19,9 @@ public func routes(_ r: HTTPRoutes, _ c: Container) throws {
         return ["foo": "bar"]
     }
 
-    r.get("hello", String.parameter) { req in
-        return try req.parameters.next(String.self)
-    }
+//    r.get("hello", String.parameter) { req in
+//        return try req.parameters.next(String.self)
+//    }
 //
 //    router.get("search") { req in
 //        return req.query["q"] ?? "none"
@@ -41,9 +41,9 @@ public func routes(_ r: HTTPRoutes, _ c: Container) throws {
 //        return "done"
 //    }
 //
-    r.get("client") { req in
-        return try c.client().get("http://vapor.codes").map { $0.description }
-    }
+//    r.get("client") { req in
+//        return try c.client().get("http://vapor.codes").map { $0.description }
+//    }
     
     let users = r.grouped("users")
     users.get { req in

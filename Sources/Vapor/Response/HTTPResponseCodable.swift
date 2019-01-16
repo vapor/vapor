@@ -43,7 +43,7 @@ extension HTTPResponseEncodable {
     ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
     public func encode(status: HTTPStatus, headers: HTTPHeaders = [:], for req: HTTPRequest) throws -> HTTPResponse {
-        let res = try self.encode(for: req)
+        var res = try self.encode(for: req)
         for (name, value) in headers {
             res.headers.replaceOrAdd(name: name, value: value)
         }

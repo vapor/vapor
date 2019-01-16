@@ -2,14 +2,28 @@ import NIO
 import HTTP
 import Routing
 
-extension HTTPRequest {
-    internal var _parameters: Parameters {
-        get { return self.userInfo["parameters"] as? Parameters ?? .init() }
-        set { self.userInfo["parameters"] = newValue }
+public final class HTTPRequestContext {
+    public var http: HTTPRequest
+    
+    public let channel: Channel
+    
+    public var eventLoop: EventLoop {
+        return self.channel.eventLoop
     }
+    
+    public var userInfo: [AnyHashable: Any]
+    
+    internal var _parameters: Parameters
     
     public var parameters: ParametersContainer {
         return .init(self)
+    }
+    
+    public init(http: HTTPRequest, channel: Channel) {
+        self.http = http
+        self.channel = channel
+        self._parameters = .init()
+        self.userInfo = [:]
     }
 }
 /// `Request` is a service-container wrapper around an `HTTPRequest`.

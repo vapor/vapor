@@ -5,7 +5,7 @@ extension Container {
     ///     print(res) // Future<Response>
     ///
     /// See `Client` for more information.
-    public func client() throws -> HTTPResponder {
+    public func client() throws -> FoundationClient {
         return FoundationClient(.init(configuration: .default), eventLoop: self.eventLoop)
     }
 }
@@ -147,6 +147,8 @@ extension HTTPResponder {
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
     public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable) -> EventLoopFuture<HTTPResponse> {
         let req = HTTPRequest(method: method, url: url, headers: headers)
-        return self.respond(to: req)
+        #warning("TODO: put these methods on a different protocol")
+        fatalError()
+        // return self.respond(to: req)
     }
 }
