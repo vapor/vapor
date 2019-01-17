@@ -29,6 +29,11 @@ existing code to stop compiling _must_ wait until the next major version to be i
 
 Code that is only additive and will not break any existing code can be included in the next minor release.
 
+## Maintainers
+
+Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor](https://github.com/vapor/vapor) is 
+currently maintained by [@MrLotU](https://github.com/MrLotU).
+
 ## Extras
 
 Here are some bash functions to help you test Swift on Linux easily from macOS (you must have Docker installed).
