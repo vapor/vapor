@@ -31,8 +31,8 @@ Code that is only additive and will not break any existing code can be included 
 
 ## Maintainers
 
-Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor](https://github.com/vapor/vapor) is 
-currently maintained by [@MrLotU](https://github.com/MrLotU).
+Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor's](https://github.com/vapor/vapor) current list of maintainers is:
+- [@MrLotU](https://github.com/MrLotU)
 
 ## Extras
 
