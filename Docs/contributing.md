@@ -88,6 +88,6 @@ spm-clean
 
 ----------
 
-Join us on Slack if you have any questions: [http://vapor.team](http://vapor.team).
+Join us on Discord if you have any questions: [http://vapor.team](http://vapor.team).
 
 &mdash; Thanks! 🙌

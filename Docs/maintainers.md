@@ -11,7 +11,7 @@ to be taken in order to be accepted.
 - Invite to "Maintainers" team on GitHub.
 - Opportunity to actively participate in deciding on new features in package. 
 - Access to private `#maintainers` channel in Discord.
-- Name listed as maintainer in repo's `contributors.md`. 
+- Name listed as maintainer in repo's `contributing.md`. 
 
 ## Responsibilities
 - Merge PRs.
