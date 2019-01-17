@@ -31,9 +31,7 @@ Code that is only additive and will not break any existing code can be included 
 
 ## Maintainers
 
-Each repo under the Vapor organization has at least one volunteer maintainer.
-
-[Check out the guide for maintainers!](maintainers.md)
+Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md)
 
 ## Extras
 
