@@ -1,12 +1,18 @@
 extension HTTPResponse {
     public var content: HTTPContentContainer<HTTPResponse> {
-        get { return .init(self) }
+        return .init(self)
     }
 }
 
 extension HTTPRequest {
     public var content: HTTPContentContainer<HTTPRequest> {
-        get { return .init(self) }
+        return .init(self)
+    }
+}
+
+extension RequestContext {
+    public var content: HTTPContentContainer<HTTPRequest> {
+        return self.http.content
     }
 }
 
@@ -206,14 +212,18 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     
     /// Looks up a `HTTPMessageEncoder` for the supplied `MediaType`.
     private func requireEncoder(for mediaType: HTTPMediaType) throws -> HTTPMessageEncoder {
-        return try HTTPContentConfig.global.requireEncoder(for: mediaType)
+        return try ContentConfig.global.requireEncoder(for: mediaType)
     }
     
     /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
     private func requireDecoder() throws -> HTTPMessageDecoder {
         guard let contentType = self.message.contentType else {
-            throw Abort(.unsupportedMediaType, reason: "No 'Content-Type' header is present.", identifier: "httpContentType")
+            if self.message.body.count == 0 {
+                throw Abort(.unsupportedMediaType, reason: "No content.", identifier: "httpContentType")
+            } else {
+                throw Abort(.unsupportedMediaType, reason: "No content-type header.", identifier: "httpContentType")
+            }
         }
-        return try HTTPContentConfig.global.requireDecoder(for: contentType)
+        return try ContentConfig.global.requireDecoder(for: contentType)
     }
 }

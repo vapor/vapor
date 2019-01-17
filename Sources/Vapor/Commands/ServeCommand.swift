@@ -101,12 +101,12 @@ private struct NIOServerResponder: HTTPServerDelegate {
     let application: Application
     
     func respond(to http: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
-        let req = HTTPRequestContext(http: http, channel: channel)
+        let req = RequestContext(http: http, channel: channel)
         if let responder = responderCache.currentValue?.responder {
             return responder.respond(to: req)
         } else {
-            return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> HTTPResponder in
-                let responder = try container.make(HTTPResponder.self)
+            return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> Responder in
+                let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
                 return responder
             }.then { responder in
@@ -118,8 +118,8 @@ private struct NIOServerResponder: HTTPServerDelegate {
 }
 
 private final class ThreadResponder {
-    var responder: HTTPResponder
-    init(responder: HTTPResponder) {
+    var responder: Responder
+    init(responder: Responder) {
         self.responder = responder
     }
 }

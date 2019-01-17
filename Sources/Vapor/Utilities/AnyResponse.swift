@@ -33,20 +33,20 @@ import HTTP
 ///         }
 ///     }
 ///
-public struct AnyResponse: HTTPResponseEncodable {
+public struct AnyResponse: ResponseEncodable {
     /// The wrapped `ResponseEncodable` type.
-    private let encodable: HTTPResponseEncodable
+    private let encodable: ResponseEncodable
 
     /// Creates a new `AnyResponse`.
     ///
     /// - parameters:
     ///     - encodable: Something `ResponseEncodable`.
-    public init(_ encodable: HTTPResponseEncodable) {
+    public init(_ encodable: ResponseEncodable) {
         self.encodable = encodable
     }
 
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: HTTPRequest) throws -> HTTPResponse {
-        return try encodable.encode(for: req)
+    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+        return self.encodable.encode(for: req)
     }
 }

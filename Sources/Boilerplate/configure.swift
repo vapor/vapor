@@ -1,7 +1,7 @@
 import Vapor
 
 public func configure(_ s: inout Services) throws {
-    s.extend(HTTPRoutes.self) { r, c in
+    s.extend(Routes.self) { r, c in
         try routes(r, c)
     }
     

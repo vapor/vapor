@@ -16,29 +16,21 @@ extension Services {
         s.register(HTTPClient.self) { c in
             return HTTPClient(config: .init(eventLoop: c.eventLoop))
         }
-
-        // router
-        s.register(Router.self) { c in
-            return try c.make(EngineRouter.self)
-        }
-        s.register(EngineRouter.self) { c in
-            return .init(caseInsensitive: false, eventLoop: c.eventLoop)
-        }
         
         // routes
-        s.register(HTTPRoutes.self) { c in
+        s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)
         }
 
         // responder
-        s.register(HTTPResponder.self) { c in
+        s.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
                 .make(MiddlewareConfig.self)
                 .resolve()
             
             // create HTTP routes
-            let routes = try c.make(HTTPRoutes.self)
+            let routes = try c.make(Routes.self)
             
             // return new responder
             return ApplicationResponder(routes: routes, middleware: middleware)

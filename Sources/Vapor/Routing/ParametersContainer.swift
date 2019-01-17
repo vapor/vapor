@@ -4,7 +4,7 @@
 ///
 public struct ParametersContainer {
     /// Private `Request`.
-    private let request: HTTPRequestContext
+    private let request: RequestContext
 
     /// The `ParameterValue`s that this request collected as it was being routed.
     public var values: [ParameterValue] {
@@ -12,7 +12,7 @@ public struct ParametersContainer {
     }
 
     /// Creates a new `ParametersContainer`. Use `Request.parameters`.
-    init(_ request: HTTPRequestContext) {
+    init(_ request: RequestContext) {
         self.request = request
     }
 

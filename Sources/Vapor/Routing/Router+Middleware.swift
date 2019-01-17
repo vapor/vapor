@@ -1,4 +1,4 @@
-extension HTTPRoutesBuilder {
+extension RoutesBuilder {
     // MARK: Middleware
 
     /// Creates a new `Router` wrapped in the supplied variadic `Middleware`.
@@ -10,7 +10,7 @@ extension HTTPRoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
-    public func grouped(_ middleware: HTTPMiddleware...) -> HTTPRoutesBuilder {
+    public func grouped(_ middleware: Middleware...) -> RoutesBuilder {
         return self.grouped(middleware)
     }
 
@@ -24,7 +24,7 @@ extension HTTPRoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: HTTPMiddleware..., configure: (HTTPRoutesBuilder) -> ()) {
+    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) -> ()) {
         return self.group(middleware, configure: configure)
     }
 
@@ -37,7 +37,7 @@ extension HTTPRoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
-    public func grouped(_ middleware: [HTTPMiddleware]) -> HTTPRoutesBuilder {
+    public func grouped(_ middleware: [Middleware]) -> RoutesBuilder {
         guard middleware.count > 0 else {
             return self
         }
@@ -54,7 +54,7 @@ extension HTTPRoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: [HTTPMiddleware], configure: (HTTPRoutesBuilder) -> ()) {
+    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) -> ()) {
         configure(MiddlewareGroup(root: self, middleware: middleware))
     }
 }
@@ -62,9 +62,9 @@ extension HTTPRoutesBuilder {
 // MARK: Private
 
 /// Middleware grouping route.
-private final class MiddlewareGroup: HTTPRoutesBuilder {
+private final class MiddlewareGroup: RoutesBuilder {
     /// Router to cascade to.
-    let root: HTTPRoutesBuilder
+    let root: RoutesBuilder
 
     /// See `HTTPRoutesBuilder`.
     var eventLoop: EventLoop {
@@ -72,16 +72,16 @@ private final class MiddlewareGroup: HTTPRoutesBuilder {
     }
 
     /// Additional middleware.
-    let middleware: [HTTPMiddleware]
+    let middleware: [Middleware]
 
     /// Creates a new `PathGroup`.
-    init(root: HTTPRoutesBuilder, middleware: [HTTPMiddleware]) {
+    init(root: RoutesBuilder, middleware: [Middleware]) {
         self.root = root
         self.middleware = middleware
     }
     
     /// See `HTTPRoutesBuilder`.
-    func add(_ route: HTTPRoute) {
+    func add(_ route: Route) {
         route.responder = self.middleware.makeResponder(chainingTo: route.responder)
         self.root.add(route)
     }

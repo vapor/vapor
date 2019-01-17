@@ -3,7 +3,7 @@
 ///
 /// - note: Make sure this middleware is inserted before all your error/abort middlewares,
 ///         so that even the failed request responses contain proper CORS information.
-public final class CORSMiddleware: HTTPMiddleware {
+public final class CORSMiddleware: Middleware {
     /// Option for the allow origin header in responses for CORS requests.
     ///
     /// - none: Disallows any origin.
@@ -114,7 +114,7 @@ public final class CORSMiddleware: HTTPMiddleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: RequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         // Check if it's valid CORS request
         guard req.http.headers[.origin].first != nil else {
             return next.respond(to: req)

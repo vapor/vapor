@@ -44,7 +44,7 @@ let package = Package(
     ],
     targets: [
         // Boilerplate
-        .target(name: "Boilerplate", dependencies: ["ServiceKit", "Routing", "Vapor"]),
+        .target(name: "Boilerplate", dependencies: ["Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // Vapor
@@ -56,7 +56,7 @@ let package = Package(
             "DatabaseKit",
             "HTTP",
             // "Multipart",
-            "Routing",
+            "RoutingKit",
             "ServiceKit",
             // "TemplateKit",
             // "URLEncodedForm",

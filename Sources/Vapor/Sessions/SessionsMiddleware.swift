@@ -12,7 +12,7 @@
 ///     services.register(middlewareConfig)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-public final class SessionsMiddleware: HTTPMiddleware {
+public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
     let config: SessionsConfig
 
@@ -30,7 +30,7 @@ public final class SessionsMiddleware: HTTPMiddleware {
     }
 
     /// See `Middleware.respond`
-    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: RequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         // Create a session cache
         let cache = SessionCache()
         req._session = cache
@@ -54,7 +54,7 @@ public final class SessionsMiddleware: HTTPMiddleware {
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to res: HTTPResponse, for req: HTTPRequestContext, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
+    private func addCookies(to res: HTTPResponse, for req: RequestContext, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
         var res = res
         if let session = cache.session {
             // A session exists or has been created. we must

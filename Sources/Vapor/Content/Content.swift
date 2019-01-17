@@ -18,7 +18,7 @@ import HTTP
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, HTTPResponseCodable, HTTPRequestCodable {
+public protocol Content: Codable, ResponseEncodable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
@@ -69,11 +69,14 @@ extension Content {
     }
     
     // See `HTTPResponseDecodable`.
-    public func encode(for req: HTTPRequest) throws -> HTTPResponse {
+    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse()
-        try res.content.encode(self)
-        return res
-        
+        do {
+            try res.content.encode(self)
+            return req.eventLoop.makeSucceededFuture(result: res)
+        } catch {
+            return req.eventLoop.makeFailedFuture(error: error)
+        }
     }
 }
 
@@ -170,14 +173,14 @@ extension Float: Content {
     }
 }
 
-extension Array: Content, HTTPRequestDecodable, HTTPRequestEncodable, HTTPResponseDecodable, HTTPResponseEncodable where Element: Content {
+extension Array: Content, ResponseEncodable where Element: Content {
     /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
 
-extension Dictionary: Content, HTTPRequestDecodable, HTTPRequestEncodable, HTTPResponseDecodable, HTTPResponseEncodable where Key == String, Value: Content {
+extension Dictionary: Content, ResponseEncodable where Key == String, Value: Content {
     /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .json

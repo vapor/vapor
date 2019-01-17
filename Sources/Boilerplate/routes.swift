@@ -1,6 +1,6 @@
 import Vapor
 
-public func routes(_ r: HTTPRoutes, _ c: Container) throws {
+public func routes(_ r: Routes, _ c: Container) throws {
     r.get("ping") { req -> StaticString in
         return "123"
     }
@@ -11,7 +11,7 @@ public func routes(_ r: HTTPRoutes, _ c: Container) throws {
             var password: String
         }
         
-        let creds = try req.http.content.decode(Creds.self)
+        let creds = try req.content.decode(Creds.self)
         return "\(creds)"
     }
 
@@ -51,7 +51,7 @@ public func routes(_ r: HTTPRoutes, _ c: Container) throws {
     }
 
     r.get("client") { req in
-        return try req.client().get("http://vapor.codes").map { $0.description }
+        return try req.client().get("http://httpbin.org/status/201").map { $0.description }
     }
     
     let users = r.grouped("users")

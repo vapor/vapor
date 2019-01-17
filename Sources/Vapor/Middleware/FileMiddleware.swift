@@ -5,7 +5,7 @@
 ///     services.register(middlewareConfig)
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: HTTPMiddleware {
+public final class FileMiddleware: Middleware {
     /// The public directory.
     /// - note: Must end with a slash.
     private let publicDirectory: String
@@ -19,7 +19,7 @@ public final class FileMiddleware: HTTPMiddleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequestContext, chainingTo next: HTTPResponder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: RequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         // make a copy of the path
         var path = req.http.url.path
 

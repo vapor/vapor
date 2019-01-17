@@ -14,10 +14,10 @@
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to `Content`.
 /// See the `Content` protocol for more information.
-public struct HTTPContentConfig {
+public struct ContentConfig {
     // MARK: Default
     
-    public static var global: HTTPContentConfig = .default()
+    public static var global: ContentConfig = .default()
 
     /// Creates a `ContentConfig` containing all of Vapor's default coders.
     ///
@@ -107,10 +107,7 @@ public struct HTTPContentConfig {
     ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> HTTPMessageEncoder {
         guard let encoder = self.encoders[mediaType] else {
-            throw Abort(.unsupportedMediaType, identifier: "httpEncoder", suggestedFixes: [
-                "Register an `HTTPMessageEncoder` using `HTTPContentConfig`.",
-                "Use one of the encoding methods that accepts a custom encoder."
-            ])
+            throw Abort(.unsupportedMediaType, identifier: "httpEncoder")
         }
         
         return encoder
@@ -124,10 +121,7 @@ public struct HTTPContentConfig {
     ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> HTTPMessageDecoder {
         guard let decoder = self.decoders[mediaType] else {
-            throw Abort(.unsupportedMediaType, identifier: "httpDecoder", suggestedFixes: [
-                "Register an `HTTPMessageDecoder` using `HTTPContentConfig`.",
-                "Use one of the decoding methods that accepts a custom decoder."
-            ])
+            throw Abort(.unsupportedMediaType, identifier: "httpDecoder")
         }
         
         return decoder

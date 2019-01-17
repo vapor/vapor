@@ -1,8 +1,4 @@
-import NIO
-import HTTP
-import Routing
-
-public final class HTTPRequestContext {
+public final class RequestContext {
     public var http: HTTPRequest
     
     public let channel: Channel

@@ -28,10 +28,10 @@ public struct RoutesCommand: Command {
     }
 
     /// `Router` to use for printing routes.
-    private let routes: HTTPRoutes
+    private let routes: Routes
 
     /// Create a new `RoutesCommand`.
-    public init(routes: HTTPRoutes) {
+    public init(routes: Routes) {
         self.routes = routes
     }
 
