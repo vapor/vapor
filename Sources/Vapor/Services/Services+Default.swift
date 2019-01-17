@@ -6,15 +6,15 @@ extension Services {
 
         // server
         s.register(HTTPServerConfig.self) { c in
-            return .init()
+            return .init(workerCount: 1)
         }
         s.register(HTTPServersConfig.self) { c in
             return try HTTPServersConfig(servers: [c.make()])
         }
 
         // client
-        s.register(FoundationClient.self) { c in
-            return FoundationClient(.shared, eventLoop: c.eventLoop)
+        s.register(HTTPClient.self) { c in
+            return HTTPClient(config: .init(eventLoop: c.eventLoop))
         }
 
         // router
@@ -52,9 +52,15 @@ extension Services {
 
         // sessions
         #warning("TODO: update sessions")
-//        s.register(SessionsMiddleware.self)
-//        s.register(KeyedCacheSessions.self)
-//        s.register(MemorySessions(), as: Sessions.self)
+        s.register(SessionsMiddleware.self) { c in
+            return try .init(sessions: c.make(), config: c.make())
+        }
+        s.register(Sessions.self) { c in
+            return try c.make(MemorySessions.self)
+        }
+        s.register(MemorySessions.self) { c in
+            return .init(on: c.eventLoop)
+        }
         s.register(SessionsConfig.self) { c in
             return .default()
         }

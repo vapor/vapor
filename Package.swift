@@ -61,7 +61,7 @@ let package = Package(
             // "TemplateKit",
             // "URLEncodedForm",
             // "Validation",
-            // "WebSocket"
+            "WebSocket"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]

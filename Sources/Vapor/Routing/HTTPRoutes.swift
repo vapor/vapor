@@ -81,43 +81,52 @@ private final class HTTPRoutesGroup: HTTPRoutesBuilder {
 
 extension HTTPRoutesBuilder {
     @discardableResult
-    public func get<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequest) throws -> Response) -> HTTPRoute
+    public func get<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequestContext) throws -> Response) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         return self._on(.GET, at: path, use: closure)
     }
     
     @discardableResult
-    public func get<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequest) throws -> EventLoopFuture<Response>) -> HTTPRoute
+    public func get<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequestContext) throws -> EventLoopFuture<Response>) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         return self._on(.GET, at: path, use: closure)
     }
     
     @discardableResult
-    public func post<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequest) throws -> Response) -> HTTPRoute
+    public func post<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequestContext) throws -> Response) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         return self._on(.POST, at: path, use: closure)
     }
     
     @discardableResult
-    public func post<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequest) throws -> EventLoopFuture<Response>) -> HTTPRoute
+    public func post<Response>(_ path: PathComponent..., use closure: @escaping (HTTPRequestContext) throws -> EventLoopFuture<Response>) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         return self._on(.POST, at: path, use: closure)
+    }
+    
+    @discardableResult
+    public func webSocket(_ path: PathComponent..., onUpgrade: @escaping (HTTPRequestContext, WebSocket) -> ()) -> HTTPRoute {
+        return self._on(.GET, at: path) { req -> HTTPResponse in
+            return try .webSocketUpgrade(for: req.http) { ws in
+                onUpgrade(req, ws)
+            }
+        }
     }
     
     // Sync
     private func _on<Response>(
         _ method: HTTPMethod,
         at path: [PathComponent],
-        use closure: @escaping (HTTPRequest) throws -> Response
+        use closure: @escaping (HTTPRequestContext) throws -> Response
     ) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            let res = try closure(req.http).encode(for: req.http)
+            let res = try closure(req).encode(for: req.http)
             return eventLoop.makeSucceededFuture(result: res)
         }
         let route = HTTPRoute(method: method, path: path, responder: responder)
@@ -129,13 +138,13 @@ extension HTTPRoutesBuilder {
     private func _on<Response>(
         _ method: HTTPMethod,
         at path: [PathComponent],
-        use closure: @escaping (HTTPRequest) throws -> EventLoopFuture<Response>
+        use closure: @escaping (HTTPRequestContext) throws -> EventLoopFuture<Response>
     ) -> HTTPRoute
         where Response: HTTPResponseEncodable
     {
         #warning("TODO: combine sync + async route closure returns by conforming Future to HTTPResponseEncodable")
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            return try closure(req.http).thenThrowing { try $0.encode(for: req.http) }
+            return try closure(req).thenThrowing { try $0.encode(for: req.http) }
         }
         let route = HTTPRoute(method: method, path: path, responder: responder)
         self.add(route)

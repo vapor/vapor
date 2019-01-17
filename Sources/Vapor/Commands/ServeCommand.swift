@@ -73,28 +73,6 @@ public final class HTTPServeCommand: Command {
         self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
-        // http upgrade
-        var upgraders: [HTTPProtocolUpgrader] = []
-        
-        // web socket upgrade
-        #warning("TODO: update websocket server")
-//            if let wss = try? container.make(WebSocketServer.self) {
-//                let ws = HTTPServer.webSocketUpgrader(maxFrameSize: config.webSocketMaxFrameSize, shouldUpgrade: { req in
-//                    guard let subContainer = containerCache.currentValue?.container else {
-//                        ERROR("[WebSocket Upgrader] Missing container (shouldUpgrade).")
-//                        return nil
-//                    }
-//                    return wss.webSocketShouldUpgrade(for: Request(http: req, using: subContainer))
-//                }, onUpgrade: { ws, req in
-//                    guard let subContainer = containerCache.currentValue?.container else {
-//                        ERROR("[WebSocket Upgrader] Missing container (onUpgrade).")
-//                        return
-//                    }
-//                    return wss.webSocketOnUpgrade(ws, for: Request(http: req, using: subContainer))
-//                })
-//                upgraders.append(ws)
-//            }
-        
         // http responder
         let responderCache = ThreadSpecificVariable<ThreadResponder>()
         let httpResponder = NIOServerResponder(responderCache: responderCache, application: self.application)
@@ -127,7 +105,6 @@ private struct NIOServerResponder: HTTPServerDelegate {
         if let responder = responderCache.currentValue?.responder {
             return responder.respond(to: req)
         } else {
-            print("new container")
             return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> HTTPResponder in
                 let responder = try container.make(HTTPResponder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
