@@ -22,7 +22,7 @@ public final class ServeCommand: Command {
     public let help: [String] = ["Begins serving the app over HTTP."]
 
     /// The server to boot.
-    private let config: HTTPServersConfig
+    private let config: HTTPServerConfig
     
     private let console: Console
     
@@ -33,7 +33,7 @@ public final class ServeCommand: Command {
 
     /// Create a new `ServeCommand`.
     public init(
-        config: HTTPServersConfig,
+        config: HTTPServerConfig,
         console: Console,
         application: Application
     ) {
@@ -44,29 +44,20 @@ public final class ServeCommand: Command {
 
     /// See `Command`.
     public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
-        #warning("handle > 1 server where port is specified")
-        #warning("consider booting multiple apps per server")
         return self.start(
             hostname: context.options["hostname"]
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
                 ?? context.options["bind"]?.split(separator: ":").first.flatMap(String.init),
             port: context.options["port"].flatMap(Int.init)
                 // 0.0.0.0:8080, :8080, parse port
-                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init),
-            on: context.eventLoop
+                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
     }
     
-    private func start(hostname: String?, port: Int?, on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return .andAll(self.config.servers.map { server in
-            return self.start(config: server, hostname: hostname, port: port)
-        }, eventLoop: eventLoop)
-    }
-    
-    private func start(config: HTTPServerConfig, hostname: String?, port: Int?) -> EventLoopFuture<Void> {
+    private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
         // determine which hostname / port to bind to
-        let hostname = hostname ?? config.hostname
-        let port = port ?? config.port
+        let hostname = hostname ?? self.config.hostname
+        let port = port ?? self.config.port
         
         // print starting message
         self.console.print("Server starting on ", newLine: false)
@@ -77,9 +68,8 @@ public final class ServeCommand: Command {
         // start the actual HTTPServer
         return HTTPServer.start(
             config: config
-        ).map { server in
-            #warning("TODO: find better solution for this")
-            self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
+        ).then { server in
+            return server.onClose
         }
     }
 }

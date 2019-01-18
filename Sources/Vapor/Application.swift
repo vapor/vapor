@@ -1,74 +1,36 @@
-import Console
-import Command
-import ServiceKit
-
-/// Core framework class. You usually create only one of these per application. Acts as your application's top-level service container.
-///
-///     let router = try app.make(Router.self)
-///
-/// - note: When generating responses to requests, you should use the `Request` as your service-container.
-///
-/// Call the `run()` method to run this `Application`'s commands. By default, this will boot an `HTTPServer` and begin serving requests.
-/// Which command is run depends on the command-line arguments and flags.
-///
-///     try app.run()
-///
-/// The `Application` is responsible for calling `Provider` (and `VaporProvider`) boot methods. The `willBoot` and `didBoot` methods
-/// will be called on `Application.init(...)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
-/// called on `Application.run()`
-public final class Application {
-    /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
-    public var environment: Environment
+public protocol Application {
+    var env: Environment { get }
     
-    private let configure: () throws -> Services
+    var eventLoopGroup: EventLoopGroup { get }
     
-    private let eventLoopGroup: EventLoopGroup
-
-    /// Use this to create stored properties in extensions.
-    public var userInfo: [AnyHashable: Any]
+    var userInfo: [AnyHashable: Any] { get set }
     
-    public var runningServer: RunningServer?
+    init(env: Environment)
+    
+    func makeServices() throws -> Services
+}
 
-    /// Creates and a new `Application`.
-    ///
-    /// - parameters:
-    ///     - config: Configuration preferences for this service container.
-    ///     - environment: Application's environment type (i.e., testing, production).
-    ///                    Different environments can trigger different application behavior (for example, suppressing verbose logs in production mode).
-    ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public init(
-        _ environment: Environment = .development,
-        _ configure: @escaping () throws -> Services
-    ) throws {
-        self.environment = environment
-        self.configure = configure
-        self.userInfo = [:]
-        self.runningServer = nil
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 8)
-        
-        #warning("TODO: use logger")
-        if _isDebugAssertConfiguration() && environment.isRelease {
-            print("Debug build mode detected while configured for release environment: \(environment.name).")
-            print("Compile your application with `-c release` to enable code optimizations.")
+extension Application {
+    public func makeContainer(on eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Container> {
+        do {
+            return try _makeContainer(on: eventLoopGroup)
+        } catch {
+            return eventLoopGroup.next().makeFailedFuture(error: error)
         }
     }
     
-    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        do {
-            var services = try self.configure()
-            services.register(Application.self) { c in
-                return self
-            }
-            let container = BasicContainer(environment: self.environment, services: services, on: eventLoop)
-            #warning("TODO: make willBoot and didBoot non-throwing")
-            let willBoots = container.providers.map { try! $0.willBoot(container) }
-            return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).then { () -> EventLoopFuture<Void> in
-                let didBoots = container.providers.map { try! $0.didBoot(container) }
-                return .andAll(didBoots, eventLoop: eventLoop)
-            }.map { _ in container }
-        } catch {
-            return eventLoop.makeFailedFuture(error: error)
+    private func _makeContainer(on eventLoopGroup: EventLoopGroup) throws -> EventLoopFuture<Container> {
+        var services = try self.makeServices()
+        services.register(Application.self) { c in
+            return self
         }
+        let container = BasicContainer(environment: self.env, services: services, on: eventLoopGroup)
+        #warning("TODO: make willBoot and didBoot non-throwing")
+        let willBoots = container.providers.map { try! $0.willBoot(container) }
+        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoopGroup.next()).then { () -> EventLoopFuture<Void> in
+            let didBoots = container.providers.map { try! $0.didBoot(container) }
+            return .andAll(didBoots, eventLoop: eventLoopGroup.next())
+        }.map { _ in container }
     }
 
     // MARK: Run
@@ -88,14 +50,18 @@ public final class Application {
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
     public func run() -> EventLoopFuture<Void> {
+        if _isDebugAssertConfiguration() && self.env.isRelease {
+            print("Debug build mode detected while configured for release environment: \(self.env.name).")
+            print("Compile your application with `-c release` to enable code optimizations.")
+        }
+        
         #warning("TODO: run VaporProvider willRuns")
-        #warning("TODO: allow elg to be passed")
-        return self.makeContainer(on: self.eventLoopGroup.next()).thenThrowing { c -> (Console, CommandGroup) in
+        return self.makeContainer(on: self.eventLoopGroup).thenThrowing { c -> (Console, CommandGroup) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
             return (console, command)
         }.then { res -> EventLoopFuture<Void> in
-            var runInput = self.environment.commandInput
+            var runInput = self.env.commandInput
             return res.0.run(res.1, input: &runInput)
         }
 //        // will-run all vapor service providers
@@ -103,51 +69,5 @@ public final class Application {
 //        // did-run all vapor service providers
 //        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
     }
-    
-    deinit {
-        try! self.eventLoopGroup.syncShutdownGracefully()
-    }
 }
-
-// MARK: Environment
-
-#warning("TODO: move this to separate file")
-
-extension Environment {
-    /// Exposes the `Environment`'s `arguments` property as a `CommandInput`.
-    public var commandInput: CommandInput {
-        get { return CommandInput(arguments: arguments) }
-        set { arguments = newValue.executablePath + newValue.arguments }
-    }
-
-    /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
-    /// - parameters:
-    ///     - arguments: Command line arguments to detect environment from.
-    /// - returns: The detected environment, or default env.
-    public static func detect(arguments: [String] = CommandLine.arguments) throws -> Environment {
-        var commandInput = CommandInput(arguments: arguments)
-        return try Environment.detect(from: &commandInput)
-    }
-
-    /// Detects the environment from `CommandInput`. Parses the `--env` flag.
-    /// - parameters:
-    ///     - arguments: `CommandInput` to parse `--env` flag from.
-    /// - returns: The detected environment, or default env.
-    public static func detect(from commandInput: inout CommandInput) throws -> Environment {
-        var env: Environment
-        if let value = try commandInput.parse(option: .value(name: "env", short: "e")) {
-            switch value {
-            case "prod", "production": env = .production
-            case "dev", "development": env = .development
-            case "test", "testing": env = .testing
-            default: env = .init(name: value, isRelease: false)
-            }
-        } else {
-            env = .development
-        }
-        env.commandInput = commandInput
-        return env
-    }
-}
-
 

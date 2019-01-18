@@ -50,8 +50,7 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
-            "Command",
-            "Console",
+            "ConsoleKit",
             // "Crypto",
             "DatabaseKit",
             "NetKit",

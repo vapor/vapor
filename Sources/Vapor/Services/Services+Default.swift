@@ -6,10 +6,7 @@ extension Services {
 
         // server
         s.register(HTTPServerConfig.self) { c in
-            return try HTTPServerConfig(delegate: c.make(), on: c.eventLoop)
-        }
-        s.register(HTTPServersConfig.self) { c in
-            return try HTTPServersConfig(servers: [c.make()])
+            return try HTTPServerConfig(delegate: c.make(), on: c.eventLoopGroup)
         }
 
         // client
@@ -26,7 +23,7 @@ extension Services {
         
         // routes
         s.register(Routes.self) { c in
-            return .init(eventLoop: c.eventLoop)
+            return .init(eventLoop: c.eventLoopGroup.next())
         }
 
         // responder
@@ -58,7 +55,7 @@ extension Services {
             return try c.make(MemorySessions.self)
         }
         s.register(MemorySessions.self) { c in
-            return .init(on: c.eventLoop)
+            return .init(on: c.eventLoopGroup.next())
         }
         s.register(SessionsConfig.self) { c in
             return .default()
@@ -94,7 +91,7 @@ extension Services {
 
         // console
         s.register(Console.self) { c in
-            return Terminal(on: c.eventLoop)
+            return Terminal(on: c.eventLoopGroup.next())
         }
         
 
@@ -156,7 +153,7 @@ extension Services {
         }
         s.register(FileIO.self) { c in
             #warning("TODO: re-use buffer allocator")
-            return try .init(io: c.make(), allocator: .init(), on: c.eventLoop)
+            return try .init(io: c.make(), allocator: .init(), on: c.eventLoopGroup.next())
         }
 
         // websocket

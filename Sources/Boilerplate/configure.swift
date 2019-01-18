@@ -5,12 +5,20 @@ public func configure(_ s: inout Services) throws {
         try routes(r, c)
     }
     
-//    s.register(HTTPServersConfig.self) { c in
-//        let plaintext = HTTPServerConfig(hostname: "127.0.0.1", port: 8080)
-//        let tls = HTTPServerConfig(hostname: "127.0.0.1", port: 8443, tlsConfig: .forServer(
-//            certificateChain: [.file("/Users/tanner0101/dev/vapor/http/certs/cert.pem")],
-//            privateKey: .file("/Users/tanner0101/dev/vapor/http/certs/key.pem")
-//        ))
-//        return HTTPServersConfig(servers: [plaintext, tls])
-//    }
+    s.register(HTTPServerConfig.self) { c in
+        switch c.environment.name {
+        case "tls":
+            return try HTTPServerConfig(hostname: "127.0.0.1", port: 8443, tlsConfig: .forServer(
+                certificateChain: [.file("/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem")],
+                privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
+            ), delegate: c.make(), on: c.eventLoopGroup)
+        default:
+            return try HTTPServerConfig(
+                hostname: "127.0.0.1",
+                port: 8080,
+                delegate: c.make(),
+                on: c.eventLoopGroup
+            )
+        }
+    }
 }
