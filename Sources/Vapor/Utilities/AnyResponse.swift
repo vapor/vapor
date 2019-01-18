@@ -1,6 +1,3 @@
-import NIO
-import HTTP
-
 /// A type erased response useful for routes that can return more than one type.
 ///
 ///     router.get("foo") { req -> AnyResponse in

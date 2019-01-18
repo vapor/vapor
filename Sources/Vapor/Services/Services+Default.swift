@@ -6,15 +6,22 @@ extension Services {
 
         // server
         s.register(HTTPServerConfig.self) { c in
-            return .init(workerCount: 1)
+            return try HTTPServerConfig(delegate: c.make(), on: c.eventLoop)
         }
         s.register(HTTPServersConfig.self) { c in
             return try HTTPServersConfig(servers: [c.make()])
         }
 
         // client
-        s.register(HTTPClient.self) { c in
-            return HTTPClient(config: .init(eventLoop: c.eventLoop))
+        s.register(NetClient.self) { c in
+            return .init()
+        }
+        s.register(Client.self) { c in
+            return try c.make(NetClient.self)
+        }
+        
+        s.register(HTTPServerDelegate.self) { c in
+            return try ServerDelegate(application: c.make())
         }
         
         // routes
@@ -92,7 +99,7 @@ extension Services {
         
 
         // commands
-        s.register(HTTPServeCommand.self) { c in
+        s.register(ServeCommand.self) { c in
             return try .init(
                 config: c.make(),
                 console: c.make(),
@@ -107,7 +114,7 @@ extension Services {
         }
         s.register(CommandConfig.self) { c in
             var config = CommandConfig()
-            try config.use(c.make(HTTPServeCommand.self), as: "serve", isDefault: true)
+            try config.use(c.make(ServeCommand.self), as: "serve", isDefault: true)
             try config.use(c.make(RoutesCommand.self), as: "routes")
             try config.use(c.make(BootCommand.self), as: "boot")
             return config

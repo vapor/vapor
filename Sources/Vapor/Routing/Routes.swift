@@ -97,9 +97,11 @@ extension RoutesBuilder {
     @discardableResult
     public func webSocket(_ path: PathComponent..., onUpgrade: @escaping (RequestContext, WebSocket) -> ()) -> Route {
         return self._on(.GET, at: path) { req -> HTTPResponse in
-            return try .webSocketUpgrade(for: req.http) { ws in
+            var res = HTTPResponse()
+            try res.webSocketUpgrade(for: req.http, onUpgrade: { ws in
                 onUpgrade(req, ws)
-            }
+            })
+            return res
         }
     }
     

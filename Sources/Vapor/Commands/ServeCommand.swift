@@ -3,7 +3,7 @@
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public final class HTTPServeCommand: Command {
+public final class ServeCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -45,6 +45,7 @@ public final class HTTPServeCommand: Command {
     /// See `Command`.
     public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
         #warning("handle > 1 server where port is specified")
+        #warning("consider booting multiple apps per server")
         return self.start(
             hostname: context.options["hostname"]
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
@@ -73,53 +74,12 @@ public final class HTTPServeCommand: Command {
         self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
-        // http responder
-        let responderCache = ThreadSpecificVariable<ThreadResponder>()
-        let httpResponder = NIOServerResponder(responderCache: responderCache, application: self.application)
-        
         // start the actual HTTPServer
         return HTTPServer.start(
-            config: config,
-            delegate: httpResponder
+            config: config
         ).map { server in
+            #warning("TODO: find better solution for this")
             self.application.runningServer = RunningServer(onClose: server.onClose, close: server.close)
-            server.onClose.whenComplete { _ in
-                self.currentWorker?.shutdownGracefully {
-                    if let error = $0 {
-                        ERROR("shutting down server event loop: \(error)")
-                    }
-                }
-            }
         }
-    }
-}
-
-// MARK: Private
-
-private struct NIOServerResponder: HTTPServerDelegate {
-    let responderCache: ThreadSpecificVariable<ThreadResponder>
-    let application: Application
-    
-    func respond(to http: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
-        let req = RequestContext(http: http, channel: channel)
-        if let responder = responderCache.currentValue?.responder {
-            return responder.respond(to: req)
-        } else {
-            return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> Responder in
-                let responder = try container.make(Responder.self)
-                self.responderCache.currentValue = ThreadResponder(responder: responder)
-                return responder
-            }.then { responder in
-                return responder.respond(to: req)
-            }
-        }
-        
-    }
-}
-
-private final class ThreadResponder {
-    var responder: Responder
-    init(responder: Responder) {
-        self.responder = responder
     }
 }

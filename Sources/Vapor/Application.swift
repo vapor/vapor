@@ -1,6 +1,5 @@
 import Console
 import Command
-import NIO
 import ServiceKit
 
 /// Core framework class. You usually create only one of these per application. Acts as your application's top-level service container.
@@ -22,6 +21,8 @@ public final class Application {
     public var environment: Environment
     
     private let configure: () throws -> Services
+    
+    private let eventLoopGroup: EventLoopGroup
 
     /// Use this to create stored properties in extensions.
     public var userInfo: [AnyHashable: Any]
@@ -43,6 +44,7 @@ public final class Application {
         self.configure = configure
         self.userInfo = [:]
         self.runningServer = nil
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 8)
         
         #warning("TODO: use logger")
         if _isDebugAssertConfiguration() && environment.isRelease {
@@ -86,22 +88,24 @@ public final class Application {
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
     public func run() -> EventLoopFuture<Void> {
-        let eventLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next()
-        return self.makeContainer(on: eventLoop).thenThrowing { c -> (Console, CommandGroup) in
-            #warning("TODO: run VaporProvider willRuns")
+        #warning("TODO: run VaporProvider willRuns")
+        #warning("TODO: allow elg to be passed")
+        return self.makeContainer(on: self.eventLoopGroup.next()).thenThrowing { c -> (Console, CommandGroup) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
             return (console, command)
         }.then { res -> EventLoopFuture<Void> in
             var runInput = self.environment.commandInput
             return res.0.run(res.1, input: &runInput)
-        }.thenThrowing { () -> Void in
-            return try eventLoop.syncShutdownGracefully()
         }
 //        // will-run all vapor service providers
 //        return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
 //        // did-run all vapor service providers
 //        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+    }
+    
+    deinit {
+        try! self.eventLoopGroup.syncShutdownGracefully()
     }
 }
 

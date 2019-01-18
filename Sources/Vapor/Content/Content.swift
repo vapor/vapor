@@ -1,5 +1,3 @@
-import HTTP
-
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:

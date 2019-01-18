@@ -1,6 +1,3 @@
-import Foundation
-import HTTP
-
 /// Encodes data as plaintext, utf8.
 public final class PlaintextEncoder: HTTPMessageEncoder {
     /// Private encoder.

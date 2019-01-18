@@ -6,11 +6,17 @@ extension RequestContext {
     ///
     /// See `Client` for more information.
     public func client() throws -> Client {
-        return HTTPClient(config: .init(eventLoop: self.eventLoop))
+        return NetClient()
     }
 }
 
-extension HTTPClient: Client { }
+public struct NetClient: Client {
+    init() { }
+    
+    public func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+        fatalError()
+    }
+}
 
 public protocol Client {
     func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse>

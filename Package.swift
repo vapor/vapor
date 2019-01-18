@@ -54,14 +54,13 @@ let package = Package(
             "Console",
             // "Crypto",
             "DatabaseKit",
-            "HTTP",
+            "NetKit",
             // "Multipart",
             "RoutingKit",
             "ServiceKit",
             // "TemplateKit",
             // "URLEncodedForm",
             // "Validation",
-            "WebSocket"
         ]),
         .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
     ]
