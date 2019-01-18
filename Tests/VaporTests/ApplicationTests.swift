@@ -661,7 +661,12 @@ class ApplicationTests: XCTestCase {
         let req = Request(using: app)
         req.http.url = URLComponents().url!
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
-        XCTAssertEqual(req.http.url.query, "name=Vapor%20Test")
+        // TODO: Change this test once URLEncodedForm is updated.
+        XCTAssertTrue(
+            req.http.url.query == "name=Vapor%20Test" ||
+            req.http.url.query == "name=Vapor+Test"
+        )
+        // XCTAssertEqual(req.http.url.query, "name=Vapor+Test")
     }
     
     func testErrorMiddlewareRespondsToNotFoundError() throws {

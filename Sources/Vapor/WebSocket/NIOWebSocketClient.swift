@@ -30,6 +30,6 @@ public final class NIOWebSocketClient: ServiceType, WebSocketClient {
             return request.eventLoop.newFailedFuture(error: error)
         }
         let path = request.http.url.path.isEmpty ? "/" : request.http.url.path
-        return HTTPClient.webSocket(scheme: httpScheme, hostname: hostname, port: request.http.url.port, path: path, on: request)
+        return HTTPClient.webSocket(scheme: httpScheme, hostname: hostname, port: request.http.url.port, path: path, headers: request.http.headers, on: request)
     }
 }
