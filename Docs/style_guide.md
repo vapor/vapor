@@ -1,5 +1,7 @@
 # Style Guide
-
+As Vapor grows, and more developers contribute, the project risks becoming
+a difficult to navigate mish-mash of coding styles. `style_guide.md` is created to 
+enforce a level of quality and consistency across every repository within the org.
 
 ## Curly Braces
 
