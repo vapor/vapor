@@ -84,3 +84,12 @@ let foo = [String]()
 // Not preferred
 let foo: [String] = []
 ```
+
+## Misc
+
+### Colons
+No matter whether it's a type anotation or in the middle of a dictionary, colons are always followed by a space.
+
+```swift
+private var dataDecoders: [MediaType: DataDecoder]
+```
