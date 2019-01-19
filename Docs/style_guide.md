@@ -39,6 +39,16 @@ public static var defaultContentType: MediaType {
     return .plainText
 }
 ```
+
+Getters and setters are a single line if they're small enough.
+
+```swift
+public static var defaultDatabase: DatabaseIdentifier<Database>? {
+    get { return _defaultDatabases[ObjectIdentifier(Self.self)] as? DatabaseIdentifier<Database> }
+    set { _defaultDatabases[ObjectIdentifier(Self.self)] = newValue }
+}
+```
+
 ### Closures
 
 If closure definitons are small enough to fit on one line, then the starting and ending
