@@ -83,6 +83,16 @@ internal init(
 }
 ```
 
+### Function Calls
+
+```swift
+throw FluentError(
+    identifier: "noDefaultDatabase",
+    reason: "A default database is required if no database ID is passed to `\(Self.self).query(_:on:)` or if `\(Self.self)` is being looked up statically.",
+    suggestedFixes: ["Set `\(Self.self).defaultDatabase` or to fix this error."]
+)
+```
+
 ## Initializers
 
 ### Arrays
