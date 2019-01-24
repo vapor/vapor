@@ -28,8 +28,7 @@ public final class ServeCommand: Command {
     
     private let application: Application
     
-    /// Hold the current worker. Used for deinit.
-    private var currentWorker: EventLoopGroup?
+    private var runningServer: HTTPServer?
 
     /// Create a new `ServeCommand`.
     public init(
@@ -65,11 +64,23 @@ public final class ServeCommand: Command {
         self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
+        let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
+        let signalSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: signalQueue)
+        signalSource.setEventHandler {
+            _ = self.runningServer?.close()
+            signalSource.cancel()
+        }
+        signal(SIGINT, SIG_IGN)
+        signalSource.resume()
+        
         // start the actual HTTPServer
         return HTTPServer.start(
             config: config
         ).then { server in
-            return server.onClose
+            self.runningServer = server
+            return server.onClose.map {
+                self.console.print("Server shutting down...")
+            }
         }
     }
 }

@@ -18,8 +18,4 @@ public final class BoilerplateApp: Application {
         try configure(&s)
         return s
     }
-    
-    deinit {
-        try! self.eventLoopGroup.syncShutdownGracefully()
-    }
 }

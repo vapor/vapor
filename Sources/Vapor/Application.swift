@@ -8,9 +8,20 @@ public protocol Application {
     init(env: Environment)
     
     func makeServices() throws -> Services
+    
+    func cleanup() throws
 }
 
 extension Application {
+    public func makeContainer() -> EventLoopFuture<Container> {
+        return self.makeContainer(on: self.eventLoopGroup)
+    }
+    
+    public func cleanup() throws {
+        print("Cleaning up application...")
+        try self.eventLoopGroup.syncShutdownGracefully()
+    }
+    
     public func makeContainer(on eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Container> {
         do {
             return try _makeContainer(on: eventLoopGroup)
@@ -24,12 +35,13 @@ extension Application {
         services.register(Application.self) { c in
             return self
         }
-        let container = BasicContainer(environment: self.env, services: services, on: eventLoopGroup)
+        let eventLoop = self.eventLoopGroup.next()
+        let container = BasicContainer(environment: self.env, services: services, on: eventLoop)
         #warning("TODO: make willBoot and didBoot non-throwing")
         let willBoots = container.providers.map { try! $0.willBoot(container) }
-        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoopGroup.next()).then { () -> EventLoopFuture<Void> in
+        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).then { () -> EventLoopFuture<Void> in
             let didBoots = container.providers.map { try! $0.didBoot(container) }
-            return .andAll(didBoots, eventLoop: eventLoopGroup.next())
+            return .andAll(didBoots, eventLoop: eventLoop)
         }.map { _ in container }
     }
 
@@ -56,7 +68,7 @@ extension Application {
         }
         
         #warning("TODO: run VaporProvider willRuns")
-        return self.makeContainer(on: self.eventLoopGroup).thenThrowing { c -> (Console, CommandGroup) in
+        return self.makeContainer().thenThrowing { c -> (Console, CommandGroup) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
             return (console, command)
@@ -70,4 +82,3 @@ extension Application {
 //        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
     }
 }
-
