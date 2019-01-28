@@ -37,11 +37,11 @@ public func routes(_ r: Routes, _ c: Container) throws {
 //
     let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
     sessions.get("get") { (req: HTTPRequest, ctx: Context) -> String in
-        return try ctx.session()["name"] ?? "n/a"
+        return try ctx.session().data["name"] ?? "n/a"
     }
     sessions.get("set", String.parameter) { (req: HTTPRequest, ctx: Context) -> String in
         let name = try ctx.parameters.next(String.self)
-        try ctx.session()["name"] = name
+        try ctx.session().data["name"] = name
         return name
     }
     sessions.get("del") { (req: HTTPRequest, ctx: Context) -> String in

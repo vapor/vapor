@@ -1,7 +1,7 @@
 /// Configuration options for sessions.
 public struct SessionsConfig {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
-    public let cookieFactory: (String) -> HTTPCookieValue
+    public let cookieFactory: (SessionID) -> HTTPCookieValue
 
     /// Name of HTTP cookie, used as a key for the cookie value.
     public let cookieName: String
@@ -15,16 +15,16 @@ public struct SessionsConfig {
     /// - parameters:
     ///     - cookieName: Name of HTTP cookie, used as a key for the cookie value.
     ///     - cookieFactory: Creates a new `HTTPCookieValue` for the supplied value `String`.
-    public init(cookieName: String, cookieFactory: @escaping (String) -> HTTPCookieValue) {
+    public init(cookieName: String, cookieFactory: @escaping (SessionID) -> HTTPCookieValue) {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory
     }
 
     /// `SessionsConfig` with basic cookie factory.
     public static func `default`() -> SessionsConfig {
-        return .init(cookieName: "vapor-session") { value in
+        return .init(cookieName: "vapor-session") { sessionID in
             return HTTPCookieValue(
-                string: value,
+                string: sessionID.string,
                 expires: Date(
                     timeIntervalSinceNow: 60 * 60 * 24 * 7 // one week
                 ),

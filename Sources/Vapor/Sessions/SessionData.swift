@@ -5,16 +5,22 @@ public struct SessionData: Codable {
 
     /// Create a new, empty session data.
     public init() {
-        storage = [:]
+        self.storage = [:]
     }
 
     /// See `Decodable`.
     public init(from decoder: Decoder) throws {
-        storage = try .init(from: decoder)
+        self.storage = try .init(from: decoder)
     }
 
     /// See `Encodable`.
     public func encode(to encoder: Encoder) throws {
-        try storage.encode(to: encoder)
+        try self.storage.encode(to: encoder)
+    }
+    
+    /// Convenience `[String: String]` accessor.
+    public subscript(_ key: String) -> String? {
+        get { return self.storage[key] }
+        set { self.storage[key] = newValue }
     }
 }

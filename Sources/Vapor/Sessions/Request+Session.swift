@@ -10,7 +10,7 @@ extension Context {
     /// - note: `SessionsMiddleware` must be added and enabled.
     /// - returns: `Session` for this `Request`.
     public func session() throws -> Session {
-        guard let cache = self._session else {
+        guard let cache = self._sessionCache else {
             fatalError("No session cache.")
         }
         guard cache.middlewareFlag else {
@@ -34,13 +34,13 @@ extension Context {
 
     /// Destroys the current session, if one exists.
     public func destroySession() throws {
-        self._session = nil
+        self._sessionCache?.session = nil
     }
     
-    internal var _session: SessionCache? {
-        get { return self.userInfo[_sessionKey] as? SessionCache }
-        set { self.userInfo[_sessionKey] = newValue }
+    internal var _sessionCache: SessionCache? {
+        get { return self.userInfo[_sessionCacheKey] as? SessionCache }
+        set { self.userInfo[_sessionCacheKey] = newValue }
     }
 }
 
-private let _sessionKey = "session"
+private let _sessionCacheKey = "session"

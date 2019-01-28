@@ -55,8 +55,22 @@ extension Services {
             return try c.make(MemorySessions.self)
         }
         s.register(MemorySessions.self) { c in
-            return .init(on: c.eventLoop)
+            return try MemorySessions(storage: c.make(), on: c.eventLoop)
         }
+        s.register(MemorySessions.Storage.self) { c in
+            let app = try c.make(Application.self)
+            app.lock.lock()
+            defer { app.lock.unlock() }
+            let key = "memory-sessions-storage"
+            if let existing = app.userInfo[key] as? MemorySessions.Storage {
+                return existing
+            } else {
+                let new = MemorySessions.Storage(lock: app.lock)
+                app.userInfo[key] = new
+                return new
+            }
+        }
+        
         s.register(SessionsConfig.self) { c in
             return .default()
         }
