@@ -11,7 +11,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
             var password: String
         }
         
-        let creds = try req.http.content.decode(Creds.self)
+        let creds = try req.http.decode(Creds.self)
         return "\(creds)"
     }
 

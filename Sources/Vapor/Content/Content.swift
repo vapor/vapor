@@ -16,171 +16,49 @@
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, ResponseEncodable {
-    /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
-    ///
-    /// Default implementation is `MediaType.json` for all types.
-    ///
-    ///     struct Hello: Content {
-    ///         static let defaultContentType = .urlEncodedForm
-    ///         let message = "Hello!"
-    ///     }
-    ///
-    ///     router.get("greeting") { req in
-    ///         return Hello() // message=Hello!
-    ///     }
-    ///
-    ///     router.get("greeting2") { req in
-    ///         let res = req.response()
-    ///         try res.content.encode(Hello(), as: .json)
-    ///         return res // {"message":"Hello!"}
-    ///     }
-    ///
-    static var defaultContentType: HTTPMediaType { get }
-}
+public protocol Content: HTTPContent, ResponseEncodable { }
 
 /// MARK: Default Implementations
 
 extension Content {
-    /// Default implementation is `MediaType.json` for all types.
-    ///
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-
-    /// See `HTTPRequestCodable`.
-    public static func decode(from req: HTTPRequest) throws -> Self {
-        return try req.content.decode(Self.self)
-    }
-    
-    /// See `HTTPRequestCodable`.
-    public func encode() throws -> HTTPRequest {
-        var req = HTTPRequest()
-        try req.content.encode(self)
-        return req
-    }
-    
-    // See `HTTPResponseDecodable`.
-    public static func decode(from res: HTTPResponse, for req: HTTPRequest) throws -> Self {
-        return try res.content.decode(Self.self)
-    }
-    
-    // See `HTTPResponseDecodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        var res = HTTPResponse()
+        return self.encode(status: .ok, for: req)
+    }
+    
+    /// Encodes an instance of `Self` to a `HTTPResponse`.
+    ///
+    /// - parameters:
+    ///     - req: The `HTTPRequest` associated with this `HTTPResponse`.
+    /// - returns: An `HTTPResponse`.
+    public func encode(
+        status: HTTPStatus,
+        headers: HTTPHeaders = .init(),
+        for req: RequestContext
+    ) -> EventLoopFuture<HTTPResponse> {
+        var res = HTTPResponse(status: status, headers: headers)
         do {
-            try res.content.encode(self)
-            return req.eventLoop.makeSucceededFuture(res)
+            try res.encode(self)
         } catch {
             return req.eventLoop.makeFailedFuture(error)
         }
+        return req.eventLoop.makeSucceededFuture(res)
     }
 }
 
 // MARK: Default Conformances
 
-extension String: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Int: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Int8: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Int16: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Int32: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Int64: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension UInt: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension UInt8: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension UInt16: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension UInt32: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension UInt64: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Double: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Float: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .plainText
-    }
-}
-
-extension Array: Content, ResponseEncodable where Element: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-}
-
-extension Dictionary: Content, ResponseEncodable where Key == String, Value: Content {
-    /// See `Content`.
-    public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-}
+extension String: Content { }
+extension Int: Content { }
+extension Int8: Content { }
+extension Int16: Content { }
+extension Int32: Content { }
+extension Int64: Content { }
+extension UInt: Content { }
+extension UInt8: Content { }
+extension UInt16: Content { }
+extension UInt32: Content { }
+extension UInt64: Content { }
+extension Double: Content { }
+extension Float: Content { }
+extension Array: Content, ResponseEncodable where Element: Content { }
+extension Dictionary: Content, ResponseEncodable where Key == String, Value: Content { }

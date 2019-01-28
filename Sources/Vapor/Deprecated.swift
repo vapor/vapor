@@ -1,7 +1,5 @@
 // nothing here yet...
 
-
-
 @available(*, deprecated, renamed: "EventLoopFuture")
 public typealias Future<T> = EventLoopFuture<T>
 
@@ -9,7 +7,7 @@ public typealias Future<T> = EventLoopFuture<T>
 public typealias Response = HTTPResponse
 
 @available(*, deprecated, renamed: "HTTPContentConfig")
-public typealias ContentCoders = ContentConfig
+public typealias ContentCoders = HTTPContentConfig
 
 extension HTTPRequest {
     @available(*, deprecated, message: "Use HTTP members directly on HTTPRequest.")
