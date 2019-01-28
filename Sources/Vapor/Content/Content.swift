@@ -18,6 +18,18 @@
 ///
 public protocol Content: HTTPContent, RequestDecodable, ResponseEncodable { }
 
+public protocol URLContent: Content { }
+
+extension URLContent {
+    public static func decodeRequest(
+        _ req: HTTPRequest,
+        using ctx: Context
+    ) -> EventLoopFuture<Self> {
+        #warning("TODO:")
+        fatalError("not yet implemented")
+    }
+}
+
 /// MARK: Default Implementations
 
 extension Content {

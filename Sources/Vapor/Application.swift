@@ -1,25 +1,42 @@
-public protocol Application {
-    var env: Environment { get }
-    
-    var eventLoopGroup: EventLoopGroup { get }
-    
-    var userInfo: [AnyHashable: Any] { get set }
-    
-    init(env: Environment)
-    
-    func makeServices() throws -> Services
-    
-    func cleanup() throws
-}
+//public protocol Application {
+//    var env: Environment { get }
+//
+//    var eventLoopGroup: EventLoopGroup { get }
+//
+//    var userInfo: [AnyHashable: Any] { get set }
+//
+//    init(env: Environment)
+//
+//    func makeServices() throws -> Services
+//
+//    func cleanup() throws
+//}
+import Foundation
 
-extension Application {
-    public func makeContainer() -> EventLoopFuture<Container> {
-        return self.makeContainer(on: self.eventLoopGroup.next())
+public final class Application {
+    public let env: Environment
+    
+    public let eventLoopGroup: EventLoopGroup
+    
+    public var userInfo: [AnyHashable: Any]
+    
+    public let lock: NSLock
+    
+    private let configure: () throws -> Services
+    
+    private var didCleanup: Bool
+    
+    public init(env: Environment = .development, configure: @escaping () throws -> Services) {
+        self.env = env
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.userInfo = [:]
+        self.didCleanup = false
+        self.configure = configure
+        self.lock = NSLock()
     }
     
-    public func cleanup() throws {
-        print("Cleaning up application...")
-        try self.eventLoopGroup.syncShutdownGracefully()
+    public func makeContainer() -> EventLoopFuture<Container> {
+        return self.makeContainer(on: self.eventLoopGroup.next())
     }
     
     public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
@@ -31,7 +48,7 @@ extension Application {
     }
     
     private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        var services = try self.makeServices()
+        var services = try self.configure()
         services.register(Application.self) { c in
             return self
         }
@@ -60,7 +77,7 @@ extension Application {
     ///     try app.runningServer?.onClose().wait()
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
-    public func run() -> EventLoopFuture<Void> {
+    public func run() -> EventLoopFuture<Application> {
         if _isDebugAssertConfiguration() && self.env.isRelease {
             print("Debug build mode detected while configured for release environment: \(self.env.name).")
             print("Compile your application with `-c release` to enable code optimizations.")
@@ -74,10 +91,23 @@ extension Application {
         }.flatMap { res -> EventLoopFuture<Void> in
             var runInput = self.env.commandInput
             return res.0.run(res.1, input: &runInput)
+        }.map {
+            return self
         }
 //        // will-run all vapor service providers
 //        return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
 //        // did-run all vapor service providers
 //        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+    }
+    
+    public func cleanup() throws {
+        try self.eventLoopGroup.syncShutdownGracefully()
+        self.didCleanup = true
+    }
+    
+    deinit {
+        if !self.didCleanup {
+            assertionFailure("Application.cleanup() was not called before Application deinitialized.")
+        }
     }
 }
