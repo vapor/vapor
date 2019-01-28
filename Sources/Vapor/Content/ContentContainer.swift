@@ -1,18 +1,22 @@
 extension HTTPResponse {
     public var content: HTTPContentContainer<HTTPResponse> {
-        return .init(self)
+        get { return .init(self) }
+        set { self = newValue.message }
     }
 }
 
 extension HTTPRequest {
     public var content: HTTPContentContainer<HTTPRequest> {
-        return .init(self)
+        get { return .init(self) }
+        set { self = newValue.message }
     }
 }
 
 extension RequestContext {
+    @available(*, unavailable, renamed: "http.content")
     public var content: HTTPContentContainer<HTTPRequest> {
-        return self.http.content
+        get {  fatalError() }
+        set { fatalError() }
     }
 }
 
@@ -21,7 +25,7 @@ extension RequestContext {
 ///     req.content.decode(User.self)
 ///
 /// See `Request` and `Response` for more information.
-public final class HTTPContentContainer<Message> where Message: HTTPMessage {
+public struct HTTPContentContainer<Message> where Message: HTTPMessage {
     /// The wrapped message container.
     internal var message: Message
 
@@ -39,7 +43,7 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     /// - parameters:
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     /// - throws: Errors during serialization.
-    public func encode<C>(_ encodable: C) throws
+    public mutating func encode<C>(_ encodable: C) throws
         where C: Content
     {
         try self.encode(encodable, as: C.defaultContentType)
@@ -54,7 +58,7 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     ///     - encoder: Specific `HTTPMessageEncoder` to use.
     /// - throws: Errors during serialization.
-    public func encode<E>(_ encodable: E, as contentType: HTTPMediaType) throws
+    public mutating func encode<E>(_ encodable: E, as contentType: HTTPMediaType) throws
         where E: Encodable
     {
         try self.encode(encodable, using: self.requireEncoder(for: contentType))
@@ -68,7 +72,7 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     ///     - encodable: Instance of generic `Encodable` to serialize to this HTTP message.
     ///     - encoder: Specific `HTTPMessageEncoder` to use.
     /// - throws: Errors during serialization.
-    public func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
+    public mutating func encode<E>(_ encodable: E, using encoder: HTTPMessageEncoder) throws where E: Encodable {
         try encoder.encode(encodable, to: &self.message)
     }
     
@@ -107,7 +111,7 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     /// - returns: Future instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the message.
     public func decode<D>(_ content: D.Type, using decoder: HTTPMessageDecoder) throws -> D where D: Decodable {
-        return try decoder.decode(D.self, from: &self.message)
+        return try decoder.decode(D.self, from: self.message)
     }
 
     // MARK: Single Value
@@ -205,7 +209,7 @@ public final class HTTPContentContainer<Message> where Message: HTTPMessage {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [BasicKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        return try self.requireDecoder().get(at: keyPath.makeBasicKeys(), from: &self.message)
+        return try self.requireDecoder().get(at: keyPath.makeBasicKeys(), from: self.message)
     }
     
     // MARK: Private

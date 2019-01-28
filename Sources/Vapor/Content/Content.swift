@@ -56,7 +56,7 @@ extension Content {
     
     /// See `HTTPRequestCodable`.
     public func encode() throws -> HTTPRequest {
-        let req = HTTPRequest()
+        var req = HTTPRequest()
         try req.content.encode(self)
         return req
     }
@@ -68,12 +68,12 @@ extension Content {
     
     // See `HTTPResponseDecodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        let res = HTTPResponse()
+        var res = HTTPResponse()
         do {
             try res.content.encode(self)
-            return req.eventLoop.makeSucceededFuture(result: res)
+            return req.eventLoop.makeSucceededFuture(res)
         } catch {
-            return req.eventLoop.makeFailedFuture(error: error)
+            return req.eventLoop.makeFailedFuture(error)
         }
     }
 }

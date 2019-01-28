@@ -1,9 +1,9 @@
 extension HTTPMessageDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    internal func get<D, M>(at keyPath: [BasicKey], from message: inout M) throws -> D
+    internal func get<D, M>(at keyPath: [BasicKey], from message: M) throws -> D
         where D: Decodable, M: HTTPMessage
     {
-        let decoder = try self.decode(SingleValueDecoder.self, from: &message)
+        let decoder = try self.decode(SingleValueDecoder.self, from: message)
         return try decoder.get(at: keyPath)
     }
 }
