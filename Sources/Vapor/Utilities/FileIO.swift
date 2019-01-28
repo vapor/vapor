@@ -1,4 +1,4 @@
-#warning("re-add methods with controller-based FileIO")
+#warning("TODO: re-add methods with controller-based FileIO")
 //extension HTTPRequestContext {
 //    /// Creates a `FileIO` for this `Request`.
 //    ///
@@ -107,7 +107,7 @@ public struct FileIO {
                 return Data(buffer: ptr.bindMemory(to: UInt8.self))
             }
             onRead(data)
-            return self.eventLoop.makeSucceededFuture(result: ())
+            return self.eventLoop.makeSucceededFuture(())
         }
     }
 

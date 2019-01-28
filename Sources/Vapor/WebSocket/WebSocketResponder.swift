@@ -1,4 +1,4 @@
-#warning("FIXME: update websocket responder")
+#warning("TODO: update websocket responder")
 ///// Handles an `HTTPRequest` requesting to upgrade to the websocket protocol.
 /////
 ///// The `WebSocketResponder` can decide to deny the upgrade by returning `nil` on `shouldUpgrade`.

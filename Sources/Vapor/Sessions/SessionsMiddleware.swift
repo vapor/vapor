@@ -88,7 +88,7 @@ public final class SessionsMiddleware: Middleware {
             }
         } else {
             // no session or existing cookie
-            return self.sessions.eventLoop.makeSucceededFuture(result: res)
+            return self.sessions.eventLoop.makeSucceededFuture(res)
         }
     }
 }

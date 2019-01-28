@@ -1,4 +1,4 @@
-#warning("FIXME: update websocket server")
+#warning("TODO: update websocket server")
 ///// Vapor's default `WebSocketServer` implementation. Includes conformance to `WebSocketServer`
 ///// that is backed by a `TrieRouter` for registering multiple different websocket handlers.
 /////

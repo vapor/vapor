@@ -1,4 +1,4 @@
-#warning("FIXME: update websocket client")
+#warning("TODO: update websocket client")
 //extension Client {
 //    /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.
 //    /// This `Request` will ask for upgrade to `WebSocket` protocol.

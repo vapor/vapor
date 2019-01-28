@@ -123,7 +123,7 @@ public final class CORSMiddleware: Middleware {
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
         let res = req.http.isPreflight
-            ? req.eventLoop.makeSucceededFuture(result: .init())
+            ? req.eventLoop.makeSucceededFuture(.init())
             : next.respond(to: req)
         
         return res.map { res in

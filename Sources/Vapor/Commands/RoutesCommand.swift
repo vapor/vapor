@@ -122,7 +122,7 @@ public struct RoutesCommand: Command {
             hr()
         }
 
-        return context.eventLoop.makeSucceededFuture(result: ())
+        return context.eventLoop.makeSucceededFuture(())
     }
 }
 

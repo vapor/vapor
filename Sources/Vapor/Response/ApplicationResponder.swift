@@ -41,7 +41,7 @@ public struct HTTPRoutesResponder: Responder {
     /// See `Responder`.
     public func respond(to req: RequestContext) -> EventLoopFuture<HTTPResponse> {
         guard let responder = self.route(request: req) else {
-            return self.eventLoop.makeFailedFuture(error: Abort(.notFound))
+            return self.eventLoop.makeFailedFuture(Abort(.notFound))
         }
         return responder.respond(to: req)
     }

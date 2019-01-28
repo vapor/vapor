@@ -26,7 +26,7 @@ public struct BasicResponder: Responder {
         do {
             return try closure(req, self.eventLoop)
         } catch {
-            return self.eventLoop.makeFailedFuture(error: error)
+            return self.eventLoop.makeFailedFuture(error)
         }
     }
 }

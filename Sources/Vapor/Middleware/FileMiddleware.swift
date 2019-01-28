@@ -30,7 +30,7 @@ public final class FileMiddleware: Middleware {
 
         // protect against relative paths
         guard !path.contains("../") else {
-            return self.fileio.eventLoop.makeFailedFuture(error: Abort(.forbidden))
+            return self.fileio.eventLoop.makeFailedFuture(Abort(.forbidden))
         }
 
         // create absolute file path
@@ -44,6 +44,6 @@ public final class FileMiddleware: Middleware {
 
         // stream the file
         let res = self.fileio.chunkedResponse(file: filePath, for: req.http)
-        return self.fileio.eventLoop.makeSucceededFuture(result: res)
+        return self.fileio.eventLoop.makeSucceededFuture(res)
     }
 }

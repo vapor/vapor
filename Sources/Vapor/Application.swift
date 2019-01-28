@@ -14,7 +14,7 @@ public protocol Application {
 
 extension Application {
     public func makeContainer() -> EventLoopFuture<Container> {
-        return self.makeContainer(on: self.eventLoopGroup)
+        return self.makeContainer(on: self.eventLoopGroup.next())
     }
     
     public func cleanup() throws {
@@ -22,20 +22,19 @@ extension Application {
         try self.eventLoopGroup.syncShutdownGracefully()
     }
     
-    public func makeContainer(on eventLoopGroup: EventLoopGroup) -> EventLoopFuture<Container> {
+    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
         do {
-            return try _makeContainer(on: eventLoopGroup)
+            return try _makeContainer(on: eventLoop)
         } catch {
             return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
     
-    private func _makeContainer(on eventLoopGroup: EventLoopGroup) throws -> EventLoopFuture<Container> {
+    private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
         var services = try self.makeServices()
         services.register(Application.self) { c in
             return self
         }
-        let eventLoop = self.eventLoopGroup.next()
         let container = BasicContainer(environment: self.env, services: services, on: eventLoop)
         #warning("TODO: make willBoot and didBoot non-throwing")
         let willBoots = container.providers.map { try! $0.willBoot(container) }

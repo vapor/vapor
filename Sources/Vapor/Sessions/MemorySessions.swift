@@ -17,7 +17,7 @@ public final class MemorySessions: Sessions {
     ///     - session: New `Session` to create.
     /// - returns: A `Future` that will be completed when the operation has finished.
     public func createSession(_ session: Session) -> EventLoopFuture<Void> {
-        return self.eventLoop.makeSucceededFuture(result: ())
+        return self.eventLoop.makeSucceededFuture(())
     }
     
     /// Fetches a session for the supplied cookie value.
@@ -26,7 +26,7 @@ public final class MemorySessions: Sessions {
     ///     - sessionID: `String` identifier of the `Session` to fetch.
     /// - returns: `Session` if found, `nil` if none exists.
     public func readSession(sessionID: String) -> EventLoopFuture<Session?> {
-        return self.eventLoop.makeSucceededFuture(result: self.cache[sessionID])
+        return self.eventLoop.makeSucceededFuture(self.cache[sessionID])
     }
     
     /// Updates the session. Call before the response with the session cookie is returned.
@@ -36,7 +36,7 @@ public final class MemorySessions: Sessions {
     /// - returns: A `Future` that will be completed when the operation has finished.
     public func updateSession(_ session: Session) -> EventLoopFuture<Void> {
         self.cache[session.id!] = session
-        return self.eventLoop.makeSucceededFuture(result: ())
+        return self.eventLoop.makeSucceededFuture(())
     }
     
     /// Destroys the session. Call if the response is no longer valid.
@@ -46,6 +46,6 @@ public final class MemorySessions: Sessions {
     /// - returns: A `Future` that will be completed when the operation has finished.
     public func destroySession(sessionID: String) -> EventLoopFuture<Void> {
         self.cache[sessionID] = nil
-        return self.eventLoop.makeSucceededFuture(result: ())
+        return self.eventLoop.makeSucceededFuture(())
     }
 }
