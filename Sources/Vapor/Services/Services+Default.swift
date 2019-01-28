@@ -6,7 +6,7 @@ extension Services {
 
         // server
         s.register(HTTPServerConfig.self) { c in
-            return try HTTPServerConfig(delegate: c.make(), on: c.eventLoopGroup)
+            return HTTPServerConfig()
         }
 
         // client

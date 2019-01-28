@@ -74,9 +74,9 @@ public final class ServeCommand: Command {
         signalSource.resume()
         
         // start the actual HTTPServer
-        return HTTPServer.start(
-            config: config
-        ).then { server in
+        let server = HTTPServer(config: self.config, on: self.application.eventLoopGroup)
+        let delegate = ServerDelegate(application: self.application)
+        return server.start(delegate: delegate).flatMap {
             self.runningServer = server
             return server.onClose.map {
                 self.console.print("Server shutting down...")

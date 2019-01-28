@@ -39,15 +39,15 @@ public final class SessionsMiddleware: Middleware {
         // Check for an existing session
         if let cookieValue = req.http.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
-            return sessions.readSession(sessionID: cookieValue.string).then { session in
+            return sessions.readSession(sessionID: cookieValue.string).flatMap { session in
                 cache.session = session
-                return next.respond(to: req).then { res in
+                return next.respond(to: req).flatMap { res in
                     return self.addCookies(to: res, for: req, cache: cache)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
-            return next.respond(to: req).then { res in
+            return next.respond(to: req).flatMap { res in
                 return self.addCookies(to: res, for: req, cache: cache)
             }
         }

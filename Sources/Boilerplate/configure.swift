@@ -8,16 +8,18 @@ public func configure(_ s: inout Services) throws {
     s.register(HTTPServerConfig.self) { c in
         switch c.environment.name {
         case "tls":
-            return try HTTPServerConfig(hostname: "127.0.0.1", port: 8443, tlsConfig: .forServer(
-                certificateChain: [.file("/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem")],
-                privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
-            ), delegate: c.make(), on: c.eventLoopGroup)
-        default:
-            return try HTTPServerConfig(
+            return HTTPServerConfig(
                 hostname: "127.0.0.1",
-                port: 8080,
-                delegate: c.make(),
-                on: c.eventLoopGroup
+                port: 8443,
+                tlsConfig: .forServer(
+                    certificateChain: [.file("/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem")],
+                    privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
+                )
+            )
+        default:
+            return HTTPServerConfig(
+                hostname: "127.0.0.1",
+                port: 8080
             )
         }
     }

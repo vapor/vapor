@@ -181,9 +181,9 @@ public struct FileIO {
         #warning("TODO: avoid ignoring future result")
         _ = _read(file: file, chunkSize: chunkSize) { chunk in
             return chunkStream.write(.chunk(chunk))
-        }.then {
+        }.flatMap {
             return chunkStream.write(.end)
-        }.mapIfError { error in
+        }.flatMapErrorThrowing { error in
             // we can't wait for the error
             _ = chunkStream.write(.error(error))
         }
@@ -207,7 +207,7 @@ public struct FileIO {
             }
             return done
         } catch {
-            return eventLoop.makeFailedFuture(error: error)
+            return eventLoop.makeFailedFuture(error)
         }
     }
 }

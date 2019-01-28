@@ -26,7 +26,7 @@ extension Application {
         do {
             return try _makeContainer(on: eventLoopGroup)
         } catch {
-            return eventLoopGroup.next().makeFailedFuture(error: error)
+            return eventLoopGroup.next().makeFailedFuture(error)
         }
     }
     
@@ -39,7 +39,7 @@ extension Application {
         let container = BasicContainer(environment: self.env, services: services, on: eventLoop)
         #warning("TODO: make willBoot and didBoot non-throwing")
         let willBoots = container.providers.map { try! $0.willBoot(container) }
-        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).then { () -> EventLoopFuture<Void> in
+        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).flatMap { () -> EventLoopFuture<Void> in
             let didBoots = container.providers.map { try! $0.didBoot(container) }
             return .andAll(didBoots, eventLoop: eventLoop)
         }.map { _ in container }
@@ -68,11 +68,11 @@ extension Application {
         }
         
         #warning("TODO: run VaporProvider willRuns")
-        return self.makeContainer().thenThrowing { c -> (Console, CommandGroup) in
+        return self.makeContainer().flatMapThrowing { c -> (Console, CommandGroup) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
             return (console, command)
-        }.then { res -> EventLoopFuture<Void> in
+        }.flatMap { res -> EventLoopFuture<Void> in
             var runInput = self.env.commandInput
             return res.0.run(res.1, input: &runInput)
         }

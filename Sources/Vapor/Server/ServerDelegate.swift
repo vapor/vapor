@@ -12,11 +12,11 @@ struct ServerDelegate: HTTPServerDelegate {
         if let responder = responderCache.currentValue?.responder {
             return responder.respond(to: req)
         } else {
-            return self.application.makeContainer(on: channel.eventLoop).thenThrowing { container -> Responder in
+            return self.application.makeContainer(on: channel.eventLoop).flatMapThrowing { container -> Responder in
                 let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
                 return responder
-            }.then { responder in
+            }.flatMap { responder in
                 return responder.respond(to: req)
             }
         }

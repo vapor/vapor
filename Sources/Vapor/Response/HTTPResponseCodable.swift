@@ -46,7 +46,7 @@ extension ResponseEncodable {
 extension HTTPResponse: ResponseEncodable {
     /// See `HTTPResponseCodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return req.eventLoop.makeSucceededFuture(result: self)
+        return req.eventLoop.makeSucceededFuture(self)
     }
 }
 
@@ -54,7 +54,7 @@ extension StaticString: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse(headers: staticStringHeaders, body: self)
-        return req.eventLoop.makeSucceededFuture(result: res)
+        return req.eventLoop.makeSucceededFuture(res)
     }
 }
 
@@ -62,14 +62,14 @@ extension String: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse(headers: staticStringHeaders, body: self)
-        return req.eventLoop.makeSucceededFuture(result: res)
+        return req.eventLoop.makeSucceededFuture(res)
     }
 }
 
-extension EventLoopFuture: ResponseEncodable where T: ResponseEncodable {
+extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
     public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return self.then { t in
+        return self.flatMap { t in
             return t.encode(for: req)
         }
     }
