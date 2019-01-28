@@ -4,16 +4,16 @@
 ///
 public struct ParametersContainer {
     /// Private `Request`.
-    private let request: RequestContext
+    private let ctx: Context
 
     /// The `ParameterValue`s that this request collected as it was being routed.
     public var values: [ParameterValue] {
-        return request._parameters.values
+        return self.ctx._parameters.values
     }
 
     /// Creates a new `ParametersContainer`. Use `Request.parameters`.
-    init(_ request: RequestContext) {
-        self.request = request
+    init(_ ctx: Context) {
+        self.ctx = ctx
     }
 
     /// Gets the raw parameter values from the request URI
@@ -57,6 +57,6 @@ public struct ParametersContainer {
     public func next<P>(_ parameter: P.Type) throws -> P.ResolvedParameter
         where P: Parameter
     {
-        return try request._parameters.next(P.self)
+        return try self.ctx._parameters.next(P.self)
     }
 }

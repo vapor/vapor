@@ -81,39 +81,73 @@ private final class HTTPRoutesGroup: RoutesBuilder {
 
 extension RoutesBuilder {
     @discardableResult
-    public func get<Response>(_ path: PathComponent..., use closure: @escaping (RequestContext) throws -> Response) -> Route
+    public func get<Response>(
+        _ path: PathComponent...,
+        use closure: @escaping (HTTPRequest, Context) throws -> Response
+    ) -> Route
         where Response: ResponseEncodable
     {
         return self._on(.GET, at: path, use: closure)
     }
     
     @discardableResult
-    public func post<Response>(_ path: PathComponent..., use closure: @escaping (RequestContext) throws -> Response) -> Route
-        where Response: ResponseEncodable
+    public func get<Request, Response>(
+        _ path: PathComponent...,
+        use closure: @escaping (Request, Context) throws -> Response
+    ) -> Route
+        where Request: RequestDecodable, Response: ResponseEncodable
+    {
+        return self._on(.GET, at: path, use: closure)
+    }
+    
+    @discardableResult
+    public func post<Request, Response>(
+        _ path: PathComponent...,
+        use closure: @escaping (Request, Context) throws -> Response
+    ) -> Route
+        where Request: RequestDecodable, Response: ResponseEncodable
     {
         return self._on(.POST, at: path, use: closure)
     }
     
+    #warning("TODO: allow Request here")
     @discardableResult
-    public func webSocket(_ path: PathComponent..., onUpgrade: @escaping (RequestContext, WebSocket) -> ()) -> Route {
-        return self._on(.GET, at: path) { req -> HTTPResponse in
+    public func webSocket(
+        _ path: PathComponent...,
+        onUpgrade: @escaping (HTTPRequest, Context, WebSocket) -> ()
+    ) -> Route {
+        return self._on(.GET, at: path) { (req: HTTPRequest, ctx: Context) -> HTTPResponse in
             var res = HTTPResponse()
-            try res.webSocketUpgrade(for: req.http, onUpgrade: { ws in
-                onUpgrade(req, ws)
+            try res.webSocketUpgrade(for: req, onUpgrade: { ws in
+                onUpgrade(req, ctx, ws)
             })
             return res
         }
     }
     
-    private func _on<Response>(
+    @discardableResult
+    public func on<Request, Response>(
+        _ method: HTTPMethod,
+        at path: PathComponent...,
+        use closure: @escaping (Request, Context) throws -> Response
+    ) -> Route
+        where Request: RequestDecodable, Response: ResponseEncodable
+    {
+        return self._on(method, at: path, use: closure)
+    }
+    
+    private func _on<Request, Response>(
         _ method: HTTPMethod,
         at path: [PathComponent],
-        use closure: @escaping (RequestContext) throws -> Response
+        use closure: @escaping (Request, Context) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Request: RequestDecodable, Response: ResponseEncodable
     {
-        let responder = BasicResponder(eventLoop: self.eventLoop) { req, eventLoop in
-            return try closure(req).encode(for: req)
+        let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
+            return Request.decodeRequest(req, using: ctx).map { req -> Response in
+                #warning("TODO: fix throwing")
+                return try! closure(req, ctx)
+            }.encodeResponse(for: req, using: ctx)
         }
         let route = Route(method: method, path: path, responder: responder)
         self.add(route)

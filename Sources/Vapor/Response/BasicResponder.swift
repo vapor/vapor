@@ -5,7 +5,7 @@ public struct BasicResponder: Responder {
     private let eventLoop: EventLoop
     
     /// The stored responder closure.
-    private let closure: (RequestContext, EventLoop) throws -> EventLoopFuture<HTTPResponse>
+    private let closure: (HTTPRequest, Context) throws -> EventLoopFuture<HTTPResponse>
 
     /// Create a new `BasicResponder`.
     ///
@@ -16,15 +16,18 @@ public struct BasicResponder: Responder {
     ///
     /// - parameters:
     ///     - closure: Responder closure.
-    public init(eventLoop: EventLoop, closure: @escaping (RequestContext, EventLoop) throws -> EventLoopFuture<HTTPResponse>) {
+    public init(
+        eventLoop: EventLoop,
+        closure: @escaping (HTTPRequest, Context) throws -> EventLoopFuture<HTTPResponse>
+    ) {
         self.eventLoop = eventLoop
         self.closure = closure
     }
 
     /// See `Responder`.
-    public func respond(to req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
         do {
-            return try closure(req, self.eventLoop)
+            return try closure(req, ctx)
         } catch {
             return self.eventLoop.makeFailedFuture(error)
         }

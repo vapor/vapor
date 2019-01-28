@@ -71,19 +71,19 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// Error-handling closure.
-    private let closure: (RequestContext, Error) -> (HTTPResponse)
+    private let closure: (HTTPRequest, Error) -> (HTTPResponse)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (RequestContext, Error) -> (HTTPResponse)) {
+    public init(_ closure: @escaping (HTTPRequest, Error) -> (HTTPResponse)) {
         self.closure = closure
     }
 
     /// See `Middleware`.
-    public func respond(to req: RequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
-        return next.respond(to: req).flatMapErrorThrowing { error in
+    public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+        return next.respond(to: req, using: ctx).flatMapErrorThrowing { error in
             return self.closure(req, error)
         }
     }

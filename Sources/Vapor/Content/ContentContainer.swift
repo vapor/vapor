@@ -12,11 +12,11 @@
 //    }
 //}
 //
-extension RequestContext {
-    @available(*, deprecated, renamed: "http.content")
+extension HTTPRequest {
+    @available(*, deprecated, message: "use encode / decode methods directly on request")
     public var content: HTTPRequest {
-        get {  return self.http }
-        set { self.http = newValue }
+        get {  return self }
+        set { self = newValue }
     }
 }
 //

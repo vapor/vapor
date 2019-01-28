@@ -30,31 +30,35 @@ public final class SessionsMiddleware: Middleware {
     }
 
     /// See `Middleware.respond`
-    public func respond(to req: RequestContext, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(
+        to req: HTTPRequest,
+        using ctx: Context,
+        chainingTo next: Responder
+    ) -> EventLoopFuture<HTTPResponse> {
         // Create a session cache
         let cache = SessionCache()
-        req._session = cache
+        ctx._session = cache
         cache.middlewareFlag = true
 
         // Check for an existing session
-        if let cookieValue = req.http.cookies[config.cookieName] {
+        if let cookieValue = req.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
             return sessions.readSession(sessionID: cookieValue.string).flatMap { session in
                 cache.session = session
-                return next.respond(to: req).flatMap { res in
+                return next.respond(to: req, using: ctx).flatMap { res in
                     return self.addCookies(to: res, for: req, cache: cache)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
-            return next.respond(to: req).flatMap { res in
+            return next.respond(to: req, using: ctx).flatMap { res in
                 return self.addCookies(to: res, for: req, cache: cache)
             }
         }
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to res: HTTPResponse, for req: RequestContext, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
+    private func addCookies(to res: HTTPResponse, for req: HTTPRequest, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
         var res = res
         if let session = cache.session {
             // A session exists or has been created. we must
@@ -79,7 +83,7 @@ public final class SessionsMiddleware: Middleware {
                 }
                 return res
             }
-        } else if let cookieValue = req.http.cookies[self.config.cookieName] {
+        } else if let cookieValue = req.cookies[self.config.cookieName] {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             return self.sessions.destroySession(sessionID: cookieValue.string).map {

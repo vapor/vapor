@@ -1,5 +1,5 @@
 #warning("TODO: consider renaming to encodeHTTP")
-
+#warning("TODO: consider merging with Responder protocol")
 
 /// Can convert `self` to a `Response`.
 ///
@@ -10,7 +10,17 @@ public protocol ResponseEncodable {
     /// - parameters:
     ///     - req: The `HTTPRequest` associated with this `HTTPResponse`.
     /// - returns: An `HTTPResponse`.
-    func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse>
+    func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse>
+}
+
+public protocol RequestDecodable {
+    static func decodeRequest(_ req: HTTPRequest, using ctx: Context) -> EventLoopFuture<Self>
+}
+
+extension HTTPRequest: RequestDecodable {
+    public static func decodeRequest(_ req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPRequest> {
+        return ctx.eventLoop.makeSucceededFuture(req)
+    }
 }
 
 // MARK: Convenience
@@ -29,8 +39,13 @@ extension ResponseEncodable {
     ///     - status: `HTTPStatus` to set on the `Response`.
     ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
-    public func encode(status: HTTPStatus, headers: HTTPHeaders = [:], for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return self.encode(for: req).map { res in
+    public func encodeResponse(
+        status: HTTPStatus,
+        headers: HTTPHeaders = [:],
+        for req: HTTPRequest,
+        using ctx: Context
+    ) -> EventLoopFuture<HTTPResponse> {
+        return self.encodeResponse(for: req, using: ctx).map { res in
             var res = res
             for (name, value) in headers {
                 res.headers.replaceOrAdd(name: name, value: value)
@@ -45,32 +60,32 @@ extension ResponseEncodable {
 
 extension HTTPResponse: ResponseEncodable {
     /// See `HTTPResponseCodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return req.eventLoop.makeSucceededFuture(self)
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        return ctx.eventLoop.makeSucceededFuture(self)
     }
 }
 
 extension StaticString: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse(headers: staticStringHeaders, body: self)
-        return req.eventLoop.makeSucceededFuture(res)
+        return ctx.eventLoop.makeSucceededFuture(res)
     }
 }
 
 extension String: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse(headers: staticStringHeaders, body: self)
-        return req.eventLoop.makeSucceededFuture(res)
+        return ctx.eventLoop.makeSucceededFuture(res)
     }
 }
 
 extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
         return self.flatMap { t in
-            return t.encode(for: req)
+            return t.encodeResponse(for: req, using: ctx)
         }
     }
 }

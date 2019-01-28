@@ -43,7 +43,7 @@ public struct AnyResponse: ResponseEncodable {
     }
 
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return self.encodable.encode(for: req)
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        return self.encodable.encodeResponse(for: req, using: ctx)
     }
 }

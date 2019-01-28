@@ -12,8 +12,8 @@ public struct ApplicationResponder: Responder {
     }
 
     /// See `Responder`.
-    public func respond(to req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return self.responder.respond(to: req)
+    public func respond(to req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        return self.responder.respond(to: req, using: ctx)
     }
 }
 
@@ -39,20 +39,20 @@ public struct HTTPRoutesResponder: Responder {
     }
 
     /// See `Responder`.
-    public func respond(to req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        guard let responder = self.route(request: req) else {
+    public func respond(to req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        guard let responder = self.route(req, using: ctx) else {
             return self.eventLoop.makeFailedFuture(Abort(.notFound))
         }
-        return responder.respond(to: req)
+        return responder.respond(to: req, using: ctx)
     }
     
     /// See `Router`.
-    private func route(request: RequestContext) -> Responder? {
+    private func route(_ req: HTTPRequest, using ctx: Context) -> Responder? {
         #warning("TODO: allow router to accept substring")
-        let path: [String] = request.http.urlString
+        let path: [String] = req.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
             .map { String($0) }
-        return self.router.route(path: [request.http.method.string] + path, parameters: &request._parameters)
+        return self.router.route(path: [req.method.string] + path, parameters: &ctx._parameters)
     }
 }

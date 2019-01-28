@@ -1,6 +1,4 @@
-public final class RequestContext {
-    public var http: HTTPRequest
-    
+public final class Context {
     public let channel: Channel
     
     public var eventLoop: EventLoop {
@@ -15,8 +13,9 @@ public final class RequestContext {
         return .init(self)
     }
     
-    public init(http: HTTPRequest, channel: Channel) {
-        self.http = http
+    #warning("TODO: consider protocolizing channel")
+    
+    public init(channel: Channel) {
         self.channel = channel
         self._parameters = .init()
         self.userInfo = [:]

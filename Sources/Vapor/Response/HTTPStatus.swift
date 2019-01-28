@@ -3,8 +3,8 @@ public typealias HTTPStatus = HTTPResponseStatus
 
 extension HTTPStatus: ResponseEncodable {
     /// See `HTTPResponseEncodable`.
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
         let res = HTTPResponse(status: self)
-        return req.eventLoop.makeSucceededFuture(res)
+        return ctx.eventLoop.makeSucceededFuture(res)
     }
 }

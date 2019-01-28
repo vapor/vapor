@@ -16,32 +16,28 @@
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: HTTPContent, ResponseEncodable { }
+public protocol Content: HTTPContent, RequestDecodable, ResponseEncodable { }
 
 /// MARK: Default Implementations
 
 extension Content {
-    public func encode(for req: RequestContext) -> EventLoopFuture<HTTPResponse> {
-        return self.encode(status: .ok, for: req)
+    public static func decodeRequest(_ req: HTTPRequest, using ctx: Context) -> EventLoopFuture<Self> {
+        do {
+            let content = try req.decode(Self.self)
+            return ctx.eventLoop.makeSucceededFuture(content)
+        } catch {
+            return ctx.eventLoop.makeFailedFuture(error)
+        }
     }
     
-    /// Encodes an instance of `Self` to a `HTTPResponse`.
-    ///
-    /// - parameters:
-    ///     - req: The `HTTPRequest` associated with this `HTTPResponse`.
-    /// - returns: An `HTTPResponse`.
-    public func encode(
-        status: HTTPStatus,
-        headers: HTTPHeaders = .init(),
-        for req: RequestContext
-    ) -> EventLoopFuture<HTTPResponse> {
-        var res = HTTPResponse(status: status, headers: headers)
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        var res = HTTPResponse()
         do {
             try res.encode(self)
         } catch {
-            return req.eventLoop.makeFailedFuture(error)
+            return ctx.eventLoop.makeFailedFuture(error)
         }
-        return req.eventLoop.makeSucceededFuture(res)
+        return ctx.eventLoop.makeSucceededFuture(res)
     }
 }
 
@@ -60,5 +56,5 @@ extension UInt32: Content { }
 extension UInt64: Content { }
 extension Double: Content { }
 extension Float: Content { }
-extension Array: Content, ResponseEncodable where Element: Content { }
-extension Dictionary: Content, ResponseEncodable where Key == String, Value: Content { }
+extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content { }
+extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content { }

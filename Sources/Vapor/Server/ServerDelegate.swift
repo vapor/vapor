@@ -7,17 +7,17 @@ struct ServerDelegate: HTTPServerDelegate {
         self.responderCache = .init()
     }
     
-    func respond(to http: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
-        let req = RequestContext(http: http, channel: channel)
+    func respond(to req: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
+        let ctx = Context(channel: channel)
         if let responder = responderCache.currentValue?.responder {
-            return responder.respond(to: req)
+            return responder.respond(to: req, using: ctx)
         } else {
             return self.application.makeContainer(on: channel.eventLoop).flatMapThrowing { container -> Responder in
                 let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
                 return responder
             }.flatMap { responder in
-                return responder.respond(to: req)
+                return responder.respond(to: req, using: ctx)
             }
         }
         

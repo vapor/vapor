@@ -1,4 +1,4 @@
-extension RequestContext {
+extension Context {
     /// Creates a `Client` for this `Container`.
     ///
     ///     let res = try req.client().get("http://vapor.codes")
