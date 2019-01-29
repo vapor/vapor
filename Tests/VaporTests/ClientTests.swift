@@ -100,7 +100,7 @@ class ClientTests: XCTestCase {
 /// MARK: Utilities
 
 final class LastRequestClient: Client {
-    var container: Container
+    weak var container: Container!
     var lastReq: Request?
     init(container: Container) {
         self.container = container
