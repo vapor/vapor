@@ -17,7 +17,7 @@ extension Container {
 ///
 public protocol Client {
     /// The `Container` to use for creating `Request`s.
-    var container: Container { get }
+    var container: Container! { get }
 
     /// Sends an HTTP `Request` to a server.
     ///
