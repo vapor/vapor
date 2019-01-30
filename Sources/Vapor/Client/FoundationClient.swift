@@ -11,7 +11,12 @@ public final class FoundationClient: Client, ServiceType {
     }
 
     /// See `Client`.
-    public weak var container: Container!
+    public var container: Container {
+        return _container!
+    }
+    
+    /// The actual container
+    private weak var _container: Container?
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
@@ -19,7 +24,7 @@ public final class FoundationClient: Client, ServiceType {
     /// Creates a new `FoundationClient`.
     public init(_ urlSession: URLSession, on container: Container) {
         self.urlSession = urlSession
-        self.container = container
+        self._container = container
     }
 
     /// Creates a `FoundationClient` with default settings.

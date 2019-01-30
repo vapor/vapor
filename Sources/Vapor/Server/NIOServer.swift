@@ -13,6 +13,9 @@ public final class NIOServer: Server, ServiceType {
 
     /// Container for setting on event loops.
     public fileprivate(set) weak var container: Container!
+    
+    /// Hold the current worker. Used for deinit.    
+    private var currentWorker: Worker?
 
     /// Create a new `NIOServer`.
     ///
@@ -22,6 +25,7 @@ public final class NIOServer: Server, ServiceType {
     public init(config: NIOServerConfig, container: Container) {
         self.config = config
         self.container = container
+        self.currentWorker = container
     }
 
     /// See `Server`.
@@ -109,7 +113,7 @@ public final class NIOServer: Server, ServiceType {
 
     /// Called when the server deinitializes.
     deinit {
-        container.shutdownGracefully {
+        currentWorker?.shutdownGracefully {
             if let error = $0 {
                 ERROR("shutting down server event loop: \(error)")
             }
