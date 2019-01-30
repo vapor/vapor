@@ -13,8 +13,8 @@ public final class NIOServer: Server, ServiceType {
 
     /// Container for setting on event loops.
     public fileprivate(set) weak var container: Container!
-    
-    /// Hold the current worker. Used for deinit.    
+
+    /// Hold the current worker. Used for deinit.
     private var currentWorker: Worker?
 
     /// Create a new `NIOServer`.
