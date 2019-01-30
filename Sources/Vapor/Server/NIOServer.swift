@@ -25,7 +25,6 @@ public final class NIOServer: Server, ServiceType {
     public init(config: NIOServerConfig, container: Container) {
         self.config = config
         self.container = container
-        self.currentWorker = container
     }
 
     /// See `Server`.
@@ -50,6 +49,7 @@ public final class NIOServer: Server, ServiceType {
 
             // create this server's own event loop group
             let group = MultiThreadedEventLoopGroup(numberOfThreads: config.workerCount)
+            self.currentWorker = group
             for _ in 0..<config.workerCount {
                 // initialize each event loop
                 let eventLoop = group.next()
