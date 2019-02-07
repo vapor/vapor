@@ -75,7 +75,9 @@ class ApplicationTests: XCTestCase {
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
-        try app.clientTest(.POST, "/hello/vapor", equals: "{\"error\":true,\"reason\":\"Not Found\"}")
+        try app.clientTest(.POST, "/hello/vapor") { res in
+            XCTAssertEqual(res.http.status, .notFound)
+        }
         
         try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
     }
