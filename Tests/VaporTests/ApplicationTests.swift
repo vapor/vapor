@@ -790,6 +790,7 @@ class ApplicationTests: XCTestCase {
         ("testMissingBody", testMissingBody),
         ("testSwiftError", testSwiftError),
         ("testDebuggableError", testDebuggableError),
+        ("testRetainCycles", testRetainCycles)
     ]
 }
 
