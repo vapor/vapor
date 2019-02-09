@@ -743,6 +743,17 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status, .internalServerError)
         })
     }
+    
+    func testRetainCycles() throws {
+        weak var server: NIOServer?
+        XCTAssertNil(server)
+        var app: Application! = try Application.makeTest(configure: { _, _ in }, routes: { _ in })
+        server = try app.make(NIOServer.self)
+        XCTAssertNotNil(server)
+        app = nil
+        XCTAssertNil(server)
+    }
+        
 
     static let allTests = [
         ("testContent", testContent),
