@@ -65,7 +65,7 @@ public final class NIOWebSocketServer: WebSocketServer, Service {
     ///     - webSocket: The newly connected websocket client. Use this to send and receive messages from the client.
     ///     - request: The HTTP request that initiated the websocket protocol upgrade.
     public func webSocketOnUpgrade(_ webSocket: WebSocket, for request: Request) {
-        let path: [String] = request.http.urlString.split(separator: "/").map { String($0) }
+        let path: [String] = request.http.url.path.split(separator: "/").map { String($0) }
         do {
             guard let route = router.route(path: path, parameters: &request._parameters) else {
                 throw VaporError(identifier: "websocketOnUpgrade", reason: "Could not find route for upgraded WebSocket.")
