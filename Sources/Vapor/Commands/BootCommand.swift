@@ -3,12 +3,7 @@
 ///     $ swift run Run boot
 ///     Done.
 ///
-public struct BootCommand: Command, ServiceType {
-    /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> BootCommand {
-        return .init()
-    }
-
+public struct BootCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -26,8 +21,8 @@ public struct BootCommand: Command, ServiceType {
     public init() { }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> Future<Void> {
+    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
         context.console.success("Done.")
-        return .done(on: context.container)
+        return context.eventLoop.makeSucceededFuture(())
     }
 }

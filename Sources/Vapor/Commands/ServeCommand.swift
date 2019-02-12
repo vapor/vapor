@@ -3,12 +3,7 @@
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public struct ServeCommand: Command, ServiceType {
-    /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> ServeCommand {
-        return try ServeCommand(server: container.make())
-    }
-
+public final class ServeCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -27,16 +22,28 @@ public struct ServeCommand: Command, ServiceType {
     public let help: [String] = ["Begins serving the app over HTTP."]
 
     /// The server to boot.
-    private let server: Server
+    private let config: HTTPServerConfig
+    
+    private let console: Console
+    
+    private let application: Application
+    
+    private var runningServer: HTTPServer?
 
     /// Create a new `ServeCommand`.
-    public init(server: Server) {
-        self.server = server
+    public init(
+        config: HTTPServerConfig,
+        console: Console,
+        application: Application
+    ) {
+        self.config = config
+        self.console = console
+        self.application = application
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> Future<Void> {
-        return server.start(
+    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+        return self.start(
             hostname: context.options["hostname"]
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
                 ?? context.options["bind"]?.split(separator: ":").first.flatMap(String.init),
@@ -44,5 +51,36 @@ public struct ServeCommand: Command, ServiceType {
                 // 0.0.0.0:8080, :8080, parse port
                 ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
+    }
+    
+    private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
+        // determine which hostname / port to bind to
+        let hostname = hostname ?? self.config.hostname
+        let port = port ?? self.config.port
+        
+        // print starting message
+        self.console.print("Server starting on ", newLine: false)
+        let scheme = config.tlsConfig == nil ? "http" : "https"
+        self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
+        self.console.output(":" + port.description, style: .init(color: .cyan))
+        
+        let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
+        let signalSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: signalQueue)
+        signalSource.setEventHandler {
+            _ = self.runningServer?.close()
+            signalSource.cancel()
+        }
+        signal(SIGINT, SIG_IGN)
+        signalSource.resume()
+        
+        // start the actual HTTPServer
+        let server = HTTPServer(config: self.config, on: self.application.eventLoopGroup)
+        let delegate = ServerDelegate(application: self.application)
+        return server.start(delegate: delegate).flatMap {
+            self.runningServer = server
+            return server.onClose.map {
+                self.console.print("Server shutting down...")
+            }
+        }
     }
 }

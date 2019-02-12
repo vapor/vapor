@@ -1,3 +1,5 @@
+import Foundation
+
 /* FIXME: add key strategy support once available on Linux */
 
 extension JSONEncoder {
