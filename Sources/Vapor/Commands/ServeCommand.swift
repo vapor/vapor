@@ -70,8 +70,13 @@ public final class ServeCommand: Command {
             _ = self.runningServer?.close()
             signalSource.cancel()
         }
-        signal(SIGINT, SIG_IGN)
-        signalSource.resume()
+        let signalSourceTERM = DispatchSource.makeSignalSource(signal: SIGTERM, queue: signalQueue)
+        signalSourceTERM.setEventHandler {
+            _ = self.runningServer?.close()
+            signalSourceTERM.cancel()
+        }
+        signal(SIGTERM, SIG_IGN)
+        signalSourceTERM.resume()
         
         // start the actual HTTPServer
         let server = HTTPServer(config: self.config, on: self.application.eventLoopGroup)
