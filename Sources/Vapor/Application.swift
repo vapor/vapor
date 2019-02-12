@@ -55,9 +55,9 @@ public final class Application {
         let container = BasicContainer(environment: self.env, services: services, on: eventLoop)
         #warning("TODO: make willBoot and didBoot non-throwing")
         let willBoots = container.providers.map { try! $0.willBoot(container) }
-        return EventLoopFuture<Void>.andAll(willBoots, eventLoop: eventLoop).flatMap { () -> EventLoopFuture<Void> in
+        return EventLoopFuture<Void>.andAllSucceed(willBoots, on: eventLoop).flatMap { () -> EventLoopFuture<Void> in
             let didBoots = container.providers.map { try! $0.didBoot(container) }
-            return .andAll(didBoots, eventLoop: eventLoop)
+            return .andAllSucceed(didBoots, on: eventLoop)
         }.map { _ in container }
     }
 

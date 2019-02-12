@@ -25,7 +25,7 @@ extension Environment {
             case "prod", "production": env = .production
             case "dev", "development": env = .development
             case "test", "testing": env = .testing
-            default: env = .init(name: value, isRelease: false)
+            default: env = .init(name: value)
             }
         } else {
             env = .development
