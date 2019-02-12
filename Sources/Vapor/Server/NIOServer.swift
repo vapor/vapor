@@ -12,7 +12,7 @@ public final class NIOServer: Server, ServiceType {
     public let config: NIOServerConfig
 
     /// Container for setting on event loops.
-    public let container: Container
+    public fileprivate(set) weak var container: Container!
 
     /// Hold the current worker. Used for deinit.
     private var currentWorker: Worker?
@@ -49,6 +49,7 @@ public final class NIOServer: Server, ServiceType {
 
             // create this server's own event loop group
             let group = MultiThreadedEventLoopGroup(numberOfThreads: config.workerCount)
+            self.currentWorker = group
             for _ in 0..<config.workerCount {
                 // initialize each event loop
                 let eventLoop = group.next()
