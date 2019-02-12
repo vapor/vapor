@@ -77,4 +77,30 @@ public struct Abort: AbortError {
         self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
         self.stackTrace = Abort.makeStackTrace()
     }
+
+    /// Create a new `Abort` from an error conforming to `AbortError`,
+    /// capturing current source location info.
+    public init(
+        _ error: AbortError,
+        file: String = #file,
+        function: String = #function,
+        line: UInt = #line,
+        column: UInt = #column
+    ) {
+        self.init(
+            error.status,
+            headers: error.headers,
+            reason: error.reason,
+            identifier: error.identifier,
+            possibleCauses: error.possibleCauses,
+            suggestedFixes: error.suggestedFixes,
+            documentationLinks: error.documentationLinks,
+            stackOverflowQuestions: error.stackOverflowQuestions,
+            gitHubIssues: error.gitHubIssues,
+            file: file,
+            function: function,
+            line: line,
+            column: column
+        )
+    }
 }
