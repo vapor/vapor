@@ -2,9 +2,7 @@ import Vapor
 import XCTest
 
 class ApplicationTests: XCTestCase {
-    func testStub() {
-        
-    }
+    func testStub() { }
 //    func testContent() throws {
 //        let app = try Application()
 //        let req = Request(using: app)

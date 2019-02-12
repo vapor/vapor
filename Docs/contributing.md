@@ -29,6 +29,13 @@ existing code to stop compiling _must_ wait until the next major version to be i
 
 Code that is only additive and will not break any existing code can be included in the next minor release.
 
+## Maintainers
+
+Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor's](https://github.com/vapor/vapor) current list of maintainers is:
+
+- [@tanner0101](https://github.com/tanner0101)
+- [@MrLotU](https://github.com/MrLotU)
+
 ## Extras
 
 Here are some bash functions to help you test Swift on Linux easily from macOS (you must have Docker installed).
@@ -83,6 +90,6 @@ spm-clean
 
 ----------
 
-Join us on Slack if you have any questions: [http://vapor.team](http://vapor.team).
+Join us on Discord if you have any questions: [http://vapor.team](http://vapor.team).
 
 &mdash; Thanks! 🙌
