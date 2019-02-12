@@ -32,10 +32,22 @@ public struct Abort: AbortError {
     public var sourceLocation: SourceLocation?
 
     /// See `Debuggable`
-    public var stackTrace: [String]
-    
+    public var stackTrace: [String]?
+
+    /// See `Debuggable`
+    public var possibleCauses: [String]
+
     /// See `Debuggable`
     public var suggestedFixes: [String]
+
+    /// See `Debuggable`
+    public var documentationLinks: [String]
+
+    /// See `Debuggable`
+    public var stackOverflowQuestions: [String]
+
+    /// See `Debuggable`
+    public var gitHubIssues: [String]
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
@@ -43,7 +55,11 @@ public struct Abort: AbortError {
         headers: HTTPHeaders = [:],
         reason: String? = nil,
         identifier: String? = nil,
+        possibleCauses: [String] = [],
         suggestedFixes: [String] = [],
+        documentationLinks: [String] = [],
+        stackOverflowQuestions: [String] = [],
+        gitHubIssues: [String] = [],
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
@@ -53,7 +69,11 @@ public struct Abort: AbortError {
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
+        self.possibleCauses = possibleCauses
         self.suggestedFixes = suggestedFixes
+        self.documentationLinks = documentationLinks
+        self.stackOverflowQuestions = stackOverflowQuestions
+        self.gitHubIssues = gitHubIssues
         self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
         self.stackTrace = Abort.makeStackTrace()
     }
