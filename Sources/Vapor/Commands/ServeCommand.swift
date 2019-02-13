@@ -65,13 +65,17 @@ public final class ServeCommand: Command {
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
-        let signalSource = DispatchSource.makeSignalSource(signal: SIGINT, queue: signalQueue)
-        signalSource.setEventHandler {
-            _ = self.runningServer?.close()
-            signalSource.cancel()
+        func makeSignalSource(_ code: Int32) {
+            let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
+            source.setEventHandler {
+                _ = self.runningServer?.close()
+                source.cancel()
+            }
+            source.resume()
+            signal(code, SIG_IGN)
         }
-        signal(SIGINT, SIG_IGN)
-        signalSource.resume()
+        makeSignalSource(SIGTERM)
+        makeSignalSource(SIGINT)
         
         // start the actual HTTPServer
         let server = HTTPServer(config: self.config, on: self.application.eventLoopGroup)
