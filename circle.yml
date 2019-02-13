@@ -13,8 +13,7 @@ jobs:
       - image: vapor/swift:5.0
     steps:
       - checkout
-      - run: swift build
-      - run: swift test
+      - run: swift build -c release
 
 workflows:
   version: 2
