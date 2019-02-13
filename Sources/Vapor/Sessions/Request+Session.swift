@@ -31,6 +31,10 @@ extension Context {
             return new
         }
     }
+    
+    public var hasSession: Bool {
+        return self._sessionCache?.session != nil
+    }
 
     /// Destroys the current session, if one exists.
     public func destroySession() throws {
