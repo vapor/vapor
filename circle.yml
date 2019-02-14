@@ -38,7 +38,7 @@ jobs:
       - run: 
           name: Compile code with optimizations
           command: swift build -c release
-  linux-compat-suite:
+  compat-suite:
     docker:
       - image: swift:4.2
     steps:
@@ -129,7 +129,7 @@ jobs:
       - run:
           name: Maintainers
           command: echo "@calebkleveter, @proggeramlug contact via discord"
-      - run: apt-get update; apt-get -y libgd-dev
+      - run: apt-get update; apt-get install -y libgd-dev
       - run:
           command: git clone -b 0.3.2 https://github.com/skelpo/PayPal
           working_directory: ~/
@@ -170,26 +170,26 @@ workflows:
       - linux-release:
           requires:
             - linux
-      - linux-compat-suite:
+      - compat-suite:
           type: approval
       - linux-compat-api-template:
           requires:
-            - linux-compat-suite
+            - compat-suite
       - linux-compat-swift-commerce-order-system:
           requires:
-            - linux-compat-suite
+            - compat-suite
       - linux-compat-swift-commerce-product-manager:
           requires:
-            - linux-compat-suite
+            - compat-suite
       - linux-compat-skelpo-user-manager:
           requires:
-            - linux-compat-suite
+            - compat-suite
       - linux-compat-skelpo-paypal:
           requires:
-            - linux-compat-suite
+            - compat-suite
       - linux-compat-ether-cli-ether:
           requires:
-            - linux-compat-suite
+            - compat-suite
   nightly:
     triggers:
       - schedule:
