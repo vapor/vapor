@@ -11,15 +11,7 @@ public final class FoundationClient: Client, ServiceType {
     }
 
     /// See `Client`.
-    public var container: Container {
-        guard let c = _container else {
-            fatalError("If you encounter this error, you are holding on to a client after its container has de-initialized.")
-        }
-        return c
-    }
-    
-    /// The actual container
-    private weak var _container: Container?
+    public let container: Container
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
@@ -27,7 +19,7 @@ public final class FoundationClient: Client, ServiceType {
     /// Creates a new `FoundationClient`.
     public init(_ urlSession: URLSession, on container: Container) {
         self.urlSession = urlSession
-        self._container = container
+        self.container = container
     }
 
     /// Creates a `FoundationClient` with default settings.
