@@ -120,9 +120,6 @@ jobs:
           command: git clone -b 0.1.8 https://github.com/skelpo/UserManager
           working_directory: ~/
       - run:
-          command: rm Package.resolved
-          working_directory: ~/UserManager
-      - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/UserManager
       - run:
