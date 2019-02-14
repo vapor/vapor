@@ -88,8 +88,8 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/OrderSystem
-    - hold:
-          type: approval
+    hold:
+      type: approval
 
   # linux-compat-swift-commerce-product-manager:
   #   docker:
