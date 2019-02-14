@@ -161,7 +161,7 @@ jobs:
     docker:
       - image: swift:4.2
     steps:
-      -run: echo ""
+      - run: echo ""
 
 workflows:
   version: 2
