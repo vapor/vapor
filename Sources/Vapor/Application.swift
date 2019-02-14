@@ -24,6 +24,8 @@ public final class Application {
     
     private let configure: () throws -> Services
     
+    private let threadPool: BlockingIOThreadPool
+    
     private var didCleanup: Bool
     
     public init(env: Environment = .development, configure: @escaping () throws -> Services) {
@@ -33,6 +35,8 @@ public final class Application {
         self.didCleanup = false
         self.configure = configure
         self.lock = NSLock()
+        self.threadPool = .init(numberOfThreads: 1)
+        self.threadPool.start()
     }
     
     public func makeContainer() -> EventLoopFuture<Container> {
@@ -78,13 +82,11 @@ public final class Application {
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
     public func run() -> EventLoopFuture<Application> {
-        if _isDebugAssertConfiguration() && self.env.isRelease {
-            print("Debug build mode detected while configured for release environment: \(self.env.name).")
-            print("Compile your application with `-c release` to enable code optimizations.")
-        }
-        
+        let eventLoop = self.eventLoopGroup.next()
         #warning("TODO: run VaporProvider willRuns")
-        return self.makeContainer().flatMapThrowing { c -> (Console, CommandGroup) in
+        return self.loadDotEnv(on: eventLoop).flatMap {
+            return self.makeContainer(on: eventLoop)
+        }.flatMapThrowing { c -> (Console, CommandGroup) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
             return (console, command)
@@ -100,9 +102,21 @@ public final class Application {
 //        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
     }
     
+    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return DotEnvFile.load(
+            path: ".env",
+            fileio: .init(threadPool: self.threadPool),
+            on: eventLoop
+        ).recover { error in
+            print("Could not load .env file: \(error)")
+        }
+    }
+    
     public func cleanup() throws {
         try self.eventLoopGroup.syncShutdownGracefully()
+        try self.threadPool.syncShutdownGracefully()
         self.didCleanup = true
+        
     }
     
     deinit {

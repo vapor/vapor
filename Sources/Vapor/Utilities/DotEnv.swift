@@ -1,4 +1,37 @@
-public struct DotEnv {
+#if os(Linux)
+import Glibc
+#else
+import Darwin
+#endif
+
+public struct DotEnvFile {
+    public static func load(
+        path: String,
+        fileio: NonBlockingFileIO,
+        on eventLoop: EventLoop,
+        overwrite: Bool = false
+    ) -> EventLoopFuture<Void> {
+        return self.read(path: path, fileio: fileio, on: eventLoop)
+            .map { $0.load(overwrite: overwrite) }
+    }
+    public static func read(
+        path: String,
+        fileio: NonBlockingFileIO,
+        on eventLoop: EventLoop
+    ) -> EventLoopFuture<DotEnvFile> {
+        return fileio.openFile(path: path, eventLoop: eventLoop).flatMap { arg -> EventLoopFuture<ByteBuffer> in
+            return fileio.read(fileRegion: arg.1, allocator: .init(), eventLoop: eventLoop)
+                .flatMapThrowing
+            { buffer in
+                try arg.0.close()
+                return buffer
+            }
+        }.map { buffer in
+            var parser = Parser(source: buffer)
+            return .init(lines: parser.parse())
+        }
+    }
+    
     public struct Line: CustomStringConvertible {
         public let key: String
         public let value: String
@@ -8,6 +41,19 @@ public struct DotEnv {
         }
     }
     
+    public let lines: [Line]
+    init(lines: [Line]) {
+        self.lines = lines
+    }
+    
+    public func load(overwrite: Bool = true) {
+        for line in self.lines {
+            setenv(line.key, line.value, overwrite ? 1 : 0)
+        }
+    }
+}
+
+private extension DotEnvFile {
     struct Parser {
         var source: ByteBuffer
         init(source: ByteBuffer) {
@@ -115,27 +161,6 @@ public struct DotEnv {
                 return nil
             }
             return distance - 1
-        }
-    }
-    
-    public let file: NonBlockingFileIO
-    public let eventLoop: EventLoop
-    public init(file: NonBlockingFileIO, on eventLoop: EventLoop) {
-        self.file = file
-        self.eventLoop = eventLoop
-    }
-    
-    public func load(path: String) -> EventLoopFuture<[Line]> {
-        return self.file.openFile(path: path, eventLoop: self.eventLoop).flatMap { arg -> EventLoopFuture<ByteBuffer> in
-            return self.file.read(fileRegion: arg.1, allocator: .init(), eventLoop: self.eventLoop)
-                .flatMapThrowing
-                { buffer in
-                    try arg.0.close()
-                    return buffer
-            }
-            }.map { buffer in
-                var parser = Parser(source: buffer)
-                return parser.parse()
         }
     }
 }

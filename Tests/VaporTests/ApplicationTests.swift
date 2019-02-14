@@ -745,15 +745,15 @@ class ApplicationTests: XCTestCase {
 //        })
 //    }
     
-    func testDotEnvLoad() throws {
+    func testDotEnvRead() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = BlockingIOThreadPool(numberOfThreads: 1)
         pool.start()
-        let file = NonBlockingFileIO(threadPool: pool)
+        let fileio = NonBlockingFileIO(threadPool: pool)
         let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/test.env"
-        let lines = try DotEnv(file: file, on: elg.next()).load(path: path).wait()
-        let test = lines.map { $0.description }.joined(separator: "\n")
+        let file = try DotEnvFile.read(path: path, fileio: fileio, on: elg.next()).wait()
+        let test = file.lines.map { $0.description }.joined(separator: "\n")
         XCTAssertEqual(test, """
         NODE_ENV=development
         BASIC=basic
@@ -777,7 +777,7 @@ class ApplicationTests: XCTestCase {
     
     
     static let allTests = [
-        ("testDotEnvLoad", testDotEnvLoad)
+        ("testDotEnvRead", testDotEnvRead)
     ]
 //
 //    static let allTests = [
