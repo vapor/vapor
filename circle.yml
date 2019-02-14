@@ -174,11 +174,11 @@ workflows:
       - linux-41
       - linux-release
       - linux-api-template
-      - linux-compat-swift-commerce-order-system
-      - linux-compat-swift-commerce-product-manager
-      - linux-compat-skelpo-user-manager
-      - linux-compat-skelpo-paypal
-      - linux-compat-ether-cli-ether
+      # - linux-compat-swift-commerce-order-system
+      # - linux-compat-swift-commerce-product-manager
+      # - linux-compat-skelpo-user-manager
+      # - linux-compat-skelpo-paypal
+      # - linux-compat-ether-cli-ether
       # - macos
 
   nightly:
