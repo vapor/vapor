@@ -13,7 +13,7 @@ public final class FoundationClient: Client, ServiceType {
     /// See `Client`.
     public var container: Container {
         guard let c = _container else {
-            fatalError("If you encounter this error, you are holding on to a client after de-initializing your Application. This is usually a bad idea.")
+            fatalError("If you encounter this error, you are holding on to a client after its container has de-initialized.")
         }
         return c
     }

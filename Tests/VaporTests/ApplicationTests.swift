@@ -755,6 +755,22 @@ class ApplicationTests: XCTestCase {
         app = nil
         XCTAssertNil(server)
     }
+    
+    func testContainerRetainCrash() throws {
+        let app = try Application.runningTest(port: 8009) { r in
+            r.get("client") { req in
+                return try req.client().get("http://httpbin.org/status/200").map { $0.description }
+            }
+        }
+        
+        try app.clientTest(.GET, "client") { res in
+            XCTAssertEqual(res.http.status, .ok)
+        }
+            
+        try app.clientTest(.GET, "client") { res in
+            XCTAssertEqual(res.http.status, .ok)
+        }
+    }
         
 
     static let allTests = [
@@ -790,7 +806,8 @@ class ApplicationTests: XCTestCase {
         ("testMissingBody", testMissingBody),
         ("testSwiftError", testSwiftError),
         ("testDebuggableError", testDebuggableError),
-        ("testRetainCycles", testRetainCycles)
+        ("testRetainCycles", testRetainCycles),
+        ("testContainerRetainCrash", testContainerRetainCrash),
     ]
 }
 
