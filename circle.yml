@@ -88,6 +88,8 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/OrderSystem
+    - hold:
+      type: approval
 
   linux-compat-swift-commerce-product-manager:
     docker:
@@ -134,6 +136,7 @@ jobs:
       - run:
           name: Maintainers
           command: echo "@calebkleveter, @proggeramlug contact via discord"
+      - run: sudo apt-get update; sudo apt-get -y libgd-dev
       - run:
           command: git clone -b 0.3.2 https://github.com/skelpo/PayPal
           working_directory: ~/
