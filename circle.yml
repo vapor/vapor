@@ -109,6 +109,7 @@ jobs:
           command: swift test
           working_directory: ~/ProductManager
 
+
   linux-compat-skelpo-user-manager:
     docker:
       - image: swift:4.2
@@ -146,6 +147,22 @@ jobs:
           command: swift test
           working_directory: ~/PayPal
 
+  linux-compat-ether-cli-ether:
+          name: Maintainer
+          command: echo "@calebkleveter contact via discord"
+      - run:
+          command: git clone -b 2018.10.03 https://github.com/Ether-CLI/Ether
+          working_directory: ~/
+      - run:
+          command: rm Package.resolved
+          working_directory: ~/Ether
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/Ether
+      - run:
+          command: swift build
+          working_directory: ~/Ether
+
 workflows:
   version: 2
   tests:
@@ -158,6 +175,7 @@ workflows:
       - linux-compat-swift-commerce-product-manager
       - linux-compat-skelpo-user-manager
       - linux-compat-skelpo-paypal
+      - linux-compat-ether-cli-ether
       # - macos
 
   nightly:
