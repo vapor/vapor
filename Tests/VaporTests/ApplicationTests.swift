@@ -745,8 +745,39 @@ class ApplicationTests: XCTestCase {
 //        })
 //    }
     
+    func testDotEnvLoad() throws {
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let pool = BlockingIOThreadPool(numberOfThreads: 1)
+        pool.start()
+        let file = NonBlockingFileIO(threadPool: pool)
+        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = "/" + folder + "/Utilities/test.env"
+        let lines = try DotEnv(file: file, on: elg.next()).load(path: path).wait()
+        let test = lines.map { $0.description }.joined(separator: "\n")
+        XCTAssertEqual(test, """
+        NODE_ENV=development
+        BASIC=basic
+        AFTER_LINE=after_line
+        UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
+        EMPTY=
+        SINGLE_QUOTES=single_quotes
+        DOUBLE_QUOTES=double_quotes
+        EXPAND_NEWLINES=expand\nnewlines
+        DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
+        DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
+        EQUAL_SIGNS=equals==
+        RETAIN_INNER_QUOTES={"foo": "bar"}
+        RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
+        INCLUDE_SPACE=some spaced out string
+        USERNAME=therealnerdybeast@example.tld
+        """)
+        try pool.syncShutdownGracefully()
+        try elg.syncShutdownGracefully()
+    }
+    
+    
     static let allTests = [
-        ("testStub", testStub)
+        ("testDotEnvLoad", testDotEnvLoad)
     ]
 //
 //    static let allTests = [
