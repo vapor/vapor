@@ -156,23 +156,21 @@ jobs:
       - run:
           command: swift build
           working_directory: ~/Ether
-
   linux-compat-suite:
     docker:
       - image: swift:4.2
     steps:
       - run: echo ""
-
 workflows:
   version: 2
   tests:
     jobs:
       - linux
       - linux-41
-      - linux-release
+      - linux-release:
           requires:
             - linux
-      - linux-api-template
+      - linux-api-template:
           requires:
             - linux
       - linux-compat-suite:
