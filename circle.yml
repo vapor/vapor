@@ -120,7 +120,7 @@ jobs:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/Ether
       - run:
-          command: swift test
+          command: swift build
           working_directory: ~/Ether
 
 workflows:
