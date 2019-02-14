@@ -1,7 +1,7 @@
-extension Container {
+extension Application {
     /// Creates a `Client` for this `Container`.
     ///
-    ///     let res = try req.client().get("http://vapor.codes")
+    ///     let res = try app.client().get("http://vapor.codes")
     ///     print(res) // Future<Response>
     ///
     /// See `Client` for more information.
@@ -9,6 +9,31 @@ extension Container {
         return try make()
     }
 }
+
+extension Request {
+    /// Creates a `Client` for this `Container`.
+    ///
+    ///     let res = try req.client().get("http://vapor.codes")
+    ///     print(res) // Future<Response>
+    ///
+    /// See `Client` for more information.
+    public func client() throws -> Client {
+        return try self.sharedContainer.make()
+    }
+}
+
+extension Response {
+    /// Creates a `Client` for this `Container`.
+    ///
+    ///     let res = try req.client().get("http://vapor.codes")
+    ///     print(res) // Future<Response>
+    ///
+    /// See `Client` for more information.
+    public func client() throws -> Client {
+        return try self.sharedContainer.make()
+    }
+}
+
 
 /// Connects to remote HTTP servers and sends HTTP requests receiving HTTP responses.
 ///
