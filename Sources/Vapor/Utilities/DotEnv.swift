@@ -4,7 +4,42 @@ import Glibc
 import Darwin
 #endif
 
+/// Reads `.env` (dotenv) files and loads them into the current process.
+///
+///     let fileio: NonBlockingFileIO
+///     let elg: EventLoopGroup
+///     let file = try DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next()).wait()
+///     for line in file.lines {
+///         print("\(line.key)=\(line.value)")
+///     }
+///     file.load(overwrite: true) // loads all lines into the process
+///
+/// Dotenv files are formatted using `KEY=VALUE` syntax. They support comments using the `#` symbol.
+/// They also support strings, both single and double-quoted.
+///
+///     FOO=BAR
+///     STRING='Single Quote String'
+///     # Comment
+///     STRING2="Double Quoted\nString"
+///
+/// Single-quoted strings are parsed literally. Double-quoted strings may contain escaped newlines
+/// that will be converted to actual newlines.
 public struct DotEnvFile {
+    /// Reads a dotenv file from the supplied path and loads it into the process.
+    ///
+    ///     let fileio: NonBlockingFileIO
+    ///     let elg: EventLoopGroup
+    ///     try DotEnvFile.load(path: ".env", fileio: fileio, on: elg.next()).wait()
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// Use `DotEnvFile.read` to read the file without loading it.
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - fileio: File loader.
+    ///     - eventLoop: Eventloop to perform async work on.
+    ///     - overwrite: If `true`, values already existing in the process' env
+    ///                  will be overwritten. Defaults to `false`.
     public static func load(
         path: String,
         fileio: NonBlockingFileIO,
@@ -14,6 +49,24 @@ public struct DotEnvFile {
         return self.read(path: path, fileio: fileio, on: eventLoop)
             .map { $0.load(overwrite: overwrite) }
     }
+    
+    /// Reads a dotenv file from the supplied path.
+    ///
+    ///     let fileio: NonBlockingFileIO
+    ///     let elg: EventLoopGroup
+    ///     let file = try DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next()).wait()
+    ///     for line in file.lines {
+    ///         print("\(line.key)=\(line.value)")
+    ///     }
+    ///     file.load(overwrite: true) // loads all lines into the process
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// Use `DotEnvFile.load` to read and load with one method.
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - fileio: File loader.
+    ///     - eventLoop: Eventloop to perform async work on.
     public static func read(
         path: String,
         fileio: NonBlockingFileIO,
@@ -32,26 +85,44 @@ public struct DotEnvFile {
         }
     }
     
+    /// Represents a `KEY=VALUE` pair in a dotenv file.
     public struct Line: CustomStringConvertible {
+        /// The key.
         public let key: String
+        
+        /// The value.
         public let value: String
         
+        /// `CustomStringConvertible` conformance.
         public var description: String {
             return "\(self.key)=\(self.value)"
         }
     }
     
+    /// All `KEY=VALUE` pairs found in the file.
     public let lines: [Line]
+    
+    /// Creates a new DotEnvFile
     init(lines: [Line]) {
         self.lines = lines
     }
     
-    public func load(overwrite: Bool = true) {
+    /// Loads this file's `KEY=VALUE` pairs into the current process.
+    ///
+    ///     let file: DotEnvFile
+    ///     file.load(overwrite: true) // loads all lines into the process
+    ///
+    /// - parameters:
+    ///     - overwrite: If `true`, values already existing in the process' env
+    ///                  will be overwritten. Defaults to `false`.
+    public func load(overwrite: Bool = false) {
         for line in self.lines {
             setenv(line.key, line.value, overwrite ? 1 : 0)
         }
     }
 }
+
+// MARK: Private
 
 private extension DotEnvFile {
     struct Parser {
@@ -122,11 +193,14 @@ private extension DotEnvFile {
             guard let first = value.first, let last = value.last else {
                 return value
             }
+            // check for quoted strings
             switch (first, last) {
             case ("\"", "\""):
+                // double quoted strings support escaped \n
                 return value.dropFirst().dropLast()
                     .replacingOccurrences(of: "\\n", with: "\n")
             case ("'", "'"):
+                // single quoted strings just need quotes removed
                 return value.dropFirst().dropLast() + ""
             default: return value
             }

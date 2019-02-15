@@ -114,8 +114,9 @@ public final class Application {
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
     public func run() -> EventLoopFuture<Void> {
+        let eventLoop = self.eventLoopGroup.next()
         return self.loadDotEnv(on: eventLoop).flatMap {
-            return self.makeContainer()
+            return self.makeContainer(on: eventLoop)
         }.flatMapThrowing { c -> (Console, CommandGroup, Container) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
