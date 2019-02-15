@@ -187,9 +187,9 @@ workflows:
       - linux-compat-skelpo-user-manager:
           requires:
             - compat-suite
-      - linux-compat-skelpo-paypal:
-          requires:
-            - compat-suite
+      #- linux-compat-skelpo-paypal:
+      #    requires:
+      #      - compat-suite
       - linux-compat-ether-cli-ether:
           requires:
             - compat-suite
