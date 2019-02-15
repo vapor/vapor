@@ -4,7 +4,7 @@ import Glibc
 import Darwin
 #endif
 
-/// Reads `.env` (dotenv) files and loads them into the current process.
+/// Reads dotenv (`.env`) files and loads them into the current process.
 ///
 ///     let fileio: NonBlockingFileIO
 ///     let elg: EventLoopGroup

@@ -99,20 +99,6 @@ public final class Application {
 
     // MARK: Run
 
-    /// Asynchronously runs the `Application`'s commands. This method will call the `willRun(_:)` methods of all
-    /// registered `VaporProvider's` before running.
-    ///
-    /// Normally this command will boot an `HTTPServer`. However, depending on configuration and command-line arguments/flags, this method may run a different command.
-    /// See `CommandConfig` for more information about customizing the commands that this method runs.
-    ///
-    ///     try app.run().wait()
-    ///
-    /// Note: When running a server, `asyncRun()` will return when the server has finished _booting_. Use the `runningServer` property on `Application` to wait
-    /// for the server to close. The synchronous `run()` method will call this automatically.
-    ///
-    ///     try app.runningServer?.onClose().wait()
-    ///
-    /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
     public func run() -> EventLoopFuture<Void> {
         let eventLoop = self.eventLoopGroup.next()
         return self.loadDotEnv(on: eventLoop).flatMap {
@@ -154,7 +140,6 @@ public final class Application {
         try self.eventLoopGroup.syncShutdownGracefully()
         try self.threadPool.syncShutdownGracefully()
         self.didShutdown = true
-
     }
     
     deinit {
