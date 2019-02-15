@@ -8,7 +8,6 @@ jobs:
       - checkout
       - run: swift build
       - run: swift test
-
   linux:
     docker:
       - image: swift:4.2
@@ -20,7 +19,6 @@ jobs:
       - run: 
           name: Run unit tests
           command: swift test
-
   linux-41:
     docker:
       - image: codevapor/swift:4.1
@@ -32,7 +30,6 @@ jobs:
       - run: 
           name: Run unit tests
           command: swift test
-
   linux-release:
     docker:
       - image: swift:4.2
@@ -41,9 +38,12 @@ jobs:
       - run: 
           name: Compile code with optimizations
           command: swift build -c release
-
-
-  linux-api-template:
+  compat-suite:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run: echo ""
+  linux-compat-api-template:
     docker:
       - image: swift:4.2
       - image: circleci/postgres:latest
@@ -68,11 +68,13 @@ jobs:
           name: Run API Template unit tests
           command: swift test
           working_directory: ~/api-template
-
   linux-compat-swift-commerce-order-system:
     docker:
       - image: swift:4.2
     steps:
+      - run:
+          name: Maintainers
+          command: echo "@calebkleveter, @proggeramlug contact via discord"
       - run:
           command: git clone -b 0.1.0 https://github.com/SwiftCommerce/OrderSystem
           working_directory: ~/
@@ -85,11 +87,13 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/OrderSystem
-
   linux-compat-swift-commerce-product-manager:
     docker:
       - image: swift:4.2
     steps:
+      - run:
+          name: Maintainers
+          command: echo "@calebkleveter, @proggeramlug contact via discord"
       - run:
           command: git clone -b 0.1.0 https://github.com/SwiftCommerce/ProductManager
           working_directory: ~/
@@ -102,7 +106,45 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/ProductManager
-
+  linux-compat-skelpo-user-manager:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainers
+          command: echo "@calebkleveter, @proggeramlug contact via discord"
+      - run:
+          command: git clone -b 0.1.8 https://github.com/skelpo/UserManager
+          working_directory: ~/
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/UserManager
+      - run:
+          command: swift test
+          working_directory: ~/UserManager
+  linux-compat-skelpo-paypal:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainers
+          command: echo "@calebkleveter, @proggeramlug contact via discord"
+      - run: apt-get update; apt-get install -y libgd-dev
+      - run:
+          command: git clone -b develop https://github.com/skelpo/PayPal
+          working_directory: ~/
+      - run:
+          command: git checkout 8076a719c33fffb7a0f59314702fc4f0e047bf57
+          working_directory: ~/PayPal
+      - run:
+          command: rm Package.resolved
+          working_directory: ~/PayPal
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/PayPal
+      - run:
+          command: swift test
+          working_directory: ~/PayPal
   linux-compat-ether-cli-ether:
     docker:
       - image: swift:4.2
@@ -122,20 +164,35 @@ jobs:
       - run:
           command: swift build
           working_directory: ~/Ether
-
 workflows:
   version: 2
   tests:
     jobs:
       - linux
       - linux-41
-      - linux-release
-      - linux-api-template
-      - linux-compat-swift-commerce-order-system
-      - linux-compat-swift-commerce-product-manager
-      - linux-compat-ether-cli-ether
-      # - macos
-
+      - linux-release:
+          requires:
+            - linux
+      - compat-suite:
+          type: approval
+      - linux-compat-api-template:
+          requires:
+            - compat-suite
+      - linux-compat-swift-commerce-order-system:
+          requires:
+            - compat-suite
+      - linux-compat-swift-commerce-product-manager:
+          requires:
+            - compat-suite
+      - linux-compat-skelpo-user-manager:
+          requires:
+            - compat-suite
+      #- linux-compat-skelpo-paypal:
+      #    requires:
+      #      - compat-suite
+      - linux-compat-ether-cli-ether:
+          requires:
+            - compat-suite
   nightly:
     triggers:
       - schedule:
@@ -143,9 +200,6 @@ workflows:
           filters:
             branches:
               only:
-                - master
-                
+                - master   
     jobs:
       - linux
-      # - macos
-
