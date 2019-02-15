@@ -22,3 +22,10 @@ extension HTTPResponse {
         get { return self }
     }
 }
+
+extension Application {
+    @available(*, deprecated, renamed: "running")
+    public var runningServer: Running? {
+        return self.running
+    }
+}

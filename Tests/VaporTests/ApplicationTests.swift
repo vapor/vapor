@@ -2,7 +2,14 @@ import Vapor
 import XCTest
 
 class ApplicationTests: XCTestCase {
-    func testStub() { }
+    func testApplicationStop() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(env: test) { .default() }
+        app.eventLoopGroup.next().scheduleTask(in: .seconds(1)) {
+            app.running?.stop()
+        }
+        try app.execute().wait()
+    }
 //    func testContent() throws {
 //        let app = try Application()
 //        let req = Request(using: app)
@@ -777,7 +784,8 @@ class ApplicationTests: XCTestCase {
     
     
     static let allTests = [
-        ("testDotEnvRead", testDotEnvRead)
+        ("testApplicationStop", testApplicationStop),
+        ("testDotEnvRead", testDotEnvRead),
     ]
 //
 //    static let allTests = [

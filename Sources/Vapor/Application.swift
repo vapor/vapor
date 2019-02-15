@@ -26,13 +26,44 @@ public final class Application {
     
     private let threadPool: BlockingIOThreadPool
     
-    private var didCleanup: Bool
+    private var didShutdown: Bool
+    
+    public var running: Running?
+    
+    public struct Running {
+        public var stop: () -> Void
+        public init(stop: @escaping () -> Void) {
+            self.stop = stop
+        }
+    }
+    
+    public final class Worker: Container {
+        public var environment: Environment
+        
+        public var services: Services
+        
+        public var cache: ServiceCache
+        
+        public var eventLoop: EventLoop
+        
+        init(env: Environment, services: Services, on eventLoop: EventLoop) {
+            // print("Worker++")
+            self.environment = env
+            self.services = services
+            self.eventLoop = eventLoop
+            self.cache = .init()
+        }
+        
+        deinit {
+            // print("Worker--")
+        }
+    }
     
     public init(env: Environment = .development, configure: @escaping () throws -> Services) {
         self.env = env
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.userInfo = [:]
-        self.didCleanup = false
+        self.didShutdown = false
         self.configure = configure
         self.lock = NSLock()
         self.threadPool = .init(numberOfThreads: 1)
@@ -56,13 +87,14 @@ public final class Application {
         services.register(Application.self) { c in
             return self
         }
-        let container = BasicContainer(environment: self.env, services: services, on: eventLoop)
-        #warning("TODO: make willBoot and didBoot non-throwing")
-        let willBoots = container.providers.map { try! $0.willBoot(container) }
-        return EventLoopFuture<Void>.andAllSucceed(willBoots, on: eventLoop).flatMap { () -> EventLoopFuture<Void> in
-            let didBoots = container.providers.map { try! $0.didBoot(container) }
-            return .andAllSucceed(didBoots, on: eventLoop)
-        }.map { _ in container }
+        let container = Worker(
+            env: self.env,
+            services: services,
+            on: eventLoop
+        )
+        return container.willBoot()
+            .flatMap { container.didBoot() }
+            .map { container }
     }
 
     // MARK: Run
@@ -81,25 +113,29 @@ public final class Application {
     ///     try app.runningServer?.onClose().wait()
     ///
     /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
-    public func run() -> EventLoopFuture<Application> {
-        let eventLoop = self.eventLoopGroup.next()
-        #warning("TODO: run VaporProvider willRuns")
+    public func run() -> EventLoopFuture<Void> {
         return self.loadDotEnv(on: eventLoop).flatMap {
-            return self.makeContainer(on: eventLoop)
-        }.flatMapThrowing { c -> (Console, CommandGroup) in
+            return self.makeContainer()
+        }.flatMapThrowing { c -> (Console, CommandGroup, Container) in
             let command = try c.make(Commands.self).group()
             let console = try c.make(Console.self)
-            return (console, command)
+            return (console, command, c)
         }.flatMap { res -> EventLoopFuture<Void> in
+            let (console, command, c) = res
             var runInput = self.env.commandInput
-            return res.0.run(res.1, input: &runInput)
-        }.map {
-            return self
+            return console.run(command, input: &runInput).flatMap {
+                return c.willShutdown()
+            }
         }
-//        // will-run all vapor service providers
-//        return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
-//        // did-run all vapor service providers
-//        return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
+    }
+    
+    public func execute() -> EventLoopFuture<Void> {
+        return self.run().flatMapThrowing { _ in
+            try self.shutdown()
+        }.flatMapErrorThrowing { error in
+            try self.shutdown()
+            throw error
+        }
     }
     
     private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
@@ -112,16 +148,17 @@ public final class Application {
         }
     }
     
-    public func cleanup() throws {
+    public func shutdown() throws {
+        print("Application shutting down")
         try self.eventLoopGroup.syncShutdownGracefully()
         try self.threadPool.syncShutdownGracefully()
-        self.didCleanup = true
-        
+        self.didShutdown = true
+
     }
     
     deinit {
-        if !self.didCleanup {
-            assertionFailure("Application.cleanup() was not called before Application deinitialized.")
+        if !self.didShutdown {
+            assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }
     }
 }

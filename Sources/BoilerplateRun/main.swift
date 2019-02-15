@@ -1,5 +1,3 @@
 import Boilerplate
 
-try Boilerplate.app(.detect())
-    .run().wait()
-    .cleanup()
+try app(.detect()).execute().wait()
