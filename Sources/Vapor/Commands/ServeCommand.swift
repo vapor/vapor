@@ -3,7 +3,7 @@
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public final class ServeCommand: Command {
+public struct ServeCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -26,9 +26,7 @@ public final class ServeCommand: Command {
     
     private let console: Console
     
-    private let application: Application
-    
-    private var runningServer: HTTPServer?
+    private var application: Application
 
     /// Create a new `ServeCommand`.
     public init(
@@ -64,27 +62,52 @@ public final class ServeCommand: Command {
         self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
+        let app = self.application
+        let server = HTTPServer(config: self.config, on: app.eventLoopGroup)
+        let delegate = ServerDelegate(application: app)
+        
+        let eventLoop = app.eventLoopGroup.next()
+        let onShutdown = eventLoop.makePromise(of: Void.self)
+        
+        var runningServer: HTTPServer?
+        let console = self.console
+        
+        func initiateShutdown() {
+            app.running = nil // stop ref cycle
+            console.print("Requesting server shutdown...")
+            let server = runningServer!
+            server.shutdown().flatMap { _ -> EventLoopFuture<Void> in
+                console.print("Server closed, cleaning up")
+                return .andAllSucceed(
+                    delegate.containers.map { $0.willShutdown() },
+                    on: eventLoop
+                )
+            }.cascade(to: onShutdown)
+        }
+        #warning("TODO: shutdown w/o ref cycle")
+        app.running = .init(stop: initiateShutdown)
+        
+        // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
+        var sources: [DispatchSourceSignal] = []
         func makeSignalSource(_ code: Int32) {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
-                _ = self.runningServer?.close()
-                source.cancel()
+                print() // clear ^C
+                initiateShutdown()
+                sources.forEach { $0.cancel() }
             }
             source.resume()
+            sources.append(source)
             signal(code, SIG_IGN)
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
         
         // start the actual HTTPServer
-        let server = HTTPServer(config: self.config, on: self.application.eventLoopGroup)
-        let delegate = ServerDelegate(application: self.application)
         return server.start(delegate: delegate).flatMap {
-            self.runningServer = server
-            return server.onClose.map {
-                self.console.print("Server shutting down...")
-            }
+            runningServer = server
+            return onShutdown.futureResult
         }
     }
 }
