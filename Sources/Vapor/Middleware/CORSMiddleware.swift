@@ -122,14 +122,14 @@ public final class CORSMiddleware: Middleware {
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let res = req.http.isPreflight
+        let res = req.isPreflight
             ? ctx.eventLoop.makeSucceededFuture(.init())
             : next.respond(to: req, using: ctx)
         
         return res.map { res in
             var res = res
             // Modify response headers based on CORS settings
-            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req.http))
+            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req))
             res.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
             res.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
             
