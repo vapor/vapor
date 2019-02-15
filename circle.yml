@@ -131,7 +131,10 @@ jobs:
           command: echo "@calebkleveter, @proggeramlug contact via discord"
       - run: apt-get update; apt-get install -y libgd-dev
       - run:
-          command: git clone -b 0.3.2 https://github.com/skelpo/PayPal
+          command: git clone -b develop https://github.com/skelpo/PayPal
+          working_directory: ~/
+      - run:
+          command: git checkout 8076a719c33fffb7a0f59314702fc4f0e047bf57
           working_directory: ~/
       - run:
           command: rm Package.resolved
