@@ -135,7 +135,7 @@ jobs:
           working_directory: ~/
       - run:
           command: git checkout 8076a719c33fffb7a0f59314702fc4f0e047bf57
-          working_directory: ~/
+          working_directory: ~/PayPal
       - run:
           command: rm Package.resolved
           working_directory: ~/PayPal
