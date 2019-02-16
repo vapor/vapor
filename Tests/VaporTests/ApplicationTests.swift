@@ -1,6 +1,28 @@
 import Vapor
 import XCTest
 
+#warning("TODO: implement better test helpers in separate package")
+extension Application {
+    static func test(
+        configure: @escaping (inout Services) throws -> () = { _ in },
+        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in },
+        run: (Application, Container) throws -> () = { _, _ in }
+    ) throws {
+        let app = Application(env: .testing) {
+            var s = Services.default()
+            try configure(&s)
+            s.extend(Routes.self) { r, c in
+                try routes(&r, c)
+            }
+            return s
+        }
+        let c = try app.makeContainer().wait()
+        try run(app, c)
+        try c.willShutdown().wait()
+        try app.shutdown()
+    }
+}
+
 class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
@@ -9,6 +31,23 @@ class ApplicationTests: XCTestCase {
             app.running?.stop()
         }
         try app.execute().wait()
+    }
+    
+    
+    func testClientRoute() throws {
+        try Application.test(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("client") { req, _ in
+                return client.get("http://vapor.codes")
+            }
+        }, run: { a, c in
+            let res = try c.make(Responder.self).respond(
+                to: .init(method: .GET, urlString: "/client"),
+                using: .init(channel: EmbeddedChannel())
+            ).wait()
+            XCTAssertEqual(res.status, .ok)
+            XCTAssert(res.body.description.contains("<title>Vapor (Server-side Swift)</title>"))
+        })
     }
 //    func testContent() throws {
 //        let app = try Application()
@@ -785,6 +824,7 @@ class ApplicationTests: XCTestCase {
     
     static let allTests = [
         ("testApplicationStop", testApplicationStop),
+        ("testClientRoute", testClientRoute),
         ("testDotEnvRead", testDotEnvRead),
     ]
 //
