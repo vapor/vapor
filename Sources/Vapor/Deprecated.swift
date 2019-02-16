@@ -14,6 +14,11 @@ extension HTTPRequest {
     public var http: HTTPRequest {
         get { return self }
     }
+    
+    @available(*, unavailable, message: "Use container to make client: c.make(Client.self)")
+    public func client() -> Client {
+        fatalError()
+    }
 }
 
 extension HTTPResponse {
