@@ -37,28 +37,6 @@ public final class Application {
         }
     }
     
-    public final class Worker: Container {
-        public var environment: Environment
-        
-        public var services: Services
-        
-        public var cache: ServiceCache
-        
-        public var eventLoop: EventLoop
-        
-        init(env: Environment, services: Services, on eventLoop: EventLoop) {
-            // print("Worker++")
-            self.environment = env
-            self.services = services
-            self.eventLoop = eventLoop
-            self.cache = .init()
-        }
-        
-        deinit {
-            // print("Worker--")
-        }
-    }
-    
     public init(env: Environment = .development, configure: @escaping () throws -> Services) {
         self.env = env
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
@@ -83,18 +61,11 @@ public final class Application {
     }
     
     private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        var services = try self.configure()
-        services.register(Application.self) { c in
+        var s = try self.configure()
+        s.register(Application.self) { c in
             return self
         }
-        let container = Worker(
-            env: self.env,
-            services: services,
-            on: eventLoop
-        )
-        return container.willBoot()
-            .flatMap { container.didBoot() }
-            .map { container }
+        return Container.boot(env: self.env, services: s, on: eventLoop)
     }
 
     // MARK: Run
@@ -111,7 +82,7 @@ public final class Application {
             let (console, command, c) = res
             var runInput = self.env.commandInput
             return console.run(command, input: &runInput).flatMap {
-                return c.willShutdown()
+                return c.shutdown()
             }
         }
     }

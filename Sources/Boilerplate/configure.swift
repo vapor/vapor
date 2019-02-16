@@ -6,8 +6,8 @@ public func configure(_ s: inout Services) throws {
     }
     
     s.register(HTTPServerConfig.self) { c in
-        switch c.environment.name {
-        case "tls":
+        switch c.env {
+        case .tls:
             return HTTPServerConfig(
                 hostname: "127.0.0.1",
                 port: 8443,
@@ -22,5 +22,11 @@ public func configure(_ s: inout Services) throws {
                 port: 8080
             )
         }
+    }
+}
+
+extension Environment {
+    static var tls: Environment {
+        return .custom(name: "tls")
     }
 }

@@ -18,7 +18,7 @@ extension Application {
         }
         let c = try app.makeContainer().wait()
         try run(app, c)
-        try c.willShutdown().wait()
+        try c.shutdown().wait()
         try app.shutdown()
     }
 }

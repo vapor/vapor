@@ -79,7 +79,7 @@ public struct ServeCommand: Command {
             server.shutdown().flatMap { _ -> EventLoopFuture<Void> in
                 console.print("Server closed, cleaning up")
                 return .andAllSucceed(
-                    delegate.containers.map { $0.willShutdown() },
+                    delegate.containers.map { $0.shutdown() },
                     on: eventLoop
                 )
             }.cascade(to: onShutdown)

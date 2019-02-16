@@ -108,7 +108,7 @@ extension Services {
             )
         }
         s.register(ErrorMiddleware.self) { c in
-            return .default(environment: c.environment)
+            return .default(environment: c.env)
         }
 
         // content
