@@ -8,13 +8,25 @@ extension Services {
         s.register(HTTPServerConfig.self) { c in
             return HTTPServerConfig()
         }
-
+        
         // client
-        s.register(NetClient.self) { c in
+        s.register(URLSessionConfiguration.self) { c in
+            return .default
+        }
+        s.register(URLSession.self) { c in
+            return try .init(configuration: c.make())
+        }
+        s.register(FoundationClient.self) { c in
+            return try .init(c.make(), on: c.eventLoop)
+        }
+        s.register(HTTPClientConfig.self) { c in
             return .init()
         }
+        s.register(HTTPClient.self) { c in
+            return try .init(config: c.make(), on: c.eventLoop)
+        }
         s.register(Client.self) { c in
-            return try c.make(NetClient.self)
+            return try c.make(HTTPClient.self)
         }
         
         s.register(HTTPServerDelegate.self) { c in

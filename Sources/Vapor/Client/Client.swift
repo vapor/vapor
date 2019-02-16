@@ -1,26 +1,8 @@
-extension Context {
-    /// Creates a `Client` for this `Container`.
-    ///
-    ///     let res = try req.client().get("http://vapor.codes")
-    ///     print(res) // Future<Response>
-    ///
-    /// See `Client` for more information.
-    public func client() throws -> Client {
-        return NetClient()
-    }
-}
-
-public struct NetClient: Client {
-    init() { }
-    
-    public func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
-        fatalError()
-    }
-}
-
 public protocol Client {
     func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse>
 }
+
+extension HTTPClient: Client { }
 
 extension Client {
     /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.

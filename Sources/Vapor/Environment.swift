@@ -34,5 +34,3 @@ extension Environment {
         return env
     }
 }
-
-#warning("TODO: consider removing isRelease from environment, only rely on swift build mode")
