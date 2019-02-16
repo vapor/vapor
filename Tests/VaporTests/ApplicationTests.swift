@@ -28,7 +28,7 @@ class ApplicationTests: XCTestCase {
     
     
     func testClientRoute() throws {
-        let app = Application.build(routes: { r, c in
+        let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
             r.get("client") { req, _ in
                 return client.get("http://vapor.codes")

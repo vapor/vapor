@@ -22,7 +22,7 @@ public final class XCTApplication {
         closure: (XCTHTTPResponse) throws -> ()
     ) throws -> XCTApplication {
         let res = try self.c.make(Responder.self).respond(
-            to: .init(method: .GET, urlString: string),
+            to: .init(method: method, urlString: string),
             using: .init(channel: EmbeddedChannel())
         ).wait()
         try closure(.init(response: res))
