@@ -1,7 +1,7 @@
 import XCTVapor
 
 extension Application {
-    static func build(
+    static func create(
         configure: @escaping (inout Services) throws -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
