@@ -6,6 +6,7 @@ import XCTest
 XCTMain([
     // Vapor
     testCase(ApplicationTests.allTests),
+    testCase(MiddlewareTests.allTests),
 ])
 
 #endif

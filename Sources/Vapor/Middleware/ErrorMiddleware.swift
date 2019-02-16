@@ -48,6 +48,11 @@ public final class ErrorMiddleware: Middleware, ServiceType {
                 reason = debuggable.reason
                 status = .internalServerError
                 headers = [:]
+            case let encodable as ResponseEncodable:
+                do {
+                    return try encodable.encode(for: req)
+                } catch { }
+                fallthrough
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
@@ -68,18 +73,18 @@ public final class ErrorMiddleware: Middleware, ServiceType {
                 res.http.body = HTTPBody(string: "Oops: \(error)")
                 res.http.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
             }
-            return res
+            return req.future(res)
         }
     }
 
     /// Error-handling closure.
-    private let closure: (Request, Error) -> (Response)
+    private let closure: (Request, Error) -> (Future<Response>)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (Request, Error) -> (Response)) {
+    public init(_ closure: @escaping (Request, Error) -> (Future<Response>)) {
         self.closure = closure
     }
 
@@ -93,15 +98,7 @@ public final class ErrorMiddleware: Middleware, ServiceType {
         }
 
         return response.catchFlatMap { error in
-            if let response = error as? ResponseEncodable {
-                do {
-                    return try response.encode(for: req)
-                } catch {
-                    return req.future(self.closure(req, error))
-                }
-            } else {
-                return req.future(self.closure(req, error))
-            }
+            return self.closure(req, error)
         }
     }
 }
