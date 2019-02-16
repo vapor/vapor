@@ -48,6 +48,7 @@ let package = Package(
             // "URLEncodedForm",
             // "Validation",
         ]),
-        .testTarget(name: "VaporTests", dependencies: ["Vapor"]),
+        .target(name: "XCTVapor", dependencies: ["Vapor"]),
+        .testTarget(name: "VaporTests", dependencies: ["XCTVapor"]),
     ]
 )

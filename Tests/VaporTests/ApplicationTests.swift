@@ -1,14 +1,11 @@
-import Vapor
-import XCTest
+import XCTVapor
 
-#warning("TODO: implement better test helpers in separate package")
 extension Application {
-    static func test(
+    static func build(
         configure: @escaping (inout Services) throws -> () = { _ in },
-        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in },
-        run: (Application, Container) throws -> () = { _, _ in }
-    ) throws {
-        let app = Application(env: .testing) {
+        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
+    ) -> Application {
+        return Application(env: .testing) {
             var s = Services.default()
             try configure(&s)
             s.extend(Routes.self) { r, c in
@@ -16,10 +13,6 @@ extension Application {
             }
             return s
         }
-        let c = try app.makeContainer().wait()
-        try run(app, c)
-        try c.shutdown().wait()
-        try app.shutdown()
     }
 }
 
@@ -35,19 +28,24 @@ class ApplicationTests: XCTestCase {
     
     
     func testClientRoute() throws {
-        try Application.test(routes: { r, c in
+        let app = Application.build(routes: { r, c in
             let client = try c.make(Client.self)
             r.get("client") { req, _ in
                 return client.get("http://vapor.codes")
             }
-        }, run: { a, c in
-            let res = try c.make(Responder.self).respond(
-                to: .init(method: .GET, urlString: "/client"),
-                using: .init(channel: EmbeddedChannel())
-            ).wait()
-            XCTAssertEqual(res.status, .ok)
-            XCTAssert(res.body.description.contains("<title>Vapor (Server-side Swift)</title>"))
         })
+            
+        try app.xctest()
+            .assert(.GET, to: "/client") { res in
+                res.assertStatus(is: .ok)
+                    .assertBody(contains: "Vapor (Server-side Swift)")
+            }
+            .assert(.GET, to: "/foo") { res in
+                res.assertStatus(is: .notFound)
+                    .assertBody(contains: "Not Found")
+        }
+        
+        try app.shutdown()
     }
 //    func testContent() throws {
 //        let app = try Application()
