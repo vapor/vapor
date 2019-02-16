@@ -36,15 +36,15 @@ class ApplicationTests: XCTestCase {
         })
             
         try app.xctest()
-            .assert(.GET, to: "/client") { res in
+            .test(.GET, to: "/client") { res in
                 res.assertStatus(is: .ok)
                     .assertBody(contains: "Vapor (Server-side Swift)")
             }
-            .assert(.GET, to: "/foo") { res in
+            .test(.GET, to: "/foo") { res in
                 res.assertStatus(is: .notFound)
                     .assertBody(contains: "Not Found")
         }
-        
+
         try app.shutdown()
     }
 //    func testContent() throws {

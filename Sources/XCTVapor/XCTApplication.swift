@@ -14,7 +14,7 @@ public final class XCTApplication {
     }
     
     @discardableResult
-    public func assert(
+    public func test(
         _ method: HTTPMethod,
         to string: String,
         file: StaticString = #file,
@@ -24,7 +24,7 @@ public final class XCTApplication {
         let res = try self.c.make(Responder.self).respond(
             to: .init(method: .GET, urlString: string),
             using: .init(channel: EmbeddedChannel())
-            ).wait()
+        ).wait()
         try closure(.init(response: res))
         return self
     }
