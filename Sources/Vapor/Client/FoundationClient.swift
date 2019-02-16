@@ -11,7 +11,7 @@ public final class FoundationClient: Client, ServiceType {
     }
 
     /// See `Client`.
-    public var container: Container
+    public let container: Container
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession

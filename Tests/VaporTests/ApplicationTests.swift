@@ -75,7 +75,9 @@ class ApplicationTests: XCTestCase {
         }
 
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
-        try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
+        try app.clientTest(.POST, "/hello/vapor") { res in
+            XCTAssertEqual(res.http.status, .notFound)
+        }
         
         try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
     }
@@ -743,6 +745,33 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status, .internalServerError)
         })
     }
+    
+    func testRetainCycles() throws {
+        weak var server: NIOServer?
+        XCTAssertNil(server)
+        var app: Application! = try Application.makeTest(configure: { _, _ in }, routes: { _ in })
+        server = try app.make(NIOServer.self)
+        XCTAssertNotNil(server)
+        app = nil
+        XCTAssertNil(server)
+    }
+    
+    func testContainerRetainCrash() throws {
+        let app = try Application.runningTest(port: 8009) { r in
+            r.get("client") { req in
+                return try req.client().get("http://httpbin.org/status/200").map { $0.description }
+            }
+        }
+        
+        try app.clientTest(.GET, "client") { res in
+            XCTAssertEqual(res.http.status, .ok)
+        }
+            
+        try app.clientTest(.GET, "client") { res in
+            XCTAssertEqual(res.http.status, .ok)
+        }
+    }
+        
 
     static let allTests = [
         ("testContent", testContent),
@@ -777,6 +806,8 @@ class ApplicationTests: XCTestCase {
         ("testMissingBody", testMissingBody),
         ("testSwiftError", testSwiftError),
         ("testDebuggableError", testDebuggableError),
+        ("testRetainCycles", testRetainCycles),
+        ("testContainerRetainCrash", testContainerRetainCrash),
     ]
 }
 

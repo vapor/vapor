@@ -1,7 +1,7 @@
 function add_vapor_apt() {
     eval "$(cat /etc/lsb-release)"
 
-    if [[ "$DISTRIB_CODENAME" != "xenial" && "$DISTRIB_CODENAME" != "yakkety" && "$DISTRIB_CODENAME" != "trusty" && "$DISTRIB_CODENAME" != "bionic" && "$DISTRIB_CODENAME" != "cosmic"" ]];
+    if [[ "$DISTRIB_CODENAME" != "xenial" && "$DISTRIB_CODENAME" != "yakkety" && "$DISTRIB_CODENAME" != "trusty" && "$DISTRIB_CODENAME" != "bionic" && "$DISTRIB_CODENAME" != "cosmic" ]];
     then
         echo "Only Ubuntu 14.04, 16.04, 16.10, 18.04 and 18.10 are supported."
         echo "You are running $DISTRIB_RELEASE ($DISTRIB_CODENAME) [`uname`]"

@@ -29,6 +29,11 @@ extension Request {
             return new
         }
     }
+    
+    /// Returns `true` if this `Request` has an active session.
+    public func hasSession() throws -> Bool {
+        return try privateContainer.make(SessionCache.self).session != nil
+    }
 
     /// Destroys the current session, if one exists.
     public func destroySession() throws {
