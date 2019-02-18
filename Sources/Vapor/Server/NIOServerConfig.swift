@@ -21,6 +21,7 @@ public struct NIOServerConfig: ServiceType {
     ///                    Streaming bodies, like chunked bodies, ignore this maximum.
     ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
     ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
+    ///     - supportCompression: When `true`, HTTP server will support gzip and deflate
     ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
     public static func `default`(
         hostname: String = "localhost",
