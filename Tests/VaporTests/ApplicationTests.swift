@@ -875,6 +875,7 @@ private extension Application {
             maxBodySize: 128_000,
             reuseAddress: true,
             tcpNoDelay: true,
+            supportCompression: false,
             webSocketMaxFrameSize: 1 << 14
         )
         services.register(serverConfig)

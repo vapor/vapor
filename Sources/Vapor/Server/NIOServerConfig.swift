@@ -21,6 +21,7 @@ public struct NIOServerConfig: ServiceType {
     ///                    Streaming bodies, like chunked bodies, ignore this maximum.
     ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
     ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
+    ///     - supportCompression: When `true`, HTTP server will support gzip and deflate
     ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
     public static func `default`(
         hostname: String = "localhost",
@@ -30,6 +31,7 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int = 1_000_000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true,
+        supportCompression: Bool = false,
         webSocketMaxFrameSize: Int = 1 << 14
     ) -> NIOServerConfig {
         return NIOServerConfig(
@@ -40,6 +42,7 @@ public struct NIOServerConfig: ServiceType {
             maxBodySize: maxBodySize,
             reuseAddress: reuseAddress,
             tcpNoDelay: tcpNoDelay,
+            supportCompression: supportCompression,
             webSocketMaxFrameSize: webSocketMaxFrameSize
         )
     }
@@ -65,6 +68,9 @@ public struct NIOServerConfig: ServiceType {
 
     /// When `true`, OS will attempt to minimize TCP packet delay.
     public var tcpNoDelay: Bool
+    
+    /// When `true`, HTTP server will support gzip and deflate compression.
+    public var supportCompression: Bool
 
     /// Number of webSocket maxFrameSize.
     public var webSocketMaxFrameSize: Int
@@ -78,6 +84,7 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int,
         reuseAddress: Bool,
         tcpNoDelay: Bool,
+        supportCompression: Bool,
         webSocketMaxFrameSize: Int = 1 << 14
     ) {
         self.hostname = hostname
@@ -87,6 +94,7 @@ public struct NIOServerConfig: ServiceType {
         self.maxBodySize = maxBodySize
         self.reuseAddress = reuseAddress
         self.tcpNoDelay = tcpNoDelay
+        self.supportCompression = supportCompression
         self.webSocketMaxFrameSize = webSocketMaxFrameSize
     }
 }
