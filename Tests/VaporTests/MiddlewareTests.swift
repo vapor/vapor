@@ -21,11 +21,39 @@ class MiddlewareTests : XCTestCase {
         let app = try Application(services: services)
 
         let req = Request(using: app)
-        _ = try app.make(Responder.self).respond(to: req).wait()
+        do {
+            _ = try app.make(Responder.self).respond(to: req).wait()
+        } catch {}
         XCTAssert(myMiddleware.flag == true)
+    }
+    
+    func testCustomErrorEncoding() throws {
+        struct MyCustomError: Error, Content {
+            var flag: Bool
+        }
+        
+        var services = Services.default()
+        var middlewareConfig = MiddlewareConfig()
+        middlewareConfig.use(ErrorMiddleware.self)
+        services.register(middlewareConfig)
+        
+        let router = EngineRouter.default()
+        router.get { (req) -> String in
+            throw MyCustomError(flag: true)
+        }
+        services.register(router, as: Router.self)
+        
+        let app = try Application(services: services)
+        
+        let req = Request(http: .init(method: .GET, url: "/", version: .init(major: 1, minor: 1)), using: app)
+        let response = try app.make(Responder.self).respond(to: req).wait()
+        
+        let error = try response.content.decode(MyCustomError.self).wait()
+        XCTAssert(error.flag)
     }
 
     static let allTests = [
         ("testNotConfigurable", testNotConfigurable),
+        ("testCustomErrorEncoding", testCustomErrorEncoding)
     ]
 }

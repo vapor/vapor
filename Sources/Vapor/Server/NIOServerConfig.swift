@@ -21,9 +21,10 @@ public struct NIOServerConfig: ServiceType {
     ///                    Streaming bodies, like chunked bodies, ignore this maximum.
     ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
     ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
-    ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
+    ///     - supportCompression: When `true`, HTTP server will support gzip and deflate
     ///     - supportCompression: When `true`, HTTP server will support gzip and deflate compression.
     ///     - supportPipelining: When `true`, HTTP server will support pipelined HTTP requests.
+    ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
     public static func `default`(
         hostname: String = "localhost",
         port: Int = 8080,
@@ -32,9 +33,9 @@ public struct NIOServerConfig: ServiceType {
         maxBodySize: Int = 1_000_000,
         reuseAddress: Bool = true,
         tcpNoDelay: Bool = true,
-        webSocketMaxFrameSize: Int = 1 << 14,
         supportCompression: Bool = false,
-        supportPipelining: Bool = false
+        supportPipelining: Bool = false,
+        webSocketMaxFrameSize: Int = 1 << 14
     ) -> NIOServerConfig {
         return NIOServerConfig(
             hostname: hostname,
@@ -44,9 +45,9 @@ public struct NIOServerConfig: ServiceType {
             maxBodySize: maxBodySize,
             reuseAddress: reuseAddress,
             tcpNoDelay: tcpNoDelay,
-            webSocketMaxFrameSize: webSocketMaxFrameSize,
             supportCompression: supportCompression,
-            supportPipelining: supportPipelining
+            supportPipelining: supportPipelining,
+            webSocketMaxFrameSize: webSocketMaxFrameSize
         )
     }
 
@@ -71,6 +72,9 @@ public struct NIOServerConfig: ServiceType {
 
     /// When `true`, OS will attempt to minimize TCP packet delay.
     public var tcpNoDelay: Bool
+    
+    /// When `true`, HTTP server will support gzip and deflate compression.
+    public var supportCompression: Bool
 
     /// Number of webSocket maxFrameSize.
     public var webSocketMaxFrameSize: Int
@@ -91,8 +95,8 @@ public struct NIOServerConfig: ServiceType {
         reuseAddress: Bool,
         tcpNoDelay: Bool,
         webSocketMaxFrameSize: Int = 1 << 14,
-        supportCompression: Bool = false,
-        supportPipelining: Bool = false
+        supportCompression: Bool,
+        supportPipelining: Bool = false,
     ) {
         self.hostname = hostname
         self.port = port
@@ -101,6 +105,7 @@ public struct NIOServerConfig: ServiceType {
         self.maxBodySize = maxBodySize
         self.reuseAddress = reuseAddress
         self.tcpNoDelay = tcpNoDelay
+        self.supportCompression = supportCompression
         self.webSocketMaxFrameSize = webSocketMaxFrameSize
         self.supportCompression = supportCompression
         self.supportPipelining = supportPipelining

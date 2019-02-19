@@ -92,8 +92,16 @@ public final class ErrorMiddleware: Middleware, ServiceType {
             response = req.eventLoop.newFailedFuture(error: error)
         }
 
-        return response.mapIfError { error in
-            return self.closure(req, error)
+        return response.catchFlatMap { error in
+            if let response = error as? ResponseEncodable {
+                do {
+                    return try response.encode(for: req)
+                } catch {
+                    return req.future(self.closure(req, error))
+                }
+            } else {
+                return req.future(self.closure(req, error))
+            }
         }
     }
 }
