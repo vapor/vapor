@@ -157,22 +157,6 @@ jobs:
       - run:
           command: swift build
           working_directory: ~/vapor-auth-jwt
-  linux-compat-asensei-fluent-mongo:
-    docker:
-      - image: swift:4.2
-    steps:
-      - run:
-          name: Maintainer
-          command: echo "@valeriomazzeo, @dlbuckley Vapor Discord DM, email"
-      - run:
-          command: git clone -b 0.0.11 https://github.com/asensei/vapor-fluent-mongo
-          working_directory: ~/
-      - run:
-          command: swift package edit Vapor --revision $CIRCLE_SHA1
-          working_directory: ~/vapor-fluent-mongo
-      - run:
-          command: swift build
-          working_directory: ~/vapor-fluent-mongo
 workflows:
   version: 2
   tests:
@@ -200,9 +184,6 @@ workflows:
           requires:
             - compat-suite
       - linux-compat-asensei-auth-jwt:
-          requires:
-            - compat-suite
-      - linux-compat-asensei-fluent-mongo:
           requires:
             - compat-suite
   nightly:
