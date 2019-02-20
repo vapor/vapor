@@ -157,6 +157,53 @@ jobs:
       - run:
           command: swift build
           working_directory: ~/vapor-auth-jwt
+      - run:
+          command: swift test
+          working_directory: ~/vapor-auth-jwt
+  linux-compat-raywenderlich-til:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainer
+          command: echo "@0xTim Vapor Discord, Twitter, Email"
+      - run:
+          command: git clone https://github.com/raywenderlich/vapor-til 
+          working_directory: ~/
+      - run:
+          command: git checkout 3b7ead68779432e707a3fd60896940a181bcf4be
+          working_directory: ~/vapor-til
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/vapor-til
+      - run:
+          command: swift build
+          working_directory: ~/vapor-til
+      - run:
+          command: swift test
+          working_directory: ~/vapor-til
+  linux-compat-brokenhandsio-security-headers:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainer
+          command: echo "@0xTim Vapor Discord, Twitter, Email"
+      - run:
+          command: git clone https://github.com/brokenhandsio/VaporSecurityHeaders 
+          working_directory: ~/
+      - run:
+          command: git checkout 931b5a36bb46706dc489013d684044db31924db2
+          working_directory: ~/VaporSecurityHeaders
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/VaporSecurityHeaders
+      - run:
+          command: swift build
+          working_directory: ~/VaporSecurityHeaders
+      - run:
+          command: swift test
+          working_directory: ~/VaporSecurityHeaders
 workflows:
   version: 2
   tests:
@@ -184,6 +231,12 @@ workflows:
           requires:
             - compat-suite
       - linux-compat-asensei-auth-jwt:
+          requires:
+            - compat-suite
+      - linux-compat-raywenderlich-til:
+          requires:
+            - compat-suite
+      - linux-compat-brokenhandsio-security-headers:
           requires:
             - compat-suite
   nightly:
