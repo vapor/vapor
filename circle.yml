@@ -122,29 +122,6 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/UserManager
-  linux-compat-skelpo-paypal:
-    docker:
-      - image: swift:4.2
-    steps:
-      - run:
-          name: Maintainers
-          command: echo "@calebkleveter, @proggeramlug contact via discord"
-      - run: apt-get update; apt-get install -y libgd-dev
-      - run:
-          command: git clone -b develop https://github.com/skelpo/PayPal
-          working_directory: ~/
-      - run:
-          command: git checkout 8076a719c33fffb7a0f59314702fc4f0e047bf57
-          working_directory: ~/PayPal
-      - run:
-          command: rm Package.resolved
-          working_directory: ~/PayPal
-      - run:
-          command: swift package edit Vapor --revision $CIRCLE_SHA1
-          working_directory: ~/PayPal
-      - run:
-          command: swift test
-          working_directory: ~/PayPal
   linux-compat-ether-cli-ether:
     docker:
       - image: swift:4.2
@@ -175,9 +152,6 @@ jobs:
           command: git clone -b 1.0.0 https://github.com/asensei/vapor-auth-jwt
           working_directory: ~/
       - run:
-          command: rm Package.resolved
-          working_directory: ~/vapor-auth-jwt
-      - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/vapor-auth-jwt
       - run:
@@ -193,9 +167,6 @@ jobs:
       - run:
           command: git clone -b 0.0.11 https://github.com/asensei/vapor-fluent-mongo
           working_directory: ~/
-      - run:
-          command: rm Package.resolved
-          working_directory: ~/vapor-fluent-mongo
       - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/vapor-fluent-mongo
@@ -225,9 +196,6 @@ workflows:
       - linux-compat-skelpo-user-manager:
           requires:
             - compat-suite
-      #- linux-compat-skelpo-paypal:
-      #    requires:
-      #      - compat-suite
       - linux-compat-ether-cli-ether:
           requires:
             - compat-suite
