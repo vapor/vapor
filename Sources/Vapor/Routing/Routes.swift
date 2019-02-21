@@ -129,25 +129,37 @@ extension RoutesBuilder {
     public func on<Request, Response>(
         _ method: HTTPMethod,
         at path: PathComponent...,
+        streaming: Bool = false,
         use closure: @escaping (Request, Context) throws -> Response
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
-        return self._on(method, at: path, use: closure)
+        return self._on(method, at: path, streaming: streaming, use: closure)
     }
     
     private func _on<Request, Response>(
         _ method: HTTPMethod,
         at path: [PathComponent],
+        streaming: Bool = false,
         use closure: @escaping (Request, Context) throws -> Response
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
-            return Request.decodeRequest(req, using: ctx).map { req -> Response in
-                #warning("TODO: fix throwing")
-                return try! closure(req, ctx)
-            }.encodeResponse(for: req, using: ctx)
+            var req = req
+            if !streaming, let stream = req.body.stream {
+                // handler doesn't support streaming, and body is streaming
+                return stream.consume(max: 16_000).flatMap { body in
+                    req.body = HTTPBody(buffer: body)
+                    return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
+                        return try closure(req, ctx)
+                    }.encodeResponse(for: req, using: ctx)
+                }
+            } else {
+                return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
+                    return try closure(req, ctx)
+                }.encodeResponse(for: req, using: ctx)
+            }
         }
         let route = Route(method: method, path: path, responder: responder)
         self.add(route)
