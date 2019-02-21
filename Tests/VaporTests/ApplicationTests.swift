@@ -47,6 +47,37 @@ class ApplicationTests: XCTestCase {
 
         try app.shutdown()
     }
+    
+    
+    func testFakeClient() throws {
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("client") { req, _ in
+                return client.get("http://vapor.codes")
+            }
+        })
+        
+        final class FakeClient: Client {
+            var reqs: [HTTPRequest]
+            init() {
+                self.reqs = []
+            }
+            func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+                self.reqs.append(req)
+                return EmbeddedEventLoop().makeSucceededFuture(.init())
+            }
+        }
+        
+        let client = FakeClient()
+        
+        try app.xctest()
+            .override(service: Client.self, with: client)
+            .test(.GET, to: "/client")
+        
+        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
+        
+        try app.shutdown()
+    }
 //    func testContent() throws {
 //        let app = try Application()
 //        let req = Request(using: app)
@@ -823,6 +854,7 @@ class ApplicationTests: XCTestCase {
     static let allTests = [
         ("testApplicationStop", testApplicationStop),
         ("testClientRoute", testClientRoute),
+        ("testFakeClient", testFakeClient),
         ("testDotEnvRead", testDotEnvRead),
     ]
 //

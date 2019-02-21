@@ -198,7 +198,7 @@ public struct FileIO {
                 throw VaporError(identifier: "fileSize", reason: "Could not determine file size of: \(file).")
             }
 
-            let fd = try FileHandle(path: file)
+            let fd = try NIOFileHandle(path: file)
             let done = io.readChunked(fileHandle: fd, byteCount: fileSize.intValue, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
                 return onRead(chunk)
             }

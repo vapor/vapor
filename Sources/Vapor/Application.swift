@@ -48,6 +48,10 @@ public final class Application {
         self.threadPool.start()
     }
     
+    public func _makeServices() throws -> Services {
+        return try self.configure()
+    }
+    
     public func makeContainer() -> EventLoopFuture<Container> {
         return self.makeContainer(on: self.eventLoopGroup.next())
     }
