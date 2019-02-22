@@ -78,6 +78,13 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     }
 }
 
+public enum HTTPBodyStreamStrategy {
+    public static var collect: HTTPBodyStreamStrategy {
+        return .collect(maxSize: 2 << 14)
+    }
+    case allow
+    case collect(maxSize: Int)
+}
 
 extension RoutesBuilder {
     @discardableResult
@@ -87,7 +94,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self._on(.GET, at: path, use: closure)
+        return self._on(.GET, to: path, use: closure)
     }
     
     @discardableResult
@@ -97,7 +104,7 @@ extension RoutesBuilder {
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
-        return self._on(.GET, at: path, use: closure)
+        return self._on(.GET, to: path, use: closure)
     }
     
     @discardableResult
@@ -107,7 +114,7 @@ extension RoutesBuilder {
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
-        return self._on(.POST, at: path, use: closure)
+        return self._on(.POST, to: path, use: closure)
     }
     
     #warning("TODO: allow Request here")
@@ -116,7 +123,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         onUpgrade: @escaping (HTTPRequest, Context, WebSocket) -> ()
     ) -> Route {
-        return self._on(.GET, at: path) { (req: HTTPRequest, ctx: Context) -> HTTPResponse in
+        return self._on(.GET, to: path) { (req: HTTPRequest, ctx: Context) -> HTTPResponse in
             var res = HTTPResponse()
             try res.webSocketUpgrade(for: req, onUpgrade: { ws in
                 onUpgrade(req, ctx, ws)
@@ -128,28 +135,27 @@ extension RoutesBuilder {
     @discardableResult
     public func on<Request, Response>(
         _ method: HTTPMethod,
-        at path: PathComponent...,
-        streaming: Bool = false,
+        to path: PathComponent...,
+        bodyStream: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request, Context) throws -> Response
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
-        return self._on(method, at: path, streaming: streaming, use: closure)
+        return self._on(method, to: path, bodyStream: bodyStream, use: closure)
     }
     
     private func _on<Request, Response>(
         _ method: HTTPMethod,
-        at path: [PathComponent],
-        streaming: Bool = false,
+        to path: [PathComponent],
+        bodyStream: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request, Context) throws -> Response
     ) -> Route
         where Request: RequestDecodable, Response: ResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
             var req = req
-            if !streaming, let stream = req.body.stream {
-                // handler doesn't support streaming, and body is streaming
-                return stream.consume(max: 16_000).flatMap { body in
+            if case .collect(let max) = bodyStream, let stream = req.body.stream {
+                return stream.consume(max: max).flatMap { body in
                     req.body = HTTPBody(buffer: body)
                     return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
                         return try closure(req, ctx)

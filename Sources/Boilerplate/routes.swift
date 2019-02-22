@@ -27,7 +27,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         ws.send(text: "Hello 👋 \(ip)")
     }
     
-    r.on(.POST, at: "file", streaming: true) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
+    r.on(.POST, to: "file", bodyStream: .allow) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
         guard let stream = req.body.stream else {
             return ctx.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Expected streaming body."))
         }
