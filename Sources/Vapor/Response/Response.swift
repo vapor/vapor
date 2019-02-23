@@ -92,6 +92,7 @@ public final class Response: ContainerAlias, HTTPMessageContainer, ResponseCodab
 }
 
 extension Future where T: Response {
+    /// Convenience function for immediatly decoding `Future<Response>` objects.
     func decode<U: Decodable>(_ type: U.Type) -> Future<U> {
         return self.flatMap(to: type) { response in
             return try response.content.decode(type)
