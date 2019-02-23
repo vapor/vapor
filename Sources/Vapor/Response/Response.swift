@@ -90,3 +90,11 @@ public final class Response: ContainerAlias, HTTPMessageContainer, ResponseCodab
         return req.eventLoop.newSucceededFuture(result: self)
     }
 }
+
+extension Future where T: Response {
+    func decode<U: Decodable>(_ type: U.Type) -> Future<U> {
+        return self.flatMap(to: type) { response in
+            return try response.content.decode(type)
+        }
+    }
+}
