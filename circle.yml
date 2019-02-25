@@ -186,28 +186,31 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/ApiCore
-  # linux-compat-liveui-s3:
-  #   docker:
-  #     - image: swift:4.2
-  #   steps:
-  #     - run:
-  #         name: Maintainer
-  #         command: echo "@rafiki270, Vapor Discord, Twitter, Email"
-  #     - run:
-  #         command: git clone https://github.com/LiveUI/S3
-  #         working_directory: ~/
-  #     - run:
-  #         command: git checkout 1f911e5148f53966045d3953f45fa989c4e1ee05
-  #         working_directory: ~/S3
-  #     - run:
-  #         command: swift package edit Vapor --revision $CIRCLE_SHA1
-  #         working_directory: ~/S3
-  #     - run:
-  #         command: swift build
-  #         working_directory: ~/S3
-  #     - run:
-  #         command: swift test
-  #         working_directory: ~/S3
+  linux-compat-liveui-s3:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainer
+          command: echo "@rafiki270, Vapor Discord, Twitter, Email"
+      - run:
+          command: git clone https://github.com/LiveUI/S3
+          working_directory: ~/
+      - run:
+          command: git checkout 1f911e5148f53966045d3953f45fa989c4e1ee05
+          working_directory: ~/S3
+      - run:
+          command: sed -i s/S3SignerAWSTests/S3Tests/g Tests/LinuxMain.swift 
+          working_directory: ~/S3
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/S3
+      - run:
+          command: swift build
+          working_directory: ~/S3
+      - run:
+          command: swift test
+          working_directory: ~/S3
 workflows:
   version: 2
   tests:
@@ -240,9 +243,9 @@ workflows:
       - linux-compat-liveui-apicore:
           requires:
             - compat-suite
-      # - linux-compat-liveui-s3:
-      #     requires:
-      #       - compat-suite
+      - linux-compat-liveui-s3:
+          requires:
+            - compat-suite
   nightly:
     triggers:
       - schedule:
