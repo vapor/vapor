@@ -171,6 +171,9 @@ jobs:
           command: git checkout fd45ad30d0e6691be31ede4e6524853328fa49f4
           working_directory: ~/ApiCore
       - run:
+          command: apt-get -qq update && apt-get install -y libgd-dev
+          working_directory: ~/ApiCore
+      - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
           working_directory: ~/ApiCore
       - run:
