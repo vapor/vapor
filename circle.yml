@@ -172,9 +172,11 @@ jobs:
           command: git checkout fd45ad30d0e6691be31ede4e6524853328fa49f4
           working_directory: ~/ApiCore
       - run:
+          name: Install libgd
           command: apt-get -qq update && apt-get install -y libgd-dev
           working_directory: ~/ApiCore
       - run:
+          name: Update database config
           command: sed -i '0,/boost/{s/boost/root/}' config.default.json && sed -i '0,/boost/{s/boost/circle_test/}' config.default.json && sed -i '0,/"aaaaaa"/{s/"aaaaaa"/null/}' config.default.json
           working_directory: ~/ApiCore
       - run:
@@ -200,6 +202,8 @@ jobs:
           command: git checkout 1f911e5148f53966045d3953f45fa989c4e1ee05
           working_directory: ~/S3
       - run:
+          # This is a hack to make the linux tests run
+          name: Patch LinuxMain.swift
           command: sed -i s/S3SignerAWSTests/S3Tests/g Tests/LinuxMain.swift 
           working_directory: ~/S3
       - run:
