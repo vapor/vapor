@@ -175,7 +175,7 @@ jobs:
           command: apt-get -qq update && apt-get install -y libgd-dev postgresql-client
           working_directory: ~/ApiCore
       - run:
-          command: psql -d postgresql://root@localhost/circle_test -c "CREATE USER boost WITH ENCRYPTED PASSWORD 'aaaaaa'"
+          command: psql -d postgresql://root@localhost/circle_test -c "CREATE USER boost WITH ENCRYPTED PASSWORD 'aaaaaa'; CREATE DATABASE boost; GRANT ALL PRIVILEGES ON DATABASE boost TO boost;"
           working_directory: ~/ApiCore
       - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
