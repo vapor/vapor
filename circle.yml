@@ -160,6 +160,7 @@ jobs:
   linux-compat-liveui-apicore:
     docker:
       - image: swift:4.2
+      - image: circleci/postgres:9.6.5-alpine-ram
     steps:
       - run:
           name: Maintainer
