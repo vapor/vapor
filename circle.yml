@@ -175,7 +175,7 @@ jobs:
           command: apt-get -qq update && apt-get install -y libgd-dev
           working_directory: ~/ApiCore
       - run:
-          command: sed -i '0,/boost/{s/boost/root/}' config.default.json && sed -i '0,/boost/{s/boost/circle_test/}' config.default.json && sed -i '0,/aaaaaa/{s/aaaaaa//}' config.default.json
+          command: sed -i '0,/boost/{s/boost/root/}' config.default.json && sed -i '0,/boost/{s/boost/circle_test/}' config.default.json && sed -i '0,/"aaaaaa"/{s/"aaaaaa"/null/}' config.default.json
           working_directory: ~/ApiCore
       - run:
           command: swift package edit Vapor --revision $CIRCLE_SHA1
