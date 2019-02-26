@@ -9,7 +9,7 @@ echo "💧  Exporting docker-machine env"
 eval "$(docker-machine env default)"
 
 echo "💧  Running unit tests on Linux"
-docker run -it -v $PWD:/root/code -w /root/code norionomura/swift:swift-4.1-branch /usr/bin/swift test
+docker run -it -v $PWD:/root/code -w /root/code swift:4.2 /usr/bin/swift test
 LINUX_EXIT=$?
 
 if [[ $MACOS_EXIT == 0 ]];
