@@ -38,7 +38,7 @@ class ApplicationTests: XCTestCase {
         try Application.test(routes: { r, c in
             let client = try c.make(Client.self)
             r.get("client") { req, _ in
-                return client.get("http://vapor.codes")
+                return client.get("https://vapor.codes")
             }
         }, run: { a, c in
             let res = try c.make(Responder.self).respond(
@@ -793,7 +793,7 @@ class ApplicationTests: XCTestCase {
     
     func testDotEnvRead() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let pool = BlockingIOThreadPool(numberOfThreads: 1)
+        let pool = NIOThreadPool(numberOfThreads: 1)
         pool.start()
         let fileio = NonBlockingFileIO(threadPool: pool)
         let folder = #file.split(separator: "/").dropLast().joined(separator: "/")

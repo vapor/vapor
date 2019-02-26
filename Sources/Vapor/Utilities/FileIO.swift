@@ -210,21 +210,3 @@ public struct FileIO {
         }
     }
 }
-
-// MARK: Service
-
-extension NonBlockingFileIO {
-    /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> NonBlockingFileIO {
-        return try NonBlockingFileIO(threadPool: container.make())
-    }
-}
-
-extension BlockingIOThreadPool {
-    /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> BlockingIOThreadPool {
-        let pool = BlockingIOThreadPool(numberOfThreads: 2)
-        pool.start()
-        return pool
-    }
-}

@@ -14,7 +14,7 @@ let package = Package(
         // .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0"),
 
         // 🚀 Non-blocking, event-driven HTTP for Swift built on Swift NIO.
-        .package(url: "https://github.com/vapor/http.git", .branch("streaming-body")),
+        .package(url: "https://github.com/vapor/http.git", .branch("master")),
 
         // 🏞 Parses and serializes multipart-encoded data with Codable support.
         // .package(url: "https://github.com/vapor/multipart.git", from: "3.0.0"),
