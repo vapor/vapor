@@ -107,7 +107,6 @@ public struct FileIO {
                 return Data(buffer: ptr.bindMemory(to: UInt8.self))
             }
             onRead(data)
-            return self.eventLoop.makeSucceededFuture(())
         }
     }
 
@@ -176,31 +175,31 @@ public struct FileIO {
     ///     - file: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: An `HTTPChunkedStream` containing the file stream.
-    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPChunkedStream {
-        let chunkStream = HTTPChunkedStream(on: eventLoop)
-        #warning("TODO: avoid ignoring future result")
+    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPBodyStream {
+        let bodyStream = HTTPBodyStream(on: eventLoop)
         _ = _read(file: file, chunkSize: chunkSize) { chunk in
-            return chunkStream.write(.chunk(chunk))
-        }.flatMap {
-            return chunkStream.write(.end)
+            bodyStream.write(.chunk(chunk))
+        }.map {
+            bodyStream.write(.end)
         }.flatMapErrorThrowing { error in
             // we can't wait for the error
-            _ = chunkStream.write(.error(error))
+            bodyStream.write(.error(error))
         }
-        return chunkStream
+        return bodyStream
     }
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
-    private func _read(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    private func _read(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> ()) -> EventLoopFuture<Void> {
         do {
             guard let attributes = try? FileManager.default.attributesOfItem(atPath: file), let fileSize = attributes[.size] as? NSNumber else {
                 throw VaporError(identifier: "fileSize", reason: "Could not determine file size of: \(file).")
             }
 
-            let fd = try FileHandle(path: file)
-            let done = io.readChunked(fileHandle: fd, byteCount: fileSize.intValue, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
-                return onRead(chunk)
+            let fd = try NIOFileHandle(path: file)
+            let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize.intValue, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
+                onRead(chunk)
+                return self.eventLoop.makeSucceededFuture(())
             }
             done.whenComplete { _ in
                 try? fd.close()
