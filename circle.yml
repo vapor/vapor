@@ -214,6 +214,64 @@ jobs:
       - run:
           command: swift test
           working_directory: ~/VaporSecurityHeaders
+  linux-compat-liveui-apicore:
+    docker:
+      - image: swift:4.2
+      - image: circleci/postgres:9.6.5-alpine-ram
+    steps:
+      - run:
+          name: Maintainer
+          command: echo "@rafiki270, Vapor Discord, Twitter, Email"
+      - run:
+          command: git clone https://github.com/LiveUI/ApiCore
+          working_directory: ~/
+      - run:
+          command: git checkout fd45ad30d0e6691be31ede4e6524853328fa49f4
+          working_directory: ~/ApiCore
+      - run:
+          name: Install libgd
+          command: apt-get -qq update && apt-get install -y libgd-dev
+          working_directory: ~/ApiCore
+      - run:
+          name: Update database config
+          command: sed -i '0,/boost/{s/boost/root/}' config.default.json && sed -i '0,/boost/{s/boost/circle_test/}' config.default.json && sed -i '0,/"aaaaaa"/{s/"aaaaaa"/null/}' config.default.json
+          working_directory: ~/ApiCore
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/ApiCore
+      - run:
+          command: swift build
+          working_directory: ~/ApiCore
+      - run:
+          command: swift test
+          working_directory: ~/ApiCore
+  linux-compat-liveui-s3:
+    docker:
+      - image: swift:4.2
+    steps:
+      - run:
+          name: Maintainer
+          command: echo "@rafiki270, Vapor Discord, Twitter, Email"
+      - run:
+          command: git clone https://github.com/LiveUI/S3
+          working_directory: ~/
+      - run:
+          command: git checkout 1f911e5148f53966045d3953f45fa989c4e1ee05
+          working_directory: ~/S3
+      - run:
+          # This is a hack to make the linux tests run
+          name: Patch LinuxMain.swift
+          command: sed -i s/S3SignerAWSTests/S3Tests/g Tests/LinuxMain.swift 
+          working_directory: ~/S3
+      - run:
+          command: swift package edit Vapor --revision $CIRCLE_SHA1
+          working_directory: ~/S3
+      - run:
+          command: swift build
+          working_directory: ~/S3
+      - run:
+          command: swift test
+          working_directory: ~/S3
 workflows:
   version: 2
   tests:
@@ -241,6 +299,12 @@ workflows:
           requires:
             - compat-suite
       - linux-compat-asensei-auth-jwt:
+          requires:
+            - compat-suite
+      - linux-compat-liveui-apicore:
+          requires:
+            - compat-suite
+      - linux-compat-liveui-s3:
           requires:
             - compat-suite
       - linux-compat-raywenderlich-til:
