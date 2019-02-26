@@ -163,14 +163,16 @@ jobs:
   linux-compat-raywenderlich-til:
     docker:
       - image: swift:4.2
-    environment:
-      GOOGLE_CALLBACK_URL: test
-      GOOGLE_CLIENT_ID: test
-      GOOGLE_CLIENT_SECRET: test
-      GITHUB_CALLBACK_URL: test
-      GITHUB_CLIENT_ID: test
-      GITHUB_CLIENT_SECRET: test
-      SENDGRID_API_KEY: test
+        environment:
+          GOOGLE_CALLBACK_URL: test
+          GOOGLE_CLIENT_ID: test
+          GOOGLE_CLIENT_SECRET: test
+          GITHUB_CALLBACK_URL: test
+          GITHUB_CLIENT_ID: test
+          GITHUB_CLIENT_SECRET: test
+          SENDGRID_API_KEY: test
+          DATABASE_URL: postgresql://root@localhost/circle_test
+      - image: circleci/postgres:9.6.5-alpine-ram
     steps:
       - run:
           name: Maintainer
