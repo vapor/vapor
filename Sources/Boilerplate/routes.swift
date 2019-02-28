@@ -16,7 +16,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
 
     r.get("json") { (req: HTTPRequest, ctx: Context) -> [String: String] in
         return ["foo": "bar"]
-    }
+    }.description("returns some test json")
     
     r.webSocket("ws") { (req: HTTPRequest, ctx: Context, ws: WebSocket) -> () in
         ws.onText { ws, text in
