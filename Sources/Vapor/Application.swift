@@ -81,15 +81,20 @@ public final class Application {
         let eventLoop = self.eventLoopGroup.next()
         return self.loadDotEnv(on: eventLoop).flatMap {
             return self.makeContainer(on: eventLoop)
-        }.flatMapThrowing { c -> (Console, CommandGroup, Container) in
-            let command = try c.make(Commands.self).group()
-            let console = try c.make(Console.self)
-            return (console, command, c)
-        }.flatMap { res -> EventLoopFuture<Void> in
-            let (console, command, c) = res
+        }.flatMap { c -> EventLoopFuture<Void> in
+            let command: CommandGroup
+            let console: Console
+            do {
+                command = try c.make(Commands.self).group()
+                console = try c.make(Console.self)
+            } catch {
+                return c.shutdown().flatMapThrowing { throw error }
+            }
             var runInput = self.env.commandInput
             return console.run(command, input: &runInput).flatMap {
                 return c.shutdown()
+            }.flatMapError { error in
+                return c.shutdown().flatMapThrowing { throw error }
             }
         }
     }

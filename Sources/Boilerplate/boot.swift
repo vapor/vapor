@@ -10,6 +10,7 @@ public func boot(_ app: Application) throws {
             print("  - \(key) = \(val)")
         }
     }
+    try test.shutdown().wait()
 }
 
 extension PathComponent: CustomStringConvertible {
