@@ -167,12 +167,6 @@ extension Services {
 //            return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
 //        }
 
-        // blocking IO pool is thread safe
-        #warning("TODO: create blocking IO thread pool wrapper with auto shutdown")
-        let sharedThreadPool = BlockingIOThreadPool(numberOfThreads: 2)
-        sharedThreadPool.start()
-        s.instance(sharedThreadPool)
-
         // file
         s.register(NonBlockingFileIO.self) { c in
             return try .init(threadPool: c.make())

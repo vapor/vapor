@@ -26,6 +26,24 @@ public func routes(_ r: Routes, _ c: Container) throws {
         let ip = ctx.channel.remoteAddress?.description ?? "<no ip>"
         ws.send(text: "Hello 👋 \(ip)")
     }
+    
+    r.on(.POST, to: "file", bodyStream: .allow) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
+        guard let stream = req.body.stream else {
+            return ctx.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Expected streaming body."))
+        }
+        let promise = ctx.eventLoop.makePromise(of: String.self)
+        stream.read { result, stream in
+            switch result {
+            case .chunk(let chunk):
+                debugPrint(chunk)
+            case .error(let error):
+                promise.fail(error)
+            case .end:
+                promise.succeed("Done")
+            }
+        }
+        return promise.futureResult
+    }
 
 //    r.get("hello", String.parameter) { req in
 //        return try req.parameters.next(String.self)

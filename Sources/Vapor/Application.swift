@@ -24,7 +24,7 @@ public final class Application {
     
     private let configure: () throws -> Services
     
-    private let threadPool: BlockingIOThreadPool
+    private let threadPool: NIOThreadPool
     
     private var didShutdown: Bool
     
@@ -68,6 +68,9 @@ public final class Application {
         var s = try self.configure()
         s.register(Application.self) { c in
             return self
+        }
+        s.register(NIOThreadPool.self) { c in
+            return self.threadPool
         }
         return Container.boot(env: self.env, services: s, on: eventLoop)
     }
