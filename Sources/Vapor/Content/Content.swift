@@ -6,7 +6,7 @@
 /// - `RequestEncodable`
 /// - `RequestDecodable`
 ///
-/// If adding conformance in an extension, you must ensure the type already exists to `Codable`.
+/// If adding conformance in an extension, you must ensure the type already conforms to `Codable`.
 ///
 ///     struct Hello: Content {
 ///         let message = "Hello!"
