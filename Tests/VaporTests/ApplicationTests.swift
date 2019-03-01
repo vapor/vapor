@@ -1,27 +1,4 @@
-import Vapor
-import XCTest
-
-#warning("TODO: implement better test helpers in separate package")
-extension Application {
-    static func test(
-        configure: @escaping (inout Services) throws -> () = { _ in },
-        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in },
-        run: (Application, Container) throws -> () = { _, _ in }
-    ) throws {
-        let app = Application(env: .testing) {
-            var s = Services.default()
-            try configure(&s)
-            s.extend(Routes.self) { r, c in
-                try routes(&r, c)
-            }
-            return s
-        }
-        let c = try app.makeContainer().wait()
-        try run(app, c)
-        try c.shutdown().wait()
-        try app.shutdown()
-    }
-}
+import XCTVapor
 
 class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -35,19 +12,55 @@ class ApplicationTests: XCTestCase {
     
     
     func testClientRoute() throws {
-        try Application.test(routes: { r, c in
+        let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
             r.get("client") { req, _ in
-                return client.get("https://vapor.codes")
+                return client.get("http://httpbin.org/status/201")
             }
-        }, run: { a, c in
-            let res = try c.make(Responder.self).respond(
-                to: .init(method: .GET, urlString: "/client"),
-                using: .init(channel: EmbeddedChannel())
-            ).wait()
-            XCTAssertEqual(res.status, .ok)
-            XCTAssert(res.body.description.contains("<title>Vapor (Server-side Swift)</title>"))
         })
+            
+        try app.xctest()
+            .test(.GET, to: "/client") { res in
+                res.assertStatus(is: .created)
+                    .assertBody(isEmpty: true)
+            }
+            .test(.GET, to: "/foo") { res in
+                res.assertStatus(is: .notFound)
+                    .assertBody(contains: "Not Found")
+        }
+
+        try app.shutdown()
+    }
+    
+    
+    func testFakeClient() throws {
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("client") { req, _ in
+                return client.get("http://vapor.codes")
+            }
+        })
+        
+        final class FakeClient: Client {
+            var reqs: [HTTPRequest]
+            init() {
+                self.reqs = []
+            }
+            func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+                self.reqs.append(req)
+                return EmbeddedEventLoop().makeSucceededFuture(.init())
+            }
+        }
+        
+        let client = FakeClient()
+        
+        try app.xctest()
+            .override(service: Client.self, with: client)
+            .test(.GET, to: "/client")
+        
+        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
+        
+        try app.shutdown()
     }
 //    func testContent() throws {
 //        let app = try Application()
@@ -825,6 +838,7 @@ class ApplicationTests: XCTestCase {
     static let allTests = [
         ("testApplicationStop", testApplicationStop),
         ("testClientRoute", testClientRoute),
+        ("testFakeClient", testFakeClient),
         ("testDotEnvRead", testDotEnvRead),
     ]
 //
@@ -983,3 +997,19 @@ class ApplicationTests: XCTestCase {
 //        return String(data: self, encoding: .utf8)
 //    }
 //}
+
+extension Application {
+    static func create(
+        configure: @escaping (inout Services) throws -> () = { _ in },
+        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
+    ) -> Application {
+        return Application(env: .testing) {
+            var s = Services.default()
+            try configure(&s)
+            s.extend(Routes.self) { r, c in
+                try routes(&r, c)
+            }
+            return s
+        }
+    }
+}
