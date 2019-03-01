@@ -79,16 +79,6 @@ public final class SecureMiddleware: Middleware {
         /// HTTP Strict Transport Security (HSTS) policy
         public let policy: Policy
         
-        /// Default Strict Transport Security configuration. max-age=0 with no policy
-        ///
-        /// - Returns: StrictTransportSecurity
-        public static func `default`() -> StrictTransportSecurity {
-            return .init(
-                maxAge: 0,
-                policy: .default
-            )
-        }
-        
         public var description: String {
             switch policy {
             case .default:
@@ -196,15 +186,11 @@ public final class SecureMiddleware: Middleware {
         /// - X-XSS-Protection: Default value "1; mode=block".
         /// - X-Content-Type-Options: Default value "nosniff".
         /// - X-Frame-Options: Default value "SAMEORIGIN".
-        /// - Strict-Transport-Security: Default value "max-age=0".
-        /// - Content-Security-Policy: Default value "default-src 'self'".
         public static func `default`() -> Configuration {
             return .init(
                 xssProtection: XSSProtection.enable(BrowserAction.block),
                 xContentTypeOptions: XContentTypeOptions.nosniff,
-                xframeOptions: XFrameOptions.sameorigin,
-                strictTransportSecurity: StrictTransportSecurity.default(),
-                contentSecurityPolicy: [.defaultSrc("'self'")]
+                xframeOptions: XFrameOptions.sameorigin
             )
         }
         
