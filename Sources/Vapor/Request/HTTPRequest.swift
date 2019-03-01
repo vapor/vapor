@@ -5,19 +5,13 @@ public final class Context {
         return self.channel.eventLoop
     }
     
+    public var parameters: Parameters
+    
     public var userInfo: [AnyHashable: Any]
-    
-    internal var _parameters: Parameters
-    
-    public var parameters: ParametersContainer {
-        return .init(self)
-    }
-    
-    #warning("TODO: consider protocolizing channel")
     
     public init(channel: Channel) {
         self.channel = channel
-        self._parameters = .init()
+        self.parameters = .init()
         self.userInfo = [:]
     }
 }

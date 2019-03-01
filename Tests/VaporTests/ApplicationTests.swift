@@ -1,21 +1,5 @@
 import XCTVapor
 
-extension Application {
-    static func create(
-        configure: @escaping (inout Services) throws -> () = { _ in },
-        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
-    ) -> Application {
-        return Application(env: .testing) {
-            var s = Services.default()
-            try configure(&s)
-            s.extend(Routes.self) { r, c in
-                try routes(&r, c)
-            }
-            return s
-        }
-    }
-}
-
 class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
@@ -31,14 +15,14 @@ class ApplicationTests: XCTestCase {
         let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
             r.get("client") { req, _ in
-                return client.get("https://vapor.codes")
+                return client.get("http://httpbin.org/status/201")
             }
         })
             
         try app.xctest()
             .test(.GET, to: "/client") { res in
-                res.assertStatus(is: .ok)
-                    .assertBody(contains: "Vapor (Server-side Swift)")
+                res.assertStatus(is: .created)
+                    .assertBody(isEmpty: true)
             }
             .test(.GET, to: "/foo") { res in
                 res.assertStatus(is: .notFound)
@@ -1013,3 +997,19 @@ class ApplicationTests: XCTestCase {
 //        return String(data: self, encoding: .utf8)
 //    }
 //}
+
+extension Application {
+    static func create(
+        configure: @escaping (inout Services) throws -> () = { _ in },
+        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
+    ) -> Application {
+        return Application(env: .testing) {
+            var s = Services.default()
+            try configure(&s)
+            s.extend(Routes.self) { r, c in
+                try routes(&r, c)
+            }
+            return s
+        }
+    }
+}

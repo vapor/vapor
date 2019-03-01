@@ -48,11 +48,10 @@ public struct HTTPRoutesResponder: Responder {
     
     /// See `Router`.
     private func route(_ req: HTTPRequest, using ctx: Context) -> Responder? {
-        #warning("TODO: allow router to accept substring")
         let path: [String] = req.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
             .map { String($0) }
-        return self.router.route(path: [req.method.string] + path, parameters: &ctx._parameters)
+        return self.router.route(path: [req.method.string] + path, parameters: &ctx.parameters)
     }
 }
