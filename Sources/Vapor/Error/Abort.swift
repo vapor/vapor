@@ -65,7 +65,7 @@ public struct Abort: AbortError {
         line: UInt = #line,
         column: UInt = #column
     ) {
-        self.identifier = status.code.description
+        self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
