@@ -6,12 +6,17 @@
 public final class SecureMiddleware: Middleware {
     /// XSS Protection. with browser action.
     ///
-    /// - block: Enables XSS filtering. Rather than sanitizing the page, the browser will prevent rendering of the page if an attack is detected.
-    /// - report: Enables XSS filtering. If a cross-site scripting attack is detected, the browser will sanitize the page and report the violation. This uses the functionality of the CSP report-uri directive to send a report.
+    /// - block: Sanitize the page and Prevent rendering of the page if an attack is detected.
+    /// - report: Sanitize the page and report the violation.
     public enum BrowserAction: CustomStringConvertible {
+        
+        /// Sanitize the page and Prevent rendering of the page if an attack is detected.
         case block
+        
+        /// Sanitize the page and report the violation.
         case report(url: String)
         
+        /// Creates the header string depending on the case of self.
         public var description: String {
             switch self {
             case .block:
@@ -26,15 +31,17 @@ public final class SecureMiddleware: Middleware {
     ///
     /// - disable: Disables XSS filtering.
     /// - enable: Enables XSS filtering with configration
-    ///     - ".enable(nil)" Enables XSS filtering (usually default in browsers). If a cross-site scripting attack is detected, the browser will sanitize the page (remove the unsafe parts).
-    ///     - ".enable(BrowserAction.block)" Enables XSS filtering. Rather than sanitizing the page, the browser will prevent rendering of the page if an attack is detected.
-    ///     - ".enable(BrowserAction.report("<reporting-URI>"))" Enables XSS filtering. If a cross-site scripting attack is detected, the browser will sanitize the page and report the violation. This uses the functionality of the CSP report-uri directive to send a report.
     ///
     /// For more information, see [X-XSS-Protection](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-XSS-Protection)
     public enum XSSProtection: CustomStringConvertible {
+
+        /// Disables XSS filtering.
         case disable
+
+        /// Enables XSS filtering with configration.
         case enable(BrowserAction?)
         
+        /// Creates the header string depending on the case of self.
         public var description: String {
             switch self {
             case .disable:
@@ -50,35 +57,37 @@ public final class SecureMiddleware: Middleware {
     
     /// HTTP Strict-Transport-Security (HSTS) header Configrations
     ///
-    /// Strict-Transport-Security response header (often abbreviated as HSTS) lets a web site tell browsers that it should only be accessed using HTTPS, instead of using HTTP.
-    /// max-age sets the `Strict-Transport-Security` header to indicate how
-    /// long (in seconds) browsers should remember that this site is only to
-    /// be accessed using HTTPS. This reduces your exposure to some SSL-stripping
-    /// man-in-the-middle (MITM) attacks.
-    ///
-    /// ExcludeSubdomains won't include subdomains tag in the `Strict Transport Security`
-    /// header, excluding all subdomains from security policy. It has no effect
-    /// unless max-age is set to a non-zero value.
+    /// Strict-Transport-Security response header (often abbreviated as HSTS)
+    /// lets a web site tell browsers that it should only be accessed using HTTPS,
+    /// instead of using HTTP.
     ///
     /// For more information, see [HTTP Strict-Transport-Security (HSTS)](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security)
     public struct StrictTransportSecurity: CustomStringConvertible {
         /// HTTP Strict Transport Security (HSTS) policy
         ///
-        /// - `default`: max-age=<expire-time>
-        /// - includeSubDomains: If this optional parameter is specified, this rule applies to all of the site's subdomains as well.
+        /// - `default`: max-age in seconds
+        /// - includeSubDomains: for applying rule to all of the site's subdomains as well.
         /// - preload: for Preloading Strict Transport Security
         public enum Policy {
+            
+            /// max-age in seconds
             case `default`
+            
+            /// for applying rule to all of the site's subdomains as well.
             case includeSubDomains
+            
+            /// for Preloading Strict Transport Security
             case preload
         }
         
-        /// The time, in seconds, that the browser should remember that a site is only to be accessed using HTTPS.
+        /// The time that the browser should remember that
+        /// a site is only to be accessed using HTTPS.
         public let maxAge: Int
         
         /// HTTP Strict Transport Security (HSTS) policy
         public let policy: Policy
         
+        /// Creates the header string depending on the case of self.
         public var description: String {
             switch policy {
             case .default:
@@ -91,18 +100,26 @@ public final class SecureMiddleware: Middleware {
         }
     }
     
-    /// The X-Frame-Options HTTP response header can be used to indicate whether or not a browser should be allowed to render a page in a <frame>, <iframe>, <embed> or <object> . Sites can use this to avoid clickjacking attacks, by ensuring that their content is not embedded into other sites.
+    /// X-Frame-Options can be used to indicate whether or not a browser should
+    /// be allowed to render a page in a <frame>, <iframe> or <object> .
     ///
     /// - deny: The page cannot be displayed in a frame, regardless of the site attempting to do so.
-    /// - sameorigin: The page can only be displayed in a frame on the same origin as the page itself. The spec leaves it up to browser vendors to decide whether this option applies to the top level, the parent, or the whole chain, although it is argued that the option is not very useful unless all ancestors are also in the same origin. Also see Browser compatibility for support details.
-    /// - allow: The page can only be displayed in a frame on the specified origin. Note that in Firefox this still suffers from the same problem as sameorigin did — it doesn't check the frame ancestors to see if they are in the same origin.
+    /// - sameorigin: The page can only be displayed in a frame on the same origin as the page.
+    /// - allow: The page can only be displayed in a frame on the specified origin.
     ///
     /// For more information, see [X-Frame-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options)
     public enum XFrameOptions: CustomStringConvertible {
+        
+        /// The page cannot be displayed in a frame, regardless of the site attempting to do so.
         case deny
+        
+        /// The page can only be displayed in a frame on the same origin as the page.
         case sameorigin
+        
+        /// The page can only be displayed in a frame on the specified origin.
         case allow(from: String)
         
+        /// Creates the header string depending on the case of self.
         public var description: String {
             switch self {
             case .deny:
@@ -115,16 +132,17 @@ public final class SecureMiddleware: Middleware {
         }
     }
     
-    /// The X-Content-Type-Options response HTTP header is a marker used by the server to indicate that the MIME types advertised in the Content-Type headers should not be changed and be followed. This allows to opt-out of MIME type sniffing, or, in other words, it is a way to say that the webmasters knew what they were doing.
+    /// The X-Content-Type-Options provides protection against overriding Content-Type
     ///
-    /// - nosniff: Blocks a request if the requested type is
-    ///     - "style" and the MIME type is not "text/css", or
-    ///     - "script" and the MIME type is not a JavaScript MIME type.
+    /// - nosniff: Blocks a request if the requested type if MIME type is not text/css or JavaScript
     ///
     /// For more information, see [X-Content-Type-Options](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options)
     public enum XContentTypeOptions: CustomStringConvertible {
+        
+        /// Blocks a request if the requested type if MIME type is not text/css or JavaScript
         case nosniff
         
+        /// Creates the header string depending on the case of self.
         public var description: String {
             switch self {
             case .nosniff:
@@ -133,46 +151,76 @@ public final class SecureMiddleware: Middleware {
         }
     }
     
-    /// Content-Security-Policy header providing security against cross-site scripting (XSS), clickjacking and other code
-    /// injection attacks resulting from execution of malicious content in the trusted web page context.
+    /// Content-Security-Policy header providing security against cross-site scripting (XSS),
+    /// clickjacking and other code injection.
     ///
     /// For more information, see [Content Security Policy (CSP)](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP)
     public struct ContentSecurityPolicy: ExpressibleByArrayLiteral {
-        /// The policy is a string containing the policy directives describing your Content Security Policy.
+        /// Configration used for the policy directives describing your Content Security Policy.
         public struct Policy: ExpressibleByStringLiteral {
+            
+            /// A textual representation of CSP.
             let string: String
             
+            /// Instantiate a Policy struct that can be used to create a `ContentSecurityPolicy`
+            ///
+            /// - Parameter value: A textual representation of Policy.
             public init(stringLiteral value: String) {
                 string = value
             }
             
+            /// Instantiate a Policy struct with `default-src` Policy.
+            ///
+            /// - Parameter value: A textual representation of Source.
+            /// - Returns: Instantiate a Policy struct.
             public static func defaultSrc(_ value: String) -> Policy {
                 return .init(stringLiteral: "default-src \(value)")
             }
             
+            /// Instantiate a Policy struct with `script-src` Policy.
+            ///
+            /// - Parameter value: A textual representation of Source.
+            /// - Returns: Instantiate a Policy struct.
             public static func scriptSrc(_ value: String) -> Policy {
                 return .init(stringLiteral: "script-src \(value)")
             }
             
+            /// Instantiate a Policy struct with `img-src` Policy.
+            ///
+            /// - Parameter value: A textual representation of Source.
+            /// - Returns: Instantiate a Policy struct.
             public static func imgSrc(_ value: String) -> Policy {
                 return .init(stringLiteral: "img-src \(value)")
             }
             
+            /// Instantiate a Policy struct with `media-src` Policy.
+            ///
+            /// - Parameter value: A textual representation of Source.
+            /// - Returns: Instantiate a Policy struct.
             public static func mediaSrc(_ value: String) -> Policy {
                 return .init(stringLiteral: "media-src \(value)")
             }
             
+            /// Instantiate a Policy struct with `report-uri` Policy.
+            ///
+            /// - Parameter value: A textual representation of Source.
+            /// - Returns: Instantiate a Policy struct.
             public static func reportUrl(_ value: String) -> Policy {
                 return .init(stringLiteral: "report-uri \(value)")
             }
         }
         
+        /// An Array of Policy struct.
         public var directives: [Policy]
         
+        /// Creates Instance of Policy struct.
+        ///
+        /// - Parameter elements: Instantiate a Policy struct
         public init(arrayLiteral elements: Policy...) {
             directives = elements
         }
         
+        /// Creates the header string depending on the Policy array.
         public var description: String {
             return directives.compactMap { $0.string }
                 .joined(separator: "; ")
@@ -202,24 +250,14 @@ public final class SecureMiddleware: Middleware {
         
         /// X-Frame-Options can be used to indicate whether or not a browser should
         /// be allowed to render a page in a <frame>, <iframe> or <object> .
-        /// Sites can use this to avoid clickjacking attacks, by ensuring that their
-        /// content is not embedded into other sites.provides protection against
-        /// clickjacking.
         public let xframeOptions: XFrameOptions?
         
-        /// Strict-Transport-Security response header (often abbreviated as HSTS) lets a web site tell browsers that it should only be accessed using HTTPS, instead of using HTTP.
-        /// max-age sets the `Strict-Transport-Security` header to indicate how
-        /// long (in seconds) browsers should remember that this site is only to
-        /// be accessed using HTTPS. This reduces your exposure to some SSL-stripping
-        /// man-in-the-middle (MITM) attacks.
-        ///
-        /// ExcludeSubdomains won't include subdomains tag in the `Strict Transport Security`
-        /// header, excluding all subdomains from security policy. It has no effect
-        /// unless max-age is set to a non-zero value.
+        /// Strict-Transport-Security response header (often abbreviated as HSTS)
+        /// lets a web site tell browsers that it should only be accessed using HTTPS.
         public let strictTransportSecurity: StrictTransportSecurity?
         
-        /// Content-Security-Policy header providing security against cross-site scripting (XSS), clickjacking and other code
-        /// injection attacks resulting from execution of malicious content in the trusted web page context.
+        /// Content-Security-Policy header providing security against cross-site scripting (XSS),
+        /// clickjacking and other code injection.
         public let contentSecurityPolicy: ContentSecurityPolicy?
         
         /// middleware for adding support for Security Headers in your responses.
@@ -227,25 +265,19 @@ public final class SecureMiddleware: Middleware {
         /// - Parameters:
         ///   - xssProtection: provides protection against cross-site scripting attack (XSS)
         ///   - xContentTypeOptions: provides protection against overriding Content-Type
-        ///   - xframeOptions: can be used to indicate whether or not a browser should
-        /// be allowed to render a page in a <frame>, <iframe> or <object> .
-        /// Sites can use this to avoid clickjacking attacks, by ensuring that their
-        /// content is not embedded into other sites.provides protection against
-        /// clickjacking.
-        ///   - strictTransportSecurity: response header (often abbreviated as HSTS) lets a web site tell browsers that it should only be accessed using HTTPS, instead of using HTTP.
-        /// max-age sets the `Strict-Transport-Security` header to indicate how
-        /// long (in seconds) browsers should remember that this site is only to
-        /// be accessed using HTTPS. This reduces your exposure to some SSL-stripping
-        /// man-in-the-middle (MITM) attacks.
-        ///   - contentSecurityPolicy: header providing security against cross-site scripting (XSS), clickjacking and other code
-        /// injection attacks resulting from execution of malicious content in the
+        ///   - xframeOptions: can be used to indicate whether or not a browser should be allowed to
+        ///     render a page in a <frame>, <iframe> or <object> .
+        ///   - strictTransportSecurity: response header (often abbreviated as HSTS) lets a web site
+        ///     tell browsers that it should only be accessed using HTTPS, instead of using HTTP.
+        ///   - contentSecurityPolicy: header providing security against cross-site scripting (XSS),
+        ///     clickjacking and other code injection.
         public init(
             xssProtection: XSSProtection? = nil,
             xContentTypeOptions: XContentTypeOptions? = nil,
             xframeOptions: XFrameOptions? = nil,
             strictTransportSecurity: StrictTransportSecurity? = nil,
             contentSecurityPolicy: ContentSecurityPolicy? = nil
-            ) {
+        ) {
             self.xssProtection = xssProtection
             self.xContentTypeOptions = xContentTypeOptions
             self.xframeOptions = xframeOptions
@@ -265,7 +297,7 @@ public final class SecureMiddleware: Middleware {
     public init(configuration: Configuration = .default()) {
         self.configuration = configuration
     }
-    
+
     /// See `Middleware`.
     public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         let response = next.respond(to: req, using: ctx)
