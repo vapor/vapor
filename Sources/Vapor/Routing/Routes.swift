@@ -123,12 +123,10 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         onUpgrade: @escaping (HTTPRequest, Context, WebSocket) -> ()
     ) -> Route {
-        return self._on(.GET, to: path) { (req: HTTPRequest, ctx: Context) -> HTTPResponse in
-            var res = HTTPResponse()
-            try res.webSocketUpgrade(for: req, onUpgrade: { ws in
+        return self._on(.GET, to: path) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<HTTPResponse> in
+            return req.makeWebSocketUpgradeResponse(on: ctx.channel, onUpgrade: { ws in
                 onUpgrade(req, ctx, ws)
             })
-            return res
         }
     }
     
