@@ -128,7 +128,7 @@ jobs:
           working_directory: ~/
       - run:
           name: Checkout AddressManager Commit
-          command: git checkout 8ab10f59c2e9f0d02a33c4d5c79e4e06c21105a2
+          command: git checkout 60030dd1fe69a8ce95959b5964ed057a5295ccaa
           working_directory: ~/AddressManager
       - run:
           name: Unpin dependencies
