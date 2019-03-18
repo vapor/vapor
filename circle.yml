@@ -109,17 +109,11 @@ jobs:
   linux-compat-swift-commerce-address-manager:
     docker:
       - image: swift:4.2
-        environment:
-          DATABASE_DB: address_manager
-          DATABASE_USER: mysql
-          DATABASE_HOST: 127.0.0.1
-          DATABASE_PASSWORD: password
       - image: circleci/mysql:8.0.15
         environment:
           MYSQL_DB: address_manager
-          MYSQL_USER: mysql
-          MYSQL_HOST: 127.0.0.1
-          MYSQL_PASSWORD: password
+          MYSQL_USER: root
+          MYSQL_ROOT_PASSWORD: password
     steps:
       - run:
           name: Maintainers
