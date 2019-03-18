@@ -124,8 +124,12 @@ jobs:
           command: echo "@calebkleveter, @proggeramlug contact via discord"
       - run:
           name: Clone AddressManager
-          command: git clone -b 0.1.1 https://github.com/SwiftCommerce/AddressManager.git
+          command: git clone --depth=1 https://github.com/SwiftCommerce/AddressManager.git
           working_directory: ~/
+      - run:
+          name: Checkout AddressManager Commit
+          command: git checkout 8ab10f59c2e9f0d02a33c4d5c79e4e06c21105a2
+          working_directory: ~/AddressManager
       - run:
           name: Unpin dependencies
           command: rm Package.resolved
