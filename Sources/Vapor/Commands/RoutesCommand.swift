@@ -11,12 +11,7 @@
 /// is a parameter whose result will be discarded.
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
-public struct RoutesCommand: Command, ServiceType {
-    /// See `ServiceType`.
-    public static func makeService(for container: Container) throws -> RoutesCommand {
-        return try RoutesCommand(router: container.make())
-    }
-
+public struct RoutesCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -33,32 +28,29 @@ public struct RoutesCommand: Command, ServiceType {
     }
 
     /// `Router` to use for printing routes.
-    private let router: Router
+    private let routes: Routes
 
     /// Create a new `RoutesCommand`.
-    public init(router: Router) {
-        self.router = router
+    public init(routes: Routes) {
+        self.routes = routes
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> Future<Void> {
+    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
         let console = context.console
         
         var longestMethod = 0
         var longestPath = 0
 
-        for route in router.routes {
-            guard let first = route.path.first, case .constant(let method) = first else {
-                continue
-            }
-
+        for route in self.routes.routes {
+            let method = route.method.string
             if method.count > longestMethod {
                 longestMethod = method.count
             }
 
             var pathLength = 0
 
-            for path in route.path[1...] {
+            for path in route.path {
                 switch path {
                 case .constant(let const):
                     pathLength += const.count + 1 // /const
@@ -88,12 +80,10 @@ public struct RoutesCommand: Command, ServiceType {
 
         hr()
 
-        for route in router.routes {
+        for route in routes.routes {
             console.print("| ", newLine: false)
 
-            guard let first = route.path.first, case .constant(let method) = first else {
-                continue
-            }
+            let method = route.method.string
             console.success(method, newLine: false)
 
             for _ in 0..<longestMethod - method.count {
@@ -104,7 +94,7 @@ public struct RoutesCommand: Command, ServiceType {
 
             var pathLength = 0
 
-            route.path[1...].forEach { comp in
+            route.path.forEach { comp in
                 switch comp {
                 case .constant(let const):
                     console.info("/", newLine: false)
@@ -132,7 +122,7 @@ public struct RoutesCommand: Command, ServiceType {
             hr()
         }
 
-        return .done(on: context.container)
+        return context.eventLoop.makeSucceededFuture(())
     }
 }
 

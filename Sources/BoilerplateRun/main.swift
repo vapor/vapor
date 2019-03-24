@@ -1,3 +1,3 @@
 import Boilerplate
 
-try app(.detect()).run()
+try app(.detect()).execute().wait()

@@ -1,4 +1,4 @@
-extension Router {
+extension RoutesBuilder {
     // MARK: Middleware
 
     /// Creates a new `Router` wrapped in the supplied variadic `Middleware`.
@@ -10,8 +10,8 @@ extension Router {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
-    public func grouped(_ middleware: Middleware...) -> Router {
-        return grouped(middleware)
+    public func grouped(_ middleware: Middleware...) -> RoutesBuilder {
+        return self.grouped(middleware)
     }
 
     /// Creates a new `Router` wrapped in the supplied variadic `Middleware`.
@@ -24,8 +24,8 @@ extension Router {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: Middleware..., configure: (Router) -> ()) {
-        return group(middleware, configure: configure)
+    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) -> ()) {
+        return self.group(middleware, configure: configure)
     }
 
     /// Creates a new `Router` wrapped in the supplied array of `Middleware`.
@@ -37,7 +37,7 @@ extension Router {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
-    public func grouped(_ middleware: [Middleware]) -> Router {
+    public func grouped(_ middleware: [Middleware]) -> RoutesBuilder {
         guard middleware.count > 0 else {
             return self
         }
@@ -54,7 +54,7 @@ extension Router {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: [Middleware], configure: (Router) -> ()) {
+    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) -> ()) {
         configure(MiddlewareGroup(root: self, middleware: middleware))
     }
 }
@@ -62,34 +62,27 @@ extension Router {
 // MARK: Private
 
 /// Middleware grouping route.
-private final class MiddlewareGroup: Router {
-    /// See `Router`.
-    var routes: [Route<Responder>] {
-        return root.routes
-    }
-
+private final class MiddlewareGroup: RoutesBuilder {
     /// Router to cascade to.
-    let root: Router
+    let root: RoutesBuilder
+
+    /// See `HTTPRoutesBuilder`.
+    var eventLoop: EventLoop {
+        return self.root.eventLoop
+    }
 
     /// Additional middleware.
     let middleware: [Middleware]
 
-    /// Creates a new `MiddlewareGroup`.
-    init(root router: Router, middleware: [Middleware]) {
-        self.root = router
+    /// Creates a new `PathGroup`.
+    init(root: RoutesBuilder, middleware: [Middleware]) {
+        self.root = root
         self.middleware = middleware
     }
-
-    /// See `Router`.
-    func register(route: Route<Responder>) {
-        // chain the output to this middleware
-        route.output = middleware.makeResponder(chainingTo: route.output)
-        // then register
-        root.register(route: route)
-    }
-
-    /// See `Router`.
-    func route(request: Request) -> Responder? {
-        return root.route(request: request)
+    
+    /// See `HTTPRoutesBuilder`.
+    func add(_ route: Route) {
+        route.responder = self.middleware.makeResponder(chainingTo: route.responder)
+        self.root.add(route)
     }
 }

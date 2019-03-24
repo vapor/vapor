@@ -6,7 +6,7 @@
 /// - `RequestEncodable`
 /// - `RequestDecodable`
 ///
-/// If adding conformance in an extension, you must ensure the type already exists to `Codable`.
+/// If adding conformance in an extension, you must ensure the type already conforms to `Codable`.
 ///
 ///     struct Hello: Content {
 ///         let message = "Hello!"
@@ -16,177 +16,57 @@
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, ResponseCodable, RequestCodable {
-    /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
-    ///
-    /// Default implementation is `MediaType.json` for all types.
-    ///
-    ///     struct Hello: Content {
-    ///         static let defaultContentType = .urlEncodedForm
-    ///         let message = "Hello!"
-    ///     }
-    ///
-    ///     router.get("greeting") { req in
-    ///         return Hello() // message=Hello!
-    ///     }
-    ///
-    ///     router.get("greeting2") { req in
-    ///         let res = req.response()
-    ///         try res.content.encode(Hello(), as: .json)
-    ///         return res // {"message":"Hello!"}
-    ///     }
-    ///
-    static var defaultContentType: MediaType { get }
+public protocol Content: HTTPContent, RequestDecodable, ResponseEncodable { }
+
+public protocol URLContent: Content { }
+
+extension URLContent {
+    public static func decodeRequest(
+        _ req: HTTPRequest,
+        using ctx: Context
+    ) -> EventLoopFuture<Self> {
+        #warning("TODO:")
+        fatalError("not yet implemented")
+    }
 }
 
 /// MARK: Default Implementations
 
 extension Content {
-    /// Default implementation is `MediaType.json` for all types.
-    ///
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .json
+    public static func decodeRequest(_ req: HTTPRequest, using ctx: Context) -> EventLoopFuture<Self> {
+        do {
+            let content = try req.decode(Self.self)
+            return ctx.eventLoop.makeSucceededFuture(content)
+        } catch {
+            return ctx.eventLoop.makeFailedFuture(error)
+        }
     }
-
-    /// Default `RequestEncodable` conformance.
-    ///
-    /// See `RequestEncodable`.
-    public func encode(using container: Container) throws -> Future<Request> {
-        let req = Request(using: container)
-        try req.content.encode(self)
-        return Future.map(on: container) { req }
-    }
-
-    /// Default `ResponseEncodable` conformance.
-    ///
-    /// See `ResponseEncodable`.
-    public func encode(for req: Request) throws -> Future<Response> {
-        let res = req.response()
-        try res.content.encode(self)
-        return Future.map(on: req) { res }
-    }
-
-    /// Default `RequestDecodable` conformance.
-    ///
-    /// See `RequestDecodable`.
-    public static func decode(from req: Request) throws -> Future<Self> {
-        let content = try req.content.decode(Self.self)
-        return content
-    }
-
-    /// Default `ResponseDecodable` conformance.
-    ///
-    /// See `ResponseDecodable`.
-    public static func decode(from res: Response, for req: Request) throws -> Future<Self> {
-        let content = try res.content.decode(Self.self)
-        return content
+    
+    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
+        var res = HTTPResponse()
+        do {
+            try res.encode(self)
+        } catch {
+            return ctx.eventLoop.makeFailedFuture(error)
+        }
+        return ctx.eventLoop.makeSucceededFuture(res)
     }
 }
 
 // MARK: Default Conformances
 
-extension String: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Int: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Int8: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Int16: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Int32: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Int64: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension UInt: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension UInt8: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension UInt16: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension UInt32: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension UInt64: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Double: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Float: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .plainText
-    }
-}
-
-extension Array: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Element: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .json
-    }
-}
-
-extension Dictionary: Content, RequestDecodable, RequestEncodable, ResponseDecodable, ResponseEncodable where Key == String, Value: Content {
-    /// See `Content`.
-    public static var defaultContentType: MediaType {
-        return .json
-    }
-}
+extension String: Content { }
+extension Int: Content { }
+extension Int8: Content { }
+extension Int16: Content { }
+extension Int32: Content { }
+extension Int64: Content { }
+extension UInt: Content { }
+extension UInt8: Content { }
+extension UInt16: Content { }
+extension UInt32: Content { }
+extension UInt64: Content { }
+extension Double: Content { }
+extension Float: Content { }
+extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content { }
+extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content { }

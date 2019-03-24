@@ -8,7 +8,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: Debuggable {
+public protocol AbortError: Error {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
@@ -65,28 +65,29 @@ extension DecodingError: AbortError {
     }
 }
 
-extension NotFound: AbortError {
-    /// See `AbortError.status`
-    public var status: HTTPResponseStatus {
-        return .notFound
-    }
-    
-    /// See `AbortError.reason`
-    public var reason: String {
-        switch rootCause {
-        case let rootCause as Debuggable:
-            return rootCause.reason
-        default:
-            return rootCause?.localizedDescription ?? "Not found."
-        }
-    }
-    
-    /// See `AbortError.identifier`
-    public var identifier: String {
-        return "notFound"
-    }
-    
-}
+#warning("TODO: update support for NotFound error")
+//extension NotFound: AbortError {
+//    /// See `AbortError.status`
+//    public var status: HTTPResponseStatus {
+//        return .notFound
+//    }
+//
+//    /// See `AbortError.reason`
+//    public var reason: String {
+//        switch rootCause {
+//        case let rootCause as Debuggable:
+//            return rootCause.reason
+//        default:
+//            return rootCause?.localizedDescription ?? "Not found."
+//        }
+//    }
+//
+//    /// See `AbortError.identifier`
+//    public var identifier: String {
+//        return "notFound"
+//    }
+//
+//}
 
 extension Array where Element == CodingKey {
     fileprivate var dotPath: String {

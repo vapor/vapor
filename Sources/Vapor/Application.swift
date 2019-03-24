@@ -1,151 +1,133 @@
-/// Core framework class. You usually create only one of these per application. Acts as your application's top-level service container.
-///
-///     let router = try app.make(Router.self)
-///
-/// - note: When generating responses to requests, you should use the `Request` as your service-container.
-///
-/// Call the `run()` method to run this `Application`'s commands. By default, this will boot an `HTTPServer` and begin serving requests.
-/// Which command is run depends on the command-line arguments and flags.
-///
-///     try app.run()
-///
-/// The `Application` is responsible for calling `Provider` (and `VaporProvider`) boot methods. The `willBoot` and `didBoot` methods
-/// will be called on `Application.init(...)` for both provider types. `VaporProvider`'s will have their `willRun` and `didRun` methods
-/// called on `Application.run()`
-public final class Application: Container {
-    /// Config preferences and requirements for available services. Used to disambiguate which service should be used
-    /// for a given interface when multiple are available.
-    public let config: Config
+//public protocol Application {
+//    var env: Environment { get }
+//
+//    var eventLoopGroup: EventLoopGroup { get }
+//
+//    var userInfo: [AnyHashable: Any] { get set }
+//
+//    init(env: Environment)
+//
+//    func makeServices() throws -> Services
+//
+//    func cleanup() throws
+//}
+import Foundation
 
-    /// Environment this application is running in. Determines whether certain behaviors like verbose/debug logging are enabled.
-    public var environment: Environment
-
-    /// Services that can be created by this application. A copy of these services will be passed to all sub-containers created
-    /// form this application (i.e., `Request`, `Response`, etc.)
-    public let services: Services
-
-    /// The `Application`'s private service cache. This cache will not be shared with any sub-containers created by this application.
-    public let serviceCache: ServiceCache
-
-    /// The `EventLoopGroup` that we derive the event loop below from, so we can close it in `deinit`.
-    private var eventLoopGroup: EventLoopGroup
-
-    /// This `Application`'s event loop. This event-loop is separate from the `HTTPServer`'s event loop group and should only be used
-    /// for creating services during boot / configuration phases. Never use this event loop while responding to requests.
-    public var eventLoop: EventLoop {
-        return eventLoopGroup.next()
+public final class Application {
+    public let env: Environment
+    
+    public let eventLoopGroup: EventLoopGroup
+    
+    public var userInfo: [AnyHashable: Any]
+    
+    public let lock: NSLock
+    
+    private let configure: () throws -> Services
+    
+    private let threadPool: NIOThreadPool
+    
+    private var didShutdown: Bool
+    
+    public var running: Running?
+    
+    public struct Running {
+        public var stop: () -> Void
+        public init(stop: @escaping () -> Void) {
+            self.stop = stop
+        }
     }
-
-    /// Use this to create stored properties in extensions.
-    public var extend: Extend
-
-    // MARK: Boot
-
-    /// Asynchronously creates and boots a new `Application`.
-    ///
-    /// - parameters:
-    ///     - config: Configuration preferences for this service container.
-    ///     - environment: Application's environment type (i.e., testing, production).
-    ///                    Different environments can trigger different application behavior (for example, supressing verbose logs in production mode).
-    ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public static func asyncBoot(config: Config = .default(), environment: Environment = .development, services: Services = .default()) -> Future<Application> {
-        let app = Application(config, environment, services)
-        return app.boot().transform(to: app)
+    
+    public init(env: Environment = .development, configure: @escaping () throws -> Services) {
+        self.env = env
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.userInfo = [:]
+        self.didShutdown = false
+        self.configure = configure
+        self.lock = NSLock()
+        self.threadPool = .init(numberOfThreads: 1)
+        self.threadPool.start()
     }
-
-    /// Synchronously creates and boots a new `Application`.
-    ///
-    /// - parameters:
-    ///     - config: Configuration preferences for this service container.
-    ///     - environment: Application's environment type (i.e., testing, production).
-    ///                    Different environments can trigger different application behavior (for example, suppressing verbose logs in production mode).
-    ///     - services: Application's available services. A copy of these services will be passed to all sub event-loops created by this Application.
-    public convenience init(
-        config: Config = .default(),
-        environment: Environment = .development,
-        services: Services = .default()
-    ) throws {
-        self.init(config, environment, services)
-        try boot().wait()
+    
+    public func _makeServices() throws -> Services {
+        return try self.configure()
+    }
+    
+    public func makeContainer() -> EventLoopFuture<Container> {
+        return self.makeContainer(on: self.eventLoopGroup.next())
+    }
+    
+    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
+        do {
+            return try _makeContainer(on: eventLoop)
+        } catch {
+            return eventLoopGroup.next().makeFailedFuture(error)
+        }
+    }
+    
+    private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
+        var s = try self.configure()
+        s.register(Application.self) { c in
+            return self
+        }
+        s.register(NIOThreadPool.self) { c in
+            return self.threadPool
+        }
+        return Container.boot(env: self.env, services: s, on: eventLoop)
     }
 
     // MARK: Run
 
-    /// Asynchronously runs the `Application`'s commands. This method will call the `willRun(_:)` methods of all
-    /// registered `VaporProvider's` before running.
-    ///
-    /// Normally this command will boot an `HTTPServer`. However, depending on configuration and command-line arguments/flags, this method may run a different command.
-    /// See `CommandConfig` for more information about customizing the commands that this method runs.
-    ///
-    ///     try app.asyncRun().wait()
-    ///
-    /// Note: When running a server, `asyncRun()` will return when the server has finished _booting_. Use the `runningServer` property on `Application` to wait
-    /// for the server to close. The synchronous `run()` method will call this automatically.
-    ///
-    ///     try app.runningServer?.onClose().wait()
-    ///
-    /// All `VaporProvider`'s `didRun(_:)` methods will be called before finishing.
-    public func asyncRun() -> Future<Void> {
-        return Future.flatMap(on: self) {
-            // will-run all vapor service providers
-            return try self.providers.onlyVapor.map { try $0.willRun(self) }.flatten(on: self)
-        }.flatMap {
-            let command = try self.make(Commands.self)
-                .group()
-            let console = try self.make(Console.self)
-
-            /// Create a mutable copy of the environment input for this run.
-            var runInput = self.environment.commandInput
-            return console.run(command, input: &runInput, on: self)
-        }.flatMap {
-            // did-run all vapor service providers
-            return try self.providers.onlyVapor.map { try $0.didRun(self) }.flatten(on: self)
-        }
-    }
-
-    /// Synchronously calls `asyncRun()` and waits for the running server to close (if one exists).
-    public func run() throws {
-        try asyncRun().wait()
-        try runningServer?.onClose.wait()
-    }
-
-    // MARK: Internal
-
-    /// Internal initializer. Creates an `Application` without booting providers.
-    internal init(_ config: Config, _ environment: Environment, _ services: Services) {
-        self.config = config
-        self.environment = environment
-        self.services = services
-        self.serviceCache = .init()
-        self.extend = Extend()
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-    }
-
-    /// Internal method. Boots the application and its providers.
-    internal func boot() -> Future<Void> {
-        return Future.flatMap(on: self) {
-            // will-boot all service providers
-            return try self.providers.map { try $0.willBoot(self) }.flatten(on: self)
-        }.map {
-            if _isDebugAssertConfiguration() && self.environment.isRelease {
-                let log = try self.make(Logger.self)
-                log.warning("Debug build mode detected while configured for release environment: \(self.environment.name).")
-                log.info("Compile your application with `-c release` to enable code optimizations.")
+    public func run() -> EventLoopFuture<Void> {
+        let eventLoop = self.eventLoopGroup.next()
+        return self.loadDotEnv(on: eventLoop).flatMap {
+            return self.makeContainer(on: eventLoop)
+        }.flatMap { c -> EventLoopFuture<Void> in
+            let command: CommandGroup
+            let console: Console
+            do {
+                command = try c.make(Commands.self).group()
+                console = try c.make(Console.self)
+            } catch {
+                return c.shutdown().flatMapThrowing { throw error }
             }
-        }.flatMap {
-            // did-boot all service providers
-            return try self.providers.map { try $0.didBoot(self) }.flatten(on: self)
+            var runInput = self.env.commandInput
+            return console.run(command, input: &runInput).flatMap {
+                return c.shutdown()
+            }.flatMapError { error in
+                return c.shutdown().flatMapThrowing { throw error }
+            }
         }
     }
-
-    /// Called when the app deinitializes.
+    
+    public func execute() -> EventLoopFuture<Void> {
+        return self.run().flatMapThrowing { _ in
+            try self.shutdown()
+        }.flatMapErrorThrowing { error in
+            try self.shutdown()
+            throw error
+        }
+    }
+    
+    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return DotEnvFile.load(
+            path: ".env",
+            fileio: .init(threadPool: self.threadPool),
+            on: eventLoop
+        ).recover { error in
+            print("Could not load .env file: \(error)")
+        }
+    }
+    
+    public func shutdown() throws {
+        print("Application shutting down")
+        try self.eventLoopGroup.syncShutdownGracefully()
+        try self.threadPool.syncShutdownGracefully()
+        self.didShutdown = true
+    }
+    
     deinit {
-        do {
-            try eventLoopGroup.syncShutdownGracefully()
-            let threadPool = try make(BlockingIOThreadPool.self)
-            try threadPool.syncShutdownGracefully()
-        } catch {
-            ERROR("shutting down app event loop: \(error)")
+        if !self.didShutdown {
+            assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }
     }
 }

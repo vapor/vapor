@@ -1,82 +1,62 @@
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient: Client, ServiceType {
-    /// See `ServiceType`.
-    public static var serviceSupports: [Any.Type] {
-        return [Client.self]
-    }
-
-    /// See `ServiceType`.
-    public static func makeService(for worker: Container) throws -> FoundationClient {
-        return .default(on: worker)
-    }
-
+public final class FoundationClient {
     /// See `Client`.
-    public var container: Container
+    public var eventLoop: EventLoop
 
     /// The `URLSession` powering this client.
     private let urlSession: URLSession
 
     /// Creates a new `FoundationClient`.
-    public init(_ urlSession: URLSession, on container: Container) {
+    public init(_ urlSession: URLSession, on eventLoop: EventLoop) {
         self.urlSession = urlSession
-        self.container = container
-    }
-
-    /// Creates a `FoundationClient` with default settings.
-    public static func `default`(on container: Container) -> FoundationClient {
-        return .init(.init(configuration: .default), on: container)
+        self.eventLoop = eventLoop
     }
 
     /// See `Client`.
-    public func send(_ req: Request) -> Future<Response> {
-        let urlReq = req.http.convertToFoundationRequest()
-        let promise = req.eventLoop.newPromise(Response.self)
-        self.urlSession.dataTask(with: urlReq) { data, urlResponse, error in
+    public func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
+        let promise = self.eventLoop.makePromise(of: HTTPResponse.self)
+        self.urlSession.dataTask(with: URLRequest(http: req)) { data, urlResponse, error in
             if let error = error {
-                promise.fail(error: error)
+                promise.fail(error)
                 return
             }
 
-            guard let httpResponse = urlResponse as? HTTPURLResponse else {
-                let error = VaporError(identifier: "httpURLResponse", reason: "URLResponse was not a HTTPURLResponse.")
-                promise.fail(error: error)
+            guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
+                let error = VaporError(
+                    identifier: "httpURLResponse",
+                    reason: "URLResponse was not a HTTPURLResponse."
+                )
+                promise.fail(error)
                 return
             }
 
-            let response = HTTPResponse.convertFromFoundationResponse(httpResponse, data: data, on: self.container)
-            promise.succeed(result: Response(http: response, using: self.container))
+            let res = HTTPResponse(foundation: httpURLResponse, data: data)
+            promise.succeed(res)
         }.resume()
         return promise.futureResult
     }
 }
 
-// MARK: Private
-
-private extension HTTPRequest {
-    /// Converts an `HTTP.HTTPRequest` to `Foundation.URLRequest`
-    func convertToFoundationRequest() -> URLRequest {
-        let http = self
+extension URLRequest {
+    public init(http: HTTPRequest) {
         let body = http.body.data ?? Data()
-        var request = URLRequest(url: http.url)
-        request.httpMethod = "\(http.method)"
-        request.httpBody = body
+        self.init(url: http.url)
+        self.httpMethod = "\(http.method)"
+        self.httpBody = body
         http.headers.forEach { key, val in
-            request.addValue(val, forHTTPHeaderField: key.description)
+            self.addValue(val, forHTTPHeaderField: key.description)
         }
-        return request
     }
 }
 
-private extension HTTPResponse {
-    /// Creates an `HTTP.HTTPResponse` to `Foundation.URLResponse`
-    static func convertFromFoundationResponse(_ httpResponse: HTTPURLResponse, data: Data?, on worker: Worker) -> HTTPResponse {
-        var res = HTTPResponse(status: .init(statusCode: httpResponse.statusCode))
+extension HTTPResponse {
+    public init(foundation: HTTPURLResponse, data: Data? = nil) {
+        self.init(status: .init(statusCode: foundation.statusCode))
         if let data = data {
-            res.body = HTTPBody(data: data)
+            self.body = HTTPBody(data: data)
         }
-        for (key, value) in httpResponse.allHeaderFields {
-            res.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
+        for (key, value) in foundation.allHeaderFields {
+            self.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
         }
-        return res
     }
 }
