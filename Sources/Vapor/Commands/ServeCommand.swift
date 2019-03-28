@@ -3,7 +3,7 @@
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public struct ServeCommand: Command {
+public final class ServeCommand: Command {
     /// See `Command`.
     public var arguments: [CommandArgument] {
         return []
@@ -21,22 +21,27 @@ public struct ServeCommand: Command {
     /// See `Command`.
     public let help: [String] = ["Begins serving the app over HTTP."]
 
-    /// The server to boot.
-    private let config: HTTPServerConfig
-    
+    private let configuration: HTTPServer.Configuration
     private let console: Console
+    private weak var application: Application?
     
-    private var application: Application
+    private var signalSources: [DispatchSourceSignal]
+    private var runningServer: HTTPServer?
+    private var onShutdown: EventLoopPromise<Void>?
+    private var delegate: ServerDelegate?
+    private var didShutdown: Bool
 
     /// Create a new `ServeCommand`.
     public init(
-        config: HTTPServerConfig,
+        configuration: HTTPServer.Configuration,
         console: Console,
         application: Application
     ) {
-        self.config = config
+        self.configuration = configuration
         self.console = console
         self.application = application
+        self.signalSources = []
+        self.didShutdown = false
     }
 
     /// See `Command`.
@@ -53,61 +58,76 @@ public struct ServeCommand: Command {
     
     private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
         // determine which hostname / port to bind to
-        let hostname = hostname ?? self.config.hostname
-        let port = port ?? self.config.port
+        let hostname = hostname ?? self.configuration.hostname
+        let port = port ?? self.configuration.port
         
         // print starting message
         self.console.print("Server starting on ", newLine: false)
-        let scheme = config.tlsConfig == nil ? "http" : "https"
+        let scheme = self.configuration.tlsConfig == nil ? "http" : "https"
         self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
         self.console.output(":" + port.description, style: .init(color: .cyan))
         
-        let app = self.application
-        let server = HTTPServer(config: self.config, on: app.eventLoopGroup)
-        let delegate = ServerDelegate(application: app)
-        
+        guard let app = self.application else {
+            fatalError("Application deinitialized")
+        }
         let eventLoop = app.eventLoopGroup.next()
+        let server = HTTPServer(configuration: self.configuration, on: app.eventLoopGroup)
+        let delegate = ServerDelegate(application: app, on: eventLoop)
+        
         let onShutdown = eventLoop.makePromise(of: Void.self)
         
-        var runningServer: HTTPServer?
-        let console = self.console
+        app.running = .init(stop: {
+            self.shutdown()
+        })
         
-        func initiateShutdown() {
-            app.running = nil // stop ref cycle
-            console.print("Requesting server shutdown...")
-            let server = runningServer!
-            server.shutdown().flatMap { _ -> EventLoopFuture<Void> in
-                console.print("Server closed, cleaning up")
-                return .andAllSucceed(
-                    delegate.containers.map { $0.shutdown() },
-                    on: eventLoop
-                )
-            }.cascade(to: onShutdown)
-        }
-        #warning("TODO: shutdown w/o ref cycle")
-        app.running = .init(stop: initiateShutdown)
+        self.onShutdown = onShutdown
+        self.delegate = delegate
+        self.runningServer = server
         
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
-        var sources: [DispatchSourceSignal] = []
         func makeSignalSource(_ code: Int32) {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C
-                initiateShutdown()
-                sources.forEach { $0.cancel() }
+                self.shutdown()
             }
             source.resume()
-            sources.append(source)
+            self.signalSources.append(source)
             signal(code, SIG_IGN)
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
         
+        
         // start the actual HTTPServer
         return server.start(delegate: delegate).flatMap {
-            runningServer = server
+            self.runningServer = server
             return onShutdown.futureResult
         }
+    }
+    
+    func shutdown() {
+        console.print("Requesting server shutdown...")
+        let server = self.runningServer!
+        server.shutdown().flatMap { _ -> EventLoopFuture<Void> in
+            self.console.print("Server closed, cleaning up")
+            return self._shutdown()
+        }.flatMapError { error in
+            self.console.print("Could not close server: \(error)")
+            self.console.print("Cleaning up...")
+            return self._shutdown()
+        }.cascade(to: self.onShutdown!)
+    }
+    
+    func _shutdown() -> EventLoopFuture<Void> {
+        self.didShutdown = true
+        self.signalSources.forEach { $0.cancel() } // clear refs
+        self.signalSources = []
+        return self.delegate!.shutdown()
+    }
+    
+    deinit {
+        assert(self.didShutdown, "ServeCommand did not shutdown before deinitializing")
     }
 }

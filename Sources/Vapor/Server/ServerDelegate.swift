@@ -1,20 +1,28 @@
 final class ServerDelegate: HTTPServerDelegate {
-    private let responderCache: ThreadSpecificVariable<ThreadResponder>
-    let application: Application
-    var containers: [Container]
+    weak var application: Application?
+    let eventLoop: EventLoop
     
-    init(application: Application) {
+    private let responderCache: ThreadSpecificVariable<ThreadResponder>
+    private var containers: [Container]
+    private var didShutdown: Bool
+    
+    init(application: Application, on eventLoop: EventLoop) {
         self.application = application
         self.responderCache = .init()
         self.containers = []
+        self.eventLoop = eventLoop
+        self.didShutdown = false
     }
     
     func respond(to req: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
+        guard let application = self.application else {
+            fatalError("Application deinitialized")
+        }
         let ctx = Context(channel: channel)
-        if let responder = responderCache.currentValue?.responder {
+        if let responder = self.responderCache.currentValue?.responder {
             return responder.respond(to: req, using: ctx)
         } else {
-            return self.application.makeContainer(on: channel.eventLoop).flatMapThrowing { container -> Responder in
+            return application.makeContainer(on: channel.eventLoop).flatMapThrowing { container -> Responder in
                 self.containers.append(container)
                 let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)
@@ -23,6 +31,18 @@ final class ServerDelegate: HTTPServerDelegate {
                 return responder.respond(to: req, using: ctx)
             }
         }
+    }
+    
+    func shutdown() -> EventLoopFuture<Void> {
+        self.didShutdown = true
+        return .andAllSucceed(
+            self.containers.map { $0.shutdown() },
+            on: self.eventLoop
+        )
+    }
+    
+    deinit {
+        assert(self.didShutdown, "ServerDelegate did not shutdown before deinitializing")
     }
 }
 

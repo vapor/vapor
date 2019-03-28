@@ -87,7 +87,7 @@ public final class CORSMiddleware: Middleware {
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPMethod],
-            allowedHeaders: [HTTPHeaderName],
+            allowedHeaders: [HTTPHeaders.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
             exposedHeaders: [String]? = nil

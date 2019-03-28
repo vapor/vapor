@@ -5,8 +5,8 @@ extension Services {
         var s = Services()
 
         // server
-        s.register(HTTPServerConfig.self) { c in
-            return HTTPServerConfig()
+        s.register(HTTPServer.Configuration.self) { c in
+            return .init()
         }
         
         // client
@@ -19,18 +19,18 @@ extension Services {
         s.register(FoundationClient.self) { c in
             return try .init(c.make(), on: c.eventLoop)
         }
-        s.register(HTTPClientConfig.self) { c in
+        s.register(HTTPClient.Configuration.self) { c in
             return .init()
         }
         s.register(HTTPClient.self) { c in
-            return try .init(config: c.make(), on: c.eventLoop)
+            return try .init(configuration: c.make(), on: c.eventLoop)
         }
         s.register(Client.self) { c in
             return try c.make(HTTPClient.self)
         }
         
         s.register(HTTPServerDelegate.self) { c in
-            return try ServerDelegate(application: c.make())
+            return try ServerDelegate(application: c.make(), on: c.eventLoop)
         }
         
         // routes
@@ -51,13 +51,7 @@ extension Services {
             // return new responder
             return ApplicationResponder(routes: routes, middleware: middleware)
         }
-
-        // bcrypt
-        #warning("TODO: update BCryptDigest")
-//        s.register { container -> BCryptDigest in
-//            return .init()
-//        }
-
+        
         // sessions
         #warning("TODO: update sessions")
         s.register(SessionsMiddleware.self) { c in
@@ -124,7 +118,7 @@ extension Services {
         // commands
         s.register(ServeCommand.self) { c in
             return try .init(
-                config: c.make(),
+                configuration: c.make(),
                 console: c.make(),
                 application: c.make()
             )

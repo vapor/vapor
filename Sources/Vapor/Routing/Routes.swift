@@ -151,8 +151,8 @@ extension RoutesBuilder {
         where Request: RequestDecodable, Response: ResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
-            var req = req
             if case .collect(let max) = bodyStream, let stream = req.body.stream {
+                var req = req
                 return stream.consume(max: max).flatMap { body in
                     req.body = HTTPBody(buffer: body)
                     return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
