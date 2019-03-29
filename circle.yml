@@ -108,7 +108,7 @@ jobs:
           working_directory: ~/ProductManager
   linux-compat-swift-commerce-address-manager:
     docker:
-      - image: swift:4.2
+      - image: swift:5.0
         environment:
           DATABASE_DB: circle_test
       - image: circleci/mysql:8.0.15
