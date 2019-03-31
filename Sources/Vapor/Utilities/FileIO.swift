@@ -175,8 +175,8 @@ public struct FileIO {
     ///     - file: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: An `HTTPChunkedStream` containing the file stream.
-    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPBodyStream {
-        let bodyStream = HTTPBodyStream(on: eventLoop)
+    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPBody.Stream {
+        let bodyStream = HTTPBody.Stream(on: eventLoop)
         _ = _read(file: file, chunkSize: chunkSize) { chunk in
             bodyStream.write(.chunk(chunk))
         }.map {

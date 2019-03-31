@@ -12,14 +12,3 @@ public func boot(_ app: Application) throws {
     }
     try test.shutdown().wait()
 }
-
-extension PathComponent: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .anything: return ":"
-        case .catchall: return "*"
-        case .constant(let string): return string
-        case .parameter(let string): return ":" + string
-        }
-    }
-}

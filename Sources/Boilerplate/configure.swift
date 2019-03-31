@@ -5,10 +5,10 @@ public func configure(_ s: inout Services) throws {
         try routes(r, c)
     }
     
-    s.register(HTTPServerConfig.self) { c in
+    s.register(HTTPServer.Configuration.self) { c in
         switch c.env {
         case .tls:
-            return HTTPServerConfig(
+            return .init(
                 hostname: "127.0.0.1",
                 port: 8443,
                 tlsConfig: .forServer(
@@ -17,9 +17,10 @@ public func configure(_ s: inout Services) throws {
                 )
             )
         default:
-            return HTTPServerConfig(
+            return .init(
                 hostname: "127.0.0.1",
-                port: 8080
+                port: 8080,
+                supportVersions: [.one]
             )
         }
     }

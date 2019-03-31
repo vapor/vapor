@@ -13,6 +13,10 @@ public func routes(_ r: Routes, _ c: Container) throws {
     r.post("login") { (creds: Creds, ctx: Context) -> String in
         return "\(creds)"
     }
+    
+    r.on(.POST, to: "large-file", bodyStream: .collect(maxSize: 1_000_000_000)) { (req: HTTPRequest, ctx: Context) -> String in
+        return req.body.count?.description ?? "none"
+    }
 
     r.get("json") { (req: HTTPRequest, ctx: Context) -> [String: String] in
         return ["foo": "bar"]

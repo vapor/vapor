@@ -1,3 +1,4 @@
+@_exported import CryptoKit
 @_exported import HTTPKit
 @_exported import RoutingKit
 @_exported import ServiceKit

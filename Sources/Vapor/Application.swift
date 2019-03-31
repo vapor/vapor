@@ -123,6 +123,7 @@ public final class Application {
         try self.eventLoopGroup.syncShutdownGracefully()
         try self.threadPool.syncShutdownGracefully()
         self.didShutdown = true
+        self.userInfo = [:]
     }
     
     deinit {

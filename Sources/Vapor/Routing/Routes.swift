@@ -123,12 +123,10 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         onUpgrade: @escaping (HTTPRequest, Context, WebSocket) -> ()
     ) -> Route {
-        return self._on(.GET, to: path) { (req: HTTPRequest, ctx: Context) -> HTTPResponse in
-            var res = HTTPResponse()
-            try res.webSocketUpgrade(for: req, onUpgrade: { ws in
+        return self._on(.GET, to: path) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<HTTPResponse> in
+            return req.makeWebSocketUpgradeResponse(on: ctx.channel, onUpgrade: { ws in
                 onUpgrade(req, ctx, ws)
             })
-            return res
         }
     }
     
@@ -153,8 +151,8 @@ extension RoutesBuilder {
         where Request: RequestDecodable, Response: ResponseEncodable
     {
         let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
-            var req = req
             if case .collect(let max) = bodyStream, let stream = req.body.stream {
+                var req = req
                 return stream.consume(max: max).flatMap { body in
                     req.body = HTTPBody(buffer: body)
                     return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
