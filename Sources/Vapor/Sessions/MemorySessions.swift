@@ -6,10 +6,10 @@ public struct MemorySessions: Sessions {
     
     public final class Storage {
         public var sessions: [SessionID: SessionData]
-        public let lock: NSLock
-        public init(lock: NSLock) {
-            self.lock = lock
+        public let queue: DispatchQueue
+        public init() {
             self.sessions = [:]
+            self.queue = DispatchQueue(label: "MemorySessions.Storage")
         }
     }
 
@@ -21,31 +21,24 @@ public struct MemorySessions: Sessions {
 
     public func createSession(_ data: SessionData) -> EventLoopFuture<SessionID> {
         let sessionID = self.generateID()
-        self.storage.sessions[sessionID] = data
+        self.storage.queue.sync {
+            self.storage.sessions[sessionID] = data
+        }
         return self.eventLoop.makeSucceededFuture(sessionID)
     }
     
     public func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?> {
-        self.storage.lock.lock()
-        defer { self.storage.lock.unlock() }
-        
-        let session = self.storage.sessions[sessionID]
+        let session = self.storage.queue.sync { self.storage.sessions[sessionID] }
         return self.eventLoop.makeSucceededFuture(session)
     }
     
     public func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID> {
-        self.storage.lock.lock()
-        defer { self.storage.lock.unlock() }
-        
-        self.storage.sessions[sessionID] = data
+        self.storage.queue.sync { self.storage.sessions[sessionID] = data }
         return self.eventLoop.makeSucceededFuture(sessionID)
     }
     
     public func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void> {
-        self.storage.lock.lock()
-        defer { self.storage.lock.unlock() }
-        
-        self.storage.sessions[sessionID] = nil
+        self.storage.queue.sync { self.storage.sessions[sessionID] = nil }
         return self.eventLoop.makeSucceededFuture(())
     }
     
