@@ -71,7 +71,7 @@ extension Services {
             if let existing = app.userInfo[key] as? MemorySessions.Storage {
                 return existing
             } else {
-                let new = MemorySessions.Storage(lock: app.lock)
+                let new = MemorySessions.Storage()
                 app.userInfo[key] = new
                 return new
             }
