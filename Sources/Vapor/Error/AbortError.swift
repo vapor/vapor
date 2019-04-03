@@ -42,6 +42,7 @@ extension DecodingError: AbortError {
         case .keyNotFound: return "keyNotFound"
         case .typeMismatch: return "typeMismatch"
         case .valueNotFound: return "valueNotFound"
+        @unknown default: return "unknown"
         }
     }
 
@@ -61,6 +62,7 @@ extension DecodingError: AbortError {
             return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
         case .valueNotFound(let type, let ctx):
             return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
+        @unknown default: return "Unknown error."
         }
     }
 }
