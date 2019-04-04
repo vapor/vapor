@@ -54,13 +54,6 @@ public struct ContentContainer<Message> where Message: HTTPMessage {
         try encoder.encode(encodable, to: &self.message)
     }
     
-    // MARK: Private
-    
-    /// Looks up a `HTTPMessageEncoder` for the supplied `MediaType`.
-    private func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
-        return try ContentConfiguration.global.requireEncoder(for: mediaType)
-    }
-    
     // MARK: Decode
     
     /// Parses a `Decodable` type from this HTTP message. This method supports streaming HTTP bodies (chunked) and can run asynchronously.
@@ -141,7 +134,96 @@ public struct ContentContainer<Message> where Message: HTTPMessage {
         )
     }
     
+    // MARK: Single Value
+    
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    ///
+    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`.
+    ///
+    ///     let name: String? = req.query["user", "name"]
+    ///     print(name) /// String?
+    ///
+    /// - parameters:
+    ///     - keyPath: One or more key path components to the desired value.
+    /// - returns: Decoded `Decodable` value.
+    public subscript<D>(_ keyPath: HTTPCodingKeyRepresentable...) -> D?
+        where D: Decodable
+    {
+        return self[D.self, at: keyPath]
+    }
+    
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    ///
+    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`.
+    ///
+    ///     let name = req.query[String.self, at: "user", "name"]
+    ///     print(name) /// String?
+    ///
+    /// - parameters:
+    ///     - type: The `Decodable` value type to decode.
+    ///     - keyPath: One or more key path components to the desired value.
+    /// - returns: Decoded `Decodable` value.
+    public subscript<D>(_ type: D.Type, at keyPath: HTTPCodingKeyRepresentable...) -> D?
+        where D: Decodable
+    {
+        return self[D.self, at: keyPath]
+    }
+    
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    ///
+    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`. This is the non-variadic version.
+    ///
+    ///     let name = req.query[String.self, at: "user", "name"]
+    ///     print(name) /// String?
+    ///
+    /// - parameters:
+    ///     - type: The `Decodable` value type to decode.
+    ///     - keyPath: One or more key path components to the desired value.
+    /// - returns: Decoded `Decodable` value.
+    public subscript<D>(_ type: D.Type, at keyPath: [HTTPCodingKeyRepresentable]) -> D?
+        where D: Decodable
+    {
+        return try? get(at: keyPath)
+    }
+    
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    ///
+    ///     let name = try req.query.get(String.self, at: "user", "name")
+    ///     print(name) /// String
+    ///
+    /// - parameters:
+    ///     - type: The `Decodable` value type to decode.
+    ///     - keyPath: One or more key path components to the desired value.
+    /// - returns: Decoded `Decodable` value.
+    public func get<D>(_ type: D.Type = D.self, at keyPath: HTTPCodingKeyRepresentable...) throws -> D
+        where D: Decodable
+    {
+        return try get(at: keyPath)
+    }
+    
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    ///
+    /// Note: This is the non-variadic version.
+    ///
+    ///     let name = try req.query.get(String.self, at: "user", "name")
+    ///     print(name) /// String
+    ///
+    /// - parameters:
+    ///     - type: The `Decodable` value type to decode.
+    ///     - keyPath: One or more key path components to the desired value.
+    /// - returns: Decoded `Decodable` value.
+    public func get<D>(_ type: D.Type = D.self, at keyPath: [HTTPCodingKeyRepresentable]) throws -> D
+        where D: Decodable
+    {
+        return try requireDecoder().get(at: keyPath.map { $0.makeHTTPCodingKey() }, from: self.message)
+    }
+    
     // MARK: Private
+    
+    /// Looks up a `HTTPMessageEncoder` for the supplied `MediaType`.
+    private func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
+        return try ContentConfiguration.global.requireEncoder(for: mediaType)
+    }
     
     /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
     private func requireDecoder() throws -> ContentDecoder {

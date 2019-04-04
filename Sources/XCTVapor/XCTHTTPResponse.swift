@@ -11,6 +11,13 @@ public final class XCTHTTPResponse {
     }
     
     @discardableResult
+    public func assertBody(equals string: String, file: StaticString = #file, line: UInt = #line) -> XCTHTTPResponse {
+        let bodyString = self.response.body.description
+        XCTAssertEqual(bodyString, string, file: file, line: line)
+        return self
+    }
+    
+    @discardableResult
     public func assertBody(contains string: String, file: StaticString = #file, line: UInt = #line) -> XCTHTTPResponse {
         let bodyString = self.response.body.description
         if !bodyString.contains(string) {

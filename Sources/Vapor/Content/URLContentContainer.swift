@@ -59,7 +59,7 @@ public struct URLContentContainer {
     /// - parameters:
     ///     - keyPath: One or more key path components to the desired value.
     /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ keyPath: HTTPCodingKey...) -> D?
+    public subscript<D>(_ keyPath: HTTPCodingKeyRepresentable...) -> D?
         where D: Decodable
     {
         return self[D.self, at: keyPath]
@@ -76,7 +76,7 @@ public struct URLContentContainer {
     ///     - type: The `Decodable` value type to decode.
     ///     - keyPath: One or more key path components to the desired value.
     /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ type: D.Type, at keyPath: HTTPCodingKey...) -> D?
+    public subscript<D>(_ type: D.Type, at keyPath: HTTPCodingKeyRepresentable...) -> D?
         where D: Decodable
     {
         return self[D.self, at: keyPath]
@@ -93,7 +93,7 @@ public struct URLContentContainer {
     ///     - type: The `Decodable` value type to decode.
     ///     - keyPath: One or more key path components to the desired value.
     /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ type: D.Type, at keyPath: [HTTPCodingKey]) -> D?
+    public subscript<D>(_ type: D.Type, at keyPath: [HTTPCodingKeyRepresentable]) -> D?
         where D: Decodable
     {
         return try? get(at: keyPath)
@@ -108,7 +108,7 @@ public struct URLContentContainer {
     ///     - type: The `Decodable` value type to decode.
     ///     - keyPath: One or more key path components to the desired value.
     /// - returns: Decoded `Decodable` value.
-    public func get<D>(_ type: D.Type = D.self, at keyPath: HTTPCodingKey...) throws -> D
+    public func get<D>(_ type: D.Type = D.self, at keyPath: HTTPCodingKeyRepresentable...) throws -> D
         where D: Decodable
     {
         return try get(at: keyPath)
@@ -125,10 +125,10 @@ public struct URLContentContainer {
     ///     - type: The `Decodable` value type to decode.
     ///     - keyPath: One or more key path components to the desired value.
     /// - returns: Decoded `Decodable` value.
-    public func get<D>(_ type: D.Type = D.self, at keyPath: [HTTPCodingKey]) throws -> D
+    public func get<D>(_ type: D.Type = D.self, at keyPath: [HTTPCodingKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        return try requireDecoder().get(at: keyPath, from: self.url)
+        return try requireDecoder().get(at: keyPath.map { $0.makeHTTPCodingKey() }, from: self.url)
     }
 
     // MARK: Private

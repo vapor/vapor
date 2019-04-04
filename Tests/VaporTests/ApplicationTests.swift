@@ -18,6 +18,7 @@ class ApplicationTests: XCTestCase {
                 return client.get("http://httpbin.org/status/201")
             }
         })
+        defer { try! app.shutdown() }
             
         try app.xctest()
             .test(.GET, to: "/client") { res in
@@ -28,8 +29,6 @@ class ApplicationTests: XCTestCase {
                 res.assertStatus(is: .notFound)
                     .assertBody(contains: "Not Found")
         }
-
-        try app.shutdown()
     }
     
     
@@ -40,6 +39,7 @@ class ApplicationTests: XCTestCase {
                 return client.get("http://vapor.codes")
             }
         })
+        defer { try! app.shutdown() }
         
         final class FakeClient: Client {
             var reqs: [HTTPRequest]
@@ -59,103 +59,106 @@ class ApplicationTests: XCTestCase {
             .test(.GET, to: "/client")
         
         XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
-        
-        try app.shutdown()
     }
-//    func testContent() throws {
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.body = """
-//        {
-//            "hello": "world"
-//        }
-//        """.convertToHTTPBody()
-//        req.http.contentType = .json
-//        try XCTAssertEqual(req.content.get(at: "hello").wait(), "world")
-//    }
-//
-//    func testComplexContent() throws {
-//        // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
-//        let complexJSON = """
-//        {
-//            "id": "0001",
-//            "type": "donut",
-//            "name": "Cake",
-//            "ppu": 0.55,
-//            "batters":
-//                {
-//                    "batter":
-//                        [
-//                            { "id": "1001", "type": "Regular" },
-//                            { "id": "1002", "type": "Chocolate" },
-//                            { "id": "1003", "type": "Blueberry" },
-//                            { "id": "1004", "type": "Devil's Food" }
-//                        ]
-//                },
-//            "topping":
-//                [
-//                    { "id": "5001", "type": "None" },
-//                    { "id": "5002", "type": "Glazed" },
-//                    { "id": "5005", "type": "Sugar" },
-//                    { "id": "5007", "type": "Powdered Sugar" },
-//                    { "id": "5006", "type": "Chocolate with Sprinkles" },
-//                    { "id": "5003", "type": "Chocolate" },
-//                    { "id": "5004", "type": "Maple" }
-//                ]
-//        }
-//        """
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.body = complexJSON.convertToHTTPBody()
-//        req.http.contentType = .json
-//
-//        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").wait(), "Chocolate")
-//    }
-//
-//    func testQuery() throws {
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.contentType = .json
-//        var comps = URLComponents()
-//        comps.query = "hello=world"
-//        req.http.url = comps.url!
-//        try XCTAssertEqual(req.query.get(String.self, at: "hello"), "world")
-//    }
-//
-//
-//    func testParameter() throws {
-//        let app = try Application.runningTest(port: 8081) { router in
-//            router.get("hello", String.parameter) { req in
-//                return try req.parameters.next(String.self)
-//            }
-//
-//            router.get("raw", String.parameter, String.parameter) { req in
-//                return req.parameters.rawValues(for: String.self)
-//            }
-//        }
-//
-//        try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
-//        try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
-//
-//        try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
-//    }
-//
-//    func testJSON() throws {
-//        let app = try Application.runningTest(port: 8082) { router in
-//            router.get("json") { req in
-//                return ["foo": "bar"]
-//            }
-//        }
-//
-//        let expected = """
-//        {"foo":"bar"}
-//        """
-//        try app.clientTest(.GET, "/json", equals: expected)
-//    }
-//
-//    func testGH1537() throws {
-//        let app = try Application.runningTest(port: 8083) { router in
-//            router.get("todos") { req in
+    
+    func testContent() throws {
+        var req = HTTPRequest()
+        req.body = .init(string: #"{"hello": "world"}"#)
+        req.contentType = .json
+        try XCTAssertEqual(req.content.get(at: "hello"), "world")
+    }
+
+    func testComplexContent() throws {
+        // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
+        let complexJSON = """
+        {
+            "id": "0001",
+            "type": "donut",
+            "name": "Cake",
+            "ppu": 0.55,
+            "batters":
+                {
+                    "batter":
+                        [
+                            { "id": "1001", "type": "Regular" },
+                            { "id": "1002", "type": "Chocolate" },
+                            { "id": "1003", "type": "Blueberry" },
+                            { "id": "1004", "type": "Devil's Food" }
+                        ]
+                },
+            "topping":
+                [
+                    { "id": "5001", "type": "None" },
+                    { "id": "5002", "type": "Glazed" },
+                    { "id": "5005", "type": "Sugar" },
+                    { "id": "5007", "type": "Powdered Sugar" },
+                    { "id": "5006", "type": "Chocolate with Sprinkles" },
+                    { "id": "5003", "type": "Chocolate" },
+                    { "id": "5004", "type": "Maple" }
+                ]
+        }
+        """
+        var req = HTTPRequest()
+        req.body = .init(string: complexJSON)
+        req.contentType = .json
+        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
+    }
+
+    func testQuery() throws {
+        var req = HTTPRequest()
+        req.contentType = .json
+        var comps = URLComponents()
+        comps.query = "hello=world"
+        req.url = comps.url!
+        try XCTAssertEqual(req.query.get(String.self, at: "hello"), "world")
+    }
+
+
+    func testParameter() throws {
+        let app = Application.create(routes: { r, c in
+            r.on(.GET, "hello", ":a") { req, ctx in
+                return ctx.parameters.get("a") ?? ""
+            }
+
+            r.on(.GET, "hello", ":a", ":b") { req, ctx in
+                return [ctx.parameters.get("a") ?? "", ctx.parameters.get("b") ?? ""]
+            }
+        })
+        defer { try! app.shutdown() }
+            
+        try app.xctest()
+            .test(.GET, to: "/hello/vapor") { res in
+                res.assertStatus(is: .ok)
+                    .assertBody(contains: "vapor")
+            }
+            .test(.POST, to: "/hello/vapor") { res in
+                res.assertStatus(is: .notFound)
+            }
+            .test(.GET, to: "/hello/vapor/development") { res in
+                res.assertStatus(is: .ok)
+                    .assertBody(equals: #"["vapor","development"]"#)
+            }
+    }
+
+    func testJSON() throws {
+        let app = Application.create(routes: { r, c in
+            r.on(.GET, "json") { req in
+                return ["foo": "bar"]
+            }
+        })
+        defer { try! app.shutdown() }
+
+        try app.xctest().test(.GET, to: "/json") { res in
+            res.assertStatus(is: .ok)
+                .assertBody(equals: #"{"foo":"bar"}"#)
+        }
+    }
+
+    // https://github.com/vapor/vapor/issues/1537
+    func testQueryStringRunning() throws {
+        #warning("TODO: abstract serve-command into ServerManager class that can be used to run server")
+//        let app = Application.create(routes: { r, c in
+//            r.get("todos") { req in
 //                return "hi"
 //            }
 //        }
@@ -168,7 +171,7 @@ class ApplicationTests: XCTestCase {
 //        }
 //
 //        try app.runningServer!.onClose.wait()
-//    }
+    }
 //
 //    func testGH1534() throws {
 //        let data = """
