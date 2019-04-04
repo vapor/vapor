@@ -30,6 +30,7 @@ public final class ServeCommand: Command {
     private var onShutdown: EventLoopPromise<Void>?
     private var delegate: ServerDelegate?
     private var didShutdown: Bool
+    private var didStart: Bool
 
     /// Create a new `ServeCommand`.
     public init(
@@ -42,6 +43,7 @@ public final class ServeCommand: Command {
         self.application = application
         self.signalSources = []
         self.didShutdown = false
+        self.didStart = false
     }
 
     /// See `Command`.
@@ -57,6 +59,8 @@ public final class ServeCommand: Command {
     }
     
     private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
+        self.didStart = true
+        
         // determine which hostname / port to bind to
         let hostname = hostname ?? self.configuration.hostname
         let port = port ?? self.configuration.port
@@ -128,6 +132,6 @@ public final class ServeCommand: Command {
     }
     
     deinit {
-        assert(self.didShutdown, "ServeCommand did not shutdown before deinitializing")
+        assert(!self.didStart || self.didShutdown, "ServeCommand did not shutdown before deinitializing")
     }
 }

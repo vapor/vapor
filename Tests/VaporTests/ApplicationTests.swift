@@ -14,7 +14,7 @@ class ApplicationTests: XCTestCase {
     func testClientRoute() throws {
         let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
-            r.get("client") { req, _ in
+            r.on(.GET, "client") { req in
                 return client.get("http://httpbin.org/status/201")
             }
         })
@@ -36,7 +36,7 @@ class ApplicationTests: XCTestCase {
     func testFakeClient() throws {
         let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
-            r.get("client") { req, _ in
+            r.on(.GET, "client") { req in
                 return client.get("http://vapor.codes")
             }
         })

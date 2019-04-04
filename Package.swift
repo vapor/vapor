@@ -26,6 +26,8 @@ let package = Package(
         // .package(url: "https://github.com/vapor/validation.git", from: "2.0.0"),
     ],
     targets: [
+        .target(name: "CMultipartParser"),
+        
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Vapor"]),
         .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
@@ -33,6 +35,7 @@ let package = Package(
         // Vapor
         .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
+            "CMultipartParser",
             "ConsoleKit",
             "CryptoKit",
             "HTTPKit",

@@ -1,18 +1,3 @@
-//public protocol Application {
-//    var env: Environment { get }
-//
-//    var eventLoopGroup: EventLoopGroup { get }
-//
-//    var userInfo: [AnyHashable: Any] { get set }
-//
-//    init(env: Environment)
-//
-//    func makeServices() throws -> Services
-//
-//    func cleanup() throws
-//}
-import Foundation
-
 public final class Application {
     public let env: Environment
     

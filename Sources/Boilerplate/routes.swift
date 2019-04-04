@@ -6,7 +6,7 @@ struct Creds: Content {
 }
 
 public func routes(_ r: Routes, _ c: Container) throws {
-    r.get("ping") { _, _ in
+    r.on(.GET, "ping") { req in
         return "123" as StaticString
     }
     
@@ -14,7 +14,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "\(creds)"
     }
     
-    r.on(.POST, to: "large-file", bodyStream: .collect(maxSize: 1_000_000_000)) { (req: HTTPRequest, ctx: Context) -> String in
+    r.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { (req: HTTPRequest, ctx: Context) -> String in
         return req.body.count?.description ?? "none"
     }
 
@@ -31,7 +31,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         ws.send(text: "Hello 👋 \(ip)")
     }
     
-    r.on(.POST, to: "file", bodyStream: .allow) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
+    r.on(.POST, "file", body: .stream) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
         guard let stream = req.body.stream else {
             return ctx.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Expected streaming body."))
         }

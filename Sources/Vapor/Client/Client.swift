@@ -2,8 +2,6 @@ public protocol Client {
     func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse>
 }
 
-extension HTTPClient: Client { }
-
 extension Client {
     /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.
     ///

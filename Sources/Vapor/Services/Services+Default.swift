@@ -130,11 +130,7 @@ extension Services {
             return .init()
         }
         s.register(CommandConfig.self) { c in
-            var config = CommandConfig()
-            try config.use(c.make(ServeCommand.self), as: "serve", isDefault: true)
-            try config.use(c.make(RoutesCommand.self), as: "routes")
-            try config.use(c.make(BootCommand.self), as: "boot")
-            return config
+            return try .default(on: c)
         }
         s.register(Commands.self) { c in
             return try c.make(CommandConfig.self).resolve()
