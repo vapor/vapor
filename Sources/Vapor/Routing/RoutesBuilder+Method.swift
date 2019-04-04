@@ -8,41 +8,41 @@ public enum HTTPBodyStreamStrategy {
 
 extension RoutesBuilder {
     @discardableResult
-    public func get<Request, Response>(
+    public func get<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request, Context) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
+        where Response: ResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
     
     @discardableResult
-    public func post<Request, Response>(
+    public func post<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request, Context) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
+        where Response: ResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
     
     @discardableResult
-    public func patch<Request, Response>(
+    public func patch<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request, Context) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
+        where Response: ResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
     
     @discardableResult
-    public func put<Request, Response>(
+    public func put<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request, Context) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
+        where Response: ResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -52,11 +52,11 @@ extension RoutesBuilder {
         _ method: HTTPMethod,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (HTTPRequest) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(method, path, body: body, use: { request, context in
+        return self.on(method, path, body: body, use: { request in
             return try closure(request)
         })
     }
@@ -64,49 +64,21 @@ extension RoutesBuilder {
     @discardableResult
     public func on<Response>(
         _ method: HTTPMethod,
-        _ path: PathComponent...,
+        _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (HTTPRequest, Context) throws -> Response
+        use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
-        return self.on(method, path, body: body, use: closure)
-    }
-    
-    @discardableResult
-    public func on<Request, Response>(
-        _ method: HTTPMethod,
-        _ path: PathComponent...,
-        body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request, Context) throws -> Response
-    ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
-    {
-        return self.on(method, path, body: body, use: closure)
-    }
-    
-    @discardableResult
-    public func on<Request, Response>(
-        _ method: HTTPMethod,
-        _ path: [PathComponent],
-        body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request, Context) throws -> Response
-    ) -> Route
-        where Request: RequestDecodable, Response: ResponseEncodable
-    {
-        let responder = BasicResponder(eventLoop: self.eventLoop) { req, ctx in
-            if case .collect(let max) = body, let stream = req.body.stream {
-                var req = req
-                return stream.consume(max: max).flatMap { body in
-                    req.body = HTTPBody(buffer: body)
-                    return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
-                        return try closure(req, ctx)
-                    }.encodeResponse(for: req, using: ctx)
-                }
+        let responder = BasicResponder(eventLoop: self.eventLoop) { request in
+            if case .collect(let max) = body, let stream = request.http.body.stream {
+                return stream.consume(max: max).flatMapThrowing { body -> Response in
+                    request.http.body = HTTPBody(buffer: body)
+                    return try closure(request)
+                }.encodeResponse(for: request)
             } else {
-                return Request.decodeRequest(req, using: ctx).flatMapThrowing { req -> Response in
-                    return try closure(req, ctx)
-                }.encodeResponse(for: req, using: ctx)
+                return try closure(request)
+                    .encodeResponse(for: request)
             }
         }
         let route = Route(

@@ -3,17 +3,14 @@ public struct ApplicationResponder: Responder {
     private let responder: Responder
     
     /// Creates a new `ApplicationResponder`.
-    public init(
-        routes: Routes,
-        middleware: [Middleware] = []
-    ) {
+    public init(routes: Routes, middleware: [Middleware] = []) {
         let router = HTTPRoutesResponder(routes: routes)
         self.responder = middleware.makeResponder(chainingTo: router)
     }
 
     /// See `Responder`.
-    public func respond(to req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
-        return self.responder.respond(to: req, using: ctx)
+    public func respond(to request: Request) -> EventLoopFuture<HTTPResponse> {
+        return self.responder.respond(to: request)
     }
 }
 
@@ -39,19 +36,19 @@ public struct HTTPRoutesResponder: Responder {
     }
 
     /// See `Responder`.
-    public func respond(to req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
-        guard let responder = self.route(req, using: ctx) else {
+    public func respond(to request: Request) -> EventLoopFuture<HTTPResponse> {
+        guard let responder = self.route(request) else {
             return self.eventLoop.makeFailedFuture(Abort(.notFound))
         }
-        return responder.respond(to: req, using: ctx)
+        return responder.respond(to: request)
     }
     
     /// See `Router`.
-    private func route(_ req: HTTPRequest, using ctx: Context) -> Responder? {
-        let path: [String] = req.urlString
+    private func route(_ request: Request) -> Responder? {
+        let path: [String] = request.http.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
             .map { String($0) }
-        return self.router.route(path: [req.method.string] + path, parameters: &ctx.parameters)
+        return self.router.route(path: [request.http.method.string] + path, parameters: &request.parameters)
     }
 }

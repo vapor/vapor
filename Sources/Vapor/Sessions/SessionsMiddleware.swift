@@ -30,37 +30,33 @@ public final class SessionsMiddleware: Middleware {
     }
 
     /// See `Middleware.respond`
-    public func respond(
-        to req: HTTPRequest,
-        using ctx: Context,
-        chainingTo next: Responder
-    ) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
         // Create a session cache
         let cache = SessionCache()
-        ctx._sessionCache = cache
+        request._sessionCache = cache
         cache.middlewareFlag = true
 
         // Check for an existing session
-        if let cookieValue = req.cookies[config.cookieName] {
+        if let cookieValue = request.http.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
             return sessions.readSession(id).flatMap { data in
                 cache.session = .init(id: id, data: data ?? .init())
-                return next.respond(to: req, using: ctx).flatMap { res in
-                    return self.addCookies(to: res, for: req, cache: cache)
+                return next.respond(to: request).flatMap { res in
+                    return self.addCookies(to: res, for: request.http, cache: cache)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
-            return next.respond(to: req, using: ctx).flatMap { res in
-                return self.addCookies(to: res, for: req, cache: cache)
+            return next.respond(to: request).flatMap { response in
+                return self.addCookies(to: response, for: request.http, cache: cache)
             }
         }
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to res: HTTPResponse, for req: HTTPRequest, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
-        var res = res
+    private func addCookies(to response: HTTPResponse, for request: HTTPRequest, cache: SessionCache) -> EventLoopFuture<HTTPResponse> {
+        var response = response
         if let session = cache.session {
             // A session exists or has been created. we must
             // set a cookie value on the response
@@ -76,20 +72,20 @@ public final class SessionsMiddleware: Middleware {
             // After create or update, set cookie on the response.
             return createOrUpdate.map { id in
                 // the session has an id, set the cookie
-                res.cookies[self.config.cookieName] = self.config.cookieFactory(id)
-                return res
+                response.cookies[self.config.cookieName] = self.config.cookieFactory(id)
+                return response
             }
-        } else if let cookieValue = req.cookies[self.config.cookieName] {
+        } else if let cookieValue = request.cookies[self.config.cookieName] {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
             return self.sessions.deleteSession(id).map {
-                res.cookies[self.config.cookieName] = .expired
-                return res
+                response.cookies[self.config.cookieName] = .expired
+                return response
             }
         } else {
             // no session or existing cookie
-            return self.sessions.eventLoop.makeSucceededFuture(res)
+            return self.sessions.eventLoop.makeSucceededFuture(response)
         }
     }
 }

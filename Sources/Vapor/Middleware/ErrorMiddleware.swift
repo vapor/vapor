@@ -82,9 +82,9 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
-        return next.respond(to: req, using: ctx).flatMapErrorThrowing { error in
-            return self.closure(req, error)
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+        return next.respond(to: request).flatMapErrorThrowing { error in
+            return self.closure(request.http, error)
         }
     }
 }

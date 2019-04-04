@@ -49,23 +49,23 @@ extension Content {
         return .json
     }
     
-    public static func decodeRequest(_ req: HTTPRequest, using ctx: Context) -> EventLoopFuture<Self> {
+    public static func decodeRequest(_ request: Request) -> EventLoopFuture<Self> {
         do {
-            let content = try req.content.decode(Self.self)
-            return ctx.eventLoop.makeSucceededFuture(content)
+            let content = try request.http.content.decode(Self.self)
+            return request.eventLoop.makeSucceededFuture(content)
         } catch {
-            return ctx.eventLoop.makeFailedFuture(error)
+            return request.eventLoop.makeFailedFuture(error)
         }
     }
     
-    public func encodeResponse(for req: HTTPRequest, using ctx: Context) -> EventLoopFuture<HTTPResponse> {
-        var res = HTTPResponse()
+    public func encodeResponse(for request: Request) -> EventLoopFuture<HTTPResponse> {
+        var response = HTTPResponse()
         do {
-            try res.content.encode(self)
+            try response.content.encode(self)
         } catch {
-            return ctx.eventLoop.makeFailedFuture(error)
+            return request.eventLoop.makeFailedFuture(error)
         }
-        return ctx.eventLoop.makeSucceededFuture(res)
+        return request.eventLoop.makeSucceededFuture(response)
     }
 }
 

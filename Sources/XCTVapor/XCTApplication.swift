@@ -36,8 +36,7 @@ public final class XCTApplication {
         closure: (XCTHTTPResponse) throws -> () = { _ in }
     ) throws -> XCTApplication {
         let res = try self.container().make(Responder.self).respond(
-            to: .init(method: method, urlString: string),
-            using: .init(channel: EmbeddedChannel())
+            to: .init(http: .init(method: method, urlString: string), channel: EmbeddedChannel())
         ).wait()
         try closure(.init(response: res))
         return self

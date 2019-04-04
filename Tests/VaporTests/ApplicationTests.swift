@@ -14,7 +14,7 @@ class ApplicationTests: XCTestCase {
     func testClientRoute() throws {
         let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
-            r.on(.GET, "client") { req in
+            r.get("client") { req in
                 return client.get("http://httpbin.org/status/201")
             }
         })
@@ -35,7 +35,7 @@ class ApplicationTests: XCTestCase {
     func testFakeClient() throws {
         let app = Application.create(routes: { r, c in
             let client = try c.make(Client.self)
-            r.on(.GET, "client") { req in
+            r.get("client") { req in
                 return client.get("http://vapor.codes")
             }
         })
@@ -116,12 +116,12 @@ class ApplicationTests: XCTestCase {
 
     func testParameter() throws {
         let app = Application.create(routes: { r, c in
-            r.on(.GET, "hello", ":a") { req, ctx in
-                return ctx.parameters.get("a") ?? ""
+            r.get("hello", ":a") { req in
+                return req.parameters.get("a") ?? ""
             }
 
-            r.on(.GET, "hello", ":a", ":b") { req, ctx in
-                return [ctx.parameters.get("a") ?? "", ctx.parameters.get("b") ?? ""]
+            r.get("hello", ":a", ":b") { req in
+                return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
             }
         })
         defer { try! app.shutdown() }
@@ -142,7 +142,7 @@ class ApplicationTests: XCTestCase {
 
     func testJSON() throws {
         let app = Application.create(routes: { r, c in
-            r.on(.GET, "json") { req in
+            r.get("json") { req in
                 return ["foo": "bar"]
             }
         })
