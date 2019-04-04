@@ -8,13 +8,3 @@ extension HTTPStatus: ResponseEncodable {
         return request.eventLoop.makeSucceededFuture(response)
     }
 }
-
-extension HTTPStatus: AbortError {
-    public var status: HTTPResponseStatus {
-        return self
-    }
-    
-    public var reason: String {
-        return self.reasonPhrase
-    }
-}

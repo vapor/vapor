@@ -14,10 +14,10 @@ extension JSONDecoder: RequestDecoder {
         where D: Decodable
     {
         guard request.headers.contentType == .json || request.headers.contentType == .jsonAPI else {
-            throw HTTPStatus.unsupportedMediaType
+            throw Abort(.unsupportedMediaType)
         }
         guard let buffer = request.body.data else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) ?? Data()
         return try self.decode(D.self, from: data)

@@ -59,7 +59,7 @@ extension Content {
     }
     
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        var response = Response()
+        let response = Response()
         do {
             try response.content.encode(self)
         } catch {

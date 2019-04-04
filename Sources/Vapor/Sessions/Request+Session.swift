@@ -13,15 +13,12 @@ extension Request {
         guard let cache = self._sessionCache else {
             fatalError("No session cache.")
         }
-        guard cache.middlewareFlag else {
-            throw VaporError(
-                identifier: "sessionsMiddlewareFlag",
-                reason: "No `SessionsMiddleware` detected.",
-                suggestedFixes: [
-                    "Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`.",
-                    "Add the `SessionsMiddleware` to a route group."
-                ]
-            )
+        if !cache.middlewareFlag {
+            // No `SessionsMiddleware` was detected on your app.
+            // Suggested solutions:
+            // - Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`
+            // - Add the `SessionsMiddleware` to a route group.
+            assertionFailure("No `SessionsMiddleware` detected.")
         }
         if let existing = cache.session {
             return existing

@@ -78,8 +78,7 @@ extension Request {
                 switch chunk {
                 case .buffer(var buffer):
                     if data.readableBytes + buffer.readableBytes >= max {
-                        let error = HTTPStatus.payloadTooLarge
-                        promise.fail(error)
+                        promise.fail(Abort(.payloadTooLarge))
                     } else {
                         data.writeBuffer(&buffer)
                     }

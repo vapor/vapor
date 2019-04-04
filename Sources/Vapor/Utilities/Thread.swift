@@ -6,7 +6,7 @@ extension Thread {
                 work()
             }
         } else {
-            ERROR("Thread.async requires macOS 10.12 or greater")
+            fatalError("Thread.async requires macOS 10.12 or greater")
         }
     }
 }

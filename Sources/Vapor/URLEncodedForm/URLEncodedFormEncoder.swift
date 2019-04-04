@@ -26,11 +26,11 @@ public struct URLEncodedFormEncoder: ResponseEncoder, URLContentEncoder {
     /// `URLContentEncoder` conformance.
     public func encode<E>(_ encodable: E, to url: inout URL) throws where E : Encodable {
         guard var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            throw VaporError(identifier: "invalidURL", reason: "Could not create comps from url.")
+            throw Abort(.internalServerError)
         }
         comps.percentEncodedQuery = try self.encode(encodable)
         guard let newURL = comps.url else {
-            throw VaporError(identifier: "invalidURLComps", reason: "Could not create url from comps.")
+            throw Abort(.internalServerError)
         }
         url = newURL
     }

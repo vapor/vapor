@@ -45,10 +45,10 @@ public struct URLEncodedFormDecoder: RequestDecoder, URLContentDecoder {
     public func decode<D>(_ decodable: D.Type, from request: Request) throws -> D
         where D: Decodable {
         guard request.headers.contentType == .urlEncodedForm else {
-            throw HTTPStatus.unsupportedMediaType
+            throw Abort(.unsupportedMediaType)
         }
         guard let buffer = request.body.data else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         let string = buffer.getString(at: buffer.readerIndex, length: buffer.readableBytes) ?? ""
         return try self.decode(D.self, from: string)
@@ -56,7 +56,7 @@ public struct URLEncodedFormDecoder: RequestDecoder, URLContentDecoder {
     
     public func decode<D>(_ decodable: D.Type, from url: URL) throws -> D where D : Decodable {
         guard let query = url.query else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         return try self.decode(D.self, from: query)
     }

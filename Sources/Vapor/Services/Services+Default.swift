@@ -16,18 +16,18 @@ extension Services {
         s.register(URLSession.self) { c in
             return try .init(configuration: c.make())
         }
-        s.register(FoundationClient.self) { c in
-            return try .init(c.make(), on: c.eventLoop)
-        }
+//        s.register(FoundationClient.self) { c in
+//            return try .init(c.make(), on: c.eventLoop)
+//        }
 //        s.register(HTTPClient.Configuration.self) { c in
 //            return .init()
 //        }
 //        s.register(HTTPClient.self) { c in
 //            return try .init(configuration: c.make(), on: c.eventLoop)
 //        }
-        s.register(Client.self) { c in
-            return try c.make(FoundationClient.self)
-        }
+//        s.register(Client.self) { c in
+//            return try c.make(FoundationClient.self)
+//        }
         
 //        s.register(HTTPServerDelegate.self) { c in
 //            return try ServerDelegate(application: c.make(), on: c.eventLoop)

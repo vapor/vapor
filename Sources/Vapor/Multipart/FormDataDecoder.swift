@@ -10,10 +10,10 @@ public struct FormDataDecoder: RequestDecoder {
     /// `RequestDecoder` conformance.
     public func decode<D>(_ decodable: D.Type, from request: Request) throws -> D where D: Decodable {
         guard let boundary = request.headers.contentType?.parameters["boundary"] else {
-            throw HTTPStatus.unsupportedMediaType
+            throw Abort(.unsupportedMediaType)
         }
         guard let buffer = request.body.data else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         return try self.decode(D.self, from: buffer, boundary: boundary)
     }

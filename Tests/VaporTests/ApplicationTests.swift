@@ -10,25 +10,36 @@ class ApplicationTests: XCTestCase {
         try app.execute().wait()
     }
     
-//    func testClientRoute() throws {
-//        let app = Application.create(routes: { r, c in
-//            let client = try c.make(Client.self)
-//            r.get("client") { req in
-//                return client.get("http://httpbin.org/status/201")
-//            }
-//        })
-//        defer { try! app.shutdown() }
-//
-//        try app.xctest()
-//            .test(.GET, to: "/client") { res in
-//                res.assertStatus(is: .created)
-//                    .assertBody(isEmpty: true)
-//            }
-//            .test(.GET, to: "/foo") { res in
-//                res.assertStatus(is: .notFound)
-//                    .assertBody(contains: "Not Found")
-//        }
-//    }
+    func testURLSession() throws {
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(URLSession.self)
+            r.get("client") { request -> EventLoopFuture<String> in
+                let promise = request.eventLoop.makePromise(of: String.self)
+                let url = URL(string: "http://httpbin.org/status/201")!
+                client.dataTask(with: URLRequest(url: url)) { data, response, error in
+                    if let error = error {
+                        promise.fail(error)
+                    } else if let response = response as? HTTPURLResponse {
+                        promise.succeed(response.statusCode.description)
+                    } else {
+                        promise.fail(Abort(.internalServerError))
+                    }
+                }.resume()
+                return promise.futureResult
+            }
+        })
+        defer { try! app.shutdown() }
+
+        try app.xctest()
+            .test(.GET, to: "/client") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "201")
+            }
+            .test(.GET, to: "/foo") { res in
+                XCTAssertEqual(res.status, .notFound)
+                XCTAssertContains(res.body.string, "Not Found")
+            }
+    }
     
 //    func testFakeClient() throws {
 //        let app = Application.create(routes: { r, c in
@@ -126,15 +137,15 @@ class ApplicationTests: XCTestCase {
             
         try app.xctest()
             .test(.GET, to: "/hello/vapor") { res in
-                res.assertStatus(is: .ok)
-                    .assertBody(contains: "vapor")
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertContains(res.body.string, "vapor")
             }
             .test(.POST, to: "/hello/vapor") { res in
-                res.assertStatus(is: .notFound)
+                XCTAssertEqual(res.status, .notFound)
             }
             .test(.GET, to: "/hello/vapor/development") { res in
-                res.assertStatus(is: .ok)
-                    .assertBody(equals: #"["vapor","development"]"#)
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
             }
     }
 
@@ -148,8 +159,8 @@ class ApplicationTests: XCTestCase {
         defer { try! app.shutdown() }
 
         try app.xctest().test(.GET, to: "/json") { res in
-            res.assertStatus(is: .ok)
-                .assertBody(equals: #"{"foo":"bar"}"#)
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
         }
     }
 

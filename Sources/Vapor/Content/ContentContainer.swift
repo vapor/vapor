@@ -175,11 +175,11 @@ public struct RequestContent {
     /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
     private func requireDecoder() throws -> RequestDecoder {
         guard let count = self.request.body.data?.readableBytes, count > 0 else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         
         guard let contentType = self.request.headers.contentType else {
-            throw HTTPStatus.notAcceptable
+            throw Abort(.notAcceptable)
         }
         
         return try ContentConfiguration.global.requireDecoder(for: contentType)

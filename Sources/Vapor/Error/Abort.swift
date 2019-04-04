@@ -27,9 +27,6 @@ public struct Abort: AbortError {
 
     /// See `AbortError`
     public var reason: String
-    
-    /// See `Debuggable`
-    public var suggestedFixes: [String]
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
@@ -47,6 +44,5 @@ public struct Abort: AbortError {
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
-        self.suggestedFixes = suggestedFixes
     }
 }
