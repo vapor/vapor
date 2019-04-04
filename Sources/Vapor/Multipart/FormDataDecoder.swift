@@ -3,17 +3,17 @@
 /// See [RFC#2388](https://tools.ietf.org/html/rfc2388) for more information about `multipart/form-data` encoding.
 ///
 /// Seealso `MultipartParser` for more information about the `multipart` encoding.
-public struct FormDataDecoder: ContentDecoder {
+public struct FormDataDecoder: RequestDecoder {
     /// Creates a new `FormDataDecoder`.
     public init() { }
     
-    /// `HTTPMessageDecoder` conformance.
-    public func decode<D, M>(_ decodable: D.Type, from message: M) throws -> D where D : Decodable, M : HTTPMessage {
-        guard let boundary = message.contentType?.parameters["boundary"] else {
-            throw HTTPError(.unknownContentType)
+    /// `RequestDecoder` conformance.
+    public func decode<D>(_ decodable: D.Type, from request: Request) throws -> D where D: Decodable {
+        guard let boundary = request.headers.contentType?.parameters["boundary"] else {
+            throw HTTPStatus.unsupportedMediaType
         }
-        guard let buffer = message.body.buffer else {
-            throw HTTPError(.noContent)
+        guard let buffer = request.body.data else {
+            throw HTTPStatus.notAcceptable
         }
         return try self.decode(D.self, from: buffer, boundary: boundary)
     }
@@ -204,7 +204,7 @@ private struct _FormDataUnkeyedDecoder: UnkeyedDecodingContainer {
     }
     var currentIndex: Int
     var index: CodingKey {
-        return HTTPCodingKey(self.currentIndex)
+        return BasicCodingKey.index(self.currentIndex)
     }
 
     let multipart: FormDataDecoderContext

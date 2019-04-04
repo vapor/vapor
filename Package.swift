@@ -13,14 +13,26 @@ let package = Package(
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
         .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
 
-        // 🚀 Non-blocking, event-driven HTTP for Swift built on Swift NIO.
-        .package(url: "https://github.com/vapor/http.git", .branch("master")),
-
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", .branch("master")),
 
         // 📦 Dependency injection / inversion of control framework.
         .package(url: "https://github.com/vapor/service.git", .branch("master")),
+        
+        // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+        
+        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
+        
+        // HTTP/2 support for SwiftNIO
+        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.0.0"),
+        
+        // Useful code around SwiftNIO.
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
+        
+        // Swift logging API
+        .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
 
         // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
         // .package(url: "https://github.com/vapor/validation.git", from: "2.0.0"),
@@ -38,7 +50,15 @@ let package = Package(
             "CMultipartParser",
             "ConsoleKit",
             "CryptoKit",
-            "HTTPKit",
+            "Logging",
+            "NIO",
+            "NIOExtras",
+            "NIOFoundationCompat",
+            "NIOHTTPCompression",
+            "NIOHTTP1",
+            "NIOHTTP2",
+            "NIOSSL",
+            "NIOWebSocket",
             "RoutingKit",
             "ServiceKit",
             // "Validation",

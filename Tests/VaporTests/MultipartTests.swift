@@ -306,7 +306,7 @@ class MultipartTests: XCTestCase {
         """
 
         struct Foo: Decodable {
-            var file: HTTPFile
+            var file: File
         }
 
         let foo = try FormDataDecoder().decode(Foo.self, from: data, boundary: "hello")
@@ -354,7 +354,7 @@ class MultipartTests: XCTestCase {
 
     func testMultipleFile() throws {
         struct UserFiles: Decodable {
-            var upload: [HTTPFile]
+            var upload: [File]
         }
 
         /// Content-Type: multipart/form-data; boundary=123

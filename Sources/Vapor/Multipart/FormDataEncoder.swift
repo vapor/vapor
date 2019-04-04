@@ -3,19 +3,19 @@
 /// See [RFC#2388](https://tools.ietf.org/html/rfc2388) for more information about `multipart/form-data` encoding.
 ///
 /// Seealso `MultipartParser` for more information about the `multipart` encoding.
-public struct FormDataEncoder: ContentEncoder {
+public struct FormDataEncoder: ResponseEncoder {
     /// Creates a new `FormDataEncoder`.
     public init() { }
     
     /// `HTTPMessageEncoder` conformance.
-    public func encode<E, M>(_ encodable: E, to message: inout M) throws
-        where E: Encodable, M: HTTPMessage
+    public func encode<E>(_ encodable: E, to response: Response) throws
+        where E: Encodable
     {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
-        message.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
+        response.headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         try self.encode(encodable, boundary: boundary, into: &buffer)
-        message.body = .init(buffer: buffer)
+        response.body = .init(buffer: buffer)
     }
     
     public func encode<E>(_ encodable: E, boundary: String) throws -> String
@@ -82,7 +82,7 @@ private final class FormDataEncoderContext {
         parts.append(part)
     }
     
-    func encode(_ files: [HTTPFile], at codingPath: [CodingKey]) throws {
+    func encode(_ files: [File], at codingPath: [CodingKey]) throws {
         for file in files {
             try encode(file, at: codingPath)
         }
@@ -148,7 +148,7 @@ private struct _FormDataKeyedEncoder<K>: KeyedEncodingContainerProtocol where K:
     mutating func encode<T>(_ value: T, forKey key: K) throws where T : Encodable {
         if value is MultipartPartConvertible {
             try multipart.encode(value, at: codingPath + [key])
-        } else if let value = value as? [HTTPFile] {
+        } else if let value = value as? [File] {
             try multipart.encode(value, at: codingPath + [key])
         } else {
             let encoder = _FormDataEncoder(multipart: multipart, codingPath: codingPath + [key])
@@ -178,7 +178,7 @@ private struct _FormDataUnkeyedEncoder: UnkeyedEncodingContainer {
     let multipart: FormDataEncoderContext
     var codingPath: [CodingKey]
     var index: CodingKey {
-        return HTTPCodingKey(0)
+        return BasicCodingKey.index(0)
     }
 
     init(multipart: FormDataEncoderContext, codingPath: [CodingKey]) {

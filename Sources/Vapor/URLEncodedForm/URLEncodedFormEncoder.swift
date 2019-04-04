@@ -10,17 +10,17 @@
 ///
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
-public struct URLEncodedFormEncoder: ContentEncoder, URLContentEncoder {
+public struct URLEncodedFormEncoder: ResponseEncoder, URLContentEncoder {
     /// Create a new `URLEncodedFormEncoder`.
     public init() {}
     
     /// `ContentEncoder` conformance.
-    public func encode<E, M>(_ encodable: E, to message: inout M) throws
-        where E: Encodable, M: HTTPMessage
+    public func encode<E>(_ encodable: E, to response: Response) throws
+        where E: Encodable
     {
         let encoded = try self.encode(encodable)
-        message.contentType = .urlEncodedForm
-        message.body = .init(string: encoded)
+        response.headers.contentType = .urlEncodedForm
+        response.body = .init(string: encoded)
     }
     
     /// `URLContentEncoder` conformance.

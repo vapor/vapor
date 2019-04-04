@@ -1,5 +1,5 @@
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient {
+public final class FoundationClient: Client {
     /// See `Client`.
     public var eventLoop: EventLoop
 
@@ -13,9 +13,9 @@ public final class FoundationClient {
     }
 
     /// See `Client`.
-    public func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
-        let promise = self.eventLoop.makePromise(of: HTTPResponse.self)
-        self.urlSession.dataTask(with: URLRequest(http: req)) { data, urlResponse, error in
+    public func send(method: HTTPMethod, url: URL, headers: HTTPHeaders, body: Data) -> EventLoopFuture<Response> {
+        let promise = self.eventLoop.makePromise(of: Response.self)
+        self.urlSession.dataTask(with: URLRequest(method: method, url: url, headers: headers, body: body)) { data, urlResponse, error in
             if let error = error {
                 promise.fail(error)
                 return
@@ -30,7 +30,7 @@ public final class FoundationClient {
                 return
             }
 
-            let res = HTTPResponse(foundation: httpURLResponse, data: data)
+            let res = Response(foundation: httpURLResponse, data: data)
             promise.succeed(res)
         }.resume()
         return promise.futureResult
@@ -38,22 +38,21 @@ public final class FoundationClient {
 }
 
 extension URLRequest {
-    public init(http: HTTPRequest) {
-        let body = http.body.data ?? Data()
-        self.init(url: http.url)
-        self.httpMethod = "\(http.method)"
+    public init(method: HTTPMethod, url: URL, headers: HTTPHeaders, body: Data) {
+        self.init(url: url)
+        self.httpMethod = method.string
         self.httpBody = body
-        http.headers.forEach { key, val in
+        headers.forEach { key, val in
             self.addValue(val, forHTTPHeaderField: key.description)
         }
     }
 }
 
-extension HTTPResponse {
-    public init(foundation: HTTPURLResponse, data: Data? = nil) {
+extension Response {
+    public convenience init(foundation: HTTPURLResponse, data: Data? = nil) {
         self.init(status: .init(statusCode: foundation.statusCode))
         if let data = data {
-            self.body = HTTPBody(data: data)
+            self.body = .init(data: data)
         }
         for (key, value) in foundation.allHeaderFields {
             self.headers.replaceOrAdd(name: "\(key)", value: "\(value)")

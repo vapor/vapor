@@ -124,14 +124,14 @@ public struct FileIO {
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    public func chunkedResponse(file: String, for req: HTTPRequest, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPResponse {
+    public func chunkedResponse(file: String, for req: Request, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> Response {
         // Get file attributes for this file.
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: file),
             let modifiedAt = attributes[.modificationDate] as? Date,
             let fileSize = attributes[.size] as? NSNumber
         else {
-            return HTTPResponse(status: .internalServerError)
+            return Response(status: .internalServerError)
         }
 
         // Create empty headers array.
@@ -143,11 +143,11 @@ public struct FileIO {
 
         // Check if file has been cached already and return NotModified response if the etags match
         if fileETag == req.headers.firstValue(name: .ifNoneMatch) {
-            return HTTPResponse(status: .notModified)
+            return Response(status: .notModified)
         }
 
         // Create the HTTP response.
-        var res = HTTPResponse(status: .ok, headers: headers)
+        let response = Response(status: .ok, headers: headers)
 
         // Set Content-Type header based on the media type
         // Only set Content-Type if file not modified and returned above.
@@ -155,11 +155,15 @@ public struct FileIO {
             let fileExtension = file.components(separatedBy: ".").last,
             let type = HTTPMediaType.fileExtension(fileExtension)
         {
-            res.contentType = type
+            response.headers.contentType = type
         }
 
-        res.body = chunkedStream(file: file).convertToHTTPBody()
-        return res
+        response.body = self.responseBodyStream(
+            file: file,
+            fileSize: fileSize.intValue,
+            chunkSize: chunkSize
+        )
+        return response
     }
 
     /// Reads the contents of a file at the supplied path into an `HTTPChunkedStream`.
@@ -175,17 +179,19 @@ public struct FileIO {
     ///     - file: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: An `HTTPChunkedStream` containing the file stream.
-    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPBody.Stream {
-        let bodyStream = HTTPBody.Stream(on: eventLoop)
-        _ = _read(file: file, chunkSize: chunkSize) { chunk in
-            bodyStream.write(.chunk(chunk))
-        }.map {
-            bodyStream.write(.end)
-        }.flatMapErrorThrowing { error in
-            // we can't wait for the error
-            bodyStream.write(.error(error))
-        }
-        return bodyStream
+    private func responseBodyStream(file: String, fileSize: Int, chunkSize: Int) -> Response.Body {
+        return .init(stream: { stream in
+            self._read(file: file, chunkSize: chunkSize) { chunk in
+                stream.write(.buffer(chunk))
+            }.whenComplete { result in
+                switch result {
+                case .failure(let error):
+                    stream.write(.error(error))
+                case .success:
+                    stream.write(.end)
+                }
+            }
+        }, count: fileSize)
     }
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.

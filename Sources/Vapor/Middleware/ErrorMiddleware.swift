@@ -55,36 +55,36 @@ public final class ErrorMiddleware: Middleware {
             }
 
             // create a Response with appropriate status
-            var res = HTTPResponse(status: status, headers: headers)
-
+            let response = Response(status: status, headers: headers)
+            
             // attempt to serialize the error to json
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
-                res.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
-                res.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                response.body = try .init(data: JSONEncoder().encode(errorResponse))
+                response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
             } catch {
-                res.body = HTTPBody(string: "Oops: \(error)")
-                res.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+                response.body = .init(string: "Oops: \(error)")
+                response.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
             }
-            return res
+            return response
         }
     }
 
     /// Error-handling closure.
-    private let closure: (HTTPRequest, Error) -> (HTTPResponse)
+    private let closure: (Request, Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (HTTPRequest, Error) -> (HTTPResponse)) {
+    public init(_ closure: @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
 
     /// See `Middleware`.
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         return next.respond(to: request).flatMapErrorThrowing { error in
-            return self.closure(request.http, error)
+            return self.closure(request, error)
         }
     }
 }

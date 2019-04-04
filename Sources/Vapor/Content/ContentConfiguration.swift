@@ -58,10 +58,10 @@ public struct ContentConfiguration {
     }
     
     /// Configured `ContentEncoder`s.
-    private var encoders: [HTTPMediaType: ContentEncoder]
+    private var encoders: [HTTPMediaType: ResponseEncoder]
     
     /// Configured `ContentDecoder`s.
-    private var decoders: [HTTPMediaType: ContentDecoder]
+    private var decoders: [HTTPMediaType: RequestDecoder]
     
     private var urlEncoder: URLContentEncoder?
     
@@ -82,7 +82,7 @@ public struct ContentConfiguration {
     /// - parameters:
     ///     - encoder: `ContentEncoder` to use.
     ///     - mediaType: `ContentEncoder` will be used to encode this `HTTPMediaType`.
-    public mutating func use(encoder: ContentEncoder, for mediaType: HTTPMediaType) {
+    public mutating func use(encoder: ResponseEncoder, for mediaType: HTTPMediaType) {
         self.encoders[mediaType] = encoder
     }
     
@@ -93,7 +93,7 @@ public struct ContentConfiguration {
     /// - parameters:
     ///     - decoder: `ContentDecoder` to use.
     ///     - mediaType: `ContentDecoder` will be used to decode this `HTTPMediaType`.
-    public mutating func use(decoder: ContentDecoder, for mediaType: HTTPMediaType) {
+    public mutating func use(decoder: RequestDecoder, for mediaType: HTTPMediaType) {
         self.decoders[mediaType] = decoder
     }
     
@@ -115,7 +115,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
-    public func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
+    public func requireEncoder(for mediaType: HTTPMediaType) throws -> ResponseEncoder {
         guard let encoder = self.encoders[mediaType] else {
             throw Abort(.unsupportedMediaType, identifier: "httpEncoder")
         }
@@ -129,7 +129,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
-    public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
+    public func requireDecoder(for mediaType: HTTPMediaType) throws -> RequestDecoder {
         guard let decoder = self.decoders[mediaType] else {
             throw Abort(.unsupportedMediaType, identifier: "httpDecoder")
         }

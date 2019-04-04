@@ -1,24 +1,25 @@
-extension JSONEncoder: ContentEncoder {
-    /// See `HTTPMessageEncoder`
-    public func encode<E, M>(_ encodable: E, to message: inout M) throws
-        where E: Encodable, M: HTTPMessage
+extension JSONEncoder: ResponseEncoder {
+    /// See `ResponseEncoder`
+    public func encode<E>(_ encodable: E, to response: Response) throws
+        where E: Encodable
     {
-        message.contentType = .json
-        message.body = try HTTPBody(data: encode(encodable))
+        response.headers.contentType = .json
+        response.body = try .init(data: encode(encodable))
     }
 }
 
-extension JSONDecoder: ContentDecoder {
-    /// See `HTTPMessageDecoder`
-    public func decode<D, M>(_ decodable: D.Type, from message: M) throws -> D
-        where D: Decodable, M: HTTPMessage
+extension JSONDecoder: RequestDecoder {
+    /// See `RequestDecoder`
+    public func decode<D>(_ decodable: D.Type, from request: Request) throws -> D
+        where D: Decodable
     {
-        guard message.contentType == .json || message.contentType == .jsonAPI else {
-            throw HTTPError(.unknownContentType)
+        guard request.headers.contentType == .json || request.headers.contentType == .jsonAPI else {
+            throw HTTPStatus.unsupportedMediaType
         }
-        guard let data = message.body.data else {
-            throw HTTPError(.noContent)
+        guard let buffer = request.body.data else {
+            throw HTTPStatus.notAcceptable
         }
+        let data = buffer.getData(at: buffer.readerIndex, length: buffer.readableBytes) ?? Data()
         return try self.decode(D.self, from: data)
     }
 }

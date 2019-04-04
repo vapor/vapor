@@ -5,7 +5,7 @@ public func configure(_ s: inout Services) throws {
         try routes(r, c)
     }
     
-    s.register(HTTPServer.Configuration.self) { c in
+    s.register(ServerConfiguration.self) { c in
         switch c.env {
         case .tls:
             return .init(

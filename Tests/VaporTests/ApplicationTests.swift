@@ -10,62 +10,62 @@ class ApplicationTests: XCTestCase {
         try app.execute().wait()
     }
     
+//    func testClientRoute() throws {
+//        let app = Application.create(routes: { r, c in
+//            let client = try c.make(Client.self)
+//            r.get("client") { req in
+//                return client.get("http://httpbin.org/status/201")
+//            }
+//        })
+//        defer { try! app.shutdown() }
+//
+//        try app.xctest()
+//            .test(.GET, to: "/client") { res in
+//                res.assertStatus(is: .created)
+//                    .assertBody(isEmpty: true)
+//            }
+//            .test(.GET, to: "/foo") { res in
+//                res.assertStatus(is: .notFound)
+//                    .assertBody(contains: "Not Found")
+//        }
+//    }
     
-    func testClientRoute() throws {
-        let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
-            r.get("client") { req in
-                return client.get("http://httpbin.org/status/201")
-            }
-        })
-        defer { try! app.shutdown() }
-            
-        try app.xctest()
-            .test(.GET, to: "/client") { res in
-                res.assertStatus(is: .created)
-                    .assertBody(isEmpty: true)
-            }
-            .test(.GET, to: "/foo") { res in
-                res.assertStatus(is: .notFound)
-                    .assertBody(contains: "Not Found")
-        }
-    }
-    
-    
-    func testFakeClient() throws {
-        let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
-            r.get("client") { req in
-                return client.get("http://vapor.codes")
-            }
-        })
-        defer { try! app.shutdown() }
-        
-        final class FakeClient: Client {
-            var reqs: [HTTPRequest]
-            init() {
-                self.reqs = []
-            }
-            func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
-                self.reqs.append(req)
-                return EmbeddedEventLoop().makeSucceededFuture(.init())
-            }
-        }
-        
-        let client = FakeClient()
-        
-        try app.xctest()
-            .override(service: Client.self, with: client)
-            .test(.GET, to: "/client")
-        
-        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
-    }
+//    func testFakeClient() throws {
+//        let app = Application.create(routes: { r, c in
+//            let client = try c.make(Client.self)
+//            r.get("client") { req in
+//                return client.get("http://vapor.codes")
+//            }
+//        })
+//        defer { try! app.shutdown() }
+//
+//        final class FakeClient: Client {
+//            var reqs: [Request]
+//            init() {
+//                self.reqs = []
+//            }
+//            func send(_ req: Request) -> EventLoopFuture<Response> {
+//                self.reqs.append(req)
+//                return EmbeddedEventLoop().makeSucceededFuture(.init())
+//            }
+//        }
+//
+//        let client = FakeClient()
+//
+//        try app.xctest()
+//            .override(service: Client.self, with: client)
+//            .test(.GET, to: "/client")
+//
+//        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
+//    }
     
     func testContent() throws {
-        var req = HTTPRequest()
-        req.body = .init(string: #"{"hello": "world"}"#)
-        req.contentType = .json
-        try XCTAssertEqual(req.content.get(at: "hello"), "world")
+        let request = Request(
+            collectedBody: .init(string: #"{"hello": "world"}"#),
+            on: EmbeddedChannel()
+        )
+        request.headers.contentType = .json
+        try XCTAssertEqual(request.content.get(at: "hello"), "world")
     }
 
     func testComplexContent() throws {
@@ -98,21 +98,19 @@ class ApplicationTests: XCTestCase {
                 ]
         }
         """
-        var req = HTTPRequest()
-        req.body = .init(string: complexJSON)
-        req.contentType = .json
-        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
+        let request = Request(collectedBody: .init(string: complexJSON), on: EmbeddedChannel())
+        request.headers.contentType = .json
+        try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
     }
 
     func testQuery() throws {
-        var req = HTTPRequest()
-        req.contentType = .json
+        let request = Request(on: EmbeddedChannel())
+        request.headers.contentType = .json
         var comps = URLComponents()
         comps.query = "hello=world"
-        req.url = comps.url!
-        try XCTAssertEqual(req.query.get(String.self, at: "hello"), "world")
+        request.url = comps.url!
+        try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
     }
-
 
     func testParameter() throws {
         let app = Application.create(routes: { r, c in
@@ -142,7 +140,8 @@ class ApplicationTests: XCTestCase {
 
     func testJSON() throws {
         let app = Application.create(routes: { r, c in
-            r.get("json") { req in
+            r.get("json") { req -> [String: String] in
+                print(req)
                 return ["foo": "bar"]
             }
         })
@@ -836,14 +835,7 @@ class ApplicationTests: XCTestCase {
         try pool.syncShutdownGracefully()
         try elg.syncShutdownGracefully()
     }
-    
-    
-    static let allTests = [
-        ("testApplicationStop", testApplicationStop),
-        ("testClientRoute", testClientRoute),
-        ("testFakeClient", testFakeClient),
-        ("testDotEnvRead", testDotEnvRead),
-    ]
+
 //
 //    static let allTests = [
 //        ("testContent", testContent),
@@ -1014,5 +1006,13 @@ extension Application {
             }
             return s
         }
+    }
+}
+
+private extension ByteBuffer {
+    init(string: String) {
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString(string)
+        self = buffer
     }
 }

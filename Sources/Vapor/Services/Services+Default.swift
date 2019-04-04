@@ -5,7 +5,7 @@ extension Services {
         var s = Services()
 
         // server
-        s.register(HTTPServer.Configuration.self) { c in
+        s.register(ServerConfiguration.self) { c in
             return .init()
         }
         
@@ -19,20 +19,20 @@ extension Services {
         s.register(FoundationClient.self) { c in
             return try .init(c.make(), on: c.eventLoop)
         }
-        s.register(HTTPClient.Configuration.self) { c in
-            return .init()
-        }
-        s.register(HTTPClient.self) { c in
-            return try .init(configuration: c.make(), on: c.eventLoop)
-        }
+//        s.register(HTTPClient.Configuration.self) { c in
+//            return .init()
+//        }
+//        s.register(HTTPClient.self) { c in
+//            return try .init(configuration: c.make(), on: c.eventLoop)
+//        }
         s.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
+            return try c.make(FoundationClient.self)
         }
         
-        s.register(HTTPServerDelegate.self) { c in
-            return try ServerDelegate(application: c.make(), on: c.eventLoop)
-        }
-        
+//        s.register(HTTPServerDelegate.self) { c in
+//            return try ServerDelegate(application: c.make(), on: c.eventLoop)
+//        }
+//        
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)

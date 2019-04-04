@@ -6,17 +6,17 @@ struct Creds: Content {
 }
 
 public func routes(_ r: Routes, _ c: Container) throws {
-    r.get("ping") { req in
+    r.on(.GET, "ping", body: .stream) { req in
         return "123" as StaticString
     }
     
     r.post("login") { req -> String in
-        let creds = try req.http.content.decode(Creds.self)
+        let creds = try req.content.decode(Creds.self)
         return "\(creds)"
     }
     
     r.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
-        return req.http.body.count?.description ?? "none"
+        return req.body.data?.readableBytes.description  ?? "none"
     }
 
     r.get("json") { req -> [String: String] in
@@ -33,14 +33,11 @@ public func routes(_ r: Routes, _ c: Container) throws {
     }
     
     r.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
-        guard let stream = req.http.body.stream else {
-            return req.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Expected streaming body."))
-        }
         let promise = req.eventLoop.makePromise(of: String.self)
-        stream.read { result, stream in
+        req.body.drain { result in
             switch result {
-            case .chunk(let chunk):
-                debugPrint(chunk)
+            case .buffer(let buffer):
+                debugPrint(buffer)
             case .error(let error):
                 promise.fail(error)
             case .end:
@@ -50,14 +47,14 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return promise.futureResult
     }
 
-//    r.get("hello", String.parameter) { req in
-//        return try req.parameters.next(String.self)
-//    }
-//
-//    router.get("search") { req in
-//        return req.query["q"] ?? "none"
-//    }
-//
+    r.get("hello", ":name") { req in
+        return req.parameters.get("name") ?? "<nil>"
+    }
+
+    r.get("search") { req in
+        return req.query["q"] ?? "none"
+    }
+
     let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
     sessions.get("get") { req -> String in
         return try req.session().data["name"] ?? "n/a"

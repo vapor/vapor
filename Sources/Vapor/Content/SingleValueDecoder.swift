@@ -1,16 +1,16 @@
-internal extension ContentDecoder {
+internal extension RequestDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D, M>(at keyPath: [HTTPCodingKey], from message: M) throws -> D
-        where D: Decodable, M: HTTPMessage
+    func get<D>(at keyPath: [BasicCodingKey], from request: Request) throws -> D
+        where D: Decodable
     {
-        let decoder = try self.decode(SingleValueDecoder.self, from: message)
+        let decoder = try self.decode(SingleValueDecoder.self, from: request)
         return try decoder.get(at: keyPath)
     }
 }
 
 internal extension URLContentDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [HTTPCodingKey], from url: URL) throws -> D
+    func get<D>(at keyPath: [BasicCodingKey], from url: URL) throws -> D
         where D: Decodable
     {
         let decoder = try self.decode(SingleValueDecoder.self, from: url)
@@ -27,9 +27,9 @@ private struct SingleValueDecoder: Decodable {
         self.decoder = decoder
     }
     
-    func get<D>(at keyPath: [HTTPCodingKey]) throws -> D where D: Decodable {
+    func get<D>(at keyPath: [BasicCodingKey]) throws -> D where D: Decodable {
         let unwrapper = self
-        var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: HTTPCodingKey.self))
+        var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicCodingKey.self))
         
         var keys = Array(keyPath.reversed())
         if keys.count == 0 {
@@ -43,7 +43,7 @@ private struct SingleValueDecoder: Decodable {
                 case .keyed(let keyed):
                     return try keyed.decode(D.self, forKey: key)
                 case .unkeyed(var unkeyed):
-                    return try unkeyed.nestedContainer(keyedBy: HTTPCodingKey.self)
+                    return try unkeyed.nestedContainer(keyedBy: BasicCodingKey.self)
                         .decode(D.self, forKey: key)
                 }
             case 1...:
@@ -60,9 +60,9 @@ private struct SingleValueDecoder: Decodable {
                 } else {
                     switch state {
                     case .keyed(let keyed):
-                        state = try .keyed(keyed.nestedContainer(keyedBy: HTTPCodingKey.self, forKey: key))
+                        state = try .keyed(keyed.nestedContainer(keyedBy: BasicCodingKey.self, forKey: key))
                     case .unkeyed(var unkeyed):
-                        state = try .keyed(unkeyed.nestedContainer(keyedBy: HTTPCodingKey.self))
+                        state = try .keyed(unkeyed.nestedContainer(keyedBy: BasicCodingKey.self))
                     }
                 }
             default: fatalError("Unexpected negative key count")
@@ -73,14 +73,14 @@ private struct SingleValueDecoder: Decodable {
 }
 
 private enum ContainerState {
-    case keyed(KeyedDecodingContainer<HTTPCodingKey>)
+    case keyed(KeyedDecodingContainer<BasicCodingKey>)
     case unkeyed(UnkeyedDecodingContainer)
 }
 
 private extension UnkeyedDecodingContainer {
     mutating func skip(to count: Int) throws -> UnkeyedDecodingContainer {
         for _ in 0..<count {
-            _ = try nestedContainer(keyedBy: HTTPCodingKey.self)
+            _ = try nestedContainer(keyedBy: BasicCodingKey.self)
         }
         return self
     }

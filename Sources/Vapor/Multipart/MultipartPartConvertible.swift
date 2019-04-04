@@ -102,7 +102,7 @@ extension Bool: MultipartPartConvertible {
     }
 }
 
-extension HTTPFile: MultipartPartConvertible {
+extension File: MultipartPartConvertible {
     /// See `MultipartPartConvertible`.
     public func convertToMultipartPart() throws -> MultipartPart {
         var part = MultipartPart(body: data)
@@ -112,11 +112,11 @@ extension HTTPFile: MultipartPartConvertible {
     }
 
     /// See `MultipartPartConvertible`.
-    public static func convertFromMultipartPart(_ part: MultipartPart) throws -> HTTPFile {
+    public static func convertFromMultipartPart(_ part: MultipartPart) throws -> File {
         guard let filename = part.filename else {
             throw MultipartError(identifier: "filename", reason: "Multipart part missing a filename.")
         }
-        return HTTPFile(data: part.body, filename: filename)
+        return File(data: part.body, filename: filename)
     }
 }
 

@@ -21,20 +21,20 @@ public final class ServeCommand: Command {
     /// See `Command`.
     public let help: [String] = ["Begins serving the app over HTTP."]
 
-    private let configuration: HTTPServer.Configuration
+    private let configuration: ServerConfiguration
     private let console: Console
     private weak var application: Application?
     
     private var signalSources: [DispatchSourceSignal]
     private var runningServer: HTTPServer?
     private var onShutdown: EventLoopPromise<Void>?
-    private var delegate: ServerDelegate?
+    private var responder: ServerResponder?
     private var didShutdown: Bool
     private var didStart: Bool
 
     /// Create a new `ServeCommand`.
     public init(
-        configuration: HTTPServer.Configuration,
+        configuration: ServerConfiguration,
         console: Console,
         application: Application
     ) {
@@ -76,7 +76,7 @@ public final class ServeCommand: Command {
         }
         let eventLoop = app.eventLoopGroup.next()
         let server = HTTPServer(configuration: self.configuration, on: app.eventLoopGroup)
-        let delegate = ServerDelegate(application: app, on: eventLoop)
+        let responder = ServerResponder(application: app, on: eventLoop)
         
         let onShutdown = eventLoop.makePromise(of: Void.self)
         
@@ -85,7 +85,7 @@ public final class ServeCommand: Command {
         })
         
         self.onShutdown = onShutdown
-        self.delegate = delegate
+        self.responder = responder
         self.runningServer = server
         
         // setup signal sources for shutdown
@@ -105,7 +105,7 @@ public final class ServeCommand: Command {
         
         
         // start the actual HTTPServer
-        return server.start(delegate: delegate).flatMap {
+        return server.start(responder: responder).flatMap {
             self.runningServer = server
             return onShutdown.futureResult
         }
@@ -128,7 +128,7 @@ public final class ServeCommand: Command {
         self.didShutdown = true
         self.signalSources.forEach { $0.cancel() } // clear refs
         self.signalSources = []
-        return self.delegate!.shutdown()
+        return self.responder!.shutdown()
     }
     
     deinit {

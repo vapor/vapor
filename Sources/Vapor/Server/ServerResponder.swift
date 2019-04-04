@@ -1,4 +1,4 @@
-final class ServerDelegate: HTTPServerDelegate {
+final class ServerResponder: Responder {
     weak var application: Application?
     let eventLoop: EventLoop
     
@@ -14,15 +14,14 @@ final class ServerDelegate: HTTPServerDelegate {
         self.didShutdown = false
     }
     
-    func respond(to http: HTTPRequest, on channel: Channel) -> EventLoopFuture<HTTPResponse> {
+    func respond(to request: Request) -> EventLoopFuture<Response> {
         guard let application = self.application else {
             fatalError("Application deinitialized")
         }
-        let request = Request(http: http, channel: channel)
         if let responder = self.responderCache.currentValue?.responder {
             return responder.respond(to: request)
         } else {
-            return application.makeContainer(on: channel.eventLoop).flatMapThrowing { container -> Responder in
+            return application.makeContainer(on: request.eventLoop).flatMapThrowing { container -> Responder in
                 self.containers.append(container)
                 let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ThreadResponder(responder: responder)

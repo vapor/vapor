@@ -1,6 +1,6 @@
 public final class XCTHTTPResponse {
-    public let response: HTTPResponse
-    public init(response: HTTPResponse) {
+    public let response: Response
+    public init(response: Response) {
         self.response = response
     }
     
@@ -35,11 +35,8 @@ public final class XCTHTTPResponse {
     }
 }
 
-extension HTTPBody {
+extension Response.Body {
     var isEmpty: Bool {
-        switch self.count {
-        case .none: return true
-        case .some(let count): return count == 0
-        }
+        return self.count == 0
     }
 }

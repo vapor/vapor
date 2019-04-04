@@ -4,12 +4,12 @@ public struct ApplicationResponder: Responder {
     
     /// Creates a new `ApplicationResponder`.
     public init(routes: Routes, middleware: [Middleware] = []) {
-        let router = HTTPRoutesResponder(routes: routes)
+        let router = RoutesResponder(routes: routes)
         self.responder = middleware.makeResponder(chainingTo: router)
     }
 
     /// See `Responder`.
-    public func respond(to request: Request) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request) -> EventLoopFuture<Response> {
         return self.responder.respond(to: request)
     }
 }
@@ -17,12 +17,12 @@ public struct ApplicationResponder: Responder {
 // MARK: Private
 
 /// Converts a `Router` into a `Responder`.
-public struct HTTPRoutesResponder: Responder {
+internal struct RoutesResponder: Responder {
     private let router: TrieRouter<Responder>
     private let eventLoop: EventLoop
 
     /// Creates a new `RouterResponder`.
-    public init(routes: Routes) {
+    init(routes: Routes) {
         let router = TrieRouter(Responder.self)
         for route in routes.routes {
             let route = RoutingKit.Route<Responder>(
@@ -36,7 +36,7 @@ public struct HTTPRoutesResponder: Responder {
     }
 
     /// See `Responder`.
-    public func respond(to request: Request) -> EventLoopFuture<HTTPResponse> {
+    func respond(to request: Request) -> EventLoopFuture<Response> {
         guard let responder = self.route(request) else {
             return self.eventLoop.makeFailedFuture(Abort(.notFound))
         }
@@ -45,10 +45,10 @@ public struct HTTPRoutesResponder: Responder {
     
     /// See `Router`.
     private func route(_ request: Request) -> Responder? {
-        let path: [String] = request.http.urlString
+        let path: [String] = request.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
             .map { String($0) }
-        return self.router.route(path: [request.http.method.string] + path, parameters: &request.parameters)
+        return self.router.route(path: [request.method.string] + path, parameters: &request.parameters)
     }
 }

@@ -19,9 +19,9 @@ public final class FileMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // make a copy of the path
-        var path = request.http.url.path
+        var path = request.url.path
 
         // path must be relative.
         while path.hasPrefix("/") {
@@ -43,7 +43,7 @@ public final class FileMiddleware: Middleware {
         }
 
         // stream the file
-        let res = self.fileio.chunkedResponse(file: filePath, for: request.http)
+        let res = self.fileio.chunkedResponse(file: filePath, for: request)
         return self.fileio.eventLoop.makeSucceededFuture(res)
     }
 }

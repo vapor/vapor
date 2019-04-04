@@ -4,7 +4,6 @@ extension Application {
     }
 }
 
-
 public final class XCTApplication {
     public let app: Application
     private var serviceOverrides: [(inout Services) -> ()]
@@ -36,7 +35,7 @@ public final class XCTApplication {
         closure: (XCTHTTPResponse) throws -> () = { _ in }
     ) throws -> XCTApplication {
         let res = try self.container().make(Responder.self).respond(
-            to: .init(http: .init(method: method, urlString: string), channel: EmbeddedChannel())
+            to: .init(method: method, urlString: string, on: EmbeddedChannel())
         ).wait()
         try closure(.init(response: res))
         return self

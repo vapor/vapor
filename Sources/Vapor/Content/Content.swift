@@ -51,15 +51,15 @@ extension Content {
     
     public static func decodeRequest(_ request: Request) -> EventLoopFuture<Self> {
         do {
-            let content = try request.http.content.decode(Self.self)
+            let content = try request.content.decode(Self.self)
             return request.eventLoop.makeSucceededFuture(content)
         } catch {
             return request.eventLoop.makeFailedFuture(error)
         }
     }
     
-    public func encodeResponse(for request: Request) -> EventLoopFuture<HTTPResponse> {
-        var response = HTTPResponse()
+    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+        var response = Response()
         do {
             try response.content.encode(self)
         } catch {
