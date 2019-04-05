@@ -1,8 +1,4 @@
-#if os(Linux)
-import Glibc
-#else
-import Darwin.C
-#endif
+import NIO
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {

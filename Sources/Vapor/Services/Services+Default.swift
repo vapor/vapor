@@ -4,10 +4,6 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
-        // server
-        s.register(ServerConfiguration.self) { c in
-            return .init()
-        }
         
         // client
         s.register(URLSessionConfiguration.self) { c in
@@ -36,20 +32,6 @@ extension Services {
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)
-        }
-
-        // responder
-        s.register(Responder.self) { c in
-            // initialize all `[Middleware]` from config
-            let middleware = try c
-                .make(MiddlewareConfig.self)
-                .resolve()
-            
-            // create HTTP routes
-            let routes = try c.make(Routes.self)
-            
-            // return new responder
-            return ApplicationResponder(routes: routes, middleware: middleware)
         }
         
         // sessions
@@ -111,17 +93,36 @@ extension Services {
 
         // console
         s.register(Console.self) { c in
-            return Terminal(on: c.eventLoop)
+            return Terminal()
         }
         
+        // server
+        s.register(ServerConfiguration.self) { c in
+            return .init()
+        }
+        s.register(Server.self) { c in
+            return try .init(
+                application: c.make(),
+                configuration: c.make(),
+                console: c.make()
+            )
+        }
+        s.register(Responder.self) { c in
+            // initialize all `[Middleware]` from config
+            let middleware = try c
+                .make(MiddlewareConfig.self)
+                .resolve()
+            
+            // create HTTP routes
+            let routes = try c.make(Routes.self)
+            
+            // return new responder
+            return ApplicationResponder(routes: routes, middleware: middleware)
+        }
 
         // commands
         s.register(ServeCommand.self) { c in
-            return try .init(
-                configuration: c.make(),
-                console: c.make(),
-                application: c.make()
-            )
+            return try .init(server: c.make())
         }
         s.register(RoutesCommand.self) { c in
             return try .init(routes: c.make())

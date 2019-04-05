@@ -39,7 +39,7 @@ public struct ServerConfiguration {
     
     public var supportVersions: Set<HTTPVersionMajor>
     
-    public var tlsConfig: TLSConfiguration?
+    public var tlsConfiguration: TLSConfiguration?
     
     /// If set, this name will be serialized as the `Server` header in outgoing responses.
     public var serverName: String?
@@ -75,8 +75,8 @@ public struct ServerConfiguration {
         webSocketMaxFrameSize: Int = 1 << 14,
         supportCompression: Bool = false,
         supportPipelining: Bool = false,
-        supportVersions: Set<HTTPVersionMajor> = [.one, .two],
-        tlsConfig: TLSConfiguration? = nil,
+        supportVersions: Set<HTTPVersionMajor>? = nil,
+        tlsConfiguration: TLSConfiguration? = nil,
         serverName: String? = nil,
         errorHandler: @escaping (Error) -> () = { _ in }
     ) {
@@ -89,8 +89,12 @@ public struct ServerConfiguration {
         self.webSocketMaxFrameSize = webSocketMaxFrameSize
         self.supportCompression = supportCompression
         self.supportPipelining = supportPipelining
-        self.supportVersions = supportVersions
-        self.tlsConfig = tlsConfig
+        if let supportVersions = supportVersions {
+            self.supportVersions = supportVersions
+        } else {
+            self.supportVersions = tlsConfiguration == nil ? [.one] : [.one, .two]
+        }
+        self.tlsConfiguration = tlsConfiguration
         self.serverName = serverName
         self.errorHandler = errorHandler
     }

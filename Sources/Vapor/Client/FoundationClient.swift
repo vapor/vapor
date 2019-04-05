@@ -1,3 +1,12 @@
+extension HTTPHeaders {
+    public init(foundation headers: [AnyHashable: Any]) {
+        self.init()
+        for (key, val) in headers {
+            self.add(name: key as! String, value: val as! String)
+        }
+    }
+}
+
 ///// `Client` wrapper around `Foundation.URLSession`.
 //public final class FoundationClient: Client {
 //    /// See `Client`.

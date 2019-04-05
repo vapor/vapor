@@ -36,7 +36,7 @@ public struct RoutesCommand: Command {
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+    public func run(using context: CommandContext) throws {
         let console = context.console
         
         var longestMethod = 0
@@ -121,8 +121,6 @@ public struct RoutesCommand: Command {
             console.print(" |")
             hr()
         }
-
-        return context.eventLoop.makeSucceededFuture(())
     }
 }
 

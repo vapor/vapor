@@ -8,16 +8,13 @@ let package = Package(
     ],
     dependencies: [
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", .branch("master")),
+        .package(url: "https://github.com/vapor/console.git", .branch("sync")),
 
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
         .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", .branch("master")),
-
-        // 📦 Dependency injection / inversion of control framework.
-        .package(url: "https://github.com/vapor/service.git", .branch("master")),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
@@ -39,6 +36,7 @@ let package = Package(
     ],
     targets: [
         .target(name: "CMultipartParser"),
+        .target(name: "COperatingSystem"),
         
         // Boilerplate
         .target(name: "Boilerplate", dependencies: ["Vapor"]),
@@ -48,6 +46,7 @@ let package = Package(
         .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
             "CMultipartParser",
+            "COperatingSystem",
             "ConsoleKit",
             "CryptoKit",
             "Logging",
@@ -60,7 +59,6 @@ let package = Package(
             "NIOSSL",
             "NIOWebSocket",
             "RoutingKit",
-            "ServiceKit",
             // "Validation",
         ]),
         .target(name: "XCTVapor", dependencies: ["Vapor"]),

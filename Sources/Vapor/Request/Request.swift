@@ -1,3 +1,5 @@
+import NIO
+
 public final class Request: CustomStringConvertible {
     /// The HTTP method for this request.
     ///

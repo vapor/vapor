@@ -1,65 +1,105 @@
 extension Application {
-    public func xctest() -> XCTApplication {
-        return .init(app: self)
+    public func test() -> XCTApplication {
+        return .init(application: self)
     }
 }
 
 public final class XCTApplication {
-    public let app: Application
-    private var serviceOverrides: [(inout Services) -> ()]
+    let application: Application
     
-    private var _container: Container?
-    public init(app: Application) {
-        self.app = app
-        self.serviceOverrides = []
+    init(application: Application) {
+        self.application = application
     }
     
-    @discardableResult
-    public func override<T>(service: T.Type, with value: T) -> XCTApplication {
-        return self.override(service: T.self) { _ in value }
-    }
-    
-    public func override<T>(service: T.Type, with factory: @escaping (Container) throws -> T) -> XCTApplication {
-        self.serviceOverrides.append({ services in
-            services.register(T.self, factory)
-        })
-        return self
-    }
-    
-    @discardableResult
-    public func test(
-        _ method: HTTPMethod,
-        to string: String,
-        file: StaticString = #file,
-        line: UInt = #line,
-        closure: (XCTHTTPResponse) throws -> () = { _ in }
-    ) throws -> XCTApplication {
-        let res = try self.container().make(Responder.self).respond(
-            to: .init(method: method, urlString: string, on: EmbeddedChannel())
-        ).wait()
-        try closure(.init(response: res))
-        return self
-    }
-    
-    private func container() throws -> Container {
-        if let existing = self._container {
-            return existing
-        } else {
-            var services = try self.app._makeServices()
-            for override in self.serviceOverrides {
-                override(&services)
-            }
-            let new = try Container.boot(
-                env: app.env,
-                services: services,
-                on: app.eventLoopGroup.next()
-                ).wait()
-            self._container = new
-            return new
+    public final class InMemory {
+        let container: Container
+        let responder: Responder
+        
+        init(container: Container) throws {
+            self.container = container
+            self.responder = try self.container.make(Responder.self)
+        }
+        
+        @discardableResult
+        public func test(
+            _ method: HTTPMethod,
+            _ path: String,
+            file: StaticString = #file,
+            line: UInt = #line,
+            closure: (XCTHTTPResponse) throws -> () = { _ in }
+        ) throws -> InMemory {
+            let response: XCTHTTPResponse
+            let res = try self.responder.respond(
+                to: .init(method: method, urlString: path, on: EmbeddedChannel())
+            ).wait()
+            response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
+            try closure(response)
+            return self
+        }
+        
+        deinit {
+            self.container.shutdown()
         }
     }
     
-    deinit {
-        try! self._container?.shutdown().wait()
+    public func inMemory() throws -> InMemory {
+        return try InMemory(container: self.container())
+    }
+    
+    public final class Live {
+        let container: Container
+        let server: Server
+        let port: Int
+        
+        init(container: Container, port: Int) throws {
+            self.container = container
+            self.port = port
+            self.server = try self.container.make(Server.self)
+            try self.server.start(hostname: "127.0.0.1", port: port)
+        }
+        
+        @discardableResult
+        public func test(
+            _ method: HTTPMethod,
+            _ path: String,
+            file: StaticString = #file,
+            line: UInt = #line,
+            closure: (XCTHTTPResponse) throws -> () = { _ in }
+        ) throws -> Live {
+            let client = URLSession(configuration: .default)
+            let promise = self.container.eventLoop.makePromise(of: XCTHTTPResponse.self)
+            let url = URL(string: "http://127.0.0.1:\(self.port)\(path)")!
+            print("get \(url)")
+            client.dataTask(with: URLRequest(url: url)) { data, response, error in
+                if let error = error {
+                    promise.fail(error)
+                } else if let response = response as? HTTPURLResponse {
+                    let xresponse = XCTHTTPResponse(
+                        status: .init(statusCode: response.statusCode),
+                        headers: .init(foundation: response.allHeaderFields),
+                        body: data.flatMap { .init(data: $0) } ?? .empty
+                    )
+                    promise.succeed(xresponse)
+                } else {
+                    promise.fail(Abort(.internalServerError))
+                }
+                client.invalidateAndCancel()
+            }.resume()
+            try closure(promise.futureResult.wait())
+            return self
+        }
+        
+        deinit {
+            self.server.shutdown()
+            self.container.shutdown()
+        }
+    }
+    
+    public func live(port: Int) throws -> Live {
+        return try Live(container: self.container(), port: port)
+    }
+    
+    private func container() throws -> Container {
+        return try self.application.makeContainer().wait()
     }
 }

@@ -2,6 +2,7 @@ import Vapor
 
 public func boot(_ app: Application) throws {
     let test = try app.makeContainer().wait()
+    defer { test.shutdown() }
     let routes = try test.make(Routes.self)
     for route in routes.routes {
         let path = route.path.map { $0.description }.joined(separator: "/")
@@ -10,5 +11,4 @@ public func boot(_ app: Application) throws {
             print("  - \(key) = \(val)")
         }
     }
-    try test.shutdown().wait()
 }

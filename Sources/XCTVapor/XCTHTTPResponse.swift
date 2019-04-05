@@ -1,25 +1,8 @@
-public final class XCTHTTPResponse: CustomStringConvertible {
-    public let response: Response
-    
-    public var description: String {
-        return self.response.description
-    }
-    
-    public init(response: Response) {
-        self.response = response
-    }
-    
-    public var status: HTTPStatus {
-        return self.response.status
-    }
-    
-    public var headers: HTTPHeaders {
-        return self.response.headers
-    }
-    
-    public var body: Response.Body {
-        return self.response.body
-    }
+public struct XCTHTTPResponse {
+    public var status: HTTPStatus
+    public var headers: HTTPHeaders
+    public var body: Response.Body
+}
     
 //    @discardableResult
 //    public func assertStatus(is status: HTTPStatus, file: StaticString = #file, line: UInt = #line) -> XCTHTTPResponse {
@@ -50,7 +33,6 @@ public final class XCTHTTPResponse: CustomStringConvertible {
 //        }
 //        return self
 //    }
-}
 
 extension Response.Body {
     var isEmpty: Bool {

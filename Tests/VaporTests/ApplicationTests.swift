@@ -1,13 +1,15 @@
 import XCTVapor
+import COperatingSystem
 
 class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(env: test) { .default() }
-        app.eventLoopGroup.next().scheduleTask(in: .seconds(1)) {
-            app.running?.stop()
+        DispatchQueue.global().async {
+            COperatingSystem.sleep(1)
+            try! app.running?.stop()
         }
-        try app.execute().wait()
+        try app.run()
     }
     
     func testURLSession() throws {
@@ -28,14 +30,14 @@ class ApplicationTests: XCTestCase {
                 return promise.futureResult
             }
         })
-        defer { try! app.shutdown() }
+        defer { app.shutdown() }
 
-        try app.xctest()
-            .test(.GET, to: "/client") { res in
+        try app.test().inMemory()
+            .test(.GET, "/client") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "201")
             }
-            .test(.GET, to: "/foo") { res in
+            .test(.GET, "/foo") { res in
                 XCTAssertEqual(res.status, .notFound)
                 XCTAssertContains(res.body.string, "Not Found")
             }
@@ -133,17 +135,17 @@ class ApplicationTests: XCTestCase {
                 return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
             }
         })
-        defer { try! app.shutdown() }
-            
-        try app.xctest()
-            .test(.GET, to: "/hello/vapor") { res in
+        defer { app.shutdown() }
+        
+        try app.test().inMemory()
+            .test(.GET, "/hello/vapor") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertContains(res.body.string, "vapor")
             }
-            .test(.POST, to: "/hello/vapor") { res in
+            .test(.POST, "/hello/vapor") { res in
                 XCTAssertEqual(res.status, .notFound)
             }
-            .test(.GET, to: "/hello/vapor/development") { res in
+            .test(.GET, "/hello/vapor/development") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
             }
@@ -156,12 +158,28 @@ class ApplicationTests: XCTestCase {
                 return ["foo": "bar"]
             }
         })
-        defer { try! app.shutdown() }
+        defer { app.shutdown() }
 
-        try app.xctest().test(.GET, to: "/json") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
-        }
+        try app.test().inMemory()
+            .test(.GET, "/json") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
+            }
+    }
+    
+    func testLiveServer() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("ping") { req -> String in
+                return "123"
+            }
+        })
+        defer { app.shutdown() }
+        
+        try app.test().live(port: 8123)
+            .test(.GET, "/ping") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "123")
+            }
     }
 
     // https://github.com/vapor/vapor/issues/1537

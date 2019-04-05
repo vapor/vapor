@@ -1,3 +1,5 @@
+import NIO
+
 #warning("TODO: re-add methods with controller-based FileIO")
 //extension HTTPRequestContext {
 //    /// Creates a `FileIO` for this `Request`.

@@ -1,3 +1,5 @@
+import NIO
+
 final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response

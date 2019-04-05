@@ -35,7 +35,7 @@ internal final class HTTPServer {
                     fatalError("HTTP server has deinitialized")
                 }
                 // add TLS handlers if configured
-                if var tlsConfig = self.configuration.tlsConfig {
+                if var tlsConfig = self.configuration.tlsConfiguration {
                     // prioritize http/2
                     if self.configuration.supportVersions.contains(.two) {
                         tlsConfig.applicationProtocols.append("h2")
