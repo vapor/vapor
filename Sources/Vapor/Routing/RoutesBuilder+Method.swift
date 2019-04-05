@@ -70,7 +70,7 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        let responder = BasicResponder(eventLoop: self.eventLoop) { request in
+        let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
                 return request.body.collect(max: max).flatMapThrowing { _ in
                     return try closure(request)

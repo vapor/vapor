@@ -85,11 +85,13 @@ internal final class HTTPServer {
     }
     
     public func stop() -> EventLoopFuture<Void> {
-        #warning("TODO: create stop timeout")
         guard let channel = self.channel, let quiesce = self.quiesce else {
             fatalError("Called stop() before start()")
         }
         let promise = channel.eventLoop.makePromise(of: Void.self)
+        channel.eventLoop.scheduleTask(in: .seconds(10)) {
+            promise.fail(Abort(.internalServerError, reason: "Server stop took too long."))
+        }
         quiesce.initiateShutdown(promise: promise)
         return promise.futureResult
     }

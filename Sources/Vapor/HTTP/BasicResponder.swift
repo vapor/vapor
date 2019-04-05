@@ -1,9 +1,5 @@
-#warning("TODO: add EventLoop req to HTTPResponder")
-
 /// A basic, closure-based `Responder`.
 public struct BasicResponder: Responder {
-    private let eventLoop: EventLoop
-    
     /// The stored responder closure.
     private let closure: (Request) throws -> EventLoopFuture<Response>
 
@@ -17,10 +13,8 @@ public struct BasicResponder: Responder {
     /// - parameters:
     ///     - closure: Responder closure.
     public init(
-        eventLoop: EventLoop,
         closure: @escaping (Request) throws -> EventLoopFuture<Response>
     ) {
-        self.eventLoop = eventLoop
         self.closure = closure
     }
 
@@ -29,7 +23,7 @@ public struct BasicResponder: Responder {
         do {
             return try closure(request)
         } catch {
-            return self.eventLoop.makeFailedFuture(error)
+            return request.eventLoop.makeFailedFuture(error)
         }
     }
 }

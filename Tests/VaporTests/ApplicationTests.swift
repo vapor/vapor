@@ -290,31 +290,32 @@ class ApplicationTests: XCTestCase {
                 XCTAssertEqualJSON(res.body.string, expected)
             }
     }
-//
-//    func testMultipartEncode() throws {
-//        struct User: Content {
-//            static var defaultContentType: HTTPMediaType = .formData
-//            var name: String
-//            var age: Int
-//            var image: File
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("multipart") { req -> User in
-//                return User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
-//            }
-//        }
-//
-//        try app.test(.GET, "multipart") { res in
-//            debugPrint(res)
-//            XCTAssertEqual(res.http.status.code, 200)
-//            let boundary = res.http.contentType?.parameters["boundary"] ?? "none"
-//            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=\"name\""), true)
-//            XCTAssertEqual(res.http.body.string.contains("--\(boundary)"), true)
-//            XCTAssertEqual(res.http.body.string.contains("filename=\"droplet.png\""), true)
-//            XCTAssertEqual(res.http.body.string.contains("name=\"image\""), true)
-//        }
-//    }
+
+    func testMultipartEncode() throws {
+        struct User: Content {
+            static var defaultContentType: HTTPMediaType = .formData
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("multipart") { req -> User in
+                return User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/multipart") { res in
+            debugPrint(res)
+            XCTAssertEqual(res.status, .ok)
+            let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+            XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
+            XCTAssertContains(res.body.string, "--\(boundary)")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
+            XCTAssertContains(res.body.string, "name=\"image\"")
+        }
+    }
 //
 //    func testViewResponse() throws {
 //        let app = try Application.makeTest { router in

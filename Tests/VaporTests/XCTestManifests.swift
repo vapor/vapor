@@ -15,6 +15,7 @@ extension ApplicationTests {
         ("testJSON", testJSON),
         ("testLiveServer", testLiveServer),
         ("testMultipartDecode", testMultipartDecode),
+        ("testMultipartEncode", testMultipartEncode),
         ("testParameter", testParameter),
         ("testQuery", testQuery),
         ("testQueryStringRunning", testQueryStringRunning),

@@ -34,18 +34,12 @@ public final class ErrorMiddleware: Middleware {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
-                #warning("TODO: add support for validation errors")
-//            case let validation as ValidationError:
-//                // this is a validation error
-//                reason = validation.reason
-//                status = .badRequest
-//                headers = [:]
-//            case let debuggable as Debuggable where !environment.isRelease:
-//                // if not release mode, and error is debuggable, provide debug
-//                // info directly to the developer
-//                reason = debuggable.reason
-//                status = .internalServerError
-//                headers = [:]
+            case let error as LocalizedError where !environment.isRelease:
+                // if not release mode, and error is debuggable, provide debug
+                // info directly to the developer
+                reason = error.localizedDescription
+                status = .internalServerError
+                headers = [:]
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info

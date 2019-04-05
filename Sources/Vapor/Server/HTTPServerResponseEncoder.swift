@@ -15,27 +15,27 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     }
     
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
-        var res = self.unwrapOutboundIn(data)
+        let response = self.unwrapOutboundIn(data)
         // add a RFC1123 timestamp to the Date header to make this
         // a valid request
-        res.headers.add(name: "date", value: self.dateCache.currentTimestamp())
+        response.headers.add(name: "date", value: self.dateCache.currentTimestamp())
         
         if let server = self.serverHeader {
-            res.headers.add(name: "server", value: server)
+            response.headers.add(name: "server", value: server)
         }
         
         // begin serializing
         context.write(wrapOutboundOut(.head(.init(
-            version: res.version,
-            status: res.status,
-            headers: res.headers
+            version: response.version,
+            status: response.status,
+            headers: response.headers
         ))), promise: nil)
         
-        if res.status == .noContent {
+        if response.status == .noContent {
             // don't send bodies for 204 (no content) requests
             context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
         } else {
-            switch res.body.storage {
+            switch response.body.storage {
             case .none:
                 context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
             case .buffer(let buffer):
