@@ -100,11 +100,7 @@ extension Services {
             return .init()
         }
         s.register(Server.self) { c in
-            return try .init(
-                application: c.make(),
-                configuration: c.make(),
-                console: c.make()
-            )
+            return try .init(application: c.make(), configuration: c.make())
         }
         s.register(Responder.self) { c in
             // initialize all `[Middleware]` from config

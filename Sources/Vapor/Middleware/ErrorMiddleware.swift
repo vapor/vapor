@@ -18,9 +18,7 @@ public final class ErrorMiddleware: Middleware {
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
             // log the error
-            #warning("TODO: upgrade to sswg logger")
-            print(error)
-            // log.report(error: error, verbose: !environment.isRelease)
+            req.logger.report(error: error, verbose: !environment.isRelease)
 
             // variables to determine
             let status: HTTPResponseStatus

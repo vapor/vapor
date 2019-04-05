@@ -17,6 +17,8 @@ public final class Application {
     
     public var running: Running?
     
+    public var logger: Logger
+    
     public struct Running {
         public var stop: () -> Void
         public init(stop: @escaping () -> Void) {
@@ -37,6 +39,7 @@ public final class Application {
         self.lock = NSLock()
         self.threadPool = .init(numberOfThreads: 1)
         self.threadPool.start()
+        self.logger = .init(label: "codes.vapor.application")
     }
     
     public func _makeServices() throws -> Services {
@@ -70,6 +73,7 @@ public final class Application {
     // MARK: Run
     
     public func run() throws {
+        self.logger = .init(label: "codes.vapor.application")
         defer { self.shutdown() }
         try self.runCommands()
     }
@@ -92,21 +96,21 @@ public final class Application {
             fileio: .init(threadPool: self.threadPool),
             on: eventLoop
         ).recover { error in
-            print("Could not load .env file: \(error)")
+            self.logger.debug("Could not load .env file: \(error)")
         }
     }
     
     public func shutdown() {
-        print("Application shutting down")
+        self.logger.debug("Application shutting down")
         do {
             try self.eventLoopGroup.syncShutdownGracefully()
         } catch {
-            print("EventLoopGroup failed to shutdown: \(error)")
+            self.logger.error("EventLoopGroup failed to shutdown: \(error)")
         }
         do {
             try self.threadPool.syncShutdownGracefully()
         } catch {
-            print("ThreadPool failed to shutdown: \(error)")
+            self.logger.error("ThreadPool failed to shutdown: \(error)")
         }
         self.didShutdown = true
         self.userInfo = [:]

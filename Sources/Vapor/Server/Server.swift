@@ -3,7 +3,6 @@ import NIO
 public final class Server {
     let application: Application
     let configuration: ServerConfiguration
-    let console: Console
     
     public var onShutdown: EventLoopFuture<Void> {
         return self.shutdownPromise!.futureResult
@@ -18,13 +17,11 @@ public final class Server {
     
     init(
         application: Application,
-        configuration: ServerConfiguration,
-        console: Console
+        configuration: ServerConfiguration
     ) {
         self.application = application
         self.responder = ServerResponder(application: application)
         self.configuration = configuration
-        self.console = console
         self.signalSources = []
         self.didStart = false
         self.didShutdown = false
@@ -39,10 +36,9 @@ public final class Server {
         configuration.port = port ?? self.configuration.port
         
         // print starting message
-        self.console.print("Server starting on ", newLine: false)
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
-        self.console.output("\(scheme)://" + configuration.hostname, style: .init(color: .cyan), newLine: false)
-        self.console.output(":" + configuration.port.description, style: .init(color: .cyan))
+        let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        self.application.logger.info("Server starting on \(address)")
         
         let server = HTTPServer(configuration: configuration, on: self.application.eventLoopGroup)
         let shutdownPromise = self.application.eventLoopGroup.next().makePromise(of: Void.self)
@@ -74,15 +70,14 @@ public final class Server {
     }
     
     public func shutdown() {
-        self.console.print("Requesting server shutdown...")
+        self.application.logger.debug("Requesting server shutdown")
         let server = self.runningServer!
         do {
             try server.stop().wait()
-            self.console.print("Server closed, cleaning up")
         } catch {
-            self.console.print("Could not close server: \(error)")
-            self.console.print("Cleaning up...")
+            self.application.logger.error("Could not stop server: \(error)")
         }
+        self.application.logger.debug("Server shutting down")
         self.didShutdown = true
         self.signalSources.forEach { $0.cancel() } // clear refs
         self.signalSources = []
@@ -108,6 +103,7 @@ private final class ServerResponder: Responder {
     }
     
     func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.logger.info("\(request.method) \(request.url)")
         if let responder = self.responderCache.currentValue?.responder {
             return responder.respond(to: request)
         } else {

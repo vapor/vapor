@@ -8,7 +8,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: Error {
+public protocol AbortError: Error, CustomStringConvertible {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
@@ -44,6 +44,11 @@ extension DecodingError: AbortError {
         case .valueNotFound: return "valueNotFound"
         @unknown default: return "unknown"
         }
+    }
+    
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        return "Decoding error: \(self.reason)"
     }
 
     /// See `AbortError.reason`

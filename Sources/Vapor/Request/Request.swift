@@ -34,6 +34,8 @@ public final class Request: CustomStringConvertible {
         set { self.url = newValue.url }
     }
     
+    public let logger: Logger
+    
     public var body: Body {
         return Body(self)
     }
@@ -116,5 +118,8 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.userInfo = [:]
         self.isKeepAlive = true
+        var logger = Logger(label: "codes.vapor.request")
+        logger.metadata["uuid"] = .string(UUID().uuidString)
+        self.logger = logger
     }
 }

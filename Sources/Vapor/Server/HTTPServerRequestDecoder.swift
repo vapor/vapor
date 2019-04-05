@@ -25,13 +25,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     init(maxBodySize: Int) {
         self.maxBodySize = maxBodySize
         self.requestState = .ready
-        self.logger = Logger(label: "http-kit.server-decoder")
+        self.logger = Logger(label: "codes.vapor.server")
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
-        self.logger.debug("got \(part)")
+        self.logger.trace("Decoded HTTP part: \(part)")
         switch part {
         case .head(let head):
             switch self.requestState {
