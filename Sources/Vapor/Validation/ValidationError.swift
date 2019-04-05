@@ -16,8 +16,9 @@ public struct ValidationFailure {
     }
 }
 
-/// A collection of errors thrown by validatable models validations
 public struct ValidationError: AbortError, CustomStringConvertible, LocalizedError {
+    public let failures: [ValidationFailure]
+    
     public var description: String {
         return self.reason
     }
@@ -34,15 +35,10 @@ public struct ValidationError: AbortError, CustomStringConvertible, LocalizedErr
         return .badRequest
     }
     
-    /// the errors thrown
-    public var failures: [ValidationFailure]
-    
-    /// See ValidationError.reason
     public var reason: String {
         return self.failures.map { $0.description }.joined(separator: ", ")
     }
     
-    /// creates a new validatable error
     public init(_ failures: [ValidationFailure]) {
         self.failures = failures
     }

@@ -9,7 +9,7 @@ public prefix func !<T> (rhs: Validator<T>) -> Validator<T> {
 // MARK: Private
 
 /// Inverts a validator
-fileprivate struct NotValidator<T>: ValidatorType where T: Codable {
+private struct NotValidator<T>: ValidatorType where T: Codable {
     /// See `ValidatorType`.
     typealias ValidationData = T
 
@@ -28,7 +28,7 @@ fileprivate struct NotValidator<T>: ValidatorType where T: Codable {
 
     /// See `ValidatorType`
     func validate(_ data: T) -> ValidatorFailure? {
-        if self.rhs.validate(data) != nil {
+        if self.rhs.validate(data) == nil {
             return .init("is \(self.rhs)")
         }
         return nil

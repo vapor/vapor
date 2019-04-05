@@ -37,7 +37,7 @@ public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
 // MARK: Private
 
 /// A validator that ignores nil values.
-fileprivate struct NilIgnoringValidator<T>: ValidatorType where T: Codable {
+private struct NilIgnoringValidator<T>: ValidatorType where T: Codable {
     /// right validator
     let base: Validator<T>
 

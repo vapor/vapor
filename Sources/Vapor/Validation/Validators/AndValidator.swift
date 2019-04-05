@@ -7,7 +7,7 @@ public func &&<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
 }
 
 /// Combines two validators, if either both succeed the validation will succeed.
-fileprivate struct AndValidator<T>: ValidatorType where T: Codable {
+private struct AndValidator<T>: ValidatorType where T: Codable {
     /// See `ValidatorType`.
     public var validatorReadable: String {
         return "\(lhs) and is \(rhs)"

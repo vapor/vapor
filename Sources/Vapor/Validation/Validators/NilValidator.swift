@@ -9,7 +9,7 @@ extension Validator where T: OptionalType, T.WrappedType: Codable {
 }
 
 /// Validates that the data is `nil`.
-fileprivate struct NilValidator<T>: ValidatorType where T: Codable {
+private struct NilValidator<T>: ValidatorType where T: Codable {
     typealias ValidationData = T?
 
     /// See `Validator`.

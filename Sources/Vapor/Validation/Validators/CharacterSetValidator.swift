@@ -36,7 +36,7 @@ public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
 // MARK: Private
 
 /// Validates that a `String` contains characters in a given `CharacterSet`
-fileprivate struct CharacterSetValidator: ValidatorType {
+private struct CharacterSetValidator: ValidatorType {
     /// `CharacterSet` to validate against.
     let characterSet: CharacterSet
 
@@ -70,9 +70,9 @@ fileprivate struct CharacterSetValidator: ValidatorType {
     }
 }
 
-extension CharacterSet {
+private extension CharacterSet {
     /// ASCII (byte 0..<128) character set.
-    fileprivate static var ascii: CharacterSet {
+    static var ascii: CharacterSet {
         var ascii: CharacterSet = .init()
         for i in 0..<128 {
             ascii.insert(Unicode.Scalar(i)!)
@@ -82,9 +82,9 @@ extension CharacterSet {
 }
 
 
-extension CharacterSet {
+private extension CharacterSet {
     /// Returns an array of strings describing the contents of this `CharacterSet`.
-    fileprivate var traits: [String] {
+    var traits: [String] {
         var desc: [String] = []
         if isSuperset(of: .newlines) {
             desc.append("newlines")

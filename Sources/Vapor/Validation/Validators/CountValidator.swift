@@ -35,7 +35,7 @@ extension Validator where T: Collection {
 // MARK: Private
 
 /// Validates whether the item's count is within a supplied int range.
-fileprivate struct CountValidator<T>: ValidatorType
+private struct CountValidator<T>: ValidatorType
     where T: Collection, T: Codable
 {
     /// See `ValidatorType`.

@@ -31,12 +31,11 @@ public protocol Validatable {
 }
 
 extension Validatable {
-    /// Validates the model, throwing an error if any of the validations fail.
-    ///
-    ///     let user = User(name: "Vapor", age: 3)
-    ///     try user.validate()
-    ///
-    /// - note: Non-validation errors may also be thrown should the validators encounter unexpected errors.
+    public static func validate(json: String) throws {
+        let decoder = try JSONDecoder().decode(DecoderUnwrapper.self, from: Data(json.utf8))
+        try Self.validate(decoder.decoder)
+    }
+
     public static func validate(_ decoder: Decoder) throws {
         try Self.validations().run(on: decoder)
     }

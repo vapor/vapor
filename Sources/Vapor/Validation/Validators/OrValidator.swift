@@ -10,7 +10,7 @@ public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
 // MARK: Private
 
 /// Combines two validators, if either is true the validation will succeed.
-fileprivate struct OrValidator<T>: ValidatorType where T: Codable {
+private struct OrValidator<T>: ValidatorType where T: Codable {
     /// See Validator.inverseMessage
     public var validatorReadable: String {
         return "\(lhs.readable) or is \(rhs.readable)"

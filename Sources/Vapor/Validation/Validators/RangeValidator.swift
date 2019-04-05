@@ -37,7 +37,7 @@ extension Validator where T: Comparable & Strideable {
 // MARK: Private
 
 /// Validates whether the data is within a supplied int range.
-fileprivate struct RangeValidator<T>: ValidatorType where T: Comparable, T: Codable {
+private struct RangeValidator<T>: ValidatorType where T: Comparable, T: Codable {
     /// See `ValidatorType`.
     var validatorReadable: String {
         if let min = self.min, let max = self.max {
