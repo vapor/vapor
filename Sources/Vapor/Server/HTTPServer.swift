@@ -84,10 +84,10 @@ internal final class HTTPServer {
         }
     }
     
-    public func shutdown() -> EventLoopFuture<Void> {
-        #warning("TODO: create shutdown timeout")
+    public func stop() -> EventLoopFuture<Void> {
+        #warning("TODO: create stop timeout")
         guard let channel = self.channel, let quiesce = self.quiesce else {
-            fatalError("Called shutdown() before start()")
+            fatalError("Called stop() before start()")
         }
         let promise = channel.eventLoop.makePromise(of: Void.self)
         quiesce.initiateShutdown(promise: promise)

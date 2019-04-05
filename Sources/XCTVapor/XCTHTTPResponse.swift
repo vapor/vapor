@@ -53,3 +53,18 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
     }
 }
 
+public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #file, line: UInt = #line)
+    where T: Codable & Equatable
+{
+    guard let data = data else {
+        XCTFail("nil does not equal \(test)", file: file, line: line)
+        return
+    }
+    do {
+        let decoded = try JSONDecoder().decode(T.self, from: Data(data.utf8))
+        XCTAssertEqual(decoded, test, file: file, line: line)
+    } catch {
+        XCTFail("could not decode \(T.self): \(error)", file: file, line: line)
+    }
+}
+

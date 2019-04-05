@@ -1,5 +1,4 @@
 extension RoutesBuilder {
-    #warning("TODO: allow Request here")
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,

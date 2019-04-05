@@ -18,9 +18,13 @@ public final class Application {
     public var running: Running?
     
     public struct Running {
-        public var stop: () throws -> Void
-        public init(stop: @escaping () throws -> Void) {
-            self.stop = stop
+        public var stop: () -> Void
+        public init(stop: @escaping () -> Void) {
+            self.stop = {
+                DispatchQueue.global().async {
+                    stop()
+                }
+            }
         }
     }
     

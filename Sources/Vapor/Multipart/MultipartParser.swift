@@ -139,8 +139,7 @@ public final class MultipartParser {
             }
         }
         guard result == buffer.readableBytes else {
-            #warning("TODO: throw")
-            fatalError()
+            throw Abort(.unprocessableEntity)
         }
     }
     

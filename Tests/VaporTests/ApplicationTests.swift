@@ -32,7 +32,7 @@ class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.test().inMemory()
+        try app.testable().inMemory()
             .test(.GET, "/client") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "201")
@@ -137,7 +137,7 @@ class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
         
-        try app.test().inMemory()
+        try app.testable().inMemory()
             .test(.GET, "/hello/vapor") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertContains(res.body.string, "vapor")
@@ -160,7 +160,7 @@ class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.test().inMemory()
+        try app.testable().inMemory()
             .test(.GET, "/json") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
@@ -175,7 +175,7 @@ class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
         
-        try app.test().live(port: 8123)
+        try app.testable().live(port: 8080)
             .test(.GET, "/ping") { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "123")
@@ -184,114 +184,112 @@ class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1537
     func testQueryStringRunning() throws {
-        #warning("TODO: abstract serve-command into ServerManager class that can be used to run server")
-//        let app = Application.create(routes: { r, c in
-//            r.get("todos") { req in
-//                return "hi"
-//            }
-//        }
-//
-//        try app.clientTest(.GET, "/todos?a=b", equals: "hi")
-//
-//        DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1) {
-//            print("stop")
-//            try! app.runningServer!.close().wait()
-//        }
-//
-//        try app.runningServer!.onClose.wait()
+        let app = Application.create(routes: { r, c in
+            r.get("todos") { req in
+                return "hi"
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().live(port: 8080)
+            .test(.GET, "/todos?a=b") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "hi")
+            }
     }
-//
-//    func testGH1534() throws {
-//        let data = """
-//        {"name":"hi","bar":"asdf"}
-//        """
-//
-//        let app = try Application.makeTest { router in
-//            router.get("decode_error") { req -> String in
-//                struct Foo: Decodable {
-//                    var name: String
-//                    var bar: Int
-//                }
-//                let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
-//                return foo.name
-//            }
-//        }
-//
-//        try app.test(.GET, "decode_error") { res in
-//            XCTAssertEqual(res.http.status.code, 400)
-//            XCTAssert(res.http.body.string.contains("Value of type 'Int' required for key 'bar'"))
-//        }
-//    }
-//
-//    func testContentContainer() throws {
-//        struct FooContent: Content {
-//            var message: String = "hi"
-//        }
-//        struct FooEncodable: Encodable {
-//            var message: String = "hi"
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("encode") { req -> Response in
-//                let res = req.response()
-//                try res.content.encode(FooContent())
-//                try res.content.encode(FooContent(), as: .json)
-//                try res.content.encode(FooEncodable(), as: .json)
-//                return res
-//            }
-//        }
-//
-//        try app.test(.GET, "encode") { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssert(res.http.body.string.contains("hi"))
-//        }
-//    }
-//
-//    func testMultipartDecode() throws {
-//        let data = """
-//        --123\r
-//        Content-Disposition: form-data; name="name"\r
-//        \r
-//        Vapor\r
-//        --123\r
-//        Content-Disposition: form-data; name="age"\r
-//        \r
-//        3\r
-//        --123\r
-//        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
-//        \r
-//        <contents of image>\r
-//        --123--\r
-//
-//        """
-//
-//        struct User: Content {
-//            var name: String
-//            var age: Int
-//            var image: Data
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("multipart") { req -> Future<User> in
-//                return try req.content.decode(User.self).map(to: User.self) { foo in
-//                    XCTAssertEqual(foo.name, "Vapor")
-//                    XCTAssertEqual(foo.age, 3)
-//                    // XCTAssertEqual(foo.image.filename, "droplet.png")
-//                    XCTAssertEqual(foo.image.utf8, "<contents of image>")
-//                    return foo
-//                }
-//            }
-//        }
-//
-//        var req = HTTPRequest(method: .GET, url: URL(string: "/multipart")!)
-//        req.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
-//        req.body = HTTPBody(string: data)
-//
-//        try app.test(req) { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssert(res.http.body.string.contains("Vapor"))
-//        }
-//    }
+
+    func testGH1534() throws {
+        let data = """
+        {"name":"hi","bar":"asdf"}
+        """
+
+        let app = Application.create(routes: { r, c in
+            r.get("decode_error") { req -> String in
+                struct Foo: Decodable {
+                    var name: String
+                    var bar: Int
+                }
+                let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
+                return foo.name
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/decode_error") { res in
+                XCTAssertEqual(res.status, .badRequest)
+                XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
+            }
+    }
+
+    func testContentContainer() throws {
+        struct FooContent: Content {
+            var message: String = "hi"
+        }
+        struct FooEncodable: Encodable {
+            var message: String = "hi"
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("encode") { req -> Response in
+                let res = Response()
+                try res.content.encode(FooContent())
+                try res.content.encode(FooContent(), as: .json)
+                try res.content.encode(FooEncodable(), as: .json)
+                return res
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/encode") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertContains(res.body.string, "hi")
+            }
+    }
+
+    func testMultipartDecode() throws {
+        let data = """
+        --123\r
+        Content-Disposition: form-data; name="name"\r
+        \r
+        Vapor\r
+        --123\r
+        Content-Disposition: form-data; name="age"\r
+        \r
+        3\r
+        --123\r
+        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
+        \r
+        <contents of image>\r
+        --123--\r
+
+        """
+        let expected = User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+
+        struct User: Content, Equatable {
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                XCTAssertEqual(decoded, expected)
+                return decoded
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqualJSON(res.body.string, expected)
+            }
+    }
 //
 //    func testMultipartEncode() throws {
 //        struct User: Content {
@@ -1043,5 +1041,9 @@ private extension ByteBuffer {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(string)
         self = buffer
+    }
+    
+    var string: String? {
+        return self.getString(at: self.readerIndex, length: self.readableBytes)
     }
 }

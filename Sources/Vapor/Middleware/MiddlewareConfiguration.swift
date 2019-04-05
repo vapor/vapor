@@ -1,7 +1,6 @@
-#warning("TODO: consider whether separate MiddlewareConfig is required")
 /// Configures an application's active `Middleware`.
 /// Middleware will be used in the order they are added.
-public struct MiddlewareConfig {
+public struct MiddlewareConfiguration {
     /// The configured middleware.
     private var storage: [Middleware]
 

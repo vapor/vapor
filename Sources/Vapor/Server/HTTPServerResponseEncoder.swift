@@ -50,7 +50,6 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .data(let data):
                 var buffer = context.channel.allocator.buffer(capacity: data.count)
-                #warning("TODO: use nio foundation compat")
                 buffer.writeBytes(data)
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .dispatchData(let data):

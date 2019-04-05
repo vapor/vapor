@@ -1,5 +1,5 @@
 extension Application {
-    public func test() -> XCTApplication {
+    public func testable() -> XCTApplication {
         return .init(application: self)
     }
 }
@@ -24,14 +24,21 @@ public final class XCTApplication {
         public func test(
             _ method: HTTPMethod,
             _ path: String,
+            headers: HTTPHeaders = [:],
+            body: ByteBuffer? = nil,
             file: StaticString = #file,
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> InMemory {
             let response: XCTHTTPResponse
-            let res = try self.responder.respond(
-                to: .init(method: method, urlString: path, on: EmbeddedChannel())
-            ).wait()
+            let request = Request(
+                method: method,
+                url: URL(string: path)!,
+                headers: headers,
+                collectedBody: body,
+                on: EmbeddedChannel()
+            )
+            let res = try self.responder.respond(to: request).wait()
             response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
             try closure(response)
             return self

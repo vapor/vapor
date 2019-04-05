@@ -47,7 +47,7 @@ public final class Server {
         let server = HTTPServer(configuration: configuration, on: self.application.eventLoopGroup)
         let shutdownPromise = self.application.eventLoopGroup.next().makePromise(of: Void.self)
         
-        self.application.running = .init(stop: {
+        self.application.running = .init(stop: { [unowned self] in
             self.shutdown()
         })
         
@@ -77,7 +77,7 @@ public final class Server {
         self.console.print("Requesting server shutdown...")
         let server = self.runningServer!
         do {
-            try server.shutdown().wait()
+            try server.stop().wait()
             self.console.print("Server closed, cleaning up")
         } catch {
             self.console.print("Could not close server: \(error)")

@@ -35,7 +35,6 @@ extension Services {
         }
         
         // sessions
-        #warning("TODO: update sessions")
         s.register(SessionsMiddleware.self) { c in
             return try .init(sessions: c.make(), config: c.make())
         }
@@ -68,8 +67,8 @@ extension Services {
 //        s.register(MemoryKeyedCache(), as: KeyedCache.self)
 
         // middleware
-        s.register(MiddlewareConfig.self) { c in
-            var middleware = MiddlewareConfig()
+        s.register(MiddlewareConfiguration.self) { c in
+            var middleware = MiddlewareConfiguration()
             try middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
@@ -110,7 +109,7 @@ extension Services {
         s.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
-                .make(MiddlewareConfig.self)
+                .make(MiddlewareConfiguration.self)
                 .resolve()
             
             // create HTTP routes
@@ -163,8 +162,10 @@ extension Services {
             return try .init(threadPool: c.make())
         }
         s.register(FileIO.self) { c in
-            #warning("TODO: re-use buffer allocator")
-            return try .init(io: c.make(), allocator: .init(), on: c.eventLoop)
+            return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
+        }
+        s.register(ByteBufferAllocator.self) { c in
+            return .init()
         }
 
         // websocket

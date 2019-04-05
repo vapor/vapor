@@ -1,5 +1,5 @@
 /// Represents a single file.
-public struct File: Codable {
+public struct File: Codable, Equatable {
     /// Name of the file, including extension.
     public var filename: String
     
@@ -16,12 +16,26 @@ public struct File: Codable {
         return filename.split(separator: ".").last.map(String.init)
     }
     
-    public init(from decoder: Decoder) throws {
-        fatalError()
+    enum CodingKeys: String, CodingKey {
+        case data, filename
     }
     
+    /// `Decodable` conformance.
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let data = try container.decode(Data.self, forKey: .data)
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeBytes(data)
+        let filename = try container.decode(String.self, forKey: .filename)
+        self.init(data: buffer, filename: filename)
+    }
+    
+    /// `Encodable` conformance.
     public func encode(to encoder: Encoder) throws {
-        fatalError()
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        let data = self.data.getData(at: self.data.readerIndex, length: self.data.readableBytes)
+        try container.encode(data, forKey: .data)
+        try container.encode(self.filename, forKey: .filename)
     }
     
     /// Creates a new `File`.

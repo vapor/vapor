@@ -51,8 +51,7 @@ private extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded() throws -> String {
         guard let result = self.addingPercentEncoding(withAllowedCharacters: _allowedCharacters) else {
-            #warning("TODO: better error")
-            fatalError()
+            throw Abort(.internalServerError)
         }
         return result
     }

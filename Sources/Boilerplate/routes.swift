@@ -46,6 +46,14 @@ public func routes(_ r: Routes, _ c: Container) throws {
         }
         return promise.futureResult
     }
+    
+    r.get("shutdown") { req -> HTTPStatus in
+        guard let running = try c.make(Application.self).running else {
+            throw Abort(.internalServerError)
+        }
+        _ = running.stop()
+        return .ok
+    }
 
     r.get("hello", ":name") { req in
         return req.parameters.get("name") ?? "<nil>"
