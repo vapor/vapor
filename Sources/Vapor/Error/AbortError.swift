@@ -66,9 +66,3 @@ extension DecodingError: AbortError {
         }
     }
 }
-
-extension Array where Element == CodingKey {
-    fileprivate var dotPath: String {
-        return map { $0.stringValue }.joined(separator: ".")
-    }
-}

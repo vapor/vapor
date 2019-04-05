@@ -7,7 +7,7 @@ class ApplicationTests: XCTestCase {
         let app = Application(env: test) { .default() }
         DispatchQueue.global().async {
             COperatingSystem.sleep(1)
-            try! app.running?.stop()
+            app.running?.stop()
         }
         try app.run()
     }

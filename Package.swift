@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", .branch("sync")),
+        .package(url: "https://github.com/vapor/console.git", .branch("master")),
 
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
         .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
@@ -30,9 +30,6 @@ let package = Package(
         
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
-
-        // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
-        // .package(url: "https://github.com/vapor/validation.git", from: "2.0.0"),
     ],
     targets: [
         .target(name: "CMultipartParser"),
@@ -59,7 +56,6 @@ let package = Package(
             "NIOSSL",
             "NIOWebSocket",
             "RoutingKit",
-            // "Validation",
         ]),
         .target(name: "XCTVapor", dependencies: ["Vapor"]),
         .testTarget(name: "VaporTests", dependencies: ["XCTVapor"]),

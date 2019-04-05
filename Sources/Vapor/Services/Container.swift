@@ -1,6 +1,3 @@
-@_exported import protocol NIO.EventLoop
-@_exported import class NIO.EventLoopFuture
-
 public final class Container {
     public static func boot(env: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
         let container = Container(env: env, services: services, on: eventLoop)

@@ -75,7 +75,7 @@ final class URLEncodedFormCodableTests: XCTestCase {
     }
 }
 
-struct User: Codable, Equatable {
+private struct User: Codable, Equatable {
     var name: String
     var age: Int
     var pets: [String]
@@ -84,6 +84,6 @@ struct User: Codable, Equatable {
     var nums: [Decimal]
 }
 
-enum Foo: String, Codable {
+private enum Foo: String, Codable {
     case foo, bar, baz
 }

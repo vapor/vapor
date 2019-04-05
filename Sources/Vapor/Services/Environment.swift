@@ -1,5 +1,3 @@
-import Foundation
-
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`'s will have
 /// an `Environment` that can be used to dynamically register and configure services.
 ///

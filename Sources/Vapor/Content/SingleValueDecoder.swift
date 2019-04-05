@@ -1,20 +1,20 @@
 internal extension RequestDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [BasicCodingKey], from request: Request) throws -> D
+    func get<D>(at keyPath: [CodingKey], from request: Request) throws -> D
         where D: Decodable
     {
         let decoder = try self.decode(SingleValueDecoder.self, from: request)
-        return try decoder.get(at: keyPath)
+        return try decoder.get(at: keyPath.map { .key($0.stringValue) })
     }
 }
 
 internal extension URLContentDecoder {
     /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [BasicCodingKey], from url: URL) throws -> D
+    func get<D>(at keyPath: [CodingKey], from url: URL) throws -> D
         where D: Decodable
     {
         let decoder = try self.decode(SingleValueDecoder.self, from: url)
-        return try decoder.get(at: keyPath)
+        return try decoder.get(at: keyPath.map { .key($0.stringValue) })
     }
 }
 

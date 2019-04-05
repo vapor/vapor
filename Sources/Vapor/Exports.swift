@@ -9,6 +9,7 @@
 @_exported import struct NIO.ByteBufferAllocator
 @_exported import protocol NIO.Channel
 @_exported import class NIO.EmbeddedChannel
+@_exported import protocol NIO.EventLoop
 @_exported import class NIO.EventLoopFuture
 @_exported import protocol NIO.EventLoopGroup
 @_exported import struct NIO.EventLoopPromise
@@ -21,5 +22,3 @@
 @_exported import enum NIOHTTP1.HTTPMethod
 @_exported import struct NIOHTTP1.HTTPVersion
 @_exported import enum NIOHTTP1.HTTPResponseStatus
-
-
