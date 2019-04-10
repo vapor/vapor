@@ -9,6 +9,7 @@
 @_exported import struct NIO.ByteBufferAllocator
 @_exported import protocol NIO.Channel
 @_exported import class NIO.EmbeddedChannel
+@_exported import class NIO.EmbeddedEventLoop
 @_exported import protocol NIO.EventLoop
 @_exported import class NIO.EventLoopFuture
 @_exported import protocol NIO.EventLoopGroup

@@ -7,59 +7,63 @@ extension HTTPHeaders {
     }
 }
 
-///// `Client` wrapper around `Foundation.URLSession`.
-//public final class FoundationClient: Client {
-//    /// See `Client`.
-//    public var eventLoop: EventLoop
-//
-//    /// The `URLSession` powering this client.
-//    private let urlSession: URLSession
-//
-//    /// Creates a new `FoundationClient`.
-//    public init(_ urlSession: URLSession, on eventLoop: EventLoop) {
-//        self.urlSession = urlSession
-//        self.eventLoop = eventLoop
-//    }
-//
-//    /// See `Client`.
-//    public func send(method: HTTPMethod, url: URL, headers: HTTPHeaders, body: Data) -> EventLoopFuture<Response> {
-//        let promise = self.eventLoop.makePromise(of: Response.self)
-//        self.urlSession.dataTask(with: URLRequest(method: method, url: url, headers: headers, body: body)) { data, urlResponse, error in
-//            if let error = error {
-//                promise.fail(error)
-//                return
-//            }
-//
-//            guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
-//                fatalError("URLResponse was not a HTTPURLResponse")
-//            }
-//
-//            let res = Response(foundation: httpURLResponse, data: data)
-//            promise.succeed(res)
-//        }.resume()
-//        return promise.futureResult
-//    }
-//}
-//
-//extension URLRequest {
-//    public init(method: HTTPMethod, url: URL, headers: HTTPHeaders, body: Data) {
-//        self.init(url: url)
-//        self.httpMethod = method.string
-//        self.httpBody = body
-//        headers.forEach { key, val in
-//            self.addValue(val, forHTTPHeaderField: key.description)
-//        }
-//    }
-//}
-//
-//extension Response {
-//    public convenience init(foundation: HTTPURLResponse, data: Data? = nil) {
-//        self.init(status: .init(statusCode: foundation.statusCode))
-//        if let data = data {
-//            self.body = .init(data: data)
-//        }
-//        for (key, value) in foundation.allHeaderFields {
-//            self.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
-//        }
-//    }
-//}
+/// `Client` wrapper around `Foundation.URLSession`.
+public final class FoundationClient: Client {
+    /// See `Client`.
+    public var eventLoop: EventLoop
+
+    /// The `URLSession` powering this client.
+    private let urlSession: URLSession
+
+    /// Creates a new `FoundationClient`.
+    public init(_ urlSession: URLSession, on eventLoop: EventLoop) {
+        self.urlSession = urlSession
+        self.eventLoop = eventLoop
+    }
+
+    /// See `Client`.
+    public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        let promise = self.eventLoop.makePromise(of: ClientResponse.self)
+        self.urlSession.dataTask(with: URLRequest(client: request)) { data, urlResponse, error in
+            if let error = error {
+                promise.fail(error)
+                return
+            }
+
+            guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
+                fatalError("URLResponse was not a HTTPURLResponse")
+            }
+
+            let response = ClientResponse(foundation: httpURLResponse, data: data)
+            promise.succeed(response)
+        }.resume()
+        return promise.futureResult
+    }
+}
+
+private extension URLRequest {
+    init(client request: ClientRequest) {
+        self.init(url: request.url)
+        self.httpMethod = request.method.string
+        if var body = request.body {
+            self.httpBody = body.readData(length: body.readableBytes)
+        }
+        request.headers.forEach { key, val in
+            self.addValue(val, forHTTPHeaderField: key.description)
+        }
+    }
+}
+
+private extension ClientResponse {
+    init(foundation: HTTPURLResponse, data: Data? = nil) {
+        self.init(status: .init(statusCode: foundation.statusCode))
+        if let data = data, !data.isEmpty {
+            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+            buffer.writeBytes(data)
+            self.body = buffer
+        }
+        for (key, value) in foundation.allHeaderFields {
+            self.headers.replaceOrAdd(name: "\(key)", value: "\(value)")
+        }
+    }
+}

@@ -12,23 +12,19 @@ extension Services {
         s.register(URLSession.self) { c in
             return try .init(configuration: c.make())
         }
-//        s.register(FoundationClient.self) { c in
-//            return try .init(c.make(), on: c.eventLoop)
-//        }
-//        s.register(HTTPClient.Configuration.self) { c in
-//            return .init()
-//        }
-//        s.register(HTTPClient.self) { c in
-//            return try .init(configuration: c.make(), on: c.eventLoop)
-//        }
-//        s.register(Client.self) { c in
-//            return try c.make(FoundationClient.self)
-//        }
+        s.register(FoundationClient.self) { c in
+            return try .init(c.make(), on: c.eventLoop)
+        }
+        s.register(HTTPClient.Configuration.self) { c in
+            return .init()
+        }
+        s.register(HTTPClient.self) { c in
+            return try .init(configuration: c.make(), on: c.eventLoop)
+        }
+        s.register(Client.self) { c in
+            return try c.make(HTTPClient.self)
+        }
         
-//        s.register(HTTPServerDelegate.self) { c in
-//            return try ServerDelegate(application: c.make(), on: c.eventLoop)
-//        }
-//        
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)
@@ -86,10 +82,6 @@ extension Services {
             return .default(environment: c.env)
         }
 
-        // content
-//        s.register(ContentConfig.self)
-//        s.register(ContentCoders.self)
-
         // console
         s.register(Console.self) { c in
             return Terminal()
@@ -138,13 +130,9 @@ extension Services {
         }
 
         // logging
-        #warning("TODO: update to sswg logging")
-//        services.register(Logger.self) { container -> ConsoleLogger in
-//            return try ConsoleLogger(console: container.make())
-//        }
-//        services.register(Logger.self) { container -> PrintLogger in
-//            return PrintLogger()
-//        }
+        s.register(ConsoleLogger.self) { container -> ConsoleLogger in
+            return try ConsoleLogger(console: container.make())
+        }
 
         // templates
         #warning("TODO: update view renderer")

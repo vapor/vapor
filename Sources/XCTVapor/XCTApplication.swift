@@ -6,9 +6,20 @@ extension Application {
 
 public final class XCTApplication {
     let application: Application
+    var overrides: [(inout Services) -> ()]
     
     init(application: Application) {
         self.application = application
+        self.overrides = []
+    }
+    
+    public func override<S>(service: S.Type, with instance: S) -> Self {
+        self.overrides.append { s in
+            s.register(S.self) { _ in
+                return instance
+            }
+        }
+        return self
     }
     
     public final class InMemory {
@@ -108,6 +119,15 @@ public final class XCTApplication {
     }
     
     private func container() throws -> Container {
-        return try self.application.makeContainer().wait()
+        var s = try self.application.makeServices()
+        for override in self.overrides {
+            override(&s)
+        }
+        let c = Container.boot(
+            env: self.application.env,
+            services: s,
+            on: self.application.eventLoopGroup.next()
+        )
+        return try c.wait()
     }
 }

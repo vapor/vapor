@@ -42,7 +42,7 @@ public final class Application {
         self.logger = .init(label: "codes.vapor.application")
     }
     
-    public func _makeServices() throws -> Services {
+    public func makeServices() throws -> Services {
         var s = try self.configure()
         s.register(Application.self) { c in
             return self
@@ -66,7 +66,7 @@ public final class Application {
     }
     
     private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        let s = try self._makeServices()
+        let s = try self.makeServices()
         return Container.boot(env: self.env, services: s, on: eventLoop)
     }
 
