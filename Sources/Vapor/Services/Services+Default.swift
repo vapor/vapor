@@ -88,10 +88,13 @@ extension Services {
         }
         
         // server
-        s.register(ServerConfiguration.self) { c in
+        s.register(HTTPServer.Configuration.self) { c in
             return .init()
         }
         s.register(Server.self) { c in
+            return try c.make(HTTPServer.self)
+        }
+        s.register(HTTPServer.self) { c in
             return try .init(application: c.make(), configuration: c.make())
         }
         s.register(Responder.self) { c in
@@ -130,8 +133,11 @@ extension Services {
         }
 
         // logging
-        s.register(ConsoleLogger.self) { container -> ConsoleLogger in
+        s.register(ConsoleLogger.self) { container in
             return try ConsoleLogger(console: container.make())
+        }
+        s.register(Logger.self) { c in
+            return try c.make(Application.self).logger
         }
 
         // templates
