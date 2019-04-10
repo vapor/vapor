@@ -119,7 +119,7 @@ public final class Request: CustomStringConvertible {
         self.userInfo = [:]
         self.isKeepAlive = true
         var logger = Logger(label: "codes.vapor.request")
-        logger.metadata["uuid"] = .string(UUID().uuidString)
+        // logger.metadata["uuid"] = .string(UUID().uuidString)
         self.logger = logger
     }
 }

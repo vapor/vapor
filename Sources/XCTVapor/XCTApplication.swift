@@ -76,7 +76,6 @@ public final class XCTApplication {
             let client = URLSession(configuration: .default)
             let promise = self.container.eventLoop.makePromise(of: XCTHTTPResponse.self)
             let url = URL(string: "http://127.0.0.1:\(self.port)\(path)")!
-            print("get \(url)")
             client.dataTask(with: URLRequest(url: url)) { data, response, error in
                 if let error = error {
                     promise.fail(error)
@@ -90,7 +89,9 @@ public final class XCTApplication {
                 } else {
                     promise.fail(Abort(.internalServerError))
                 }
+                #if !os(Linux)
                 client.invalidateAndCancel()
+                #endif
             }.resume()
             try closure(promise.futureResult.wait())
             return self
