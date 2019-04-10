@@ -1,14 +1,12 @@
 import Vapor
 
 public func boot(_ app: Application) throws {
-    let test = try app.makeContainer().wait()
-    let routes = try test.make(Routes.self)
-    for route in routes.routes {
-        let path = route.path.map { $0.description }.joined(separator: "/")
-        print("[\(route.method)] /\(path) \(route.requestType) -> \(route.responseType)")
-        for (key, val) in route.userInfo {
-            print("  - \(key) = \(val)")
-        }
-    }
-    try test.shutdown().wait()
+    let c = try app.makeContainer().wait()
+    defer { c.shutdown() }
+    
+    // bootstrap logging system
+    let console = try c.make(Console.self)
+    LoggingSystem.bootstrap(console: console, level: .info)
+    
+    // use container
 }

@@ -6,40 +6,38 @@ struct Creds: Content {
 }
 
 public func routes(_ r: Routes, _ c: Container) throws {
-    r.get("ping") { _, _ in
+    r.on(.GET, "ping", body: .stream) { req in
         return "123" as StaticString
     }
     
-    r.post("login") { (creds: Creds, ctx: Context) -> String in
+    r.post("login") { req -> String in
+        let creds = try req.content.decode(Creds.self)
         return "\(creds)"
     }
     
-    r.on(.POST, to: "large-file", bodyStream: .collect(maxSize: 1_000_000_000)) { (req: HTTPRequest, ctx: Context) -> String in
-        return req.body.count?.description ?? "none"
+    r.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
+        return req.body.data?.readableBytes.description  ?? "none"
     }
 
-    r.get("json") { (req: HTTPRequest, ctx: Context) -> [String: String] in
+    r.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
     
-    r.webSocket("ws") { (req: HTTPRequest, ctx: Context, ws: WebSocket) -> () in
+    r.webSocket("ws") { req, ws in
         ws.onText { ws, text in
             ws.send(text: text.reversed())
         }
         
-        let ip = ctx.channel.remoteAddress?.description ?? "<no ip>"
+        let ip = req.channel.remoteAddress?.description ?? "<no ip>"
         ws.send(text: "Hello 👋 \(ip)")
     }
     
-    r.on(.POST, to: "file", bodyStream: .allow) { (req: HTTPRequest, ctx: Context) -> EventLoopFuture<String> in
-        guard let stream = req.body.stream else {
-            return ctx.eventLoop.makeFailedFuture(Abort(.badRequest, reason: "Expected streaming body."))
-        }
-        let promise = ctx.eventLoop.makePromise(of: String.self)
-        stream.read { result, stream in
+    r.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
+        let promise = req.eventLoop.makePromise(of: String.self)
+        req.body.drain { result in
             switch result {
-            case .chunk(let chunk):
-                debugPrint(chunk)
+            case .buffer(let buffer):
+                debugPrint(buffer)
             case .error(let error):
                 promise.fail(error)
             case .end:
@@ -48,39 +46,47 @@ public func routes(_ r: Routes, _ c: Container) throws {
         }
         return promise.futureResult
     }
-
-//    r.get("hello", String.parameter) { req in
-//        return try req.parameters.next(String.self)
-//    }
-//
-//    router.get("search") { req in
-//        return req.query["q"] ?? "none"
-//    }
-//
-    let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
-    sessions.get("get") { (req: HTTPRequest, ctx: Context) -> String in
-        return try ctx.session().data["name"] ?? "n/a"
+    
+    r.get("shutdown") { req -> HTTPStatus in
+        guard let running = try c.make(Application.self).running else {
+            throw Abort(.internalServerError)
+        }
+        _ = running.stop()
+        return .ok
     }
-    sessions.get("set", ":value") { (req: HTTPRequest, ctx: Context) -> String in
-        let name = ctx.parameters.get("value")!
-        try ctx.session().data["name"] = name
+
+    r.get("hello", ":name") { req in
+        return req.parameters.get("name") ?? "<nil>"
+    }
+
+    r.get("search") { req in
+        return req.query["q"] ?? "none"
+    }
+
+    let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
+    sessions.get("get") { req -> String in
+        return try req.session().data["name"] ?? "n/a"
+    }
+    sessions.get("set", ":value") { req -> String in
+        let name = req.parameters.get("value")!
+        try req.session().data["name"] = name
         return name
     }
-    sessions.get("del") { (req: HTTPRequest, ctx: Context) -> String in
-        try ctx.destroySession()
+    sessions.get("del") { req -> String in
+        try req.destroySession()
         return "done"
     }
 
-    let client = try c.make(Client.self)
-    r.get("client") { (req: HTTPRequest, ctx: Context) in
-        return client.get("http://httpbin.org/status/201").map { $0.description }
-    }
+//    let client = try c.make(Client.self)
+//    r.get("client") { req in
+//        return client.get("http://httpbin.org/status/201").map { $0.description }
+//    }
     
     let users = r.grouped("users")
-    users.get { (req: HTTPRequest, ctx: Context) in
+    users.get { req in
         return "users"
     }
-    users.get(.parameter("userID")) { (req: HTTPRequest, ctx: Context) in
+    users.get(":userID") { req in
         return "user"
     }
 }

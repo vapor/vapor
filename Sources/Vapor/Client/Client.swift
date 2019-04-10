@@ -1,8 +1,6 @@
 public protocol Client {
-    func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse>
+    func send(method: HTTPMethod, url: URL, headers: HTTPHeaders, body: Data) -> EventLoopFuture<Response>
 }
-
-extension HTTPClient: Client { }
 
 extension Client {
     /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.
@@ -23,7 +21,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<HTTPResponse> {
+    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<Response> {
         return self.send(.GET, headers: headers, to: url)
     }
 
@@ -40,7 +38,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<HTTPResponse> {
+    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<Response> {
         return self.send(.POST, headers: headers, to: url)
     }
 
@@ -57,7 +55,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<HTTPResponse> {
+    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<Response> {
         return self.send(.PATCH, headers: headers, to: url)
     }
 
@@ -74,7 +72,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<HTTPResponse> {
+    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<Response> {
         return self.send(.PUT, headers: headers, to: url)
     }
 
@@ -97,7 +95,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<HTTPResponse> {
+    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<Response> {
         return self.send(.DELETE, headers: headers, to: url)
     }
 
@@ -116,8 +114,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable) -> EventLoopFuture<HTTPResponse> {
-        let req = HTTPRequest(method: method, url: url, headers: headers)
-        return self.send(req)
+    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable) -> EventLoopFuture<Response> {
+        return self.send(method: method, url: url.convertToURL()!, headers: headers, body: .init())
     }
 }

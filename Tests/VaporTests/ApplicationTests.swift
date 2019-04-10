@@ -1,291 +1,321 @@
 import XCTVapor
+import COperatingSystem
 
 class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(env: test) { .default() }
-        app.eventLoopGroup.next().scheduleTask(in: .seconds(1)) {
+        DispatchQueue.global().async {
+            COperatingSystem.sleep(1)
             app.running?.stop()
         }
-        try app.execute().wait()
+        try app.run()
     }
     
-    
-    func testClientRoute() throws {
+    func testURLSession() throws {
         let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
-            r.get("client") { req, _ in
-                return client.get("http://httpbin.org/status/201")
+            let client = try c.make(URLSession.self)
+            r.get("client") { request -> EventLoopFuture<String> in
+                let promise = request.eventLoop.makePromise(of: String.self)
+                let url = URL(string: "http://httpbin.org/status/201")!
+                client.dataTask(with: URLRequest(url: url)) { data, response, error in
+                    if let error = error {
+                        promise.fail(error)
+                    } else if let response = response as? HTTPURLResponse {
+                        promise.succeed(response.statusCode.description)
+                    } else {
+                        promise.fail(Abort(.internalServerError))
+                    }
+                }.resume()
+                return promise.futureResult
             }
         })
-            
-        try app.xctest()
-            .test(.GET, to: "/client") { res in
-                res.assertStatus(is: .created)
-                    .assertBody(isEmpty: true)
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/client") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "201")
             }
-            .test(.GET, to: "/foo") { res in
-                res.assertStatus(is: .notFound)
-                    .assertBody(contains: "Not Found")
+            .test(.GET, "/foo") { res in
+                XCTAssertEqual(res.status, .notFound)
+                XCTAssertContains(res.body.string, "Not Found")
+            }
+    }
+    
+//    func testFakeClient() throws {
+//        let app = Application.create(routes: { r, c in
+//            let client = try c.make(Client.self)
+//            r.get("client") { req in
+//                return client.get("http://vapor.codes")
+//            }
+//        })
+//        defer { try! app.shutdown() }
+//
+//        final class FakeClient: Client {
+//            var reqs: [Request]
+//            init() {
+//                self.reqs = []
+//            }
+//            func send(_ req: Request) -> EventLoopFuture<Response> {
+//                self.reqs.append(req)
+//                return EmbeddedEventLoop().makeSucceededFuture(.init())
+//            }
+//        }
+//
+//        let client = FakeClient()
+//
+//        try app.xctest()
+//            .override(service: Client.self, with: client)
+//            .test(.GET, to: "/client")
+//
+//        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
+//    }
+    
+    func testContent() throws {
+        let request = Request(
+            collectedBody: .init(string: #"{"hello": "world"}"#),
+            on: EmbeddedChannel()
+        )
+        request.headers.contentType = .json
+        try XCTAssertEqual(request.content.get(at: "hello"), "world")
+    }
+
+    func testComplexContent() throws {
+        // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
+        let complexJSON = """
+        {
+            "id": "0001",
+            "type": "donut",
+            "name": "Cake",
+            "ppu": 0.55,
+            "batters":
+                {
+                    "batter":
+                        [
+                            { "id": "1001", "type": "Regular" },
+                            { "id": "1002", "type": "Chocolate" },
+                            { "id": "1003", "type": "Blueberry" },
+                            { "id": "1004", "type": "Devil's Food" }
+                        ]
+                },
+            "topping":
+                [
+                    { "id": "5001", "type": "None" },
+                    { "id": "5002", "type": "Glazed" },
+                    { "id": "5005", "type": "Sugar" },
+                    { "id": "5007", "type": "Powdered Sugar" },
+                    { "id": "5006", "type": "Chocolate with Sprinkles" },
+                    { "id": "5003", "type": "Chocolate" },
+                    { "id": "5004", "type": "Maple" }
+                ]
+        }
+        """
+        let request = Request(collectedBody: .init(string: complexJSON), on: EmbeddedChannel())
+        request.headers.contentType = .json
+        try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
+    }
+
+    func testQuery() throws {
+        let request = Request(on: EmbeddedChannel())
+        request.headers.contentType = .json
+        var comps = URLComponents()
+        comps.query = "hello=world"
+        request.url = comps.url!
+        try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
+    }
+
+    func testParameter() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("hello", ":a") { req in
+                return req.parameters.get("a") ?? ""
+            }
+
+            r.get("hello", ":a", ":b") { req in
+                return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
+            }
+        })
+        defer { app.shutdown() }
+        
+        try app.testable().inMemory()
+            .test(.GET, "/hello/vapor") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertContains(res.body.string, "vapor")
+            }
+            .test(.POST, "/hello/vapor") { res in
+                XCTAssertEqual(res.status, .notFound)
+            }
+            .test(.GET, "/hello/vapor/development") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
+            }
+    }
+
+    func testJSON() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("json") { req -> [String: String] in
+                print(req)
+                return ["foo": "bar"]
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/json") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
+            }
+    }
+    
+    func testLiveServer() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("ping") { req -> String in
+                return "123"
+            }
+        })
+        defer { app.shutdown() }
+        
+        try app.testable().live(port: 8080)
+            .test(.GET, "/ping") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "123")
+            }
+    }
+
+    // https://github.com/vapor/vapor/issues/1537
+    func testQueryStringRunning() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("todos") { req in
+                return "hi"
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().live(port: 8080)
+            .test(.GET, "/todos?a=b") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "hi")
+            }
+    }
+
+    func testGH1534() throws {
+        let data = """
+        {"name":"hi","bar":"asdf"}
+        """
+
+        let app = Application.create(routes: { r, c in
+            r.get("decode_error") { req -> String in
+                struct Foo: Decodable {
+                    var name: String
+                    var bar: Int
+                }
+                let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
+                return foo.name
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/decode_error") { res in
+                XCTAssertEqual(res.status, .badRequest)
+                XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
+            }
+    }
+
+    func testContentContainer() throws {
+        struct FooContent: Content {
+            var message: String = "hi"
+        }
+        struct FooEncodable: Encodable {
+            var message: String = "hi"
         }
 
-        try app.shutdown()
-    }
-    
-    
-    func testFakeClient() throws {
         let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
-            r.get("client") { req, _ in
-                return client.get("http://vapor.codes")
+            r.get("encode") { req -> Response in
+                let res = Response()
+                try res.content.encode(FooContent())
+                try res.content.encode(FooContent(), as: .json)
+                try res.content.encode(FooEncodable(), as: .json)
+                return res
             }
         })
-        
-        final class FakeClient: Client {
-            var reqs: [HTTPRequest]
-            init() {
-                self.reqs = []
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/encode") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertContains(res.body.string, "hi")
             }
-            func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
-                self.reqs.append(req)
-                return EmbeddedEventLoop().makeSucceededFuture(.init())
-            }
-        }
-        
-        let client = FakeClient()
-        
-        try app.xctest()
-            .override(service: Client.self, with: client)
-            .test(.GET, to: "/client")
-        
-        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
-        
-        try app.shutdown()
     }
-//    func testContent() throws {
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.body = """
-//        {
-//            "hello": "world"
-//        }
-//        """.convertToHTTPBody()
-//        req.http.contentType = .json
-//        try XCTAssertEqual(req.content.get(at: "hello").wait(), "world")
-//    }
-//
-//    func testComplexContent() throws {
-//        // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
-//        let complexJSON = """
-//        {
-//            "id": "0001",
-//            "type": "donut",
-//            "name": "Cake",
-//            "ppu": 0.55,
-//            "batters":
-//                {
-//                    "batter":
-//                        [
-//                            { "id": "1001", "type": "Regular" },
-//                            { "id": "1002", "type": "Chocolate" },
-//                            { "id": "1003", "type": "Blueberry" },
-//                            { "id": "1004", "type": "Devil's Food" }
-//                        ]
-//                },
-//            "topping":
-//                [
-//                    { "id": "5001", "type": "None" },
-//                    { "id": "5002", "type": "Glazed" },
-//                    { "id": "5005", "type": "Sugar" },
-//                    { "id": "5007", "type": "Powdered Sugar" },
-//                    { "id": "5006", "type": "Chocolate with Sprinkles" },
-//                    { "id": "5003", "type": "Chocolate" },
-//                    { "id": "5004", "type": "Maple" }
-//                ]
-//        }
-//        """
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.body = complexJSON.convertToHTTPBody()
-//        req.http.contentType = .json
-//
-//        try XCTAssertEqual(req.content.get(at: "batters", "batter", 1, "type").wait(), "Chocolate")
-//    }
-//
-//    func testQuery() throws {
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.contentType = .json
-//        var comps = URLComponents()
-//        comps.query = "hello=world"
-//        req.http.url = comps.url!
-//        try XCTAssertEqual(req.query.get(String.self, at: "hello"), "world")
-//    }
-//
-//
-//    func testParameter() throws {
-//        let app = try Application.runningTest(port: 8081) { router in
-//            router.get("hello", String.parameter) { req in
-//                return try req.parameters.next(String.self)
-//            }
-//
-//            router.get("raw", String.parameter, String.parameter) { req in
-//                return req.parameters.rawValues(for: String.self)
-//            }
-//        }
-//
-//        try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
-//        try app.clientTest(.POST, "/hello/vapor", equals: "Not found")
-//
-//        try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
-//    }
-//
-//    func testJSON() throws {
-//        let app = try Application.runningTest(port: 8082) { router in
-//            router.get("json") { req in
-//                return ["foo": "bar"]
-//            }
-//        }
-//
-//        let expected = """
-//        {"foo":"bar"}
-//        """
-//        try app.clientTest(.GET, "/json", equals: expected)
-//    }
-//
-//    func testGH1537() throws {
-//        let app = try Application.runningTest(port: 8083) { router in
-//            router.get("todos") { req in
-//                return "hi"
-//            }
-//        }
-//
-//        try app.clientTest(.GET, "/todos?a=b", equals: "hi")
-//
-//        DispatchQueue.global().asyncAfter(deadline: DispatchTime.now() + 1) {
-//            print("stop")
-//            try! app.runningServer!.close().wait()
-//        }
-//
-//        try app.runningServer!.onClose.wait()
-//    }
-//
-//    func testGH1534() throws {
-//        let data = """
-//        {"name":"hi","bar":"asdf"}
-//        """
-//
-//        let app = try Application.makeTest { router in
-//            router.get("decode_error") { req -> String in
-//                struct Foo: Decodable {
-//                    var name: String
-//                    var bar: Int
-//                }
-//                let foo = try JSONDecoder().decode(Foo.self, from: Data(data.utf8))
-//                return foo.name
-//            }
-//        }
-//
-//        try app.test(.GET, "decode_error") { res in
-//            XCTAssertEqual(res.http.status.code, 400)
-//            XCTAssert(res.http.body.string.contains("Value of type 'Int' required for key 'bar'"))
-//        }
-//    }
-//
-//    func testContentContainer() throws {
-//        struct FooContent: Content {
-//            var message: String = "hi"
-//        }
-//        struct FooEncodable: Encodable {
-//            var message: String = "hi"
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("encode") { req -> Response in
-//                let res = req.response()
-//                try res.content.encode(FooContent())
-//                try res.content.encode(FooContent(), as: .json)
-//                try res.content.encode(FooEncodable(), as: .json)
-//                return res
-//            }
-//        }
-//
-//        try app.test(.GET, "encode") { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssert(res.http.body.string.contains("hi"))
-//        }
-//    }
-//
-//    func testMultipartDecode() throws {
-//        let data = """
-//        --123\r
-//        Content-Disposition: form-data; name="name"\r
-//        \r
-//        Vapor\r
-//        --123\r
-//        Content-Disposition: form-data; name="age"\r
-//        \r
-//        3\r
-//        --123\r
-//        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
-//        \r
-//        <contents of image>\r
-//        --123--\r
-//
-//        """
-//
-//        struct User: Content {
-//            var name: String
-//            var age: Int
-//            var image: Data
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("multipart") { req -> Future<User> in
-//                return try req.content.decode(User.self).map(to: User.self) { foo in
-//                    XCTAssertEqual(foo.name, "Vapor")
-//                    XCTAssertEqual(foo.age, 3)
-//                    // XCTAssertEqual(foo.image.filename, "droplet.png")
-//                    XCTAssertEqual(foo.image.utf8, "<contents of image>")
-//                    return foo
-//                }
-//            }
-//        }
-//
-//        var req = HTTPRequest(method: .GET, url: URL(string: "/multipart")!)
-//        req.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": "123"])
-//        req.body = HTTPBody(string: data)
-//
-//        try app.test(req) { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssert(res.http.body.string.contains("Vapor"))
-//        }
-//    }
-//
-//    func testMultipartEncode() throws {
-//        struct User: Content {
-//            static var defaultContentType: HTTPMediaType = .formData
-//            var name: String
-//            var age: Int
-//            var image: File
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("multipart") { req -> User in
-//                return User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
-//            }
-//        }
-//
-//        try app.test(.GET, "multipart") { res in
-//            debugPrint(res)
-//            XCTAssertEqual(res.http.status.code, 200)
-//            let boundary = res.http.contentType?.parameters["boundary"] ?? "none"
-//            XCTAssertEqual(res.http.body.string.contains("Content-Disposition: form-data; name=\"name\""), true)
-//            XCTAssertEqual(res.http.body.string.contains("--\(boundary)"), true)
-//            XCTAssertEqual(res.http.body.string.contains("filename=\"droplet.png\""), true)
-//            XCTAssertEqual(res.http.body.string.contains("name=\"image\""), true)
-//        }
-//    }
+
+    func testMultipartDecode() throws {
+        let data = """
+        --123\r
+        Content-Disposition: form-data; name="name"\r
+        \r
+        Vapor\r
+        --123\r
+        Content-Disposition: form-data; name="age"\r
+        \r
+        3\r
+        --123\r
+        Content-Disposition: form-data; name="image"; filename="droplet.png"\r
+        \r
+        <contents of image>\r
+        --123--\r
+
+        """
+        let expected = User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+
+        struct User: Content, Equatable {
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("multipart") { req -> User in
+                let decoded = try req.content.decode(User.self)
+                XCTAssertEqual(decoded, expected)
+                return decoded
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory()
+            .test(.GET, "/multipart", headers: [
+                "Content-Type": "multipart/form-data; boundary=123"
+            ], body: .init(string: data)) { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqualJSON(res.body.string, expected)
+            }
+    }
+
+    func testMultipartEncode() throws {
+        struct User: Content {
+            static var defaultContentType: HTTPMediaType = .formData
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("multipart") { req -> User in
+                return User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/multipart") { res in
+            debugPrint(res)
+            XCTAssertEqual(res.status, .ok)
+            let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+            XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
+            XCTAssertContains(res.body.string, "--\(boundary)")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
+            XCTAssertContains(res.body.string, "name=\"image\"")
+        }
+    }
 //
 //    func testViewResponse() throws {
 //        let app = try Application.makeTest { router in
@@ -833,14 +863,7 @@ class ApplicationTests: XCTestCase {
         try pool.syncShutdownGracefully()
         try elg.syncShutdownGracefully()
     }
-    
-    
-    static let allTests = [
-        ("testApplicationStop", testApplicationStop),
-        ("testClientRoute", testClientRoute),
-        ("testFakeClient", testFakeClient),
-        ("testDotEnvRead", testDotEnvRead),
-    ]
+
 //
 //    static let allTests = [
 //        ("testContent", testContent),
@@ -1011,5 +1034,17 @@ extension Application {
             }
             return s
         }
+    }
+}
+
+private extension ByteBuffer {
+    init(string: String) {
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString(string)
+        self = buffer
+    }
+    
+    var string: String? {
+        return self.getString(at: self.readerIndex, length: self.readableBytes)
     }
 }

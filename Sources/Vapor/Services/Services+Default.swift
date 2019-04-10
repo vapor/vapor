@@ -4,10 +4,6 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
-        // server
-        s.register(HTTPServer.Configuration.self) { c in
-            return .init()
-        }
         
         // client
         s.register(URLSessionConfiguration.self) { c in
@@ -16,44 +12,29 @@ extension Services {
         s.register(URLSession.self) { c in
             return try .init(configuration: c.make())
         }
-        s.register(FoundationClient.self) { c in
-            return try .init(c.make(), on: c.eventLoop)
-        }
-        s.register(HTTPClient.Configuration.self) { c in
-            return .init()
-        }
-        s.register(HTTPClient.self) { c in
-            return try .init(configuration: c.make(), on: c.eventLoop)
-        }
-        s.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
-        }
+//        s.register(FoundationClient.self) { c in
+//            return try .init(c.make(), on: c.eventLoop)
+//        }
+//        s.register(HTTPClient.Configuration.self) { c in
+//            return .init()
+//        }
+//        s.register(HTTPClient.self) { c in
+//            return try .init(configuration: c.make(), on: c.eventLoop)
+//        }
+//        s.register(Client.self) { c in
+//            return try c.make(FoundationClient.self)
+//        }
         
-        s.register(HTTPServerDelegate.self) { c in
-            return try ServerDelegate(application: c.make(), on: c.eventLoop)
-        }
-        
+//        s.register(HTTPServerDelegate.self) { c in
+//            return try ServerDelegate(application: c.make(), on: c.eventLoop)
+//        }
+//        
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)
         }
-
-        // responder
-        s.register(Responder.self) { c in
-            // initialize all `[Middleware]` from config
-            let middleware = try c
-                .make(MiddlewareConfig.self)
-                .resolve()
-            
-            // create HTTP routes
-            let routes = try c.make(Routes.self)
-            
-            // return new responder
-            return ApplicationResponder(routes: routes, middleware: middleware)
-        }
         
         // sessions
-        #warning("TODO: update sessions")
         s.register(SessionsMiddleware.self) { c in
             return try .init(sessions: c.make(), config: c.make())
         }
@@ -86,8 +67,8 @@ extension Services {
 //        s.register(MemoryKeyedCache(), as: KeyedCache.self)
 
         // middleware
-        s.register(MiddlewareConfig.self) { c in
-            var middleware = MiddlewareConfig()
+        s.register(MiddlewareConfiguration.self) { c in
+            var middleware = MiddlewareConfiguration()
             try middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
@@ -111,17 +92,32 @@ extension Services {
 
         // console
         s.register(Console.self) { c in
-            return Terminal(on: c.eventLoop)
+            return Terminal()
         }
         
+        // server
+        s.register(ServerConfiguration.self) { c in
+            return .init()
+        }
+        s.register(Server.self) { c in
+            return try .init(application: c.make(), configuration: c.make())
+        }
+        s.register(Responder.self) { c in
+            // initialize all `[Middleware]` from config
+            let middleware = try c
+                .make(MiddlewareConfiguration.self)
+                .resolve()
+            
+            // create HTTP routes
+            let routes = try c.make(Routes.self)
+            
+            // return new responder
+            return ApplicationResponder(routes: routes, middleware: middleware)
+        }
 
         // commands
         s.register(ServeCommand.self) { c in
-            return try .init(
-                configuration: c.make(),
-                console: c.make(),
-                application: c.make()
-            )
+            return try .init(server: c.make())
         }
         s.register(RoutesCommand.self) { c in
             return try .init(routes: c.make())
@@ -130,11 +126,7 @@ extension Services {
             return .init()
         }
         s.register(CommandConfig.self) { c in
-            var config = CommandConfig()
-            try config.use(c.make(ServeCommand.self), as: "serve", isDefault: true)
-            try config.use(c.make(RoutesCommand.self), as: "routes")
-            try config.use(c.make(BootCommand.self), as: "boot")
-            return config
+            return try .default(on: c)
         }
         s.register(Commands.self) { c in
             return try c.make(CommandConfig.self).resolve()
@@ -166,8 +158,10 @@ extension Services {
             return try .init(threadPool: c.make())
         }
         s.register(FileIO.self) { c in
-            #warning("TODO: re-use buffer allocator")
-            return try .init(io: c.make(), allocator: .init(), on: c.eventLoop)
+            return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
+        }
+        s.register(ByteBufferAllocator.self) { c in
+            return .init()
         }
 
         // websocket

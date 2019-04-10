@@ -1,11 +1,8 @@
-#if os(Linux)
-
 import XCTest
-@testable import VaporTests
 
-XCTMain([
-    // Vapor
-    testCase(ApplicationTests.allTests),
-])
+import VaporTests
 
-#endif
+var tests = [XCTestCaseEntry]()
+tests += VaporTests.__allTests()
+
+XCTMain(tests)

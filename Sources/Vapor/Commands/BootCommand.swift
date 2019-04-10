@@ -21,8 +21,7 @@ public struct BootCommand: Command {
     public init() { }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+    public func run(using context: CommandContext) throws {
         context.console.success("Done.")
-        return context.eventLoop.makeSucceededFuture(())
     }
 }

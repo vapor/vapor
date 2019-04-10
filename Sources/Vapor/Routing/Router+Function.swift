@@ -1,3 +1,4 @@
+#warning("TODO: consider deprecating")
 //extension Router {
 //    // MARK: Middleware Function
 //    

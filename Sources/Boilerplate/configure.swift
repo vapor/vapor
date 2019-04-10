@@ -5,26 +5,20 @@ public func configure(_ s: inout Services) throws {
         try routes(r, c)
     }
     
-    s.register(HTTPServer.Configuration.self) { c in
+    s.register(ServerConfiguration.self) { c in
         switch c.env {
         case .tls:
-            return .init(
-                hostname: "127.0.0.1",
-                port: 8443,
-                tlsConfig: .forServer(
-                    certificateChain: [.file("/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem")],
-                    privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
-                )
-            )
+            return .init(hostname: "127.0.0.1", port: 8443, tlsConfiguration: tls)
         default:
-            return .init(
-                hostname: "127.0.0.1",
-                port: 8080,
-                supportVersions: [.one]
-            )
+            return .init(hostname: "127.0.0.1", port: 8080)
         }
     }
 }
+
+let tls = TLSConfiguration.forServer(
+    certificateChain: [.file("/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem")],
+    privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
+)
 
 extension Environment {
     static var tls: Environment {
