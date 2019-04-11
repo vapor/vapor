@@ -3,19 +3,17 @@
 /// See [RFC#2388](https://tools.ietf.org/html/rfc2388) for more information about `multipart/form-data` encoding.
 ///
 /// Seealso `MultipartParser` for more information about the `multipart` encoding.
-public struct FormDataEncoder: ResponseEncoder {
+public struct FormDataEncoder: ContentEncoder {
     /// Creates a new `FormDataEncoder`.
     public init() { }
     
-    /// `HTTPMessageEncoder` conformance.
-    public func encode<E>(_ encodable: E, to response: Response) throws
+    /// `ContentEncoder` conformance.
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
-        response.headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
-        var buffer = ByteBufferAllocator().buffer(capacity: 0)
-        try self.encode(encodable, boundary: boundary, into: &buffer)
-        response.body = .init(buffer: buffer)
+        headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
+        try self.encode(encodable, boundary: boundary, into: &body)
     }
     
     public func encode<E>(_ encodable: E, boundary: String) throws -> String

@@ -32,15 +32,11 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
     ],
     targets: [
+        // C helpers
         .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
-        
-        // Boilerplate
-        .target(name: "Boilerplate", dependencies: ["Vapor"]),
-        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
             "CMultipartParser",
             "COperatingSystem",
@@ -57,6 +53,11 @@ let package = Package(
             "NIOWebSocket",
             "RoutingKit",
         ]),
+
+        // Development
+        .target(name: "Development", dependencies: ["Vapor"]),
+
+        // Testing
         .target(name: "XCTVapor", dependencies: ["Vapor"]),
         .testTarget(name: "VaporTests", dependencies: ["XCTVapor"]),
     ]

@@ -1,33 +1,18 @@
-internal extension RequestDecoder {
-    /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [CodingKey], from request: Request) throws -> D
-        where D: Decodable
-    {
-        let decoder = try self.decode(SingleValueDecoder.self, from: request)
-        return try decoder.get(at: keyPath.map { .key($0.stringValue) })
-    }
-}
-
-internal extension URLContentDecoder {
-    /// Gets a single decodable value at the supplied key path from the data.
-    func get<D>(at keyPath: [CodingKey], from url: URL) throws -> D
-        where D: Decodable
-    {
-        let decoder = try self.decode(SingleValueDecoder.self, from: url)
-        return try decoder.get(at: keyPath.map { .key($0.stringValue) })
-    }
-}
-
-/// MARK: Private
-
 /// Decodes nested, single values from data at a key path.
-private struct SingleValueDecoder: Decodable {
+internal struct SingleValueDecoder: Decodable {
     let decoder: Decoder
     init(from decoder: Decoder) throws {
         self.decoder = decoder
     }
+
+    /// Gets a single decodable value at the supplied key path from the data.
+    internal func get<D>(at keyPath: [CodingKey]) throws -> D
+        where D: Decodable
+    {
+        return try self.get(at: keyPath.map { .key($0.stringValue) })
+    }
     
-    func get<D>(at keyPath: [BasicCodingKey]) throws -> D where D: Decodable {
+    private func get<D>(at keyPath: [BasicCodingKey]) throws -> D where D: Decodable {
         let unwrapper = self
         var state = try ContainerState.keyed(unwrapper.decoder.container(keyedBy: BasicCodingKey.self))
         

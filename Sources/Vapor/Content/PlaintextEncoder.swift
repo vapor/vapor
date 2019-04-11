@@ -1,5 +1,5 @@
 /// Encodes data as plaintext, utf8.
-public struct PlaintextEncoder: ResponseEncoder {
+public struct PlaintextEncoder: ContentEncoder {
     /// Private encoder.
     private let encoder: _PlaintextEncoder
     
@@ -16,16 +16,16 @@ public struct PlaintextEncoder: ResponseEncoder {
         self.contentType = contentType
     }
     
-    /// See `HTTPMessageEncoder`.
-    public func encode<E>(_ encodable: E, to response: Response) throws
+    /// `ContentEncoder` conformance.
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
         try encodable.encode(to: encoder)
         guard let string = self.encoder.plaintext else {
             fatalError()
         }
-        response.headers.contentType = self.contentType
-        response.body = .init(string: string)
+        headers.contentType = self.contentType
+        body.writeString(string)
     }
 }
 

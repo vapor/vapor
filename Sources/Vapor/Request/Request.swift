@@ -28,10 +28,63 @@ public final class Request: CustomStringConvertible {
     public var headers: HTTPHeaders
     
     internal var isKeepAlive: Bool
+
+    // MARK: Content
+
+    private struct _URLQueryContainer: URLQueryContainer {
+        let request: Request
+
+        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+            where D: Decodable
+        {
+            return try decoder.decode(D.self, from: self.request.url)
+        }
+
+        func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+            where E: Encodable
+        {
+            try encoder.encode(encodable, to: &self.request.url)
+        }
+    }
     
-    public var query: URLContentContainer {
-        get { return .init(url: self.url) }
-        set { self.url = newValue.url }
+    public var query: URLQueryContainer {
+        get {
+            return _URLQueryContainer(request: self)
+        }
+        set {
+            // ignore since Request is a reference type
+        }
+    }
+
+    private struct _ContentContainer: ContentContainer {
+        let request: Request
+
+        var contentType: HTTPMediaType? {
+            return self.request.headers.contentType
+        }
+
+        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(encodable, to: &body, headers: &self.request.headers)
+            self.request.bodyStorage = .collected(body)
+        }
+
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+            guard let body = self.request.body.data else {
+                self.request.logger.error("Decoding streaming bodies not supported")
+                throw Abort(.unprocessableEntity)
+            }
+            return try decoder.decode(D.self, from: body, headers: self.request.headers)
+        }
+    }
+
+    public var content: ContentContainer {
+        get {
+            return _ContentContainer(request: self)
+        }
+        set {
+            // ignore since Request is a reference type
+        }
     }
     
     public let logger: Logger
@@ -119,7 +172,7 @@ public final class Request: CustomStringConvertible {
         self.userInfo = [:]
         self.isKeepAlive = true
         var logger = Logger(label: "codes.vapor.request")
-        // logger.metadata["uuid"] = .string(UUID().uuidString)
+        logger[metadataKey: "uuid"] = .string(UUID().uuidString)
         self.logger = logger
     }
 }

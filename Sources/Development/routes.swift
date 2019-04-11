@@ -27,7 +27,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         ws.onText { ws, text in
             ws.send(text: text.reversed())
         }
-        
+
         let ip = req.channel.remoteAddress?.description ?? "<no ip>"
         ws.send(text: "Hello 👋 \(ip)")
     }
@@ -80,6 +80,18 @@ public func routes(_ r: Routes, _ c: Container) throws {
     let client = try c.make(Client.self)
     r.get("client") { req in
         return client.get("http://httpbin.org/status/201").map { $0.description }
+    }
+
+    r.get("client-json") { req -> EventLoopFuture<String> in
+        struct HTTPBinResponse: Decodable {
+            struct Slideshow: Decodable {
+                var title: String
+            }
+            var slideshow: Slideshow
+        }
+        return client.get("http://httpbin.org/json")
+            .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
+            .map { $0.slideshow.title }
     }
     
     let users = r.grouped("users")
