@@ -88,7 +88,13 @@ extension CredentialsAuthenticator {
 
 // MARK: Middleware
 
-public class RequestAuthenticationMiddleware<A>: Middleware
+extension RequestAuthenticator {
+    public func middleware() -> Middleware {
+        return RequestAuthenticationMiddleware<Self>(authenticator: self)
+    }
+}
+
+private final class RequestAuthenticationMiddleware<A>: Middleware
     where A: RequestAuthenticator
 {
     public let authenticator: A
@@ -112,11 +118,5 @@ public class RequestAuthenticationMiddleware<A>: Middleware
             }
             return next.respond(to: request)
         }
-    }
-}
-
-extension RequestAuthenticator {
-    public func middleware() -> RequestAuthenticationMiddleware<Self> {
-        return RequestAuthenticationMiddleware(authenticator: self)
     }
 }

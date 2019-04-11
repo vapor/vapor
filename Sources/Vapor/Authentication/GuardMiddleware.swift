@@ -1,3 +1,16 @@
+extension Authenticatable {
+    /// Creates a new `GuardAuthenticationMiddleware` for self.
+    ///
+    /// - parameters:
+    ///     - error: `Error` to throw if the type is not authed.
+    public static func guardMiddleware(
+        throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
+    ) -> Middleware {
+        return GuardAuthenticationMiddleware<Self>(throwing: error)
+    }
+}
+
+
 /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
 /// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform
 /// authentication will _not_ throw errors if they fail to authenticate the user (except in
@@ -11,7 +24,7 @@
 ///
 /// Use this middleware in conjunction with other middleware such as `BearerAuthenticationMiddleware`
 /// and `BasicAuthenticationMiddleware` to do the actual authentication.
-public final class GuardAuthenticationMiddleware<A>: Middleware
+private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
@@ -32,18 +45,5 @@ public final class GuardAuthenticationMiddleware<A>: Middleware
             return req.eventLoop.makeFailedFuture(self.error)
         }
         return next.respond(to: req)
-    }
-}
-
-
-extension Authenticatable {
-    /// Creates a new `GuardAuthenticationMiddleware` for self.
-    ///
-    /// - parameters:
-    ///     - error: `Error` to throw if the type is not authed.
-    public static func guardMiddleware(
-        throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
-    ) -> GuardAuthenticationMiddleware<Self> {
-        return .init(throwing: error)
     }
 }

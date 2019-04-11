@@ -1,5 +1,13 @@
+extension Authenticatable {
+    /// Basic middleware to redirect unauthenticated requests to the supplied path
+    public static func redirectMiddleware(path: String) -> Middleware {
+        return RedirectMiddleware<Self>(Self.self, path: path)
+    }
+}
+
+
 /// Basic middleware to redirect unauthenticated requests to the supplied path
-public struct RedirectMiddleware<A>: Middleware where A: Authenticatable {
+private final class RedirectMiddleware<A>: Middleware where A: Authenticatable {
     /// The path to redirect to
     let path: String
 
@@ -25,11 +33,5 @@ public struct RedirectMiddleware<A>: Middleware where A: Authenticatable {
     /// protected content to a login page
     public static func login(path: String = "/login") -> RedirectMiddleware {
         return RedirectMiddleware(path: path)
-    }
-}
-
-extension Authenticatable {
-    public static func redirectMiddleware(path: String) -> RedirectMiddleware<Self> {
-        return .init(Self.self, path: path)
     }
 }

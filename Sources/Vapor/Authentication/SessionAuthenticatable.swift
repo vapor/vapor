@@ -1,59 +1,14 @@
-/// Persists authentication done by another auth middleware allowing the authentication to only be passed once.
-public final class SessionAuthenticationMiddleware<A>: Middleware
-    where A: SessionAuthenticatableResolver
+public protocol SessionAuthenticator: Authenticator
+    where Self.User: SessionAuthenticatable
 {
-    let resolver: A
-
-    /// create a new password auth middleware
-    public init(resolver: A) {
-        self.resolver = resolver
-    }
-
-    /// See Middleware.respond
-    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        let future: EventLoopFuture<Void>
-        if let aID = req.session.authenticated(A.User.self) {
-            // try to find user with id from session
-            future = self.resolver.resolve(sessionID: aID).map { a in
-                // if the user was found, auth it
-                if let a = a {
-                    req.authenticate(a)
-                }
-            }
-        } else {
-            // no need to authenticate
-            future = req.eventLoop.makeSucceededFuture(())
-        }
-
-        // map the auth future to a resopnse
-        return future.flatMap { _ in
-            // respond to the request
-            return next.respond(to: req).map { res in
-                if let a = req.authenticated(A.User.self) {
-                    // if a user has been authed (or is still authed), store in the session
-                    req.session.authenticate(a)
-                } else if req.hasSession {
-                    // if no user is authed, it's possible they've been unauthed.
-                    // remove from session.
-                    req.session.unauthenticate(A.User.self)
-                }
-                return res
-            }
-        }
-    }
-}
-
-extension SessionAuthenticatableResolver {
-    public func middleware() -> SessionAuthenticationMiddleware<Self> {
-        return .init(resolver: self)
-    }
-}
-
-public protocol SessionAuthenticatableResolver {
-    associatedtype User: SessionAuthenticatable
-
     /// Authenticate a model with the supplied ID.
     func resolve(sessionID: User.SessionID) -> EventLoopFuture<User?>
+}
+
+extension SessionAuthenticator {
+    public func middleware() -> Middleware {
+        return SessionAuthenticationMiddleware<Self>(authenticator: self)
+    }
 }
 
 /// Models conforming to this protocol can have their authentication
@@ -94,5 +49,49 @@ extension Session {
     {
         return self.data["_" + A.sessionName + "Session"]
             .flatMap { A.SessionID.init($0) }
+    }
+}
+
+private final class SessionAuthenticationMiddleware<A>: Middleware
+    where A: SessionAuthenticator
+{
+    let authenticator: A
+
+    /// create a new password auth middleware
+    public init(authenticator: A) {
+        self.authenticator = authenticator
+    }
+
+    /// See Middleware.respond
+    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        let future: EventLoopFuture<Void>
+        if let aID = req.session.authenticated(A.User.self) {
+            // try to find user with id from session
+            future = self.authenticator.resolve(sessionID: aID).map { a in
+                // if the user was found, auth it
+                if let a = a {
+                    req.authenticate(a)
+                }
+            }
+        } else {
+            // no need to authenticate
+            future = req.eventLoop.makeSucceededFuture(())
+        }
+
+        // map the auth future to a resopnse
+        return future.flatMap { _ in
+            // respond to the request
+            return next.respond(to: req).map { res in
+                if let a = req.authenticated(A.User.self) {
+                    // if a user has been authed (or is still authed), store in the session
+                    req.session.authenticate(a)
+                } else if req.hasSession {
+                    // if no user is authed, it's possible they've been unauthed.
+                    // remove from session.
+                    req.session.unauthenticate(A.User.self)
+                }
+                return res
+            }
+        }
     }
 }

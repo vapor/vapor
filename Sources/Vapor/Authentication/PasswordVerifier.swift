@@ -4,6 +4,8 @@ public protocol PasswordVerifier {
     func verify(_ password: CryptoData, created hash: CryptoData) throws -> Bool
 }
 
+extension BCryptDigest: PasswordVerifier { }
+
 /// Simply compares the password to the hash.
 /// Don't use this in production.
 public struct PlaintextVerifier: PasswordVerifier {
