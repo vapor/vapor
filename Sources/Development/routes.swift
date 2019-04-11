@@ -101,4 +101,31 @@ public func routes(_ r: Routes, _ c: Container) throws {
     users.get(":userID") { req in
         return "user"
     }
+
+    r.grouped(FooAuthenticator(on: c.eventLoop).middleware())
+        .grouped(Foo.guardAuthMiddleware())
+        .get("foo") { req -> String in
+            return try req.requireAuthenticated(Foo.self).name
+        }
+}
+
+struct Foo: Authenticatable {
+    var name: String
+}
+
+struct FooAuthenticator: BearerAuthenticator {
+    typealias User = Foo
+
+    let eventLoop: EventLoop
+
+    init(on eventLoop: EventLoop) {
+        self.eventLoop = eventLoop
+    }
+
+    func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Foo?> {
+        guard bearer.token == "foo" else {
+            return self.eventLoop.makeSucceededFuture(nil)
+        }
+        return self.eventLoop.makeSucceededFuture(Foo(name: "Vapor"))
+    }
 }
