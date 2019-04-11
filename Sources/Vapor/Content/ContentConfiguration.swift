@@ -58,14 +58,14 @@ public struct ContentConfiguration {
     }
     
     /// Configured `ContentEncoder`s.
-    private var encoders: [HTTPMediaType: ResponseEncoder]
+    private var encoders: [HTTPMediaType: ContentEncoder]
     
     /// Configured `ContentDecoder`s.
-    private var decoders: [HTTPMediaType: RequestDecoder]
+    private var decoders: [HTTPMediaType: ContentDecoder]
     
-    private var urlEncoder: URLContentEncoder?
+    private var urlEncoder: URLQueryEncoder?
     
-    private var urlDecoder: URLContentDecoder?
+    private var urlDecoder: URLQueryDecoder?
     
     // MARK: Init
     
@@ -82,7 +82,7 @@ public struct ContentConfiguration {
     /// - parameters:
     ///     - encoder: `ContentEncoder` to use.
     ///     - mediaType: `ContentEncoder` will be used to encode this `HTTPMediaType`.
-    public mutating func use(encoder: ResponseEncoder, for mediaType: HTTPMediaType) {
+    public mutating func use(encoder: ContentEncoder, for mediaType: HTTPMediaType) {
         self.encoders[mediaType] = encoder
     }
     
@@ -93,17 +93,17 @@ public struct ContentConfiguration {
     /// - parameters:
     ///     - decoder: `ContentDecoder` to use.
     ///     - mediaType: `ContentDecoder` will be used to decode this `HTTPMediaType`.
-    public mutating func use(decoder: RequestDecoder, for mediaType: HTTPMediaType) {
+    public mutating func use(decoder: ContentDecoder, for mediaType: HTTPMediaType) {
         self.decoders[mediaType] = decoder
     }
     
 
-    public mutating func use(urlEncoder: URLContentEncoder) {
+    public mutating func use(urlEncoder: URLQueryEncoder) {
         self.urlEncoder = urlEncoder
     }
     
 
-    public mutating func use(urlDecoder: URLContentDecoder) {
+    public mutating func use(urlDecoder: URLQueryDecoder) {
         self.urlDecoder = urlDecoder
     }
     
@@ -115,7 +115,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
-    public func requireEncoder(for mediaType: HTTPMediaType) throws -> ResponseEncoder {
+    public func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
         guard let encoder = self.encoders[mediaType] else {
             throw Abort(.unsupportedMediaType, identifier: "httpEncoder")
         }
@@ -129,7 +129,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
-    public func requireDecoder(for mediaType: HTTPMediaType) throws -> RequestDecoder {
+    public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
         guard let decoder = self.decoders[mediaType] else {
             throw Abort(.unsupportedMediaType, identifier: "httpDecoder")
         }
@@ -144,7 +144,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
-    public func requireURLEncoder() throws -> URLContentEncoder {
+    public func requireURLEncoder() throws -> URLQueryEncoder {
         guard let encoder = self.urlEncoder else {
             throw Abort(.unsupportedMediaType, identifier: "urlEncoder")
         }
@@ -158,7 +158,7 @@ public struct ContentConfiguration {
     ///
     /// - parameters:
     ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
-    public func requireURLDecoder() throws -> URLContentDecoder {
+    public func requireURLDecoder() throws -> URLQueryDecoder {
         guard let decoder = self.urlDecoder else {
             throw Abort(.unsupportedMediaType, identifier: "urlDecoder")
         }

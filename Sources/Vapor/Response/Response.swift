@@ -50,6 +50,38 @@ public final class Response: CustomStringConvertible {
         desc.append(self.body.description)
         return desc.joined(separator: "\n")
     }
+
+    // MARK: Content
+
+    private struct _ContentContainer: ContentContainer {
+        let response: Response
+
+        var contentType: HTTPMediaType? {
+            return self.response.headers.contentType
+        }
+
+        func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(encodable, to: &body, headers: &self.response.headers)
+            self.response.body = .init(buffer: body)
+        }
+
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+            guard let body = self.response.body.buffer else {
+                throw Abort(.unprocessableEntity)
+            }
+            return try decoder.decode(D.self, from: body, headers: self.response.headers)
+        }
+    }
+
+    public var content: ContentContainer {
+        get {
+            return _ContentContainer(response: self)
+        }
+        set {
+            // ignore since Request is a reference type
+        }
+    }
     
     // MARK: Init
     

@@ -10,7 +10,7 @@
 ///
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
-public struct URLEncodedFormDecoder: RequestDecoder, URLContentDecoder {
+public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// The underlying `URLEncodedFormEncodedParser`
     private let parser: URLEncodedFormParser
 
@@ -42,15 +42,13 @@ public struct URLEncodedFormDecoder: RequestDecoder, URLContentDecoder {
     }
     
     /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from request: Request) throws -> D
-        where D: Decodable {
-        guard request.headers.contentType == .urlEncodedForm else {
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
+        where D: Decodable
+    {
+        guard headers.contentType == .urlEncodedForm else {
             throw Abort(.unsupportedMediaType)
         }
-        guard let buffer = request.body.data else {
-            throw Abort(.notAcceptable)
-        }
-        let string = buffer.getString(at: buffer.readerIndex, length: buffer.readableBytes) ?? ""
+        let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
         return try self.decode(D.self, from: string)
     }
     

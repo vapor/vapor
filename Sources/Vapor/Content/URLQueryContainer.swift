@@ -1,14 +1,15 @@
 /// Helper for encoding and decoding data from an HTTP request query string.
 ///
 /// See `Request.query` for more information.
-public struct URLContentContainer {
-    /// URL query string or ""
-    internal var url: URL
-    
-    internal init(url: URL) {
-        self.url = url
-    }
+public protocol URLQueryContainer {
+    func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
+        where D: Decodable
 
+    mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
+        where E: Encodable
+}
+
+extension URLQueryContainer {
     // MARK: Content
 
     /// Serializes an `Encodable` type to this HTTP request query string.
@@ -22,7 +23,7 @@ public struct URLContentContainer {
     ///     - encodable: `Encodable` type to encode to this HTTP message.
     /// - throws: Any errors making the decoder for this media type or serializing the query string.
     public mutating func encode<E>(_ encodable: E) throws where E: Encodable {
-        try requireEncoder().encode(encodable, to: &self.url)
+        try self.encode(encodable, using: self.configuredEncoder())
     }
 
     /// Parses a `Decodable` type from this HTTP request query string.
@@ -37,7 +38,7 @@ public struct URLContentContainer {
     /// - returns: Instance of the `Decodable` type.
     /// - throws: Any errors making the decoder for this media type or parsing the query string.
     public func decode<D>(_ decodable: D.Type) throws -> D where D: Decodable {
-        return try requireDecoder().decode(D.self, from: self.url)
+        return try self.decode(D.self, using: self.configuredDecoder())
     }
 
     // MARK: Single Value
@@ -121,18 +122,18 @@ public struct URLContentContainer {
     public func get<D>(_ type: D.Type = D.self, at keyPath: [CodingKeyRepresentable]) throws -> D
         where D: Decodable
     {
-        return try requireDecoder().get(at: keyPath.map { $0.codingKey }, from: self.url)
+        return try self.decode(SingleValueDecoder.self).get(at: keyPath.map { $0.codingKey })
     }
 
     // MARK: Private
 
     /// Gets the`DataDecoder` or throws an error.
-    private func requireDecoder() throws -> URLContentDecoder {
+    private func configuredDecoder() throws -> URLQueryDecoder {
         return try ContentConfiguration.global.requireURLDecoder()
     }
 
     /// Gets the `DataEncoder` or throws an error.
-    private func requireEncoder() throws -> URLContentEncoder {
+    private func configuredEncoder() throws -> URLQueryEncoder {
         return try ContentConfiguration.global.requireURLEncoder()
     }
 }
