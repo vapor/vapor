@@ -77,10 +77,10 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "done"
     }
 
-//    let client = try c.make(Client.self)
-//    r.get("client") { req in
-//        return client.get("http://httpbin.org/status/201").map { $0.description }
-//    }
+    let client = try c.make(Client.self)
+    r.get("client") { req in
+        return client.get("http://httpbin.org/status/201").map { $0.description }
+    }
     
     let users = r.grouped("users")
     users.get { req in

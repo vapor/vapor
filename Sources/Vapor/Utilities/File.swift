@@ -8,12 +8,17 @@ public struct File: Codable, Equatable {
     
     /// Associated `MediaType` for this file's extension, if it has one.
     public var contentType: HTTPMediaType? {
-        return ext.flatMap { HTTPMediaType.fileExtension($0.lowercased()) }
+        return self.extension.flatMap { HTTPMediaType.fileExtension($0.lowercased()) }
     }
     
     /// The file extension, if it has one.
-    public var ext: String? {
-        return filename.split(separator: ".").last.map(String.init)
+    public var `extension`: String? {
+        let parts = self.filename.split(separator: ".")
+        if parts.count > 1 {
+            return parts.last.map(String.init)
+        } else {
+            return nil
+        }
     }
     
     enum CodingKeys: String, CodingKey {

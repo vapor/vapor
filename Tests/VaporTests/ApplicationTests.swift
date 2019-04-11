@@ -43,34 +43,36 @@ class ApplicationTests: XCTestCase {
             }
     }
     
-//    func testFakeClient() throws {
-//        let app = Application.create(routes: { r, c in
-//            let client = try c.make(Client.self)
-//            r.get("client") { req in
-//                return client.get("http://vapor.codes")
-//            }
-//        })
-//        defer { try! app.shutdown() }
-//
-//        final class FakeClient: Client {
-//            var reqs: [Request]
-//            init() {
-//                self.reqs = []
-//            }
-//            func send(_ req: Request) -> EventLoopFuture<Response> {
-//                self.reqs.append(req)
-//                return EmbeddedEventLoop().makeSucceededFuture(.init())
-//            }
-//        }
-//
-//        let client = FakeClient()
-//
-//        try app.xctest()
-//            .override(service: Client.self, with: client)
-//            .test(.GET, to: "/client")
-//
-//        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
-//    }
+    func testFakeClient() throws {
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("client") { req in
+                return client.get("http://vapor.codes").map { $0.description }
+            }
+        })
+        defer { app.shutdown() }
+
+        final class FakeClient: Client {
+            var reqs: [ClientRequest]
+            init() {
+                self.reqs = []
+            }
+            func send(_ req: ClientRequest) -> EventLoopFuture<ClientResponse> {
+                self.reqs.append(req)
+                return EmbeddedEventLoop().makeSucceededFuture(.init())
+            }
+        }
+
+        let client = FakeClient()
+
+        try app.testable()
+            .override(service: Client.self, with: client)
+            .inMemory()
+            .test(.GET, "/client") { res in
+                XCTAssertEqual(res.status, .ok)
+            }
+        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
+    }
     
     func testContent() throws {
         let request = Request(

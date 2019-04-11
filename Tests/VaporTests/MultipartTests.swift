@@ -313,7 +313,7 @@ class MultipartTests: XCTestCase {
         XCTAssertEqual(foo.file.data.readableViewString, "string")
         XCTAssertEqual(foo.file.filename, "foo.txt")
         XCTAssertEqual(foo.file.contentType, HTTPMediaType.plainText)
-        XCTAssertEqual(foo.file.ext, "txt")
+        XCTAssertEqual(foo.file.extension, "txt")
     }
 
     func testDocBlocks() throws {
