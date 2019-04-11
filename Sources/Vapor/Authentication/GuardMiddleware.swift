@@ -41,7 +41,7 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///     - error: `Error` to throw if the type is not authed.
-    public static func guardAuthMiddleware(
+    public static func guardMiddleware(
         throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
     ) -> GuardAuthenticationMiddleware<Self> {
         return .init(throwing: error)

@@ -9,38 +9,45 @@ extension Request {
     ///
     /// - note: `SessionsMiddleware` must be added and enabled.
     /// - returns: `Session` for this `Request`.
-    public func session() throws -> Session {
-        guard let cache = self._sessionCache else {
-            fatalError("No session cache.")
-        }
-        if !cache.middlewareFlag {
+    public var session: Session {
+        if !self._sessionCache.middlewareFlag {
             // No `SessionsMiddleware` was detected on your app.
             // Suggested solutions:
             // - Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`
             // - Add the `SessionsMiddleware` to a route group.
             assertionFailure("No `SessionsMiddleware` detected.")
         }
-        if let existing = cache.session {
+        if let existing = self._sessionCache.session {
             return existing
         } else {
             let new = Session()
-            cache.session = new
+            self._sessionCache.session = new
             return new
         }
     }
     
     public var hasSession: Bool {
-        return self._sessionCache?.session != nil
+        return self._sessionCache.session != nil
     }
 
     /// Destroys the current session, if one exists.
-    public func destroySession() throws {
-        self._sessionCache?.session = nil
+    public func destroySession() {
+        self._sessionCache.session = nil
     }
     
-    internal var _sessionCache: SessionCache? {
-        get { return self.userInfo[_sessionCacheKey] as? SessionCache }
-        set { self.userInfo[_sessionCacheKey] = newValue }
+    internal var _sessionCache: SessionCache {
+        get {
+            if let existing = self.userInfo[_sessionCacheKey] as? SessionCache {
+                return existing
+            } else {
+                let new = SessionCache()
+                self.userInfo[_sessionCacheKey] = new
+                return new
+            }
+        }
+        set {
+            self.userInfo[_sessionCacheKey] = newValue
+        }
     }
 }
 

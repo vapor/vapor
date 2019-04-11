@@ -8,7 +8,7 @@ public struct RedirectMiddleware<A>: Middleware where A: Authenticatable {
     /// - parameters:
     ///    - authenticatableType: The type to check authentication against
     ///    - path: The path to redirect to if the request is not authenticated
-    public init(A authenticatableType: A.Type = A.self, path: String) {
+    public init(_ authenticatableType: A.Type = A.self, path: String) {
         self.path = path
     }
 
@@ -25,5 +25,11 @@ public struct RedirectMiddleware<A>: Middleware where A: Authenticatable {
     /// protected content to a login page
     public static func login(path: String = "/login") -> RedirectMiddleware {
         return RedirectMiddleware(path: path)
+    }
+}
+
+extension Authenticatable {
+    public static func redirectMiddleware(path: String) -> RedirectMiddleware<Self> {
+        return .init(Self.self, path: path)
     }
 }

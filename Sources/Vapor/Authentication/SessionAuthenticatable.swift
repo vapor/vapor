@@ -1,3 +1,61 @@
+/// Persists authentication done by another auth middleware allowing the authentication to only be passed once.
+public final class SessionAuthenticationMiddleware<A>: Middleware
+    where A: SessionAuthenticatableResolver
+{
+    let resolver: A
+
+    /// create a new password auth middleware
+    public init(resolver: A) {
+        self.resolver = resolver
+    }
+
+    /// See Middleware.respond
+    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        let future: EventLoopFuture<Void>
+        if let aID = req.session.authenticated(A.User.self) {
+            // try to find user with id from session
+            future = self.resolver.resolve(sessionID: aID).map { a in
+                // if the user was found, auth it
+                if let a = a {
+                    req.authenticate(a)
+                }
+            }
+        } else {
+            // no need to authenticate
+            future = req.eventLoop.makeSucceededFuture(())
+        }
+
+        // map the auth future to a resopnse
+        return future.flatMap { _ in
+            // respond to the request
+            return next.respond(to: req).map { res in
+                if let a = req.authenticated(A.User.self) {
+                    // if a user has been authed (or is still authed), store in the session
+                    req.session.authenticate(a)
+                } else if req.hasSession {
+                    // if no user is authed, it's possible they've been unauthed.
+                    // remove from session.
+                    req.session.unauthenticate(A.User.self)
+                }
+                return res
+            }
+        }
+    }
+}
+
+extension SessionAuthenticatableResolver {
+    public func middleware() -> SessionAuthenticationMiddleware<Self> {
+        return .init(resolver: self)
+    }
+}
+
+public protocol SessionAuthenticatableResolver {
+    associatedtype User: SessionAuthenticatable
+
+    /// Authenticate a model with the supplied ID.
+    func resolve(sessionID: User.SessionID) -> EventLoopFuture<User?>
+}
+
 /// Models conforming to this protocol can have their authentication
 /// status cached using `AuthenticationSessionsMiddleware`.
 public protocol SessionAuthenticatable: Authenticatable {
@@ -6,9 +64,6 @@ public protocol SessionAuthenticatable: Authenticatable {
 
     /// Unique session identifier.
     var sessionID: SessionID? { get }
-
-    /// Authenticate a model with the supplied ID.
-    static func authenticate(sessionID: SessionID) -> EventLoopFuture<Self?>
 }
 
 private extension SessionAuthenticatable {
@@ -17,25 +72,27 @@ private extension SessionAuthenticatable {
     }
 }
 
-extension Request {
+extension Session {
     /// Authenticates the model into the session.
-    public func authenticateSession<A>(_ a: A) throws where A: SessionAuthenticatable {
-        try session().data["_" + A.sessionName + "Session"] = a.sessionID?.description
-        self.authenticate(a)
+    public func authenticate<A>(_ a: A)
+        where A: SessionAuthenticatable
+    {
+        self.data["_" + A.sessionName + "Session"] = a.sessionID?.description
     }
 
     /// Un-authenticates the model from the session.
-    public func unauthenticateSession<A>(_ a: A.Type) throws where A: SessionAuthenticatable {
-        guard self.hasSession else {
-            return
-        }
-        try self.session().data["_" + A.sessionName + "Session"] = nil
-        self.unauthenticate(A.self)
+    public func unauthenticate<A>(_ a: A.Type)
+        where A: SessionAuthenticatable
+    {
+        self.data["_" + A.sessionName + "Session"] = nil
     }
 
     /// Returns the authenticatable type's ID if it exists
     /// in the session data.
-    public func authenticatedSession<A>(_ a: A.Type) throws -> A.SessionID? where A: SessionAuthenticatable {
-        return try session().data["_" + A.sessionName + "Session"].flatMap { A.SessionID.init($0) }
+    public func authenticated<A>(_ a: A.Type) -> A.SessionID?
+        where A: SessionAuthenticatable
+    {
+        return self.data["_" + A.sessionName + "Session"]
+            .flatMap { A.SessionID.init($0) }
     }
 }
