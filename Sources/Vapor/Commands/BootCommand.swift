@@ -3,25 +3,23 @@
 ///     $ swift run Run boot
 ///     Done.
 ///
-public struct BootCommand: Command {
+public final class BootCommand: Command {
     /// See `Command`.
-    public var arguments: [CommandArgument] {
-        return []
-    }
+    public struct Signature: CommandSignature { }
 
     /// See `Command`.
-    public var options: [CommandOption] {
-        return []
-    }
+    public let signature = Signature()
 
     /// See `Command`.
-    public let help: [String] = ["Boots the application's providers."]
+    public var help: String? {
+        return "Boots the application's providers."
+    }
 
     /// Create a new `BootCommand`.
     public init() { }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws {
+    public func run(using context: CommandContext<BootCommand>) throws {
         context.console.success("Done.")
     }
 }
