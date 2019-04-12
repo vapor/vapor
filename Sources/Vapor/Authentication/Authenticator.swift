@@ -18,7 +18,7 @@ public protocol BasicAuthenticator: RequestAuthenticator {
 extension BasicAuthenticator {
     public func authenticate(request: Request) -> EventLoopFuture<User?> {
         guard let basicAuthorization = request.headers.basicAuthorization else {
-            fatalError()
+            return request.eventLoop.makeSucceededFuture(nil)
         }
         return self.authenticate(basic: basicAuthorization)
     }
