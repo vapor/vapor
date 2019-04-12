@@ -17,12 +17,14 @@ extension HTTPHeaders {
                 return nil
             }
 
-            guard let range = string.range(of: "Bearer ") else {
+            let headerParts = string.split(separator: " ")
+            guard headerParts.count == 2 else {
                 return nil
             }
-
-            let token = string[range.upperBound...]
-            return .init(token: String(token))
+            guard headerParts[0] == "Bearer" else {
+                return nil
+            }
+            return .init(token: String(headerParts[1]))
         }
         set {
             if let bearer = newValue {
