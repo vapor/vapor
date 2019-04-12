@@ -75,7 +75,12 @@ public final class Application {
     public func run() throws {
         self.logger = .init(label: "codes.vapor.application")
         defer { self.shutdown() }
-        try self.runCommands()
+        do {
+            try self.runCommands()
+        } catch {
+            self.logger.report(error: error)
+            throw error
+        }
     }
     
     public func runCommands() throws {
