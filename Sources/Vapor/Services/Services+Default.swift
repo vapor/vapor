@@ -4,6 +4,16 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
+        // auth
+        s.register(PasswordVerifier.self) { c in
+            return BCryptDigest()
+        }
+        s.register(PlaintextVerifier.self) { c in
+            return PlaintextVerifier()
+        }
+        s.register(PasswordVerifier.self) { c in
+            return try c.make(PlaintextVerifier.self)
+        }
         
         // client
         s.register(URLSessionConfiguration.self) { c in
@@ -79,7 +89,7 @@ extension Services {
             )
         }
         s.register(ErrorMiddleware.self) { c in
-            return .default(environment: c.env)
+            return .default(environment: c.environment)
         }
 
         // console

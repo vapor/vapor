@@ -124,7 +124,7 @@ public final class XCTApplication {
             override(&s)
         }
         let c = Container.boot(
-            env: self.application.env,
+            environment: self.application.environment,
             services: s,
             on: self.application.eventLoopGroup.next()
         )

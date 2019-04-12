@@ -1,10 +1,10 @@
 import XCTVapor
 import COperatingSystem
 
-class ApplicationTests: XCTestCase {
+final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(env: test) { .default() }
+        let app = Application(environment: test) { .default() }
         DispatchQueue.global().async {
             COperatingSystem.sleep(1)
             app.running?.stop()
@@ -1028,7 +1028,7 @@ extension Application {
         configure: @escaping (inout Services) throws -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
-        return Application(env: .testing) {
+        return Application(environment: .testing) {
             var s = Services.default()
             try configure(&s)
             s.extend(Routes.self) { r, c in

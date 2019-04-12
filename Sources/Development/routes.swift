@@ -65,15 +65,15 @@ public func routes(_ r: Routes, _ c: Container) throws {
 
     let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
     sessions.get("get") { req -> String in
-        return try req.session().data["name"] ?? "n/a"
+        return req.session.data["name"] ?? "n/a"
     }
     sessions.get("set", ":value") { req -> String in
         let name = req.parameters.get("value")!
-        try req.session().data["name"] = name
+        req.session.data["name"] = name
         return name
     }
     sessions.get("del") { req -> String in
-        try req.destroySession()
+        req.destroySession()
         return "done"
     }
 
@@ -99,6 +99,6 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "users"
     }
     users.get(":userID") { req in
-        return "user"
+        return req.parameters.get("userID") ?? "no id"
     }
 }
