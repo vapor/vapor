@@ -1,7 +1,7 @@
 import NIO
 
 public final class Application {
-    public let env: Environment
+    public let environment: Environment
     
     public let eventLoopGroup: EventLoopGroup
     
@@ -30,8 +30,8 @@ public final class Application {
         }
     }
     
-    public init(env: Environment = .development, configure: @escaping () throws -> Services) {
-        self.env = env
+    public init(environment: Environment = .development, configure: @escaping () throws -> Services) {
+        self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.userInfo = [:]
         self.didShutdown = false
@@ -67,7 +67,7 @@ public final class Application {
     
     private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
         let s = try self.makeServices()
-        return Container.boot(env: self.env, services: s, on: eventLoop)
+        return Container.boot(environment: self.environment, services: s, on: eventLoop)
     }
 
     // MARK: Run
@@ -90,7 +90,7 @@ public final class Application {
         defer { c.shutdown() }
         let command = try c.make(Commands.self).group()
         let console = try c.make(Console.self)
-        var runInput = self.env.commandInput
+        var runInput = self.environment.commandInput
         try console.run(command, input: &runInput)
     }
     

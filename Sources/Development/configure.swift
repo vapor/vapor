@@ -6,7 +6,7 @@ public func configure(_ s: inout Services) throws {
     }
     
     s.register(HTTPServer.Configuration.self) { c in
-        switch c.env {
+        switch c.environment {
         case .tls:
             return .init(hostname: "127.0.0.1", port: 8443, tlsConfiguration: tls)
         default:

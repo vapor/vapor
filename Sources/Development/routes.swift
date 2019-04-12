@@ -99,28 +99,6 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "users"
     }
     users.get(":userID") { req in
-        return "user"
-    }
-
-    r.grouped([
-        FooAuthenticator().middleware(), Foo.guardMiddleware()
-    ]).get("foo") { req -> String in
-        return try req.requireAuthenticated(Foo.self).name
-    }
-}
-
-struct Foo: Authenticatable {
-    var name: String
-}
-
-struct FooAuthenticator: BearerAuthenticator {
-    typealias User = Foo
-
-    func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Foo?> {
-        guard bearer.token == "foo" else {
-            return EmbeddedEventLoop().makeSucceededFuture(nil)
-        }
-        let foo = Foo(name: "Vapor")
-        return EmbeddedEventLoop().makeSucceededFuture(foo)
+        return req.parameters.get("userID") ?? "no id"
     }
 }

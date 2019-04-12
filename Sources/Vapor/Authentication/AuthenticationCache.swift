@@ -44,7 +44,7 @@ extension Request {
     }
 
     /// Returns the authenticated instance of the supplied type.
-    /// note: nil if no type has been authed, throws if there is a problem.
+    /// note: nil if no type has been authed.
     public func authenticated<A>(_ type: A.Type = A.self) -> A?
         where A: Authenticatable
     {

@@ -1,13 +1,13 @@
 public final class Container {
-    public static func boot(env: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        let container = Container(env: env, services: services, on: eventLoop)
+    public static func boot(environment: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
+        let container = Container(environment: environment, services: services, on: eventLoop)
         return container.willBoot()
             .flatMap { container.didBoot() }
             .map { container }
     }
     
     /// Service `Environment` (e.g., production, dev). Use this to dynamically swap services based on environment.
-    public let env: Environment
+    public let environment: Environment
     
     /// Available services. This struct contains all of this `Container`'s available service implementations.
     public let services: Services
@@ -25,8 +25,8 @@ public final class Container {
     
     private var didShutdown: Bool
     
-    private init(env: Environment, services: Services, on eventLoop: EventLoop) {
-        self.env = env
+    private init(environment: Environment, services: Services, on eventLoop: EventLoop) {
+        self.environment = environment
         self.services = services
         self.eventLoop = eventLoop
         self.cache = .init()
