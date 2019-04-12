@@ -130,11 +130,11 @@ extension Services {
         s.register(BootCommand.self) { c in
             return .init()
         }
-        s.register(CommandConfig.self) { c in
+        s.register(CommandConfiguration.self) { c in
             return try .default(on: c)
         }
         s.register(Commands.self) { c in
-            return try c.make(CommandConfig.self).resolve()
+            return try c.make(CommandConfiguration.self).resolve()
         }
 
         // directory

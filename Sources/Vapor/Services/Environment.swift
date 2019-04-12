@@ -26,7 +26,7 @@ public struct Environment: Equatable {
     /// - returns: The detected environment, or default env.
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
         var env: Environment
-        if let value = try commandInput.parse(option: .value(name: "env", short: "e")) {
+        if let value = try commandInput.parse(option: Option<String>(name: "env", short: "e", type: .value)) {
             switch value {
             case "prod", "production": env = .production
             case "dev", "development": env = .development
