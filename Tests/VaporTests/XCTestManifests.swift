@@ -29,7 +29,9 @@ extension AuthenticationTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__AuthenticationTests = [
+        ("testBasicAuthenticator", testBasicAuthenticator),
         ("testBearerAuthenticator", testBearerAuthenticator),
+        ("testSessionAuthentication", testSessionAuthentication),
     ]
 }
 
