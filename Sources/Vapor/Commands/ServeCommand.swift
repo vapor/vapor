@@ -6,13 +6,13 @@
 public final class ServeCommand: Command {
     /// See `Command`.
     public struct Signature: CommandSignature {
-        public let hostname = Option<String>(name: "hostname", short: "H", default: nil, help: "Set the hostname the server will run on.")
-        public let port = Option<Int>(name: "port", short: "p", default: nil, help: "Set the port the server will run on.")
-        public let bind = Option<String>(name: "bind", short: "b", default: nil, help: "Convenience for setting hostname and port together.")
+        public let hostname = Option<String>(name: "hostname", short: "H", type: .value, help: "Set the hostname the server will run on.")
+        public let port = Option<Int>(name: "port", short: "p",  type: .value, help: "Set the port the server will run on.")
+        public let bind = Option<String>(name: "bind", short: "b", type: .value, help: "Convenience for setting hostname and port together.")
     }
 
     /// See `Command`.
-    public static let signature = Signature()
+    public let signature = Signature()
 
     /// See `Command`.
     public var help: String? {

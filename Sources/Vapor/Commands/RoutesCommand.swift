@@ -16,7 +16,7 @@ public final class RoutesCommand: Command {
     public struct Signature: CommandSignature { }
 
     /// See `Command`.
-    public static let signature = Signature()
+    public let signature = Signature()
 
     /// See `Command`.
     public var help: String? {
