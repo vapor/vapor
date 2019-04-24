@@ -59,7 +59,5 @@ private extension String {
 
 /// Characters allowed in form-urlencoded data.
 private var _allowedCharacters: CharacterSet = {
-    var allowed = CharacterSet.urlQueryAllowed
-    allowed.remove("+")
-    return allowed
+    return CharacterSet(charactersIn: "?&[]=;% +").inverted
 }()
