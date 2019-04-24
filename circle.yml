@@ -6,7 +6,7 @@ jobs:
       - image: swift:5.0
     steps:
       - checkout
-      - run: apt-get update; apt-get install libssl-dev
+      - run: apt-get update; apt-get install -y libssl-dev
       - run: swift build
       - run: swift test
   linux-release:
@@ -14,7 +14,7 @@ jobs:
       - image: swift:5.0
     steps:
       - checkout
-      - run: apt-get update; apt-get install libssl-dev
+      - run: apt-get update; apt-get install -y libssl-dev
       - run: swift build -c release
 
 workflows:
