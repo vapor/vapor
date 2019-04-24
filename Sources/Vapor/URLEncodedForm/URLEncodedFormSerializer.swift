@@ -59,8 +59,8 @@ private extension String {
 
 /// Characters allowed in form-urlencoded data.
 private var _allowedCharacters: CharacterSet = {
-    var set = CharacterSet.urlQueryAllowed
+    var allowed = CharacterSet.urlQueryAllowed
     // these symbols are reserved for url-encoded form
-    set.remove(charactersIn: "?&=[];+")
-    return set
+    allowed.remove(charactersIn: "?&=[];+")
+    return allowed
 }()
