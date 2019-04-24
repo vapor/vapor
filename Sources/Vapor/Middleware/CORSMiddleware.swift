@@ -27,7 +27,7 @@ public final class CORSMiddleware: Middleware {
         ///
         /// - Parameter request: Request for which the allow origin header should be created.
         /// - Returns: Header string to be used in response for allowed origin.
-        public func header(forRequest req: HTTPRequest) -> String {
+        public func header(forRequest req: Request) -> String {
             switch self {
             case .none: return ""
             case .originBased: return req.headers[.origin].first ?? ""
@@ -87,7 +87,7 @@ public final class CORSMiddleware: Middleware {
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPMethod],
-            allowedHeaders: [HTTPHeaderName],
+            allowedHeaders: [HTTPHeaders.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
             exposedHeaders: [String]? = nil
@@ -114,45 +114,44 @@ public final class CORSMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // Check if it's valid CORS request
-        guard req.headers[.origin].first != nil else {
-            return next.respond(to: req, using: ctx)
+        guard request.headers[.origin].first != nil else {
+            return next.respond(to: request)
         }
         
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
-        let res = req.isPreflight
-            ? ctx.eventLoop.makeSucceededFuture(.init())
-            : next.respond(to: req, using: ctx)
+        let response = request.isPreflight
+            ? request.eventLoop.makeSucceededFuture(.init())
+            : next.respond(to: request)
         
-        return res.map { res in
-            var res = res
+        return response.map { response in
             // Modify response headers based on CORS settings
-            res.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: req))
-            res.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
-            res.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
+            response.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: request))
+            response.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
+            response.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
             
             if let exposedHeaders = self.configuration.exposedHeaders {
-                res.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
+                response.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
             }
             
             if let cacheExpiration = self.configuration.cacheExpiration {
-                res.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
+                response.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
             }
             
             if self.configuration.allowCredentials {
-                res.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
+                response.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
             }
             
-            return res
+            return response
         }
     }
 }
 
 // MARK: Private
 
-private extension HTTPRequest {
+private extension Request {
     /// Returns `true` if the request is a pre-flight CORS request.
     var isPreflight: Bool {
         return self.method == .OPTIONS && self.headers[.accessControlRequestMethod].first != nil

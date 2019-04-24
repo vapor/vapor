@@ -1,43 +1,4 @@
-#warning("TODO: re-add methods with controller-based FileIO")
-//extension HTTPRequestContext {
-//    /// Creates a `FileIO` for this `Request`.
-//    ///
-//    ///     let data = try req.fileio().read(file: "/path/to/file.txt")
-//    ///     print(data) // Future<Data>
-//    ///
-//    /// See `FileIO` for more information.
-//    public func fileio() throws -> FileIO {
-//        let allocator: ByteBufferAllocator
-//        if let channel = http.channel {
-//            allocator = channel.allocator
-//        } else {
-//            debugOnly { WARNING("FileIO: No channel on HTTPRequest. Initializing a new ByteBufferAllocator.") }
-//            allocator = .init()
-//        }
-//        return try .init(io: make(), allocator: allocator, on: self)
-//    }
-//
-//    /// If you are simply looking to serve files from your public directory,
-//    /// it may be useful to look at 'FileMiddleware' instead.
-//    ///
-//    /// Use this to initialize a file response for the exact file path.
-//    /// If using from a public folder for example, the file name should be appended
-//    /// to the public directory, ie: `drop.publicDir + "myFile.cool"`
-//    ///
-//    /// If none match represents an ETag that will be used to check if the file has
-//    /// changed since the last load by the client. This allows clients like browsers
-//    /// to cache their files and avoid downloading resources unnecessarily.
-//    /// Most often calculated w/
-//    /// https://tools.ietf.org/html/rfc7232#section-3.2
-//    ///
-//    /// For an example of how this is used, look at 'FileMiddleware'.
-//    ///
-//    /// See `FileIO` for more information.
-//    public func streamFile(at path: String) throws -> EventLoopFuture<HTTPResponse> {
-//        let res = try fileio().chunkedResponse(file: path, for: http)
-//        return self.eventLoop.makeSucceededFuture(result: res)
-//    }
-//}
+import NIO
 
 // MARK: FileIO
 
@@ -45,19 +6,24 @@
 ///
 /// It can read files, both in their entirety and chunked.
 ///
-///     let data = try req.fileio().read(file: "/path/to/file.txt").wait()
-///     print(data) // file data
+///     let fileio = try c.make(FileIO.self)
 ///
-/// It can also create HTTP chunked streams for use as HTTP bodies.
-///
-///     router.get("file-stream") { req -> HTTPResponse in
-///         let stream = try req.fileio().chunkedStream(file: "/path/to/file.txt")
-///         var res = HTTPResponse(status: .ok, body: stream)
-///         res.contentType = .plainText
-///         return res
+///     fileio.readFile(at: "/path/to/file.txt") { chunk in
+///         print(chunk) // part of file
 ///     }
 ///
-/// Use `Request.fileio()` to create one.
+///     fileio.collectFile(at: "/path/to/file.txt").map { file in
+///         print(file) // entire file
+///     }
+///
+/// It can also create streaming HTTP responses.
+///
+///     let fileio = try c.make(FileIO.self)
+///     router.get("file-stream") { req -> Response in
+///         return fileio.streamFile(at: "/path/to/file.txt", for: req)
+///     }
+///
+/// Streaming file responses respect `E-Tag` headers present in the request.
 public struct FileIO {
     /// Wrapped non-blocking file io from SwiftNIO
     private let io: NonBlockingFileIO
@@ -85,9 +51,12 @@ public struct FileIO {
     /// - parameters:
     ///     - file: Path to file on the disk.
     /// - returns: `Future` containing the file data.
-    public func read(file: String) -> EventLoopFuture<Data> {
-        var data: Data = .init()
-        return readChunked(file: file) { data += $0 }.map { data }
+    public func collectFile(at file: String) -> EventLoopFuture<ByteBuffer> {
+        var data = self.allocator.buffer(capacity: 0)
+        return self.readFile(at: file) { new in
+            var new = new
+            data.writeBuffer(&new)
+        }.map { data }
     }
 
     /// Reads the contents of a file at the supplied path in chunks.
@@ -101,13 +70,14 @@ public struct FileIO {
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
-    public func readChunked(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (Data) -> Void) -> EventLoopFuture<Void> {
-        return _read(file: file, chunkSize: chunkSize) { buffer in
-            let data = buffer.withUnsafeReadableBytes { ptr in
-                return Data(buffer: ptr.bindMemory(to: UInt8.self))
-            }
-            onRead(data)
+    public func readFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> Void) -> EventLoopFuture<Void> {
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+            let fileSize = attributes[.size] as? NSNumber
+        else {
+            return self.eventLoop.makeFailedFuture(Abort(.internalServerError))
         }
+        return self.read(path: path, fileSize: fileSize.intValue, chunkSize: chunkSize, onRead: onRead)
     }
 
     /// Generates a chunked `HTTPResponse` for the specified file. This method respects values in
@@ -124,80 +94,62 @@ public struct FileIO {
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    public func chunkedResponse(file: String, for req: HTTPRequest, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPResponse {
+    public func streamFile(at path: String, for request: Request, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> Response {
         // Get file attributes for this file.
         guard
-            let attributes = try? FileManager.default.attributesOfItem(atPath: file),
+            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
             let modifiedAt = attributes[.modificationDate] as? Date,
-            let fileSize = attributes[.size] as? NSNumber
+            let fileSize = (attributes[.size] as? NSNumber)?.intValue
         else {
-            return HTTPResponse(status: .internalServerError)
+            return Response(status: .internalServerError)
         }
 
         // Create empty headers array.
         var headers: HTTPHeaders = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-        let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize.intValue)"
+        let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize)"
         headers.replaceOrAdd(name: .eTag, value: fileETag)
 
         // Check if file has been cached already and return NotModified response if the etags match
-        if fileETag == req.headers.firstValue(name: .ifNoneMatch) {
-            return HTTPResponse(status: .notModified)
+        if fileETag == request.headers.firstValue(name: .ifNoneMatch) {
+            return Response(status: .notModified)
         }
 
         // Create the HTTP response.
-        var res = HTTPResponse(status: .ok, headers: headers)
+        let response = Response(status: .ok, headers: headers)
 
         // Set Content-Type header based on the media type
         // Only set Content-Type if file not modified and returned above.
         if
-            let fileExtension = file.components(separatedBy: ".").last,
+            let fileExtension = path.components(separatedBy: ".").last,
             let type = HTTPMediaType.fileExtension(fileExtension)
         {
-            res.contentType = type
+            response.headers.contentType = type
         }
 
-        res.body = chunkedStream(file: file).convertToHTTPBody()
-        return res
-    }
-
-    /// Reads the contents of a file at the supplied path into an `HTTPChunkedStream`.
-    ///
-    ///     router.get("file-stream") { req -> HTTPResponse in
-    ///         let stream = try req.fileio().chunkedStream(file: "/path/to/file.txt")
-    ///         var res = HTTPResponse(status: .ok, body: stream)
-    ///         res.contentType = .plainText
-    ///         return res
-    ///     }
-    ///
-    /// - parameters:
-    ///     - file: Path to file on the disk.
-    ///     - chunkSize: Maximum size for the file data chunks.
-    /// - returns: An `HTTPChunkedStream` containing the file stream.
-    public func chunkedStream(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> HTTPBodyStream {
-        let bodyStream = HTTPBodyStream(on: eventLoop)
-        _ = _read(file: file, chunkSize: chunkSize) { chunk in
-            bodyStream.write(.chunk(chunk))
-        }.map {
-            bodyStream.write(.end)
-        }.flatMapErrorThrowing { error in
-            // we can't wait for the error
-            bodyStream.write(.error(error))
-        }
-        return bodyStream
+        response.body = .init(stream: { stream in
+            self.read(path: path, fileSize: fileSize, chunkSize: chunkSize) { chunk in
+                stream.write(.buffer(chunk))
+            }.whenComplete { result in
+                switch result {
+                case .failure(let error):
+                    stream.write(.error(error))
+                case .success:
+                    stream.write(.end)
+                }
+            }
+        }, count: fileSize)
+        
+        return response
     }
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
-    private func _read(file: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> ()) -> EventLoopFuture<Void> {
+    private func read(path: String, fileSize: Int, chunkSize: Int, onRead: @escaping (ByteBuffer) -> ()) -> EventLoopFuture<Void> {
         do {
-            guard let attributes = try? FileManager.default.attributesOfItem(atPath: file), let fileSize = attributes[.size] as? NSNumber else {
-                throw VaporError(identifier: "fileSize", reason: "Could not determine file size of: \(file).")
-            }
-
-            let fd = try NIOFileHandle(path: file)
-            let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize.intValue, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
+            let fd = try NIOFileHandle(path: path)
+            let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
                 onRead(chunk)
                 return self.eventLoop.makeSucceededFuture(())
             }

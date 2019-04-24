@@ -1,5 +1,14 @@
+extension HTTPHeaders {
+    public init(foundation headers: [AnyHashable: Any]) {
+        self.init()
+        for (key, val) in headers {
+            self.add(name: key as! String, value: val as! String)
+        }
+    }
+}
+
 /// `Client` wrapper around `Foundation.URLSession`.
-public final class FoundationClient {
+public final class FoundationClient: Client {
     /// See `Client`.
     public var eventLoop: EventLoop
 
@@ -13,47 +22,45 @@ public final class FoundationClient {
     }
 
     /// See `Client`.
-    public func send(_ req: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
-        let promise = self.eventLoop.makePromise(of: HTTPResponse.self)
-        self.urlSession.dataTask(with: URLRequest(http: req)) { data, urlResponse, error in
+    public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        let promise = self.eventLoop.makePromise(of: ClientResponse.self)
+        self.urlSession.dataTask(with: URLRequest(client: request)) { data, urlResponse, error in
             if let error = error {
                 promise.fail(error)
                 return
             }
 
             guard let httpURLResponse = urlResponse as? HTTPURLResponse else {
-                let error = VaporError(
-                    identifier: "httpURLResponse",
-                    reason: "URLResponse was not a HTTPURLResponse."
-                )
-                promise.fail(error)
-                return
+                fatalError("URLResponse was not a HTTPURLResponse")
             }
 
-            let res = HTTPResponse(foundation: httpURLResponse, data: data)
-            promise.succeed(res)
+            let response = ClientResponse(foundation: httpURLResponse, data: data)
+            promise.succeed(response)
         }.resume()
         return promise.futureResult
     }
 }
 
-extension URLRequest {
-    public init(http: HTTPRequest) {
-        let body = http.body.data ?? Data()
-        self.init(url: http.url)
-        self.httpMethod = "\(http.method)"
-        self.httpBody = body
-        http.headers.forEach { key, val in
+private extension URLRequest {
+    init(client request: ClientRequest) {
+        self.init(url: request.url)
+        self.httpMethod = request.method.string
+        if var body = request.body {
+            self.httpBody = body.readData(length: body.readableBytes)
+        }
+        request.headers.forEach { key, val in
             self.addValue(val, forHTTPHeaderField: key.description)
         }
     }
 }
 
-extension HTTPResponse {
-    public init(foundation: HTTPURLResponse, data: Data? = nil) {
+private extension ClientResponse {
+    init(foundation: HTTPURLResponse, data: Data? = nil) {
         self.init(status: .init(statusCode: foundation.statusCode))
-        if let data = data {
-            self.body = HTTPBody(data: data)
+        if let data = data, !data.isEmpty {
+            var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+            buffer.writeBytes(data)
+            self.body = buffer
         }
         for (key, value) in foundation.allHeaderFields {
             self.headers.replaceOrAdd(name: "\(key)", value: "\(value)")

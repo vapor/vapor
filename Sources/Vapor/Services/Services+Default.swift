@@ -4,9 +4,15 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
-        // server
-        s.register(HTTPServerConfig.self) { c in
-            return HTTPServerConfig()
+        // auth
+        s.register(PasswordVerifier.self) { c in
+            return BCryptDigest()
+        }
+        s.register(PlaintextVerifier.self) { c in
+            return PlaintextVerifier()
+        }
+        s.register(PasswordVerifier.self) { c in
+            return try c.make(PlaintextVerifier.self)
         }
         
         // client
@@ -19,47 +25,22 @@ extension Services {
         s.register(FoundationClient.self) { c in
             return try .init(c.make(), on: c.eventLoop)
         }
-        s.register(HTTPClientConfig.self) { c in
+        s.register(HTTPClient.Configuration.self) { c in
             return .init()
         }
         s.register(HTTPClient.self) { c in
-            return try .init(config: c.make(), on: c.eventLoop)
+            return try .init(configuration: c.make(), on: c.eventLoop)
         }
         s.register(Client.self) { c in
             return try c.make(HTTPClient.self)
-        }
-        
-        s.register(HTTPServerDelegate.self) { c in
-            return try ServerDelegate(application: c.make())
         }
         
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)
         }
-
-        // responder
-        s.register(Responder.self) { c in
-            // initialize all `[Middleware]` from config
-            let middleware = try c
-                .make(MiddlewareConfig.self)
-                .resolve()
-            
-            // create HTTP routes
-            let routes = try c.make(Routes.self)
-            
-            // return new responder
-            return ApplicationResponder(routes: routes, middleware: middleware)
-        }
-
-        // bcrypt
-        #warning("TODO: update BCryptDigest")
-//        s.register { container -> BCryptDigest in
-//            return .init()
-//        }
-
+        
         // sessions
-        #warning("TODO: update sessions")
         s.register(SessionsMiddleware.self) { c in
             return try .init(sessions: c.make(), config: c.make())
         }
@@ -77,7 +58,7 @@ extension Services {
             if let existing = app.userInfo[key] as? MemorySessions.Storage {
                 return existing
             } else {
-                let new = MemorySessions.Storage(lock: app.lock)
+                let new = MemorySessions.Storage()
                 app.userInfo[key] = new
                 return new
             }
@@ -92,8 +73,8 @@ extension Services {
 //        s.register(MemoryKeyedCache(), as: KeyedCache.self)
 
         // middleware
-        s.register(MiddlewareConfig.self) { c in
-            var middleware = MiddlewareConfig()
+        s.register(MiddlewareConfiguration.self) { c in
+            var middleware = MiddlewareConfiguration()
             try middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
@@ -108,26 +89,40 @@ extension Services {
             )
         }
         s.register(ErrorMiddleware.self) { c in
-            return .default(environment: c.env)
+            return .default(environment: c.environment)
         }
-
-        // content
-//        s.register(ContentConfig.self)
-//        s.register(ContentCoders.self)
 
         // console
         s.register(Console.self) { c in
-            return Terminal(on: c.eventLoop)
+            return Terminal()
         }
         
+        // server
+        s.register(HTTPServer.Configuration.self) { c in
+            return .init()
+        }
+        s.register(Server.self) { c in
+            return try c.make(HTTPServer.self)
+        }
+        s.register(HTTPServer.self) { c in
+            return try .init(application: c.make(), configuration: c.make())
+        }
+        s.register(Responder.self) { c in
+            // initialize all `[Middleware]` from config
+            let middleware = try c
+                .make(MiddlewareConfiguration.self)
+                .resolve()
+            
+            // create HTTP routes
+            let routes = try c.make(Routes.self)
+            
+            // return new responder
+            return ApplicationResponder(routes: routes, middleware: middleware)
+        }
 
         // commands
         s.register(ServeCommand.self) { c in
-            return try .init(
-                config: c.make(),
-                console: c.make(),
-                application: c.make()
-            )
+            return try .init(server: c.make())
         }
         s.register(RoutesCommand.self) { c in
             return try .init(routes: c.make())
@@ -135,15 +130,11 @@ extension Services {
         s.register(BootCommand.self) { c in
             return .init()
         }
-        s.register(CommandConfig.self) { c in
-            var config = CommandConfig()
-            try config.use(c.make(ServeCommand.self), as: "serve", isDefault: true)
-            try config.use(c.make(RoutesCommand.self), as: "routes")
-            try config.use(c.make(BootCommand.self), as: "boot")
-            return config
+        s.register(CommandConfiguration.self) { c in
+            return try .default(on: c)
         }
         s.register(Commands.self) { c in
-            return try c.make(CommandConfig.self).resolve()
+            return try c.make(CommandConfiguration.self).resolve()
         }
 
         // directory
@@ -152,13 +143,12 @@ extension Services {
         }
 
         // logging
-        #warning("TODO: update to sswg logging")
-//        services.register(Logger.self) { container -> ConsoleLogger in
-//            return try ConsoleLogger(console: container.make())
-//        }
-//        services.register(Logger.self) { container -> PrintLogger in
-//            return PrintLogger()
-//        }
+        s.register(ConsoleLogger.self) { container in
+            return try ConsoleLogger(console: container.make())
+        }
+        s.register(Logger.self) { c in
+            return try c.make(Application.self).logger
+        }
 
         // templates
         #warning("TODO: update view renderer")
@@ -172,8 +162,10 @@ extension Services {
             return try .init(threadPool: c.make())
         }
         s.register(FileIO.self) { c in
-            #warning("TODO: re-use buffer allocator")
-            return try .init(io: c.make(), allocator: .init(), on: c.eventLoop)
+            return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
+        }
+        s.register(ByteBufferAllocator.self) { c in
+            return .init()
         }
 
         // websocket

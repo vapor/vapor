@@ -1,4 +1,4 @@
-// swift-tools-version:4.2
+// swift-tools-version:5.0
 import PackageDescription
 
 let package = Package(
@@ -11,43 +11,53 @@ let package = Package(
         .package(url: "https://github.com/vapor/console.git", .branch("master")),
 
         // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
-        // .package(url: "https://github.com/vapor/crypto.git", from: "3.0.0"),
-
-        // 🚀 Non-blocking, event-driven HTTP for Swift built on Swift NIO.
-        .package(url: "https://github.com/vapor/http.git", .branch("master")),
-
-        // 🏞 Parses and serializes multipart-encoded data with Codable support.
-        // .package(url: "https://github.com/vapor/multipart.git", from: "3.0.0"),
+        .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", .branch("master")),
-
-        // 📦 Dependency injection / inversion of control framework.
-        .package(url: "https://github.com/vapor/service.git", .branch("master")),
-
-        // 📝 Parses and serializes url-encoded form data with Codable support.
-        // .package(url: "https://github.com/vapor/url-encoded-form.git", from: "1.0.0"),
-
-        // ✅ Extensible data validation library (email, alphanumeric, UUID, etc)
-        // .package(url: "https://github.com/vapor/validation.git", from: "2.0.0"),
+        
+        // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
+        
+        // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.0.0"),
+        
+        // HTTP/2 support for SwiftNIO
+        .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.0.0"),
+        
+        // Useful code around SwiftNIO.
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
+        
+        // Swift logging API
+        .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
     ],
     targets: [
-        // Boilerplate
-        .target(name: "Boilerplate", dependencies: ["Vapor"]),
-        .target(name: "BoilerplateRun", dependencies: ["Boilerplate"]),
+        // C helpers
+        .target(name: "CMultipartParser"),
+        .target(name: "COperatingSystem"),
 
         // Vapor
-        .target(name: "Development", dependencies: ["Vapor"]),
         .target(name: "Vapor", dependencies: [
+            "CMultipartParser",
+            "COperatingSystem",
             "ConsoleKit",
-            // "Crypto",
-            "HTTPKit",
-            // "Multipart",
+            "CryptoKit",
+            "Logging",
+            "NIO",
+            "NIOExtras",
+            "NIOFoundationCompat",
+            "NIOHTTPCompression",
+            "NIOHTTP1",
+            "NIOHTTP2",
+            "NIOSSL",
+            "NIOWebSocket",
             "RoutingKit",
-            "ServiceKit",
-            // "URLEncodedForm",
-            // "Validation",
         ]),
+
+        // Development
+        .target(name: "Development", dependencies: ["Vapor"]),
+
+        // Testing
         .target(name: "XCTVapor", dependencies: ["Vapor"]),
         .testTarget(name: "VaporTests", dependencies: ["XCTVapor"]),
     ]

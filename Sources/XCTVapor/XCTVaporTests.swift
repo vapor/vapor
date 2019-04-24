@@ -12,6 +12,6 @@ open class XCTVaporTests: XCTestCase {
     
     open override func tearDown() {
         super.tearDown()
-        try! self.app.shutdown()
+        self.app.shutdown()
     }
 }
