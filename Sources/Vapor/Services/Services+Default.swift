@@ -29,7 +29,10 @@ extension Services {
             return .init()
         }
         s.register(HTTPClient.self) { c in
-            return try .init(configuration: c.make(), on: c.eventLoop)
+            return try .init(
+                eventLoopGroupProvider: .shared(c.eventLoop),
+                configuration: c.make()
+            )
         }
         s.register(Client.self) { c in
             return try c.make(HTTPClient.self)

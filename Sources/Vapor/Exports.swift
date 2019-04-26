@@ -19,7 +19,10 @@
 @_exported import class NIO.NIOThreadPool
 
 @_exported import struct NIOSSL.TLSConfiguration
+
 @_exported import struct NIOHTTP1.HTTPHeaders
 @_exported import enum NIOHTTP1.HTTPMethod
 @_exported import struct NIOHTTP1.HTTPVersion
 @_exported import enum NIOHTTP1.HTTPResponseStatus
+
+@_exported import class NIOHTTPClient.HTTPClient
