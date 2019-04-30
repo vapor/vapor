@@ -30,6 +30,9 @@ let package = Package(
         
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
+
+        // HTTP client library built on SwiftNIO
+        .package(url: "https://github.com/swift-server/swift-nio-http-client.git", .branch("master")),
     ],
     targets: [
         // C helpers
@@ -49,6 +52,7 @@ let package = Package(
             "NIOHTTPCompression",
             "NIOHTTP1",
             "NIOHTTP2",
+            "NIOHTTPClient",
             "NIOSSL",
             "NIOWebSocket",
             "RoutingKit",
