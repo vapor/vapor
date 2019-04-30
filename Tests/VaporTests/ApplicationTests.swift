@@ -318,6 +318,31 @@ final class ApplicationTests: XCTestCase {
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
+
+    func testWebSocketClient() throws {
+        let app = Application.create(routes: { r, c in
+            let ws = try c.make(WebSocketClient.self)
+            r.get("ws") { req -> EventLoopFuture<String> in
+                let promise = req.eventLoop.makePromise(of: String.self)
+                return ws.connect(host: "echo.websocket.org", port: 80) { ws in
+                    ws.send(text: "Hello, world!")
+                    ws.onText { ws, text in
+                        promise.succeed(text)
+                        ws.close().cascadeFailure(to: promise)
+                    }
+                }.flatMap {
+                    return promise.futureResult
+                }
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/ws") { res in
+            debugPrint(res)
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Hello, world!")
+        }
+    }
 //
 //    func testViewResponse() throws {
 //        let app = try Application.makeTest { router in

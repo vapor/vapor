@@ -1,5 +1,6 @@
 import NIO
 import NIOHTTP1
+import NIOWebSocket
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -47,29 +48,48 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let res = self.unwrapOutboundIn(data)
         
-        context.write(self.wrapOutboundOut(res), promise: promise)
-        
         // check upgrade
         switch self.upgradeState {
         case .pending(let req, let buffer):
+            self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
-                // do upgrade
-                let handlers: [RemovableChannelHandler] = [self] + self.otherHTTPHandlers
-                _ = EventLoopFuture<Void>.andAllComplete(handlers.map { handler in
-                    return context.pipeline.removeHandler(handler)
-                }, on: context.eventLoop).flatMap { _ in
-                    return upgrader.upgrade(
-                        context: context,
-                        upgradeRequest: .init(
-                            version: req.version,
-                            method: req.method,
-                            uri: req.urlString
-                        )
+                switch upgrader {
+                case .webSocket(let onUpgrade):
+                    let webSocketUpgrader = WebSocketUpgrader(shouldUpgrade: { channel, _ in
+                        return channel.eventLoop.makeSucceededFuture([:])
+                    }, upgradePipelineHandler: { channel, req in
+                        let webSocket = HTTPServerWebSocket(channel: channel, mode: .server)
+                        let handler = HTTPServerWebSocketHandler(webSocket: webSocket)
+                        return channel.pipeline.addHandler(handler).map {
+                            onUpgrade(webSocket)
+                        }
+                    })
+
+                    var head = HTTPRequestHead(
+                        version: req.version,
+                        method: req.method,
+                        uri: req.urlString
                     )
+                    head.headers = req.headers
+
+                    webSocketUpgrader.buildUpgradeResponse(
+                        channel: context.channel,
+                        upgradeRequest: head,
+                        initialResponseHeaders: [:]
+                    ).map { headers in
+                        res.headers = headers
+                        context.write(self.wrapOutboundOut(res), promise: promise)
+                    }.flatMap {
+                        let handlers: [RemovableChannelHandler] = [self] + self.otherHTTPHandlers
+                        return .andAllComplete(handlers.map { handler in
+                            return context.pipeline.removeHandler(handler)
+                        }, on: context.eventLoop)
+                    }.flatMap {
+                        return webSocketUpgrader.upgrade(context: context, upgradeRequest: head)
                     }.flatMap {
                         return context.pipeline.removeHandler(buffer)
+                    }.cascadeFailure(to: promise)
                 }
-                self.upgradeState = .upgraded
             } else {
                 // reset handlers
                 self.upgradeState = .ready
@@ -77,8 +97,8 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     return context.channel.pipeline.removeHandler(buffer)
                 }
             }
-        case .ready: break
-        case .upgraded: break
+        case .ready, .upgraded:
+            context.write(self.wrapOutboundOut(res), promise: promise)
         }
     }
 }

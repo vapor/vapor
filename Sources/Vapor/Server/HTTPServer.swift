@@ -132,7 +132,6 @@ public final class HTTPServer: Server {
     
     public func start(hostname: String?, port: Int?) throws {
         var configuration = self.configuration
-        self.didStart = true
         
         // determine which hostname / port to bind to
         configuration.hostname = hostname ?? self.configuration.hostname
@@ -154,6 +153,7 @@ public final class HTTPServer: Server {
             on: self.application.eventLoopGroup
         )
         self.connection = try connection.wait()
+        self.didStart = true
     }
     
     public func shutdown() {
@@ -172,7 +172,7 @@ public final class HTTPServer: Server {
     }
     
     deinit {
-        assert(!self.didStart || self.didShutdown, "ServeCommand did not shutdown before deinitializing")
+        assert(!self.didStart || self.didShutdown, "HTTPServer did not shutdown before deinitializing")
     }
 }
 
