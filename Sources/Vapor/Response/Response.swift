@@ -32,8 +32,12 @@ public final class Response: CustomStringConvertible {
     public var body: Body {
         didSet { self.headers.updateContentLength(self.body.count) }
     }
+
+    internal enum Upgrader {
+        case webSocket(onUpgrade: (WebSocket) -> ())
+    }
     
-    internal var upgrader: HTTPServerProtocolUpgrader?
+    internal var upgrader: Upgrader?
     
     /// Get and set `HTTPCookies` for this `HTTPResponse`
     /// This accesses the `"Set-Cookie"` header.

@@ -4,10 +4,12 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
-        return self.on(.GET, path) { request -> EventLoopFuture<Response> in
-            return request.makeWebSocketUpgradeResponse(onUpgrade: { ws in
+        return self.on(.GET, path) { request -> Response in
+            let res = Response(status: .switchingProtocols)
+            res.upgrader = .webSocket(onUpgrade: { ws in
                 onUpgrade(request, ws)
             })
+            return res
         }
     }
 }

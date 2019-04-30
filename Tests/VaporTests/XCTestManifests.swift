@@ -21,6 +21,7 @@ extension ApplicationTests {
         ("testQuery", testQuery),
         ("testQueryStringRunning", testQueryStringRunning),
         ("testURLSession", testURLSession),
+        ("testWebSocketClient", testWebSocketClient),
     ]
 }
 

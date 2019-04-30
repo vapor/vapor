@@ -172,8 +172,15 @@ extension Services {
         }
 
         // websocket
-        #warning("TODO: update websocket client")
-        // services.register(NIOWebSocketClient.self)
+        s.register(WebSocketClient.self) { c in
+            return try .init(
+                eventLoopGroupProvider: .shared(c.eventLoop),
+                configuration: c.make()
+            )
+        }
+        s.register(WebSocketClient.Configuration.self) { c in
+            return .init()
+        }
 
         return s
     }
