@@ -8,7 +8,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: Error {
+public protocol AbortError: Error, CustomStringConvertible {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
@@ -45,6 +45,11 @@ extension DecodingError: AbortError {
         @unknown default: return "unknown"
         }
     }
+    
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        return "Decoding error: \(self.reason)"
+    }
 
     /// See `AbortError.reason`
     public var reason: String {
@@ -64,35 +69,5 @@ extension DecodingError: AbortError {
             return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
         @unknown default: return "Unknown error."
         }
-    }
-}
-
-#warning("TODO: update support for NotFound error")
-//extension NotFound: AbortError {
-//    /// See `AbortError.status`
-//    public var status: HTTPResponseStatus {
-//        return .notFound
-//    }
-//
-//    /// See `AbortError.reason`
-//    public var reason: String {
-//        switch rootCause {
-//        case let rootCause as Debuggable:
-//            return rootCause.reason
-//        default:
-//            return rootCause?.localizedDescription ?? "Not found."
-//        }
-//    }
-//
-//    /// See `AbortError.identifier`
-//    public var identifier: String {
-//        return "notFound"
-//    }
-//
-//}
-
-extension Array where Element == CodingKey {
-    fileprivate var dotPath: String {
-        return map { $0.stringValue }.joined(separator: ".")
     }
 }

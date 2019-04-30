@@ -18,9 +18,7 @@ public final class ErrorMiddleware: Middleware {
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
             // log the error
-            #warning("TODO: upgrade to sswg logger")
-            print(error)
-            // log.report(error: error, verbose: !environment.isRelease)
+            req.logger.report(error: error, verbose: !environment.isRelease)
 
             // variables to determine
             let status: HTTPResponseStatus
@@ -34,18 +32,12 @@ public final class ErrorMiddleware: Middleware {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
-                #warning("TODO: add support for validation errors")
-//            case let validation as ValidationError:
-//                // this is a validation error
-//                reason = validation.reason
-//                status = .badRequest
-//                headers = [:]
-//            case let debuggable as Debuggable where !environment.isRelease:
-//                // if not release mode, and error is debuggable, provide debug
-//                // info directly to the developer
-//                reason = debuggable.reason
-//                status = .internalServerError
-//                headers = [:]
+            case let error as LocalizedError where !environment.isRelease:
+                // if not release mode, and error is debuggable, provide debug
+                // info directly to the developer
+                reason = error.localizedDescription
+                status = .internalServerError
+                headers = [:]
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
@@ -55,36 +47,36 @@ public final class ErrorMiddleware: Middleware {
             }
 
             // create a Response with appropriate status
-            var res = HTTPResponse(status: status, headers: headers)
-
+            let response = Response(status: status, headers: headers)
+            
             // attempt to serialize the error to json
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
-                res.body = try HTTPBody(data: JSONEncoder().encode(errorResponse))
-                res.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+                response.body = try .init(data: JSONEncoder().encode(errorResponse))
+                response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
             } catch {
-                res.body = HTTPBody(string: "Oops: \(error)")
-                res.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+                response.body = .init(string: "Oops: \(error)")
+                response.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
             }
-            return res
+            return response
         }
     }
 
     /// Error-handling closure.
-    private let closure: (HTTPRequest, Error) -> (HTTPResponse)
+    private let closure: (Request, Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (HTTPRequest, Error) -> (HTTPResponse)) {
+    public init(_ closure: @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
-        return next.respond(to: req, using: ctx).flatMapErrorThrowing { error in
-            return self.closure(req, error)
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        return next.respond(to: request).flatMapErrorThrowing { error in
+            return self.closure(request, error)
         }
     }
 }

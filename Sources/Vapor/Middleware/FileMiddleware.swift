@@ -19,9 +19,9 @@ public final class FileMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to req: HTTPRequest, using ctx: Context, chainingTo next: Responder) -> EventLoopFuture<HTTPResponse> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // make a copy of the path
-        var path = req.url.path
+        var path = request.url.path
 
         // path must be relative.
         while path.hasPrefix("/") {
@@ -39,11 +39,11 @@ public final class FileMiddleware: Middleware {
         // check if file exists and is not a directory
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: filePath, isDirectory: &isDir), !isDir.boolValue else {
-            return next.respond(to: req, using: ctx)
+            return next.respond(to: request)
         }
 
         // stream the file
-        let res = self.fileio.chunkedResponse(file: filePath, for: req)
+        let res = self.fileio.streamFile(at: filePath, for: request)
         return self.fileio.eventLoop.makeSucceededFuture(res)
     }
 }

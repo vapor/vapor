@@ -11,20 +11,16 @@
 /// is a parameter whose result will be discarded.
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
-public struct RoutesCommand: Command {
+public final class RoutesCommand: Command {
     /// See `Command`.
-    public var arguments: [CommandArgument] {
-        return []
-    }
+    public struct Signature: CommandSignature { }
 
     /// See `Command`.
-    public var options: [CommandOption] {
-        return []
-    }
+    public let signature = Signature()
 
     /// See `Command`.
-    public var help: [String] {
-        return ["Displays all registered routes."]
+    public var help: String? {
+        return "Displays all registered routes."
     }
 
     /// `Router` to use for printing routes.
@@ -36,7 +32,7 @@ public struct RoutesCommand: Command {
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
+    public func run(using context: CommandContext<RoutesCommand>) throws {
         let console = context.console
         
         var longestMethod = 0
@@ -121,8 +117,6 @@ public struct RoutesCommand: Command {
             console.print(" |")
             hr()
         }
-
-        return context.eventLoop.makeSucceededFuture(())
     }
 }
 

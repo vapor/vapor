@@ -5,84 +5,39 @@
 ///
 public final class ServeCommand: Command {
     /// See `Command`.
-    public var arguments: [CommandArgument] {
-        return []
+    public struct Signature: CommandSignature {
+        public let hostname = Option<String>(name: "hostname", short: "H", type: .value, help: "Set the hostname the server will run on.")
+        public let port = Option<Int>(name: "port", short: "p",  type: .value, help: "Set the port the server will run on.")
+        public let bind = Option<String>(name: "bind", short: "b", type: .value, help: "Convenience for setting hostname and port together.")
     }
 
     /// See `Command`.
-    public var options: [CommandOption] {
-        return [
-            .value(name: "hostname", short: "H", help: ["Set the hostname the server will run on."]),
-            .value(name: "port", short: "p", help: ["Set the port the server will run on."]),
-            .value(name: "bind", short: "b", help: ["Convenience for setting hostname and port together."]),
-        ]
-    }
+    public let signature = Signature()
 
     /// See `Command`.
-    public let help: [String] = ["Begins serving the app over HTTP."]
+    public var help: String? {
+        return "Begins serving the app over HTTP."
+    }
 
-    private let configuration: HTTPServer.Configuration
-    private let console: Console
-    private weak var application: Application?
-    
+    private let server: Server
     private var signalSources: [DispatchSourceSignal]
-    private var runningServer: HTTPServer?
-    private var onShutdown: EventLoopPromise<Void>?
-    private var delegate: ServerDelegate?
-    private var didShutdown: Bool
 
     /// Create a new `ServeCommand`.
-    public init(
-        configuration: HTTPServer.Configuration,
-        console: Console,
-        application: Application
-    ) {
-        self.configuration = configuration
-        self.console = console
-        self.application = application
+    public init(server: Server) {
+        self.server = server
         self.signalSources = []
-        self.didShutdown = false
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext) throws -> EventLoopFuture<Void> {
-        return self.start(
-            hostname: context.options["hostname"]
+    public func run(using context: CommandContext<ServeCommand>) throws {
+        try self.server.start(
+            hostname: context.option(\.hostname)
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
-                ?? context.options["bind"]?.split(separator: ":").first.flatMap(String.init),
-            port: context.options["port"].flatMap(Int.init)
+                ?? context.option(\.bind)?.split(separator: ":").first.flatMap(String.init),
+            port: context.option(\.port)
                 // 0.0.0.0:8080, :8080, parse port
-                ?? context.options["bind"]?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
+                ?? context.option(\.bind)?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
-    }
-    
-    private func start(hostname: String?, port: Int?) -> EventLoopFuture<Void> {
-        // determine which hostname / port to bind to
-        let hostname = hostname ?? self.configuration.hostname
-        let port = port ?? self.configuration.port
-        
-        // print starting message
-        self.console.print("Server starting on ", newLine: false)
-        let scheme = self.configuration.tlsConfig == nil ? "http" : "https"
-        self.console.output("\(scheme)://" + hostname, style: .init(color: .cyan), newLine: false)
-        self.console.output(":" + port.description, style: .init(color: .cyan))
-        
-        guard let app = self.application else {
-            fatalError("Application deinitialized")
-        }
-        let eventLoop = app.eventLoopGroup.next()
-        let server = HTTPServer(configuration: self.configuration, on: app.eventLoopGroup)
-        let delegate = ServerDelegate(application: app, on: eventLoop)
-        
-        let onShutdown = eventLoop.makePromise(of: Void.self)
-        
-        app.running = .init(stop: {
-            self.shutdown()
-        })
-        
-        self.onShutdown = onShutdown
-        self.delegate = delegate
-        self.runningServer = server
         
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
@@ -90,7 +45,7 @@ public final class ServeCommand: Command {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C
-                self.shutdown()
+                self.server.shutdown()
             }
             source.resume()
             self.signalSources.append(source)
@@ -99,35 +54,11 @@ public final class ServeCommand: Command {
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
         
-        
-        // start the actual HTTPServer
-        return server.start(delegate: delegate).flatMap {
-            self.runningServer = server
-            return onShutdown.futureResult
-        }
-    }
-    
-    func shutdown() {
-        console.print("Requesting server shutdown...")
-        let server = self.runningServer!
-        server.shutdown().flatMap { _ -> EventLoopFuture<Void> in
-            self.console.print("Server closed, cleaning up")
-            return self._shutdown()
-        }.flatMapError { error in
-            self.console.print("Could not close server: \(error)")
-            self.console.print("Cleaning up...")
-            return self._shutdown()
-        }.cascade(to: self.onShutdown!)
-    }
-    
-    func _shutdown() -> EventLoopFuture<Void> {
-        self.didShutdown = true
-        self.signalSources.forEach { $0.cancel() } // clear refs
-        self.signalSources = []
-        return self.delegate!.shutdown()
+        try self.server.onShutdown.wait()
     }
     
     deinit {
-        assert(self.didShutdown, "ServeCommand did not shutdown before deinitializing")
+        self.signalSources.forEach { $0.cancel() } // clear refs
+        self.signalSources = []
     }
 }
