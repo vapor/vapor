@@ -1,39 +1,55 @@
-#warning("TODO: re-impl ViewRenderer conveniences")
-//extension HTTPRequestContext {
-//    // MARK: View
-//
-//    /// Creates a `ViewRenderer`.
-//    ///
-//    ///     router.get("home") { req -> Future<View> in
-//    ///         return try req.view().make("home", ["message", "Hello, world!"])
-//    ///     }
-//    ///
-//    public func view() throws -> ViewRenderer {
-//        return try make()
-//    }
-//}
-//
-//extension View: Content {
-//    // MARK: Content
-//
-//    /// See `Content`.
-//    public static var defaultContentType: HTTPMediaType {
-//        return .html
-//    }
-//}
-//
-//extension ViewRenderer {
-//    // MARK: Render
-//
-//    /// Renders the template at the supplied path with an empty context.
-//    ///
-//    ///     try req.view().make("home")
-//    ///
-//    /// - parameters:
-//    ///     - path: Path to file containing the template.
-//    /// - returns: `Future` containing the rendered `View`.
-//    public func render(_ path: String) -> Future<View> {
-//        let empty: [String: String] = [:]
-//        return render(path, empty)
-//    }
-//}
+public protocol ViewRenderer {
+    var eventLoop: EventLoop { get }
+    func render<E>(_ name: String, _ context: E) -> EventLoopFuture<View>
+        where E: Encodable
+}
+
+extension ViewRenderer {
+    public func render(_ name: String) -> EventLoopFuture<View> {
+        return self.render(name, [String: String]())
+    }
+}
+
+public struct View: ResponseEncodable {
+    public var data: ByteBuffer
+
+    public init(data: ByteBuffer) {
+        self.data = data
+    }
+
+    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
+        let response = Response()
+        response.headers.contentType = .html
+        response.body = .init(buffer: self.data)
+        return request.eventLoop.makeSucceededFuture(response)
+    }
+}
+
+public struct PlaintextRenderer: ViewRenderer {
+    public let eventLoop: EventLoop
+    private let fileio: NonBlockingFileIO
+    private let viewsDirectory: String
+
+    public init(
+        threadPool: NIOThreadPool,
+        viewsDirectory: String,
+        eventLoop: EventLoop
+    ) {
+        self.fileio = .init(threadPool: threadPool)
+        self.viewsDirectory = viewsDirectory.finished(with: "/")
+        self.eventLoop = eventLoop
+    }
+
+    public func render<E>(_ name: String, _ context: E) -> EventLoopFuture<View>
+        where E: Encodable
+    {
+        let path = name.hasPrefix("/")
+            ? name
+            : self.viewsDirectory + name
+        return self.fileio.openFile(path: path, eventLoop: self.eventLoop).flatMap { (handle, region) in
+            return self.fileio.read(fileRegion: region, allocator: .init(), eventLoop: self.eventLoop)
+        }.map { data in
+            return View(data: data)
+        }
+    }
+}

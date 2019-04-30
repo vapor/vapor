@@ -82,12 +82,8 @@ extension Services {
             return middleware
         }
         s.register(FileMiddleware.self) { c in
-            var workDir = try c.make(DirectoryConfig.self).workDir
-            if !workDir.hasSuffix("/") {
-                workDir.append("/")
-            }
             return try .init(
-                publicDirectory: workDir + "Public/",
+                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
                 fileio: c.make()
             )
         }
@@ -141,7 +137,7 @@ extension Services {
         }
 
         // directory
-        s.register(DirectoryConfig.self) { c in
+        s.register(DirectoryConfiguration.self) { c in
             return .detect()
         }
 
@@ -153,12 +149,17 @@ extension Services {
             return try c.make(Application.self).logger
         }
 
-        // templates
-        #warning("TODO: update view renderer")
-//        services.register(ViewRenderer.self) { container -> PlaintextRenderer in
-//            let dir = try container.make(DirectoryConfig.self)
-//            return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
-//        }
+        // view
+        s.register(ViewRenderer.self) { c in
+            return try c.make(PlaintextRenderer.self)
+        }
+        s.register(PlaintextRenderer.self) { c in
+            return try PlaintextRenderer(
+                threadPool: c.make(NIOThreadPool.self),
+                viewsDirectory: c.make(DirectoryConfiguration.self).viewsDirectory,
+                eventLoop: c.eventLoop
+            )
+        }
 
         // file
         s.register(NonBlockingFileIO.self) { c in
