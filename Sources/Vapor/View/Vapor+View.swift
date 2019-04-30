@@ -47,7 +47,10 @@ public struct PlaintextRenderer: ViewRenderer {
             ? name
             : self.viewsDirectory + name
         return self.fileio.openFile(path: path, eventLoop: self.eventLoop).flatMap { (handle, region) in
-            return self.fileio.read(fileRegion: region, allocator: .init(), eventLoop: self.eventLoop)
+            return self.fileio.read(fileRegion: region, allocator: .init(), eventLoop: self.eventLoop).flatMapThrowing { buffer in
+                try handle.close()
+                return buffer
+            }
         }.map { data in
             return View(data: data)
         }
