@@ -4,27 +4,40 @@ import Glibc
 import Darwin.C
 #endif
 
-/// `DirectoryConfig` represents a configured working directory. It can also be used to derive a working directory automatically.
+/// `DirectoryConfiguration` represents a configured working directory.
+/// It can also be used to derive a working directory automatically.
 ///
-///     let dirConfig = DirectoryConfig.detect()
-///     print(dirConfig.workDir) // "/path/to/workdir"
+///     let dirConfig = DirectoryConfiguration.detect()
+///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
-public struct DirectoryConfig {
+public struct DirectoryConfiguration {
     /// Path to the current working directory.
-    public let workDir: String
+    public let workingDirectory: String
+
+    public var resourcesDirectory: String {
+        return self.workingDirectory + "Resources/"
+    }
+
+    public var viewsDirectory: String {
+        return self.resourcesDirectory + "Views/"
+    }
+
+    public var publicDirectory: String {
+        return self.workingDirectory + "Public/"
+    }
     
     /// Create a new `DirectoryConfig` with a custom working directory.
     ///
     /// - parameters:
-    ///     - workDir: Custom working directory path.
-    public init(workDir: String) {
-        self.workDir = workDir
+    ///     - workingDirectory: Custom working directory path.
+    public init(workingDirectory: String) {
+        self.workingDirectory = workingDirectory.finished(with: "/")
     }
     
     /// Creates a `DirectoryConfig` by deriving a working directory using the `#file` variable or `getcwd` method.
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
-    public static func detect() -> DirectoryConfig {
+    public static func detect() -> DirectoryConfiguration {
         let fileBasedWorkDir: String?
         
         #if Xcode
@@ -62,8 +75,16 @@ public struct DirectoryConfig {
             }
         }
         
-        return DirectoryConfig(
-            workDir: workDir.hasSuffix("/") ? workDir : workDir + "/"
-        )
+        return DirectoryConfiguration(workingDirectory: workDir)
+    }
+}
+
+public extension String {
+    func finished(with string: String) -> String {
+        if !self.hasSuffix(string) {
+            return self + string
+        } else {
+            return self
+        }
     }
 }
