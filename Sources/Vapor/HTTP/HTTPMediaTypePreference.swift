@@ -1,5 +1,5 @@
 /// Represents a `MediaType` and its associated preference, `q`.
-public struct MediaTypePreference {
+public struct HTTPMediaTypePreference {
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
     
@@ -7,12 +7,12 @@ public struct MediaTypePreference {
     public var q: Double?
 }
 
-extension Array where Element == MediaTypePreference {
+extension Array where Element == HTTPMediaTypePreference {
     /// Parses an array of `[MediaTypePreference]` from an accept header value
     ///
     /// - parameters:
     ///     - data: The accept header value to parse.
-    public static func parse(_ data: String) -> [MediaTypePreference] {
+    public static func parse(_ data: String) -> [HTTPMediaTypePreference] {
         return data.split(separator: ",").compactMap { token in
             let parts = token.split(separator: ";", maxSplits: 1)
             let value = String(parts[0]).trimmingCharacters(in: .whitespaces)
@@ -48,15 +48,15 @@ extension Array where Element == MediaTypePreference {
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
     ///
     public func comparePreference(for a: HTTPMediaType, to b: HTTPMediaType) -> ComparisonResult {
-        var aq: Double?
-        var bq: Double?
-        for pref in self {
-            if aq == nil, pref.mediaType == a { aq = pref.q ?? 1.0 }
-            if bq == nil, pref.mediaType == b { bq = pref.q ?? 1.0 }
-        }
+        let aq = self.filter { $0.mediaType == a }
+            .map { $0.q ?? 1.0 }
+            .first
+        let bq = self.filter { $0.mediaType == b }
+            .map { $0.q ?? 1.0 }
+            .first
         switch (aq, bq) {
         case (.some(let aq), .some(let bq)):
-            /// there is a value for both media types, compare the preference
+            // there is a value for both media types, compare the preference
             if aq == bq {
                 return .orderedSame
             } else if aq > bq {
@@ -65,13 +65,13 @@ extension Array where Element == MediaTypePreference {
                 return .orderedDescending
             }
         case (.none, .some):
-            /// there is not a value for a, no way it can be preferred
+            // there is not a value for a, no way it can be preferred
             return .orderedDescending
         case (.some, .none):
-            /// there is not a value for b, a is preferred by default
+            // there is not a value for b, a is preferred by default
             return .orderedAscending
         case (.none, .none):
-            /// there is no value for either, neither is preferred
+            // there is no value for either, neither is preferred
             return .orderedSame
         }
     }
