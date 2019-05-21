@@ -58,7 +58,7 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             case .awaitingBody(let request):
                 self.requestState = .awaitingEnd(request, buffer)
             case .awaitingEnd(let request, let previousBuffer):
-                let stream = Request.BodyStream()
+                let stream = Request.BodyStream(on: context.eventLoop)
                 request.bodyStorage = .stream(stream)
                 context.fireChannelRead(self.wrapInboundOut(request))
                 stream.write(.buffer(previousBuffer))

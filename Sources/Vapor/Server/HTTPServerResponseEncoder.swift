@@ -76,17 +76,21 @@ private struct ChannelResponseBodyStream: BodyStreamWriter {
     let context: ChannelHandlerContext
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
+
+    var eventLoop: EventLoop {
+        return self.context.eventLoop
+    }
     
-    func write(_ result: BodyStreamResult) {
+    func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
         case .end:
             self.promise?.succeed(())
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: nil)
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
         case .error(let error):
             self.promise?.fail(error)
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: nil)
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
         }
     }
 }

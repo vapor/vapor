@@ -70,7 +70,11 @@ public struct FileIO {
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
-    public func readFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) -> Void) -> EventLoopFuture<Void> {
+    public func readFile(
+        at path: String,
+        chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+    ) -> EventLoopFuture<Void> {
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
             let fileSize = attributes[.size] as? NSNumber
@@ -130,13 +134,13 @@ public struct FileIO {
 
         response.body = .init(stream: { stream in
             self.read(path: path, fileSize: fileSize, chunkSize: chunkSize) { chunk in
-                stream.write(.buffer(chunk))
+                return stream.write(.buffer(chunk))
             }.whenComplete { result in
                 switch result {
                 case .failure(let error):
-                    stream.write(.error(error))
+                    stream.write(.error(error), promise: nil)
                 case .success:
-                    stream.write(.end)
+                    stream.write(.end, promise: nil)
                 }
             }
         }, count: fileSize)
@@ -146,12 +150,11 @@ public struct FileIO {
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
-    private func read(path: String, fileSize: Int, chunkSize: Int, onRead: @escaping (ByteBuffer) -> ()) -> EventLoopFuture<Void> {
+    private func read(path: String, fileSize: Int, chunkSize: Int, onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path)
             let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
-                onRead(chunk)
-                return self.eventLoop.makeSucceededFuture(())
+                return onRead(chunk)
             }
             done.whenComplete { _ in
                 try? fd.close()
