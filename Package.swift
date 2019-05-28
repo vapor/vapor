@@ -10,8 +10,8 @@ let package = Package(
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console.git", .branch("master")),
 
-        // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
-        .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
+        // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
+        .package(url: "https://github.com/vapor/crypto-kit.git", from: "4.0.0-alpha"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing.git", .branch("master")),
