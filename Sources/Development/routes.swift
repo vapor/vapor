@@ -25,14 +25,14 @@ public func routes(_ r: Routes, _ c: Container) throws {
     
     r.webSocket("ws") { req, ws in
         ws.onText { ws, text in
-            ws.send(text: text.reversed())
+            ws.send(text.reversed())
             if text == "close" {
                 ws.close(code: nil, promise: nil)
             }
         }
 
         let ip = req.channel.remoteAddress?.description ?? "<no ip>"
-        ws.send(text: "Hello 👋 \(ip)")
+        ws.send("Hello 👋 \(ip)")
     }
     
     r.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
