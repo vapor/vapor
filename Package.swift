@@ -8,13 +8,13 @@ let package = Package(
     ],
     dependencies: [
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", .branch("master")),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha"),
 
-        // 🔑 Hashing (BCrypt, SHA, HMAC, etc), encryption, and randomness.
-        .package(url: "https://github.com/vapor/crypto.git", .branch("master")),
+        // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
+        .package(url: "https://github.com/vapor/crypto-kit.git", from: "4.0.0-alpha"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing.git", .branch("master")),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-alpha"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
@@ -29,13 +29,13 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
         
         // Swift logging API
-        .package(url: "https://github.com/apple/swift-log.git", .branch("master")),
+        .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/swift-nio-http-client.git", .branch("master")),
 
         // SwiftNIO based WebSocket client
-        .package(url: "https://github.com/vapor/nio-websocket-client.git", .branch("master")),
+        .package(url: "https://github.com/vapor/nio-websocket-client.git", from: "1.0.0-alpha"),
     ],
     targets: [
         // C helpers

@@ -15,7 +15,7 @@ public final class ServeCommand: Command {
     public let signature = Signature()
 
     /// See `Command`.
-    public var help: String? {
+    public var help: String {
         return "Begins serving the app over HTTP."
     }
 
