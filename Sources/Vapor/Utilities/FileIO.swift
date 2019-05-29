@@ -56,6 +56,7 @@ public struct FileIO {
         return self.readFile(at: file) { new in
             var new = new
             data.writeBuffer(&new)
+            return self.eventLoop.makeSucceededFuture(())
         }.map { data }
     }
 
