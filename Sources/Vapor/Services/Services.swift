@@ -177,11 +177,11 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - provider: Initialized `Provider` to register.
     /// - throws: The provider can throw errors while registering services.
-    public mutating func provider<P>(_ provider: P) throws where P: Provider {
+    public mutating func provider<P>(_ provider: P) where P: Provider {
         guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
             return
         }
-        try provider.register(&self)
+        provider.register(&self)
         providers.append(provider)
     }
     

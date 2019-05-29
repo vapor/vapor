@@ -4,6 +4,9 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
+        // client
+        s.provider(ClientProvider())
+
         // auth
         s.register(PasswordVerifier.self) { c in
             return BCryptDigest()
@@ -15,27 +18,12 @@ extension Services {
             return try c.make(PlaintextVerifier.self)
         }
         
-        // client
+        // url session
         s.register(URLSessionConfiguration.self) { c in
             return .default
         }
         s.register(URLSession.self) { c in
             return try .init(configuration: c.make())
-        }
-        s.register(FoundationClient.self) { c in
-            return try .init(c.make(), on: c.eventLoop)
-        }
-        s.register(HTTPClient.Configuration.self) { c in
-            return .init()
-        }
-        s.register(HTTPClient.self) { c in
-            return try .init(
-                eventLoopGroupProvider: .shared(c.eventLoop),
-                configuration: c.make()
-            )
-        }
-        s.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
         }
         
         // routes
@@ -169,17 +157,6 @@ extension Services {
             return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
         }
         s.register(ByteBufferAllocator.self) { c in
-            return .init()
-        }
-
-        // websocket
-        s.register(WebSocketClient.self) { c in
-            return try .init(
-                eventLoopGroupProvider: .shared(c.eventLoop),
-                configuration: c.make()
-            )
-        }
-        s.register(WebSocketClient.Configuration.self) { c in
             return .init()
         }
 

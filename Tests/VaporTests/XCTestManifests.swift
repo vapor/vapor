@@ -11,7 +11,6 @@ extension ApplicationTests {
         ("testContent", testContent),
         ("testContentContainer", testContentContainer),
         ("testDotEnvRead", testDotEnvRead),
-        ("testFakeClient", testFakeClient),
         ("testGH1534", testGH1534),
         ("testJSON", testJSON),
         ("testLiveServer", testLiveServer),

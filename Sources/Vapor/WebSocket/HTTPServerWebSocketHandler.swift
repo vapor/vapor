@@ -112,7 +112,7 @@ internal final class HTTPServerWebSocketHandler: ChannelInboundHandler {
         let pongFrame = WebSocketFrame(
             fin: true,
             opcode: .pong,
-            maskKey: self.webSocket.mode.makeMaskKey(),
+            maskKey: nil,
             data: frame.data
         )
         context.writeAndFlush(self.wrapOutboundOut(pongFrame), promise: nil)
@@ -128,7 +128,7 @@ internal final class HTTPServerWebSocketHandler: ChannelInboundHandler {
         let frame = WebSocketFrame(
             fin: true,
             opcode: .connectionClose,
-            maskKey: self.webSocket.mode.makeMaskKey(),
+            maskKey: nil,
             data: data
         )
 
