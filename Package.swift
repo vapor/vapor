@@ -14,7 +14,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/crypto-kit.git", from: "4.0.0-alpha"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing.git", .branch("master")),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-alpha"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.0.0"),
