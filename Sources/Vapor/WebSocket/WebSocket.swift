@@ -8,6 +8,8 @@ import NIOWebSocket
 ///      }
 ///
 public protocol WebSocket {
+    var eventLoop: EventLoop { get }
+
     /// Adds a callback to this `WebSocket` to receive text-formatted messages.
     ///
     ///     ws.onText { ws, string in
@@ -52,36 +54,21 @@ public protocol WebSocket {
 }
 
 extension WebSocket {
-    public func send(binary: ByteBuffer) {
+    public func send<S>(_ text: S) where S: Collection, S.Element == Character {
+        self.send(String(text))
+    }
+
+    public func send(_ text: String) {
+        self.send(text: text, promise: nil)
+    }
+    
+    public func send(_ binary: ByteBuffer) {
         self.send(binary: binary, promise: nil)
     }
 
-    public func send(text: String) {
-        self.send(text: text, promise: nil)
-    }
-
-    public func close(promise: EventLoopPromise<Void>?) {
+    public func close(code: WebSocketErrorCode? = nil) -> EventLoopFuture<Void> {
+        let promise = self.eventLoop.makePromise(of: Void.self)
         self.close(code: nil, promise: promise)
-    }
-
-    public func close(code: WebSocketErrorCode?) {
-        self.close(code: code, promise: nil)
-    }
-
-    public func close() {
-        self.close(code: nil, promise: nil)
-    }
-
-    /// Sends text-formatted data to the connected client.
-    ///
-    ///     ws.onText { ws, string in
-    ///         ws.send(string.reversed())
-    ///     }
-    ///
-    /// - parameters:
-    ///     - text: `String` to send as text-formatted data to the client.
-    ///     - promise: Optional `Promise` to complete when the send is finished.
-    public func send<S>(text: S, promise: EventLoopPromise<Void>? = nil) where S: Collection, S.Element == Character {
-        self.send(text: String(text), promise: promise)
+        return promise.futureResult
     }
 }

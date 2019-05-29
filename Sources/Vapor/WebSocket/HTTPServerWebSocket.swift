@@ -1,34 +1,10 @@
 import NIOWebSocket
 
 internal final class HTTPServerWebSocket {
-    enum Mode {
-        case client
-        case server
-
-        /// RFC 6455 Section 5.1
-        /// To avoid confusing network intermediaries (such as intercepting proxies) and
-        /// for security reasons that are further, a client MUST mask all frames that it
-        /// sends to the server.
-        /// The server MUST close the connection upon receiving a frame that is not masked.
-        /// A server MUST NOT mask any frames that it sends to the client.
-        /// A client MUST close a connection if it detects a masked frame.
-        ///
-        /// RFC 6455 Section 5.3
-        /// The masking key is a 32-bit value chosen at random by the client.
-        /// When preparing a masked frame, the client MUST pick a fresh masking
-        /// key from the set of allowed 32-bit values.
-        internal func makeMaskKey() -> WebSocketMaskingKey? {
-            switch self {
-            case .client:
-                return WebSocketMaskingKey([.random, .random, .random, .random])
-            case .server:
-                return  nil
-            }
-        }
-    }
-
     private let channel: Channel
-    internal let mode: Mode
+    var eventLoop: EventLoop {
+        return self.channel.eventLoop
+    }
     var onTextCallback: (HTTPServerWebSocket, String) -> ()
     var onBinaryCallback: (HTTPServerWebSocket, ByteBuffer) -> ()
     var onErrorCallback: (HTTPServerWebSocket, Error) -> ()
@@ -39,9 +15,8 @@ internal final class HTTPServerWebSocket {
         return self.channel.closeFuture
     }
 
-    init(channel: Channel, mode: Mode) {
+    init(channel: Channel) {
         self.channel = channel
-        self.mode = mode
         self.onTextCallback = { _, _ in }
         self.onBinaryCallback = { _, _ in }
         self.onErrorCallback = { _, _ in }
@@ -52,7 +27,7 @@ internal final class HTTPServerWebSocket {
         let frame = WebSocketFrame(
             fin: fin,
             opcode: opcode,
-            maskKey: mode.makeMaskKey(),
+            maskKey: nil,
             data: buffer
         )
         self.channel.writeAndFlush(frame, promise: promise)
