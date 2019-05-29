@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console.git", .branch("master")),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/vapor/crypto-kit.git", from: "4.0.0-alpha"),

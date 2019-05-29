@@ -11,7 +11,7 @@ public final class BootCommand: Command {
     public let signature = Signature()
 
     /// See `Command`.
-    public var help: String? {
+    public var help: String {
         return "Boots the application's providers."
     }
 
