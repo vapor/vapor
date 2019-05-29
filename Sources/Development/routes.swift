@@ -10,6 +10,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "123" as StaticString
     }
 
+    // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
     r.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
@@ -32,8 +33,8 @@ public func routes(_ r: Routes, _ c: Container) throws {
 
             // manually return pre-completed future
             // this should balloon in memory
-            return req.eventLoop.makeSucceededFuture(())
-            // return promise.futureResult
+            // return req.eventLoop.makeSucceededFuture(())
+            return promise.futureResult
         }
 
         return done.futureResult
