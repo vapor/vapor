@@ -25,8 +25,17 @@ internal struct RoutesResponder: Responder {
     init(routes: Routes) {
         let router = TrieRouter(Responder.self)
         for route in routes.routes {
+            // remove any empty path components
+            let path = route.path.filter { component in
+                switch component {
+                case .constant(let string):
+                    return string != ""
+                default:
+                    return true
+                }
+            }
             let route = RoutingKit.Route<Responder>(
-                path: [.constant(route.method.string)] + route.path,
+                path: [.constant(route.method.string)] + path,
                 output: route.responder
             )
             router.register(route: route)
@@ -49,6 +58,9 @@ internal struct RoutesResponder: Responder {
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
             .map { String($0) }
-        return self.router.route(path: [request.method.string] + path, parameters: &request.parameters)
+        return self.router.route(
+            path: [request.method.string] + path,
+            parameters: &request.parameters
+        )
     }
 }

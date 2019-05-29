@@ -168,6 +168,51 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
             }
     }
+
+    func testRootGet() throws {
+        do {
+            let app = Application.create(routes: { r, c in
+                r.get("") { req -> String in
+                    return "root"
+                }
+                r.get("foo") { req -> String in
+                    return "foo"
+                }
+            })
+            defer { app.shutdown() }
+
+            try app.testable().inMemory()
+                .test(.GET, "/") { res in
+                    XCTAssertEqual(res.status, .ok)
+                    XCTAssertEqual(res.body.string, "root")
+                }
+                .test(.GET, "/foo") { res in
+                    XCTAssertEqual(res.status, .ok)
+                    XCTAssertEqual(res.body.string, "foo")
+                }
+        }
+        do {
+            let app = Application.create(routes: { r, c in
+                r.get { req -> String in
+                    return "root"
+                }
+                r.get("foo") { req -> String in
+                    return "foo"
+                }
+            })
+            defer { app.shutdown() }
+
+            try app.testable().inMemory()
+                .test(.GET, "/") { res in
+                    XCTAssertEqual(res.status, .ok)
+                    XCTAssertEqual(res.body.string, "root")
+                }
+                .test(.GET, "/foo") { res in
+                    XCTAssertEqual(res.status, .ok)
+                    XCTAssertEqual(res.body.string, "foo")
+                }
+        }
+    }
     
     func testLiveServer() throws {
         let app = Application.create(routes: { r, c in

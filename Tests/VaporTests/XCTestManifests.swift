@@ -20,6 +20,7 @@ extension ApplicationTests {
         ("testParameter", testParameter),
         ("testQuery", testQuery),
         ("testQueryStringRunning", testQueryStringRunning),
+        ("testRootGet", testRootGet),
         ("testURLSession", testURLSession),
         ("testWebSocketClient", testWebSocketClient),
     ]
