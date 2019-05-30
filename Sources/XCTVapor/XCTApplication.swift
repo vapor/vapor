@@ -44,7 +44,7 @@ public final class XCTApplication {
             let response: XCTHTTPResponse
             let request = Request(
                 method: method,
-                url: URL(string: path)!,
+                url: .init(string: path),
                 headers: headers,
                 collectedBody: body,
                 on: EmbeddedChannel()

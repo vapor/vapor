@@ -121,9 +121,10 @@ final class ApplicationTests: XCTestCase {
     func testQuery() throws {
         let request = Request(on: EmbeddedChannel())
         request.headers.contentType = .json
-        var comps = URLComponents()
-        comps.query = "hello=world"
-        request.url = comps.url!
+        request.url.path = "/foo"
+        print(request.url.string)
+        request.url.query = "hello=world"
+        print(request.url.string)
         try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
     }
 
@@ -354,7 +355,6 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
 
         try app.testable().inMemory().test(.GET, "/multipart") { res in
-            debugPrint(res)
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
@@ -383,103 +383,162 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
 
         try app.testable().inMemory().test(.GET, "/ws") { res in
-            debugPrint(res)
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Hello, world!")
         }
     }
-//
-//    func testViewResponse() throws {
-//        let app = try Application.makeTest { router in
-//            router.get("view") { req -> View in
-//                return View(data: "<h1>hello</h1>".convertToData())
-//            }
-//        }
-//
-//        try app.test(.GET, "view") { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssertEqual(res.http.contentType, .html)
-//            XCTAssertEqual(res.http.body.string, "<h1>hello</h1>")
-//        }
-//    }
-//
-//    func testURLEncodedFormDecode() throws {
-//        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
-//
-//        struct User: Content {
-//            var name: String
-//            var age: Int
-//            var luckyNumbers: [Int]
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("urlencodedform") { req -> Future<HTTPStatus> in
-//                return try req.content.decode(User.self).map(to: HTTPStatus.self) { foo in
-//                    XCTAssertEqual(foo.name, "Vapor")
-//                    XCTAssertEqual(foo.age, 3)
-//                    XCTAssertEqual(foo.luckyNumbers, [5, 7])
-//                    return .ok
-//                }
-//            }
-//        }
-//
-//        var req = HTTPRequest(method: .GET, url: URL(string: "/urlencodedform")!)
-//        req.contentType = .urlEncodedForm
-//        req.body = HTTPBody(string: data)
-//
-//        try app.test(req) { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//        }
-//    }
-//
-//    func testURLEncodedFormEncode() throws {
-//        struct User: Content {
-//            static let defaultContentType: HTTPMediaType = .urlEncodedForm
-//            var name: String
-//            var age: Int
-//            var luckyNumbers: [Int]
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("urlencodedform") { req -> User in
-//                return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
-//            }
-//        }
-//
-//        try app.test(.GET, "urlencodedform") { res in
-//            debugPrint(res)
-//            XCTAssertEqual(res.http.status.code, 200)
-//            XCTAssertEqual(res.http.contentType, .urlEncodedForm)
-//            XCTAssert(res.http.body.string.contains("luckyNumbers[]=5"))
-//            XCTAssert(res.http.body.string.contains("luckyNumbers[]=7"))
-//            XCTAssert(res.http.body.string.contains("age=3"))
-//            XCTAssert(res.http.body.string.contains("name=Vapor"))
-//        }
-//    }
-//
-//    func testURLEncodedFormDecodeQuery() throws {
-//        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
-//        struct User: Content {
-//            var name: String
-//            var age: Int
-//            var luckyNumbers: [Int]
-//        }
-//
-//        let app = try Application.makeTest { router in
-//            router.get("urlencodedform") { req -> HTTPStatus in
-//                let foo = try req.query.decode(User.self)
-//                XCTAssertEqual(foo.name, "Vapor")
-//                XCTAssertEqual(foo.age, 3)
-//                XCTAssertEqual(foo.luckyNumbers, [5, 7])
-//                return .ok
-//            }
-//        }
-//
-//        let req = HTTPRequest(method: .GET, url: URL(string: "/urlencodedform?\(data)")!)
-//        try app.test(req) { res in
-//            XCTAssertEqual(res.http.status.code, 200)
-//        }
-//    }
+
+    func testWebSocketClientBadHost() throws {
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("ws") { req -> EventLoopFuture<String> in
+                return client.webSocket("ws://asdf/") { ws in
+                    XCTFail("should not have connected")
+                    ws.close(code: nil, promise: nil)
+                }.map { "fail" }
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/ws") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+            XCTAssertContains(res.body.string, "Something went wrong")
+        }
+    }
+
+    func testViewResponse() throws {
+        var data = ByteBufferAllocator().buffer(capacity: 0)
+        data.writeString("<h1>hello</h1>")
+        let app = Application.create(routes: { r, c in
+            let client = try c.make(Client.self)
+            r.get("view") { req -> View in
+                return View(data: data)
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/view") { res in
+            XCTAssertEqual(res.status.code, 200)
+            XCTAssertEqual(res.headers.contentType, .html)
+            XCTAssertEqual(res.body.string, "<h1>hello</h1>")
+        }
+    }
+
+    func testURLEncodedFormDecode() throws {
+        struct User: Content {
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("urlencodedform") { req -> HTTPStatus in
+                let foo = try req.content.decode(User.self)
+                XCTAssertEqual(foo.name, "Vapor")
+                XCTAssertEqual(foo.age, 3)
+                XCTAssertEqual(foo.luckyNumbers, [5, 7])
+                return .ok
+            }
+        })
+        defer { app.shutdown() }
+
+        var headers = HTTPHeaders()
+        headers.contentType = .urlEncodedForm
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
+
+        try app.testable().inMemory().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+            XCTAssertEqual(res.status.code, 200)
+        }
+    }
+
+    func testURLEncodedFormEncode() throws {
+        struct User: Content {
+            static let defaultContentType: HTTPMediaType = .urlEncodedForm
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("urlencodedform") { req -> User in
+                return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/urlencodedform") { res in
+            debugPrint(res)
+            XCTAssertEqual(res.status.code, 200)
+            XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
+            XCTAssertContains(res.body.string, "luckyNumbers[]=5")
+            XCTAssertContains(res.body.string, "luckyNumbers[]=7")
+            XCTAssertContains(res.body.string, "age=3")
+            XCTAssertContains(res.body.string, "name=Vapor")
+        }
+    }
+
+    func testURLEncodedFormDecodeQuery() throws {
+        struct User: Content {
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("urlencodedform") { req -> HTTPStatus in
+                debugPrint(req)
+                let foo = try req.query.decode(User.self)
+                XCTAssertEqual(foo.name, "Vapor")
+                XCTAssertEqual(foo.age, 3)
+                XCTAssertEqual(foo.luckyNumbers, [5, 7])
+                return .ok
+            }
+        })
+        defer { app.shutdown() }
+
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
+        try app.testable().inMemory().test(.GET, "/urlencodedform?\(data)") { res in
+            XCTAssertEqual(res.status.code, 200)
+        }
+    }
+
+    func testVaporURI() throws {
+        do {
+            var uri = URI(string: "http://vapor.codes/foo?bar=baz#qux")
+            XCTAssertEqual(uri.scheme, "http")
+            XCTAssertEqual(uri.host, "vapor.codes")
+            XCTAssertEqual(uri.path, "/foo")
+            XCTAssertEqual(uri.query, "bar=baz")
+            XCTAssertEqual(uri.fragment, "qux")
+            uri.query = "bar=baz&test=1"
+            XCTAssertEqual(uri.string, "http://vapor.codes/foo?bar=baz&test=1#qux")
+            uri.query = nil
+            XCTAssertEqual(uri.string, "http://vapor.codes/foo#qux")
+        }
+        do {
+            let uri = URI(string: "/foo/bar/baz")
+            XCTAssertEqual(uri.path, "/foo/bar/baz")
+        }
+        do {
+            let uri = URI(string: "ws://echo.websocket.org/")
+            XCTAssertEqual(uri.scheme, "ws")
+            XCTAssertEqual(uri.host, "echo.websocket.org")
+            XCTAssertEqual(uri.path, "/")
+        }
+        do {
+            let uri = URI(string: "http://foo")
+            XCTAssertEqual(uri.scheme, "http")
+            XCTAssertEqual(uri.host, "foo")
+            XCTAssertEqual(uri.path, "")
+        }
+        do {
+            let uri = URI(string: "foo")
+            XCTAssertEqual(uri.scheme, "foo")
+            XCTAssertEqual(uri.host, nil)
+            XCTAssertEqual(uri.path, "")
+        }
+    }
 //
 //    func testStreamFile() throws {
 //        try Application.runningTest(port: 8085) { router in

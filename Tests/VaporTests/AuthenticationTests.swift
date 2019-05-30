@@ -28,10 +28,10 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         try app.testable().inMemory()
-            .test(.GET, "test") { res in
+            .test(.GET, "/test") { res in
                 XCTAssertEqual(res.status, .unauthorized)
             }
-            .test(.GET, "test", headers: ["Authorization": "Bearer test"]) { res in
+            .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "Vapor")
             }
@@ -65,10 +65,10 @@ final class AuthenticationTests: XCTestCase {
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
         try app.testable().inMemory()
-            .test(.GET, "test") { res in
+            .test(.GET, "/test") { res in
                 XCTAssertEqual(res.status, .unauthorized)
             }
-            .test(.GET, "test", headers: ["Authorization": "Basic \(basic)"]) { res in
+            .test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "Vapor")
         }
@@ -117,11 +117,11 @@ final class AuthenticationTests: XCTestCase {
 
         var sessionCookie: HTTPCookies.Value?
         try app.testable().inMemory()
-            .test(.GET, "test") { res in
+            .test(.GET, "/test") { res in
                 XCTAssertEqual(res.status, .unauthorized)
                 XCTAssertNil(res.headers.firstValue(name: .setCookie))
             }
-            .test(.GET, "test", headers: ["Authorization": "Bearer test"]) { res in
+            .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "Vapor")
                 if
@@ -133,7 +133,7 @@ final class AuthenticationTests: XCTestCase {
                     XCTFail("No set cookie header")
                 }
             }
-            .test(.GET, "test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res in
+            .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res in
                 XCTAssertEqual(res.status, .ok)
                 XCTAssertEqual(res.body.string, "Vapor")
                 XCTAssertNotNil(res.headers.firstValue(name: .setCookie))

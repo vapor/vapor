@@ -41,11 +41,13 @@ let package = Package(
         // C helpers
         .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
+        .target(name: "CURLParser"),
 
         // Vapor
         .target(name: "Vapor", dependencies: [
             "CMultipartParser",
             "COperatingSystem",
+            "CURLParser",
             "ConsoleKit",
             "CryptoKit",
             "Logging",
