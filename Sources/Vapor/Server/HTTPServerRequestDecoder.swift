@@ -1,9 +1,10 @@
 import NIO
 import NIOHTTP1
 
-final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
+    typealias OutboundIn = Never
     
     /// Tracks current HTTP server state
     enum RequestState {
@@ -21,11 +22,16 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     private let maxBodySize: Int
     
     private let logger: Logger
+
+    var isWritable: Bool
+    var hasReadPending: Bool
     
     init(maxBodySize: Int) {
         self.maxBodySize = maxBodySize
         self.requestState = .ready
         self.logger = Logger(label: "codes.vapor.server")
+        self.isWritable = true
+        self.hasReadPending = false
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -58,14 +64,18 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             case .awaitingBody(let request):
                 self.requestState = .awaitingEnd(request, buffer)
             case .awaitingEnd(let request, let previousBuffer):
-                let stream = Request.BodyStream()
+                let stream = Request.BodyStream(on: context.eventLoop)
                 request.bodyStorage = .stream(stream)
                 context.fireChannelRead(self.wrapInboundOut(request))
-                stream.write(.buffer(previousBuffer))
-                stream.write(.buffer(buffer))
+                let done = stream.write(.buffer(previousBuffer)).flatMap {
+                    stream.write(.buffer(buffer))
+                }
+                self.updateReadability(done, context: context)
                 self.requestState = .streamingBody(stream)
             case .streamingBody(let stream):
-                stream.write(.buffer(buffer))
+                self.isWritable = false
+                let done = stream.write(.buffer(buffer))
+                self.updateReadability(done, context: context)
             }
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Tail headers are not supported.")
@@ -77,9 +87,34 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                 request.bodyStorage = .collected(buffer)
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .streamingBody(let stream):
-                stream.write(.end)
+                let done = stream.write(.end)
+                self.updateReadability(done, context: context)
             }
             self.requestState = .ready
+        }
+    }
+
+    func read(context: ChannelHandlerContext) {
+        if self.isWritable {
+            context.read()
+        } else {
+            self.hasReadPending = true
+        }
+    }
+
+    func updateReadability(_ future: EventLoopFuture<Void>, context: ChannelHandlerContext) {
+        self.isWritable = false
+        future.whenComplete { result in
+            self.isWritable = true
+            if self.hasReadPending {
+                self.hasReadPending = false
+                context.read()
+            }
+            switch result {
+            case .failure(let error):
+                self.logger.error("Could not write body: \(error)")
+            case .success: break
+            }
         }
     }
 }
