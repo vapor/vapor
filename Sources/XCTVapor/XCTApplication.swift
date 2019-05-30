@@ -80,6 +80,8 @@ public final class XCTApplication {
         public func test(
             _ method: HTTPMethod,
             _ path: String,
+            headers: HTTPHeaders = [:],
+            body: ByteBuffer? = nil,
             file: StaticString = #file,
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
@@ -87,7 +89,15 @@ public final class XCTApplication {
             let client = URLSession(configuration: .default)
             let promise = self.container.eventLoop.makePromise(of: XCTHTTPResponse.self)
             let url = URL(string: "http://127.0.0.1:\(self.port)\(path)")!
-            client.dataTask(with: URLRequest(url: url)) { data, response, error in
+            var request = URLRequest(url: url)
+            for (name, value) in headers {
+                request.addValue(name, forHTTPHeaderField: value)
+            }
+            request.httpMethod = method.string
+            if var body = body {
+                request.httpBody = body.readData(length: body.readableBytes)
+            }
+            client.dataTask(with: request) { data, response, error in
                 if let error = error {
                     promise.fail(error)
                 } else if let response = response as? HTTPURLResponse {

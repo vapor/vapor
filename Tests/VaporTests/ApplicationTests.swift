@@ -42,37 +42,6 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertContains(res.body.string, "Not Found")
             }
     }
-    
-//    func testFakeClient() throws {
-//        let app = Application.create(routes: { r, c in
-//            let client = try c.make(Client.self)
-//            r.get("client") { req in
-//                return client.get("http://vapor.codes").map { $0.description }
-//            }
-//        })
-//        defer { app.shutdown() }
-//
-//        final class FakeClient: Client {
-//            var reqs: [ClientRequest]
-//            init() {
-//                self.reqs = []
-//            }
-//            func send(_ req: ClientRequest) -> EventLoopFuture<ClientResponse> {
-//                self.reqs.append(req)
-//                return EmbeddedEventLoop().makeSucceededFuture(.init())
-//            }
-//        }
-//
-//        let client = FakeClient()
-//
-//        try app.testable()
-//            .override(service: Client.self, with: client)
-//            .inMemory()
-//            .test(.GET, "/client") { res in
-//                XCTAssertEqual(res.status, .ok)
-//            }
-//        XCTAssertEqual(client.reqs[0].url.description, "http://vapor.codes")
-//    }
 
     func testContent() throws {
         let request = Request(
@@ -388,24 +357,6 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testWebSocketClientBadHost() throws {
-        let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
-            r.get("ws") { req -> EventLoopFuture<String> in
-                return client.webSocket("ws://asdf/") { ws in
-                    XCTFail("should not have connected")
-                    ws.close(code: nil, promise: nil)
-                }.map { "fail" }
-            }
-        })
-        defer { app.shutdown() }
-
-        try app.testable().inMemory().test(.GET, "/ws") { res in
-            XCTAssertEqual(res.status, .internalServerError)
-            XCTAssertContains(res.body.string, "Something went wrong")
-        }
-    }
-
     func testViewResponse() throws {
         var data = ByteBufferAllocator().buffer(capacity: 0)
         data.writeString("<h1>hello</h1>")
@@ -539,188 +490,234 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(uri.path, "")
         }
     }
-//
-//    func testStreamFile() throws {
-//        try Application.runningTest(port: 8085) { router in
-//            router.get("file-stream") { req -> Future<Response> in
-//                return try req.streamFile(at: #file)
-//            }
-//        }.clientTest(.GET, "file-stream") { res in
-//            let test = "the quick brown fox"
-//            XCTAssertNotNil(res.http.headers[.eTag])
-//            XCTAssert(res.http.body.string.contains(test))
-//        }
-//    }
-//
-//    func testStreamFileConnectionClose() throws {
-//        let app = try Application.runningTest(port: 8087) { router in
-//            router.get("file-stream") { req -> Future<Response> in
-//                return try req.streamFile(at: #file)
-//            }
-//        }
-//
-//        let client = try HTTPClient.connect(
-//            scheme: .http,
-//            hostname: "localhost",
-//            port: 8087,
-//            on: app,
-//            onError: { XCTFail("\($0)") }
-//        ).wait()
-//        var req = HTTPRequest(method: .GET, url: "/file-stream")
-//        req.headers.replaceOrAdd(name: .connection, value: "close")
-//        let res = try client.send(req).wait()
-//        let test = "the quick brown fox"
-//        XCTAssertNotNil(res.headers[.eTag])
-//        XCTAssert(res.body.string.contains(test))
-//    }
-//
-//    func testCustomEncode() throws {
-//        try Application.makeTest { router in
-//            router.get("custom-encode") { req -> Response in
-//                let res = req.response(http: .init(status: .ok))
-//                try res.content.encode(json: ["hello": "world"], using: .custom(format: .prettyPrinted))
-//                return res
-//            }
-//        }.test(.GET, "custom-encode") { res in
-//            XCTAssertEqual(res.http.body.string, """
-//            {
-//              "hello" : "world"
-//            }
-//            """)
-//        }
-//    }
-//
-//    // https://github.com/vapor/vapor/issues/1609
-//    func testGH1609() throws {
-//        struct DecodeFail: Content {
-//            var here: String
-//            var missing: String
-//        }
-//        try Application.runningTest(port: 8086) { router in
-//            router.post(DecodeFail.self, at: "decode-fail") { req, fail -> String in
-//                return "ok"
-//            }
-//        }.clientTest(.POST, "decode-fail", beforeSend: { try $0.content.encode(["here": "hi"]) }) { res in
-//            XCTAssertEqual(res.http.status, .badRequest)
-//            XCTAssert(res.http.body.string.contains("missing"))
-//        }
-//    }
-//
-//    func testValidationError() throws {
-//        struct User: Content, Validatable, Reflectable {
-//            static func validations() throws -> Validations<User> {
-//                var validations = Validations(User.self)
-//                try validations.add(\.email, .email)
-//                return validations
-//            }
-//
-//            var name: String
-//            var email: String
-//        }
-//        try Application.makeTest { router in
-//            router.post(User.self, at: "users") { req, user -> String in
-//                try user.validate()
-//                return "ok"
-//            }
-//        }.test(.POST, "users", beforeSend: {
-//            try $0.content.encode(["name": "vapor", "email": "foo"])
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .badRequest)
-//            XCTAssert(res.http.body.string.contains("'email' is not a valid email address"))
-//        })
-//    }
-//
-//    func testAnyResponse() throws {
-//        try Application.makeTest { router in
-//            router.get("foo") { req -> AnyResponse in
-//                if try req.query.get(String.self, at: "number").bool == true {
-//                    return AnyResponse(42)
-//                } else {
-//                    return AnyResponse("string")
-//                }
-//            }
-//        }.test(.GET, "foo", beforeSend: {
-//            try $0.query.encode(["number": "true"])
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.body.string, "42")
-//        }).test(.GET, "foo", beforeSend: {
-//            try $0.query.encode(["number": "false"])
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.body.string, "string")
-//        })
-//    }
-//
-//    func testEnumResponse() throws {
-//        enum IntOrString: ResponseEncodable {
-//            case int(Int)
-//            case string(String)
-//
-//            func encode(for req: Request) throws -> EventLoopFuture<Response> {
-//                switch self {
-//                case .int(let i): return try i.encode(for: req)
-//                case .string(let s): return try s.encode(for: req)
-//                }
-//            }
-//        }
-//        try Application.makeTest { router in
-//            router.get("foo") { req -> IntOrString in
-//                if try req.query.get(String.self, at: "number").bool == true {
-//                    return .int(42)
-//                } else {
-//                    return .string("string")
-//                }
-//            }
-//        }.test(.GET, "foo", beforeSend: {
-//            try $0.query.encode(["number": "true"])
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.body.string, "42")
-//        }).test(.GET, "foo", beforeSend: {
-//            try $0.query.encode(["number": "false"])
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.body.string, "string")
-//        })
-//    }
-//
-//    func testVaporProvider() throws {
-//        final class FooProvider: VaporProvider {
-//            var willRun: Bool = false
-//            var didRun: Bool = false
-//            var didBoot: Bool = false
-//
-//            func register(_ services: inout Services) throws {
-//                //
-//            }
-//
-//            func didBoot(_ container: Container) throws -> Future<Void> {
-//                didBoot = true
-//                return .done(on: container)
-//            }
-//
-//            func willRun(_ worker: Container) throws -> Future<Void> {
-//                willRun = true
-//                return .done(on: worker)
-//            }
-//
-//            func didRun(_ worker: Container) throws -> Future<Void> {
-//                didRun = true
-//                return .done(on: worker)
-//            }
-//        }
-//        let foo = FooProvider()
-//        var services = Services.default()
-//        try services.register(foo)
-//        let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
-//        XCTAssertEqual(foo.didBoot, true)
-//        XCTAssertEqual(foo.didRun, false)
-//        XCTAssertEqual(foo.willRun, false)
-//        try app.asyncRun().wait()
-//        XCTAssertEqual(foo.willRun, true)
-//        XCTAssertEqual(foo.didRun, true)
-//    }
+
+    func testStreamFile() throws {
+        let app = Application.create(routes: { r, c in
+            let fileio = try c.make(FileIO.self)
+            r.get("file-stream") { req -> Response in
+                return fileio.streamFile(at: #file, for: req)
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().live(port: 8080).test(.GET, "/file-stream") { res in
+            let test = "the quick brown fox"
+            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertContains(res.body.string, test)
+        }
+    }
+
+    func testStreamFileConnectionClose() throws {
+        let app = Application.create(routes: { r, c in
+            let fileio = try c.make(FileIO.self)
+            r.get("file-stream") { req -> Response in
+                return fileio.streamFile(at: #file, for: req)
+            }
+        })
+        defer { app.shutdown() }
+
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .connection, value: "close")
+        try app.testable().live(port: 8080).test(.GET, "/file-stream", headers: headers) { res in
+            let test = "the quick brown fox"
+            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertContains(res.body.string, test)
+        }
+    }
+
+    func testCustomEncode() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("custom-encode") { req -> Response in
+                var res = Response(status: .ok)
+                var jsonEncoder = JSONEncoder()
+                jsonEncoder.outputFormatting = .prettyPrinted
+                try res.content.encode(["hello": "world"], using: jsonEncoder)
+                return res
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/custom-encode") { res in
+            XCTAssertEqual(res.body.string, """
+            {
+              "hello" : "world"
+            }
+            """)
+        }
+    }
+
+    // https://github.com/vapor/vapor/issues/1609
+    func testGH1609() throws {
+        struct DecodeFail: Content {
+            var here: String
+            var missing: String
+        }
+        let app = Application.create(routes: { r, c in
+            r.post("decode-fail") { req -> String in
+                let fail = try req.content.decode(DecodeFail.self)
+                return "ok"
+            }
+        })
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"{"here":"hi"}"#)
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+        headers.contentType = .json
+
+        try app.testable().inMemory().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertContains(res.body.string, "missing")
+        }
+    }
+
+    func testValidationError() throws {
+        struct User: Content, Validatable {
+            static func validations() -> Validations {
+                var validations = Validations()
+                validations.add("email", as: String.self, is: .email)
+                return validations
+            }
+
+            var name: String
+            var email: String
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.post("users") { req -> String in
+                try User.validate(req)
+                let user = try req.content.decode(User.self)
+                return "ok"
+            }
+        })
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"{"name":"vapor","email":"foo"}"#)
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+        headers.contentType = .json
+
+        try app.testable().inMemory().test(.POST, "/users", headers: headers, body: body) { res in
+            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertContains(res.body.string, "email is not a valid email address")
+        }
+    }
+
+    func testAnyResponse() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("foo") { req -> AnyResponse in
+                if try req.query.get(String.self, at: "number") == "true" {
+                    return AnyResponse(42)
+                } else {
+                    return AnyResponse("string")
+                }
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/foo?number=true") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "42")
+        }.test(.GET, "/foo?number=false") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "string")
+        }
+    }
+
+    func testEnumResponse() throws {
+        enum IntOrString: ResponseEncodable {
+            case int(Int)
+            case string(String)
+
+            func encodeResponse(for req: Request) -> EventLoopFuture<Response> {
+                switch self {
+                case .int(let i):
+                    return i.encodeResponse(for: req)
+                case .string(let s):
+                    return s.encodeResponse(for: req)
+                }
+            }
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.get("foo") { req -> IntOrString in
+                if try req.query.get(String.self, at: "number") == "true" {
+                    return .int(42)
+                } else {
+                    return .string("string")
+                }
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/foo?number=true") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "42")
+        }.test(.GET, "/foo?number=false") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "string")
+        }
+    }
+
+    func testVaporProvider() throws {
+        final class FooProvider: Provider {
+            var registerFlag: Bool = false
+            var willBootFlag: Bool = false
+            var didBootFlag: Bool = false
+            var willShutdownFlag: Bool = false
+
+            func register(_ services: inout Services) {
+                self.registerFlag = true
+            }
+
+            func willBoot(_ c: Container) -> EventLoopFuture<Void> {
+                self.willBootFlag = true
+                return c.eventLoop.makeSucceededFuture(())
+            }
+
+            func didBoot(_ c: Container) -> EventLoopFuture<Void> {
+                self.didBootFlag = true
+                return c.eventLoop.makeSucceededFuture(())
+            }
+
+            func willShutdown(_ c: Container) {
+                self.willShutdownFlag = true
+            }
+        }
+        let foo = FooProvider()
+
+        XCTAssertEqual(foo.registerFlag, false)
+        XCTAssertEqual(foo.willBootFlag, false)
+        XCTAssertEqual(foo.didBootFlag, false)
+        XCTAssertEqual(foo.willShutdownFlag, false)
+
+        let app = Application.create(configure: { s in
+            s.provider(foo)
+            XCTAssertEqual(foo.registerFlag, true)
+            XCTAssertEqual(foo.willBootFlag, false)
+            XCTAssertEqual(foo.didBootFlag, false)
+            XCTAssertEqual(foo.willShutdownFlag, false)
+        }, routes: { r, c in
+            // no routes
+        })
+        defer { app.shutdown() }
+
+        let container = try app.makeContainer().wait()
+
+        XCTAssertEqual(foo.registerFlag, true)
+        XCTAssertEqual(foo.willBootFlag, true)
+        XCTAssertEqual(foo.didBootFlag, true)
+        XCTAssertEqual(foo.willShutdownFlag, false)
+
+        container.shutdown()
+        
+        XCTAssertEqual(foo.registerFlag, true)
+        XCTAssertEqual(foo.willBootFlag, true)
+        XCTAssertEqual(foo.didBootFlag, true)
+        XCTAssertEqual(foo.willShutdownFlag, true)
+    }
 //
 //    func testResponseEncodableStatus() throws {
 //        struct User: Content {
@@ -994,163 +991,7 @@ final class ApplicationTests: XCTestCase {
         try pool.syncShutdownGracefully()
         try elg.syncShutdownGracefully()
     }
-
-//
-//    static let allTests = [
-//        ("testContent", testContent),
-//        ("testComplexContent", testComplexContent),
-//        ("testQuery", testQuery),
-//        ("testParameter", testParameter),
-//        ("testJSON", testJSON),
-//        ("testGH1537", testGH1537),
-//        ("testGH1534", testGH1534),
-//        ("testContentContainer", testContentContainer),
-//        ("testMultipartDecode", testMultipartDecode),
-//        ("testMultipartEncode", testMultipartEncode),
-//        ("testViewResponse", testViewResponse),
-//        ("testURLEncodedFormDecode", testURLEncodedFormDecode),
-//        ("testURLEncodedFormEncode", testURLEncodedFormEncode),
-//        ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
-//        ("testStreamFile", testStreamFile),
-//        ("testStreamFileConnectionClose", testStreamFileConnectionClose),
-//        ("testCustomEncode", testCustomEncode),
-//        ("testGH1609", testGH1609),
-//        ("testAnyResponse", testAnyResponse),
-//        ("testVaporProvider", testVaporProvider),
-//        ("testResponseEncodableStatus", testResponseEncodableStatus),
-//        ("testHeadRequest", testHeadRequest),
-//        ("testInvalidCookie", testInvalidCookie),
-//        ("testDataResponses", testDataResponses),
-//        ("testMiddlewareOrder", testMiddlewareOrder),
-//        ("testSessionDestroy", testSessionDestroy),
-//        ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
-//        ("testErrorMiddlewareRespondsToNotFoundError", testErrorMiddlewareRespondsToNotFoundError),
-//        ("testGH1787", testGH1787),
-//        ("testMissingBody", testMissingBody),
-//        ("testSwiftError", testSwiftError),
-//        ("testDebuggableError", testDebuggableError),
-//    ]
 }
-
-// MARK: Private
-//
-//private extension Application {
-//    // MARK: Static
-//
-//    static func makeTest(configure: (inout Config, inout Services) throws -> () = { _, _ in }, routes: (Router) throws -> ()) throws -> Application {
-//        var services = Services.default()
-//        var config = Config.default()
-//        try configure(&config, &services)
-//
-//        let router = EngineRouter.default()
-//        try routes(router)
-//        services.register(router, as: Router.self)
-//        return try Application.asyncBoot(config: config, environment: .xcode, services: services).wait()
-//    }
-//
-//    @discardableResult
-//    func test(
-//        _ method: HTTPMethod,
-//        _ path: String,
-//        beforeSend: @escaping (Request) throws -> () = { _ in },
-//        afterSend: @escaping (Response) throws -> ()
-//    ) throws  -> Application {
-//        let http = HTTPRequest(method: method, url: URL(string: path)!)
-//        return try test(http, beforeSend: beforeSend, afterSend: afterSend)
-//    }
-//
-//    @discardableResult
-//    func test(
-//        _ http: HTTPRequest,
-//        beforeSend: @escaping (Request) throws -> () = { _ in },
-//        afterSend: @escaping (Response) throws -> ()
-//    ) throws -> Application {
-//        let promise = eventLoop.newPromise(Void.self)
-//        eventLoop.execute {
-//            let req = Request(http: http, using: self)
-//            do {
-//                try beforeSend(req)
-//                try self.make(Responder.self).respond(to: req).map { res in
-//                    try afterSend(res)
-//                }.cascade(promise: promise)
-//            } catch {
-//                promise.fail(error: error)
-//            }
-//        }
-//        try promise.futureResult.wait()
-//        return self
-//    }
-//
-//    // MARK: Live
-//
-//    static func runningTest(port: Int, routes: (Router) throws -> ()) throws -> Application {
-//        let router = EngineRouter.default()
-//        try routes(router)
-//        var services = Services.default()
-//        services.register(router, as: Router.self)
-//        let serverConfig = NIOServerConfig(
-//            hostname: "localhost",
-//            port: port,
-//            backlog: 8,
-//            workerCount: 1,
-//            maxBodySize: 128_000,
-//            reuseAddress: true,
-//            tcpNoDelay: true,
-//            webSocketMaxFrameSize: 1 << 14
-//        )
-//        services.register(serverConfig)
-//        let app = try Application.asyncBoot(config: .default(), environment: .xcode, services: services).wait()
-//        try app.asyncRun().wait()
-//        return app
-//    }
-//
-//    @discardableResult
-//    func clientTest(
-//        _ method: HTTPMethod,
-//        _ path: String,
-//        beforeSend: (Request) throws -> () = { _ in },
-//        afterSend: (Response) throws -> ()
-//    ) throws -> Application {
-//        let config = try make(NIOServerConfig.self)
-//        let path = path.hasPrefix("/") ? path : "/\(path)"
-//        let req = Request(
-//            http: .init(method: method, url: "http://localhost:\(config.port)" + path),
-//            using: self
-//        )
-//        try beforeSend(req)
-//        let res = try FoundationClient.default(on: self).send(req).wait()
-//        try afterSend(res)
-//        return self
-//    }
-//
-//    @discardableResult
-//    func clientTest(_ method: HTTPMethod, _ path: String, equals: String) throws -> Application {
-//        return try clientTest(method, path) { res in
-//            XCTAssertEqual(res.http.body.string, equals)
-//        }
-//    }
-//}
-//
-//private extension Environment {
-//    static var xcode: Environment {
-//        return .init(name: "xcode", isRelease: false, arguments: ["xcode"])
-//    }
-//}
-//
-//private extension HTTPBody {
-//    var string: String {
-//        guard let data = self.data else {
-//            return "<streaming>"
-//        }
-//        return String(data: data, encoding: .ascii) ?? "<non-ascii>"
-//    }
-//}
-//
-//private extension Data {
-//    var utf8: String? {
-//        return String(data: self, encoding: .utf8)
-//    }
-//}
 
 extension Application {
     static func create(

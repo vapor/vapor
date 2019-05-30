@@ -6,12 +6,16 @@ extension ApplicationTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__ApplicationTests = [
+        ("testAnyResponse", testAnyResponse),
         ("testApplicationStop", testApplicationStop),
         ("testComplexContent", testComplexContent),
         ("testContent", testContent),
         ("testContentContainer", testContentContainer),
+        ("testCustomEncode", testCustomEncode),
         ("testDotEnvRead", testDotEnvRead),
+        ("testEnumResponse", testEnumResponse),
         ("testGH1534", testGH1534),
+        ("testGH1609", testGH1609),
         ("testJSON", testJSON),
         ("testLiveServer", testLiveServer),
         ("testMultipartDecode", testMultipartDecode),
@@ -20,7 +24,16 @@ extension ApplicationTests {
         ("testQuery", testQuery),
         ("testQueryStringRunning", testQueryStringRunning),
         ("testRootGet", testRootGet),
+        ("testStreamFile", testStreamFile),
+        ("testStreamFileConnectionClose", testStreamFileConnectionClose),
+        ("testURLEncodedFormDecode", testURLEncodedFormDecode),
+        ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
+        ("testURLEncodedFormEncode", testURLEncodedFormEncode),
         ("testURLSession", testURLSession),
+        ("testValidationError", testValidationError),
+        ("testVaporProvider", testVaporProvider),
+        ("testVaporURI", testVaporURI),
+        ("testViewResponse", testViewResponse),
         ("testWebSocketClient", testWebSocketClient),
     ]
 }

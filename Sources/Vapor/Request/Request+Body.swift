@@ -12,6 +12,14 @@ extension Request {
             case .none, .stream: return nil
             }
         }
+
+        public var string: String? {
+            if var data = self.data {
+                return data.readString(length: data.readableBytes)
+            } else {
+                return nil
+            }
+        }
         
         public func drain(_ handler: @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage {
