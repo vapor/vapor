@@ -59,10 +59,6 @@ extension Services {
             return .default()
         }
 
-        // keyed cache
-        #warning("TODO: update keyed caches")
-//        s.register(MemoryKeyedCache(), as: KeyedCache.self)
-
         // middleware
         s.register(MiddlewareConfiguration.self) { c in
             var middleware = MiddlewareConfiguration()

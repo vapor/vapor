@@ -54,7 +54,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
         guard let query = url.query else {
-            throw Abort(.notAcceptable)
+            throw Abort(.unsupportedMediaType)
         }
         return try self.decode(D.self, from: query)
     }

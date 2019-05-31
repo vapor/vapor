@@ -30,6 +30,25 @@ public final class XCTApplication {
             self.container = container
             self.responder = try self.container.make(Responder.self)
         }
+
+        @discardableResult
+        public func test<Body>(
+            _ method: HTTPMethod,
+            _ path: String,
+            headers: HTTPHeaders = [:],
+            json: Body,
+            file: StaticString = #file,
+            line: UInt = #line,
+            closure: (XCTHTTPResponse) throws -> () = { _ in }
+        ) throws -> InMemory
+            where Body: Encodable
+        {
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try body.writeBytes(JSONEncoder().encode(json))
+            var headers = HTTPHeaders()
+            headers.contentType = .json
+            return try self.test(method, path, headers: headers, body: body, closure: closure)
+        }
         
         @discardableResult
         public func test(
@@ -41,6 +60,10 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> InMemory {
+            var headers = headers
+            if let body = body {
+                headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+            }
             let response: XCTHTTPResponse
             let request = Request(
                 method: method,

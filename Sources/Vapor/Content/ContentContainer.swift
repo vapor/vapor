@@ -140,7 +140,7 @@ extension ContentContainer {
     /// Looks up a `HTTPMessageDecoder` for the supplied `MediaType`.
     private func configuredDecoder() throws -> ContentDecoder {
         guard let contentType = self.contentType else {
-            throw Abort(.notAcceptable)
+            throw Abort(.unsupportedMediaType)
         }
         return try ContentConfiguration.global.requireDecoder(for: contentType)
     }

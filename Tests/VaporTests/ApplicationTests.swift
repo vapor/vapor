@@ -593,13 +593,7 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString(#"{"name":"vapor","email":"foo"}"#)
-        var headers = HTTPHeaders()
-        headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
-        headers.contentType = .json
-
-        try app.testable().inMemory().test(.POST, "/users", headers: headers, body: body) { res in
+        try app.testable().inMemory().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
@@ -718,250 +712,224 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootFlag, true)
         XCTAssertEqual(foo.willShutdownFlag, true)
     }
-//
-//    func testResponseEncodableStatus() throws {
-//        struct User: Content {
-//            var name: String
-//        }
-//
-//        try Application.makeTest { router in
-//            router.post("users") { req -> Future<Response> in
-//                return try req.content
-//                    .decode(User.self)
-//                    .encode(status: .created, for: req)
-//            }
-//        }.test(.POST, "users", beforeSend: {
-//            try $0.content.encode(User(name: "vapor"))
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .created)
-//            XCTAssertEqual(res.http.contentType, .json)
-//            XCTAssertEqual(res.http.body.string, """
-//            {"name":"vapor"}
-//            """)
-//        })
-//    }
-//
-//    func testHeadRequest() throws {
-//        try Application.runningTest(port: 8007) { router in
-//            router.get("hello") { req -> String in
-//                return "hi"
-//            }
-//        }.clientTest(.HEAD, "hello", afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.headers[.contentLength].first, "2")
-//            XCTAssertEqual(res.http.body.count, 0)
-//        })
-//    }
-//
-//    func testInvalidCookie() throws {
-//        try Application.makeTest { router in
-//            router.grouped(SessionsMiddleware.self).get("get") { req -> String in
-//                return try req.session()["name"] ?? "n/a"
-//            }
-//        }.test(.GET, "get", beforeSend: { req in
-//            req.http.cookies["vapor-session"] = "asdf"
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertNotNil(res.http.headers[.setCookie])
-//            XCTAssertEqual(res.http.body.string, "n/a")
-//        })
-//    }
-//
-//    func testDataResponses() throws {
-//        // without specific content type
-//        try Application.makeTest { router in
-//            router.get("hello") { req in
-//                return req.response("Hello!")
-//            }
-//        }.test(.GET, "hello") { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.body.string, "Hello!")
-//        }
-//
-//        // with specific content type
-//        try Application.makeTest { router in
-//            router.get("hello-html") { req -> Response in
-//                return req.response("Hey!", as: .html)
-//            }
-//        }.test(.GET, "hello-html") { res in
-//            XCTAssertEqual(res.http.status, .ok)
-//            XCTAssertEqual(res.http.contentType, HTTPMediaType.html)
-//            XCTAssertEqual(res.http.body.string, "Hey!")
-//        }
-//    }
-//
-//    func testMiddlewareOrder() throws {
-//        final class OrderMiddleware: Middleware {
-//            static var order: [String] = []
-//            let pos: String
-//            init(_ pos: String) {
-//                self.pos = pos
-//            }
-//            func respond(to req: Request, chainingTo next: Responder) throws -> Future<Response> {
-//                OrderMiddleware.order.append(pos)
-//                return try next.respond(to: req)
-//            }
-//        }
-//
-//        try Application.makeTest { router in
-//            router.grouped(
-//                OrderMiddleware("a"), OrderMiddleware("b"), OrderMiddleware("c")
-//            ).get("order") { req -> String in
-//                return "done"
-//            }
-//        }.test(.GET, "order", afterSend: { res in
-//            XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
-//        })
-//    }
-//
-//    func testSessionDestroy() throws {
-//        final class MockKeyedCache: KeyedCache, Service {
-//            var ops: [String]
-//            init() { self.ops = [] }
-//            func get<D>(_ key: String, as decodable: D.Type) -> Future<D?> where D : Decodable {
-//                ops.append("get \(key) as \(D.self)")
-//                return EmbeddedEventLoop().newSucceededFuture(result: nil)
-//            }
-//
-//            func set<E>(_ key: String, to encodable: E) -> Future<Void> where E : Encodable {
-//                ops.append("set \(key) to \(E.self)")
-//                return EmbeddedEventLoop().newSucceededFuture(result: ())
-//            }
-//
-//            func remove(_ key: String) -> Future<Void> {
-//                ops.append("del \(key)")
-//                return EmbeddedEventLoop().newSucceededFuture(result: ())
-//            }
-//        }
-//
-//        let mockCache = MockKeyedCache()
-//        var cookie: HTTPCookieValue?
-//
-//        try Application.makeTest(configure: { config, services in
-//            config.prefer(KeyedCacheSessions.self, for: Sessions.self)
-//            config.prefer(MockKeyedCache.self, for: KeyedCache.self)
-//            services.register(mockCache, as: KeyedCache.self)
-//        }, routes: { router in
-//            let sessions = router.grouped(SessionsMiddleware.self)
-//            sessions.get("set") { req -> String in
-//                try req.session()["foo"] = "bar"
-//                return "set"
-//            }
-//            sessions.get("del") { req  -> String in
-//                try req.destroySession()
-//                return "del"
-//            }
-//        }).test(.GET, "set", afterSend: { res in
-//            XCTAssertEqual(res.http.body.string, "set")
-//            cookie = res.http.cookies["vapor-session"]
-//            XCTAssertNotNil(cookie)
-//            XCTAssertEqual(mockCache.ops, [
-//                "set \(cookie?.string ?? "n/a") to SessionData",
-//            ])
-//            mockCache.ops = []
-//        }).test(.GET, "del", beforeSend: { req in
-//            req.http.cookies["vapor-session"] = cookie
-//        }, afterSend: { res in
-//            XCTAssertEqual(res.http.body.string, "del")
-//            XCTAssertEqual(mockCache.ops, [
-//                "get \(cookie?.string ?? "n/a") as SessionData",
-//                "del \(cookie?.string ?? "n/a")",
-//            ])
-//        })
-//    }
-//
-//    // https://github.com/vapor/vapor/issues/1687
-//    func testRequestQueryStringPercentEncoding() throws {
-//        struct TestQueryStringContainer: Content {
-//            var name: String
-//        }
-//        let app = try Application()
-//        let req = Request(using: app)
-//        req.http.url = URLComponents().url!
-//        try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
-//        // TODO: Change this test once URLEncodedForm is updated.
-//        XCTAssertTrue(
-//            req.http.url.query == "name=Vapor%20Test" ||
-//            req.http.url.query == "name=Vapor+Test"
-//        )
-//        // XCTAssertEqual(req.http.url.query, "name=Vapor+Test")
-//    }
-//
-//    func testErrorMiddlewareRespondsToNotFoundError() throws {
-//        class NotFoundThrowingResponder: Responder {
-//            func respond(to req: Request) throws -> EventLoopFuture<Response> {
-//                throw NotFound(rootCause: nil)
-//            }
-//        }
-//        let app = try Application()
-//        let errorMiddleware = ErrorMiddleware.default(environment: app.environment, log: try app.make())
-//
-//        let result = try errorMiddleware.respond(to: Request(using: app), chainingTo: NotFoundThrowingResponder()).wait()
-//
-//        XCTAssertEqual(result.http.status, .notFound)
-//    }
-//
-//    // https://github.com/vapor/vapor/issues/1787
-//    func testGH1787() throws {
-//        try Application.runningTest(port: 8008, routes: { router in
-//            router.get("no-content") { req -> String in
-//                throw Abort(.noContent)
-//            }
-//        }).clientTest(.GET, "no-content", afterSend: { res in
-//            XCTAssertEqual(res.http.status.code, 204)
-//        })
-//    }
-//
-//    // https://github.com/vapor/vapor/issues/1786
-//    func testMissingBody() throws {
-//        struct User: Content { }
-//        try Application.makeTest(routes: { router in
-//            router.get("user") { req -> Future<User> in
-//                return try req.content.decode(User.self)
-//            }
-//        }).test(.GET, "user", afterSend: { res in
-//            XCTAssertEqual(res.http.status, .unsupportedMediaType)
-//        })
-//    }
-//
-//    func testSwiftError() throws {
-//        struct Foo: Error { }
-//        try Application.makeTest(routes: { router in
-//            router.get("error") { req -> String in
-//                throw Foo()
-//            }
-//        }).test(.GET, "error", afterSend: { res in
-//            XCTAssertEqual(res.http.status, .internalServerError)
-//        })
-//    }
-//
-//    func testDebuggableError() throws {
-//        struct Foo: Debuggable, Error {
-//            var identifier: String
-//            var reason: String
-//            var sourceLocation: SourceLocation?
-//            init(
-//                identifier: String,
-//                reason: String,
-//                file: String = #file,
-//                function: String = #function,
-//                line: UInt = #line,
-//                column: UInt = #column
-//            ) {
-//                self.identifier = identifier
-//                self.reason = reason
-//                self.sourceLocation = SourceLocation(file: file, function: function, line: line, column: column, range: nil)
-//            }
-//        }
-//        try Application.makeTest(routes: { router in
-//            router.get("error") { req -> String in
-//                throw Foo(identifier: "test", reason: "For testing error output.")
-//            }
-//        }).test(.GET, "error", afterSend: { res in
-//            XCTAssertEqual(res.http.status, .internalServerError)
-//        })
-//    }
-    
+
+    func testResponseEncodableStatus() throws {
+        struct User: Content {
+            var name: String
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.post("users") { req -> EventLoopFuture<Response> in
+                return try req.content
+                    .decode(User.self)
+                    .encodeResponse(status: .created, for: req)
+            }
+        })
+        defer { app.shutdown() }
+
+
+        try app.testable().inMemory().test(.POST, "/users", json: ["name": "vapor"]) { res in
+            XCTAssertEqual(res.status, .created)
+            XCTAssertEqual(res.headers.contentType, .json)
+            XCTAssertEqual(res.body.string, """
+            {"name":"vapor"}
+            """)
+        }
+    }
+
+    func testHeadRequest() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("hello") { req -> String in
+                return "hi"
+            }
+        })
+        defer { app.shutdown() }
+
+
+        try app.testable().live(port: 8080).test(.HEAD, "/hello") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
+            XCTAssertEqual(res.body.count, 0)
+        }
+    }
+
+    func testInvalidCookie() throws {
+        let app = Application.create(routes: { r, c in
+            let sessions = try c.make(SessionsMiddleware.self)
+            r.grouped(sessions).get("get") { req -> String in
+                return req.session.data["name"] ?? "n/a"
+            }
+        })
+        defer { app.shutdown() }
+
+        var headers = HTTPHeaders()
+        headers.cookie["vapor-session"] = "asdf"
+
+        try app.testable().inMemory().test(.GET, "/get", headers: headers) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertNotNil(res.headers[.setCookie])
+            XCTAssertEqual(res.body.string, "n/a")
+        }
+    }
+
+    func testMiddlewareOrder() throws {
+        final class OrderMiddleware: Middleware {
+            static var order: [String] = []
+            let pos: String
+            init(_ pos: String) {
+                self.pos = pos
+            }
+            func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+                OrderMiddleware.order.append(pos)
+                return next.respond(to: req)
+            }
+        }
+
+        let app = Application.create(routes: { r, c in
+            r.grouped(
+                OrderMiddleware("a"), OrderMiddleware("b"), OrderMiddleware("c")
+            ).get("order") { req -> String in
+                return "done"
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/order") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
+            XCTAssertEqual(res.body.string, "done")
+        }
+    }
+
+    func testSessionDestroy() throws {
+        final class MockKeyedCache: Sessions {
+            var ops: [String]
+
+            var eventLoop: EventLoop {
+                return EmbeddedEventLoop()
+            }
+
+            init() {
+                self.ops = []
+            }
+
+            func createSession(_ data: SessionData) -> EventLoopFuture<SessionID> {
+                self.ops.append("create \(data)")
+                return self.eventLoop.makeSucceededFuture(.init(string: "a"))
+            }
+
+            func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?> {
+                self.ops.append("read \(sessionID)")
+                return self.eventLoop.makeSucceededFuture(SessionData())
+            }
+
+            func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID> {
+                self.ops.append("update \(sessionID) to \(data)")
+                return self.eventLoop.makeSucceededFuture(sessionID)
+            }
+
+            func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void> {
+                self.ops.append("delete \(sessionID)")
+                return self.eventLoop.makeSucceededFuture(())
+            }
+        }
+
+        let mockCache = MockKeyedCache()
+        var cookie: HTTPCookies.Value?
+
+        let app = Application.create(configure: { s in
+            s.instance(Sessions.self, mockCache)
+        }, routes: { r, c in
+            let sessions = try r.grouped(c.make(SessionsMiddleware.self))
+            sessions.get("set") { req -> String in
+                req.session.data["foo"] = "bar"
+                return "set"
+            }
+            sessions.get("del") { req  -> String in
+                req.destroySession()
+                return "del"
+            }
+        })
+        defer { app.shutdown() }
+
+
+        let tester = try app.testable().inMemory().test(.GET, "/set") { res in
+            XCTAssertEqual(res.body.string, "set")
+            cookie = res.headers.setCookie["vapor-session"]
+            XCTAssertNotNil(cookie)
+            XCTAssertEqual(mockCache.ops, [
+                #"create SessionData(storage: ["foo": "bar"])"#,
+            ])
+            mockCache.ops = []
+        }
+
+        XCTAssertEqual(cookie?.string, "a")
+
+        var headers = HTTPHeaders()
+        headers.cookie["vapor-session"] = cookie
+        try tester.test(.GET, "/del", headers: headers) { res in
+            XCTAssertEqual(res.body.string, "del")
+            XCTAssertEqual(mockCache.ops, [
+                #"read SessionID(string: "a")"#,
+                #"delete SessionID(string: "a")"#
+            ])
+        }
+    }
+
+    // https://github.com/vapor/vapor/issues/1687
+    func testRequestQueryStringPercentEncoding() throws {
+        struct TestQueryStringContainer: Content {
+            var name: String
+        }
+        let req = Request(on: EmbeddedChannel())
+        try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
+        XCTAssertEqual(req.url.query, "name=Vapor%20Test")
+    }
+
+    // https://github.com/vapor/vapor/issues/1787
+    func testGH1787() throws {
+        let app = Application.create(routes: { r, c in
+            r.get("no-content") { req -> String in
+                throw Abort(.noContent)
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().live(port: 8080).test(.GET, "/no-content") { res in
+            XCTAssertEqual(res.status.code, 204)
+            XCTAssertEqual(res.body.count, 0)
+        }
+    }
+
+    // https://github.com/vapor/vapor/issues/1786
+    func testMissingBody() throws {
+        struct User: Content { }
+        let app = Application.create(routes: { r, c in
+            r.get("user") { req -> User in
+                return try req.content.decode(User.self)
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/user") { res in
+            XCTAssertEqual(res.status, .unsupportedMediaType)
+        }
+    }
+
+    func testSwiftError() throws {
+        struct Foo: Error { }
+        let app = Application.create(routes: { r, c in
+            r.get("error") { req -> String in
+                throw Foo()
+            }
+        })
+        defer { app.shutdown() }
+
+        try app.testable().inMemory().test(.GET, "/error") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+        }
+    }
+
     func testDotEnvRead() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = NIOThreadPool(numberOfThreads: 1)

@@ -1,4 +1,9 @@
 extension Response {
+    struct BodyStream {
+        let count: Int
+        let callback: (BodyStreamWriter) -> ()
+    }
+
     /// Represents an `HTTPMessage`'s body.
     ///
     ///     let body = HTTPBody(string: "Hello, world!")

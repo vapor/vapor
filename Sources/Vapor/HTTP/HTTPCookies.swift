@@ -1,3 +1,35 @@
+extension HTTPHeaders {
+    /// Get and set `HTTPCookies` for an HTTP request
+    /// This accesses the `"Cookie"` header.
+    public var cookie: HTTPCookies {
+        get {
+            return self.firstValue(name: .cookie)
+                .flatMap(HTTPCookies.parse) ?? [:]
+        }
+        set {
+            if let cookieHeader = newValue.cookieHeader {
+                self.replaceOrAdd(name: .cookie, value: cookieHeader)
+            } else {
+                self.remove(name: .cookie)
+            }
+        }
+    }
+
+    /// Get and set `HTTPCookies` for an HTTP response
+    /// This accesses the `"Set-Cookie"` header.
+    public var setCookie: HTTPCookies {
+        get {
+            return HTTPCookies.parse(setCookieHeaders: self[.setCookie]) ?? [:]
+        }
+        set {
+            self.remove(name: .setCookie)
+            for cookieHeader in newValue.setCookieHeaders {
+                self.add(name: .setCookie, value: cookieHeader)
+            }
+        }
+    }
+}
+
 /// A collection of `HTTPCookie`s.
 public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     /// A cookie which can only be sent in requests originating from the same origin as the target domain.
@@ -246,25 +278,20 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     // MARK: Serialize
     
     /// Seriaizes the `Cookies` for a `Request`
-    public func serialize(into request: Request) {
+    public var cookieHeader: String? {
         guard !cookies.isEmpty else {
-            request.headers.remove(name: .cookie)
-            return
+            return nil
         }
         
-        let cookie: String = cookies.map { (name, value) in
+        let cookie: String = self.cookies.map { (name, value) in
             return "\(name)=\(value.string)"
-            }.joined(separator: "; ")
-        
-        request.headers.replaceOrAdd(name: .cookie, value: cookie)
+        }.joined(separator: "; ")
+
+        return cookie
     }
-    
-    /// Seriaizes the `Cookies` for a `Response`
-    public func serialize(into response: Response)  {
-        response.headers.remove(name: .setCookie)
-        for (name, value) in cookies {
-            response.headers.add(name: .setCookie, value: value.serialize(name: name))
-        }
+
+    public var setCookieHeaders: [String] {
+        return self.cookies.map { $0.value.serialize(name: $0.key) }
     }
     
     // MARK: Access

@@ -95,8 +95,12 @@ public final class Request: CustomStringConvertible {
     /// Get and set `HTTPCookies` for this `HTTPRequest`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
-        get { return headers.firstValue(name: .cookie).flatMap(HTTPCookies.parse) ?? [:] }
-        set { newValue.serialize(into: self) }
+        get {
+            return self.headers.cookie
+        }
+        set {
+            self.headers.cookie = newValue
+        }
     }
     
     /// See `CustomStringConvertible`

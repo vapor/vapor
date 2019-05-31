@@ -29,9 +29,11 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                 self.errorHandler(error)
                 context.close(promise: nil)
             case .success(let response):
+                let contentLength = response.headers.firstValue(name: .contentLength)
                 if originalMethod == .HEAD {
                     response.body = .init()
                 }
+                response.headers.replaceOrAdd(name: .contentLength, value: contentLength ?? "0")
                 self.serialize(response, for: request, context: context)
             }
         }
