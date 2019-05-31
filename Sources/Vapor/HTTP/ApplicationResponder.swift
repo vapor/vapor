@@ -54,12 +54,11 @@ internal struct RoutesResponder: Responder {
     
     /// See `Router`.
     private func route(_ request: Request) -> Responder? {
-        let path: [String] = request.urlString
-            .split(separator: "?", maxSplits: 1)[0]
+        let pathComponents = request.url.path
             .split(separator: "/")
-            .map { String($0) }
+            .map(String.init)
         return self.router.route(
-            path: [request.method.string] + path,
+            path: [request.method.string] + pathComponents,
             parameters: &request.parameters
         )
     }

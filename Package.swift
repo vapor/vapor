@@ -32,7 +32,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/swift-nio-http-client.git", .branch("master")),
+        .package(url: "https://github.com/vapor/swift-nio-http-client.git", from: "0.0.0"),
 
         // SwiftNIO based WebSocket client
         .package(url: "https://github.com/vapor/nio-websocket-client.git", from: "1.0.0-alpha"),
@@ -41,11 +41,13 @@ let package = Package(
         // C helpers
         .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
+        .target(name: "CURLParser"),
 
         // Vapor
         .target(name: "Vapor", dependencies: [
             "CMultipartParser",
             "COperatingSystem",
+            "CURLParser",
             "ConsoleKit",
             "CryptoKit",
             "Logging",

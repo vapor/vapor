@@ -31,7 +31,7 @@ public final class Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func get(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.GET, headers: headers, to: url)
     }
 
@@ -48,7 +48,7 @@ public final class Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func post(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.POST, headers: headers, to: url)
     }
 
@@ -65,7 +65,7 @@ public final class Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func patch(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.PATCH, headers: headers, to: url)
     }
 
@@ -82,7 +82,7 @@ public final class Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func put(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.PUT, headers: headers, to: url)
     }
 
@@ -105,7 +105,7 @@ public final class Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func delete(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.DELETE, headers: headers, to: url)
     }
 
@@ -124,15 +124,15 @@ public final class Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable) -> EventLoopFuture<ClientResponse> {
-        let request = ClientRequest(method: method, url: url.convertToURL()!, headers: headers, body: nil)
+    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URI) -> EventLoopFuture<ClientResponse> {
+        let request = ClientRequest(method: method, url: url, headers: headers, body: nil)
         return self.send(request)
     }
 
     public func send(_ client: ClientRequest) -> EventLoopFuture<ClientResponse> {
         do {
             let request = try HTTPClient.Request(
-                url: client.url,
+                url: URL(string: client.url.string)!,
                 version: .init(major: 1, minor: 1),
                 method: client.method,
                 headers: client.headers, body: client.body.flatMap { .byteBuffer($0) }
@@ -150,8 +150,7 @@ public final class Client {
         }
     }
 
-    public func webSocket(_ url: URLRepresentable, headers: HTTPHeaders = [:], onUpgrade: @escaping (WebSocket) -> ()) -> EventLoopFuture<Void> {
-        let url = url.convertToURL()!
+    public func webSocket(_ url: URI, headers: HTTPHeaders = [:], onUpgrade: @escaping (WebSocket) -> ()) -> EventLoopFuture<Void> {
         let port: Int
         if let p = url.port {
             port = p

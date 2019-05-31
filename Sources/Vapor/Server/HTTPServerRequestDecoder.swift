@@ -44,7 +44,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             case .ready:
                 let request = Request(
                     method: head.method,
-                    urlString: head.uri,
+                    url: .init(string: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
                     on: context.channel

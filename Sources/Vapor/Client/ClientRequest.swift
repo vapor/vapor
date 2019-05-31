@@ -1,10 +1,10 @@
 public struct ClientRequest {
     public var method: HTTPMethod
-    public var url: URL
+    public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
 
-    public init(method: HTTPMethod = .GET, url: URL = .root, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+    public init(method: HTTPMethod = .GET, url: URI = "/", headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
         self.method = method
         self.url = url
         self.headers = headers
@@ -14,7 +14,7 @@ public struct ClientRequest {
     // MARK: Content
 
     private struct _URLQueryContainer: URLQueryContainer {
-        var url: URL
+        var url: URI
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
             where D: Decodable

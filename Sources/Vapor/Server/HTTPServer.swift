@@ -141,7 +141,8 @@ public final class HTTPServer: Server {
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
         self.application.logger.info("Server starting on \(address)")
-        
+
+        // TODO: consider moving to serve command
         self.application.running = .init(stop: { [unowned self] in
             self.shutdown()
         })

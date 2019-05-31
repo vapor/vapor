@@ -1,9 +1,9 @@
 public protocol URLQueryDecoder {
-    func decode<D>(_ decodable: D.Type, from url: URL) throws -> D
+    func decode<D>(_ decodable: D.Type, from url: URI) throws -> D
         where D: Decodable
 }
 
 public protocol URLQueryEncoder {
-    func encode<E>(_ encodable: E, to url: inout URL) throws
+    func encode<E>(_ encodable: E, to url: inout URI) throws
         where E: Encodable
 }
