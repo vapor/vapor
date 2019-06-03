@@ -1,5 +1,9 @@
 import NIO
 
+public protocol ApplicationDelegate {
+    func configure(_ services: inout Services) throws
+}
+
 public final class Application {
     public let environment: Environment
     
@@ -9,7 +13,7 @@ public final class Application {
     
     public let lock: NSLock
     
-    private let configure: () throws -> Services
+    public let delegate: ApplicationDelegate
     
     private let threadPool: NIOThreadPool
     
@@ -30,12 +34,12 @@ public final class Application {
         }
     }
     
-    public init(environment: Environment = .development, configure: @escaping () throws -> Services) {
+    public init(environment: Environment = .development, delegate: ApplicationDelegate) {
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.userInfo = [:]
         self.didShutdown = false
-        self.configure = configure
+        self.delegate = delegate
         self.lock = NSLock()
         self.threadPool = .init(numberOfThreads: 1)
         self.threadPool.start()
@@ -43,7 +47,8 @@ public final class Application {
     }
     
     public func makeServices() throws -> Services {
-        var s = try self.configure()
+        var s = Services.default()
+        try self.delegate.configure(&s)
         s.register(Application.self) { c in
             return self
         }

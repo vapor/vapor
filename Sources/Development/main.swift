@@ -1,2 +1,7 @@
+import Vapor
+
 // normally this would be in a separate target
-try app(.detect()).run()
+try Application(
+    environment: .detect(),
+    delegate: Development()
+).run()

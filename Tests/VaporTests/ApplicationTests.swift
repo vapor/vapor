@@ -1,10 +1,16 @@
 import XCTVapor
 import COperatingSystem
 
+struct Default: ApplicationDelegate {
+    func configure(_ services: inout Services) throws {
+
+    }
+}
+
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(environment: test) { .default() }
+        let app = Application(environment: test, delegate: Default())
         DispatchQueue.global().async {
             COperatingSystem.sleep(1)
             app.running?.stop()
@@ -966,14 +972,20 @@ extension Application {
         configure: @escaping (inout Services) throws -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
-        return Application(environment: .testing) {
-            var s = Services.default()
+        struct Test: ApplicationDelegate {
+            var configureCallback: (inout Services) throws -> ()
+            func configure(_ services: inout Services) throws {
+                try self.configureCallback(&services)
+            }
+        }
+
+        let test = Test { s in
             try configure(&s)
             s.extend(Routes.self) { r, c in
                 try routes(&r, c)
             }
-            return s
         }
+        return Application(environment: .testing, delegate: test  )
     }
 }
 
