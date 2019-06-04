@@ -9,7 +9,7 @@ public final class Application {
     
     public let lock: NSLock
     
-    private let configure: () throws -> Services
+    private let configure: (inout Services) throws -> ()
     
     private let threadPool: NIOThreadPool
     
@@ -30,7 +30,10 @@ public final class Application {
         }
     }
     
-    public init(environment: Environment = .development, configure: @escaping () throws -> Services) {
+    public init(
+        environment: Environment = .development,
+        configure: @escaping (inout Services) throws -> () = { _ in }
+    ) {
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.userInfo = [:]
@@ -43,7 +46,8 @@ public final class Application {
     }
     
     public func makeServices() throws -> Services {
-        var s = try self.configure()
+        var s = Services.default()
+        try self.configure(&s)
         s.register(Application.self) { c in
             return self
         }

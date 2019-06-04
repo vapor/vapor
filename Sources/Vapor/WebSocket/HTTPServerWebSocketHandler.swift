@@ -27,7 +27,7 @@ internal final class HTTPServerWebSocketHandler: ChannelInboundHandler {
 
     /// See `ChannelInboundHandler`.
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        var frame = self.unwrapInboundIn(data)
+        let frame = self.unwrapInboundIn(data)
         switch frame.opcode {
         case .connectionClose: self.receivedClose(context: context, frame: frame)
         case .ping:
