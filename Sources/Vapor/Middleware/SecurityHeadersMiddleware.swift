@@ -78,6 +78,9 @@ public final class SecurityHeadersMiddleware: Middleware {
 
             /// for Preloading Strict Transport Security
             case preload
+
+            /// for Preloading Strict Transport Security and applying rule to all of the site's subdomains as well.
+            case both
         }
 
         /// The time that the browser should remember that
@@ -96,7 +99,17 @@ public final class SecurityHeadersMiddleware: Middleware {
                 return "max-age=\(maxAge); includeSubDomains"
             case .preload:
                 return "max-age=\(maxAge); preload"
+            case .both:
+                return "max-age=\(maxAge); includeSubDomains; preload"
             }
+        }
+
+        /// Creates Instance of StrictTransportSecurity struct.
+        ///
+        /// - Parameter maxAge: The time that the browser should remember that
+        public init(maxAge: Int, policy: Policy = .default) {
+            self.maxAge = maxAge
+            self.policy = policy
         }
     }
 
