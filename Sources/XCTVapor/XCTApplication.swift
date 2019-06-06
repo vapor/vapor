@@ -109,35 +109,20 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> Live {
-            let client = URLSession(configuration: .default)
-            let promise = self.container.eventLoop.makePromise(of: XCTHTTPResponse.self)
-            let url = URL(string: "http://127.0.0.1:\(self.port)\(path)")!
-            var request = URLRequest(url: url)
-            for (name, value) in headers {
-                request.addValue(name, forHTTPHeaderField: value)
+            let client = HTTPClient(eventLoopGroupProvider: .createNew)
+            defer { try! client.syncShutdown() }
+            var request = try HTTPClient.Request(url: "http://127.0.0.1:\(self.port)\(path)")
+            request.headers = headers
+            request.method = method
+            if let body = body {
+                request.body = .byteBuffer(body)
             }
-            request.httpMethod = method.string
-            if var body = body {
-                request.httpBody = body.readData(length: body.readableBytes)
-            }
-            client.dataTask(with: request) { data, response, error in
-                if let error = error {
-                    promise.fail(error)
-                } else if let response = response as? HTTPURLResponse {
-                    let xresponse = XCTHTTPResponse(
-                        status: .init(statusCode: response.statusCode),
-                        headers: .init(foundation: response.allHeaderFields),
-                        body: data.flatMap { .init(data: $0) } ?? .empty
-                    )
-                    promise.succeed(xresponse)
-                } else {
-                    promise.fail(Abort(.internalServerError))
-                }
-                #if !os(Linux)
-                client.invalidateAndCancel()
-                #endif
-            }.resume()
-            try closure(promise.futureResult.wait())
+            let response = try client.execute(request: request).wait()
+            try closure(XCTHTTPResponse(
+                status: response.status,
+                headers: response.headers,
+                body: response.body.flatMap { .init(buffer: $0) } ?? .init()
+            ))
             return self
         }
         

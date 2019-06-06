@@ -1,8 +1,9 @@
-#if os(Linux)
-import FoundationNetworking
-#else
-import Foundation
-#endif
+// TODO: uncomment once URLSession works on Linux
+//#if os(Linux)
+//import FoundationNetworking
+//#else
+//import Foundation
+//#endif
 
 internal final class ClientProvider: Provider {
     init() { }
@@ -17,15 +18,16 @@ internal final class ClientProvider: Provider {
         s.register(Client.self) { c in
             return try c.make(DefaultClient.self)
         }
-        s.register(FoundationClient.self) { c in
-            return try FoundationClient(c.make(), on: c.eventLoop)
-        }
-        s.register(URLSession.self) { c in
-            return try URLSession(configuration: c.make())
-        }
-        s.register(URLSessionConfiguration.self) { c in
-            return .default
-        }
+// TODO: uncomment once URLSession works on Linux
+//        s.register(FoundationClient.self) { c in
+//            return try FoundationClient(c.make(), on: c.eventLoop)
+//        }
+//        s.register(URLSession.self) { c in
+//            return try URLSession(configuration: c.make())
+//        }
+//        s.register(URLSessionConfiguration.self) { c in
+//            return .default
+//        }
         s.singleton(DefaultClient.self) { c in
             return try .init(
                 httpConfiguration: c.make(),
