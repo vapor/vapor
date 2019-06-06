@@ -8,7 +8,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: Error, CustomStringConvertible {
+public protocol AbortError: LocalizedError, CustomStringConvertible {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
@@ -23,6 +23,10 @@ extension AbortError {
     /// See `AbortError`.
     public var headers: HTTPHeaders {
         return [:]
+    }
+
+    public var errorDescription: String? {
+        return self.description
     }
 }
 

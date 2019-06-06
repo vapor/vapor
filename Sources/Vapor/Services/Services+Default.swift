@@ -18,14 +18,6 @@ extension Services {
             return try c.make(PlaintextVerifier.self)
         }
         
-        // url session
-        s.register(URLSessionConfiguration.self) { c in
-            return .default
-        }
-        s.register(URLSession.self) { c in
-            return try .init(configuration: c.make())
-        }
-        
         // routes
         s.register(Routes.self) { c in
             return .init(eventLoop: c.eventLoop)

@@ -38,7 +38,6 @@ extension ApplicationTests {
         ("testURLEncodedFormDecode", testURLEncodedFormDecode),
         ("testURLEncodedFormDecodeQuery", testURLEncodedFormDecodeQuery),
         ("testURLEncodedFormEncode", testURLEncodedFormEncode),
-        ("testURLSession", testURLSession),
         ("testValidationError", testValidationError),
         ("testVaporProvider", testVaporProvider),
         ("testVaporURI", testVaporURI),
