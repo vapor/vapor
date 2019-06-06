@@ -8,16 +8,7 @@ public final class Request: CustomStringConvertible {
     public var method: HTTPMethod
     
     /// The URL used on this request.
-    public var url: URL {
-        get { return URL(string: self.urlString) ?? .root }
-        set { self.urlString = newValue.absoluteString }
-    }
-    
-    /// The unparsed URL string. This is usually set through the `url` property.
-    ///
-    ///     httpReq.urlString = "/welcome"
-    ///
-    public var urlString: String
+    public var url: URI
     
     /// The version for this HTTP request.
     public var version: HTTPVersion
@@ -104,8 +95,12 @@ public final class Request: CustomStringConvertible {
     /// Get and set `HTTPCookies` for this `HTTPRequest`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
-        get { return headers.firstValue(name: .cookie).flatMap(HTTPCookies.parse) ?? [:] }
-        set { newValue.serialize(into: self) }
+        get {
+            return self.headers.cookie
+        }
+        set {
+            self.headers.cookie = newValue
+        }
     }
     
     /// See `CustomStringConvertible`
@@ -131,7 +126,7 @@ public final class Request: CustomStringConvertible {
     
     public convenience init(
         method: HTTPMethod = .GET,
-        url: URLRepresentable = URL.root,
+        url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
@@ -139,7 +134,7 @@ public final class Request: CustomStringConvertible {
     ) {
         self.init(
             method: method,
-            urlString: url.convertToURL()?.absoluteString ?? "/",
+            url: url,
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
@@ -152,14 +147,14 @@ public final class Request: CustomStringConvertible {
     
     public init(
         method: HTTPMethod,
-        urlString: String,
+        url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         on channel: Channel
     ) {
         self.method = method
-        self.urlString = urlString
+        self.url = url
         self.version = version
         self.headers = headers
         if let body = collectedBody {

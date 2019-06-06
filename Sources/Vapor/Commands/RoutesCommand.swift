@@ -19,7 +19,7 @@ public final class RoutesCommand: Command {
     public let signature = Signature()
 
     /// See `Command`.
-    public var help: String? {
+    public var help: String {
         return "Displays all registered routes."
     }
 

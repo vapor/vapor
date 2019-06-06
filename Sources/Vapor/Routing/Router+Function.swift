@@ -1,4 +1,5 @@
-#warning("TODO: consider deprecating")
+// TODO: update router middleware function overloads
+
 //extension Router {
 //    // MARK: Middleware Function
 //    

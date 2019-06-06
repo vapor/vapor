@@ -11,5 +11,14 @@ public enum BodyStreamResult {
 }
 
 public protocol BodyStreamWriter {
-    func write(_ result: BodyStreamResult)
+    var eventLoop: EventLoop { get }
+    func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?)
+}
+
+extension BodyStreamWriter {
+    public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
+        let promise = self.eventLoop.makePromise(of: Void.self)
+        self.write(result, promise: promise)
+        return promise.futureResult
+    }
 }

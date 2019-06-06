@@ -1,50 +1,40 @@
 import NIO
 import NIOWebSocket
 
-extension ChannelPipeline {
-    /// Adds the supplied `WebSocket` to this `ChannelPipeline`.
-    public func add(webSocket: WebSocket) -> EventLoopFuture<Void> {
-        let handler = WebSocketHandler(webSocket: webSocket)
-        return self.addHandler(handler)
-    }
-}
-
-// MARK: Private
-
 /// Decodes `WebSocketFrame`s, forwarding to a `WebSocket`.
-private final class WebSocketHandler: ChannelInboundHandler {
+internal final class HTTPServerWebSocketHandler: ChannelInboundHandler {
     /// See `ChannelInboundHandler`.
     typealias InboundIn = WebSocketFrame
-    
+
     /// See `ChannelInboundHandler`.
     typealias OutboundOut = WebSocketFrame
-    
+
     /// `WebSocket` to handle the incoming events.
-    private var webSocket: WebSocket
-    
+    private var webSocket: HTTPServerWebSocket
+
     /// Current frame sequence.
     private var frameSequence: WebSocketFrameSequence?
-    
+
     /// Creates a new `WebSocketEventDecoder`
-    init(webSocket: WebSocket) {
+    init(webSocket: HTTPServerWebSocket) {
         self.webSocket = webSocket
     }
-    
+
     /// See `ChannelInboundHandler`.
     func channelActive(context: ChannelHandlerContext) {
         // connected
     }
-    
+
     /// See `ChannelInboundHandler`.
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        var frame = self.unwrapInboundIn(data)
+        let frame = self.unwrapInboundIn(data)
         switch frame.opcode {
         case .connectionClose: self.receivedClose(context: context, frame: frame)
         case .ping:
             if !frame.fin {
-                closeOnError(context: context) // control frames can't be fragmented it should be final
+                self.closeOnError(context: context) // control frames can't be fragmented it should be final
             } else {
-                pong(context: context, frame: frame)
+                self.pong(context: context, frame: frame)
             }
         case .text, .binary:
             // create a new frame sequence or use existing
@@ -70,26 +60,26 @@ private final class WebSocketHandler: ChannelInboundHandler {
             // We ignore all other frames.
             break
         }
-        
+
         // if this frame was final and we have a non-nil frame sequence,
         // output it to the websocket and clear storage
-        if var frameSequence = self.frameSequence, frame.fin {
+        if let frameSequence = self.frameSequence, frame.fin {
             switch frameSequence.type {
             case .binary:
-                #warning("TODO: pass buffered results")
-            // webSocket.onBinaryCallback(webSocket, frameSequence.binaryBuffer?.readBytes(length: frameSequence.binaryBuffer?.readableBytes ?? 0) ?? [])
-            case .text: webSocket.onTextCallback(webSocket, frameSequence.textBuffer)
+                self.webSocket.onBinaryCallback(self.webSocket, frameSequence.binaryBuffer)
+            case .text:
+                self.webSocket.onTextCallback(self.webSocket, frameSequence.textBuffer)
             default: break
             }
             self.frameSequence = nil
         }
     }
-    
+
     /// See `ChannelInboundHandler`.
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        webSocket.onErrorCallback(webSocket, error)
+        self.webSocket.onErrorCallback(self.webSocket, error)
     }
-    
+
     /// Closes gracefully.
     private func receivedClose(context: ChannelHandlerContext, frame: WebSocketFrame) {
         /// Parse the close frame.
@@ -98,12 +88,12 @@ private final class WebSocketHandler: ChannelInboundHandler {
             .map(Int.init)
             .flatMap(WebSocketErrorCode.init(codeNumber:))
         {
-            webSocket.onCloseCodeCallback(closeCode)
+            self.webSocket.onErrorCallback(self.webSocket, closeCode)
         }
-        
+
         // Handle a received close frame. In websockets, we're just going to send the close
         // frame and then close, unless we already sent our own close frame.
-        if webSocket.isClosed {
+        if self.webSocket.isClosed {
             // Cool, we started the close and were waiting for the user. We're done.
             context.close(promise: nil)
         } else {
@@ -116,18 +106,18 @@ private final class WebSocketHandler: ChannelInboundHandler {
             }
         }
     }
-    
+
     /// Sends a pong frame in response to ping.
     private func pong(context: ChannelHandlerContext, frame: WebSocketFrame) {
         let pongFrame = WebSocketFrame(
             fin: true,
             opcode: .pong,
-            maskKey: webSocket.mode.makeMaskKey(),
+            maskKey: nil,
             data: frame.data
         )
         context.writeAndFlush(self.wrapOutboundOut(pongFrame), promise: nil)
     }
-    
+
     /// Closes the connection with error frame.
     private func closeOnError(context: ChannelHandlerContext) {
         // We have hit an error, we want to close. We do that by sending a close frame and then
@@ -138,13 +128,68 @@ private final class WebSocketHandler: ChannelInboundHandler {
         let frame = WebSocketFrame(
             fin: true,
             opcode: .connectionClose,
-            maskKey: webSocket.mode.makeMaskKey(),
+            maskKey: nil,
             data: data
         )
-        
+
         _ = context.writeAndFlush(self.wrapOutboundOut(frame)).flatMap {
             context.close(mode: .output)
         }
-        self.webSocket.isClosed = true
+    }
+}
+
+extension WebSocketErrorCode: Error { }
+
+/// Collects WebSocket frame sequences.
+///
+/// See https://tools.ietf.org/html/rfc6455#section-5 below.
+///
+/// 5.  Data Framing
+/// 5.1.  Overview
+///
+/// In the WebSocket Protocol, data is transmitted using a sequence of
+/// frames.  To avoid confusing network intermediaries (such as
+/// intercepting proxies) and for security reasons that are further
+/// discussed in Section 10.3, a client MUST mask all frames that it
+/// sends to the server (see Section 5.3 for further details).  (Note
+/// that masking is done whether or not the WebSocket Protocol is running
+/// over TLS.)  The server MUST close the connection upon receiving a
+/// frame that is not masked.  In this case, a server MAY send a Close
+/// frame with a status code of 1002 (protocol error) as defined in
+/// Section 7.4.1.  A server MUST NOT mask any frames that it sends to
+/// the client.  A client MUST close a connection if it detects a masked
+/// frame.  In this case, it MAY use the status code 1002 (protocol
+/// error) as defined in Section 7.4.1.  (These rules might be relaxed in
+/// a future specification.)
+///
+/// The base framing protocol defines a frame type with an opcode, a
+/// payload length, and designated locations for "Extension data" and
+/// "Application data", which together define the "Payload data".
+/// Certain bits and opcodes are reserved for future expansion of the
+/// protocol.
+///
+/// A data frame MAY be transmitted by either the client or the server at
+/// any time after opening handshake completion and before that endpoint
+/// has sent a Close frame (Section 5.5.1).
+private struct WebSocketFrameSequence {
+    var binaryBuffer: ByteBuffer
+    var textBuffer: String
+    var type: WebSocketOpcode
+
+    init(type: WebSocketOpcode) {
+        self.binaryBuffer = ByteBufferAllocator().buffer(capacity: 0)
+        self.textBuffer = .init()
+        self.type = type
+    }
+
+    mutating func append(_ frame: WebSocketFrame) {
+        var data = frame.unmaskedData
+        switch type {
+        case .binary:
+            self.binaryBuffer.writeBuffer(&data)
+        case .text:
+            self.textBuffer += data.readString(length: data.readableBytes) ?? ""
+        default: break
+        }
     }
 }

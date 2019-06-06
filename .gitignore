@@ -4,3 +4,5 @@ Packages
 *.xcodeproj
 DerivedData/
 Package.resolved
+.swiftpm
+

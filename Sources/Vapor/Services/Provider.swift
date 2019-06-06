@@ -34,7 +34,7 @@ public protocol Provider {
     ///
     ///     services.register(RedisCache.self)
     ///
-    func register(_ s: inout Services) throws
+    func register(_ s: inout Services)
 
     /// Called before the container has fully initialized.
     func willBoot(_ c: Container) -> EventLoopFuture<Void>

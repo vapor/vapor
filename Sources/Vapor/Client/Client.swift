@@ -1,139 +1,18 @@
-public protocol Client {
-    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse>
-}
+public final class Client {
+    private let httpClient: HTTPClient
+    private let webSocketClient: WebSocketClient
+    private let eventLoop: EventLoop
 
-public struct ClientRequest {
-    public var method: HTTPMethod
-    public var url: URL
-    public var headers: HTTPHeaders
-    public var body: ByteBuffer?
-    
-    public init(method: HTTPMethod = .GET, url: URL = .root, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
-        self.method = method
-        self.url = url
-        self.headers = headers
-        self.body = body
+    public init(
+        httpConfiguration: HTTPClient.Configuration = .init(),
+        webSocketConfiguration: WebSocketClient.Configuration = .init(),
+        on eventLoop: EventLoop
+    ) {
+        self.httpClient = .init(eventLoopGroupProvider: .shared(eventLoop), configuration: httpConfiguration)
+        self.webSocketClient = .init(eventLoopGroupProvider: .shared(eventLoop), configuration: webSocketConfiguration)
+        self.eventLoop = eventLoop
     }
 
-    // MARK: Content
-
-    private struct _URLQueryContainer: URLQueryContainer {
-        var url: URL
-
-        func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
-            where D: Decodable
-        {
-            return try decoder.decode(D.self, from: self.url)
-        }
-
-        mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
-            where E: Encodable
-        {
-            try encoder.encode(encodable, to: &self.url)
-        }
-    }
-
-    public var query: URLQueryContainer {
-        get {
-            return _URLQueryContainer(url: self.url)
-        }
-        set {
-            self.url = (newValue as! _URLQueryContainer).url
-        }
-    }
-
-    private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer?
-        var headers: HTTPHeaders
-
-        var contentType: HTTPMediaType? {
-            return self.headers.contentType
-        }
-
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.headers)
-            self.body = body
-        }
-
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            return try decoder.decode(D.self, from: body, headers: self.headers)
-        }
-    }
-
-    public var content: ContentContainer {
-        get {
-            return _ContentContainer(body: self.body, headers: self.headers)
-        }
-        set {
-            let container = (newValue as! _ContentContainer)
-            self.body = container.body
-            self.headers = container.headers
-        }
-    }
-}
-
-public struct ClientResponse: CustomStringConvertible {
-    public var status: HTTPStatus
-    public var headers: HTTPHeaders
-    public var body: ByteBuffer?
-    
-    public var description: String {
-        var desc = ["HTTP/1.1 \(status.code) \(status.reasonPhrase)"]
-        desc += self.headers.map { "\($0.name): \($0.value)" }
-        if var body = self.body {
-            let string = body.readString(length: body.readableBytes) ?? ""
-            desc += ["", string]
-        }
-        return desc.joined(separator: "\n")
-    }
-
-    // MARK: Content
-
-    private struct _ContentContainer: ContentContainer {
-        var body: ByteBuffer?
-        var headers: HTTPHeaders
-
-        var contentType: HTTPMediaType? {
-            return self.headers.contentType
-        }
-
-        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.headers)
-            self.body = body
-        }
-
-        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.body else {
-                throw Abort(.lengthRequired)
-            }
-            return try decoder.decode(D.self, from: body, headers: self.headers)
-        }
-    }
-
-    public var content: ContentContainer {
-        get {
-            return _ContentContainer(body: self.body, headers: self.headers)
-        }
-        set {
-            let container = (newValue as! _ContentContainer)
-            self.body = container.body
-            self.headers = container.headers
-        }
-    }
-    
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
-        self.status = status
-        self.headers = headers
-        self.body = body
-    }
-}
-
-extension Client {
     /// Sends an HTTP `GET` `Request` to a server with an optional configuration closure that will run before sending.
     ///
     ///     let res = try client.get("http://api.vapor.codes/users")
@@ -152,7 +31,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func get(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func get(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.GET, headers: headers, to: url)
     }
 
@@ -169,7 +48,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func post(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func post(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.POST, headers: headers, to: url)
     }
 
@@ -186,7 +65,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func patch(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func patch(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.PATCH, headers: headers, to: url)
     }
 
@@ -203,7 +82,7 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func put(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func put(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.PUT, headers: headers, to: url)
     }
 
@@ -226,7 +105,7 @@ extension Client {
     ///     - headers: `HTTPHeaders` to add to the request. Empty by default.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func delete(_ url: URLRepresentable, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
+    public func delete(_ url: URI, headers: HTTPHeaders = [:]) -> EventLoopFuture<ClientResponse> {
         return self.send(.DELETE, headers: headers, to: url)
     }
 
@@ -245,8 +124,73 @@ extension Client {
     ///            This `URL` should contain a scheme, hostname, and port.
     ///     - beforeSend: An optional closure that can mutate the `Request` before it is sent.
     /// - returns: A `Future` containing the requested `Response` or an `Error`.
-    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URLRepresentable) -> EventLoopFuture<ClientResponse> {
-        let request = ClientRequest(method: method, url: url.convertToURL()!, headers: headers, body: nil)
+    public func send(_ method: HTTPMethod, headers: HTTPHeaders = [:], to url: URI) -> EventLoopFuture<ClientResponse> {
+        let request = ClientRequest(method: method, url: url, headers: headers, body: nil)
         return self.send(request)
+    }
+
+    public func send(_ client: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        do {
+            let request = try HTTPClient.Request(
+                url: URL(string: client.url.string)!,
+                version: .init(major: 1, minor: 1),
+                method: client.method,
+                headers: client.headers, body: client.body.flatMap { .byteBuffer($0) }
+            )
+            return self.httpClient.execute(request: request).map { response in
+                let client = ClientResponse(
+                    status: response.status,
+                    headers: response.headers,
+                    body: response.body
+                )
+                return client
+            }
+        } catch {
+            return self.eventLoop.makeFailedFuture(error)
+        }
+    }
+
+    public func webSocket(_ url: URI, headers: HTTPHeaders = [:], onUpgrade: @escaping (WebSocket) -> ()) -> EventLoopFuture<Void> {
+        let port: Int
+        if let p = url.port {
+            port = p
+        } else if let scheme = url.scheme {
+            port = scheme == "wss" ? 443 : 80
+        } else {
+            port = 80
+        }
+        return self.webSocketClient.connect(host: url.host ?? "", port: port, uri: url.path, headers: headers) { socket in
+            onUpgrade(socket)
+        }
+    }
+
+    public func syncShutdown() throws {
+        try self.httpClient.syncShutdown()
+        try self.webSocketClient.syncShutdown()
+    }
+}
+
+extension WebSocketClient.Socket: WebSocket {
+    public func onText(_ callback: @escaping (WebSocket, String) -> ()) {
+        self.onText { (ws: WebSocketClient.Socket, data: String) in
+            callback(ws, data)
+        }
+    }
+
+    public func onBinary(_ callback: @escaping (WebSocket, ByteBuffer) -> ()) {
+        self.onBinary { (ws: WebSocketClient.Socket, data: ByteBuffer) in
+            callback(ws, data)
+        }
+    }
+
+    public func onError(_ callback: @escaping (WebSocket, Error) -> ()) {
+        self.onError { (ws: WebSocketClient.Socket, error: Error) in
+            callback(ws, error)
+        }
+    }
+
+    public func send(binary: ByteBuffer, promise: EventLoopPromise<Void>?) {
+        var binary = binary
+        self.send(binary: binary.readBytes(length: binary.readableBytes)!, promise: promise)
     }
 }

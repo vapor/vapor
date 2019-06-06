@@ -4,6 +4,9 @@ extension Services {
     public static func `default`() -> Services {
         var s = Services()
 
+        // client
+        s.provider(ClientProvider())
+
         // auth
         s.register(PasswordVerifier.self) { c in
             return BCryptDigest()
@@ -15,24 +18,12 @@ extension Services {
             return try c.make(PlaintextVerifier.self)
         }
         
-        // client
+        // url session
         s.register(URLSessionConfiguration.self) { c in
             return .default
         }
         s.register(URLSession.self) { c in
             return try .init(configuration: c.make())
-        }
-        s.register(FoundationClient.self) { c in
-            return try .init(c.make(), on: c.eventLoop)
-        }
-        s.register(HTTPClient.Configuration.self) { c in
-            return .init()
-        }
-        s.register(HTTPClient.self) { c in
-            return try .init(configuration: c.make(), on: c.eventLoop)
-        }
-        s.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
         }
         
         // routes
@@ -68,10 +59,6 @@ extension Services {
             return .default()
         }
 
-        // keyed cache
-        #warning("TODO: update keyed caches")
-//        s.register(MemoryKeyedCache(), as: KeyedCache.self)
-
         // middleware
         s.register(MiddlewareConfiguration.self) { c in
             var middleware = MiddlewareConfiguration()
@@ -79,12 +66,8 @@ extension Services {
             return middleware
         }
         s.register(FileMiddleware.self) { c in
-            var workDir = try c.make(DirectoryConfig.self).workDir
-            if !workDir.hasSuffix("/") {
-                workDir.append("/")
-            }
             return try .init(
-                publicDirectory: workDir + "Public/",
+                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
                 fileio: c.make()
             )
         }
@@ -138,7 +121,7 @@ extension Services {
         }
 
         // directory
-        s.register(DirectoryConfig.self) { c in
+        s.register(DirectoryConfiguration.self) { c in
             return .detect()
         }
 
@@ -150,12 +133,17 @@ extension Services {
             return try c.make(Application.self).logger
         }
 
-        // templates
-        #warning("TODO: update view renderer")
-//        services.register(ViewRenderer.self) { container -> PlaintextRenderer in
-//            let dir = try container.make(DirectoryConfig.self)
-//            return PlaintextRenderer.init(viewsDir: dir.workDir + "Resources/Views/", on: container)
-//        }
+        // view
+        s.register(ViewRenderer.self) { c in
+            return try c.make(PlaintextRenderer.self)
+        }
+        s.register(PlaintextRenderer.self) { c in
+            return try PlaintextRenderer(
+                threadPool: c.make(NIOThreadPool.self),
+                viewsDirectory: c.make(DirectoryConfiguration.self).viewsDirectory,
+                eventLoop: c.eventLoop
+            )
+        }
 
         // file
         s.register(NonBlockingFileIO.self) { c in
@@ -167,10 +155,6 @@ extension Services {
         s.register(ByteBufferAllocator.self) { c in
             return .init()
         }
-
-        // websocket
-        #warning("TODO: update websocket client")
-        // services.register(NIOWebSocketClient.self)
 
         return s
     }

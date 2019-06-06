@@ -2,7 +2,6 @@ import NIO
 import NIOHTTP1
 import NIOFoundationCompat
 
-
 /// An HTTP response from a server back to the client.
 ///
 ///     let httpRes = HTTPResponse(status: .ok)
@@ -32,14 +31,22 @@ public final class Response: CustomStringConvertible {
     public var body: Body {
         didSet { self.headers.updateContentLength(self.body.count) }
     }
+
+    internal enum Upgrader {
+        case webSocket(onUpgrade: (WebSocket) -> ())
+    }
     
-    internal var upgrader: HTTPServerProtocolUpgrader?
+    internal var upgrader: Upgrader?
     
     /// Get and set `HTTPCookies` for this `HTTPResponse`
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
-        get { return HTTPCookies.parse(setCookieHeaders: self.headers[.setCookie]) ?? [:] }
-        set { newValue.serialize(into: self) }
+        get {
+            return self.headers.setCookie
+        }
+        set {
+            self.headers.setCookie = newValue
+        }
     }
     
     /// See `CustomStringConvertible`

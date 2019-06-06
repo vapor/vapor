@@ -99,7 +99,6 @@ internal struct URLEncodedFormParser {
         return URLEncodedFormEncodedKey(name: name.removingPercentEncoding!, path: path)
     }
 
-    #warning("TODO: optimize set algorithm")
     /// Sets mutable form-urlencoded input to a value at the given `[URLEncodedFormEncodedSubKey]` path.
     private func set(_ base: inout URLEncodedFormData, to data: URLEncodedFormData, at path: [URLEncodedFormEncodedSubKey]) {
         guard path.count >= 1 else {

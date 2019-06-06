@@ -23,15 +23,8 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     }
     
     /// `URLContentEncoder` conformance.
-    public func encode<E>(_ encodable: E, to url: inout URL) throws where E : Encodable {
-        guard var comps = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
-            throw Abort(.internalServerError)
-        }
-        comps.percentEncodedQuery = try self.encode(encodable)
-        guard let newURL = comps.url else {
-            throw Abort(.internalServerError)
-        }
-        url = newURL
+    public func encode<E>(_ encodable: E, to url: inout URI) throws where E : Encodable {
+        url.query = try self.encode(encodable)
     }
 
     /// Encodes the supplied `Encodable` object to `Data`.

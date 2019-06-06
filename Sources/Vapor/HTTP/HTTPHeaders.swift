@@ -47,7 +47,7 @@ extension HTTPHeaders {
     ///
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
     ///
-    public var accept: [MediaTypePreference] {
-        return self.firstValue(name: .accept).flatMap([MediaTypePreference].parse) ?? []
+    public var accept: [HTTPMediaTypePreference] {
+        return self.firstValue(name: .accept).flatMap([HTTPMediaTypePreference].parse) ?? []
     }
 }

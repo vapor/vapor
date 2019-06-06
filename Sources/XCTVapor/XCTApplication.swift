@@ -30,6 +30,25 @@ public final class XCTApplication {
             self.container = container
             self.responder = try self.container.make(Responder.self)
         }
+
+        @discardableResult
+        public func test<Body>(
+            _ method: HTTPMethod,
+            _ path: String,
+            headers: HTTPHeaders = [:],
+            json: Body,
+            file: StaticString = #file,
+            line: UInt = #line,
+            closure: (XCTHTTPResponse) throws -> () = { _ in }
+        ) throws -> InMemory
+            where Body: Encodable
+        {
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try body.writeBytes(JSONEncoder().encode(json))
+            var headers = HTTPHeaders()
+            headers.contentType = .json
+            return try self.test(method, path, headers: headers, body: body, closure: closure)
+        }
         
         @discardableResult
         public func test(
@@ -41,10 +60,14 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> InMemory {
+            var headers = headers
+            if let body = body {
+                headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+            }
             let response: XCTHTTPResponse
             let request = Request(
                 method: method,
-                url: URL(string: path)!,
+                url: .init(string: path),
                 headers: headers,
                 collectedBody: body,
                 on: EmbeddedChannel()
@@ -80,6 +103,8 @@ public final class XCTApplication {
         public func test(
             _ method: HTTPMethod,
             _ path: String,
+            headers: HTTPHeaders = [:],
+            body: ByteBuffer? = nil,
             file: StaticString = #file,
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
@@ -87,7 +112,15 @@ public final class XCTApplication {
             let client = URLSession(configuration: .default)
             let promise = self.container.eventLoop.makePromise(of: XCTHTTPResponse.self)
             let url = URL(string: "http://127.0.0.1:\(self.port)\(path)")!
-            client.dataTask(with: URLRequest(url: url)) { data, response, error in
+            var request = URLRequest(url: url)
+            for (name, value) in headers {
+                request.addValue(name, forHTTPHeaderField: value)
+            }
+            request.httpMethod = method.string
+            if var body = body {
+                request.httpBody = body.readData(length: body.readableBytes)
+            }
+            client.dataTask(with: request) { data, response, error in
                 if let error = error {
                     promise.fail(error)
                 } else if let response = response as? HTTPURLResponse {

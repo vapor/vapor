@@ -9,6 +9,36 @@ public func routes(_ r: Routes, _ c: Container) throws {
     r.on(.GET, "ping", body: .stream) { req in
         return "123" as StaticString
     }
+
+    // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
+    r.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+        let done = req.eventLoop.makePromise(of: String.self)
+
+        var total = 0
+        req.body.drain { result in
+            let promise = req.eventLoop.makePromise(of: Void.self)
+
+            switch result {
+            case .buffer(let buffer):
+                req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
+                    total += buffer.readableBytes
+                    promise.succeed(())
+                }
+            case .error(let error):
+                done.fail(error)
+            case .end:
+                promise.succeed(())
+                done.succeed(total.description)
+            }
+
+            // manually return pre-completed future
+            // this should balloon in memory
+            // return req.eventLoop.makeSucceededFuture(())
+            return promise.futureResult
+        }
+
+        return done.futureResult
+    }
     
     r.post("login") { req -> String in
         let creds = try req.content.decode(Creds.self)
@@ -25,11 +55,14 @@ public func routes(_ r: Routes, _ c: Container) throws {
     
     r.webSocket("ws") { req, ws in
         ws.onText { ws, text in
-            ws.send(text: text.reversed())
+            ws.send(text.reversed())
+            if text == "close" {
+                ws.close(code: nil, promise: nil)
+            }
         }
 
         let ip = req.channel.remoteAddress?.description ?? "<no ip>"
-        ws.send(text: "Hello 👋 \(ip)")
+        ws.send("Hello 👋 \(ip)")
     }
     
     r.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
@@ -43,6 +76,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
             case .end:
                 promise.succeed("Done")
             }
+            return req.eventLoop.makeSucceededFuture(())
         }
         return promise.futureResult
     }

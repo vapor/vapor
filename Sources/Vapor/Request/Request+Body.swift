@@ -12,13 +12,23 @@ extension Request {
             case .none, .stream: return nil
             }
         }
+
+        public var string: String? {
+            if var data = self.data {
+                return data.readString(length: data.readableBytes)
+            } else {
+                return nil
+            }
+        }
         
-        public func drain(_ handler: @escaping (BodyStreamResult) -> ()) {
+        public func drain(_ handler: @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage {
             case .stream(let stream):
-                stream.read(handler)
+                stream.read { (result, promise) in
+                    handler(result).cascade(to: promise)
+                }
             case .collected(let buffer):
-                handler(.buffer(buffer))
+                _ = handler(.buffer(buffer))
             case .none: break
             }
         }
