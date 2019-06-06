@@ -61,7 +61,7 @@ public final class Container {
         
         // fetch service factory if one exists
         guard let factory = self.services.factories[id] as? ServiceFactory<S> else {
-            fatalError("No services available for \(S.self)")
+            throw Abort(.internalServerError, reason: "No service known for \(S.self)")
         }
         
         // create the service

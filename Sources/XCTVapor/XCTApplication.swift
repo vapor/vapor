@@ -23,12 +23,10 @@ public final class XCTApplication {
     }
     
     public final class InMemory {
-        let container: Container
-        let responder: Responder
+        let container: () throws -> Container
         
-        init(container: Container) throws {
+        init(container: @escaping () throws -> Container) throws {
             self.container = container
-            self.responder = try self.container.make(Responder.self)
         }
 
         @discardableResult
@@ -60,6 +58,10 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> InMemory {
+            let container = try self.container()
+            defer { container.shutdown() }
+            let responder = try container.make(Responder.self)
+
             var headers = headers
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
@@ -72,31 +74,24 @@ public final class XCTApplication {
                 collectedBody: body,
                 on: EmbeddedChannel()
             )
-            let res = try self.responder.respond(to: request).wait()
+            let res = try responder.respond(to: request).wait()
             response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
             try closure(response)
             return self
         }
-        
-        deinit {
-            self.container.shutdown()
-        }
     }
     
     public func inMemory() throws -> InMemory {
-        return try InMemory(container: self.container())
+        return try InMemory(container: self.container)
     }
     
     public final class Live {
-        let container: Container
-        let server: Server
+        let container: () throws -> Container
         let port: Int
         
-        init(container: Container, port: Int) throws {
+        init(container: @escaping () throws -> Container, port: Int) throws {
             self.container = container
             self.port = port
-            self.server = try self.container.make(Server.self)
-            try self.server.start(hostname: "127.0.0.1", port: port)
         }
         
         @discardableResult
@@ -109,6 +104,12 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> Live {
+            let container = try self.container()
+            defer { container.shutdown() }
+            let server = try container.make(Server.self)
+            try server.start(hostname: "127.0.0.1", port: port)
+            defer { server.shutdown() }
+            
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var request = try HTTPClient.Request(url: "http://127.0.0.1:\(self.port)\(path)")
@@ -125,15 +126,10 @@ public final class XCTApplication {
             ))
             return self
         }
-        
-        deinit {
-            self.server.shutdown()
-            self.container.shutdown()
-        }
     }
     
     public func live(port: Int) throws -> Live {
-        return try Live(container: self.container(), port: port)
+        return try Live(container: self.container, port: port)
     }
     
     private func container() throws -> Container {
