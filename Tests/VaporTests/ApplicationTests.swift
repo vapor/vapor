@@ -5,6 +5,7 @@ final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
+        try app.boot()
         DispatchQueue.global().async {
             COperatingSystem.sleep(1)
             app.running?.stop()
@@ -966,12 +967,14 @@ extension Application {
         configure: @escaping (inout Services) throws -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
-        return Application(environment: .testing) { s in
+        let app = Application(environment: .testing) { s in
             try configure(&s)
             s.extend(Routes.self) { r, c in
                 try routes(&r, c)
             }
         }
+        try! app.boot()
+        return app
     }
 }
 

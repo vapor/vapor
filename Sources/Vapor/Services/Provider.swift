@@ -36,6 +36,12 @@ public protocol Provider {
     ///
     func register(_ s: inout Services)
 
+    func willBoot(_ application: Application) throws
+
+    func didBoot(_ application: Application) throws
+
+    func willShutdown(_ application: Application)
+
     /// Called before the container has fully initialized.
     func willBoot(_ c: Container) -> EventLoopFuture<Void>
 
@@ -59,4 +65,10 @@ extension Provider {
     
     /// Default implementation.
     public func willShutdown(_ c: Container) { }
+
+    public func willBoot(_ application: Application) throws { }
+
+    public func didBoot(_ application: Application) throws { }
+
+    public func willShutdown(_ application: Application) { }
 }
