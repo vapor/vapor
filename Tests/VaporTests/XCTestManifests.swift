@@ -8,6 +8,7 @@ extension ApplicationTests {
     static let __allTests__ApplicationTests = [
         ("testAnyResponse", testAnyResponse),
         ("testApplicationStop", testApplicationStop),
+        ("testAsyncKitExport", testAsyncKitExport),
         ("testComplexContent", testComplexContent),
         ("testContent", testContent),
         ("testContentContainer", testContentContainer),

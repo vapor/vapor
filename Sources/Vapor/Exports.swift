@@ -1,3 +1,4 @@
+@_exported import AsyncKit
 @_exported import CryptoKit
 @_exported import RoutingKit
 @_exported import ConsoleKit

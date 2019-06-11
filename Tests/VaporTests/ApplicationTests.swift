@@ -930,6 +930,19 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
+    func testAsyncKitExport() throws {
+        let eventLoop: EventLoop = EmbeddedEventLoop()
+        let a = eventLoop.makePromise(of: Int.self)
+        let b = eventLoop.makePromise(of: Int.self)
+
+        let c = [a.futureResult, b.futureResult].flatten(on: eventLoop)
+
+        a.succeed(1)
+        b.succeed(2)
+
+        try XCTAssertEqual(c.wait(), [1, 2])
+    }
+
     func testDotEnvRead() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = NIOThreadPool(numberOfThreads: 1)

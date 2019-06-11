@@ -7,6 +7,9 @@ let package = Package(
         .library(name: "Vapor", targets: ["Vapor"]),
     ],
     dependencies: [
+        // Sugary extensions for the SwiftNIO library
+        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-alpha"),
+
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha"),
 
@@ -45,6 +48,7 @@ let package = Package(
 
         // Vapor
         .target(name: "Vapor", dependencies: [
+            "AsyncKit",
             "CMultipartParser",
             "COperatingSystem",
             "CURLParser",
