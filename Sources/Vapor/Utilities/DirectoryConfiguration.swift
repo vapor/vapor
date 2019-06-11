@@ -38,44 +38,28 @@ public struct DirectoryConfiguration {
     ///
     /// - returns: The derived `DirectoryConfig` if it could be created, otherwise just "./".
     public static func detect() -> DirectoryConfiguration {
-        let fileBasedWorkDir: String?
-        
-        #if Xcode
-        // attempt to find working directory through #file
-        let file = #file
-        
-        if file.contains(".build") {
-            // most dependencies are in `./.build/`
-            fileBasedWorkDir = file.components(separatedBy: "/.build").first
-        } else if file.contains("Packages") {
-            // when editing a dependency, it is in `./Packages/`
-            fileBasedWorkDir = file.components(separatedBy: "/Packages").first
-        } else {
-            // when dealing with current repository, file is in `./Sources/`
-            fileBasedWorkDir = file.components(separatedBy: "/Sources").first
+        // get actual working directory
+        let cwd = getcwd(nil, Int(PATH_MAX))
+        defer {
+            free(cwd)
         }
-        #else
-        fileBasedWorkDir = nil
+
+        let workingDirectory: String
+
+        if let cwd = cwd, let string = String(validatingUTF8: cwd) {
+            workingDirectory = string
+        } else {
+            workingDirectory = "./"
+        }
+
+        #if Xcode
+        if workingDirectory.contains("DerivedData") {
+            Logger(label: "codes.vapor.directory-config")
+                .warning("No custom working directory set for this scheme, using \(workingDirectory)")
+        }
         #endif
         
-        let workDir: String
-        if let fileBasedWorkDir = fileBasedWorkDir {
-            workDir = fileBasedWorkDir
-        } else {
-            // get actual working directory
-            let cwd = getcwd(nil, Int(PATH_MAX))
-            defer {
-                free(cwd)
-            }
-            
-            if let cwd = cwd, let string = String(validatingUTF8: cwd) {
-                workDir = string
-            } else {
-                workDir = "./"
-            }
-        }
-        
-        return DirectoryConfiguration(workingDirectory: workDir)
+        return DirectoryConfiguration(workingDirectory: workingDirectory)
     }
 }
 
