@@ -43,6 +43,7 @@ extension ApplicationTests {
         ("testVaporProvider", testVaporProvider),
         ("testVaporURI", testVaporURI),
         ("testViewResponse", testViewResponse),
+        ("testWebSocket404", testWebSocket404),
         ("testWebSocketClient", testWebSocketClient),
     ]
 }

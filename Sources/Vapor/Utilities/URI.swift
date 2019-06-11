@@ -1,10 +1,14 @@
 import CURLParser
 
-public struct URI: ExpressibleByStringLiteral {
+public struct URI: ExpressibleByStringLiteral, CustomStringConvertible {
     public var string: String
 
     public init(string: String = "/") {
         self.string = string
+    }
+
+    public var description: String {
+        return self.string
     }
 
     public init(
