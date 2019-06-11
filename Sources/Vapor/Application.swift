@@ -1,7 +1,7 @@
 import NIO
 
 public final class Application {
-    public let environment: Environment
+    public var environment: Environment
     
     public let eventLoopGroup: EventLoopGroup
     
@@ -18,6 +18,8 @@ public final class Application {
     public var running: Running?
     
     public var logger: Logger
+
+    private var _services: Services!
     
     public struct Running {
         public var stop: () -> Void
@@ -75,6 +77,12 @@ public final class Application {
     }
 
     // MARK: Run
+
+    public func boot() throws {
+        self._services = try self.makeServices()
+        try self._services.providers.forEach { try $0.willBoot(self) }
+        try self._services.providers.forEach { try $0.didBoot(self) }
+    }
     
     public func run() throws {
         self.logger = .init(label: "codes.vapor.application")
@@ -111,6 +119,9 @@ public final class Application {
     
     public func shutdown() {
         self.logger.debug("Application shutting down")
+        if self._services != nil {
+            self._services.providers.forEach { $0.willShutdown(self) }
+        }
         do {
             try self.eventLoopGroup.syncShutdownGracefully()
         } catch {
