@@ -943,14 +943,6 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(c.wait(), [1, 2])
     }
 
-    func testDirectoryConfigurationDetection() throws {
-        let config = DirectoryConfiguration.detect()
-        let license = config.workingDirectory + "LICENSE"
-        if !FileManager.default.fileExists(atPath: license) {
-            XCTFail("could not find license using directory config")
-        }
-    }
-
     func testDotEnvRead() throws {
         let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
         let pool = NIOThreadPool(numberOfThreads: 1)
