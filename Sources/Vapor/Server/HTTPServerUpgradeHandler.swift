@@ -17,15 +17,15 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     
     private var upgradeState: UpgradeState
     let httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>
-    let otherHTTPHandlers: [RemovableChannelHandler]
+    let httpHandlers: [RemovableChannelHandler]
     
     init(
         httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>,
-        otherHTTPHandlers: [RemovableChannelHandler]
+        httpHandlers: [RemovableChannelHandler]
     ) {
         self.upgradeState = .ready
         self.httpRequestDecoder = httpRequestDecoder
-        self.otherHTTPHandlers = otherHTTPHandlers
+        self.httpHandlers = httpHandlers
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -34,11 +34,8 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         // check if request is upgrade
         let connectionHeaders = Set(req.headers[canonicalForm: "connection"].map { $0.lowercased() })
         if connectionHeaders.contains("upgrade") {
-            // remove http decoder
             let buffer = UpgradeBufferHandler()
-            _ = context.channel.pipeline.addHandler(buffer, position: .after(self.httpRequestDecoder)).flatMap {
-                return context.channel.pipeline.removeHandler(self.httpRequestDecoder)
-            }
+            _ = context.channel.pipeline.addHandler(buffer, position: .before(self.httpRequestDecoder))
             self.upgradeState = .pending(req, buffer)
         }
         
@@ -80,7 +77,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                         res.headers = headers
                         context.write(self.wrapOutboundOut(res), promise: promise)
                     }.flatMap {
-                        let handlers: [RemovableChannelHandler] = [self] + self.otherHTTPHandlers
+                        let handlers: [RemovableChannelHandler] = [self] + self.httpHandlers
                         return .andAllComplete(handlers.map { handler in
                             return context.pipeline.removeHandler(handler)
                         }, on: context.eventLoop)
@@ -93,9 +90,8 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
             } else {
                 // reset handlers
                 self.upgradeState = .ready
-                _ = context.channel.pipeline.addHandler(self.httpRequestDecoder, position: .after(buffer)).flatMap {
-                    return context.channel.pipeline.removeHandler(buffer)
-                }
+                context.channel.pipeline.removeHandler(buffer, promise: nil)
+                context.write(self.wrapOutboundOut(res), promise: promise)
             }
         case .ready, .upgraded:
             context.write(self.wrapOutboundOut(res), promise: promise)

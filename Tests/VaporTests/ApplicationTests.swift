@@ -973,6 +973,27 @@ final class ApplicationTests: XCTestCase {
         try pool.syncShutdownGracefully()
         try elg.syncShutdownGracefully()
     }
+
+    // https://github.com/vapor/vapor/issues/1997
+    func testWebSocket404() throws {
+        let app = Application.create(routes: { r, c in
+            r.webSocket("bar") { req, ws in
+                ws.close(code: nil, promise: nil)
+            }
+        })
+        defer { app.shutdown() }
+
+        let server = try app.testable().live(port: 8080).start()
+        defer { server.shutdown() }
+
+        let client = WebSocketClient(eventLoopGroupProvider: .createNew)
+        defer { try! client.syncShutdown() }
+
+        let future = client.connect(host: "localhost", port: 8080, uri: "/foo") { ws in
+            XCTFail("Should not have connected")
+        }
+        XCTAssertThrowsError(try future.wait())
+    }
 }
 
 extension Application {

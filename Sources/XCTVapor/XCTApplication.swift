@@ -88,10 +88,27 @@ public final class XCTApplication {
     public final class Live {
         let container: () throws -> Container
         let port: Int
+
+        public struct Running {
+            let container: Container
+            let server: Server
+
+            public func shutdown() {
+                self.server.shutdown()
+                self.container.shutdown()
+            }
+        }
         
         init(container: @escaping () throws -> Container, port: Int) throws {
             self.container = container
             self.port = port
+        }
+
+        public func start() throws -> Running {
+            let container = try self.container()
+            let server = try container.make(Server.self)
+            try server.start(hostname: "127.0.0.1", port: port)
+            return Running(container: container, server: server)
         }
         
         @discardableResult
@@ -104,10 +121,7 @@ public final class XCTApplication {
             line: UInt = #line,
             closure: (XCTHTTPResponse) throws -> () = { _ in }
         ) throws -> Live {
-            let container = try self.container()
-            defer { container.shutdown() }
-            let server = try container.make(Server.self)
-            try server.start(hostname: "127.0.0.1", port: port)
+            let server = try self.start()
             defer { server.shutdown() }
             
             let client = HTTPClient(eventLoopGroupProvider: .createNew)

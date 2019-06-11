@@ -361,8 +361,7 @@ private extension ChannelPipeline {
     
     func addVaporHTTP1Handlers(responder: Responder, configuration: HTTPServer.Configuration) -> EventLoopFuture<Void> {
         // create server pipeline array
-        var handlers: [ChannelHandler] = []
-        var otherHTTPHandlers: [RemovableChannelHandler] = []
+        var handlers: [RemovableChannelHandler] = []
         
         // configure HTTP/1
         // add http parsing and serializing
@@ -371,20 +370,17 @@ private extension ChannelPipeline {
             leftOverBytesStrategy: .forwardBytes
         ))
         handlers += [httpResEncoder, httpReqDecoder]
-        otherHTTPHandlers += [httpResEncoder]
         
         // add pipelining support if configured
         if configuration.supportPipelining {
             let pipelineHandler = HTTPServerPipelineHandler()
             handlers.append(pipelineHandler)
-            otherHTTPHandlers.append(pipelineHandler)
         }
         
         // add response compressor if configured
         if configuration.supportCompression {
             let compressionHandler = HTTPResponseCompressor()
             handlers.append(compressionHandler)
-            otherHTTPHandlers.append(compressionHandler)
         }
         
         // add NIO -> HTTP request decoder
@@ -392,7 +388,6 @@ private extension ChannelPipeline {
             maxBodySize: configuration.maxBodySize
         )
         handlers.append(serverReqDecoder)
-        otherHTTPHandlers.append(serverReqDecoder)
         
         // add NIO -> HTTP response encoder
         let serverResEncoder = HTTPServerResponseEncoder(
@@ -400,24 +395,22 @@ private extension ChannelPipeline {
             dateCache: .eventLoop(self.eventLoop)
         )
         handlers.append(serverResEncoder)
-        otherHTTPHandlers.append(serverResEncoder)
         
+        // add HTTP upgrade handler
+        let upgrader = HTTPServerUpgradeHandler(
+            httpRequestDecoder: httpReqDecoder,
+            httpHandlers: handlers
+        )
+
         // add server request -> response delegate
         let handler = HTTPServerHandler(
             responder: responder,
             errorHandler: configuration.errorHandler
         )
-        otherHTTPHandlers.append(handler)
-        
-        // add HTTP upgrade handler
-        let upgrader = HTTPServerUpgradeHandler(
-            httpRequestDecoder: httpReqDecoder,
-            otherHTTPHandlers: otherHTTPHandlers
-        )
         handlers.append(upgrader)
+        handlers.append(handler)
         
         // wait to add delegate as final step
-        handlers.append(handler)
         return self.addHandlers(handlers)
     }
 }
