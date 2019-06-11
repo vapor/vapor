@@ -39,7 +39,10 @@ function check_vapor() {
 
     SWIFTV=`swift --version`
 
-    if [[ $SWIFTV == *"Swift version 4.1"* ]] || [[ $SWIFTV == *"Swift version 5."* ]] || [[ $SWIFTV == *"Swift version 6."* ]];
+    if  [[ $SWIFTV == *"Swift version 4.1"* ]] || 
+        [[ $SWIFTV == *"Swift version 4.2"* ]] || 
+        [[ $SWIFTV == *"Swift version 5."* ]] || 
+        [[ $SWIFTV == *"Swift version 6."* ]];
     then
         echo "✅ Swift 4.1 or later is compatible with Vapor 3"
     else
