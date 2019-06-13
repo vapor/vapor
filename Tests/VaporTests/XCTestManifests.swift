@@ -31,6 +31,7 @@ extension ApplicationTests {
         ("testRequestQueryStringPercentEncoding", testRequestQueryStringPercentEncoding),
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testRootGet", testRootGet),
+        ("testSecurityHeadersMiddleware", testSecurityHeadersMiddleware),
         ("testSessionDestroy", testSessionDestroy),
         ("testStreamFile", testStreamFile),
         ("testStreamFileConnectionClose", testStreamFileConnectionClose),
