@@ -336,10 +336,10 @@ final class ApplicationTests: XCTestCase {
 
     func testWebSocketClient() throws {
         let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
+            let wsClient = try c.make(WebSocketClient.self)
             r.get("ws") { req -> EventLoopFuture<String> in
                 let promise = req.eventLoop.makePromise(of: String.self)
-                return client.webSocket("ws://echo.websocket.org/") { ws in
+                return wsClient.webSocket("ws://echo.websocket.org/") { ws in
                     ws.send("Hello, world!")
                     ws.onText { ws, text in
                         promise.succeed(text)
@@ -993,6 +993,23 @@ final class ApplicationTests: XCTestCase {
             XCTFail("Should not have connected")
         }
         XCTAssertThrowsError(try future.wait())
+    }
+
+    func testClientBeforeSend() throws {
+        let client = HTTPClient(eventLoopGroupProvider: .createNew)
+        defer { try! client.syncShutdown() }
+
+        let res = try client.post("http://httpbin.org/anything") { req in
+            try req.content.encode(["hello": "world"])
+        }.wait()
+
+        struct HTTPBinAnything: Codable {
+            var headers: [String: String]
+            var json: [String: String]
+        }
+        let data = try res.content.decode(HTTPBinAnything.self)
+        XCTAssertEqual(data.json, ["hello": "world"])
+        XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
     }
 }
 
