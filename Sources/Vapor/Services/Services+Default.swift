@@ -5,7 +5,23 @@ extension Services {
         var s = Services()
 
         // client
-        s.provider(ClientProvider())
+        s.register(HTTPClient.Configuration.self) { c in
+            return .init()
+        }
+        s.register(Client.self) { c in
+            return try c.make(HTTPClient.self)
+        }
+        s.register(HTTPClient.self) { c in
+            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        }
+
+        // ws client
+        s.register(WebSocketClient.Configuration.self) { c in
+            return .init()
+        }
+        s.register(WebSocketClient.self) { c in
+            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        }
 
         // auth
         s.register(PasswordVerifier.self) { c in

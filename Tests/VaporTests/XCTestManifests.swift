@@ -9,6 +9,7 @@ extension ApplicationTests {
         ("testAnyResponse", testAnyResponse),
         ("testApplicationStop", testApplicationStop),
         ("testAsyncKitExport", testAsyncKitExport),
+        ("testClientBeforeSend", testClientBeforeSend),
         ("testComplexContent", testComplexContent),
         ("testContent", testContent),
         ("testContentContainer", testContentContainer),
