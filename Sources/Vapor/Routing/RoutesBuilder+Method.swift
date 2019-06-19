@@ -48,6 +48,16 @@ extension RoutesBuilder {
     }
     
     @discardableResult
+    public func delete<Response>(
+        _ path: PathComponent...,
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.DELETE, path, use: closure)
+    }
+    
+    @discardableResult
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: PathComponent...,
