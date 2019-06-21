@@ -1011,6 +1011,34 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(data.json, ["hello": "world"])
         XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
     }
+
+    func testSingletonServiceShutdown() throws {
+        final class Foo {
+            var didShutdown = false
+        }
+        struct Bar { }
+
+        let app = Application.create(configure: { s in
+            s.singleton(Foo.self, boot: { c in
+                return Foo()
+            }, shutdown: { foo in
+                foo.didShutdown = true
+            })
+            // test normal singleton method
+            s.singleton(Bar.self) { c in
+                return .init()
+            }
+        }, routes: { (r, c) in
+            // no routes
+        })
+        defer { app.shutdown() }
+
+        let container = try app.makeContainer().wait()
+        let foo = try container.make(Foo.self)
+        XCTAssertEqual(foo.didShutdown, false)
+        container.shutdown()
+        XCTAssertEqual(foo.didShutdown, true)
+    }
 }
 
 extension Application {

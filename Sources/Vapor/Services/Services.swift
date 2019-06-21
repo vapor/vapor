@@ -92,13 +92,22 @@ public struct Services: CustomStringConvertible {
     ///     - interface: An interface that this `Service` supports (besides its own type).
     public mutating func instance<S>(_ interface: S.Type, _ instance: S) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: false) { c in
+        let factory = ServiceFactory(isSingleton: false, boot: { c in
             return instance
-        }
+        }, shutdown: { service in
+            // do nothing
+        })
         self.factories[id] = factory
     }
     
     // MARK: Factory
+
+    public mutating func singleton<S>(
+        _ interface: S.Type,
+        _ closure: @escaping (Container) throws -> (S)
+    ) {
+        return self.singleton(S.self, boot: closure, shutdown: { _ in })
+    }
 
     /// Registers a new singleton service. Singleton services are created only once per container.
     ///
@@ -128,13 +137,16 @@ public struct Services: CustomStringConvertible {
     ///
     /// - parameters:
     ///     - interface: Service type.
-    ///     - factory: Creates an instance of the service type using the container to locate
+    ///     - boot: Creates an instance of the service type using the container to locate
     ///                any required dependencies.
-    public mutating func singleton<S>(_ interface: S.Type, _ factory: @escaping (Container) throws -> (S)) {
+    ///     - shutdown: Cleans up the created service.
+    public mutating func singleton<S>(
+        _ interface: S.Type,
+        boot: @escaping (Container) throws -> (S),
+        shutdown: @escaping (S) throws -> ()
+    ) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: true) { c in
-            return try factory(c)
-        }
+        let factory = ServiceFactory(isSingleton: true, boot: boot, shutdown: shutdown)
         self.factories[id] = factory
     }
 
@@ -159,9 +171,11 @@ public struct Services: CustomStringConvertible {
     ///     - factory: `Container` accepting closure that returns an initialized instance of this `Service`.
     public mutating func register<S>(_ interface: S.Type, _ factory: @escaping (Container) throws -> (S)) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: false) { c in
+        let factory = ServiceFactory(isSingleton: false, boot: { c in
             return try factory(c)
-        }
+        }, shutdown: { service in
+            // do nothing
+        })
         self.factories[id] = factory
     }
 

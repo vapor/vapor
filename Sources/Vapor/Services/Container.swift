@@ -53,7 +53,7 @@ public final class Container {
         
         // check if cached
         if let cached = self.cache.get(service: S.self) {
-            return cached
+            return cached.service
         }
         
         // create service lookup identifier
@@ -65,7 +65,7 @@ public final class Container {
         }
         
         // create the service
-        var instance = try factory.serviceMake(for: self)
+        var instance = try factory.boot(self)
         
         // check for any extensions
         if let extensions = self.services.extensions[id] as? [ServiceExtension<S>], !extensions.isEmpty {
@@ -75,7 +75,8 @@ public final class Container {
         
         // cache if singleton
         if factory.isSingleton {
-            self.cache.set(service: instance)
+            let service = CachedService(service: instance, shutdown: factory.shutdown)
+            self.cache.set(service: service)
         }
         
         // return created and extended instance
@@ -94,7 +95,7 @@ public final class Container {
         for provider in self.providers {
             provider.willShutdown(self)
         }
-        self.cache.clear()
+        self.cache.shutdown()
         self.didShutdown = true
     }
     

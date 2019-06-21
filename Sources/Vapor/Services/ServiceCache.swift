@@ -1,30 +1,42 @@
-/// Stores cached singleton services.
 internal struct ServiceCache {
-    /// Private storage.
-    private var storage: [ServiceID: Any]
-    
-    /// Creates a new `ServiceCache`.
+    private var storage: [ServiceID: AnyCachedService]
+
     init() {
         self.storage = [:]
     }
-    
-    /// Returns the service if cached.
-    func get<S>(service: S.Type) -> S? {
+
+    func get<S>(service: S.Type) -> CachedService<S>? {
         let id = ServiceID(S.self)
-        guard let service = self.storage[id] as? S else {
+        guard let service = self.storage[id] as? CachedService<S> else {
             return nil
         }
         return service
     }
-    
-    /// Sets a new service on the cache.
-    mutating func set<S>(service: S) {
+
+    mutating func set<S>(service: CachedService<S>) {
         let id = ServiceID(S.self)
         self.storage[id] = service
     }
-    
-    /// Clears any existing cached services.
-    mutating func clear() {
+
+    mutating func shutdown() {
+        self.storage.values.forEach { $0.cleanup() }
         self.storage = [:]
     }
+}
+
+internal struct CachedService<T>: AnyCachedService {
+    let service: T
+    let shutdown: (T) throws -> ()
+    func cleanup() {
+        do {
+            try self.shutdown(self.service)
+        } catch {
+            Logger(label: "codes.vapor.services")
+                .error("Could not shutdown service \(T.self): \(error)")
+        }
+    }
+}
+
+private protocol AnyCachedService {
+    func cleanup()
 }
