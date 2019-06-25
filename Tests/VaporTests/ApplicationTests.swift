@@ -1039,6 +1039,26 @@ final class ApplicationTests: XCTestCase {
         container.shutdown()
         XCTAssertEqual(foo.didShutdown, true)
     }
+
+    // https://github.com/vapor/vapor/issues/2009
+    func testWebSocketServer() throws {
+        var promise: EventLoopPromise<Void>?
+        let app = Application.create(routes: { (r, c) in
+            r.webSocket("foo") { req, ws in
+                ws.send("foo")
+                ws.close(code: .normalClosure, promise: promise)
+            }
+        })
+        promise = app.eventLoopGroup.next().makePromise(of: Void.self)
+        defer { app.shutdown() }
+
+        let test = try app.testable().live(port: 8080).start()
+        defer { test.shutdown() }
+
+        try WebSocketClient.init(eventLoopGroupProvider: .shared(app.eventLoopGroup)).connect(host: "127.0.0.1", port: 8080, uri: "/foo") { ws in
+            // do nothing
+        }.wait()
+    }
 }
 
 extension Application {

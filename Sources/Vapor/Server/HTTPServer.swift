@@ -395,18 +395,18 @@ private extension ChannelPipeline {
             dateCache: .eventLoop(self.eventLoop)
         )
         handlers.append(serverResEncoder)
-        
-        // add HTTP upgrade handler
-        let upgrader = HTTPServerUpgradeHandler(
-            httpRequestDecoder: httpReqDecoder,
-            httpHandlers: handlers
-        )
-
         // add server request -> response delegate
         let handler = HTTPServerHandler(
             responder: responder,
             errorHandler: configuration.errorHandler
         )
+
+        // add HTTP upgrade handler
+        let upgrader = HTTPServerUpgradeHandler(
+            httpRequestDecoder: httpReqDecoder,
+            httpHandlers: handlers + [handler]
+        )
+
         handlers.append(upgrader)
         handlers.append(handler)
         
