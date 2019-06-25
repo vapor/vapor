@@ -47,6 +47,7 @@ extension ApplicationTests {
         ("testViewResponse", testViewResponse),
         ("testWebSocket404", testWebSocket404),
         ("testWebSocketClient", testWebSocketClient),
+        ("testWebSocketServer", testWebSocketServer),
     ]
 }
 
