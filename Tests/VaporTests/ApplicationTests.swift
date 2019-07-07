@@ -77,6 +77,18 @@ class ApplicationTests: XCTestCase {
         try app.clientTest(.GET, "/hello/vapor", equals: "vapor")
         try app.clientTest(.POST, "/hello/vapor") { res in
             XCTAssertEqual(res.http.status, .notFound)
+            
+            struct AbortWithReason: Decodable, Equatable {
+                let error: Bool
+                let reason: String
+            }
+                        
+            let abort = try res.content.syncDecode(AbortWithReason.self)
+            
+            let expected = AbortWithReason(error: true,
+                                           reason: "Route for resource '/hello/vapor' not found.")
+            
+            XCTAssertEqual(abort, expected)
         }
         
         try app.clientTest(.GET, "/raw/vapor/development", equals: "[\"vapor\",\"development\"]")
