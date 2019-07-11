@@ -771,7 +771,20 @@ class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.http.status, .ok)
         }
     }
-        
+
+    func testRoutingTypeValidation() throws {
+        struct Foo: Error { }
+        try Application.makeTest(routes: { router in
+            router.get("users", Int.parameter) { (req) throws -> Int in
+                let id = try req.parameters.next(Int.self)
+                return id
+            }
+        }).test(.GET, "users/5", afterSend: { res in
+            XCTAssertEqual(res.http.body.string, "5")
+        }).test(.GET, "users/asdf", afterSend: { res in
+            XCTAssertEqual(res.http.status, .notFound)
+        })
+    }
 
     static let allTests = [
         ("testContent", testContent),
@@ -808,6 +821,7 @@ class ApplicationTests: XCTestCase {
         ("testDebuggableError", testDebuggableError),
         ("testRetainCycles", testRetainCycles),
         ("testContainerRetainCrash", testContainerRetainCrash),
+        ("testRoutingTypeValidation", testRoutingTypeValidation),
     ]
 }
 

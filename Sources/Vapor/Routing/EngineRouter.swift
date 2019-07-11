@@ -85,3 +85,10 @@ private extension HTTPMethod {
         }
     }
 }
+
+extension RoutingError: AbortError {
+    /// See `AbortError.status`
+    public var status: HTTPStatus {
+        return .notFound
+    }
+}
