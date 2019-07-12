@@ -85,8 +85,7 @@ class ApplicationTests: XCTestCase {
                         
             let abort = try res.content.syncDecode(AbortWithReason.self)
             
-            let expected = AbortWithReason(error: true,
-                                           reason: "Route for resource '/hello/vapor' not found.")
+            let expected = AbortWithReason(error: true, reason: "/hello/vapor")
             
             XCTAssertEqual(abort, expected)
         }
