@@ -13,9 +13,14 @@ function add_vapor_apt() {
     if ! [ $(id -u) = 0 ]; then
         export SUDO=sudo
     fi
-    
+
     $SUDO apt-get -q update
-    $SUDO apt-get -q install -y wget software-properties-common python-software-properties apt-transport-https
+    if [[ "$DISTRIB_CODENAME" = "xenial" || "$DISTRIB_CODENAME" = "yakkety" || "$DISTRIB_CODENAME" = "trusty" ]];
+    then
+        $SUDO apt-get -q install -y wget software-properties-common python-software-properties apt-transport-https
+    else
+        $SUDO apt-get -q install -y wget software-properties-common apt-transport-https
+    fi
     wget -q https://repo.vapor.codes/apt/keyring.gpg -O- | $SUDO apt-key add -
     echo "deb https://repo.vapor.codes/apt $DISTRIB_CODENAME main" | $SUDO tee /etc/apt/sources.list.d/vapor.list
     $SUDO apt-get -q update
