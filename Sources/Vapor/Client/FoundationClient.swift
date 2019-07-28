@@ -1,3 +1,7 @@
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
+
 /// `Client` wrapper around `Foundation.URLSession`.
 public final class FoundationClient: Client, ServiceType {
     /// See `ServiceType`.
