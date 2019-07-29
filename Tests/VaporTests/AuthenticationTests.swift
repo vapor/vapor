@@ -139,4 +139,21 @@ final class AuthenticationTests: XCTestCase {
                 XCTAssertNotNil(res.headers.firstValue(name: .setCookie))
             }
     }
+
+    func testMiddlewareConfigExistential() {
+        struct Test: Authenticatable {
+            var name: String
+        }
+
+        struct TestAuthenticator: BearerAuthenticator {
+            typealias User = Test
+
+            func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
+                return EmbeddedEventLoop().makeSucceededFuture(nil)
+            }
+        }
+
+        var config = MiddlewareConfiguration()
+        config.use(TestAuthenticator().middleware())
+    }
 }

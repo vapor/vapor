@@ -58,6 +58,7 @@ extension AuthenticationTests {
     static let __allTests__AuthenticationTests = [
         ("testBasicAuthenticator", testBasicAuthenticator),
         ("testBearerAuthenticator", testBearerAuthenticator),
+        ("testMiddlewareConfigExistential", testMiddlewareConfigExistential),
         ("testSessionAuthentication", testSessionAuthentication),
     ]
 }
