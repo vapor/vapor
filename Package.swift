@@ -35,7 +35,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/swift-nio-http-client.git", from: "0.0.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0-alpha.1"),
 
         // SwiftNIO based WebSocket client
         .package(url: "https://github.com/vapor/nio-websocket-client.git", from: "1.0.0-alpha"),
@@ -61,7 +61,7 @@ let package = Package(
             "NIOHTTPCompression",
             "NIOHTTP1",
             "NIOHTTP2",
-            "NIOHTTPClient",
+            "AsyncHTTPClient",
             "NIOSSL",
             "NIOWebSocket",
             "NIOWebSocketClient",
