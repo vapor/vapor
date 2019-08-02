@@ -107,7 +107,7 @@ public final class XCTApplication {
         public func start() throws -> Running {
             let container = try self.container()
             let server = try container.make(Server.self)
-            try server.start(hostname: "127.0.0.1", port: port)
+            try server.start(hostname: "localhost", port: port)
             return Running(container: container, server: server)
         }
         
@@ -126,7 +126,7 @@ public final class XCTApplication {
             
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
-            var request = try HTTPClient.Request(url: "http://127.0.0.1:\(self.port)\(path)")
+            var request = try HTTPClient.Request(url: "http://localhost:\(self.port)\(path)")
             request.headers = headers
             request.method = method
             if let body = body {

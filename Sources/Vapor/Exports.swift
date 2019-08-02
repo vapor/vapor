@@ -1,5 +1,5 @@
 @_exported import AsyncKit
-@_exported import CryptoKit
+@_exported import OpenCrypto
 @_exported import RoutingKit
 @_exported import ConsoleKit
 @_exported import Foundation
@@ -27,5 +27,3 @@
 @_exported import enum NIOHTTP1.HTTPResponseStatus
 
 @_exported import class AsyncHTTPClient.HTTPClient
-
-@_exported import class NIOWebSocketClient.WebSocketClient

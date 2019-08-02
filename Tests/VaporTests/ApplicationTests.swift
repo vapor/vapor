@@ -336,10 +336,12 @@ final class ApplicationTests: XCTestCase {
 
     func testWebSocketClient() throws {
         let app = Application.create(routes: { r, c in
-            let wsClient = try c.make(WebSocketClient.self)
             r.get("ws") { req -> EventLoopFuture<String> in
                 let promise = req.eventLoop.makePromise(of: String.self)
-                return wsClient.webSocket("ws://echo.websocket.org/") { ws in
+                return WebSocket.connect(
+                    to: "ws://echo.websocket.org/",
+                    on: c.eventLoop
+                ) { ws in
                     ws.send("Hello, world!")
                     ws.onText { ws, text in
                         promise.succeed(text)
@@ -983,13 +985,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        let server = try app.testable().live(port: 8080).start()
+        let server = try app.testable().live(port: 8085).start()
         defer { server.shutdown() }
 
-        let client = WebSocketClient(eventLoopGroupProvider: .createNew)
-        defer { try! client.syncShutdown() }
-
-        let future = client.connect(host: "localhost", port: 8080, uri: "/foo") { ws in
+        let future = WebSocket.connect(
+            to: "ws://localhost:8085/foo",
+            on: app.eventLoopGroup
+        ) { ws in
             XCTFail("Should not have connected")
         }
         XCTAssertThrowsError(try future.wait())
@@ -1055,7 +1057,10 @@ final class ApplicationTests: XCTestCase {
         let test = try app.testable().live(port: 8080).start()
         defer { test.shutdown() }
 
-        try WebSocketClient.init(eventLoopGroupProvider: .shared(app.eventLoopGroup)).connect(host: "127.0.0.1", port: 8080, uri: "/foo") { ws in
+        try WebSocket.connect(
+            to: "ws://127.0.0.1:8080/foo",
+            on: app.eventLoopGroup
+        ) { ws in
             // do nothing
         }.wait()
     }

@@ -14,7 +14,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/vapor/crypto-kit.git", from: "4.0.0-alpha"),
+        .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-alpha.2"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-alpha"),
@@ -36,12 +36,10 @@ let package = Package(
 
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0-alpha.1"),
-
-        // SwiftNIO based WebSocket client
-        .package(url: "https://github.com/vapor/nio-websocket-client.git", from: "1.0.0-alpha"),
     ],
     targets: [
         // C helpers
+        .target(name: "CBcrypt"),
         .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
         .target(name: "CURLParser"),
@@ -49,11 +47,11 @@ let package = Package(
         // Vapor
         .target(name: "Vapor", dependencies: [
             "AsyncKit",
+            "CBcrypt",
             "CMultipartParser",
             "COperatingSystem",
             "CURLParser",
             "ConsoleKit",
-            "CryptoKit",
             "Logging",
             "NIO",
             "NIOExtras",
@@ -64,7 +62,7 @@ let package = Package(
             "AsyncHTTPClient",
             "NIOSSL",
             "NIOWebSocket",
-            "NIOWebSocketClient",
+            "OpenCrypto",
             "RoutingKit",
         ]),
 
