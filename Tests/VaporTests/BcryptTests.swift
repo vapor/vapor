@@ -2,67 +2,44 @@ import XCTest
 import Vapor
 
 final class BCryptTests: XCTestCase {
-    public func testVersion() throws {
-        let digest = try Bcrypt.hash("foo", salt: .generate(cost: 6))
-        XCTAssert(digest.string.hasPrefix("$2b$06$"))
+    func testVersion() throws {
+        let digest = try Bcrypt.hash("foo", cost: 6)
+        XCTAssert(digest.hasPrefix("$2b$06$"))
     }
 
-    public func testFail() throws {
-        let digest = try Bcrypt.hash("foo", salt: .generate(cost: 6))
+    func testFail() throws {
+        let digest = try Bcrypt.hash("foo", cost: 6)
         let res = try Bcrypt.verify("bar", created: digest)
         XCTAssertEqual(res, false)
     }
 
-    public func testInvalidMinCost() throws {
-        XCTAssertThrowsError(try Bcrypt.hash("foo", salt: .generate(cost: 2)))
+    func testInvalidMinCost() throws {
+        XCTAssertThrowsError(try Bcrypt.hash("foo", cost: 1))
     }
 
-    public func testInvalidMaxCost() throws {
-        XCTAssertThrowsError(try Bcrypt.hash("foo", salt: .generate(cost: 32)))
+    func testInvalidMaxCost() throws {
+        XCTAssertThrowsError(try Bcrypt.hash("foo", cost: 32))
     }
 
-    public func testInvalidSalt() throws {
+    func testInvalidSalt() throws {
         do {
-            _ = try Bcrypt.verify("", created: .init(string: "foo"))
+            _ = try Bcrypt.verify("", created: "foo")
             XCTFail("Should have failed")
-        } catch let error as Bcrypt.Error {
+        } catch let error as BcryptError {
             print(error)
         }
     }
 
-    public func testVerify() throws {
+    func testVerify() throws {
         for (desired, message) in tests {
-            let result = try Bcrypt.verify(message, created: .init(string: desired))
+            let result = try Bcrypt.verify(message, created: desired)
             XCTAssert(result, "\(message): did not match \(desired)")
         }
     }
 
-    public func testNotVerify() throws {
-        let result = try Bcrypt.verify(
-            "x",
-            created: .init(salt: .generate(cost: 12), bytes: [])
-        )
-        XCTAssertFalse(result, "should not have verified")
-    }
-
-    public func testExample1() throws {
-        let test = "$2y$12$Iv4bbqusw4TFlXOmEb.06u8hTB8skqwvJiNppo6Qei5FpT/fMx7mq"
-        print("REAL: \(test)")
-        let digest = try Bcrypt.Digest(string: "$2y$12$Iv4bbqusw4TFlXOmEb.06u8hTB8skqwvJiNppo6Qei5FpT/fMx7mq")
-        print("PARS: \(digest.string)")
-        XCTAssertEqual(test, digest.string)
-
-        try XCTAssert(Bcrypt.verify("vapor", created: digest))
-        let hash = try Bcrypt.hash("vapor", salt: .generate(cost: 4))
-        try XCTAssertEqual(Bcrypt.verify("vapor", created: hash), true)
-//        try XCTAssertEqual(Bcrypt.verify("foo", created: hash), false)
-    }
-
-    func testBase64() {
-        XCTAssertEqual(Base64.bcrypt.encode([77, 97, 110]), "TWFu")
-        XCTAssertEqual(Base64.bcrypt.encode([77, 97]), "TWE")
-        XCTAssertEqual(Base64.bcrypt.encode([77]), "TQ")
-        XCTAssertEqual(Base64.bcrypt.encode([0x01, 0x23, 0x45, 0x67, 0x89]), "ASNFZ4k")
+    func testOnlineVapor() throws {
+        let result = try Bcrypt.verify("vapor", created: "$2a$10$e.qg8zwKLHu3ur5rPF97ouzCJiJmZ93tiwNekDvTQfuhyu97QaUk.")
+        XCTAssert(result, "verification failed")
     }
 }
 

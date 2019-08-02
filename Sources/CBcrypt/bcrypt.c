@@ -40,61 +40,123 @@
 #include <string.h>
 #include "bcrypt.h"
 
-int encode_base64(char *, const u_int8_t *, size_t);
-int decode_base64(u_int8_t *, size_t, const char *);
+char   *bcrypt_gensalt(u_int8_t);
 
-// digests plaintext against the provided 16 byte salt
-// loads a 24 byte digest into digest
-// returns -1 if error
-int bcrypt_digest(const uint8_t *plaintext,
-                  size_t plaintext_len,
-                  int cost,
-                  const uint8_t salt[BCRYPT_SALT_SIZE],
-                  uint8_t digest[BCRYPT_DIGEST_SIZE])
+int encode_base64(char *, const u_int8_t *, size_t);
+static int decode_base64(u_int8_t *, size_t, const char *);
+
+/*
+ * the core bcrypt function
+ */
+int
+bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
+                size_t encryptedlen)
 {
     blf_ctx state;
-    uint32_t i, k;
-    uint16_t j;
-    u_int8_t minor;
-    memcpy(digest, "OrpheanBeholderScryDoubt", BCRYPT_DIGEST_SIZE);
+    u_int32_t rounds, i, k;
+    u_int16_t j;
+    size_t key_len;
+    u_int8_t salt_len, logr, minor;
+    u_int8_t ciphertext[4 * BCRYPT_WORDS] = "OrpheanBeholderScryDoubt";
+    u_int8_t csalt[BCRYPT_MAXSALT];
     u_int32_t cdata[BCRYPT_WORDS];
 
-    if (cost < BCRYPT_MINLOGROUNDS || cost > 31) {
-        return -1;
-    }
-    uint32_t rounds = 1U << cost;
+    if (encryptedlen < BCRYPT_HASHSPACE)
+        goto inval;
 
+    /* Check and discard "$" identifier */
+    if (salt[0] != '$')
+        goto inval;
+    salt += 1;
+
+    if (salt[0] != BCRYPT_VERSION)
+        goto inval;
+
+    /* Check for minor versions */
+    switch ((minor = salt[1])) {
+        case 'a':
+            key_len = (u_int8_t)(strlen(key) + 1);
+            break;
+        case 'b':
+            /* strlen() returns a size_t, but the function calls
+             * below result in implicit casts to a narrower integer
+             * type, so cap key_len at the actual maximum supported
+             * length here to avoid integer wraparound */
+            key_len = strlen(key);
+            if (key_len > 72)
+                key_len = 72;
+            key_len++; /* include the NUL */
+            break;
+        default:
+            goto inval;
+    }
+    if (salt[2] != '$')
+        goto inval;
+    /* Discard version + "$" identifier */
+    salt += 3;
+
+    /* Check and parse num rounds */
+    if (!isdigit((unsigned char)salt[0]) ||
+        !isdigit((unsigned char)salt[1]) || salt[2] != '$')
+        goto inval;
+    logr = (salt[1] - '0') + ((salt[0] - '0') * 10);
+    if (logr < BCRYPT_MINLOGROUNDS || logr > 31)
+        goto inval;
+    /* Computer power doesn't increase linearly, 2^x should be fine */
+    rounds = 1U << logr;
+
+    /* Discard num rounds + "$" identifier */
+    salt += 3;
+
+    if (strlen(salt) * 3 / 4 < BCRYPT_MAXSALT)
+        goto inval;
+
+    /* We dont want the base64 salt but the raw data */
+    if (decode_base64(csalt, BCRYPT_MAXSALT, salt))
+        goto inval;
+    salt_len = BCRYPT_MAXSALT;
+
+    /* Setting up S-Boxes and Subkeys */
     Blowfish_initstate(&state);
-    Blowfish_expandstate(&state, salt, BCRYPT_MAXSALT, plaintext, plaintext_len);
+    Blowfish_expandstate(&state, csalt, salt_len,
+                         (u_int8_t *) key, key_len);
     for (k = 0; k < rounds; k++) {
-        Blowfish_expand0state(&state, plaintext, plaintext_len);
-        Blowfish_expand0state(&state, salt, BCRYPT_MAXSALT);
+        Blowfish_expand0state(&state, (u_int8_t *) key, key_len);
+        Blowfish_expand0state(&state, csalt, salt_len);
     }
 
     /* This can be precomputed later */
     j = 0;
-    for (i = 0; i < BCRYPT_WORDS; i++) {
-        cdata[i] = Blowfish_stream2word(digest, 4 * BCRYPT_WORDS, &j);
-    }
+    for (i = 0; i < BCRYPT_WORDS; i++)
+        cdata[i] = Blowfish_stream2word(ciphertext, 4 * BCRYPT_WORDS, &j);
 
     /* Now do the encryption */
-    for (k = 0; k < 64; k++) {
+    for (k = 0; k < 64; k++)
         blf_enc(&state, cdata, BCRYPT_WORDS / 2);
-    }
 
     for (i = 0; i < BCRYPT_WORDS; i++) {
-        digest[4 * i + 3] = cdata[i] & 0xff;
+        ciphertext[4 * i + 3] = cdata[i] & 0xff;
         cdata[i] = cdata[i] >> 8;
-        digest[4 * i + 2] = cdata[i] & 0xff;
+        ciphertext[4 * i + 2] = cdata[i] & 0xff;
         cdata[i] = cdata[i] >> 8;
-        digest[4 * i + 1] = cdata[i] & 0xff;
+        ciphertext[4 * i + 1] = cdata[i] & 0xff;
         cdata[i] = cdata[i] >> 8;
-        digest[4 * i + 0] = cdata[i] & 0xff;
+        ciphertext[4 * i + 0] = cdata[i] & 0xff;
     }
 
+
+    snprintf(encrypted, 8, "$2%c$%2.2u$", minor, logr);
+    encode_base64(encrypted + 7, csalt, BCRYPT_MAXSALT);
+    encode_base64(encrypted + 7 + 22, ciphertext, 4 * BCRYPT_WORDS - 1);
     explicit_bzero(&state, sizeof(state));
+    explicit_bzero(ciphertext, sizeof(ciphertext));
+    explicit_bzero(csalt, sizeof(csalt));
     explicit_bzero(cdata, sizeof(cdata));
     return 0;
+
+inval:
+    errno = EINVAL;
+    return -1;
 }
 
 /*
@@ -123,7 +185,7 @@ static const u_int8_t index_64[128] = {
 /*
  * read buflen (after decoding) bytes of data from b64data
  */
-int
+static int
 decode_base64(u_int8_t *buffer, size_t len, const char *b64data)
 {
     u_int8_t *bp = buffer;

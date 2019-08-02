@@ -26,24 +26,14 @@ typedef uint64_t u_int64_t;
  * time to come.
  */
 
-#define BCRYPT_DIGEST_SIZE 24
-#define BCRYPT_SALT_SIZE 16
-#define BCRYPT_WORDS 6
-
 #define BCRYPT_VERSION '2'
 #define BCRYPT_MAXSALT 16    /* Precomputation is just so nice */
-       /* Ciphertext words */
+#define BCRYPT_WORDS 6        /* Ciphertext words */
 #define BCRYPT_MINLOGROUNDS 4    /* we have log2(rounds) in salt */
 
 #define    BCRYPT_SALTSPACE    (7 + (BCRYPT_MAXSALT * 4 + 2) / 3 + 1)
 #define    BCRYPT_HASHSPACE    61
 
 
-int bcrypt_digest(const uint8_t *plaintext,
-                  size_t plaintext_len,
-                  int logr,
-                  const uint8_t salt[16],
-                  uint8_t digest[40]);
-
-int decode_base64(u_int8_t *buffer, size_t len, const char *b64data);
-int encode_base64(char *b64buffer, const u_int8_t *data, size_t len);
+int bcrypt_hashpass(const char *key, const char *salt, char *encrypted, size_t encryptedlen);
+int encode_base64(char *, const u_int8_t *, size_t);
