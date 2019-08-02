@@ -983,13 +983,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        let server = try app.testable().live(port: 8080).start()
+        let server = try app.testable().live(port: 8085).start()
         defer { server.shutdown() }
 
         let client = WebSocketClient(eventLoopGroupProvider: .createNew)
         defer { try! client.syncShutdown() }
 
-        let future = client.connect(host: "localhost", port: 8080, uri: "/foo") { ws in
+        let future = client.connect(host: "localhost", port: 8085, uri: "/foo") { ws in
             XCTFail("Should not have connected")
         }
         XCTAssertThrowsError(try future.wait())

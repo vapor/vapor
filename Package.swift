@@ -36,9 +36,6 @@ let package = Package(
 
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0-alpha.1"),
-
-        // SwiftNIO based WebSocket client
-        .package(url: "https://github.com/vapor/nio-websocket-client.git", from: "1.0.0-alpha"),
     ],
     targets: [
         // C helpers
@@ -65,7 +62,6 @@ let package = Package(
             "AsyncHTTPClient",
             "NIOSSL",
             "NIOWebSocket",
-            "NIOWebSocketClient",
             "OpenCrypto",
             "RoutingKit",
         ]),
