@@ -77,9 +77,3 @@ extension HTTPServerWebSocket: WebSocket {
     }
 }
 
-
-private extension FixedWidthInteger {
-    static var random: Self {
-        return Self.random(in: Self.min..<Self.max)
-    }
-}

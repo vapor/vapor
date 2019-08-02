@@ -24,9 +24,9 @@ extension Services {
         }
 
         // auth
-        s.register(PasswordVerifier.self) { c in
-            return BCryptDigest()
-        }
+//        s.register(PasswordVerifier.self) { c in
+//            return BCrypt()
+//        }
         s.register(PlaintextVerifier.self) { c in
             return PlaintextVerifier()
         }
