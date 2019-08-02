@@ -27,5 +27,3 @@
 @_exported import enum NIOHTTP1.HTTPResponseStatus
 
 @_exported import class AsyncHTTPClient.HTTPClient
-
-@_exported import class NIOWebSocketClient.WebSocketClient
