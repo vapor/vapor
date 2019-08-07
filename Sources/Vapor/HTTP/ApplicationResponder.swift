@@ -57,8 +57,11 @@ internal struct RoutesResponder: Responder {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)
+        
+        let method = (request.method == .HEAD) ? .GET : request.method
+        
         return self.router.route(
-            path: [request.method.string] + pathComponents,
+            path: [method.string] + pathComponents,
             parameters: &request.parameters
         )
     }

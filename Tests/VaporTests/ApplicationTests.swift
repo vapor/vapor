@@ -743,6 +743,7 @@ final class ApplicationTests: XCTestCase {
     func testHeadRequest() throws {
         let app = Application.create(routes: { r, c in
             r.get("hello") { req -> String in
+                XCTAssertEqual(req.method, .HEAD)
                 return "hi"
             }
         })
