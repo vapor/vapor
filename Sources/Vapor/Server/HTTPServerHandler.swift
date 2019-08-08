@@ -15,13 +15,6 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
         
-        // change HEAD -> GET
-        let originalMethod = request.method
-        switch request.method {
-        case .HEAD: request.method = .GET
-        default: break
-        }
-        
         // query delegate for response
         self.responder.respond(to: request).whenComplete { response in
             switch response {
@@ -30,7 +23,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                 context.close(promise: nil)
             case .success(let response):
                 let contentLength = response.headers.firstValue(name: .contentLength)
-                if originalMethod == .HEAD {
+                if request.method == .HEAD {
                     response.body = .init()
                 }
                 response.headers.replaceOrAdd(name: .contentLength, value: contentLength ?? "0")
