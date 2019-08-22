@@ -7,9 +7,9 @@ extension HTTPClient: Client {
         do {
             let request = try HTTPClient.Request(
                 url: URL(string: client.url.string)!,
-                version: .init(major: 1, minor: 1),
                 method: client.method,
-                headers: client.headers, body: client.body.flatMap { .byteBuffer($0) }
+                headers: client.headers,
+                body: client.body.map { .byteBuffer($0) }
             )
             return self.execute(request: request).map { response in
                 let client = ClientResponse(
