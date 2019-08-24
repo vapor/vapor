@@ -126,9 +126,11 @@ public final class XCTApplication {
             
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
-            var request = try HTTPClient.Request(url: "http://localhost:\(self.port)\(path)")
-            request.headers = headers
-            request.method = method
+            var request = try HTTPClient.Request(
+                url: "http://localhost:\(self.port)\(path)",
+                method: method,
+                headers: headers
+            )
             if let body = body {
                 request.body = .byteBuffer(body)
             }
