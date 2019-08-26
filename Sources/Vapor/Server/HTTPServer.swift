@@ -153,11 +153,17 @@ public final class HTTPServer: Server {
             configuration: self.configuration,
             on: self.application.eventLoopGroup
         )
-        self.connection = try connection.wait()
+
+        try self.application.sync.do {
+            self.connection = try connection.wait()
+        }
         self.didStart = true
     }
     
     public func shutdown() {
+        self.application.sync.lock()
+        defer { self.application.sync.unlock() }
+
         guard let connection = self.connection else {
             fatalError("Called shutdown before start")
         }

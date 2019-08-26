@@ -61,7 +61,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
             }
         }
 
-        let ip = req.channel.remoteAddress?.description ?? "<no ip>"
+        let ip = req.remoteAddress?.description ?? "<no ip>"
         ws.send("Hello 👋 \(ip)")
     }
     

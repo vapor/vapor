@@ -47,7 +47,8 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     url: .init(string: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
-                    on: context.channel
+                    remoteAddress: context.channel.remoteAddress,
+                    on: context.channel.eventLoop
                 )
                 switch head.version.major {
                 case 2:
