@@ -7,15 +7,28 @@ public final class Application {
     
     public var userInfo: [AnyHashable: Any]
     
-    public let lock: NSLock
+    public let sync: Lock
     
     private let configure: (inout Services) throws -> ()
     
     private let threadPool: NIOThreadPool
     
     private var didShutdown: Bool
+
+    public var running: Running? {
+        get {
+            self.sync.lock()
+            defer { self.sync.unlock() }
+            return self._running
+        }
+        set {
+            self.sync.lock()
+            defer { self.sync.unlock() }
+            self._running = newValue
+        }
+    }
     
-    public var running: Running?
+    private var _running: Running?
     
     public var logger: Logger
 
@@ -24,11 +37,7 @@ public final class Application {
     public struct Running {
         public var stop: () -> Void
         public init(stop: @escaping () -> Void) {
-            self.stop = {
-                DispatchQueue.global().async {
-                    stop()
-                }
-            }
+            self.stop = stop
         }
     }
     
@@ -41,7 +50,7 @@ public final class Application {
         self.userInfo = [:]
         self.didShutdown = false
         self.configure = configure
-        self.lock = NSLock()
+        self.sync = Lock()
         self.threadPool = .init(numberOfThreads: 1)
         self.threadPool.start()
         self.logger = .init(label: "codes.vapor.application")

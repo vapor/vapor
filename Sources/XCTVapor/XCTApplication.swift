@@ -21,109 +21,51 @@ public final class XCTApplication {
         }
         return self
     }
-    
-    public final class InMemory {
-        let container: () throws -> Container
-        
-        init(container: @escaping () throws -> Container) throws {
-            self.container = container
-        }
 
-        @discardableResult
-        public func test<Body>(
-            _ method: HTTPMethod,
-            _ path: String,
-            headers: HTTPHeaders = [:],
-            json: Body,
-            file: StaticString = #file,
-            line: UInt = #line,
-            closure: (XCTHTTPResponse) throws -> () = { _ in }
-        ) throws -> InMemory
-            where Body: Encodable
-        {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
-            try body.writeBytes(JSONEncoder().encode(json))
-            var headers = HTTPHeaders()
-            headers.contentType = .json
-            return try self.test(method, path, headers: headers, body: body, closure: closure)
+    public enum Method {
+        case inMemory
+        case running(port: Int)
+        public static var running: Method {
+            return .running(port: 8080)
         }
-        
-        @discardableResult
-        public func test(
-            _ method: HTTPMethod,
-            _ path: String,
-            headers: HTTPHeaders = [:],
-            body: ByteBuffer? = nil,
-            file: StaticString = #file,
-            line: UInt = #line,
-            closure: (XCTHTTPResponse) throws -> () = { _ in }
-        ) throws -> InMemory {
-            let container = try self.container()
-            defer { container.shutdown() }
-            let responder = try container.make(Responder.self)
+    }
 
-            var headers = headers
-            if let body = body {
-                headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
-            }
-            let response: XCTHTTPResponse
-            let request = Request(
-                method: method,
-                url: .init(string: path),
-                headers: headers,
-                collectedBody: body,
-                on: EmbeddedChannel()
-            )
-            let res = try responder.respond(to: request).wait()
-            response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
-            try closure(response)
-            return self
+    public func start(method: Method = .inMemory) throws -> XCTApplicationTester {
+        switch method {
+        case .inMemory:
+            return try InMemory(container: self.container())
+        case .running(let port):
+            return try Live(container: self.container(), port: port)
         }
     }
     
-    public func inMemory() throws -> InMemory {
-        return try InMemory(container: self.container)
-    }
-    
-    public final class Live {
-        let container: () throws -> Container
+    private struct Live: XCTApplicationTester {
+        let container: Container
+        let server: Server
         let port: Int
 
-        public struct Running {
-            let container: Container
-            let server: Server
-
-            public func shutdown() {
-                self.server.shutdown()
-                self.container.shutdown()
-            }
-        }
-        
-        init(container: @escaping () throws -> Container, port: Int) throws {
+        init(container: Container, port: Int) throws {
             self.container = container
             self.port = port
+            self.server = try container.make(Server.self)
+            try server.start(hostname: "localhost", port: port)
         }
 
-        public func start() throws -> Running {
-            let container = try self.container()
-            let server = try container.make(Server.self)
-            try server.start(hostname: "localhost", port: port)
-            return Running(container: container, server: server)
+        public func shutdown() {
+            self.server.shutdown()
+            self.container.shutdown()
         }
         
         @discardableResult
-        public func test(
-            _ method: HTTPMethod,
-            _ path: String,
-            headers: HTTPHeaders = [:],
-            body: ByteBuffer? = nil,
-            file: StaticString = #file,
-            line: UInt = #line,
-            closure: (XCTHTTPResponse) throws -> () = { _ in }
-        ) throws -> Live {
-            let server = try self.start()
-            defer { server.shutdown() }
-            
+        public func performTest(
+            method: HTTPMethod,
+            path: String,
+            headers: HTTPHeaders,
+            body: ByteBuffer?,
+            file: StaticString,
+            line: UInt,
+            closure: (XCTHTTPResponse) throws -> ()
+        ) throws -> XCTApplicationTester {
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var request = try HTTPClient.Request(url: "http://localhost:\(self.port)\(path)")
@@ -141,9 +83,47 @@ public final class XCTApplication {
             return self
         }
     }
-    
-    public func live(port: Int) throws -> Live {
-        return try Live(container: self.container, port: port)
+
+    private struct InMemory: XCTApplicationTester {
+        let container: Container
+
+        init(container: Container) throws {
+            self.container = container
+        }
+
+        public func shutdown() {
+            self.container.shutdown()
+        }
+
+        @discardableResult
+        public func performTest(
+            method: HTTPMethod,
+            path: String,
+            headers: HTTPHeaders,
+            body: ByteBuffer?,
+            file: StaticString,
+            line: UInt,
+            closure: (XCTHTTPResponse) throws -> ()
+        ) throws -> XCTApplicationTester {
+            let responder = try self.container.make(Responder.self)
+            var headers = headers
+            if let body = body {
+                headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
+            }
+            let response: XCTHTTPResponse
+            let request = Request(
+                method: method,
+                url: .init(string: path),
+                headers: headers,
+                collectedBody: body,
+                remoteAddress: nil,
+                on: self.container.eventLoop.next()
+            )
+            let res = try responder.respond(to: request).wait()
+            response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
+            try closure(response)
+            return self
+        }
     }
     
     private func container() throws -> Container {
@@ -157,5 +137,62 @@ public final class XCTApplication {
             on: self.application.eventLoopGroup.next()
         )
         return try c.wait()
+    }
+}
+
+public protocol XCTApplicationTester {
+    @discardableResult
+    func performTest(
+        method: HTTPMethod,
+        path: String,
+        headers: HTTPHeaders,
+        body: ByteBuffer?,
+        file: StaticString,
+        line: UInt,
+        closure: (XCTHTTPResponse) throws -> ()
+    ) throws -> XCTApplicationTester
+
+    func shutdown()
+}
+
+extension XCTApplicationTester {
+    @discardableResult
+    public func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        closure: (XCTHTTPResponse) throws -> () = { _ in }
+    ) throws -> XCTApplicationTester {
+        return try self.performTest(
+            method: method,
+            path: path,
+            headers: headers,
+            body: body,
+            file: file,
+            line: line,
+            closure: closure
+        )
+    }
+
+    @discardableResult
+    public func test<Body>(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        json: Body,
+        file: StaticString = #file,
+        line: UInt = #line,
+        closure: (XCTHTTPResponse) throws -> () = { _ in }
+    ) throws -> XCTApplicationTester
+        where Body: Encodable
+    {
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        try body.writeBytes(JSONEncoder().encode(json))
+        var headers = HTTPHeaders()
+        headers.contentType = .json
+        return try self.test(method, path, headers: headers, body: body, closure: closure)
     }
 }

@@ -111,14 +111,10 @@ public final class Request: CustomStringConvertible {
         desc.append(self.body.description)
         return desc.joined(separator: "\n")
     }
+
+    public let remoteAddress: SocketAddress?
     
-    // public var upgrader: HTTPClientProtocolUpgrader?
-    
-    public let channel: Channel
-    
-    public var eventLoop: EventLoop {
-        return self.channel.eventLoop
-    }
+    public let eventLoop: EventLoop
     
     public var parameters: Parameters
     
@@ -130,7 +126,8 @@ public final class Request: CustomStringConvertible {
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
-        on channel: Channel
+        remoteAddress: SocketAddress? = nil,
+        on eventLoop: EventLoop
     ) {
         self.init(
             method: method,
@@ -138,7 +135,7 @@ public final class Request: CustomStringConvertible {
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
-            on: channel
+            on: eventLoop
         )
         if let body = collectedBody {
             self.headers.updateContentLength(body.readableBytes)
@@ -151,7 +148,8 @@ public final class Request: CustomStringConvertible {
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
-        on channel: Channel
+        remoteAddress: SocketAddress? = nil,
+        on eventLoop: EventLoop
     ) {
         self.method = method
         self.url = url
@@ -162,7 +160,8 @@ public final class Request: CustomStringConvertible {
         } else {
             self.bodyStorage = .none
         }
-        self.channel = channel
+        self.remoteAddress = remoteAddress
+        self.eventLoop = eventLoop
         self.parameters = .init()
         self.userInfo = [:]
         self.isKeepAlive = true

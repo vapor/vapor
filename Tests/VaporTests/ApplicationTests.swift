@@ -6,8 +6,7 @@ final class ApplicationTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
         try app.boot()
-        DispatchQueue.global().async {
-            COperatingSystem.sleep(1)
+        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
             app.running?.stop()
         }
         try app.run()
@@ -47,7 +46,7 @@ final class ApplicationTests: XCTestCase {
     func testContent() throws {
         let request = Request(
             collectedBody: .init(string: #"{"hello": "world"}"#),
-            on: EmbeddedChannel()
+            on: EmbeddedEventLoop()
         )
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "hello"), "world")
@@ -83,13 +82,13 @@ final class ApplicationTests: XCTestCase {
                 ]
         }
         """
-        let request = Request(collectedBody: .init(string: complexJSON), on: EmbeddedChannel())
+        let request = Request(collectedBody: .init(string: complexJSON), on: EmbeddedEventLoop())
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
     }
 
     func testQuery() throws {
-        let request = Request(on: EmbeddedChannel())
+        let request = Request(on: EmbeddedEventLoop())
         request.headers.contentType = .json
         request.url.path = "/foo"
         print(request.url.string)
@@ -109,19 +108,20 @@ final class ApplicationTests: XCTestCase {
             }
         })
         defer { app.shutdown() }
-        
-        try app.testable().inMemory()
-            .test(.GET, "/hello/vapor") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertContains(res.body.string, "vapor")
-            }
-            .test(.POST, "/hello/vapor") { res in
-                XCTAssertEqual(res.status, .notFound)
-            }
-            .test(.GET, "/hello/vapor/development") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
-            }
+
+
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/hello/vapor") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "vapor")
+        }.test(.POST, "/hello/vapor") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "/hello/vapor/development") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
+        }
     }
 
     func testJSON() throws {
@@ -133,11 +133,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory()
-            .test(.GET, "/json") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
-            }
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/json") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
+        }
     }
 
     func testRootGet() throws {
@@ -152,15 +154,17 @@ final class ApplicationTests: XCTestCase {
             })
             defer { app.shutdown() }
 
-            try app.testable().inMemory()
-                .test(.GET, "/") { res in
-                    XCTAssertEqual(res.status, .ok)
-                    XCTAssertEqual(res.body.string, "root")
-                }
-                .test(.GET, "/foo") { res in
-                    XCTAssertEqual(res.status, .ok)
-                    XCTAssertEqual(res.body.string, "foo")
-                }
+            let server = try app.testable().start()
+            defer { server.shutdown() }
+
+            try server.test(.GET, "/") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "root")
+            }
+            .test(.GET, "/foo") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "foo")
+            }
         }
         do {
             let app = Application.create(routes: { r, c in
@@ -173,15 +177,17 @@ final class ApplicationTests: XCTestCase {
             })
             defer { app.shutdown() }
 
-            try app.testable().inMemory()
-                .test(.GET, "/") { res in
-                    XCTAssertEqual(res.status, .ok)
-                    XCTAssertEqual(res.body.string, "root")
-                }
-                .test(.GET, "/foo") { res in
-                    XCTAssertEqual(res.status, .ok)
-                    XCTAssertEqual(res.body.string, "foo")
-                }
+            let server = try app.testable().start()
+            defer { server.shutdown() }
+
+            try server.test(.GET, "/") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "root")
+            }
+            .test(.GET, "/foo") { res in
+                XCTAssertEqual(res.status, .ok)
+                XCTAssertEqual(res.body.string, "foo")
+            }
         }
     }
     
@@ -192,12 +198,14 @@ final class ApplicationTests: XCTestCase {
             }
         })
         defer { app.shutdown() }
+
+        let server = try app.testable().start()
+        defer { server.shutdown() }
         
-        try app.testable().live(port: 8080)
-            .test(.GET, "/ping") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertEqual(res.body.string, "123")
-            }
+        try server.test(.GET, "/ping") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "123")
+        }
     }
 
     // https://github.com/vapor/vapor/issues/1537
@@ -209,11 +217,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().live(port: 8080)
-            .test(.GET, "/todos?a=b") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertEqual(res.body.string, "hi")
-            }
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/todos?a=b") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "hi")
+        }
     }
 
     func testGH1534() throws {
@@ -233,11 +243,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory()
-            .test(.GET, "/decode_error") { res in
-                XCTAssertEqual(res.status, .badRequest)
-                XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
-            }
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/decode_error") { res in
+            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
+        }
     }
 
     func testContentContainer() throws {
@@ -259,11 +271,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory()
-            .test(.GET, "/encode") { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertContains(res.body.string, "hi")
-            }
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/encode") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "hi")
+        }
     }
 
     func testMultipartDecode() throws {
@@ -300,13 +314,15 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory()
-            .test(.GET, "/multipart", headers: [
-                "Content-Type": "multipart/form-data; boundary=123"
-            ], body: .init(string: data)) { res in
-                XCTAssertEqual(res.status, .ok)
-                XCTAssertEqualJSON(res.body.string, expected)
-            }
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqualJSON(res.body.string, expected)
+        }
     }
 
     func testMultipartEncode() throws {
@@ -324,7 +340,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/multipart") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/multipart") { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
@@ -340,7 +359,7 @@ final class ApplicationTests: XCTestCase {
                 let promise = req.eventLoop.makePromise(of: String.self)
                 return WebSocket.connect(
                     to: "ws://echo.websocket.org/",
-                    on: c.eventLoop
+                    on: req.eventLoop
                 ) { ws in
                     ws.send("Hello, world!")
                     ws.onText { ws, text in
@@ -354,7 +373,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/ws") { res in
+        let server = try app.testable().start(method: .inMemory)
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/ws") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Hello, world!")
         }
@@ -371,7 +393,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/view") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/view") { res in
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .html)
             XCTAssertEqual(res.body.string, "<h1>hello</h1>")
@@ -401,7 +426,11 @@ final class ApplicationTests: XCTestCase {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-        try app.testable().inMemory().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/urlencodedform", headers: headers, body: body) { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
@@ -421,7 +450,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/urlencodedform") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/urlencodedform") { res in
             debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
@@ -451,8 +483,11 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start(method: .inMemory)
+        defer { server.shutdown() }
+
         let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
-        try app.testable().inMemory().test(.GET, "/urlencodedform?\(data)") { res in
+        try server.test(.GET, "/urlencodedform?\(data)") { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
@@ -503,7 +538,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().live(port: 8080).test(.GET, "/file-stream") { res in
+        let server = try app.testable().start(method: .running)
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/file-stream") { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.firstValue(name: .eTag))
             XCTAssertContains(res.body.string, test)
@@ -519,9 +557,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start(method: .running)
+        defer { server.shutdown() }
+
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .connection, value: "close")
-        try app.testable().live(port: 8080).test(.GET, "/file-stream", headers: headers) { res in
+
+        try server.test(.GET, "/file-stream", headers: headers) { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.firstValue(name: .eTag))
             XCTAssertContains(res.body.string, test)
@@ -540,7 +582,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/custom-encode") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/custom-encode") { res in
             XCTAssertEqual(res.body.string, """
             {
               "hello" : "world"
@@ -563,13 +608,16 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString(#"{"here":"hi"}"#)
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
         headers.contentType = .json
 
-        try app.testable().inMemory().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+        try server.test(.POST, "/decode-fail", headers: headers, body: body) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "missing")
         }
@@ -596,7 +644,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
@@ -614,7 +665,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/foo?number=true") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/foo?number=true") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
         }.test(.GET, "/foo?number=false") { res in
@@ -649,7 +703,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/foo?number=true") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/foo?number=true") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
         }.test(.GET, "/foo?number=false") { res in
@@ -730,8 +787,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start()
+        defer { server.shutdown() }
 
-        try app.testable().inMemory().test(.POST, "/users", json: ["name": "vapor"]) { res in
+        try server.test(.POST, "/users", json: ["name": "vapor"]) { res in
             XCTAssertEqual(res.status, .created)
             XCTAssertEqual(res.headers.contentType, .json)
             XCTAssertEqual(res.body.string, """
@@ -749,8 +808,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start(method: .running)
+        defer { server.shutdown() }
 
-        try app.testable().live(port: 8080).test(.HEAD, "/hello") { res in
+        try server.test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
             XCTAssertEqual(res.body.count, 0)
@@ -766,10 +827,13 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
         var headers = HTTPHeaders()
         headers.cookie["vapor-session"] = "asdf"
 
-        try app.testable().inMemory().test(.GET, "/get", headers: headers) { res in
+        try server.test(.GET, "/get", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertNotNil(res.headers[.setCookie])
             XCTAssertEqual(res.body.string, "n/a")
@@ -798,7 +862,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/order") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/order") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
             XCTAssertEqual(res.body.string, "done")
@@ -807,42 +874,40 @@ final class ApplicationTests: XCTestCase {
 
     func testSessionDestroy() throws {
         final class MockKeyedCache: Sessions {
-            var ops: [String]
+            static var ops: [String] = []
 
-            var eventLoop: EventLoop {
-                return EmbeddedEventLoop()
-            }
+            let eventLoop: EventLoop
 
-            init() {
-                self.ops = []
+            init(on eventLoop: EventLoop) {
+                self.eventLoop = eventLoop
             }
 
             func createSession(_ data: SessionData) -> EventLoopFuture<SessionID> {
-                self.ops.append("create \(data)")
+                Self.ops.append("create \(data)")
                 return self.eventLoop.makeSucceededFuture(.init(string: "a"))
             }
 
             func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?> {
-                self.ops.append("read \(sessionID)")
+                Self.ops.append("read \(sessionID)")
                 return self.eventLoop.makeSucceededFuture(SessionData())
             }
 
             func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID> {
-                self.ops.append("update \(sessionID) to \(data)")
+                Self.ops.append("update \(sessionID) to \(data)")
                 return self.eventLoop.makeSucceededFuture(sessionID)
             }
 
             func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void> {
-                self.ops.append("delete \(sessionID)")
+                Self.ops.append("delete \(sessionID)")
                 return self.eventLoop.makeSucceededFuture(())
             }
         }
 
-        let mockCache = MockKeyedCache()
         var cookie: HTTPCookies.Value?
-
         let app = Application.create(configure: { s in
-            s.instance(Sessions.self, mockCache)
+            s.register(Sessions.self) { c in
+                return MockKeyedCache(on: c.eventLoop)
+            }
         }, routes: { r, c in
             let sessions = try r.grouped(c.make(SessionsMiddleware.self))
             sessions.get("set") { req -> String in
@@ -856,24 +921,26 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
+        let server = try app.testable().start()
+        defer { server.shutdown() }
 
-        let tester = try app.testable().inMemory().test(.GET, "/set") { res in
+        try server.test(.GET, "/set") { res in
             XCTAssertEqual(res.body.string, "set")
             cookie = res.headers.setCookie["vapor-session"]
             XCTAssertNotNil(cookie)
-            XCTAssertEqual(mockCache.ops, [
+            XCTAssertEqual(MockKeyedCache.ops, [
                 #"create SessionData(storage: ["foo": "bar"])"#,
             ])
-            mockCache.ops = []
+            MockKeyedCache.ops = []
         }
 
         XCTAssertEqual(cookie?.string, "a")
 
         var headers = HTTPHeaders()
         headers.cookie["vapor-session"] = cookie
-        try tester.test(.GET, "/del", headers: headers) { res in
+        try server.test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
-            XCTAssertEqual(mockCache.ops, [
+            XCTAssertEqual(MockKeyedCache.ops, [
                 #"read SessionID(string: "a")"#,
                 #"delete SessionID(string: "a")"#
             ])
@@ -885,7 +952,7 @@ final class ApplicationTests: XCTestCase {
         struct TestQueryStringContainer: Content {
             var name: String
         }
-        let req = Request(on: EmbeddedChannel())
+        let req = Request(on: EmbeddedEventLoop())
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
     }
@@ -899,7 +966,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().live(port: 8080).test(.GET, "/no-content") { res in
+        let server = try app.testable().start(method: .running)
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/no-content") { res in
             XCTAssertEqual(res.status.code, 204)
             XCTAssertEqual(res.body.count, 0)
         }
@@ -915,7 +985,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/user") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/user") { res in
             XCTAssertEqual(res.status, .unsupportedMediaType)
         }
     }
@@ -929,7 +1002,10 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        try app.testable().inMemory().test(.GET, "/error") { res in
+        let server = try app.testable().start()
+        defer { server.shutdown() }
+
+        try server.test(.GET, "/error") { res in
             XCTAssertEqual(res.status, .internalServerError)
         }
     }
@@ -986,7 +1062,7 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        let server = try app.testable().live(port: 8085).start()
+        let server = try app.testable().start()
         defer { server.shutdown() }
 
         let future = WebSocket.connect(
@@ -1055,8 +1131,8 @@ final class ApplicationTests: XCTestCase {
         promise = app.eventLoopGroup.next().makePromise(of: Void.self)
         defer { app.shutdown() }
 
-        let test = try app.testable().live(port: 8080).start()
-        defer { test.shutdown() }
+        let server = try app.testable().start(method: .running)
+        defer { server.shutdown() }
 
         try WebSocket.connect(
             to: "ws://127.0.0.1:8080/foo",
