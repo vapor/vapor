@@ -5,10 +5,9 @@
 ///
 public final class BootCommand: Command {
     /// See `Command`.
-    public struct Signature: CommandSignature { }
-
-    /// See `Command`.
-    public let signature = Signature()
+    public struct Signature: CommandSignature {
+        public init() { }
+    }
 
     /// See `Command`.
     public var help: String {
@@ -19,7 +18,7 @@ public final class BootCommand: Command {
     public init() { }
 
     /// See `Command`.
-    public func run(using context: CommandContext<BootCommand>) throws {
+    public func run(using context: CommandContext, signature: Signature) throws {
         context.console.success("Done.")
     }
 }
