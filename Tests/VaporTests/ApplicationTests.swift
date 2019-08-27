@@ -394,7 +394,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application.create(routes: { r, c in
             r.get("ws") { req -> EventLoopFuture<String> in
                 let promise = req.eventLoop.makePromise(of: String.self)
-                return WebSocket.connect(
+                WebSocket.connect(
                     to: "ws://echo.websocket.org/",
                     on: req.eventLoop
                 ) { ws in
@@ -403,9 +403,8 @@ final class ApplicationTests: XCTestCase {
                         promise.succeed(text)
                         ws.close().cascadeFailure(to: promise)
                     }
-                }.flatMap {
-                    return promise.futureResult
-                }
+                }.cascadeFailure(to: promise)
+                return promise.futureResult
             }
         })
         defer { app.shutdown() }
