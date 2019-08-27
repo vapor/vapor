@@ -11,7 +11,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-alpha"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", .branch("pw-name")),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha.2"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-alpha.2"),
