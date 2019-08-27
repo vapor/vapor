@@ -13,10 +13,9 @@
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
 public final class RoutesCommand: Command {
     /// See `Command`.
-    public struct Signature: CommandSignature { }
-
-    /// See `Command`.
-    public let signature = Signature()
+    public struct Signature: CommandSignature {
+        public init() { }
+    }
 
     /// See `Command`.
     public var help: String {
@@ -32,7 +31,7 @@ public final class RoutesCommand: Command {
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext<RoutesCommand>) throws {
+    public func run(using context: CommandContext, signature: Signature) throws {
         let console = context.console
         
         var longestMethod = 0

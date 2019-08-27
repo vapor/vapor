@@ -4,11 +4,17 @@
 ///     Server starting on http://localhost:8080
 ///
 public final class ServeCommand: Command {
-    /// See `Command`.
     public struct Signature: CommandSignature {
-        public let hostname = Option<String>(name: "hostname", short: "H", type: .value, help: "Set the hostname the server will run on.")
-        public let port = Option<Int>(name: "port", short: "p",  type: .value, help: "Set the port the server will run on.")
-        public let bind = Option<String>(name: "bind", short: "b", type: .value, help: "Convenience for setting hostname and port together.")
+        @Option(name: "hostname", short: "H", help: "Set the hostname the server will run on.")
+        var hostname: String?
+        
+        @Option(name: "port", short: "p", help: "Set the port the server will run on.")
+        var port: Int?
+        
+        @Option(name: "bind", short: "b", help: "Convenience for setting hostname and port together.")
+        var bind: String?
+
+        public init() { }
     }
 
     /// See `Command`.
@@ -29,14 +35,14 @@ public final class ServeCommand: Command {
     }
 
     /// See `Command`.
-    public func run(using context: CommandContext<ServeCommand>) throws {
+    public func run(using context: CommandContext, signature: Signature) throws {
         try self.server.start(
-            hostname: context.option(\.hostname)
+            hostname: signature.hostname
                 // 0.0.0.0:8080, 0.0.0.0, parse hostname
-                ?? context.option(\.bind)?.split(separator: ":").first.flatMap(String.init),
-            port: context.option(\.port)
+                ?? signature.bind?.split(separator: ":").first.flatMap(String.init),
+            port: signature.port
                 // 0.0.0.0:8080, :8080, parse port
-                ?? context.option(\.bind)?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
+                ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
         
         // setup signal sources for shutdown

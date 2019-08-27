@@ -111,8 +111,7 @@ public final class Application {
         defer { c.shutdown() }
         let command = try c.make(Commands.self).group()
         let console = try c.make(Console.self)
-        var runInput = self.environment.commandInput
-        try console.run(command, input: &runInput)
+        try console.run(command, input: self.environment.commandInput)
     }
     
     
