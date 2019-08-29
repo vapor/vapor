@@ -28,6 +28,7 @@ extension ApplicationTests {
         ("testMultipartDecode", testMultipartDecode),
         ("testMultipartEncode", testMultipartEncode),
         ("testParameter", testParameter),
+        ("testPortOverride", testPortOverride),
         ("testQuery", testQuery),
         ("testQueryGet", testQueryGet),
         ("testQueryStringRunning", testQueryStringRunning),
