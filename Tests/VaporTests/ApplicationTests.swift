@@ -1177,14 +1177,40 @@ final class ApplicationTests: XCTestCase {
             // do nothing
         }.wait()
     }
+
+    func testPortOverride() throws {
+        let env = Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--port", "8123"]
+        )
+        let app = Application.create(environment: env, routes: { (r, c) in
+            r.get("foo") { req in
+                return "bar"
+            }
+        })
+
+        DispatchQueue.global().async {
+            try! app.run()
+        }
+
+        sleep(1)
+        let res = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
+            .get(url: "http://127.0.0.1:8123/foo")
+            .wait()
+
+        app.running!.stop()
+
+        XCTAssertEqual(res.body?.string, "bar")
+    }
 }
 
 extension Application {
     static func create(
+        environment: Environment = .testing,
         configure: @escaping (inout Services) throws -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
-        let app = Application(environment: .testing) { s in
+        let app = Application(environment: environment) { s in
             try configure(&s)
             s.extend(Routes.self) { r, c in
                 try routes(&r, c)

@@ -150,7 +150,7 @@ public final class HTTPServer: Server {
         // start the actual HTTPServer
         let connection = HTTPServerConnection.start(
             responder: self.responder,
-            configuration: self.configuration,
+            configuration: configuration,
             on: self.application.eventLoopGroup
         )
 
