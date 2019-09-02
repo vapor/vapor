@@ -1171,7 +1171,7 @@ final class ApplicationTests: XCTestCase {
         defer { server.shutdown() }
 
         try WebSocket.connect(
-            to: "ws://127.0.0.1:8080/foo",
+            to: "ws://localhost:8080/foo",
             on: app.eventLoopGroup
         ) { ws in
             // do nothing
@@ -1195,7 +1195,7 @@ final class ApplicationTests: XCTestCase {
 
         sleep(1)
         let res = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
-            .get(url: "http://127.0.0.1:8123/foo")
+            .get(url: "http://localhost:8123/foo")
             .wait()
 
         app.running!.stop()
