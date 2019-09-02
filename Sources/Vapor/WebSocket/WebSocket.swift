@@ -76,6 +76,9 @@ public final class WebSocket {
     /// See `onBinary(...)`.
     var onBinaryCallback: (WebSocket, ByteBuffer) -> ()
 
+    /// See `onPong(...)`.
+    var onPongCallback: (WebSocket, ByteBuffer) -> ()
+
     /// See `onError(...)`.
     var onErrorCallback: (WebSocket, Error) -> ()
 
@@ -88,6 +91,7 @@ public final class WebSocket {
         self.channel = channel
         self.onTextCallback = { _, _ in }
         self.onBinaryCallback = { _, _ in }
+        self.onPongCallback = { _, _ in }
         self.onErrorCallback = { _, _ in }
         self.onCloseCodeCallback = { _ in }
     }
@@ -121,6 +125,19 @@ public final class WebSocket {
     ///                 This will be called every time the connected client sends binary-data.
     public func onBinary(_ callback: @escaping (WebSocket, ByteBuffer) -> ()) {
         self.onBinaryCallback = callback
+    }
+
+    /// Adds a callback to this `WebSocket` to handle pong.
+    ///
+    ///     ws.onPong { ws, data in
+    ///         print(data)
+    ///     }
+    ///
+    /// - parameters:
+    ///     - callback: Closure to accept incoming pong.
+    ///                 This will be called every time the connected client sends pong.
+    public func onPong(_ callback: @escaping (WebSocket, ByteBuffer) -> ()) {
+        self.onPongCallback = callback
     }
 
     /// Adds a callback to this `WebSocket` to handle errors.
@@ -283,6 +300,12 @@ private final class WebSocketHandler: ChannelInboundHandler {
                 closeOnError(context: context) // control frames can't be fragmented it should be final
             } else {
                 pong(context: context, frame: frame)
+            }
+        case .pong:
+            if !frame.fin {
+                closeOnError(context: context) // control frames can't be fragmented it should be final
+            } else {
+                self.webSocket.onPongCallback(self.webSocket, frame.unmaskedData)
             }
         case .text, .binary:
             // create a new frame sequence or use existing
