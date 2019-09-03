@@ -5,7 +5,7 @@ import NIOHTTP1
 import NIOWebSocket
 import NIOSSL
 
-internal final class WebSocketClient {
+public final class WebSocketClient {
     public enum Error: Swift.Error, LocalizedError {
         case invalidResponseStatus(HTTPResponseHead)
         case alreadyShutdown
