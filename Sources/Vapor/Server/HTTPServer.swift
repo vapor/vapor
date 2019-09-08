@@ -187,11 +187,13 @@ private final class HTTPServerResponder: Responder {
     let application: Application
     private let responderCache: ThreadSpecificVariable<ResponderCache>
     private var containers: [Container]
+    private let sync: Lock
     
     init(application: Application) {
         self.application = application
         self.responderCache = .init()
         self.containers = []
+        self.sync = .init()
     }
     
     func respond(to request: Request) -> EventLoopFuture<Response> {
@@ -199,8 +201,10 @@ private final class HTTPServerResponder: Responder {
         if let responder = self.responderCache.currentValue?.responder {
             return responder.respond(to: request)
         } else {
-            return application.makeContainer(on: request.eventLoop).flatMapThrowing { container -> Responder in
-                self.containers.append(container)
+            return application.makeContainer(on: request.eventLoop).flatMapThrowing { container -> Responder in                                                                                   
+                self.sync.do {
+                    self.containers.append(container)
+                }
                 let responder = try container.make(Responder.self)
                 self.responderCache.currentValue = ResponderCache(responder: responder)
                 return responder
