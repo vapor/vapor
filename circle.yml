@@ -31,6 +31,13 @@ jobs:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
       - run: swift build -c release
+  bionic-thread:
+    docker:
+      - image: vapor/swift:5.1-bionic
+    steps:
+      - checkout
+      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
+      - run: swift test --sanitize=thread
 
 workflows:
   version: 2
@@ -40,3 +47,4 @@ workflows:
       # - macos-release
       - bionic
       - bionic-release
+      - bionic-thread
