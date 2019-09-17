@@ -10,7 +10,10 @@ internal struct URLEncodedFormParser {
     }
 
     func parse(_ encoded: String) throws -> [String: URLEncodedFormData] {
-        let data = encoded.replacingOccurrences(of: "+", with: " ")
+        guard let data = encoded.replacingOccurrences(of: "+", with: " ").removingPercentEncoding else {
+            throw URLEncodedFormError(identifier: "percentDecoding", reason: "Could not percent decode string value: \(encoded)")
+        }
+        
         var decoded: [String: URLEncodedFormData] = [:]
 
         for pair in data.split(separator: "&") {
