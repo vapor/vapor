@@ -147,6 +147,7 @@ final class AuthenticationTests: XCTestCase {
                 let cookie = cookies["vapor-session"]
             {
                 sessionCookie = cookie
+                XCTAssertTrue(cookie.isHTTPOnly)
             } else {
                 XCTFail("No set cookie header")
             }

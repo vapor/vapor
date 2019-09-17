@@ -32,7 +32,7 @@ public struct SessionsConfig {
                 domain: nil,
                 path: "/",
                 isSecure: false,
-                isHTTPOnly: false,
+                isHTTPOnly: true,
                 sameSite: nil
             )
         }
