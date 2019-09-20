@@ -5,11 +5,9 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias OutboundOut = Response
     
     let responder: Responder
-    let errorHandler: (Error) -> ()
     
-    init(responder: Responder, errorHandler: @escaping (Error) -> ()) {
+    init(responder: Responder) {
         self.responder = responder
-        self.errorHandler = errorHandler
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -19,8 +17,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         self.responder.respond(to: request).whenComplete { response in
             switch response {
             case .failure(let error):
-                self.errorHandler(error)
-                context.close(promise: nil)
+                self.errorCaught(context: context, error: error)
             case .success(let response):
                 let contentLength = response.headers.firstValue(name: .contentLength)
                 if request.method == .HEAD {

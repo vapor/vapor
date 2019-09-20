@@ -92,15 +92,40 @@ public struct Services: CustomStringConvertible {
     ///     - interface: An interface that this `Service` supports (besides its own type).
     public mutating func instance<S>(_ interface: S.Type, _ instance: S) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: false, boot: { c in
+        let factory = ServiceFactory(cache: .none, boot: { c in
             return instance
         }, shutdown: { service in
             // do nothing
         })
         self.factories[id] = factory
     }
-    
-    // MARK: Factory
+
+    // MARK: Global
+
+
+
+    public mutating func global<S>(
+        _ interface: S.Type,
+        _ closure: @escaping (Application) throws -> (S)
+    ) {
+        return self.global(S.self, boot: closure, shutdown: { _ in })
+    }
+
+
+
+    public mutating func global<S>(
+        _ interface: S.Type,
+        boot: @escaping (Application) throws -> (S),
+        shutdown: @escaping (S) throws -> ()
+    ) {
+        let id = ServiceID(S.self)
+        let factory = ServiceFactory(cache: .application, boot: { c in
+            return try boot(c.application)
+        }, shutdown: shutdown)
+        self.factories[id] = factory
+    }
+
+    // MARK: Singleton
 
     public mutating func singleton<S>(
         _ interface: S.Type,
@@ -146,7 +171,7 @@ public struct Services: CustomStringConvertible {
         shutdown: @escaping (S) throws -> ()
     ) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: true, boot: boot, shutdown: shutdown)
+        let factory = ServiceFactory(cache: .container, boot: boot, shutdown: shutdown)
         self.factories[id] = factory
     }
 
@@ -171,7 +196,7 @@ public struct Services: CustomStringConvertible {
     ///     - factory: `Container` accepting closure that returns an initialized instance of this `Service`.
     public mutating func register<S>(_ interface: S.Type, _ factory: @escaping (Container) throws -> (S)) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(isSingleton: false, boot: { c in
+        let factory = ServiceFactory(cache: .none, boot: { c in
             return try factory(c)
         }, shutdown: { service in
             // do nothing

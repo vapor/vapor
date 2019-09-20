@@ -11,7 +11,7 @@ public final class Application {
     
     private let configure: (inout Services) throws -> ()
     
-    private let threadPool: NIOThreadPool
+    public let threadPool: NIOThreadPool
     
     private var didShutdown: Bool
 
@@ -32,7 +32,9 @@ public final class Application {
     
     public var logger: Logger
 
-    private var _services: Services!
+    public var services: Services
+
+    internal var cache: ServiceCache
     
     public struct Running {
         public var onStop: EventLoopFuture<Void>
@@ -46,7 +48,7 @@ public final class Application {
     
     public init(
         environment: Environment = .development,
-        configure: @escaping (inout Services) throws -> () = { _ in }
+        configure: @escaping (inout Services) -> () = { _ in }
     ) {
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
@@ -57,43 +59,25 @@ public final class Application {
         self.threadPool = .init(numberOfThreads: 1)
         self.threadPool.start()
         self.logger = .init(label: "codes.vapor.application")
+        var services = Services.default()
+        configure(&services)
+        self.services = services
+        self.cache = .init()
     }
-    
-    public func makeServices() throws -> Services {
-        var s = Services.default()
-        try self.configure(&s)
-        s.register(Application.self) { c in
-            return self
-        }
-        s.register(NIOThreadPool.self) { c in
-            return self.threadPool
-        }
-        return s
-    }
-    
+
     public func makeContainer() -> EventLoopFuture<Container> {
         return self.makeContainer(on: self.eventLoopGroup.next())
     }
     
     public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        do {
-            return try _makeContainer(on: eventLoop)
-        } catch {
-            return self.eventLoopGroup.next().makeFailedFuture(error)
-        }
-    }
-    
-    private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        let s = try self.makeServices()
-        return Container.boot(environment: self.environment, services: s, on: eventLoop)
+        return Container.boot(application: self, on: eventLoop)
     }
 
     // MARK: Run
 
     public func boot() throws {
-        self._services = try self.makeServices()
-        try self._services.providers.forEach { try $0.willBoot(self) }
-        try self._services.providers.forEach { try $0.didBoot(self) }
+        try self.services.providers.forEach { try $0.willBoot(self) }
+        try self.services.providers.forEach { try $0.didBoot(self) }
     }
     
     public func run() throws {
@@ -133,9 +117,8 @@ public final class Application {
     
     public func shutdown() {
         self.logger.debug("Application shutting down")
-        if self._services != nil {
-            self._services.providers.forEach { $0.willShutdown(self) }
-        }
+        self.services.providers.forEach { $0.willShutdown(self) }
+        self.cache.shutdown()
         do {
             try self.eventLoopGroup.syncShutdownGracefully()
         } catch {

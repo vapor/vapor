@@ -5,8 +5,9 @@ final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
-        try app.boot()
-        try app.start()
+        defer { app.shutdown() }
+        try! app.boot()
+        try! app.start()
         guard let running = app.running else {
             XCTFail("app started without setting 'running'")
             return
@@ -1216,11 +1217,11 @@ final class ApplicationTests: XCTestCase {
 extension Application {
     static func create(
         environment: Environment = .testing,
-        configure: @escaping (inout Services) throws -> () = { _ in },
+        configure: @escaping (inout Services) -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
         let app = Application(environment: environment) { s in
-            try configure(&s)
+            configure(&s)
             s.extend(Routes.self) { r, c in
                 try routes(&r, c)
             }

@@ -52,7 +52,7 @@ public final class HTTPServer: Server {
         public var serverName: String?
         
         /// Any uncaught server or responder errors will go here.
-        public var errorHandler: (Error) -> ()
+        public var logger: Logger
         
         /// Creates a new `HTTPServerConfig`.
         ///
@@ -71,7 +71,7 @@ public final class HTTPServer: Server {
         ///     - supportPipelining: When `true`, HTTP server will support pipelined requests.
         ///     - serverName: If set, this name will be serialized as the `Server` header in outgoing responses.
         ///     - upgraders: An array of `HTTPProtocolUpgrader` to check for with each request.
-        ///     - errorHandler: Any uncaught server or responder errors will go here.
+        ///     - logger: Any uncaught server or responder errors will be logged here.
         public init(
             hostname: String = "127.0.0.1",
             port: Int = 8080,
@@ -85,8 +85,8 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            errorHandler: @escaping (Error) -> () = { _ in }
-            ) {
+            logger: Logger? = nil
+        ) {
             self.hostname = hostname
             self.port = port
             self.backlog = backlog
@@ -103,7 +103,7 @@ public final class HTTPServer: Server {
             }
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
-            self.errorHandler = errorHandler
+            self.logger = logger ?? Logger(label: "codes.vapor.http-server")
         }
     }
     
@@ -141,7 +141,6 @@ public final class HTTPServer: Server {
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
         self.application.logger.info("Server starting on \(address)")
-        
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
             responder: self.responder,
@@ -238,7 +237,6 @@ private final class HTTPServerConnection {
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
-        let logger = Logger(label: "codes.vapor.http-server")
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
             // Specify backlog and enable SO_REUSEADDR for the server itself
@@ -267,18 +265,26 @@ private final class HTTPServerConnection {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
                         tlsHandler = try NIOSSLServerHandler(context: sslContext)
                     } catch {
-                        logger.error("Could not configure TLS: \(error)")
+                        configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
                     }
-                    return channel.pipeline.addHandler(tlsHandler).flatMap { (_) -> EventLoopFuture<Void> in
-                        return channel.pipeline.configureHTTP2SecureUpgrade(h2PipelineConfigurator: { (pipeline) -> EventLoopFuture<Void> in
-                            return channel.configureHTTP2Pipeline(mode: .server, inboundStreamStateInitializer: { (channel, streamID) -> EventLoopFuture<Void> in
-                                return channel.pipeline.addVaporHTTP2Handlers(responder: responder, configuration: configuration, streamID: streamID)
-                            }).flatMap { (_) -> EventLoopFuture<Void> in
-                                return channel.pipeline.addHandler(HTTPServerErrorHandler(logger: logger))
-                            }
-                        }, http1PipelineConfigurator: { (pipeline) -> EventLoopFuture<Void> in
-                            return pipeline.addVaporHTTP1Handlers(responder: responder, configuration: configuration)
+                    return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
+                        return channel.pipeline.configureHTTP2SecureUpgrade(h2PipelineConfigurator: { pipeline in
+                            return channel.configureHTTP2Pipeline(
+                                mode: .server,
+                                inboundStreamStateInitializer: { (channel, streamID) in
+                                    return channel.pipeline.addVaporHTTP2Handlers(
+                                        responder: responder,
+                                        configuration: configuration,
+                                        streamID: streamID
+                                    )
+                                }
+                            ).map { _ in }
+                        }, http1PipelineConfigurator: { pipeline in
+                            return pipeline.addVaporHTTP1Handlers(
+                                responder: responder,
+                                configuration: configuration
+                            )
                         })
                     }
                 } else {
@@ -338,7 +344,11 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
 }
 
 private extension ChannelPipeline {
-    func addVaporHTTP2Handlers(responder: Responder, configuration: HTTPServer.Configuration, streamID: HTTP2StreamID) -> EventLoopFuture<Void> {
+    func addVaporHTTP2Handlers(
+        responder: Responder,
+        configuration: HTTPServer.Configuration,
+        streamID: HTTP2StreamID
+    ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [ChannelHandler] = []
         
@@ -359,13 +369,12 @@ private extension ChannelPipeline {
         handlers.append(serverResEncoder)
         
         // add server request -> response delegate
-        let handler = HTTPServerHandler(
-            responder: responder,
-            errorHandler: configuration.errorHandler
-        )
+        let handler = HTTPServerHandler(responder: responder)
         handlers.append(handler)
         
-        return self.addHandlers(handlers)
+        return self.addHandlers(handlers).flatMap {
+            self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+        }
     }
     
     func addVaporHTTP1Handlers(responder: Responder, configuration: HTTPServer.Configuration) -> EventLoopFuture<Void> {
@@ -405,10 +414,7 @@ private extension ChannelPipeline {
         )
         handlers.append(serverResEncoder)
         // add server request -> response delegate
-        let handler = HTTPServerHandler(
-            responder: responder,
-            errorHandler: configuration.errorHandler
-        )
+        let handler = HTTPServerHandler(responder: responder)
 
         // add HTTP upgrade handler
         let upgrader = HTTPServerUpgradeHandler(
@@ -420,6 +426,8 @@ private extension ChannelPipeline {
         handlers.append(handler)
         
         // wait to add delegate as final step
-        return self.addHandlers(handlers)
+        return self.addHandlers(handlers).flatMap {
+            self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+        }
     }
 }

@@ -1,14 +1,20 @@
 struct ServiceFactory<T> {
-    let isSingleton: Bool
+    enum Cache {
+        case application
+        case container
+        case none
+    }
+    
+    let cache: Cache
     let boot: (Container) throws -> T
     let shutdown: (T) throws -> ()
     
     init(
-        isSingleton: Bool,
+        cache: Cache,
         boot: @escaping (Container) throws -> T,
         shutdown: @escaping (T) throws -> ()
     ) {
-        self.isSingleton = isSingleton
+        self.cache = cache
         self.boot = boot
         self.shutdown = shutdown
     }
