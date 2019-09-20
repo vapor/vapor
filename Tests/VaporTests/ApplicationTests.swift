@@ -6,10 +6,13 @@ final class ApplicationTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
         try app.boot()
-        DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-            app.running?.stop()
+        try app.start()
+        guard let running = app.running else {
+            XCTFail("app started without setting 'running'")
+            return
         }
-        try app.run()
+        running.stop()
+        try running.onStop.wait()
     }
     
 //    func testURLSession() throws {
@@ -1188,17 +1191,23 @@ final class ApplicationTests: XCTestCase {
                 return "bar"
             }
         })
+        defer { app.shutdown() }
+        try app.start()
 
-        DispatchQueue.global().async {
-            try! app.run()
+        guard let running = app.running else {
+            XCTFail("app started but didn't set running")
+            return
         }
 
-        sleep(1)
-        let res = try HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
+        let client = HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
+        defer { try! client.syncShutdown() }
+
+        let res = try client
             .get(url: "http://127.0.0.1:8123/foo")
             .wait()
 
-        app.running!.stop()
+        running.stop()
+        try running.onStop.wait()
 
         XCTAssertEqual(res.body?.string, "bar")
     }

@@ -59,8 +59,6 @@ public final class ServeCommand: Command {
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
-        
-        try self.server.onShutdown.wait()
     }
     
     deinit {

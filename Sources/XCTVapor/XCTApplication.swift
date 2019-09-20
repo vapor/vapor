@@ -48,7 +48,7 @@ public final class XCTApplication {
             self.container = container
             self.port = port
             self.server = try container.make(Server.self)
-            try server.start(hostname: "localhost", port: port)
+            try server.start(hostname: nil, port: port)
         }
 
         public func shutdown() {

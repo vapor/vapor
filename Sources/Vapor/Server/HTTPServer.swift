@@ -141,22 +141,25 @@ public final class HTTPServer: Server {
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
         self.application.logger.info("Server starting on \(address)")
-
-        // TODO: consider moving to serve command
-        self.application.running = .init(stop: { [unowned self] in
-            self.shutdown()
-        })
         
         // start the actual HTTPServer
-        let connection = HTTPServerConnection.start(
+        self.connection = try HTTPServerConnection.start(
             responder: self.responder,
             configuration: configuration,
             on: self.application.eventLoopGroup
+        ).wait()
+
+        // allow the server to be stopped or waited for
+        self.application.running = .init(
+            onStop: self.onShutdown,
+            stop: { [weak self] in
+                guard let self = self else {
+                    fatalError("Server deinitialized before shutdown")
+                }
+                self.shutdown()
+            }
         )
 
-        try self.application.sync.do {
-            self.connection = try connection.wait()
-        }
         self.didStart = true
     }
     
