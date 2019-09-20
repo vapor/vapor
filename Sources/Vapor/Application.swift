@@ -35,8 +35,11 @@ public final class Application {
     private var _services: Services!
     
     public struct Running {
+        public var onStop: EventLoopFuture<Void>
         public var stop: () -> Void
-        public init(stop: @escaping () -> Void) {
+        
+        init(onStop: EventLoopFuture<Void>, stop: @escaping () -> Void) {
+            self.onStop = onStop
             self.stop = stop
         }
     }
@@ -97,14 +100,17 @@ public final class Application {
         self.logger = .init(label: "codes.vapor.application")
         defer { self.shutdown() }
         do {
-            try self.runCommands()
+            try self.start()
+            if let running = self.running {
+                try running.onStop.wait()
+            }
         } catch {
             self.logger.report(error: error)
             throw error
         }
     }
     
-    public func runCommands() throws {
+    public func start() throws {
         let eventLoop = self.eventLoopGroup.next()
         try self.loadDotEnv(on: eventLoop).wait()
         let c = try self.makeContainer(on: eventLoop).wait()
