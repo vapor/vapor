@@ -157,9 +157,12 @@ public func routes(_ app: Application) throws {
     users.get(":userID") { req in
         return req.parameters.get("userID") ?? "no id"
     }
-    
+
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         req.view.render("hello.txt", ["name": "world"])
+
+    r.get("secret") { (req) -> EventLoopFuture<String> in
+        return try Environment.secret(key: "PASSWORD_SECRET", container: c)
     }
 }
