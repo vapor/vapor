@@ -1161,25 +1161,29 @@ final class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() throws {
-        var promise: EventLoopPromise<Void>?
         let app = Application.create(routes: { (r, c) in
             r.webSocket("foo") { req, ws in
                 ws.send("foo")
-                ws.close(code: .normalClosure, promise: promise)
+                ws.close(code: .normalClosure, promise: nil)
             }
         })
-        promise = app.eventLoopGroup.next().makePromise(of: Void.self)
         defer { app.shutdown() }
 
         let server = try app.testable().start(method: .running)
         defer { server.shutdown() }
 
+        var string: String? = nil
         try WebSocket.connect(
-            to: "ws://127.0.0.1:8080/foo",
+            to: "ws://localhost:8080/foo",
             on: app.eventLoopGroup
         ) { ws in
             // do nothing
+            ws.onText { ws, s in
+                string = s
+            }
         }.wait()
+
+        XCTAssertEqual(string, "foo")
     }
 
     func testPortOverride() throws {
