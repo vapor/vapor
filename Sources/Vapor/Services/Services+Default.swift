@@ -133,7 +133,7 @@ extension Services {
             return try ConsoleLogger(console: container.make())
         }
         s.register(Logger.self) { c in
-            return try c.application.logger
+            return c.application.logger
         }
 
         // view

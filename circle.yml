@@ -18,7 +18,7 @@ jobs:
       - run: swift build -c release
   bionic:
     docker:
-      - image: vapor/swift:5.1-bionic
+      - image: swift:5.1-bionic
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
@@ -26,18 +26,33 @@ jobs:
       - run: swift test
   bionic-release:
     docker:
-      - image: vapor/swift:5.1-bionic
+      - image: swift:5.1-bionic
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
       - run: swift build -c release
   bionic-thread:
     docker:
-      - image: vapor/swift:5.1-bionic
+      - image: swift:5.1-bionic
     steps:
       - checkout
       - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
       - run: swift test --sanitize=thread
+  xenial:
+    docker:
+      - image: swift:5.1-xenial
+    steps:
+      - checkout
+      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
+      - run: swift build
+      - run: swift test
+  xenial-release:
+    docker:
+      - image: swift:5.1-xenial
+    steps:
+      - checkout
+      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
+      - run: swift build -c release
 
 workflows:
   version: 2
@@ -48,3 +63,5 @@ workflows:
       - bionic
       - bionic-release
       - bionic-thread
+      - xenial
+      - xenial-release
