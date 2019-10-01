@@ -1,6 +1,6 @@
 public struct Lock {
     private let nslock: NSLock
-    init() {
+    public init() {
         self.nslock = .init()
     }
 

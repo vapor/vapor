@@ -14,10 +14,8 @@ public final class XCTApplication {
     }
     
     public func override<S>(service: S.Type, with instance: S) -> Self {
-        self.overrides.append { s in
-            s.register(S.self) { _ in
-                return instance
-            }
+        self.application.services.register(S.self) { _ in
+            return instance
         }
         return self
     }
@@ -31,11 +29,12 @@ public final class XCTApplication {
     }
 
     public func start(method: Method = .inMemory) throws -> XCTApplicationTester {
+        let container = try self.application.makeContainer().wait()
         switch method {
         case .inMemory:
-            return try InMemory(container: self.container())
+            return try InMemory(container: container)
         case .running(let port):
-            return try Live(container: self.container(), port: port)
+            return try Live(container: container, port: port)
         }
     }
     
@@ -48,7 +47,7 @@ public final class XCTApplication {
             self.container = container
             self.port = port
             self.server = try container.make(Server.self)
-            try server.start(hostname: nil, port: port)
+            try server.start(hostname: "localhost", port: port)
         }
 
         public func shutdown() {
@@ -126,19 +125,6 @@ public final class XCTApplication {
             try closure(response)
             return self
         }
-    }
-    
-    private func container() throws -> Container {
-        var s = try self.application.makeServices()
-        for override in self.overrides {
-            override(&s)
-        }
-        let c = Container.boot(
-            environment: self.application.environment,
-            services: s,
-            on: self.application.eventLoopGroup.next()
-        )
-        return try c.wait()
     }
 }
 

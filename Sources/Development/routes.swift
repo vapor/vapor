@@ -82,11 +82,29 @@ public func routes(_ r: Routes, _ c: Container) throws {
     }
     
     r.get("shutdown") { req -> HTTPStatus in
-        guard let running = try c.make(Application.self).running else {
+        guard let running = c.application.running else {
             throw Abort(.internalServerError)
         }
         _ = running.stop()
         return .ok
+    }
+
+    let cache = try c.make(MemoryCache.self)
+    r.get("cache", "get", ":key") { req -> String in
+        guard let key = req.parameters.get("key") else {
+            throw Abort(.internalServerError)
+        }
+        return "\(key) = \(cache.get(key) ?? "nil")"
+    }
+    r.get("cache", "set", ":key", ":value") { req -> String in
+        guard let key = req.parameters.get("key") else {
+            throw Abort(.internalServerError)
+        }
+        guard let value = req.parameters.get("value") else {
+            throw Abort(.internalServerError)
+        }
+        cache.set(key, to: value)
+        return "\(key) = \(value)"
     }
 
     r.get("hello", ":name") { req in

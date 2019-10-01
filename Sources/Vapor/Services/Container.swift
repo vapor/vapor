@@ -1,16 +1,25 @@
 public final class Container {
-    public static func boot(environment: Environment = .development, services: Services, on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        let container = Container(environment: environment, services: services, on: eventLoop)
+    static func boot(
+        application: Application,
+        on eventLoop: EventLoop
+    ) -> EventLoopFuture<Container> {
+        let container = Container(application: application, on: eventLoop)
         return container.willBoot()
             .flatMap { container.didBoot() }
             .map { container }
     }
-    
+
+    public let application: Application
+
     /// Service `Environment` (e.g., production, dev). Use this to dynamically swap services based on environment.
-    public let environment: Environment
+    public var environment: Environment {
+        return self.application.environment
+    }
     
     /// Available services. This struct contains all of this `Container`'s available service implementations.
-    public let services: Services
+    public var services: Services {
+        return self.application.services
+    }
     
     /// All `Provider`s that have been registered to this `Container`'s `Services`.
     public var providers: [Provider] {
@@ -25,9 +34,11 @@ public final class Container {
     
     private var didShutdown: Bool
     
-    private init(environment: Environment, services: Services, on eventLoop: EventLoop) {
-        self.environment = environment
-        self.services = services
+    private init(
+        application: Application,
+        on eventLoop: EventLoop
+    ) {
+        self.application = application
         self.eventLoop = eventLoop
         self.cache = .init()
         self.didShutdown = false
@@ -51,11 +62,6 @@ public final class Container {
     public func make<S>(_ service: S.Type = S.self) throws -> S {
         assert(!self.didShutdown, "Container.shutdown() has been called, this Container is no longer valid.")
         
-        // check if cached
-        if let cached = self.cache.get(service: S.self) {
-            return cached.service
-        }
-        
         // create service lookup identifier
         let id = ServiceID(S.self)
         
@@ -63,22 +69,53 @@ public final class Container {
         guard let factory = self.services.factories[id] as? ServiceFactory<S> else {
             throw Abort(.internalServerError, reason: "No service known for \(S.self)")
         }
-        
-        // create the service
-        var instance = try factory.boot(self)
-        
-        // check for any extensions
-        if let extensions = self.services.extensions[id] as? [ServiceExtension<S>], !extensions.isEmpty {
-            // loop over extensions, modifying instace
-            try extensions.forEach { try $0.serviceExtend(&instance, self) }
+
+        // check if cached
+        switch factory.cache {
+        case .application:
+            self.application.sync.lock()
+            if let cached = self.application.cache.get(service: S.self) {
+                self.application.sync.unlock()
+                return cached.service
+            }
+        case .container:
+            if let cached = self.cache.get(service: S.self) {
+                return cached.service
+            }
+        case .none: break
         }
-        
-        // cache if singleton
-        if factory.isSingleton {
-            let service = CachedService(service: instance, shutdown: factory.shutdown)
+
+
+        // create and extend the service
+        var instance: S
+        do {
+            instance = try factory.boot(self)
+            // check for any extensions
+            if let extensions = self.services.extensions[id] as? [ServiceExtension<S>], !extensions.isEmpty {
+                // loop over extensions, modifying instace
+                try extensions.forEach { try $0.serviceExtend(&instance, self) }
+            }
+        } catch {
+            // if creation fails, unlock application sync
+            switch factory.cache {
+            case .application:
+                self.application.sync.unlock()
+            default: break
+            }
+            throw error
+        }
+
+        // cache if needed
+        let service = CachedService(service: instance, shutdown: factory.shutdown)
+        switch factory.cache {
+        case .application:
+            self.application.cache.set(service: service)
+            self.application.sync.unlock()
+        case .container:
             self.cache.set(service: service)
+        case .none: break
         }
-        
+
         // return created and extended instance
         return instance
     }

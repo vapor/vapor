@@ -5,8 +5,9 @@ final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
-        try app.boot()
-        try app.start()
+        defer { app.shutdown() }
+        try! app.boot()
+        try! app.start()
         guard let running = app.running else {
             XCTFail("app started without setting 'running'")
             return
@@ -1160,25 +1161,29 @@ final class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() throws {
-        var promise: EventLoopPromise<Void>?
         let app = Application.create(routes: { (r, c) in
             r.webSocket("foo") { req, ws in
                 ws.send("foo")
-                ws.close(code: .normalClosure, promise: promise)
+                ws.close(code: .normalClosure, promise: nil)
             }
         })
-        promise = app.eventLoopGroup.next().makePromise(of: Void.self)
         defer { app.shutdown() }
 
         let server = try app.testable().start(method: .running)
         defer { server.shutdown() }
 
+        var string: String? = nil
         try WebSocket.connect(
-            to: "ws://127.0.0.1:8080/foo",
+            to: "ws://localhost:8080/foo",
             on: app.eventLoopGroup
         ) { ws in
             // do nothing
+            ws.onText { ws, s in
+                string = s
+            }
         }.wait()
+
+        XCTAssertEqual(string, "foo")
     }
 
     func testPortOverride() throws {
@@ -1216,11 +1221,11 @@ final class ApplicationTests: XCTestCase {
 extension Application {
     static func create(
         environment: Environment = .testing,
-        configure: @escaping (inout Services) throws -> () = { _ in },
+        configure: @escaping (inout Services) -> () = { _ in },
         routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
     ) -> Application {
         let app = Application(environment: environment) { s in
-            try configure(&s)
+            configure(&s)
             s.extend(Routes.self) { r, c in
                 try routes(&r, c)
             }

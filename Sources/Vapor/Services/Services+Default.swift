@@ -54,18 +54,8 @@ extension Services {
         s.register(MemorySessions.self) { c in
             return try MemorySessions(storage: c.make(), on: c.eventLoop)
         }
-        s.register(MemorySessions.Storage.self) { c in
-            let app = try c.make(Application.self)
-            app.sync.lock()
-            defer { app.sync.unlock() }
-            let key = "memory-sessions-storage"
-            if let existing = app.userInfo[key] as? MemorySessions.Storage {
-                return existing
-            } else {
-                let new = MemorySessions.Storage()
-                app.userInfo[key] = new
-                return new
-            }
+        s.global(MemorySessions.Storage.self) { app in
+            return .init()
         }
         
         s.register(SessionsConfig.self) { c in
@@ -101,7 +91,7 @@ extension Services {
             return try c.make(HTTPServer.self)
         }
         s.register(HTTPServer.self) { c in
-            return try .init(application: c.make(), configuration: c.make())
+            return try .init(application: c.application, configuration: c.make())
         }
         s.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
@@ -143,7 +133,7 @@ extension Services {
             return try ConsoleLogger(console: container.make())
         }
         s.register(Logger.self) { c in
-            return try c.make(Application.self).logger
+            return c.application.logger
         }
 
         // view
@@ -160,7 +150,7 @@ extension Services {
 
         // file
         s.register(NonBlockingFileIO.self) { c in
-            return try .init(threadPool: c.make())
+            return .init(threadPool: c.application.threadPool)
         }
         s.register(FileIO.self) { c in
             return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
