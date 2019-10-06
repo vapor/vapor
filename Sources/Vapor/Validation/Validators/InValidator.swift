@@ -1,44 +1,30 @@
 extension Validator where T: Equatable {
     /// Validates whether an item is contained in the supplied array.
-    ///
-    ///     try validations.add(\.name, .in("foo", "bar"))
-    ///
     public static func `in`(_ array: T...) -> Validator<T> {
-        return .in(array)
+        .in(array)
     }
 
-    /// Validates whether an item is contained in the supplied array.
-    ///
-    ///     try validations.add(\.name, .in(["foo", "bar"]))
-    ///
-    public static func `in`(_ array: [T]) -> Validator<T> {
-        return InValidator(array).validator()
+    /// Validates whether an item is contained in the supplied sequence.
+    public static func `in`<S: Sequence>(_ array: S) -> Validator<T> where S.Element == T {
+        InValidator(array).validator()
     }
 }
 
-// MARK: Private
+public struct InValidatorFailure: ValidatorFailure {}
 
 /// Validates whether an item is contained in the supplied array.
-fileprivate struct InValidator<T>: ValidatorType where T: Equatable, T: Codable {
-    /// See `ValidatorType`.
-    public var validatorReadable: String {
-        let all = array.map { "\($0)" }.joined(separator: ", ")
-        return "in [\(all)]"
-    }
+struct InValidator<T: Decodable & Equatable>: ValidatorType {
 
     /// Array to check against.
-    let array: [T]
+    let contains: (T) -> Bool
 
     /// Creates a new `InValidator`.
-    public init(_ array: [T]) {
-        self.array = array
+    init<S: Sequence>(_ sequence: S) where S.Element == T {
+        contains = sequence.contains
     }
 
     /// See `Validator`.
-    public func validate(_ item: T) -> ValidatorFailure? {
-        guard array.contains(item) else {
-            return .init("is not \(validatorReadable)")
-        }
-        return nil
+    func validate(_ item: T) -> InValidatorFailure? {
+        contains(item) ? nil : .init()
     }
 }

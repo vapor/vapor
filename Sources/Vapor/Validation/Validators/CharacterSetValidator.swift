@@ -1,26 +1,17 @@
 extension Validator {
     /// Validates that all characters in a `String` are ASCII (bytes 0..<128).
-    ///
-    ///     try validations.add(\.name, .ascii)
-    ///
     public static var ascii: Validator<String> {
-        return .characterSet(.ascii)
+        .characterSet(.ascii)
     }
 
     /// Validates that all characters in a `String` are alphanumeric (a-z,A-Z,0-9).
-    ///
-    ///     try validations.add(\.name, .alphanumeric)
-    ///
     public static var alphanumeric: Validator<String> {
-        return .characterSet(.alphanumerics)
+        .characterSet(.alphanumerics)
     }
 
     /// Validates that all characters in a `String` are in the supplied `CharacterSet`.
-    ///
-    ///     try validations.add(\.name, .characterSet(.alphanumerics + .whitespaces))
-    ///
     public static func characterSet(_ characterSet: CharacterSet) -> Validator<String> {
-        return CharacterSetValidator(characterSet).validator()
+        CharacterSetValidator(characterSet: characterSet).validator()
     }
 }
 
@@ -29,41 +20,27 @@ extension Validator {
 ///     .characterSet(.alphanumerics + .whitespaces)
 ///
 public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
-    return lhs.union(rhs)
+    lhs.union(rhs)
 }
 
-
-// MARK: Private
+public struct CharacterSetValidatorFailure: ValidatorFailure {
+    public let characterSet: CharacterSet
+    public let invalidSlice: Substring
+}
 
 /// Validates that a `String` contains characters in a given `CharacterSet`
-private struct CharacterSetValidator: ValidatorType {
+struct CharacterSetValidator: ValidatorType {
+
     /// `CharacterSet` to validate against.
     let characterSet: CharacterSet
 
     /// See `Validator`
-    public var validatorReadable: String {
-        if characterSet.traits.count > 0 {
-            let string = characterSet.traits.joined(separator: ", ")
-            return "in character set (\(string))"
-        } else {
-            return "in character set"
-        }
-    }
-
-    /// Creates a new `CharacterSetValidator`.
-    init(_ characterSet: CharacterSet) {
-        self.characterSet = characterSet
-    }
-
-    /// See `Validator`
-    public func validate(_ s: String) -> ValidatorFailure? {
+    func validate(_ s: String) -> CharacterSetValidatorFailure? {
         if let range = s.rangeOfCharacter(from: characterSet.inverted) {
-            var reason = "contains an invalid character: '\(s[range])'"
-            if self.characterSet.traits.count > 0 {
-                let string = self.characterSet.traits.joined(separator: ", ")
-                reason += " (allowed: \(string))"
-            }
-            return .init(reason)
+            return .init(
+                characterSet: characterSet,
+                invalidSlice: s[range]
+            )
         } else {
             return nil
         }
@@ -73,34 +50,6 @@ private struct CharacterSetValidator: ValidatorType {
 private extension CharacterSet {
     /// ASCII (byte 0..<128) character set.
     static var ascii: CharacterSet {
-        var ascii: CharacterSet = .init()
-        for i in 0..<128 {
-            ascii.insert(Unicode.Scalar(i)!)
-        }
-        return ascii
-    }
-}
-
-
-private extension CharacterSet {
-    /// Returns an array of strings describing the contents of this `CharacterSet`.
-    var traits: [String] {
-        var desc: [String] = []
-        if isSuperset(of: .newlines) {
-            desc.append("newlines")
-        }
-        if isSuperset(of: .whitespaces) {
-            desc.append("whitespace")
-        }
-        if isSuperset(of: .capitalizedLetters) {
-            desc.append("A-Z")
-        }
-        if isSuperset(of: .lowercaseLetters) {
-            desc.append("a-z")
-        }
-        if isSuperset(of: .decimalDigits) {
-            desc.append("0-9")
-        }
-        return desc
+        CharacterSet(charactersIn: Unicode.Scalar(0)..<Unicode.Scalar(128))
     }
 }

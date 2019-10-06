@@ -1,36 +1,21 @@
 /// Inverts a `Validation`.
-///
-///     try validations.add(\.email, .email && !.nil)
-///
-public prefix func !<T> (rhs: Validator<T>) -> Validator<T> {
-    return NotValidator(rhs).validator()
+public prefix func !<V: ValidatorType> (validator: V) -> Validator<V.Data> {
+    NotValidator(validator: validator).validator()
 }
 
-// MARK: Private
+public struct NotValidatorFailure<F: ValidatorFailure>: ValidatorFailure {
+    let type: F.Type = F.self
+}
 
 /// Inverts a validator
-private struct NotValidator<T>: ValidatorType where T: Codable {
+struct NotValidator<V: ValidatorType>: ValidatorType {
     /// See `ValidatorType`.
-    typealias ValidationData = T
-
-    /// See `ValidatorType`
-    public var validatorReadable: String {
-        return "not \(rhs.readable)"
-    }
 
     /// The inverted `Validator`.
-    let rhs: Validator<T>
-
-    /// Creates a new `NotValidator`.
-    init(_ rhs: Validator<T>) {
-        self.rhs = rhs
-    }
+    let validator: V
 
     /// See `ValidatorType`
-    func validate(_ data: T) -> ValidatorFailure? {
-        if self.rhs.validate(data) == nil {
-            return .init("is \(self.rhs)")
-        }
-        return nil
+    func validate(_ data: V.Data) -> NotValidatorFailure<V.Failure>? {
+        validator.validate(data) == nil ? .init() : nil
     }
 }

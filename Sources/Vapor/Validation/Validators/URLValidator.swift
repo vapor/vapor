@@ -1,12 +1,6 @@
 extension Validator where T == String {
     /// Validates whether a `String` is a valid URL.
     ///
-    ///     try validations.add(\.profilePictureURL, .url)
-    ///
-    ///     alternatively, if you want to allow an optional URL:
-    ///
-    ///     try validations.add(\.profilePictureURL, .url || .nil)
-    ///
     /// This validator will allow either file URLs, or URLs
     /// containing at least a scheme and a host.
     ///
@@ -15,25 +9,18 @@ extension Validator where T == String {
     }
 }
 
-// MARK: Private
+public struct URLValidatorFailure: ValidatorFailure {}
 
 /// Validates whether a string is a valid email address.
-private struct URLValidator: ValidatorType {
-    typealias ValidationData = String
-
-    /// See `ValidatorType`.
-    public var validatorReadable: String {
-        return "a valid URL"
-    }
-
-    /// Creates a new `URLValidator`.
-    public init() {}
+struct URLValidator: ValidatorType {
 
     /// See `Validator`.
-    func validate(_ data: String) -> ValidatorFailure? {
-        guard let url = URL(string: data),
-            url.isFileURL || (url.host != nil && url.scheme != nil) else {
-            return .init("is not a valid URL")
+    func validate(_ data: String) -> URLValidatorFailure? {
+        guard
+            let url = URL(string: data),
+            url.isFileURL || (url.host != nil && url.scheme != nil)
+        else {
+            return .init()
         }
         return nil
     }
