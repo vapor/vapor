@@ -1,7 +1,3 @@
-#if canImport(Combine)
-import Combine
-#endif
-
 /// Capable of being validated. Conformance adds a throwing `validate()` method.
 ///
 ///     struct User: Validatable {
@@ -17,11 +13,6 @@ public protocol Validatable {
 }
 
 extension Validatable {
-    @available(OSX 10.15, *)
-    public static func validate<T: TopLevelDecoder>(_ input: T.Input, using topLevelDecoder: T) throws {
-        try validations().validate(input, using: topLevelDecoder)
-    }
-
     public static func validate(from decoder: Decoder) throws {
         try validations().validate(from: decoder)
     }

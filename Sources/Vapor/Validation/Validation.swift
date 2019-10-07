@@ -1,8 +1,3 @@
-//import Codability
-#if canImport(Combine)
-import Combine
-#endif
-
 public struct Validation {
     enum ValidationType {
     case nested([Validation], BasicCodingKey, Bool = true)
@@ -56,12 +51,6 @@ public struct Validation {
 }
 
 extension Sequence where Element == Validation {
-    @available(OSX 10.15, *)
-    public func validate<T: TopLevelDecoder>(_ input: T.Input, using topLevelDecoder: T) throws {
-        let decoder = try topLevelDecoder.decode(DecoderUnwrapper.self, from: input)
-        return try validate(from: decoder.decoder)
-    }
-
     public func validate(from decoder: Decoder) throws {
         if let error = ValidationsError(try run(on: decoder.container(keyedBy: BasicCodingKey.self))) {
             throw error
