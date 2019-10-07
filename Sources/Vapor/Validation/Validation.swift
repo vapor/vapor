@@ -1,5 +1,7 @@
 //import Codability
+#if canImport(Combine)
 import Combine
+#endif
 
 public struct Validation {
     enum ValidationType {

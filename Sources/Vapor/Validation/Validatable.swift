@@ -1,4 +1,6 @@
+#if canImport(Combine)
 import Combine
+#endif
 
 /// Capable of being validated. Conformance adds a throwing `validate()` method.
 ///
