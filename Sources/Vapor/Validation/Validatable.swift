@@ -16,4 +16,8 @@ extension Validatable {
     public static func validate(from decoder: Decoder) throws {
         try validations().validate(from: decoder)
     }
+    
+    public static func validate(json: String) throws {
+        try validations().validate(json: json)
+    }
 }

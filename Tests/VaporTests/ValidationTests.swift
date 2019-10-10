@@ -135,27 +135,28 @@ private final class User: Validatable, Codable {
         self.preferredColors = preferredColors
     }
 
-    static func validations() -> Validations {
-        var validations = Validations()
-        // validate name is at least 5 characters and alphanumeric
-        validations.add("name", as: String.self, is: .count(5...) && .alphanumeric)
-        // validate age is 18 or older
-        validations.add("age", as: Int.self, is: .range(18...))
-        // validate the email is valid and is not nil
-        validations.add("email", as: String?.self, is: !.nil && .email)
-        validations.add("email", as: String?.self, is: .email && !.nil) // test other way
-        // validate the email is valid or is nil
-        validations.add("email", as: String?.self, is: .nil || .email)
-        validations.add("email", as: String?.self, is: .email || .nil) // test other way
-        // validate that the lucky number is nil or is 5 or 7
-        validations.add("luckyNumber", as: Int?.self, is: .nil || .in(5, 7))
-        // validate that the profile picture is nil or a valid URL
-        validations.add("profilePictureURL", as: String?.self, is: .url || .nil)
-        validations.add("preferredColors", as: [String].self, is: !.empty)
-        // pet validations
-        validations.add("pet", "name", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
-        validations.add("pet", "age", as: Int.self, is: .range(3...))
-        print(validations)
-        return validations
+    static func validations() -> [Validation] {
+        [
+            // validate name is at least 5 characters and alphanumeric
+            Validation(key: "name", as: String.self, validator: .count(5...) && .alphanumeric),
+            // validate age is 18 or older
+            Validation(key: "age", as: Int.self, validator: .range(18...)),
+            // validate the email is valid and is not nil
+//            Validation(key: "email", as: String?.self, validator: !.nil && .email),
+//            Validation(key: "email", as: String?.self, validator: .email && !.nil), // test other way
+            // validate the email is valid or is nil
+            Validation(key: "email", as: String?.self, validator: .nil || .email),
+            Validation(key: "email", as: String?.self, validator: .email || .nil), // test other way
+            // validate that the lucky number is nil or is 5 or 7
+            Validation(key: "luckyNumber", as: Int?.self, validator: .nil || .in(5, 7)),
+            // validate that the profile picture is nil or a valid URL
+            Validation(key: "profilePictureURL", as: String?.self, validator: .url || .nil),
+//            Validation(key: "preferredColors", as: [String].self, validator: !.empty),
+            // pet validations
+            Validation(key: "pet", validations: [
+                Validation(key: "name", as: String.self, validator: .count(5...) && .characterSet(.alphanumerics + .whitespaces)),
+                Validation(key: "age", as: Int.self, validator: .range(3...))
+            ])
+        ]
     }
 }

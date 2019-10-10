@@ -51,6 +51,11 @@ public struct Validation {
 }
 
 extension Sequence where Element == Validation {
+    public func validate(json: String) throws {
+        let decoder = try JSONDecoder().decode(DecoderUnwrapper.self, from: Data(json.utf8))
+        try self.validate(from: decoder.decoder)
+    }
+
     public func validate(from decoder: Decoder) throws {
         if let error = ValidationsError(try run(on: decoder.container(keyedBy: BasicCodingKey.self))) {
             throw error

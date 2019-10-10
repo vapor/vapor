@@ -1,7 +1,5 @@
-//import Validations
-
 extension Sequence where Element == Validation {
-    func validate(_ request: Request) throws {
+    public func validate(_ request: Request) throws {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableEntity)
         }
@@ -15,7 +13,7 @@ extension Sequence where Element == Validation {
 }
 
 extension Validatable {
-    static func validate(_ request: Request) throws {
+    public static func validate(_ request: Request) throws {
         try validations().validate(request)
     }
 }
