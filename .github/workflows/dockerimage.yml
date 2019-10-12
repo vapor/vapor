@@ -12,4 +12,4 @@ jobs:
     steps:
     - uses: actions/checkout@v1
     - name: swift test
-      run: docker run -it $(docker build -q .) test
+      run: docker run $(docker build -q .) test
