@@ -26,7 +26,7 @@ public struct ValidationsError: Error, CustomStringConvertible {
     public var description: String {
         describeFailures(String.init(describing:))
             .map { path, failures in
-                "\(path): [\(failures.joined(separator: ", "))]"
+                "\(path): \(failures.joined(separator: ", "))"
             }
             .joined(separator: "\n")
     }

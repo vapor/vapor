@@ -1,6 +1,12 @@
 import Vapor
 import XCTest
 
+extension CharacterSetValidatorFailure: CustomStringConvertible {
+    public var description: String {
+        "contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)"
+    }
+}
+
 class ValidationTests: XCTestCase {
     func testValidate() throws {
         let valid = """
@@ -33,7 +39,11 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertThrowsError(try User.validate(json: invalid)) { error in
-            XCTAssertEqual(error.localizedDescription, "name contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)")
+            guard let validationsError = error as? ValidationsError else {
+                XCTFail("error is not of type ValidationsError")
+                return
+            }
+            XCTAssertEqual(validationsError.description, "name: contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)")
         }
     }
 
