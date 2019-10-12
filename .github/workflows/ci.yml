@@ -37,15 +37,15 @@ jobs:
     - uses: actions/checkout@v1
     - name: build release
       run: docker run -v $(pwd):/app vapor/swift:5.1-xenial swift build --package-path /app -c release
-  macos:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: test
-      run: swift test
-  macos-release:
-    runs-on: macos-latest
-    steps:
-    - uses: actions/checkout@v1
-    - name: build release
-      run: swift build -c release
+  # macos:
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - name: test
+  #     run: swift test
+  # macos-release:
+  #   runs-on: macos-latest
+  #   steps:
+  #   - uses: actions/checkout@v1
+  #   - name: build release
+  #     run: swift build -c release

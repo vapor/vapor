@@ -1,7 +1,0 @@
-.git
-.build
-DerivedData
-Package.resolved
-*.xcodeproj
-.swiftpm
-
