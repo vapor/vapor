@@ -7,8 +7,6 @@
 //    let type: F.Type = F.self
 //}
 //
-//
-//
 ///// Inverts a validator
 //struct NotValidator<T: Decodable>: ValidatorType {
 //    /// See `ValidatorType`.

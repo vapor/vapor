@@ -10,8 +10,8 @@ extension Validator {
     }
 
     /// Validates that all characters in a `String` are in the supplied `CharacterSet`.
-    public static func characterSet(_ characterSet: CharacterSet) -> Validator<String> {
-        CharacterSetValidator(characterSet: characterSet).validator()
+    public static func characterSet(_ characterSet: Foundation.CharacterSet) -> Validator<String> {
+        CharacterSet(characterSet: characterSet).validator()
     }
 }
 
@@ -23,31 +23,36 @@ public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
     lhs.union(rhs)
 }
 
-public struct CharacterSetValidatorFailure: ValidatorFailure {
-    public let characterSet: CharacterSet
-    public let invalidSlice: Substring
-}
+extension Validator {
+    /// Validates that a `String` contains characters in a given `CharacterSet`
+    public struct CharacterSet: ValidatorType {
+        public struct Failure: ValidatorFailure {
+            public let characterSet: Foundation.CharacterSet
+            public let invalidSlice: Substring
+        }
 
-/// Validates that a `String` contains characters in a given `CharacterSet`
-struct CharacterSetValidator: ValidatorType {
+        /// `CharacterSet` to validate against.
+        let characterSet: Foundation.CharacterSet
 
-    /// `CharacterSet` to validate against.
-    let characterSet: CharacterSet
+        public init(characterSet: Foundation.CharacterSet) {
+            self.characterSet = characterSet
+        }
 
-    /// See `Validator`
-    func validate(_ s: String) -> CharacterSetValidatorFailure? {
-        if let range = s.rangeOfCharacter(from: characterSet.inverted) {
-            return .init(
-                characterSet: characterSet,
-                invalidSlice: s[range]
-            )
-        } else {
-            return nil
+        /// See `Validator`
+        public func validate(_ s: String) -> Failure? {
+            if let range = s.rangeOfCharacter(from: characterSet.inverted) {
+                return .init(
+                    characterSet: characterSet,
+                    invalidSlice: s[range]
+                )
+            } else {
+                return nil
+            }
         }
     }
 }
 
-private extension CharacterSet {
+private extension Foundation.CharacterSet {
     /// ASCII (byte 0..<128) character set.
     static var ascii: CharacterSet {
         CharacterSet(charactersIn: Unicode.Scalar(0)..<Unicode.Scalar(128))

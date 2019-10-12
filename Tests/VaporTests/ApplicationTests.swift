@@ -7,7 +7,7 @@ extension ValidationsError: AbortError {
     public var status: HTTPResponseStatus { .unprocessableEntity }
 }
 
-extension EmailValidatorFailure: CustomStringConvertible {
+extension Validator.Email.Failure: CustomStringConvertible {
     public var description: String {
         "is not a valid email address"
     }

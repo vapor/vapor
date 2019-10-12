@@ -1,22 +1,30 @@
 /// Combines two `Validator`s, succeeding if either of the `Validator`s does not fail.
 public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
-    return OrValidator(lhs: lhs, rhs: rhs).validator()
+    Validator.Or(lhs: lhs, rhs: rhs).validator()
 }
 
-/// Combines two validators, if either is true the validation will succeed.
-struct OrValidator<T: Decodable>: ValidatorType {
-    /// left validator
-    let lhs: Validator<T>
+extension Validator {
 
-    /// right validator
-    let rhs: Validator<T>
+    /// Combines two validators, if either is true the validation will succeed.
+    struct Or: ValidatorType {
+        /// left validator
+        let lhs: Validator<T>
 
-    /// See Validator.validate
-    func validate(_ data: T) -> CompoundValidatorFailure? {
-        let failures = [lhs.validate(data), rhs.validate(data)].compactMap { $0 }
-        guard failures.count != 2 else {
-            return .init(failures: failures)
+        /// right validator
+        let rhs: Validator<T>
+
+        public init(lhs: Validator<T>, rhs: Validator<T>) {
+            self.lhs = lhs
+            self.rhs = rhs
         }
-        return nil
+
+        /// See Validator.validate
+        public func validate(_ data: T) -> CompoundValidatorFailure? {
+            let failures = [lhs.validate(data), rhs.validate(data)].compactMap { $0 }
+            guard failures.count != 2 else {
+                return .init(failures: failures)
+            }
+            return nil
+        }
     }
 }

@@ -1,7 +1,7 @@
 import Vapor
 import XCTest
 
-extension CharacterSetValidatorFailure: CustomStringConvertible {
+extension Validator.CharacterSet.Failure: CustomStringConvertible {
     public var description: String {
         "contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)"
     }
