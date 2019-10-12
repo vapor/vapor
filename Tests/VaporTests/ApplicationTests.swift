@@ -397,18 +397,18 @@ final class ApplicationTests: XCTestCase {
     func testWebSocketClient() throws {
         let app = Application.create(routes: { r, c in
             r.get("ws") { req -> EventLoopFuture<String> in
-                let promise = req.eventLoop.makePromise(of: String.self)
-                WebSocket.connect(
+                return WebSocket.connect(
                     to: "ws://echo.websocket.org/",
                     on: req.eventLoop
-                ) { ws in
+                ).flatMap { ws in
                     ws.send("Hello, world!")
+                    let promise = req.eventLoop.makePromise(of: String.self)
                     ws.onText { ws, text in
                         promise.succeed(text)
                         ws.close().cascadeFailure(to: promise)
                     }
-                }.cascadeFailure(to: promise)
-                return promise.futureResult
+                    return promise.futureResult
+                }
             }
         })
         defer { app.shutdown() }
@@ -1105,13 +1105,15 @@ final class ApplicationTests: XCTestCase {
         let server = try app.testable().start()
         defer { server.shutdown() }
 
-        let future = WebSocket.connect(
-            to: "ws://localhost:8085/foo",
-            on: app.eventLoopGroup
-        ) { ws in
-            XCTFail("Should not have connected")
+        do {
+            _ = try WebSocket.connect(
+                to: "ws://localhost:8085/foo",
+                on: app.eventLoopGroup
+            ).wait()
+            XCTFail("should have failed")
+        } catch {
+            // pass
         }
-        XCTAssertThrowsError(try future.wait())
     }
 
     func testClientBeforeSend() throws {
@@ -1173,15 +1175,16 @@ final class ApplicationTests: XCTestCase {
         defer { server.shutdown() }
 
         var string: String? = nil
-        try WebSocket.connect(
+        let ws = try WebSocket.connect(
             to: "ws://localhost:8080/foo",
             on: app.eventLoopGroup
-        ) { ws in
-            // do nothing
-            ws.onText { ws, s in
-                string = s
-            }
-        }.wait()
+        ).wait()
+
+        // do nothing
+        ws.onText { ws, s in
+            string = s
+        }
+        try ws.onClose.wait()
 
         XCTAssertEqual(string, "foo")
     }
