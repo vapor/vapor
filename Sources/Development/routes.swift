@@ -57,7 +57,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         ws.onText { ws, text in
             ws.send(text.reversed())
             if text == "close" {
-                ws.close(code: nil, promise: nil)
+                ws.close(promise: nil)
             }
         }
 
