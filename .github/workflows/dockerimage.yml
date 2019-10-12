@@ -1,4 +1,4 @@
-name: Docker Image CI
+name: Test
 on:
   push:
     branches:
@@ -7,9 +7,9 @@ on:
     branches:
     - master
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v1
-    - name: Build the Docker image
-      run: docker build . --file Dockerfile --tag my-image-name:$(date +%s)
+    - name: swift test
+      run: docker run -it $(docker build -q .) test
