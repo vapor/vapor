@@ -15,37 +15,6 @@ final class ApplicationTests: XCTestCase {
         running.stop()
         try running.onStop.wait()
     }
-    
-//    func testURLSession() throws {
-//        let app = Application.create(routes: { r, c in
-//            let client = try c.make(URLSession.self)
-//            r.get("client") { request -> EventLoopFuture<String> in
-//                let promise = request.eventLoop.makePromise(of: String.self)
-//                let url = URL(string: "http://httpbin.org/status/201")!
-//                client.dataTask(with: URLRequest(url: url)) { data, response, error in
-//                    if let error = error {
-//                        promise.fail(error)
-//                    } else if let response = response as? HTTPURLResponse {
-//                        promise.succeed(response.statusCode.description)
-//                    } else {
-//                        promise.fail(Abort(.internalServerError))
-//                    }
-//                }.resume()
-//                return promise.futureResult
-//            }
-//        })
-//        defer { app.shutdown() }
-//
-//        try app.testable().inMemory()
-//            .test(.GET, "/client") { res in
-//                XCTAssertEqual(res.status, .ok)
-//                XCTAssertEqual(res.body.string, "201")
-//            }
-//            .test(.GET, "/foo") { res in
-//                XCTAssertEqual(res.status, .notFound)
-//                XCTAssertContains(res.body.string, "Not Found")
-//            }
-//    }
 
     func testContent() throws {
         let request = Request(
