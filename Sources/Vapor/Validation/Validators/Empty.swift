@@ -18,3 +18,10 @@ extension Validator {
         }
     }
 }
+
+extension Validator.Empty.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        "is not empty"
+    }
+}

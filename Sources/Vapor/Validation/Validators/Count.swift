@@ -20,7 +20,6 @@ extension Validator where T: Collection {
     }
 }
 
-
 /// Validates whether the item's count is within a supplied int range.
 extension Validator where T: Collection {
     public struct Count: ValidatorType {
@@ -53,6 +52,26 @@ extension Validator where T: Collection {
             }
 
             return nil
+        }
+    }
+}
+
+extension Validator.Count.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        switch self {
+        case .greaterThan(let max):
+            return "is greater than required maximum of \(elementDescription(count: max))"
+        case .lessThan(let min):
+            return "is less than required minimum of \(elementDescription(count: min))"
+        }
+    }
+
+    private func elementDescription(count: Int) -> String {
+        if T.Element.self is Character.Type {
+            return count == 1 ? "1 character" : "\(count) characters"
+        } else {
+            return count == 1 ? "1 item" : "\(count) items"
         }
     }
 }

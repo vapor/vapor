@@ -13,19 +13,31 @@ extension Validator where T: Equatable {
 extension Validator {
     /// Validates whether an item is contained in the supplied array.
     public struct In<T: Decodable & Equatable>: ValidatorType {
-        public struct Failure: ValidatorFailure {}
+        public struct Failure: ValidatorFailure {
+            let elementDescriptions: () -> [String]
+        }
 
         /// Array to check against.
         let contains: (T) -> Bool
+        let elementDescriptions: () -> [String]
 
         /// Creates a new `InValidator`.
         public init<S: Sequence>(_ sequence: S) where S.Element == T {
             contains = sequence.contains
+            elementDescriptions = { sequence.map(String.init(describing:)) }
         }
 
         /// See `Validator`.
         public func validate(_ item: T) -> Failure? {
-            contains(item) ? nil : .init()
+            contains(item) ? nil : .init(elementDescriptions: elementDescriptions)
         }
     }
 }
+
+extension Validator.In.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        "is not in: \(elementDescriptions().joined(separator: ", "))"
+    }
+}
+

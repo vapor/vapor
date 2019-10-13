@@ -31,3 +31,10 @@ extension Validator {
         }
     }
 }
+
+extension Validator.URL.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        "is not a valid URL"
+    }
+}

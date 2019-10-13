@@ -17,3 +17,11 @@ extension Validator {
         }
     }
 }
+
+extension Validator.Nil.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        "is not nil"
+    }
+}
+

@@ -1,12 +1,6 @@
 import Vapor
 import XCTest
 
-extension Validator.CharacterSet.Failure: CustomStringConvertible {
-    public var description: String {
-        "contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)"
-    }
-}
-
 class ValidationTests: XCTestCase {
     func testValidate() throws {
         let valid = """

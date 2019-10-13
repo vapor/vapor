@@ -7,12 +7,6 @@ extension ValidationsError: AbortError {
     public var status: HTTPResponseStatus { .unprocessableEntity }
 }
 
-extension Validator.Email.Failure: CustomStringConvertible {
-    public var description: String {
-        "is not a valid email address"
-    }
-}
-
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])

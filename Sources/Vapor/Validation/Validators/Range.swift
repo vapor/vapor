@@ -59,3 +59,15 @@ extension Validator where T: Comparable {
         }
     }
 }
+
+extension Validator.Range.Failure: CustomStringConvertible {
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        switch self {
+        case .greaterThan(let max):
+            return "is greater than \(max)"
+        case .lessThan(let min):
+            return "is less than \(min)"
+        }
+    }
+}
