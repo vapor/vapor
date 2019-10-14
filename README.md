@@ -43,6 +43,17 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/vapor/vapor/blob/master/Docs/code_of_conduct.md) during your interactions surrounding this project.
 
+### 💛 Sponsors
+
+Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsors).
+
+<a href="http://nodesagency.com">
+    <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
+</a>
+<a href="https://www.skelpo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
+</a>
+
 ### 💚 Backers
 
 Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsors).
@@ -99,17 +110,4 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 <a href="https://opencollective.com/vapor/backer/46/website" target="_blank"><img src="https://opencollective.com/vapor/backer/46/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/47/website" target="_blank"><img src="https://opencollective.com/vapor/backer/47/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/48/website" target="_blank"><img src="https://opencollective.com/vapor/backer/48/avatar.svg"></a>
-
-### 💛 Sponsors
-
-Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsors).
-
-<a href="http://nodesagency.com">
-    <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
-</a>
-
-<a href="https://www.skelpo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
-</a>
-
 [![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()
