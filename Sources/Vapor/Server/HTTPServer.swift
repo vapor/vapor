@@ -76,7 +76,7 @@ public final class HTTPServer: Server {
             hostname: String = "127.0.0.1",
             port: Int = 8080,
             backlog: Int = 256,
-            maxBodySize: Int = 1_000_000,
+            maxBodySize: Int = 1 << 14,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
