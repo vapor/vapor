@@ -1,0 +1,28 @@
+name: test
+on:
+- pull_request
+jobs:
+  xenial:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: docker://vapor/swift:5.1-xenial
+      with:
+        entrypoint: swift
+        args: test
+  bionic:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: docker://vapor/swift:5.1-bionic
+      with:
+        entrypoint: swift
+        args: test
+  thread:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - uses: docker://vapor/swift:5.1
+      with:
+        entrypoint: swift
+        args: test --sanitize=thread

@@ -7,7 +7,7 @@ public struct PlaintextRenderer: ViewRenderer {
         threadPool: NIOThreadPool,
         viewsDirectory: String,
         eventLoop: EventLoop
-        ) {
+    ) {
         self.fileio = .init(threadPool: threadPool)
         self.viewsDirectory = viewsDirectory.finished(with: "/")
         self.eventLoop = eventLoop
