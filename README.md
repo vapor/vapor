@@ -79,6 +79,25 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 <a href="https://opencollective.com/vapor/backer/27/website" target="_blank"><img src="https://opencollective.com/vapor/backer/27/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/28/website" target="_blank"><img src="https://opencollective.com/vapor/backer/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/29/website" target="_blank"><img src="https://opencollective.com/vapor/backer/29/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/30/website" target="_blank"><img src="https://opencollective.com/vapor/backer/30/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/31/website" target="_blank"><img src="https://opencollective.com/vapor/backer/31/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/32/website" target="_blank"><img src="https://opencollective.com/vapor/backer/32/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/33/website" target="_blank"><img src="https://opencollective.com/vapor/backer/33/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/34/website" target="_blank"><img src="https://opencollective.com/vapor/backer/34/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/35/website" target="_blank"><img src="https://opencollective.com/vapor/backer/35/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/36/website" target="_blank"><img src="https://opencollective.com/vapor/backer/36/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/37/website" target="_blank"><img src="https://opencollective.com/vapor/backer/37/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/38/website" target="_blank"><img src="https://opencollective.com/vapor/backer/38/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/39/website" target="_blank"><img src="https://opencollective.com/vapor/backer/39/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/40/website" target="_blank"><img src="https://opencollective.com/vapor/backer/40/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/41/website" target="_blank"><img src="https://opencollective.com/vapor/backer/41/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/42/website" target="_blank"><img src="https://opencollective.com/vapor/backer/42/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/43/website" target="_blank"><img src="https://opencollective.com/vapor/backer/43/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/44/website" target="_blank"><img src="https://opencollective.com/vapor/backer/44/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/45/website" target="_blank"><img src="https://opencollective.com/vapor/backer/45/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/46/website" target="_blank"><img src="https://opencollective.com/vapor/backer/46/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/47/website" target="_blank"><img src="https://opencollective.com/vapor/backer/47/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/48/website" target="_blank"><img src="https://opencollective.com/vapor/backer/48/avatar.svg"></a>
 
 ### 💛 Sponsors
 
