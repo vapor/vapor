@@ -105,11 +105,11 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 Vapor is proudly sponsored by [Nodes](http://nodesagency.com) and [Skelpo](https://www.skelpo.com). Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsors).
 
 <a href="http://nodesagency.com">
-    <img src="https://user-images.githubusercontent.com/1342803/66773193-84103e80-ee8c-11e9-956f-9f950bbc5dc9.png" width="300" alt="Nodes">
+    <img src="https://user-images.githubusercontent.com/1342803/66773394-dbaeaa00-ee8c-11e9-800b-19be023e7d26.png" height="300px" alt="Nodes">
 </a>
 
 <a href="https://www.skelpo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="200" alt="Skelpo">
+    <img src="https://user-images.githubusercontent.com/1342803/66773429-f1bc6a80-ee8c-11e9-878b-7925ee553a67.png" height="300px" alt="Skelpo">
 </a>
 
 [![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()
