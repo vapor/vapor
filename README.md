@@ -39,17 +39,15 @@ If you find a **bug**, please [create an issue](https://github.com/vapor/vapor/i
 
 If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible.
 
-### 💙 Code of Conduct
+### 🤝 Code of Conduct
 
 Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/vapor/vapor/blob/master/Docs/code_of_conduct.md) during your interactions surrounding this project.
 
-### 🏫 Tutorials
+### 💚 Backers
 
-The awesome Vapor community is always adding new tutorials and articles out there, [Vapor University](http://vapor.university) is a great place to get started!
+Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsors).
 
-### 👥 Backers
-
-Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/vapor#backer)]
+<a href="https://github.com/tkrajacic"><img src="https://avatars3.githubusercontent.com/u/873717?s=120" width="60px"></a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/1/website" target="_blank"><img src="https://opencollective.com/vapor/backer/1/avatar.svg"></a>
@@ -81,29 +79,6 @@ Support us with a monthly donation and help us continue our activities. [[Become
 <a href="https://opencollective.com/vapor/backer/27/website" target="_blank"><img src="https://opencollective.com/vapor/backer/27/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/28/website" target="_blank"><img src="https://opencollective.com/vapor/backer/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/29/website" target="_blank"><img src="https://opencollective.com/vapor/backer/29/avatar.svg"></a>
-
-
-### 🥇 Sponsors
-
-Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://www.skelpo.com) (🥉), and our [Open Collective sponsors](https://opencollective.com/vapor#sponsor).
-
-- 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
-- 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
-- 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
-- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor)
-
-<a href="http://nodesagency.com">
-    <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
-</a>
-
-<br>
-
-<a href="https://www.skelpo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
-</a>
-
-<br>
-<br>
 
 <a href="http://dominickm.com" target="_blank">
     <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">
@@ -138,5 +113,20 @@ Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://ww
 <a href="https://opencollective.com/vapor/sponsor/27/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/27/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/28/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/sponsor/29/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/29/avatar.svg"></a>
+
+
+### 💛 Sponsors
+
+Vapor is proudly sponsored by [Nodes](http://nodesagency.com) and [Skelpo](https://www.skelpo.com).
+
+Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsors).
+
+<a href="http://nodesagency.com">
+    <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="300" alt="Nodes">
+</a>
+
+<a href="https://www.skelpo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="200" alt="Skelpo">
+</a>
 
 [![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()
