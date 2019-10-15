@@ -1,4 +1,7 @@
 @_exported import AsyncKit
+
+@_exported import class AsyncHTTPClient.HTTPClient
+
 @_exported import OpenCrypto
 @_exported import RoutingKit
 @_exported import ConsoleKit
@@ -26,4 +29,4 @@
 @_exported import struct NIOHTTP1.HTTPVersion
 @_exported import enum NIOHTTP1.HTTPResponseStatus
 
-@_exported import class AsyncHTTPClient.HTTPClient
+@_exported import WebSocketKit

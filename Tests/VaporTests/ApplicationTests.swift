@@ -15,37 +15,6 @@ final class ApplicationTests: XCTestCase {
         running.stop()
         try running.onStop.wait()
     }
-    
-//    func testURLSession() throws {
-//        let app = Application.create(routes: { r, c in
-//            let client = try c.make(URLSession.self)
-//            r.get("client") { request -> EventLoopFuture<String> in
-//                let promise = request.eventLoop.makePromise(of: String.self)
-//                let url = URL(string: "http://httpbin.org/status/201")!
-//                client.dataTask(with: URLRequest(url: url)) { data, response, error in
-//                    if let error = error {
-//                        promise.fail(error)
-//                    } else if let response = response as? HTTPURLResponse {
-//                        promise.succeed(response.statusCode.description)
-//                    } else {
-//                        promise.fail(Abort(.internalServerError))
-//                    }
-//                }.resume()
-//                return promise.futureResult
-//            }
-//        })
-//        defer { app.shutdown() }
-//
-//        try app.testable().inMemory()
-//            .test(.GET, "/client") { res in
-//                XCTAssertEqual(res.status, .ok)
-//                XCTAssertEqual(res.body.string, "201")
-//            }
-//            .test(.GET, "/foo") { res in
-//                XCTAssertEqual(res.status, .notFound)
-//                XCTAssertContains(res.body.string, "Not Found")
-//            }
-//    }
 
     func testContent() throws {
         let request = Request(
@@ -397,8 +366,8 @@ final class ApplicationTests: XCTestCase {
     func testWebSocketClient() throws {
         let app = Application.create(routes: { r, c in
             r.get("ws") { req -> EventLoopFuture<String> in
-                let promise = req.eventLoop.makePromise(of: String.self)
-                WebSocket.connect(
+            let promise = req.eventLoop.makePromise(of: String.self)
+                return WebSocket.connect(
                     to: "ws://echo.websocket.org/",
                     on: req.eventLoop
                 ) { ws in
@@ -407,8 +376,9 @@ final class ApplicationTests: XCTestCase {
                         promise.succeed(text)
                         ws.close().cascadeFailure(to: promise)
                     }
-                }.cascadeFailure(to: promise)
-                return promise.futureResult
+                }.flatMap {
+                    return promise.futureResult
+                }
             }
         })
         defer { app.shutdown() }
@@ -1097,7 +1067,7 @@ final class ApplicationTests: XCTestCase {
     func testWebSocket404() throws {
         let app = Application.create(routes: { r, c in
             r.webSocket("bar") { req, ws in
-                ws.close(code: nil, promise: nil)
+                ws.close(promise: nil)
             }
         })
         defer { app.shutdown() }
@@ -1105,13 +1075,15 @@ final class ApplicationTests: XCTestCase {
         let server = try app.testable().start()
         defer { server.shutdown() }
 
-        let future = WebSocket.connect(
-            to: "ws://localhost:8085/foo",
-            on: app.eventLoopGroup
-        ) { ws in
-            XCTFail("Should not have connected")
+        do {
+            try WebSocket.connect(
+                to: "ws://localhost:8085/foo",
+                on: app.eventLoopGroup
+            ) { _ in  }.wait()
+            XCTFail("should have failed")
+        } catch {
+            // pass
         }
-        XCTAssertThrowsError(try future.wait())
     }
 
     func testClientBeforeSend() throws {
@@ -1164,26 +1136,26 @@ final class ApplicationTests: XCTestCase {
         let app = Application.create(routes: { (r, c) in
             r.webSocket("foo") { req, ws in
                 ws.send("foo")
-                ws.close(code: .normalClosure, promise: nil)
+                ws.close(promise: nil)
             }
         })
         defer { app.shutdown() }
 
-        let server = try app.testable().start(method: .running)
+        let server = try app.testable().start(method: .running(port: 8080))
         defer { server.shutdown() }
 
-        var string: String? = nil
-        try WebSocket.connect(
+        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+        WebSocket.connect(
             to: "ws://localhost:8080/foo",
             on: app.eventLoopGroup
         ) { ws in
             // do nothing
-            ws.onText { ws, s in
-                string = s
+            ws.onText { ws, string in
+                promise.succeed(string)
             }
-        }.wait()
+        }.cascadeFailure(to: promise)
 
-        XCTAssertEqual(string, "foo")
+        try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
     func testPortOverride() throws {

@@ -55,10 +55,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     let webSocketUpgrader = NIOWebSocketServerUpgrader(shouldUpgrade: { channel, _ in
                         return channel.eventLoop.makeSucceededFuture([:])
                     }, upgradePipelineHandler: { channel, req in
-                        let webSocket = WebSocket(channel: channel)
-                        return webSocket.addHandler(to: channel.pipeline).map {
-                            onUpgrade(webSocket)
-                        }
+                        return WebSocket.server(on: channel, onUpgrade: onUpgrade)
                     })
 
                     var head = HTTPRequestHead(

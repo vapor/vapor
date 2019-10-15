@@ -142,7 +142,7 @@ extension Services {
         }
         s.register(PlaintextRenderer.self) { c in
             return try PlaintextRenderer(
-                threadPool: c.make(NIOThreadPool.self),
+                threadPool: c.application.threadPool,
                 viewsDirectory: c.make(DirectoryConfiguration.self).viewsDirectory,
                 eventLoop: c.eventLoop
             )
