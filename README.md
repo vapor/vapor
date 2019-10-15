@@ -52,9 +52,10 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 
 ### 💚 Backers
 Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
+
 <a href="https://github.com/tkrajacic"><img src="https://avatars3.githubusercontent.com/u/873717?s=120" width="60px"></a>
-<a href="https://github.com/slashmo"><img src="https://avatars3.githubusercontent.com/u/16192401?s=120" width="60px"></a>>
-<a href="https://github.com/ScottRobbins"><img src="https://avatars3.githubusercontent.com/u/6894359?s=120" width="60px"></a>>
+<a href="https://github.com/slashmo"><img src="https://avatars3.githubusercontent.com/u/16192401?s=120" width="60px"></a>
+<a href="https://github.com/ScottRobbins"><img src="https://avatars3.githubusercontent.com/u/6894359?s=120" width="60px"></a>
 <a href="https://github.com/ksmandersen"><img src="https://avatars3.githubusercontent.com/u/178181?s=120" width="60px"></a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
