@@ -736,14 +736,12 @@ final class ApplicationTests: XCTestCase {
                 self.registerFlag = true
             }
 
-            func willBoot(_ c: Container) -> EventLoopFuture<Void> {
+            func willBoot(_ c: Container) throws {
                 self.willBootFlag = true
-                return c.eventLoop.makeSucceededFuture(())
             }
 
-            func didBoot(_ c: Container) -> EventLoopFuture<Void> {
+            func didBoot(_ c: Container) throws {
                 self.didBootFlag = true
-                return c.eventLoop.makeSucceededFuture(())
             }
 
             func willShutdown(_ c: Container) {
@@ -768,7 +766,7 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        let container = try app.makeContainer().wait()
+        let container = try app.makeContainer()
 
         XCTAssertEqual(foo.registerFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
@@ -1124,7 +1122,7 @@ final class ApplicationTests: XCTestCase {
         })
         defer { app.shutdown() }
 
-        let container = try app.makeContainer().wait()
+        let container = try app.makeContainer()
         let foo = try container.make(Foo.self)
         XCTAssertEqual(foo.didShutdown, false)
         container.shutdown()

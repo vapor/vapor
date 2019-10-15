@@ -53,30 +53,12 @@ public final class HTTPServer: Server {
         
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
-        
-        /// Creates a new `HTTPServerConfig`.
-        ///
-        /// - parameters:
-        ///     - hostname: Socket hostname to bind to. Usually `localhost` or `::1`.
-        ///     - port: Socket port to bind to. Usually `8080` for development and `80` for production.
-        ///     - backlog: OS socket backlog size.
-        ///     - workerCount: Number of `Worker`s to use for responding to incoming requests.
-        ///                    This should be (and is by default) equal to the number of logical cores.
-        ///     - maxBodySize: Requests with bodies larger than this maximum will be rejected.
-        ///                    Streaming bodies, like chunked bodies, ignore this maximum.
-        ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
-        ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
-        ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
-        ///     - supportCompression: When `true`, HTTP server will support gzip and deflate compression.
-        ///     - supportPipelining: When `true`, HTTP server will support pipelined requests.
-        ///     - serverName: If set, this name will be serialized as the `Server` header in outgoing responses.
-        ///     - upgraders: An array of `HTTPProtocolUpgrader` to check for with each request.
-        ///     - logger: Any uncaught server or responder errors will be logged here.
+
         public init(
             hostname: String = "127.0.0.1",
             port: Int = 8080,
             backlog: Int = 256,
-            maxBodySize: Int = 1_000_000,
+            maxBodySize: Int = 1 << 14,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
@@ -125,7 +107,7 @@ public final class HTTPServer: Server {
     init(application: Application, configuration: Configuration) {
         self.application = application
         self.configuration = configuration
-        self.responder = .init(application: application)
+        self.responder = .init()
         self.didStart = false
         self.didShutdown = false
     }
@@ -141,6 +123,10 @@ public final class HTTPServer: Server {
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
         self.application.logger.info("Server starting on \(address)")
+
+        // initializer the responder threads
+        try self.responder.initialize(using: self.application)
+        
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
             responder: self.responder,
@@ -186,30 +172,32 @@ public final class HTTPServer: Server {
 }
 
 private final class HTTPServerResponder: Responder {
-    let application: Application
     private let responderCache: ThreadSpecificVariable<ResponderCache>
     private var containers: [Container]
     
-    init(application: Application) {
-        self.application = application
+    init() {
         self.responderCache = .init()
         self.containers = []
+    }
+
+    func initialize(using application: Application) throws {
+        var it = application.eventLoopGroup.makeIterator()
+        while let eventLoop = it.next() {
+            let container = try application.makeContainer(on: eventLoop)
+            self.containers.append(container)
+            let responder = try container.make(Responder.self)
+            _ = eventLoop.submit {
+                self.responderCache.currentValue = .init(responder: responder)
+            }
+        }
     }
     
     func respond(to request: Request) -> EventLoopFuture<Response> {
         request.logger.info("\(request.method) \(request.url)")
-        if let responder = self.responderCache.currentValue?.responder {
-            return responder.respond(to: request)
-        } else {
-            return application.makeContainer(on: request.eventLoop).flatMapThrowing { container -> Responder in
-                self.containers.append(container)
-                let responder = try container.make(Responder.self)
-                self.responderCache.currentValue = ResponderCache(responder: responder)
-                return responder
-            }.flatMap { responder in
-                return responder.respond(to: request)
-            }
+        guard let responder = self.responderCache.currentValue?.responder else {
+            fatalError("Responder not initialized")
         }
+        return responder.respond(to: request)
     }
     
     func shutdown() {
