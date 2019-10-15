@@ -5,11 +5,11 @@ extension CommandConfiguration {
     ///         return try .default(on: c)
     ///     }
     ///
-    public static func `default`(on c: Container) throws -> CommandConfiguration {
+    public static func `default`(on app: Application) throws -> CommandConfiguration {
         var config = CommandConfiguration()
-        try config.use(c.make(ServeCommand.self), as: "serve", isDefault: true)
-        try config.use(c.make(RoutesCommand.self), as: "routes")
-        try config.use(c.make(BootCommand.self), as: "boot")
+        try config.use(app.make(ServeCommand.self), as: "serve", isDefault: true)
+        try config.use(app.make(RoutesCommand.self), as: "routes")
+        try config.use(app.make(BootCommand.self), as: "boot")
         return config
     }
 }

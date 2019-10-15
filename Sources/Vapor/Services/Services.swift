@@ -47,24 +47,67 @@
 ///
 /// See `Container` for more information.
 public struct Services: CustomStringConvertible {
-    /// All registered services.
     var factories: [ServiceID: Any]
-
-    /// All registered service providers. These are stored so that their lifecycle methods can be called later.
-    var providers: [Provider]
-    
     var extensions: [ServiceID: [Any]]
+    var providers: [Provider]
 
     // MARK: Init
 
     /// Creates a new `Services`.
     public init() {
         self.factories = [:]
-        self.providers = []
         self.extensions = [:]
+        self.providers = []
     }
 
-    // MARK: Instance
+    // MARK: CustomStringConvertible
+
+    /// See `CustomStringConvertible`.
+    public var description: String {
+        var desc: [String] = []
+
+        desc.append("Services:")
+        if factories.isEmpty {
+            desc.append("<none>")
+        } else {
+            for (id, _) in self.factories {
+                desc.append("- \(id.type)")
+            }
+        }
+
+        desc.append("Providers:")
+        if providers.isEmpty {
+            desc.append("- none")
+        } else {
+            for provider in self.providers {
+                desc.append("- \(type(of: provider))")
+            }
+        }
+
+        return desc.joined(separator: "\n")
+    }
+}
+
+extension Application {
+    // MARK: Services
+
+    /// Registers a `Provider` to the services. This will automatically register all of the `Provider`'s available
+    /// services. It will also store the provider so that its lifecycle methods can be called later.
+    ///
+    ///     try app.register(PrintLoggerProvider())
+    ///
+    /// See `Provider` for more information.
+    ///
+    /// - parameters:
+    ///     - provider: Initialized `Provider` to register.
+    /// - throws: The provider can throw errors while registering services.
+    public func provider<P>(_ provider: P) where P: Provider {
+        guard !self.providers.contains(where: { Swift.type(of: $0) == P.self }) else {
+            return
+        }
+        provider.register(self)
+        self.services.providers.append(provider)
+    }
     
     /// Registers a pre-initialized instance of a `Service` conforming to a single interface to the `Services`.
     ///
@@ -76,8 +119,8 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - instance: Pre-initialized `Service` instance to register.
     ///     - interface: An interface that this `Service` supports (besides its own type).
-    public mutating func instance<S>(_ instance: S) {
-        return self.instance(S.self, instance)
+    public func register<S>(instance: S) {
+        return self.register(instance: S.self, instance)
     }
 
     /// Registers a pre-initialized instance of a `Service` conforming to a single interface to the `Services`.
@@ -90,48 +133,21 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - instance: Pre-initialized `Service` instance to register.
     ///     - interface: An interface that this `Service` supports (besides its own type).
-    public mutating func instance<S>(_ interface: S.Type, _ instance: S) {
+    public func register<S>(instance interface: S.Type, _ instance: S) {
         let id = ServiceID(S.self)
         let factory = ServiceFactory(cache: .none, boot: { c in
             return instance
         }, shutdown: { service in
             // do nothing
         })
-        self.factories[id] = factory
+        self.services.factories[id] = factory
     }
 
-    // MARK: Global
-
-
-
-    public mutating func global<S>(
-        _ interface: S.Type,
+    public func register<S>(
+        singleton interface: S.Type,
         _ closure: @escaping (Application) throws -> (S)
     ) {
-        return self.global(S.self, boot: closure, shutdown: { _ in })
-    }
-
-
-
-    public mutating func global<S>(
-        _ interface: S.Type,
-        boot: @escaping (Application) throws -> (S),
-        shutdown: @escaping (S) throws -> ()
-    ) {
-        let id = ServiceID(S.self)
-        let factory = ServiceFactory(cache: .application, boot: { c in
-            return try boot(c.application)
-        }, shutdown: shutdown)
-        self.factories[id] = factory
-    }
-
-    // MARK: Singleton
-
-    public mutating func singleton<S>(
-        _ interface: S.Type,
-        _ closure: @escaping (Container) throws -> (S)
-    ) {
-        return self.singleton(S.self, boot: closure, shutdown: { _ in })
+        return self.register(singleton: S.self, boot: closure, shutdown: { _ in })
     }
 
     /// Registers a new singleton service. Singleton services are created only once per container.
@@ -152,10 +168,10 @@ public struct Services: CustomStringConvertible {
     ///         return .init()
     ///     }
     ///
-    ///     let c: Container ...
-    ///     try c.make(Counter.self).count += 1
-    ///     try c.make(Counter.self).count += 1
-    ///     try print(c.make(Counter.self).count) // 2
+    ///     let app: Application ...
+    ///     try app.make(Counter.self).count += 1
+    ///     try app.make(Counter.self).count += 1
+    ///     try print(app.make(Counter.self).count) // 2
     ///
     /// - warning: Storing references to `Container` from a singleton service will
     ///            create a reference cycle.
@@ -165,14 +181,14 @@ public struct Services: CustomStringConvertible {
     ///     - boot: Creates an instance of the service type using the container to locate
     ///                any required dependencies.
     ///     - shutdown: Cleans up the created service.
-    public mutating func singleton<S>(
-        _ interface: S.Type,
-        boot: @escaping (Container) throws -> (S),
+    public func register<S>(
+        singleton interface: S.Type,
+        boot: @escaping (Application) throws -> (S),
         shutdown: @escaping (S) throws -> ()
     ) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(cache: .container, boot: boot, shutdown: shutdown)
-        self.factories[id] = factory
+        let factory = ServiceFactory(cache: .application, boot: boot, shutdown: shutdown)
+        self.services.factories[id] = factory
     }
 
     /// Registers a `Service` creating closure (service factory) conforming to a single interface to the `Services`.
@@ -194,70 +210,20 @@ public struct Services: CustomStringConvertible {
     /// - parameters:
     ///     - interfaces: Zero or more interfaces that this `Service` supports (besides its own type).
     ///     - factory: `Container` accepting closure that returns an initialized instance of this `Service`.
-    public mutating func register<S>(_ interface: S.Type, _ factory: @escaping (Container) throws -> (S)) {
+    public func register<S>(_ interface: S.Type, _ factory: @escaping (Application) throws -> (S)) {
         let id = ServiceID(S.self)
         let factory = ServiceFactory(cache: .none, boot: { c in
             return try factory(c)
         }, shutdown: { service in
             // do nothing
         })
-        self.factories[id] = factory
+        self.services.factories[id] = factory
     }
-
-    // MARK: Provider
-
-    /// Registers a `Provider` to the services. This will automatically register all of the `Provider`'s available
-    /// services. It will also store the provider so that its lifecycle methods can be called later.
-    ///
-    ///     try services.register(PrintLoggerProvider())
-    ///
-    /// See `Provider` for more information.
-    ///
-    /// - parameters:
-    ///     - provider: Initialized `Provider` to register.
-    /// - throws: The provider can throw errors while registering services.
-    public mutating func provider<P>(_ provider: P) where P: Provider {
-        guard !providers.contains(where: { Swift.type(of: $0) == P.self }) else {
-            return
-        }
-        provider.register(&self)
-        providers.append(provider)
-    }
-    
-    // MARK: Extend
     
     /// Adds a supplement closure for the given Service type
-    public mutating func extend<S>(_ service: S.Type, _ closure: @escaping (inout S, Container) throws -> Void) {
+    public func extend<S>(_ service: S.Type, _ closure: @escaping (inout S, Application) throws -> Void) {
         let id = ServiceID(S.self)
         let ext = ServiceExtension<S>(closure: closure)
-        self.extensions[id, default: []].append(ext)
-    }
-
-
-    // MARK: CustomStringConvertible
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        var desc: [String] = []
-
-        desc.append("Services:")
-        if factories.isEmpty {
-            desc.append("<none>")
-        } else {
-            for (id, _) in factories {
-                desc.append("- \(id.type)")
-            }
-        }
-
-        desc.append("Providers:")
-        if providers.isEmpty {
-            desc.append("- none")
-        } else {
-            for provider in providers {
-                desc.append("- \(type(of: provider))")
-            }
-        }
-
-        return desc.joined(separator: "\n")
+        self.services.extensions[id, default: []].append(ext)
     }
 }

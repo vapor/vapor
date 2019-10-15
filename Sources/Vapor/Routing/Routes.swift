@@ -1,10 +1,12 @@
-public final class Routes: RoutesBuilder {
+public final class Routes: RoutesBuilder, CustomStringConvertible {
     public var routes: [Route]
-    public var eventLoop: EventLoop
+
+    public var description: String {
+        return self.routes.description
+    }
     
-    public init(eventLoop: EventLoop) {
+    public init() {
         self.routes = []
-        self.eventLoop = eventLoop
     }
     
     public func add(_ route: Route) {

@@ -14,7 +14,7 @@ public final class XCTApplication {
     }
     
     public func override<S>(service: S.Type, with instance: S) -> Self {
-        self.application.services.register(S.self) { _ in
+        self.application.register(S.self) { _ in
             return instance
         }
         return self
@@ -29,30 +29,29 @@ public final class XCTApplication {
     }
 
     public func start(method: Method = .inMemory) throws -> XCTApplicationTester {
-        let container = try self.application.makeContainer()
         switch method {
         case .inMemory:
-            return try InMemory(container: container)
+            return try InMemory(app: self.application)
         case .running(let port):
-            return try Live(container: container, port: port)
+            return try Live(app: self.application, port: port)
         }
     }
     
     private struct Live: XCTApplicationTester {
-        let container: Container
+        let app: Application
         let server: Server
         let port: Int
 
-        init(container: Container, port: Int) throws {
-            self.container = container
+        init(app: Application, port: Int) throws {
+            self.app = app
             self.port = port
-            self.server = try container.make(Server.self)
+            self.server = try app.make(Server.self)
             try server.start(hostname: "localhost", port: port)
         }
 
         public func shutdown() {
             self.server.shutdown()
-            self.container.shutdown()
+            self.app.shutdown()
         }
         
         @discardableResult
@@ -86,14 +85,13 @@ public final class XCTApplication {
     }
 
     private struct InMemory: XCTApplicationTester {
-        let container: Container
-
-        init(container: Container) throws {
-            self.container = container
+        let app: Application
+        init(app: Application) throws {
+            self.app = app
         }
 
         public func shutdown() {
-            self.container.shutdown()
+            self.app.shutdown()
         }
 
         @discardableResult
@@ -106,7 +104,7 @@ public final class XCTApplication {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
-            let responder = try self.container.make(Responder.self)
+            let responder = try self.app.make(Responder.self)
             var headers = headers
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
@@ -118,7 +116,7 @@ public final class XCTApplication {
                 headers: headers,
                 collectedBody: body,
                 remoteAddress: nil,
-                on: self.container.eventLoop.next()
+                on: self.app.eventLoopGroup.next()
             )
             let res = try responder.respond(to: request).wait()
             response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)

@@ -5,7 +5,7 @@ struct Creds: Content {
     var password: String
 }
 
-public func routes(_ r: Routes, _ c: Container) throws {
+public func routes(_ r: Routes, _ app: Application) throws {
     r.on(.GET, "ping", body: .stream) { req in
         return "123" as StaticString
     }
@@ -82,14 +82,14 @@ public func routes(_ r: Routes, _ c: Container) throws {
     }
     
     r.get("shutdown") { req -> HTTPStatus in
-        guard let running = c.application.running else {
+        guard let running = app.running else {
             throw Abort(.internalServerError)
         }
         _ = running.stop()
         return .ok
     }
 
-    let cache = try c.make(MemoryCache.self)
+    let cache = try app.make(MemoryCache.self)
     r.get("cache", "get", ":key") { req -> String in
         guard let key = req.parameters.get("key") else {
             throw Abort(.internalServerError)
@@ -115,7 +115,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return req.query["q"] ?? "none"
     }
 
-    let sessions = try r.grouped("sessions").grouped(c.make(SessionsMiddleware.self))
+    let sessions = try r.grouped("sessions").grouped(app.make(SessionsMiddleware.self))
     sessions.get("get") { req -> String in
         return req.session.data["name"] ?? "n/a"
     }
@@ -129,7 +129,7 @@ public func routes(_ r: Routes, _ c: Container) throws {
         return "done"
     }
 
-    let client = try c.make(Client.self)
+    let client = try app.make(Client.self)
     r.get("client") { req in
         return client.get("http://httpbin.org/status/201").map { $0.description }
     }

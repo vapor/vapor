@@ -6,12 +6,12 @@ struct ServiceFactory<T> {
     }
     
     let cache: Cache
-    let boot: (Container) throws -> T
+    let boot: (Application) throws -> T
     let shutdown: (T) throws -> ()
     
     init(
         cache: Cache,
-        boot: @escaping (Container) throws -> T,
+        boot: @escaping (Application) throws -> T,
         shutdown: @escaping (T) throws -> ()
     ) {
         self.cache = cache

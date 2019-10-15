@@ -98,7 +98,6 @@ public final class HTTPServer: Server {
     
     private let application: Application
     private let configuration: Configuration
-    private let responder: HTTPServerResponder
     
     private var connection: HTTPServerConnection?
     private var didShutdown: Bool
@@ -107,7 +106,6 @@ public final class HTTPServer: Server {
     init(application: Application, configuration: Configuration) {
         self.application = application
         self.configuration = configuration
-        self.responder = .init()
         self.didStart = false
         self.didShutdown = false
     }
@@ -124,12 +122,11 @@ public final class HTTPServer: Server {
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
         self.application.logger.info("Server starting on \(address)")
 
-        // initializer the responder threads
-        try self.responder.initialize(using: self.application)
+        #warning("TODO: need application?")
         
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
-            responder: self.responder,
+            responder: self.application.make(Responder.self),
             configuration: configuration,
             on: self.application.eventLoopGroup
         ).wait()
@@ -163,56 +160,10 @@ public final class HTTPServer: Server {
         }
         self.application.logger.debug("Server shutting down")
         self.didShutdown = true
-        self.responder.shutdown()
     }
     
     deinit {
         assert(!self.didStart || self.didShutdown, "HTTPServer did not shutdown before deinitializing")
-    }
-}
-
-private final class HTTPServerResponder: Responder {
-    private let responderCache: ThreadSpecificVariable<ResponderCache>
-    private var containers: [Container]
-    
-    init() {
-        self.responderCache = .init()
-        self.containers = []
-    }
-
-    func initialize(using application: Application) throws {
-        var it = application.eventLoopGroup.makeIterator()
-        while let eventLoop = it.next() {
-            let container = try application.makeContainer(on: eventLoop)
-            self.containers.append(container)
-            let responder = try container.make(Responder.self)
-            _ = eventLoop.submit {
-                self.responderCache.currentValue = .init(responder: responder)
-            }
-        }
-    }
-    
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.logger.info("\(request.method) \(request.url)")
-        guard let responder = self.responderCache.currentValue?.responder else {
-            fatalError("Responder not initialized")
-        }
-        return responder.respond(to: request)
-    }
-    
-    func shutdown() {
-        let containers = self.containers
-        self.containers = []
-        for container in containers {
-            container.shutdown()
-        }
-    }
-}
-
-private final class ResponderCache {
-    var responder: Responder
-    init(responder: Responder) {
-        self.responder = responder
     }
 }
 

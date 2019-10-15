@@ -4,7 +4,7 @@ import COperatingSystem
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(environment: test)
+        let app = Application.default(environment: test)
         defer { app.shutdown() }
         try! app.boot()
         try! app.start()
@@ -732,19 +732,19 @@ final class ApplicationTests: XCTestCase {
             var didBootFlag: Bool = false
             var willShutdownFlag: Bool = false
 
-            func register(_ services: inout Services) {
+            func register(_ app: Application) {
                 self.registerFlag = true
             }
 
-            func willBoot(_ c: Container) throws {
+            func willBoot(_ app: Application) throws {
                 self.willBootFlag = true
             }
 
-            func didBoot(_ c: Container) throws {
+            func didBoot(_ app: Application) throws {
                 self.didBootFlag = true
             }
 
-            func willShutdown(_ c: Container) {
+            func willShutdown(_ app: Application) {
                 self.willShutdownFlag = true
             }
         }
@@ -755,26 +755,29 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootFlag, false)
         XCTAssertEqual(foo.willShutdownFlag, false)
 
-        let app = Application.create(configure: { s in
-            s.provider(foo)
-            XCTAssertEqual(foo.registerFlag, true)
-            XCTAssertEqual(foo.willBootFlag, false)
-            XCTAssertEqual(foo.didBootFlag, false)
-            XCTAssertEqual(foo.willShutdownFlag, false)
-        }, routes: { r, c in
-            // no routes
-        })
-        defer { app.shutdown() }
+        let app = Application()
 
-        let container = try app.makeContainer()
+        XCTAssertEqual(foo.registerFlag, false)
+        XCTAssertEqual(foo.willBootFlag, false)
+        XCTAssertEqual(foo.didBootFlag, false)
+        XCTAssertEqual(foo.willShutdownFlag, false)
+
+        app.provider(foo)
+
+        XCTAssertEqual(foo.registerFlag, true)
+        XCTAssertEqual(foo.willBootFlag, false)
+        XCTAssertEqual(foo.didBootFlag, false)
+        XCTAssertEqual(foo.willShutdownFlag, false)
+
+        try app.boot()
 
         XCTAssertEqual(foo.registerFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
         XCTAssertEqual(foo.willShutdownFlag, false)
 
-        container.shutdown()
-        
+        app.shutdown()
+
         XCTAssertEqual(foo.registerFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
@@ -912,12 +915,14 @@ final class ApplicationTests: XCTestCase {
         }
 
         var cookie: HTTPCookies.Value?
-        let app = Application.create(configure: { s in
-            s.register(Sessions.self) { c in
-                return MockKeyedCache(on: c.eventLoop)
-            }
-        }, routes: { r, c in
-            let sessions = try r.grouped(c.make(SessionsMiddleware.self))
+
+        let app = Application.default()
+        defer { app.shutdown() }
+        app.register(Sessions.self) { c in
+            return MockKeyedCache(on: c.eventLoopGroup.next())
+        }
+        app.extend(Routes.self) { routes, app in
+            let sessions = try routes.grouped(app.make(SessionsMiddleware.self))
             sessions.get("set") { req -> String in
                 req.session.data["foo"] = "bar"
                 return "set"
@@ -926,8 +931,8 @@ final class ApplicationTests: XCTestCase {
                 req.destroySession()
                 return "del"
             }
-        })
-        defer { app.shutdown() }
+        }
+        try app.boot()
 
         let server = try app.testable().start()
         defer { server.shutdown() }
@@ -1108,24 +1113,22 @@ final class ApplicationTests: XCTestCase {
         struct Bar { }
 
         let app = Application.create(configure: { s in
-            s.singleton(Foo.self, boot: { c in
+            s.register(singleton: Foo.self, boot: { c in
                 return Foo()
             }, shutdown: { foo in
                 foo.didShutdown = true
             })
             // test normal singleton method
-            s.singleton(Bar.self) { c in
+            s.register(Bar.self) { c in
                 return .init()
             }
         }, routes: { (r, c) in
             // no routes
         })
-        defer { app.shutdown() }
 
-        let container = try app.makeContainer()
-        let foo = try container.make(Foo.self)
+        let foo = try app.make(Foo.self)
         XCTAssertEqual(foo.didShutdown, false)
-        container.shutdown()
+        app.shutdown()
         XCTAssertEqual(foo.didShutdown, true)
     }
 
@@ -1191,14 +1194,13 @@ final class ApplicationTests: XCTestCase {
 extension Application {
     static func create(
         environment: Environment = .testing,
-        configure: @escaping (inout Services) -> () = { _ in },
-        routes: @escaping (inout Routes, Container) throws -> () = { _, _ in }
+        configure: @escaping (Application) -> () = { _ in },
+        routes: @escaping (inout Routes, Application) throws -> () = { _, _ in }
     ) -> Application {
-        let app = Application(environment: environment) { s in
-            configure(&s)
-            s.extend(Routes.self) { r, c in
-                try routes(&r, c)
-            }
+        let app = Application.default(environment: environment)
+        configure(app)
+        app.extend(Routes.self) { r, c in
+            try routes(&r, c)
         }
         try! app.boot()
         return app

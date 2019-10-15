@@ -1,99 +1,99 @@
-extension Services {
+extension Application {
     /// Vapor's default services. This includes many services required to successfully
     /// boot an Application. Only for special use cases should you create an empty `Services` struct.
-    public static func `default`() -> Services {
-        var s = Services()
+    public static func `default`(environment: Environment = .development) -> Application {
+        let app = Application(environment: environment)
 
         // client
-        s.register(HTTPClient.Configuration.self) { c in
+        app.register(HTTPClient.Configuration.self) { c in
             return .init()
         }
-        s.register(Client.self) { c in
+        app.register(Client.self) { c in
             return try c.make(HTTPClient.self)
         }
-        s.singleton(HTTPClient.self, boot: { c in
-            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        app.register(singleton: HTTPClient.self, boot: { app in
+            return try .init(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: app.make())
         }, shutdown: { s in
             try s.syncShutdown()
         })
 
         // ws client
-        s.register(WebSocketClient.Configuration.self) { c in
+        app.register(WebSocketClient.Configuration.self) { c in
             return .init()
         }
-        s.register(WebSocketClient.self) { c in
-            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        app.register(WebSocketClient.self) { app in
+            return try .init(eventLoopGroupProvider: .shared(app.eventLoopGroup), configuration: app.make())
         }
 
         // auth
-        s.register(PasswordVerifier.self) { c in
+        app.register(PasswordVerifier.self) { c in
             return try c.make(BCryptDigest.self)
         }
-        s.register(BCryptDigest.self) { c in
+        app.register(BCryptDigest.self) { c in
             return Bcrypt
         }
-        s.register(PlaintextVerifier.self) { c in
+        app.register(PlaintextVerifier.self) { c in
             return PlaintextVerifier()
         }
-        s.register(PasswordVerifier.self) { c in
+        app.register(PasswordVerifier.self) { c in
             return try c.make(PlaintextVerifier.self)
         }
         
         // routes
-        s.register(Routes.self) { c in
-            return .init(eventLoop: c.eventLoop)
-        }
-        
-        // sessions
-        s.register(SessionsMiddleware.self) { c in
-            return try .init(sessions: c.make(), config: c.make())
-        }
-        s.register(Sessions.self) { c in
-            return try c.make(MemorySessions.self)
-        }
-        s.register(MemorySessions.self) { c in
-            return try MemorySessions(storage: c.make(), on: c.eventLoop)
-        }
-        s.global(MemorySessions.Storage.self) { app in
+        app.register(Routes.self) { app in
             return .init()
         }
         
-        s.register(SessionsConfig.self) { c in
+        // sessions
+        app.register(SessionsMiddleware.self) { c in
+            return try .init(sessions: c.make(), config: c.make())
+        }
+        app.register(Sessions.self) { c in
+            return try c.make(MemorySessions.self)
+        }
+        app.register(MemorySessions.self) { app in
+            return try MemorySessions(storage: app.make(), on: app.eventLoopGroup)
+        }
+        app.register(singleton: MemorySessions.Storage.self) { app in
+            return .init()
+        }
+        
+        app.register(SessionsConfig.self) { c in
             return .default()
         }
 
         // middleware
-        s.register(MiddlewareConfiguration.self) { c in
+        app.register(MiddlewareConfiguration.self) { c in
             var middleware = MiddlewareConfiguration()
             try middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
-        s.register(FileMiddleware.self) { c in
+        app.register(FileMiddleware.self) { c in
             return try .init(
                 publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
                 fileio: c.make()
             )
         }
-        s.register(ErrorMiddleware.self) { c in
+        app.register(ErrorMiddleware.self) { c in
             return .default(environment: c.environment)
         }
 
         // console
-        s.register(Console.self) { c in
+        app.register(Console.self) { c in
             return Terminal()
         }
         
         // server
-        s.register(HTTPServer.Configuration.self) { c in
+        app.register(HTTPServer.Configuration.self) { c in
             return .init()
         }
-        s.register(Server.self) { c in
+        app.register(Server.self) { c in
             return try c.make(HTTPServer.self)
         }
-        s.register(HTTPServer.self) { c in
-            return try .init(application: c.application, configuration: c.make())
+        app.register(HTTPServer.self) { app in
+            return try .init(application: app, configuration: app.make())
         }
-        s.register(Responder.self) { c in
+        app.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
                 .make(MiddlewareConfiguration.self)
@@ -107,58 +107,57 @@ extension Services {
         }
 
         // commands
-        s.register(ServeCommand.self) { c in
+        app.register(ServeCommand.self) { c in
             return try .init(server: c.make())
         }
-        s.register(RoutesCommand.self) { c in
+        app.register(RoutesCommand.self) { c in
             return try .init(routes: c.make())
         }
-        s.register(BootCommand.self) { c in
+        app.register(BootCommand.self) { c in
             return .init()
         }
-        s.register(CommandConfiguration.self) { c in
+        app.register(CommandConfiguration.self) { c in
             return try .default(on: c)
         }
-        s.register(Commands.self) { c in
+        app.register(Commands.self) { c in
             return try c.make(CommandConfiguration.self).resolve()
         }
 
         // directory
-        s.register(DirectoryConfiguration.self) { c in
+        app.register(DirectoryConfiguration.self) { c in
             return .detect()
         }
 
         // logging
-        s.register(ConsoleLogger.self) { container in
+        app.register(ConsoleLogger.self) { container in
             return try ConsoleLogger(console: container.make())
         }
-        s.register(Logger.self) { c in
-            return c.application.logger
+        app.register(Logger.self) { app in
+            return app.logger
         }
 
         // view
-        s.register(ViewRenderer.self) { c in
+        app.register(ViewRenderer.self) { c in
             return try c.make(PlaintextRenderer.self)
         }
-        s.register(PlaintextRenderer.self) { c in
+        app.register(PlaintextRenderer.self) { app in
             return try PlaintextRenderer(
-                threadPool: c.application.threadPool,
-                viewsDirectory: c.make(DirectoryConfiguration.self).viewsDirectory,
-                eventLoop: c.eventLoop
+                threadPool: app.threadPool,
+                viewsDirectory: app.make(DirectoryConfiguration.self).viewsDirectory,
+                eventLoopGroup: app.eventLoopGroup
             )
         }
 
         // file
-        s.register(NonBlockingFileIO.self) { c in
-            return .init(threadPool: c.application.threadPool)
+        app.register(NonBlockingFileIO.self) { app in
+            return .init(threadPool: app.threadPool)
         }
-        s.register(FileIO.self) { c in
-            return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
+        app.register(FileIO.self) { app in
+            return try .init(io: app.make(), allocator: app.make())
         }
-        s.register(ByteBufferAllocator.self) { c in
+        app.register(ByteBufferAllocator.self) { c in
             return .init()
         }
-
-        return s
+        return app
     }
 }

@@ -31,16 +31,12 @@ public struct FileIO {
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
 
-    /// Event loop for async work.
-    public let eventLoop: EventLoop
-
     /// Creates a new `FileIO`.
     ///
     /// See `Request.fileio()` to create one.
-    internal init(io: NonBlockingFileIO, allocator: ByteBufferAllocator, on eventLoop: EventLoop) {
+    internal init(io: NonBlockingFileIO, allocator: ByteBufferAllocator) {
         self.io = io
         self.allocator = allocator
-        self.eventLoop = eventLoop
     }
 
     /// Reads the contents of a file at the supplied path.
@@ -51,12 +47,12 @@ public struct FileIO {
     /// - parameters:
     ///     - file: Path to file on the disk.
     /// - returns: `Future` containing the file data.
-    public func collectFile(at file: String) -> EventLoopFuture<ByteBuffer> {
+    public func collectFile(at file: String, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
         var data = self.allocator.buffer(capacity: 0)
-        return self.readFile(at: file) { new in
+        return self.readFile(at: file, on: eventLoop) { new in
             var new = new
             data.writeBuffer(&new)
-            return self.eventLoop.makeSucceededFuture(())
+            return eventLoop.makeSucceededFuture(())
         }.map { data }
     }
 
@@ -74,15 +70,16 @@ public struct FileIO {
     public func readFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+        on eventLoop: EventLoop,
         onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
             let fileSize = attributes[.size] as? NSNumber
         else {
-            return self.eventLoop.makeFailedFuture(Abort(.internalServerError))
+            return eventLoop.makeFailedFuture(Abort(.internalServerError))
         }
-        return self.read(path: path, fileSize: fileSize.intValue, chunkSize: chunkSize, onRead: onRead)
+        return self.read(path: path, fileSize: fileSize.intValue, chunkSize: chunkSize, on: eventLoop, onRead: onRead)
     }
 
     /// Generates a chunked `HTTPResponse` for the specified file. This method respects values in
@@ -134,7 +131,7 @@ public struct FileIO {
         }
 
         response.body = .init(stream: { stream in
-            self.read(path: path, fileSize: fileSize, chunkSize: chunkSize) { chunk in
+            self.read(path: path, fileSize: fileSize, chunkSize: chunkSize, on: request.eventLoop) { chunk in
                 return stream.write(.buffer(chunk))
             }.whenComplete { result in
                 switch result {
@@ -151,10 +148,22 @@ public struct FileIO {
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
-    private func read(path: String, fileSize: Int, chunkSize: Int, onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    private func read(
+        path: String,
+        fileSize: Int,
+        chunkSize: Int,
+        on eventLoop: EventLoop,
+        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+    ) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path)
-            let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
+            let done = self.io.readChunked(
+                fileHandle: fd,
+                byteCount: fileSize,
+                chunkSize: chunkSize,
+                allocator: allocator,
+                eventLoop: eventLoop
+            ) { chunk in
                 return onRead(chunk)
             }
             done.whenComplete { _ in
