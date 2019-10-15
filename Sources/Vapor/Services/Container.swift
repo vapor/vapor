@@ -2,11 +2,11 @@ public final class Container {
     static func boot(
         application: Application,
         on eventLoop: EventLoop
-    ) -> EventLoopFuture<Container> {
+    ) throws -> Container {
         let container = Container(application: application, on: eventLoop)
-        return container.willBoot()
-            .flatMap { container.didBoot() }
-            .map { container }
+        try container.willBoot()
+        try container.didBoot()
+        return container
     }
 
     public let application: Application
@@ -120,12 +120,12 @@ public final class Container {
         return instance
     }
     
-    private func willBoot() -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.providers.map { $0.willBoot(self) }, on: self.eventLoop)
+    private func willBoot() throws {
+        try self.providers.forEach { try $0.willBoot(self) }
     }
     
-    private func didBoot() -> EventLoopFuture<Void> {
-        return .andAllSucceed(self.providers.map { $0.didBoot(self) }, on: self.eventLoop)
+    private func didBoot() throws {
+        try self.providers.forEach { try $0.didBoot(self) }
     }
     
     public func shutdown() {

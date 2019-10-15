@@ -29,7 +29,7 @@ public final class XCTApplication {
     }
 
     public func start(method: Method = .inMemory) throws -> XCTApplicationTester {
-        let container = try self.application.makeContainer().wait()
+        let container = try self.application.makeContainer()
         switch method {
         case .inMemory:
             return try InMemory(container: container)
