@@ -1,9 +1,26 @@
+/// Determines how an incoming HTTP request's body is collected. 
 public enum HTTPBodyStreamStrategy {
+    /// The HTTP request's body will be collected into memory before the route handler is
+    /// called. The HTTP server's max body size will determine how much data can be
+    /// collected.
+    ///
+    /// See `collect(maxSize:)` to set a lower max body size.
     public static var collect: HTTPBodyStreamStrategy {
-        return .collect(maxSize: 2 << 14)
+        return .collect(maxSize: nil)
     }
+
+    /// The HTTP request's body will not be collected first before the route handler is called
+    /// and will arrive in zero or more chunks.
     case stream
-    case collect(maxSize: Int)
+
+    /// The HTTP request's body will be collected into memory before the route handler is
+    /// called.
+    ///
+    /// If a `maxSize` is supplied, the request body size in bytes will be limited. Requests
+    /// exceeding that size will result in an error. If no `maxSize` is supplied, the HTTP
+    /// server may still enforce a max body size limit. Note that the HTTP server's max body
+    /// size limit will take precedent over the value supplied here.
+    case collect(maxSize: Int?)
 }
 
 extension RoutesBuilder {

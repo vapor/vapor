@@ -65,12 +65,12 @@ public final class Application {
         self.cache = .init()
     }
 
-    public func makeContainer() -> EventLoopFuture<Container> {
-        return self.makeContainer(on: self.eventLoopGroup.next())
+    public func makeContainer() throws -> Container {
+        return try self.makeContainer(on: self.eventLoopGroup.next())
     }
     
-    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        return Container.boot(application: self, on: eventLoop)
+    public func makeContainer(on eventLoop: EventLoop) throws -> Container {
+        return try Container.boot(application: self, on: eventLoop)
     }
 
     // MARK: Run
@@ -97,7 +97,7 @@ public final class Application {
     public func start() throws {
         let eventLoop = self.eventLoopGroup.next()
         try self.loadDotEnv(on: eventLoop).wait()
-        let c = try self.makeContainer(on: eventLoop).wait()
+        let c = try self.makeContainer(on: eventLoop)
         defer { c.shutdown() }
         let command = try c.make(Commands.self).group()
         let console = try c.make(Console.self)
