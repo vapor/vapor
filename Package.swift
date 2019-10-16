@@ -39,11 +39,13 @@ let package = Package(
 
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", .branch("master")),
+
+        .package(url: "https://github.com/vapor/multipart.git", .branch("VaporPort"))
     ],
     targets: [
         // C helpers
         .target(name: "CBcrypt"),
-        .target(name: "CMultipartParser"),
+//        .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
         .target(name: "CURLParser"),
 
@@ -51,7 +53,7 @@ let package = Package(
         .target(name: "Vapor", dependencies: [
             "AsyncKit",
             "CBcrypt",
-            "CMultipartParser",
+//            "CMultipartParser",
             "COperatingSystem",
             "CURLParser",
             "ConsoleKit",
@@ -67,7 +69,8 @@ let package = Package(
             "NIOWebSocket",
             "OpenCrypto",
             "RoutingKit",
-            "WebSocketKit"
+            "WebSocketKit",
+            "Multipart"
         ]),
 
         // Development

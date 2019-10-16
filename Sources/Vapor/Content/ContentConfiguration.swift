@@ -1,3 +1,5 @@
+import Multipart
+
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
 ///     var contentConfig = ContentConfig()
