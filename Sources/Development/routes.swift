@@ -80,9 +80,10 @@ public func routes(_ r: Routes, _ app: Application) throws {
         }
         return promise.futureResult
     }
-    
+
+    let running = try app.make(Running.self)
     r.get("shutdown") { req -> HTTPStatus in
-        guard let running = app.running else {
+        guard let running = running.current else {
             throw Abort(.internalServerError)
         }
         _ = running.stop()

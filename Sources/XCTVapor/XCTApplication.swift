@@ -51,7 +51,6 @@ public final class XCTApplication {
 
         public func shutdown() {
             self.server.shutdown()
-            self.app.shutdown()
         }
         
         @discardableResult
@@ -91,7 +90,7 @@ public final class XCTApplication {
         }
 
         public func shutdown() {
-            self.app.shutdown()
+            // do nothing
         }
 
         @discardableResult
@@ -110,13 +109,13 @@ public final class XCTApplication {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
             }
             let response: XCTHTTPResponse
-            let request = Request(
+            let request = try Request(
                 method: method,
                 url: .init(string: path),
                 headers: headers,
                 collectedBody: body,
                 remoteAddress: nil,
-                on: self.app.eventLoopGroup.next()
+                on: self.app.make()
             )
             let res = try responder.respond(to: request).wait()
             response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)

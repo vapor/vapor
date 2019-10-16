@@ -1,71 +1,46 @@
-import NIO
-
 public final class Application {
     public var environment: Environment
-    
-    public let eventLoopGroup: EventLoopGroup
-    
-    public var userInfo: [AnyHashable: Any]
-    
-    public let sync: Lock
-    
-    public let threadPool: NIOThreadPool
-    
-    private var didShutdown: Bool
-
-    public var running: Running? {
-        get {
-            self.sync.lock()
-            defer { self.sync.unlock() }
-            return self._running
-        }
-        set {
-            self.sync.lock()
-            defer { self.sync.unlock() }
-            self._running = newValue
-        }
-    }
-    
-    private var _running: Running?
-    
-    public var logger: Logger
-
     public var services: Services
+    public let sync: Lock
+    public var userInfo: [AnyHashable: Any]
+    internal var cache: ServiceCache
+    private var didShutdown: Bool
 
     public var providers: [Provider] {
         return self.services.providers
     }
-
-    internal var cache: ServiceCache
-    
-    public struct Running {
-        public var onStop: EventLoopFuture<Void>
-        public var stop: () -> Void
-        
-        init(onStop: EventLoopFuture<Void>, stop: @escaping () -> Void) {
-            self.onStop = onStop
-            self.stop = stop
-        }
-    }
     
     public init(environment: Environment = .development) {
         self.environment = environment
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        self.userInfo = [:]
-        self.didShutdown = false
-        self.sync = Lock()
-        self.threadPool = .init(numberOfThreads: 1)
-        self.threadPool.start()
-        self.logger = .init(label: "codes.vapor.application")
         self.services = .init()
+        self.sync = .init()
+        self.userInfo = [:]
         self.cache = .init()
+        self.didShutdown = false
+        self.serviceLocks = [:]
+        self.registerDefaultServices()
     }
 
+    // MARK: Services
+
+    var serviceLocks: [ServiceID: Lock]
+
     public func make<S>(_ service: S.Type = S.self) throws -> S {
-        assert(!self.didShutdown, "Container.shutdown() has been called, this Container is no longer valid.")
+        assert(!self.didShutdown, "Application.shutdown() has been called, this Application is no longer valid.")
 
         // create service lookup identifier
         let id = ServiceID(S.self)
+
+        let serviceLock: Lock
+        self.sync.lock()
+        if let existing = self.serviceLocks[id] {
+            serviceLock = existing
+        } else {
+            let new = Lock()
+            self.serviceLocks[id] = new
+            serviceLock = new
+        }
+        self.sync.unlock()
 
         // fetch service factory if one exists
         guard let factory = self.services.factories[id] as? ServiceFactory<S> else {
@@ -74,14 +49,10 @@ public final class Application {
 
         // check if cached
         switch factory.cache {
-        case .application:
-            self.sync.lock()
+        case .singleton:
+            serviceLock.lock()
             if let cached = self.cache.get(service: S.self) {
-                self.sync.unlock()
-                return cached.service
-            }
-        case .container:
-            if let cached = self.cache.get(service: S.self) {
+                serviceLock.unlock()
                 return cached.service
             }
         case .none: break
@@ -100,9 +71,9 @@ public final class Application {
         } catch {
             // if creation fails, unlock application sync
             switch factory.cache {
-            case .application:
-                self.sync.unlock()
-            default: break
+            case .singleton:
+                serviceLock.unlock()
+            case .none: break
             }
             throw error
         }
@@ -110,11 +81,9 @@ public final class Application {
         // cache if needed
         let service = CachedService(service: instance, shutdown: factory.shutdown)
         switch factory.cache {
-        case .application:
+        case .singleton:
             self.cache.set(service: service)
-            self.sync.unlock()
-        case .container:
-            self.cache.set(service: service)
+            serviceLock.unlock()
         case .none: break
         }
 
@@ -130,21 +99,18 @@ public final class Application {
     }
     
     public func run() throws {
-        self.logger = .init(label: "codes.vapor.application")
         defer { self.shutdown() }
         do {
             try self.start()
-            if let running = self.running {
-                try running.onStop.wait()
-            }
+            try self.make(Running.self).current?.onStop.wait()
         } catch {
-            self.logger.report(error: error)
+            try self.make(Logger.self).report(error: error)
             throw error
         }
     }
     
     public func start() throws {
-        let eventLoop = self.eventLoopGroup.next()
+        let eventLoop = try self.make(EventLoop.self)
         try self.loadDotEnv(on: eventLoop).wait()
         let command = try self.make(Commands.self).group()
         let console = try self.make(Console.self)
@@ -152,37 +118,60 @@ public final class Application {
     }
     
     
-    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return DotEnvFile.load(
+    private func loadDotEnv(on eventLoop: EventLoop) throws -> EventLoopFuture<Void> {
+        let logger = try self.make(Logger.self)
+        return try DotEnvFile.load(
             path: ".env",
-            fileio: .init(threadPool: self.threadPool),
+            fileio: .init(threadPool: self.make()),
             on: eventLoop
         ).recover { error in
-            self.logger.debug("Could not load .env file: \(error)")
+            logger.debug("Could not load .env file: \(error)")
         }
     }
     
     public func shutdown() {
-        self.logger.debug("Application shutting down")
+        assert(!self.didShutdown, "Application has already shut down")
+        try! self.make(Logger.self).debug("Application shutting down")
         self.services.providers.forEach { $0.willShutdown(self) }
         self.cache.shutdown()
-        do {
-            try self.eventLoopGroup.syncShutdownGracefully()
-        } catch {
-            self.logger.error("EventLoopGroup failed to shutdown: \(error)")
-        }
-        do {
-            try self.threadPool.syncShutdownGracefully()
-        } catch {
-            self.logger.error("ThreadPool failed to shutdown: \(error)")
-        }
-        self.didShutdown = true
         self.userInfo = [:]
+        self.didShutdown = true
     }
     
     deinit {
         if !self.didShutdown {
             assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }
+    }
+}
+
+
+public final class Running {
+    public struct Current {
+        public let onStop: EventLoopFuture<Void>
+        public let stop: () -> Void
+    }
+
+    let lock: Lock
+    
+    public var current: Current? {
+        get {
+            return self._current.map { current in
+                Current(onStop: current.onStop) {
+                    self.lock.lock()
+                    defer { self.lock.unlock() }
+                    current.stop()
+                }
+            }
+        }
+        set {
+            self._current = newValue
+        }
+    }
+
+    private var _current: Current?
+
+    public init(lock: Lock) {
+        self.lock = lock
     }
 }

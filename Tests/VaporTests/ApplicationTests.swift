@@ -4,11 +4,11 @@ import COperatingSystem
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application.default(environment: test)
+        let app = Application(environment: test)
         defer { app.shutdown() }
         try! app.boot()
         try! app.start()
-        guard let running = app.running else {
+        guard let running = try app.make(Running.self).current else {
             XCTFail("app started without setting 'running'")
             return
         }
@@ -916,10 +916,10 @@ final class ApplicationTests: XCTestCase {
 
         var cookie: HTTPCookies.Value?
 
-        let app = Application.default()
+        let app = Application()
         defer { app.shutdown() }
         app.register(Sessions.self) { c in
-            return MockKeyedCache(on: c.eventLoopGroup.next())
+            return try MockKeyedCache(on: app.make())
         }
         app.extend(Routes.self) { routes, app in
             let sessions = try routes.grouped(app.make(SessionsMiddleware.self))
@@ -1081,7 +1081,7 @@ final class ApplicationTests: XCTestCase {
         do {
             try WebSocket.connect(
                 to: "ws://localhost:8085/foo",
-                on: app.eventLoopGroup
+                on: app.make()
             ) { _ in  }.wait()
             XCTFail("should have failed")
         } catch {
@@ -1145,10 +1145,10 @@ final class ApplicationTests: XCTestCase {
         let server = try app.testable().start(method: .running(port: 8080))
         defer { server.shutdown() }
 
-        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
-        WebSocket.connect(
+        let promise = try app.make(EventLoop.self).makePromise(of: String.self)
+        try WebSocket.connect(
             to: "ws://localhost:8080/foo",
-            on: app.eventLoopGroup
+            on: app.make()
         ) { ws in
             // do nothing
             ws.onText { ws, string in
@@ -1172,12 +1172,12 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         try app.start()
 
-        guard let running = app.running else {
+        guard let running = try app.make(Running.self).current else {
             XCTFail("app started but didn't set running")
             return
         }
 
-        let client = HTTPClient(eventLoopGroupProvider: .shared(app.eventLoopGroup))
+        let client = try HTTPClient(eventLoopGroupProvider: .shared(app.make()))
         defer { try! client.syncShutdown() }
 
         let res = try client
@@ -1197,7 +1197,7 @@ extension Application {
         configure: @escaping (Application) -> () = { _ in },
         routes: @escaping (inout Routes, Application) throws -> () = { _, _ in }
     ) -> Application {
-        let app = Application.default(environment: environment)
+        let app = Application(environment: environment)
         configure(app)
         app.extend(Routes.self) { r, c in
             try routes(&r, c)

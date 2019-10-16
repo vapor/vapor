@@ -95,17 +95,23 @@ public final class HTTPServer: Server {
         }
         return connection.channel.closeFuture
     }
-    
-    private let application: Application
+
+    private let responder: Responder
     private let configuration: Configuration
+    private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
     private var didShutdown: Bool
     private var didStart: Bool
     
-    init(application: Application, configuration: Configuration) {
-        self.application = application
+    init(
+        responder: Responder,
+        configuration: Configuration,
+        on eventLoopGroup: EventLoopGroup
+    ) {
+        self.responder = responder
         self.configuration = configuration
+        self.eventLoopGroup = eventLoopGroup
         self.didStart = false
         self.didShutdown = false
     }
@@ -120,45 +126,29 @@ public final class HTTPServer: Server {
         // print starting message
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
-        self.application.logger.info("Server starting on \(address)")
-
-        #warning("TODO: need application?")
+        self.configuration.logger.info("Server starting on \(address)")
         
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
-            responder: self.application.make(Responder.self),
+            responder: self.responder,
             configuration: configuration,
-            on: self.application.eventLoopGroup
+            on: self.eventLoopGroup
         ).wait()
-
-        // allow the server to be stopped or waited for
-        self.application.running = .init(
-            onStop: self.onShutdown,
-            stop: { [weak self] in
-                guard let self = self else {
-                    fatalError("Server deinitialized before shutdown")
-                }
-                self.shutdown()
-            }
-        )
 
         self.didStart = true
     }
     
     public func shutdown() {
-        self.application.sync.lock()
-        defer { self.application.sync.unlock() }
-
         guard let connection = self.connection else {
             fatalError("Called shutdown before start")
         }
-        self.application.logger.debug("Requesting server shutdown")
+        self.configuration.logger.debug("Requesting server shutdown")
         do {
             try connection.close().wait()
         } catch {
-            self.application.logger.error("Could not stop server: \(error)")
+            self.configuration.logger.error("Could not stop server: \(error)")
         }
-        self.application.logger.debug("Server shutting down")
+        self.configuration.logger.debug("Server shutting down")
         self.didShutdown = true
     }
     

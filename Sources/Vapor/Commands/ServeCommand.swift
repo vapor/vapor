@@ -26,11 +26,13 @@ public final class ServeCommand: Command {
     }
 
     private let server: Server
+    private let running: Running
     private var signalSources: [DispatchSourceSignal]
 
     /// Create a new `ServeCommand`.
-    public init(server: Server) {
+    public init(server: Server, running: Running) {
         self.server = server
+        self.running = running
         self.signalSources = []
     }
 
@@ -44,7 +46,18 @@ public final class ServeCommand: Command {
                 // 0.0.0.0:8080, :8080, parse port
                 ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
-        
+
+        // allow the server to be stopped or waited for
+        self.running.current = .init(
+            onStop: self.server.onShutdown,
+            stop: { [weak self] in
+                guard let self = self else {
+                    fatalError("Server deinitialized before shutdown")
+                }
+                self.server.shutdown()
+            }
+        )
+
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {

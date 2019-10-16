@@ -187,7 +187,7 @@ extension Application {
         shutdown: @escaping (S) throws -> ()
     ) {
         let id = ServiceID(S.self)
-        let factory = ServiceFactory(cache: .application, boot: boot, shutdown: shutdown)
+        let factory = ServiceFactory(cache: .singleton, boot: boot, shutdown: shutdown)
         self.services.factories[id] = factory
     }
 

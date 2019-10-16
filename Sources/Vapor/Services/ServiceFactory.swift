@@ -1,7 +1,6 @@
 struct ServiceFactory<T> {
     enum Cache {
-        case application
-        case container
+        case singleton
         case none
     }
     
