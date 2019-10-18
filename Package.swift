@@ -8,6 +8,7 @@ let package = Package(
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
+        .library(name: "XCTVapor", targets: ["XCTVapor"])
     ],
     dependencies: [
         // Sugary extensions for the SwiftNIO library
