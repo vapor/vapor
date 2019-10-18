@@ -28,12 +28,14 @@ public final class ServeCommand: Command {
     private let server: Server
     private let running: Running
     private var signalSources: [DispatchSourceSignal]
+    private var didShutdown: Bool
 
     /// Create a new `ServeCommand`.
     public init(server: Server, running: Running) {
         self.server = server
         self.running = running
         self.signalSources = []
+        self.didShutdown = false
     }
 
     /// See `Command`.
@@ -48,23 +50,19 @@ public final class ServeCommand: Command {
         )
 
         // allow the server to be stopped or waited for
-        self.running.current = .init(
-            onStop: self.server.onShutdown,
-            stop: { [weak self] in
-                guard let self = self else {
-                    fatalError("Server deinitialized before shutdown")
-                }
-                self.server.shutdown()
-            }
-        )
+        let promise = self.running.set(on: self.server.onShutdown.eventLoop)
+        self.server.onShutdown.cascade(to: promise)
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
-            source.setEventHandler {
+            source.setEventHandler { [weak self] in
+                guard let self = self else {
+                    fatalError("ServeCommand deinitialized before signal handler")
+                }
                 print() // clear ^C
-                self.server.shutdown()
+                promise.succeed(())
             }
             source.resume()
             self.signalSources.append(source)
@@ -73,9 +71,14 @@ public final class ServeCommand: Command {
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
     }
-    
-    deinit {
+
+    func shutdown() {
+        self.didShutdown = true
         self.signalSources.forEach { $0.cancel() } // clear refs
         self.signalSources = []
+    }
+    
+    deinit {
+        assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
     }
 }

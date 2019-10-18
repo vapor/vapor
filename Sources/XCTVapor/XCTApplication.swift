@@ -110,6 +110,7 @@ public final class XCTApplication {
             }
             let response: XCTHTTPResponse
             let request = try Request(
+                application: app,
                 method: method,
                 url: .init(string: path),
                 headers: headers,

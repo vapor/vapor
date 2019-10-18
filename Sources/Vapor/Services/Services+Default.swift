@@ -2,7 +2,7 @@ extension Application {
     func registerDefaultServices() {
         // core
         self.register(singleton: Running.self) { app in
-            return Running(lock: app.sync)
+            return Running()
         }
         self.register(singleton: NIOThreadPool.self, boot: { app in
             let pool = NIOThreadPool(numberOfThreads: 1)
@@ -12,13 +12,8 @@ extension Application {
             try pool.syncShutdownGracefully()
         })
         self.register(EventLoopGroup.self) { app in
-            return try app.make(MultiThreadedEventLoopGroup.self)
+            return app.eventLoopGroup
         }
-        self.register(singleton: MultiThreadedEventLoopGroup.self, boot: { app in
-            return MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        }, shutdown: { elg in
-            try elg.syncShutdownGracefully()
-        })
         self.register(EventLoop.self) { app in
             return try app.make(EventLoopGroup.self).next()
         }
@@ -27,11 +22,17 @@ extension Application {
         self.register(HTTPClient.Configuration.self) { app in
             return .init()
         }
+        self.register(request: Client.self) { req in
+            return try RequestClient(http: req.application.make(), req: req)
+        }
         self.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
+            return try ApplicationClient(http: c.make())
         }
         self.register(singleton: HTTPClient.self, boot: { app in
-            return try .init(eventLoopGroupProvider: .shared(app.make()), configuration: app.make())
+            return try .init(
+                eventLoopGroupProvider: .shared(app.make()),
+                configuration: app.make()
+            )
         }, shutdown: { s in
             try s.syncShutdown()
         })
@@ -109,9 +110,16 @@ extension Application {
         self.register(Server.self) { c in
             return try c.make(HTTPServer.self)
         }
-        self.register(HTTPServer.self) { app in
-            return try .init(responder: app.make(), configuration: app.make(), on: app.make())
-        }
+        self.register(singleton: HTTPServer.self, boot: { app in
+            return try .init(
+                application: app,
+                responder: app.make(),
+                configuration: app.make(),
+                on: app.make()
+            )
+        }, shutdown: { server in
+            server.shutdown()
+        })
         self.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
@@ -126,9 +134,11 @@ extension Application {
         }
 
         // commands
-        self.register(ServeCommand.self) { app in
+        self.register(singleton: ServeCommand.self, boot: { app in
             return try .init(server: app.make(), running: app.make())
-        }
+        }, shutdown: { serve in
+            serve.shutdown()
+        })
         self.register(RoutesCommand.self) { c in
             return try .init(routes: c.make())
         }

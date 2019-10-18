@@ -18,3 +18,11 @@ struct ServiceFactory<T> {
         self.shutdown = shutdown
     }
 }
+
+struct RequestServiceFactory<T> {
+    let boot: (Request) throws -> T
+
+    init(boot: @escaping (Request) throws -> T) {
+        self.boot = boot
+    }
+}

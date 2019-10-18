@@ -103,12 +103,16 @@ public final class HTTPServer: Server {
     private var connection: HTTPServerConnection?
     private var didShutdown: Bool
     private var didStart: Bool
+
+    private var application: Application
     
     init(
+        application: Application,
         responder: Responder,
         configuration: Configuration,
         on eventLoopGroup: EventLoopGroup
     ) {
+        self.application = application
         self.responder = responder
         self.configuration = configuration
         self.eventLoopGroup = eventLoopGroup
@@ -130,6 +134,7 @@ public final class HTTPServer: Server {
         
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
+            application: self.application,
             responder: self.responder,
             configuration: configuration,
             on: self.eventLoopGroup
@@ -142,13 +147,13 @@ public final class HTTPServer: Server {
         guard let connection = self.connection else {
             fatalError("Called shutdown before start")
         }
-        self.configuration.logger.debug("Requesting server shutdown")
+        self.configuration.logger.debug("Requesting HTTP server shutdown")
         do {
             try connection.close().wait()
         } catch {
-            self.configuration.logger.error("Could not stop server: \(error)")
+            self.configuration.logger.error("Could not stop HTTP server: \(error)")
         }
-        self.configuration.logger.debug("Server shutting down")
+        self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown = true
     }
     
@@ -162,6 +167,7 @@ private final class HTTPServerConnection {
     let quiesce: ServerQuiescingHelper
     
     static func start(
+        application: Application,
         responder: Responder,
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
@@ -178,7 +184,7 @@ private final class HTTPServerConnection {
             }
             
             // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { channel in
+            .childChannelInitializer { [weak application] channel in
                 // add TLS handlers if configured
                 if var tlsConfiguration = configuration.tlsConfiguration {
                     // prioritize http/2
@@ -203,6 +209,7 @@ private final class HTTPServerConnection {
                                 mode: .server,
                                 inboundStreamStateInitializer: { (channel, streamID) in
                                     return channel.pipeline.addVaporHTTP2Handlers(
+                                        application: application!,
                                         responder: responder,
                                         configuration: configuration,
                                         streamID: streamID
@@ -211,6 +218,7 @@ private final class HTTPServerConnection {
                             ).map { _ in }
                         }, http1PipelineConfigurator: { pipeline in
                             return pipeline.addVaporHTTP1Handlers(
+                                application: application!,
                                 responder: responder,
                                 configuration: configuration
                             )
@@ -220,7 +228,11 @@ private final class HTTPServerConnection {
                     guard !configuration.supportVersions.contains(.two) else {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
                     }
-                    return channel.pipeline.addVaporHTTP1Handlers(responder: responder, configuration: configuration)
+                    return channel.pipeline.addVaporHTTP1Handlers(
+                        application: application!,
+                        responder: responder,
+                        configuration: configuration
+                    )
                 }
             }
             
@@ -274,6 +286,7 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
 
 private extension ChannelPipeline {
     func addVaporHTTP2Handlers(
+        application: Application,
         responder: Responder,
         configuration: HTTPServer.Configuration,
         streamID: HTTP2StreamID
@@ -286,6 +299,7 @@ private extension ChannelPipeline {
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
+            application: application,
             maxBodySize: configuration.maxBodySize
         )
         handlers.append(serverReqDecoder)
@@ -306,7 +320,11 @@ private extension ChannelPipeline {
         }
     }
     
-    func addVaporHTTP1Handlers(responder: Responder, configuration: HTTPServer.Configuration) -> EventLoopFuture<Void> {
+    func addVaporHTTP1Handlers(
+        application: Application,
+        responder: Responder,
+        configuration: HTTPServer.Configuration
+    ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [RemovableChannelHandler] = []
         
@@ -332,6 +350,7 @@ private extension ChannelPipeline {
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
+            application: application,
             maxBodySize: configuration.maxBodySize
         )
         handlers.append(serverReqDecoder)

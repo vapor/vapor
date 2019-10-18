@@ -1,66 +1,112 @@
-/// The `Services` struct is used for registering and storing a `Container`'s services.
-///
-/// # Registering Services
-///
-/// While the `Services` struct is mutable (before it is used to initialize a `Container`), new services
-/// can be registered using a few different methods.
-///
-/// ## Factory
-///
-/// The most common method for registering services is by using a factory.
-///
-///     services.register(Logger.self) { container in
-///         return PrintLogger()
-///     }
-///
-/// This will ensure a new instance of your service is created for any `SubContainer`s. See the `register(_:factory:)`
-/// methods for more information.
-///
-/// - note: You may need to disambiguate the closure return by adding `-> T`.
-///
-/// ## Type
-///
-/// A concise method for registering services is by using the `ServiceType` protocol. Types conforming
-/// to this protocol can be registered to `Services` using just the type name.
-///
-///     extension PrintLogger: ServiceType { ... }
-///
-///     services.register(PrintLogger.self)
-///
-/// See `ServiceType` for more details.
-///
-/// ## Instance
-///
-/// You can also register pre-initialized instances of a service.
-///
-///     services.register(PrintLogger())
-///
-/// - warning: When used with reference types (classes), this method will share the same
-///            object with all `SubContainer`s. Be careful to avoid race conditions.
-///
-/// # Making Services
-///
-/// Once you initialize a `Container` from a `Services` struct, the `Services` will become immutable.
-/// After this point, you can use the `make(_:)` method on `Container` to start creating services.
-///
-/// - note: The `Services` are immutable on a `Container` to optimize caching.
-///
-/// See `Container` for more information.
+extension Application {
+    public func make<S>(_ service: S.Type = S.self, for request: Request) throws -> S {
+        assert(!self.didShutdown,
+               "Application.shutdown() has been called, this Application is no longer valid.")
+
+        // create service lookup identifier
+        let id = ServiceID(S.self)
+
+        // fetch service factory if one exists
+        guard let factory = self.services.requestFactories[id] as? RequestServiceFactory<S> else {
+            throw Abort(.internalServerError, reason: "No request service known for \(S.self)")
+        }
+
+        return try factory.boot(request)
+    }
+
+    public func make<S>(_ service: S.Type = S.self) throws -> S {
+        assert(!self.didShutdown,
+               "Application.shutdown() has been called, this Application is no longer valid.")
+
+        // create service lookup identifier
+        let id = ServiceID(S.self)
+
+        let serviceLock: Lock
+        self.sync.lock()
+        if let existing = self.services.locks[id] {
+            serviceLock = existing
+        } else {
+            let new = Lock()
+            self.services.locks[id] = new
+            serviceLock = new
+        }
+        self.sync.unlock()
+
+        // fetch service factory if one exists
+        guard let factory = self.services.factories[id] as? ServiceFactory<S> else {
+            throw Abort(.internalServerError, reason: "No service known for \(S.self)")
+        }
+
+        // check if cached
+        switch factory.cache {
+        case .singleton:
+            serviceLock.lock()
+            if let cached = self.services.cache.get(service: S.self) {
+                serviceLock.unlock()
+                return cached.service
+            }
+        case .none: break
+        }
+
+
+        // create and extend the service
+        var instance: S
+        do {
+            instance = try factory.boot(self)
+            // check for any extensions
+            if let extensions = self.services.extensions[id] as? [ServiceExtension<S>], !extensions.isEmpty {
+                // loop over extensions, modifying instace
+                try extensions.forEach { try $0.serviceExtend(&instance, self) }
+            }
+        } catch {
+            // if creation fails, unlock application sync
+            switch factory.cache {
+            case .singleton:
+                serviceLock.unlock()
+            case .none: break
+            }
+            throw error
+        }
+
+        // cache if needed
+        let service = CachedService(service: instance, shutdown: factory.shutdown)
+        switch factory.cache {
+        case .singleton:
+            self.services.cache.set(service: service)
+            serviceLock.unlock()
+        case .none: break
+        }
+
+        // return created and extended instance
+        return instance
+    }
+}
+
 public struct Services: CustomStringConvertible {
     var factories: [ServiceID: Any]
+    var requestFactories: [ServiceID: Any]
+
     var extensions: [ServiceID: [Any]]
     var providers: [Provider]
+
+    var cache: ServiceCache
+    var locks: [ServiceID: Lock]
 
     // MARK: Init
 
     /// Creates a new `Services`.
-    public init() {
+    init() {
         self.factories = [:]
+        self.requestFactories = [:]
         self.extensions = [:]
         self.providers = []
+        self.cache = .init()
+        self.locks = [:]
     }
 
-    // MARK: CustomStringConvertible
+    mutating func shutdown() {
+        self.cache.shutdown()
+    }
 
     /// See `CustomStringConvertible`.
     public var description: String {
@@ -219,6 +265,13 @@ extension Application {
         })
         self.services.factories[id] = factory
     }
+
+    public func register<S>(request interface: S.Type, _ factory: @escaping (Request) throws -> (S)) {
+        let id = ServiceID(S.self)
+        let factory = RequestServiceFactory(boot: factory)
+        self.services.requestFactories[id] = factory
+    }
+
     
     /// Adds a supplement closure for the given Service type
     public func extend<S>(_ service: S.Type, _ closure: @escaping (inout S, Application) throws -> Void) {

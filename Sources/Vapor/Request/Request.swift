@@ -1,6 +1,8 @@
 import NIO
 
 public final class Request: CustomStringConvertible {
+    public let application: Application
+
     /// The HTTP method for this request.
     ///
     ///     httpReq.method = .GET
@@ -121,6 +123,7 @@ public final class Request: CustomStringConvertible {
     public var userInfo: [AnyHashable: Any]
     
     public convenience init(
+        application: Application,
         method: HTTPMethod = .GET,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -130,6 +133,7 @@ public final class Request: CustomStringConvertible {
         on eventLoop: EventLoop
     ) {
         self.init(
+            application: application,
             method: method,
             url: url,
             version: version,
@@ -143,6 +147,7 @@ public final class Request: CustomStringConvertible {
     }
     
     public init(
+        application: Application,
         method: HTTPMethod,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -151,6 +156,7 @@ public final class Request: CustomStringConvertible {
         remoteAddress: SocketAddress? = nil,
         on eventLoop: EventLoop
     ) {
+        self.application = application
         self.method = method
         self.url = url
         self.version = version

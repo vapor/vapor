@@ -1,9 +1,49 @@
-extension HTTPClient: Client {
-    public var eventLoop: EventLoop {
-        return self.eventLoopGroup.next()
+struct ApplicationClient: Client {
+    let http: HTTPClient
+
+    var eventLoopGroup: EventLoopGroup {
+        return self.http.eventLoopGroup
     }
 
-    public func send(_ client: ClientRequest) -> EventLoopFuture<ClientResponse> {
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        return self.http.send(request, eventLoop: .indifferent)
+    }
+}
+
+extension Request {
+    public var client: Client {
+        return self.make()
+    }
+
+    public func make<S>(_ service: S.Type = S.self) -> S {
+        return try! self.application.make(for: self)
+    }
+}
+
+extension Application {
+    public var client: Client {
+        return try! self.make()
+    }
+}
+
+struct RequestClient: Client {
+    let http: HTTPClient
+    let req: Request
+
+    var eventLoopGroup: EventLoopGroup {
+        return self.http.eventLoopGroup
+    }
+
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        return self.http.send(request, eventLoop: .delegate(on: self.req.eventLoop))
+    }
+}
+
+private extension HTTPClient {
+    func send(
+        _ client: ClientRequest,
+        eventLoop: HTTPClient.EventLoopPreference
+    ) -> EventLoopFuture<ClientResponse> {
         do {
             let request = try HTTPClient.Request(
                 url: URL(string: client.url.string)!,
@@ -11,7 +51,7 @@ extension HTTPClient: Client {
                 headers: client.headers,
                 body: client.body.map { .byteBuffer($0) }
             )
-            return self.execute(request: request).map { response in
+            return self.execute(request: request, eventLoop: eventLoop).map { response in
                 let client = ClientResponse(
                     status: response.status,
                     headers: response.headers,
@@ -20,7 +60,7 @@ extension HTTPClient: Client {
                 return client
             }
         } catch {
-            return self.eventLoop.makeFailedFuture(error)
+            return self.eventLoopGroup.next().makeFailedFuture(error)
         }
     }
 }

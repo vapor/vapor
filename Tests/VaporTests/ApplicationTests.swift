@@ -17,7 +17,11 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testContent() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
         let request = Request(
+            application: app,
             collectedBody: .init(string: #"{"hello": "world"}"#),
             on: EmbeddedEventLoop()
         )
@@ -26,6 +30,9 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testComplexContent() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
         // http://adobe.github.io/Spry/samples/data_region/JSONDataSetSample.html
         let complexJSON = """
         {
@@ -55,13 +62,20 @@ final class ApplicationTests: XCTestCase {
                 ]
         }
         """
-        let request = Request(collectedBody: .init(string: complexJSON), on: EmbeddedEventLoop())
+        let request = try Request(
+            application: app,
+            collectedBody: .init(string: complexJSON),
+            on: app.make()
+        )
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
     }
 
     func testQuery() throws {
-        let request = Request(on: EmbeddedEventLoop())
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = try Request(application: app, on: app.make())
         request.headers.contentType = .json
         request.url.path = "/foo"
         print(request.url.string)
@@ -71,10 +85,18 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testQueryGet() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
         var req: Request
 
         //
-        req = Request(method: .GET, url: .init(string: "/path?foo=a"), on: EmbeddedEventLoop())
+        req = try Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path?foo=a"),
+            on: app.make()
+        )
 
         XCTAssertEqual(try req.query.get(String.self, at: "foo"), "a")
         XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
@@ -96,7 +118,12 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(req.query[String.self, at: "bar"], nil)
 
         //
-        req = Request(method: .GET, url: .init(string: "/path"), on: EmbeddedEventLoop())
+        req = try Request(
+            application: app,
+            method: .GET,
+            url: .init(string: "/path"),
+            on: app.make()
+        )
         XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
             if let error = error as? Abort {
                 XCTAssertEqual(error.status, .unsupportedMediaType)
@@ -962,10 +989,16 @@ final class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1687
     func testRequestQueryStringPercentEncoding() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
         struct TestQueryStringContainer: Content {
             var name: String
         }
-        let req = Request(on: EmbeddedEventLoop())
+        let req = try Request(
+            application: app,
+            on: app.make()
+        )
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
     }
@@ -1090,8 +1123,9 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testClientBeforeSend() throws {
-        let client = HTTPClient(eventLoopGroupProvider: .createNew)
-        defer { try! client.syncShutdown() }
+        let app = Application()
+        defer { app.shutdown() }
+        let client = try app.make(Client.self)
 
         let res = try client.post("http://httpbin.org/anything") { req in
             try req.content.encode(["hello": "world"])
@@ -1188,6 +1222,33 @@ final class ApplicationTests: XCTestCase {
         try running.onStop.wait()
 
         XCTAssertEqual(res.body?.string, "bar")
+    }
+
+    func testBoilerplate() throws {
+        let app = Application(environment: .init(
+            name: "xctest",
+            arguments: ["vapor", "serve", "-b", "localhost:8080", "--log", "trace"]
+        ))
+        try LoggingSystem.bootstrap(from: &app.environment)
+        defer { app.shutdown() }
+
+        app.extend(Routes.self) { routes, app in
+            routes.get("foo") { req -> EventLoopFuture<String> in
+                return req.client.get("https://httpbin.org/status/201").map { res in
+                    XCTAssertEqual(res.status.code, 201)
+                    req.application.running.current?.stop()
+                    return "bar"
+                }
+            }
+        }
+
+        try app.boot()
+        try app.start()
+
+        let res = try app.client.get("http://localhost:8080/foo").wait()
+        XCTAssertEqual(res.body?.string, "bar")
+
+        try app.running.current?.onStop.wait()
     }
 }
 
