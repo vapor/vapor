@@ -1,4 +1,5 @@
 extension Validator where T: Equatable {
+
     /// Validates whether an item is contained in the supplied array.
     public static func `in`(_ array: T...) -> Validator<T> {
         .in(array)
@@ -8,16 +9,14 @@ extension Validator where T: Equatable {
     public static func `in`<S: Sequence>(_ array: S) -> Validator<T> where S.Element == T {
         In(array).validator()
     }
-}
 
-extension Validator {
     /// Validates whether an item is contained in the supplied array.
-    public struct In<T: Decodable & Equatable>: ValidatorType {
+    public struct In: ValidatorType {
         public struct Failure: ValidatorFailure {
             let elementDescriptions: () -> [String]
         }
 
-        /// Array to check against.
+        /// Closure to determine whether an element is in the sequence.
         let contains: (T) -> Bool
         let elementDescriptions: () -> [String]
 
@@ -35,6 +34,7 @@ extension Validator {
 }
 
 extension Validator.In.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         "is not in: \(elementDescriptions().joined(separator: ", "))"

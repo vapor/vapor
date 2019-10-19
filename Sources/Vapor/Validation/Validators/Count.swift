@@ -1,4 +1,5 @@
 extension Validator where T: Collection {
+
     /// Validates that the data's count is within the supplied `ClosedRange`.
     public static func count(_ range: ClosedRange<Int>) -> Validator<T> {
         Count(min: range.lowerBound, max: range.upperBound).validator()
@@ -18,10 +19,8 @@ extension Validator where T: Collection {
     public static func count(_ range: Swift.Range<Int>) -> Validator<T> {
         Count(min: range.lowerBound, max: range.upperBound.advanced(by: -1)).validator()
     }
-}
 
-/// Validates whether the item's count is within a supplied int range.
-extension Validator where T: Collection {
+    /// Validates whether the item's count is within a supplied int range.
     public struct Count: ValidatorType {
         public enum Failure: ValidatorFailure {
             case lessThan(min: Int)
@@ -57,6 +56,7 @@ extension Validator where T: Collection {
 }
 
 extension Validator.Count.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         switch self {

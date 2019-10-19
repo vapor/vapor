@@ -25,6 +25,7 @@ extension Validator where T: Comparable & Strideable {
 }
 
 extension Validator where T: Comparable {
+
     /// Validates whether the data is within a supplied int range.
     public struct Range: ValidatorType {
         public enum Failure: ValidatorFailure {
@@ -61,6 +62,7 @@ extension Validator where T: Comparable {
 }
 
 extension Validator.Range.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         switch self {

@@ -1,13 +1,12 @@
 extension Validator where T: Collection {
-    /// Validates that the data is empty. You can also check a non empty state by combining with the `NotValidator`
+
+    /// Validates that the data is empty. You can also check a non empty state by combining with the `NotValidator`.
     public static var empty: Validator<T> {
         Empty().validator()
     }
-}
 
-extension Validator {
     /// Validates whether the data is empty.
-    public struct Empty<T: Collection & Decodable>: ValidatorType {
+    public struct Empty: ValidatorType {
         public struct Failure: ValidatorFailure {}
 
         public init() {}
@@ -20,6 +19,7 @@ extension Validator {
 }
 
 extension Validator.Empty.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         "is not empty"

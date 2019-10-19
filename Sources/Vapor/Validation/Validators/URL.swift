@@ -8,10 +8,6 @@ extension Validator where T == String {
     public static var url: Validator<T> {
         URL().validator()
     }
-}
-
-
-extension Validator {
 
     /// Validates whether a string is a valid email address.
     public struct URL: ValidatorType {
@@ -33,6 +29,7 @@ extension Validator {
 }
 
 extension Validator.URL.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         "is not a valid URL"

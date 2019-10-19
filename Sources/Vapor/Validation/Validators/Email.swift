@@ -1,13 +1,11 @@
 extension Validator where T == String {
+
     /// Validates whether a `String` is a valid email address.
     public static var email: Validator<T> {
         Email().validator()
     }
-}
 
-extension Validator {
-
-    /// Validates whether a string is a valid email address.
+    /// Validates whether a `String` is a valid email address.
     public struct Email: ValidatorType {
 
         public struct Failure: ValidatorFailure {}
@@ -31,6 +29,7 @@ extension Validator {
 }
 
 extension Validator.Email.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         "is not a valid email address"

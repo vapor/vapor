@@ -1,4 +1,5 @@
 extension Validator {
+
     /// Validates that all characters in a `String` are ASCII (bytes 0..<128).
     public static var ascii: Validator<String> {
         .characterSet(.ascii)
@@ -13,17 +14,7 @@ extension Validator {
     public static func characterSet(_ characterSet: Foundation.CharacterSet) -> Validator<String> {
         CharacterSet(characterSet: characterSet).validator()
     }
-}
 
-/// Unions two character sets.
-///
-///     .characterSet(.alphanumerics + .whitespaces)
-///
-public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
-    lhs.union(rhs)
-}
-
-extension Validator {
     /// Validates that a `String` contains characters in a given `CharacterSet`.
     public struct CharacterSet: ValidatorType {
         public struct Failure: ValidatorFailure {
@@ -53,6 +44,7 @@ extension Validator {
 }
 
 extension Validator.CharacterSet.Failure: CustomStringConvertible {
+
     /// See `CustomStringConvertible`.
     public var description: String {
         var string = "contains an invalid character: '\(invalidSlice)'"
@@ -63,7 +55,16 @@ extension Validator.CharacterSet.Failure: CustomStringConvertible {
     }
 }
 
+/// Unions two character sets.
+///
+///     .characterSet(.alphanumerics + .whitespaces)
+///
+public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
+    lhs.union(rhs)
+}
+
 private extension Foundation.CharacterSet {
+
     /// ASCII (byte 0..<128) character set.
     static var ascii: CharacterSet {
         CharacterSet(charactersIn: Unicode.Scalar(0)..<Unicode.Scalar(128))
