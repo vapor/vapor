@@ -8,13 +8,7 @@ public func Validations(@ValidationBuilder build: () -> [Validation]) -> [Valida
 }
 
 extension Validation {
-    public init(key: BasicCodingKey, required: Bool = true, @ValidationBuilder builder: () -> [Validation]) {
-        self.init(key: key, required: required, validations: builder())
-    }
     public init(key: String, required: Bool = true, @ValidationBuilder builder: () -> [Validation]) {
-        self.init(key: BasicCodingKey(key), required: required, builder: builder)
-    }
-    public init(key: CodingKey, required: Bool = true, @ValidationBuilder builder: () -> [Validation]) {
-        self.init(key: BasicCodingKey(key), required: required, builder: builder)
+        self.init(key: key, required: required, validations: builder())
     }
 }

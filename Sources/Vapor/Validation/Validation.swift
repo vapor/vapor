@@ -12,41 +12,21 @@ public struct Validation {
                 .map { (key, $0) }
         }
     }
+
     public init<T: Decodable>(key: String, as: T.Type = T.self, required: Bool = true, validator: Validator<T>) {
         self.init(key: BasicCodingKey(key), required: required, validator: validator)
     }
-    public init<T: Decodable>(key: CodingKey, as: T.Type = T.self, required: Bool = true, validator: Validator<T>) {
-        self.init(key: BasicCodingKey(key), required: required, validator: validator)
-    }
 
-    public init(key: BasicCodingKey, required: Bool = true, validations: [Validation]) {
-        type = .nested(validations, key, required)
-    }
     public init(key: String, required: Bool = true, validations: [Validation]) {
-        self.init(key: BasicCodingKey(key), required: required, validations: validations)
-    }
-    public init(key: CodingKey, required: Bool = true, validations: [Validation]) {
-        self.init(key: BasicCodingKey(key), required: required, validations: validations)
+        type = .nested(validations, BasicCodingKey(key), required)
     }
 
-    public init(key: BasicCodingKey, required: Bool = true, validations: Validation ...) {
+    public init(key: String, required: Bool = true, validations: Validation ...) {
         self.init(key: key, required: required, validations: validations)
     }
-    public init(key: String, required: Bool = true, validations: Validation ...) {
-        self.init(key: BasicCodingKey(key), required: required, validations: validations)
-    }
-    public init(key: CodingKey, required: Bool = true, validations: Validation ...) {
-        self.init(key: BasicCodingKey(key), required: required, validations: validations)
-    }
 
-    public init(key: BasicCodingKey, required: Bool = true, validatable: Validatable.Type) {
-        self.init(key: key, required: required, validations: validatable.validations())
-    }
     public init(key: String, required: Bool = true, validatable: Validatable.Type) {
-        self.init(key: BasicCodingKey(key), required: required, validatable: validatable)
-    }
-    public init(key: CodingKey, required: Bool = true, validatable: Validatable.Type) {
-        self.init(key: BasicCodingKey(key), required: required, validatable: validatable)
+        self.init(key: key, required: required, validations: validatable.validations())
     }
 }
 
@@ -91,7 +71,7 @@ struct KeyedValidation<T: Decodable> {
         do {
             if container.contains(key) {
                 let data = try container.decode(T.self, forKey: key)
-                return validator.validate(data)//.makeValidator().validate(data)
+                return validator.validate(data)
             } else if required {
                 return MissingRequiredValueFailure()
             } else {
