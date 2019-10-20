@@ -7,6 +7,11 @@ extension Validator {
 
     /// Combines two validators, if either is true the validation will succeed.
     struct Or: ValidatorType {
+        struct Failure: ValidatorFailure {
+            let left: ValidatorFailure
+            let right: ValidatorFailure
+        }
+
         /// left validator
         let lhs: Validator<T>
 
@@ -19,12 +24,21 @@ extension Validator {
         }
 
         /// See Validator.validate
-        public func validate(_ data: T) -> CompoundValidatorFailure? {
-            let failures = [lhs.validate(data), rhs.validate(data)].compactMap { $0 }
-            guard failures.count != 2 else {
-                return .init(failures: failures)
+        public func validate(_ data: T) -> Failure? {
+            switch (lhs.validate(data), rhs.validate(data)) {
+            case let (.some(left), .some(right)): return .init(left: left, right: right)
+            default: return nil
             }
-            return nil
         }
+    }
+}
+
+extension Validator.Or.Failure: CustomStringConvertible {
+    public var description: String {
+        """
+        \((left as? CustomStringConvertible)?.description ?? "left validation failed")\
+         and \
+        \((right as? CustomStringConvertible)?.description ?? "right validation failed")
+        """
     }
 }

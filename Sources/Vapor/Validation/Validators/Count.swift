@@ -60,10 +60,10 @@ extension Validator.Count.Failure: CustomStringConvertible {
     /// See `CustomStringConvertible`.
     public var description: String {
         switch self {
-        case .greaterThan(let max):
-            return "is greater than required maximum of \(elementDescription(count: max))"
         case .lessThan(let min):
             return "is less than required minimum of \(elementDescription(count: min))"
+        case .greaterThan(let max):
+            return "is greater than required maximum of \(elementDescription(count: max))"
         }
     }
 
