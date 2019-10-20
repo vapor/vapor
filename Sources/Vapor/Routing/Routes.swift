@@ -13,3 +13,13 @@ public final class Routes: RoutesBuilder, CustomStringConvertible {
         self.routes.append(route)
     }
 }
+
+extension Application: RoutesBuilder {
+    public func add(_ route: Route) {
+        self.routes.add(route)
+    }
+    
+    public var routes: Routes {
+        return try! self.make()
+    }
+}

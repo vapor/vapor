@@ -45,12 +45,12 @@ public final class XCTApplication {
         init(app: Application, port: Int) throws {
             self.app = app
             self.port = port
-            self.server = try app.make(Server.self)
+            self.server = app.make(Server.self)
             try server.start(hostname: "localhost", port: port)
         }
 
         public func shutdown() {
-            self.server.shutdown()
+            // do nothing
         }
         
         @discardableResult
@@ -103,13 +103,13 @@ public final class XCTApplication {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
-            let responder = try self.app.make(Responder.self)
+            let responder = self.app.make(Responder.self)
             var headers = headers
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
             }
             let response: XCTHTTPResponse
-            let request = try Request(
+            let request = Request(
                 application: app,
                 method: method,
                 url: .init(string: path),

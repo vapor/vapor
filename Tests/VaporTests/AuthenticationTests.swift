@@ -25,7 +25,7 @@ final class AuthenticationTests: XCTestCase {
         }
 
         let app = Application.create(routes: { r, app in
-            try r.grouped([
+            r.grouped([
                 TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
             ]).get("test") { req -> String in
                 return try req.requireAuthenticated(Test.self).name
@@ -69,7 +69,7 @@ final class AuthenticationTests: XCTestCase {
         }
 
         let app = Application.create(routes: { r, app in
-            try r.grouped([
+            r.grouped([
                 TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
             ]).get("test") { req -> String in
                 return try req.requireAuthenticated(Test.self).name
@@ -130,7 +130,7 @@ final class AuthenticationTests: XCTestCase {
         }
 
         let app = Application.create(routes: { r, app in
-            try r.grouped([
+            r.grouped([
                 app.make(SessionsMiddleware.self),
                 TestSessionAuthenticator(on: app.make()).middleware(),
                 TestBearerAuthenticator(on: app.make()).middleware(),

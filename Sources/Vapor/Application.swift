@@ -5,10 +5,8 @@ public final class Application {
     public var userInfo: [AnyHashable: Any]
     public private(set) var didShutdown: Bool
     internal let eventLoopGroup: EventLoopGroup
-    public var logger: Logger {
-        return self._logger
-    }
-    private var _logger: Logger!
+    public var logger: Logger
+    private var isBooted: Bool
 
     public var providers: [Provider] {
         return self.services.providers
@@ -21,16 +19,12 @@ public final class Application {
         self.userInfo = [:]
         self.didShutdown = false
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.logger = .init(label: "codes.vapor.application")
+        self.isBooted = false
         self.registerDefaultServices()
     }
 
     // MARK: Run
-
-    public func boot() throws {
-        self._logger = .init(label: "codes.vapor.application")
-        try self.providers.forEach { try $0.willBoot(self) }
-        try self.providers.forEach { try $0.didBoot(self) }
-    }
     
     public func run() throws {
         defer { self.shutdown() }
@@ -38,28 +32,36 @@ public final class Application {
             try self.start()
             try self.make(Running.self).current?.onStop.wait()
         } catch {
-            try self.make(Logger.self).report(error: error)
+            self.logger.report(error: error)
             throw error
         }
     }
     
     public func start() throws {
-        let eventLoop = try self.make(EventLoop.self)
+        try self.boot()
+        let eventLoop = self.make(EventLoop.self)
         try self.loadDotEnv(on: eventLoop).wait()
-        let command = try self.make(Commands.self).group()
-        let console = try self.make(Console.self)
+        let command = self.make(Commands.self).group()
+        let console = self.make(Console.self)
         try console.run(command, input: self.environment.commandInput)
     }
+
+    public func boot() throws {
+        guard !self.isBooted else {
+            return
+        }
+        self.isBooted = true
+        try self.providers.forEach { try $0.willBoot(self) }
+        try self.providers.forEach { try $0.didBoot(self) }
+    }
     
-    
-    private func loadDotEnv(on eventLoop: EventLoop) throws -> EventLoopFuture<Void> {
-        let logger = try self.make(Logger.self)
-        return try DotEnvFile.load(
+    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        return DotEnvFile.load(
             path: ".env",
             fileio: .init(threadPool: self.make()),
             on: eventLoop
         ).recover { error in
-            logger.debug("Could not load .env file: \(error)")
+            self.logger.debug("Could not load .env file: \(error)")
         }
     }
     
@@ -127,6 +129,6 @@ public final class Running {
 
 extension Application {
     public var running: Running {
-        return try! self.make()
+        return self.make()
     }
 }

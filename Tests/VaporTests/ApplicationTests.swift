@@ -6,9 +6,8 @@ final class ApplicationTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(environment: test)
         defer { app.shutdown() }
-        try! app.boot()
-        try! app.start()
-        guard let running = try app.make(Running.self).current else {
+        try app.start()
+        guard let running = app.running.current else {
             XCTFail("app started without setting 'running'")
             return
         }
@@ -62,7 +61,7 @@ final class ApplicationTests: XCTestCase {
                 ]
         }
         """
-        let request = try Request(
+        let request = Request(
             application: app,
             collectedBody: .init(string: complexJSON),
             on: app.make()
@@ -75,7 +74,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
 
-        let request = try Request(application: app, on: app.make())
+        let request = Request(application: app, on: app.make())
         request.headers.contentType = .json
         request.url.path = "/foo"
         print(request.url.string)
@@ -91,7 +90,7 @@ final class ApplicationTests: XCTestCase {
         var req: Request
 
         //
-        req = try Request(
+        req = Request(
             application: app,
             method: .GET,
             url: .init(string: "/path?foo=a"),
@@ -118,7 +117,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(req.query[String.self, at: "bar"], nil)
 
         //
-        req = try Request(
+        req = Request(
             application: app,
             method: .GET,
             url: .init(string: "/path"),
@@ -423,7 +422,6 @@ final class ApplicationTests: XCTestCase {
         var data = ByteBufferAllocator().buffer(capacity: 0)
         data.writeString("<h1>hello</h1>")
         let app = Application.create(routes: { r, c in
-            let client = try c.make(Client.self)
             r.get("view") { req -> View in
                 return View(data: data)
             }
@@ -568,7 +566,7 @@ final class ApplicationTests: XCTestCase {
 
     func testStreamFile() throws {
         let app = Application.create(routes: { r, c in
-            let fileio = try c.make(FileIO.self)
+            let fileio = c.make(FileIO.self)
             r.get("file-stream") { req -> Response in
                 return fileio.streamFile(at: #file, for: req)
             }
@@ -587,7 +585,7 @@ final class ApplicationTests: XCTestCase {
 
     func testStreamFileConnectionClose() throws {
         let app = Application.create(routes: { r, c in
-            let fileio = try c.make(FileIO.self)
+            let fileio = c.make(FileIO.self)
             r.get("file-stream") { req -> Response in
                 return fileio.streamFile(at: #file, for: req)
             }
@@ -858,7 +856,7 @@ final class ApplicationTests: XCTestCase {
 
     func testInvalidCookie() throws {
         let app = Application.create(routes: { r, c in
-            let sessions = try c.make(SessionsMiddleware.self)
+            let sessions = c.make(SessionsMiddleware.self)
             r.grouped(sessions).get("get") { req -> String in
                 return req.session.data["name"] ?? "n/a"
             }
@@ -946,10 +944,10 @@ final class ApplicationTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         app.register(Sessions.self) { c in
-            return try MockKeyedCache(on: app.make())
+            return MockKeyedCache(on: app.make())
         }
         app.extend(Routes.self) { routes, app in
-            let sessions = try routes.grouped(app.make(SessionsMiddleware.self))
+            let sessions = routes.grouped(app.make(SessionsMiddleware.self))
             sessions.get("set") { req -> String in
                 req.session.data["foo"] = "bar"
                 return "set"
@@ -995,10 +993,7 @@ final class ApplicationTests: XCTestCase {
         struct TestQueryStringContainer: Content {
             var name: String
         }
-        let req = try Request(
-            application: app,
-            on: app.make()
-        )
+        let req = Request(application: app, on: app.make())
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
     }
@@ -1125,7 +1120,9 @@ final class ApplicationTests: XCTestCase {
     func testClientBeforeSend() throws {
         let app = Application()
         defer { app.shutdown() }
-        let client = try app.make(Client.self)
+        try app.boot()
+        
+        let client = app.make(Client.self)
 
         let res = try client.post("http://httpbin.org/anything") { req in
             try req.content.encode(["hello": "world"])
@@ -1160,7 +1157,7 @@ final class ApplicationTests: XCTestCase {
             // no routes
         })
 
-        let foo = try app.make(Foo.self)
+        let foo = app.make(Foo.self)
         XCTAssertEqual(foo.didShutdown, false)
         app.shutdown()
         XCTAssertEqual(foo.didShutdown, true)
@@ -1179,8 +1176,8 @@ final class ApplicationTests: XCTestCase {
         let server = try app.testable().start(method: .running(port: 8080))
         defer { server.shutdown() }
 
-        let promise = try app.make(EventLoop.self).makePromise(of: String.self)
-        try WebSocket.connect(
+        let promise = app.make(EventLoop.self).makePromise(of: String.self)
+        WebSocket.connect(
             to: "ws://localhost:8080/foo",
             on: app.make()
         ) { ws in
@@ -1206,12 +1203,12 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         try app.start()
 
-        guard let running = try app.make(Running.self).current else {
+        guard let running = app.make(Running.self).current else {
             XCTFail("app started but didn't set running")
             return
         }
 
-        let client = try HTTPClient(eventLoopGroupProvider: .shared(app.make()))
+        let client = HTTPClient(eventLoopGroupProvider: .shared(app.make()))
         defer { try! client.syncShutdown() }
 
         let res = try client
@@ -1232,13 +1229,11 @@ final class ApplicationTests: XCTestCase {
         try LoggingSystem.bootstrap(from: &app.environment)
         defer { app.shutdown() }
 
-        app.extend(Routes.self) { routes, app in
-            routes.get("foo") { req -> EventLoopFuture<String> in
-                return req.client.get("https://httpbin.org/status/201").map { res in
-                    XCTAssertEqual(res.status.code, 201)
-                    req.application.running.current?.stop()
-                    return "bar"
-                }
+        app.get("foo") { req -> EventLoopFuture<String> in
+            return req.client.get("https://httpbin.org/status/201").map { res in
+                XCTAssertEqual(res.status.code, 201)
+                req.application.running.current?.stop()
+                return "bar"
             }
         }
 

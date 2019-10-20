@@ -1,10 +1,9 @@
 import Vapor
 
 public func configure(_ app: Application) throws {
-    app.extend(Routes.self) { r, c in
-        try routes(r, c)
-    }
+    // providers here
 
+    // overrides
     app.register(singleton: MemoryCache.self) { _ in
         return .init()
     }
@@ -29,6 +28,9 @@ public func configure(_ app: Application) throws {
             return .init(hostname: "127.0.0.1", port: 8080)
         }
     }
+    
+    // routes
+    try routes(app)
 }
 
 final class MemoryCache {

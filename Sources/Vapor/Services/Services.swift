@@ -14,7 +14,7 @@ extension Application {
         return try factory.boot(request)
     }
 
-    public func make<S>(_ service: S.Type = S.self) throws -> S {
+    public func make<S>(_ service: S.Type = S.self) -> S {
         assert(!self.didShutdown,
                "Application.shutdown() has been called, this Application is no longer valid.")
 
@@ -34,7 +34,7 @@ extension Application {
 
         // fetch service factory if one exists
         guard let factory = self.services.factories[id] as? ServiceFactory<S> else {
-            throw Abort(.internalServerError, reason: "No service known for \(S.self)")
+            fatalError("No services registered for \(S.self)")
         }
 
         // check if cached
@@ -65,7 +65,7 @@ extension Application {
                 serviceLock.unlock()
             case .none: break
             }
-            throw error
+            fatalError("Failed to create service \(S.self): \(error)")
         }
 
         // cache if needed

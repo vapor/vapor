@@ -57,10 +57,7 @@ public final class ServeCommand: Command {
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
-            source.setEventHandler { [weak self] in
-                guard let self = self else {
-                    fatalError("ServeCommand deinitialized before signal handler")
-                }
+            source.setEventHandler {
                 print() // clear ^C
                 promise.succeed(())
             }

@@ -60,7 +60,7 @@ extension Application {
         }
         
         // routes
-        self.register(Routes.self) { app in
+        self.register(singleton: Routes.self) { app in
             return .init()
         }
         
