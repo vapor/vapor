@@ -1221,7 +1221,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(res.body?.string, "bar")
     }
 
-    func testBoilerplate() throws {
+    func testBoilerplateClient() throws {
         let app = Application(environment: .init(
             name: "xctest",
             arguments: ["vapor", "serve", "-b", "localhost:8080", "--log", "trace"]
@@ -1245,6 +1245,21 @@ final class ApplicationTests: XCTestCase {
 
         try app.running.current?.onStop.wait()
     }
+
+    func testBoilerplate() throws {
+        
+        let app = Application(environment: .test)
+        defer { app.shutdown() }
+
+        app.get("hello") { req -> String in
+            return "Hello, world!"
+        }
+
+        try app.start()
+
+        let res = try app.client.get("http://localhost:8080/hello").wait()
+        XCTAssertEqual(res.body?.string, "Hello, world!")
+    }
 }
 
 extension Application {
@@ -1260,6 +1275,12 @@ extension Application {
         }
         try! app.boot()
         return app
+    }
+}
+
+extension Environment {
+    static var test: Environment {
+        return .init(name: "test", arguments: ["vapor"])
     }
 }
 

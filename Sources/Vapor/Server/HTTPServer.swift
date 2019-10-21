@@ -145,7 +145,7 @@ public final class HTTPServer: Server {
     
     public func shutdown() {
         guard let connection = self.connection else {
-            fatalError("Called shutdown before start")
+            return
         }
         self.configuration.logger.debug("Requesting HTTP server shutdown")
         do {
