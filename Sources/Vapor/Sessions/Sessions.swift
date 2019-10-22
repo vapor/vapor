@@ -1,30 +1,23 @@
 /// Capable of managing CRUD operations for `Session`s.
 public protocol Sessions {
-    /// Stores a newly created `Session`.
-    ///
-    /// - parameters:
-    ///     - session: New `Session` to create.
-    /// - returns: A `Future` that will be completed when the operation has finished.
-    func createSession(_ data: SessionData) -> EventLoopFuture<SessionID>
-
-    /// Fetches a session for the supplied cookie value.
-    ///
-    /// - parameters:
-    ///     - sessionID: `String` identifier of the `Session` to fetch.
-    /// - returns: `Session` if found, `nil` if none exists.
-    func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?>
-
-    /// Updates the session. Call before the response with the session cookie is returned.
-    ///
-    /// - parameters:
-    ///     - session: Existing `Session` to update.
-    /// - returns: A `Future` that will be completed when the operation has finished.
-    func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID>
-
-    /// Destroys the session. Call if the response is no longer valid.
-    ///
-    /// - parameters:
-    ///     - sessionID: `String` identifier of the `Session` to destroy.
-    /// - returns: A `Future` that will be completed when the operation has finished.
-    func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void>
+    func createSession(
+        _ data: SessionData,
+        for request: Request
+    ) -> EventLoopFuture<SessionID>
+    
+    func readSession(
+        _ sessionID: SessionID,
+        for request: Request
+    ) -> EventLoopFuture<SessionData?>
+    
+    func updateSession(
+        _ sessionID: SessionID,
+        to data: SessionData,
+        for request: Request
+    ) -> EventLoopFuture<SessionID>
+    
+    func deleteSession(
+        _ sessionID: SessionID,
+        for request: Request
+    ) -> EventLoopFuture<Void>
 }

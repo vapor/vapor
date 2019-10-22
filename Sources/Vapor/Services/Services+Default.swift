@@ -72,7 +72,7 @@ extension Application {
             return c.make(MemorySessions.self)
         }
         self.register(MemorySessions.self) { app in
-            return MemorySessions(storage: app.make(), on: app.make())
+            return MemorySessions(storage: app.make())
         }
         self.register(singleton: MemorySessions.Storage.self) { app in
             return .init()

@@ -804,30 +804,26 @@ final class ApplicationTests: XCTestCase {
         final class MockKeyedCache: Sessions {
             static var ops: [String] = []
 
-            let eventLoop: EventLoop
+            init() { }
 
-            init(on eventLoop: EventLoop) {
-                self.eventLoop = eventLoop
-            }
-
-            func createSession(_ data: SessionData) -> EventLoopFuture<SessionID> {
+            func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
                 Self.ops.append("create \(data)")
-                return self.eventLoop.makeSucceededFuture(.init(string: "a"))
+                return request.eventLoop.makeSucceededFuture(.init(string: "a"))
             }
 
-            func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?> {
+            func readSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<SessionData?> {
                 Self.ops.append("read \(sessionID)")
-                return self.eventLoop.makeSucceededFuture(SessionData())
+                return request.eventLoop.makeSucceededFuture(SessionData())
             }
 
-            func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID> {
+            func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
                 Self.ops.append("update \(sessionID) to \(data)")
-                return self.eventLoop.makeSucceededFuture(sessionID)
+                return request.eventLoop.makeSucceededFuture(sessionID)
             }
 
-            func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void> {
+            func deleteSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<Void> {
                 Self.ops.append("delete \(sessionID)")
-                return self.eventLoop.makeSucceededFuture(())
+                return request.eventLoop.makeSucceededFuture(())
             }
         }
 
@@ -835,8 +831,9 @@ final class ApplicationTests: XCTestCase {
 
         let app = Application()
         defer { app.shutdown() }
+        
         app.register(Sessions.self) { c in
-            return MockKeyedCache(on: app.make())
+            return MockKeyedCache()
         }
         let sessions = app.routes.grouped(app.make(SessionsMiddleware.self))
         sessions.get("set") { req -> String in
