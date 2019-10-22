@@ -276,7 +276,7 @@ final class ApplicationTests: XCTestCase {
         --123\r
         Content-Disposition: form-data; name="age"\r
         \r
-        3\r
+        4\r
         --123\r
         Content-Disposition: form-data; name="image"; filename="droplet.png"\r
         \r
@@ -284,7 +284,11 @@ final class ApplicationTests: XCTestCase {
         --123--\r
 
         """
-        let expected = User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+        let expected = User(
+            name: "Vapor",
+            age: 4,
+            image: File(data: "<contents of image>", filename: "droplet.png")
+        )
 
         struct User: Content, Equatable {
             var name: String
@@ -321,7 +325,11 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get("multipart") { req -> User in
-            return User(name: "Vapor", age: 3, image: File(data: "<contents of image>", filename: "droplet.png"))
+            return User(
+                name: "Vapor",
+                age: 4,
+                image: File(data: "<contents of image>", filename: "droplet.png")
+            )
         }
 
         try app.testable().test(.GET, "/multipart") { res in
