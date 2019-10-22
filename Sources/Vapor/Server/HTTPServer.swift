@@ -130,7 +130,7 @@ public final class HTTPServer: Server {
         // print starting message
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
-        self.configuration.logger.info("Server starting on \(address)")
+        self.configuration.logger.notice("Server starting on \(address)")
         
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(

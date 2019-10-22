@@ -43,7 +43,7 @@ public final class FileMiddleware: Middleware {
         }
 
         // stream the file
-        let res = self.fileio.streamFile(at: filePath, for: request)
+        let res = request.fileio.streamFile(at: filePath)
         return request.eventLoop.makeSucceededFuture(res)
     }
 }

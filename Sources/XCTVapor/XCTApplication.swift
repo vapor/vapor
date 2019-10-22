@@ -1,25 +1,4 @@
 extension Application {
-    public func testable() -> XCTApplication {
-        return .init(application: self)
-    }
-}
-
-public final class XCTApplication {
-    let application: Application
-    var overrides: [(inout Services) -> ()]
-    
-    init(application: Application) {
-        self.application = application
-        self.overrides = []
-    }
-    
-    public func override<S>(service: S.Type, with instance: S) -> Self {
-        self.application.register(S.self) { _ in
-            return instance
-        }
-        return self
-    }
-
     public enum Method {
         case inMemory
         case running(port: Int)
@@ -28,12 +7,13 @@ public final class XCTApplication {
         }
     }
 
-    public func start(method: Method = .inMemory) throws -> XCTApplicationTester {
+    public func testable(method: Method = .inMemory) throws -> XCTApplicationTester {
+        try self.boot()
         switch method {
         case .inMemory:
-            return try InMemory(app: self.application)
+            return try InMemory(app: self)
         case .running(let port):
-            return try Live(app: self.application, port: port)
+            return try Live(app: self, port: port)
         }
     }
     
@@ -49,10 +29,6 @@ public final class XCTApplication {
             try server.start(hostname: "localhost", port: port)
         }
 
-        public func shutdown() {
-            // do nothing
-        }
-        
         @discardableResult
         public func performTest(
             method: HTTPMethod,
@@ -87,10 +63,6 @@ public final class XCTApplication {
         let app: Application
         init(app: Application) throws {
             self.app = app
-        }
-
-        public func shutdown() {
-            // do nothing
         }
 
         @discardableResult
@@ -137,8 +109,6 @@ public protocol XCTApplicationTester {
         line: UInt,
         closure: (XCTHTTPResponse) throws -> ()
     ) throws -> XCTApplicationTester
-
-    func shutdown()
 }
 
 extension XCTApplicationTester {

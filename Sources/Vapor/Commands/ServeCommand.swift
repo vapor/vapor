@@ -26,12 +26,12 @@ public final class ServeCommand: Command {
     }
 
     private let server: Server
-    private let running: Running
+    private let running: RunningService
     private var signalSources: [DispatchSourceSignal]
     private var didShutdown: Bool
 
     /// Create a new `ServeCommand`.
-    public init(server: Server, running: Running) {
+    init(server: Server, running: RunningService) {
         self.server = server
         self.running = running
         self.signalSources = []
@@ -50,8 +50,9 @@ public final class ServeCommand: Command {
         )
 
         // allow the server to be stopped or waited for
-        let promise = self.running.set(on: self.server.onShutdown.eventLoop)
+        let promise = self.server.onShutdown.eventLoop.makePromise(of: Void.self)
         self.server.onShutdown.cascade(to: promise)
+        self.running.current = .start(using: promise)
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")

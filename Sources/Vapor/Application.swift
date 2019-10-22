@@ -30,7 +30,7 @@ public final class Application {
         defer { self.shutdown() }
         do {
             try self.start()
-            try self.make(Running.self).current?.onStop.wait()
+            try self.running?.onStop.wait()
         } catch {
             self.logger.report(error: error)
             throw error
@@ -98,37 +98,35 @@ public final class Application {
 }
 
 
-public final class Running {
-    public struct Current {
-        public var onStop: EventLoopFuture<Void> {
-            return self.promise.futureResult
+extension Application {
+    public var running: Running? {
+        get {
+            return self.make(RunningService.self).current
         }
-
-        let promise: EventLoopPromise<Void>
-
-        public func stop() {
-            self.promise.succeed(())
+        set {
+            self.make(RunningService.self).current = newValue
         }
-    }
-    
-    public var current: Current? {
-        return self._current
-    }
-
-    private var _current: Current?
-
-
-    init() { }
-
-    public func set(on eventLoop: EventLoop) -> EventLoopPromise<Void> {
-        let promise = eventLoop.makePromise(of: Void.self)
-        self._current = Current(promise: promise)
-        return promise
     }
 }
 
-extension Application {
-    public var running: Running {
-        return self.make()
+
+public struct Running {
+    public static func start(using promise: EventLoopPromise<Void>) -> Running {
+        return self.init(promise: promise)
     }
+    
+    public var onStop: EventLoopFuture<Void> {
+        return self.promise.futureResult
+    }
+
+    private let promise: EventLoopPromise<Void>
+
+    public func stop() {
+        self.promise.succeed(())
+    }
+}
+
+final class RunningService {
+    var current: Running?
+    init() { }
 }

@@ -85,7 +85,7 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("shutdown") { req -> HTTPStatus in
-        guard let running = req.application.running.current else {
+        guard let running = req.application.running else {
             throw Abort(.internalServerError)
         }
         _ = running.stop()

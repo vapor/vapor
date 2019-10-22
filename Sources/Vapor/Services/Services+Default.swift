@@ -1,8 +1,8 @@
 extension Application {
     func registerDefaultServices() {
         // core
-        self.register(singleton: Running.self) { app in
-            return Running()
+        self.register(singleton: RunningService.self) { app in
+            return .init()
         }
         self.register(singleton: NIOThreadPool.self, boot: { app in
             let pool = NIOThreadPool(numberOfThreads: 1)
@@ -181,9 +181,6 @@ extension Application {
         // file
         self.register(NonBlockingFileIO.self) { app in
             return .init(threadPool: app.make())
-        }
-        self.register(FileIO.self) { app in
-            return .init(io: app.make(), allocator: app.make())
         }
         self.register(ByteBufferAllocator.self) { c in
             return .init()
