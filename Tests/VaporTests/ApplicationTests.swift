@@ -1119,6 +1119,22 @@ final class ApplicationTests: XCTestCase {
         let res = try app.client.get("http://localhost:8080/hello").wait()
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
+
+    func testChangeRequestLogLevel() throws {
+        let app = Application(environment: .testing)
+        defer { app.shutdown() }
+
+        app.get("trace") { req -> String in
+            req.logger.logLevel = .trace
+            req.logger.trace("foo")
+            return "done"
+        }
+
+        try app.testable().test(.GET, "trace") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+        }
+    }
 }
 
 private extension ByteBuffer {

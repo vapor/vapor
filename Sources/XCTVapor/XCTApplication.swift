@@ -80,6 +80,7 @@ extension Application {
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
             }
+            let path = path.hasPrefix("/") ? path : "/" + path
             let response: XCTHTTPResponse
             let request = Request(
                 application: app,
