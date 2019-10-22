@@ -1,6 +1,8 @@
 import NIO
 
 public final class Request: CustomStringConvertible {
+    public let application: Application
+
     /// The HTTP method for this request.
     ///
     ///     httpReq.method = .GET
@@ -78,7 +80,7 @@ public final class Request: CustomStringConvertible {
         }
     }
     
-    public let logger: Logger
+    public var logger: Logger
     
     public var body: Body {
         return Body(self)
@@ -121,20 +123,24 @@ public final class Request: CustomStringConvertible {
     public var userInfo: [AnyHashable: Any]
     
     public convenience init(
+        application: Application,
         method: HTTPMethod = .GET,
         url: URI = "/",
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
         on eventLoop: EventLoop
     ) {
         self.init(
+            application: application,
             method: method,
             url: url,
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
+            logger: logger,
             on: eventLoop
         )
         if let body = collectedBody {
@@ -143,14 +149,17 @@ public final class Request: CustomStringConvertible {
     }
     
     public init(
+        application: Application,
         method: HTTPMethod,
         url: URI,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
         on eventLoop: EventLoop
     ) {
+        self.application = application
         self.method = method
         self.url = url
         self.version = version
@@ -165,8 +174,7 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.userInfo = [:]
         self.isKeepAlive = true
-        var logger = Logger(label: "codes.vapor.request")
-        logger[metadataKey: "uuid"] = .string(UUID().uuidString)
         self.logger = logger
+        self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
     }
 }

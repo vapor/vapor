@@ -1,4 +1,4 @@
-public final class Route {
+public final class Route: CustomStringConvertible {
     public var method: HTTPMethod
     public var path: [PathComponent]
     public var responder: Responder
@@ -6,6 +6,11 @@ public final class Route {
     public var responseType: Any.Type
     
     public var userInfo: [AnyHashable: Any]
+
+    public var description: String {
+        let path = self.path.map { "\($0)" }.joined(separator: "/")
+        return "\(self.method.string) /\(path)"
+    }
     
     public init(
         method: HTTPMethod,

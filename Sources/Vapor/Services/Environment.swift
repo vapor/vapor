@@ -54,17 +54,17 @@ public struct Environment: Equatable {
 
     /// An environment for developing your application.
     public static var development: Environment {
-        return .init(name: "development")
+        return .init(name: "development", arguments: ["vapor"])
     }
 
     /// An environment for testing your application.
     public static var testing: Environment {
-        return .init(name: "testing")
+        return .init(name: "testing", arguments: ["vapor"])
     }
 
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment {
-        return .init(name: name)
+        return .init(name: name, arguments: ["vapor"])
     }
 
     // MARK: Env
