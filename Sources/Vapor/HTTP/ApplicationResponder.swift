@@ -10,6 +10,7 @@ public struct ApplicationResponder: Responder {
 
     /// See `Responder`.
     public func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.logger.info("\(request.method) \(request.url.path)")
         return self.responder.respond(to: request)
     }
 }

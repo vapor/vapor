@@ -22,7 +22,7 @@ extension Request {
 
 extension Application {
     public var client: Client {
-        return try! self.make()
+        return self.make()
     }
 }
 

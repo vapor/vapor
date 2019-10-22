@@ -80,7 +80,7 @@ public final class Request: CustomStringConvertible {
         }
     }
     
-    public let logger: Logger
+    public var logger: Logger
     
     public var body: Body {
         return Body(self)
@@ -130,6 +130,7 @@ public final class Request: CustomStringConvertible {
         headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
         on eventLoop: EventLoop
     ) {
         self.init(
@@ -139,6 +140,7 @@ public final class Request: CustomStringConvertible {
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
+            logger: logger,
             on: eventLoop
         )
         if let body = collectedBody {
@@ -154,6 +156,7 @@ public final class Request: CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders = .init(),
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
+        logger: Logger = .init(label: "codes.vapor.request"),
         on eventLoop: EventLoop
     ) {
         self.application = application
@@ -171,8 +174,7 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.userInfo = [:]
         self.isKeepAlive = true
-        var logger = Logger(label: "codes.vapor.request")
-        logger[metadataKey: "uuid"] = .string(UUID().uuidString)
         self.logger = logger
+        self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
     }
 }

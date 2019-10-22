@@ -20,6 +20,6 @@ extension Application: RoutesBuilder {
     }
     
     public var routes: Routes {
-        return try! self.make()
+        return self.make()
     }
 }

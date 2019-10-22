@@ -15,7 +15,7 @@ extension Application {
             return app.eventLoopGroup
         }
         self.register(EventLoop.self) { app in
-            return try app.make(EventLoopGroup.self).next()
+            return app.make(EventLoopGroup.self).next()
         }
 
         // client
@@ -23,13 +23,13 @@ extension Application {
             return .init()
         }
         self.register(request: Client.self) { req in
-            return try RequestClient(http: req.application.make(), req: req)
+            return RequestClient(http: req.application.make(), req: req)
         }
         self.register(Client.self) { c in
-            return try ApplicationClient(http: c.make())
+            return ApplicationClient(http: c.make())
         }
         self.register(singleton: HTTPClient.self, boot: { app in
-            return try .init(
+            return .init(
                 eventLoopGroupProvider: .shared(app.make()),
                 configuration: app.make()
             )
@@ -42,12 +42,12 @@ extension Application {
             return .init()
         }
         self.register(WebSocketClient.self) { app in
-            return try .init(eventLoopGroupProvider: .shared(app.make()), configuration: app.make())
+            return .init(eventLoopGroupProvider: .shared(app.make()), configuration: app.make())
         }
 
         // auth
         self.register(PasswordVerifier.self) { c in
-            return try c.make(BCryptDigest.self)
+            return c.make(BCryptDigest.self)
         }
         self.register(BCryptDigest.self) { c in
             return Bcrypt
@@ -56,7 +56,7 @@ extension Application {
             return PlaintextVerifier()
         }
         self.register(PasswordVerifier.self) { c in
-            return try c.make(PlaintextVerifier.self)
+            return c.make(PlaintextVerifier.self)
         }
         
         // routes
@@ -66,13 +66,13 @@ extension Application {
         
         // sessions
         self.register(SessionsMiddleware.self) { c in
-            return try .init(sessions: c.make(), config: c.make())
+            return .init(sessions: c.make(), config: c.make())
         }
         self.register(Sessions.self) { c in
-            return try c.make(MemorySessions.self)
+            return c.make(MemorySessions.self)
         }
         self.register(MemorySessions.self) { app in
-            return try MemorySessions(storage: app.make(), on: app.make())
+            return MemorySessions(storage: app.make(), on: app.make())
         }
         self.register(singleton: MemorySessions.Storage.self) { app in
             return .init()
@@ -85,11 +85,11 @@ extension Application {
         // middleware
         self.register(MiddlewareConfiguration.self) { c in
             var middleware = MiddlewareConfiguration()
-            try middleware.use(c.make(ErrorMiddleware.self))
+            middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
         self.register(FileMiddleware.self) { c in
-            return try .init(
+            return .init(
                 publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
                 fileio: c.make()
             )
@@ -108,10 +108,10 @@ extension Application {
             return .init()
         }
         self.register(Server.self) { c in
-            return try c.make(HTTPServer.self)
+            return c.make(HTTPServer.self)
         }
         self.register(singleton: HTTPServer.self, boot: { app in
-            return try .init(
+            return .init(
                 application: app,
                 responder: app.make(),
                 configuration: app.make(),
@@ -127,7 +127,7 @@ extension Application {
                 .resolve()
             
             // create HTTP routes
-            let routes = try c.make(Routes.self)
+            let routes = c.make(Routes.self)
             
             // return new responder
             return ApplicationResponder(routes: routes, middleware: middleware)
@@ -135,18 +135,22 @@ extension Application {
 
         // commands
         self.register(singleton: ServeCommand.self, boot: { app in
-            return try .init(server: app.make(), running: app.make())
+            return .init(server: app.make(), running: app.make())
         }, shutdown: { serve in
             serve.shutdown()
         })
         self.register(RoutesCommand.self) { c in
-            return try .init(routes: c.make())
+            return .init(routes: c.make())
         }
         self.register(BootCommand.self) { c in
             return .init()
         }
-        self.register(CommandConfiguration.self) { c in
-            return try .default(on: c)
+        self.register(CommandConfiguration.self) { app in
+            var config = CommandConfiguration()
+            config.use(app.make(ServeCommand.self), as: "serve", isDefault: true)
+            config.use(app.make(RoutesCommand.self), as: "routes")
+            config.use(app.make(BootCommand.self), as: "boot")
+            return config
         }
         self.register(Commands.self) { c in
             return try c.make(CommandConfiguration.self).resolve()
@@ -158,19 +162,16 @@ extension Application {
         }
 
         // logging
-        self.register(ConsoleLogger.self) { container in
-            return try ConsoleLogger(console: container.make())
-        }
         self.register(Logger.self) { app in
-            return .init(label: "codes.vapor.application")
+            return app.logger
         }
 
         // view
         self.register(ViewRenderer.self) { c in
-            return try c.make(PlaintextRenderer.self)
+            return c.make(PlaintextRenderer.self)
         }
         self.register(PlaintextRenderer.self) { app in
-            return try PlaintextRenderer(
+            return PlaintextRenderer(
                 threadPool: app.make(),
                 viewsDirectory: app.make(DirectoryConfiguration.self).viewsDirectory,
                 eventLoopGroup: app.make()
@@ -179,10 +180,10 @@ extension Application {
 
         // file
         self.register(NonBlockingFileIO.self) { app in
-            return try .init(threadPool: app.make())
+            return .init(threadPool: app.make())
         }
         self.register(FileIO.self) { app in
-            return try .init(io: app.make(), allocator: app.make())
+            return .init(io: app.make(), allocator: app.make())
         }
         self.register(ByteBufferAllocator.self) { c in
             return .init()

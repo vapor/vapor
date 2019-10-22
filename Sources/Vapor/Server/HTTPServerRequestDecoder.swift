@@ -51,6 +51,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     version: head.version,
                     headersNoUpdate: head.headers,
                     remoteAddress: context.channel.remoteAddress,
+                    logger: self.application.logger,
                     on: context.channel.eventLoop
                 )
                 switch head.version.major {

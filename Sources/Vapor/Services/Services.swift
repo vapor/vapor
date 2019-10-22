@@ -274,7 +274,7 @@ extension Application {
 
     
     /// Adds a supplement closure for the given Service type
-    public func extend<S>(_ service: S.Type, _ closure: @escaping (inout S, Application) throws -> Void) {
+    public func register<S>(extension service: S.Type, _ closure: @escaping (inout S, Application) throws -> Void) {
         let id = ServiceID(S.self)
         let ext = ServiceExtension<S>(closure: closure)
         self.services.extensions[id, default: []].append(ext)
