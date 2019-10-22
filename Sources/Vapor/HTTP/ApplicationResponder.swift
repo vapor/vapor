@@ -10,6 +10,7 @@ public struct ApplicationResponder: Responder {
 
     /// See `Responder`.
     public func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.logger.info("\(request.method) \(request.url.path)")
         return self.responder.respond(to: request)
     }
 }
@@ -19,7 +20,6 @@ public struct ApplicationResponder: Responder {
 /// Converts a `Router` into a `Responder`.
 internal struct RoutesResponder: Responder {
     private let router: TrieRouter<Responder>
-    private let eventLoop: EventLoop
 
     /// Creates a new `RouterResponder`.
     init(routes: Routes) {
@@ -41,13 +41,12 @@ internal struct RoutesResponder: Responder {
             router.register(route: route)
         }
         self.router = router
-        self.eventLoop = routes.eventLoop
     }
 
     /// See `Responder`.
     func respond(to request: Request) -> EventLoopFuture<Response> {
         guard let responder = self.route(request) else {
-            return self.eventLoop.makeFailedFuture(Abort(.notFound))
+            return request.eventLoop.makeFailedFuture(Abort(.notFound))
         }
         return responder.respond(to: request)
     }

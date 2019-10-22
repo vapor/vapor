@@ -26,12 +26,16 @@ public final class ServeCommand: Command {
     }
 
     private let server: Server
+    private let running: RunningService
     private var signalSources: [DispatchSourceSignal]
+    private var didShutdown: Bool
 
     /// Create a new `ServeCommand`.
-    public init(server: Server) {
+    init(server: Server, running: RunningService) {
         self.server = server
+        self.running = running
         self.signalSources = []
+        self.didShutdown = false
     }
 
     /// See `Command`.
@@ -44,14 +48,19 @@ public final class ServeCommand: Command {
                 // 0.0.0.0:8080, :8080, parse port
                 ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         )
-        
+
+        // allow the server to be stopped or waited for
+        let promise = self.server.onShutdown.eventLoop.makePromise(of: Void.self)
+        self.server.onShutdown.cascade(to: promise)
+        self.running.current = .start(using: promise)
+
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C
-                self.server.shutdown()
+                promise.succeed(())
             }
             source.resume()
             self.signalSources.append(source)
@@ -60,9 +69,14 @@ public final class ServeCommand: Command {
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
     }
-    
-    deinit {
+
+    func shutdown() {
+        self.didShutdown = true
         self.signalSources.forEach { $0.cancel() } // clear refs
         self.signalSources = []
+    }
+    
+    deinit {
+        assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
     }
 }

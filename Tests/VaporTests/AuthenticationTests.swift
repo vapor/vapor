@@ -9,34 +9,31 @@ final class AuthenticationTests: XCTestCase {
         struct TestAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            let eventLoop: EventLoop
+            let eventLoopGroup: EventLoopGroup
 
-            init(on eventLoop: EventLoop) {
-                self.eventLoop = eventLoop
+            init(on eventLoopGroup: EventLoopGroup) {
+                self.eventLoopGroup = eventLoopGroup
             }
 
             func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
                 guard bearer.token == "test" else {
-                    return self.eventLoop.makeSucceededFuture(nil)
+                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return self.eventLoop.makeSucceededFuture(test)
+                return self.eventLoopGroup.next().makeSucceededFuture(test)
             }
         }
-
-        let app = Application.create(routes: { r, c in
-            r.grouped([
-                TestAuthenticator(on: c.eventLoop).middleware(), Test.guardMiddleware()
-            ]).get("test") { req -> String in
-                return try req.requireAuthenticated(Test.self).name
-            }
-        })
+        
+        let app = Application(environment: .testing)
         defer { app.shutdown() }
+        
+        app.routes.grouped([
+            TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
+        ]).get("test") { req -> String in
+            return try req.requireAuthenticated(Test.self).name
+        }
 
-        let server = try app.testable().start()
-        defer { server.shutdown() }
-
-        try server.test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }
         .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
@@ -53,38 +50,34 @@ final class AuthenticationTests: XCTestCase {
         struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
-            let eventLoop: EventLoop
+            let eventLoopGroup: EventLoopGroup
 
-            init(on eventLoop: EventLoop) {
-                self.eventLoop = eventLoop
+            init(on eventLoopGroup: EventLoopGroup) {
+                self.eventLoopGroup = eventLoopGroup
             }
 
             func authenticate(basic: BasicAuthorization) -> EventLoopFuture<Test?> {
                 guard basic.username == "test" && basic.password == "secret" else {
-                    return self.eventLoop.makeSucceededFuture(nil)
+                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return self.eventLoop.makeSucceededFuture(test)
+                return self.eventLoopGroup.next().makeSucceededFuture(test)
             }
         }
-
-        let app = Application.create(routes: { r, c in
-            r.grouped([
-                TestAuthenticator(on: c.eventLoop).middleware(), Test.guardMiddleware()
-            ]).get("test") { req -> String in
-                return try req.requireAuthenticated(Test.self).name
-            }
-        })
+        
+        let app = Application(environment: .testing)
         defer { app.shutdown() }
 
-        let server = try app.testable().start()
-        defer { server.shutdown() }
-
-        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try server.test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized)
+        app.routes.grouped([
+            TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
+        ]).get("test") { req -> String in
+            return try req.requireAuthenticated(Test.self).name
         }
-        .test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        
+        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
+        try app.testable().test(.GET, "/test") { res in
+            XCTAssertEqual(res.status, .unauthorized)
+        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
@@ -101,45 +94,51 @@ final class AuthenticationTests: XCTestCase {
         struct TestBearerAuthenticator: BearerAuthenticator {
             typealias User = Test
 
+            let eventLoopGroup: EventLoopGroup
+            init(on eventLoopGroup: EventLoopGroup) {
+                self.eventLoopGroup = eventLoopGroup
+            }
+
             func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
                 guard bearer.token == "test" else {
-                    return EmbeddedEventLoop().makeSucceededFuture(nil)
+                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return EmbeddedEventLoop().makeSucceededFuture(test)
+                return self.eventLoopGroup.next().makeSucceededFuture(test)
             }
         }
 
         struct TestSessionAuthenticator: SessionAuthenticator {
             typealias User = Test
 
+            let eventLoopGroup: EventLoopGroup
+            init(on eventLoopGroup: EventLoopGroup) {
+                self.eventLoopGroup = eventLoopGroup
+            }
+
             func resolve(sessionID: String) -> EventLoopFuture<Test?> {
                 let test = Test(name: sessionID)
-                return EmbeddedEventLoop().makeSucceededFuture(test)
+                return self.eventLoopGroup.next().makeSucceededFuture(test)
             }
         }
-
-        let app = Application.create(routes: { r, c in
-            try r.grouped([
-                c.make(SessionsMiddleware.self),
-                TestSessionAuthenticator().middleware(),
-                TestBearerAuthenticator().middleware(),
-                Test.guardMiddleware(),
-            ]).get("test") { req -> String in
-                return try req.requireAuthenticated(Test.self).name
-            }
-        })
+        
+        let app = Application(environment: .testing)
         defer { app.shutdown() }
-
-        let server = try app.testable().start()
-        defer { server.shutdown() }
+        
+        app.routes.grouped([
+            app.make(SessionsMiddleware.self),
+            TestSessionAuthenticator(on: app.make()).middleware(),
+            TestBearerAuthenticator(on: app.make()).middleware(),
+            Test.guardMiddleware(),
+        ]).get("test") { req -> String in
+            return try req.requireAuthenticated(Test.self).name
+        }
 
         var sessionCookie: HTTPCookies.Value?
-        try server.test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
             XCTAssertNil(res.headers.firstValue(name: .setCookie))
-        }
-        .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+        }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
             if
