@@ -345,9 +345,9 @@ private extension ChannelPipeline {
         // add response compressor if configured
         if configuration.supportCompression {
             let requestDecompressionHandler = NIOHTTPRequestDecompressor(limit: .none)
-            let responseComressoionHandler = HTTPResponseCompressor()
+            let responseCompressoionHandler = HTTPResponseCompressor()
 
-            handlers.append(responseComressoionHandler)
+            handlers.append(responseCompressoionHandler)
             handlers.append(requestDecompressionHandler)
         }
         
