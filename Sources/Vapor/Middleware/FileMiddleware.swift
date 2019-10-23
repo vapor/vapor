@@ -9,13 +9,10 @@ public final class FileMiddleware: Middleware {
     /// The public directory.
     /// - note: Must end with a slash.
     private let publicDirectory: String
-    
-    private let fileio: FileIO
 
     /// Creates a new `FileMiddleware`.
-    public init(publicDirectory: String, fileio: FileIO) {
+    public init(publicDirectory: String) {
         self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
-        self.fileio = fileio
     }
 
     /// See `Middleware`.

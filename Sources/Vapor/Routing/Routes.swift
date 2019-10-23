@@ -1,16 +1,16 @@
 public final class Routes: RoutesBuilder, CustomStringConvertible {
-    public var routes: [Route]
+    public var all: [Route]
 
     public var description: String {
-        return self.routes.description
+        return self.all.description
     }
     
     public init() {
-        self.routes = []
+        self.all = []
     }
     
     public func add(_ route: Route) {
-        self.routes.append(route)
+        self.all.append(route)
     }
 }
 

@@ -90,8 +90,7 @@ extension Application {
         }
         self.register(FileMiddleware.self) { c in
             return .init(
-                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
-                fileio: c.make()
+                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory
             )
         }
         self.register(ErrorMiddleware.self) { c in

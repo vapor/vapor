@@ -24,7 +24,7 @@ internal struct RoutesResponder: Responder {
     /// Creates a new `RouterResponder`.
     init(routes: Routes) {
         let router = TrieRouter(Responder.self)
-        for route in routes.routes {
+        for route in routes.all {
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
