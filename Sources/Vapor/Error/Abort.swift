@@ -27,6 +27,18 @@ public struct Abort: AbortError {
 
     /// See `AbortError`
     public var reason: String
+
+    /// The file throwing this error
+    public var file: String
+    
+    /// The function throwing this error
+    public var function: String
+    
+    /// The line where the error is thrown
+    public var line: UInt
+    
+    /// The column where the errror is thrown
+    public var column: UInt
     
     public var description: String {
         return "Abort \(self.status.code): \(self.reason)"
@@ -48,5 +60,9 @@ public struct Abort: AbortError {
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
+        self.file = file
+        self.function = function
+        self.line = line
+        self.column = column
     }
 }
