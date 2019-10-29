@@ -4,11 +4,19 @@ public func && <T: Decodable>(lhs: Validator<T>, rhs: Validator<T>) -> Validator
 }
 
 extension Validator {
+    // TODO: after hiding `ValidatorType`s, consider merging this with Or to create on LogicValidator that takes an operator like `&&`, `||` to reduce code duplication
     public struct And: ValidatorType {
-        public enum Failure: ValidatorFailure {
-            case left(ValidatorFailure)
-            case right(ValidatorFailure)
-            case both(left: ValidatorFailure, right: ValidatorFailure)
+        public struct Result: ValidatorResult {
+            public let left: ValidatorResult
+            public let right: ValidatorResult
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
+            }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool { left.failed || right.failed }
         }
 
         let lhs: Validator<T>
@@ -19,35 +27,8 @@ extension Validator {
             self.rhs = rhs
         }
 
-        public func validate(_ data: T) -> Failure? {
-            switch (lhs.validate(data), rhs.validate(data)) {
-            case (.none, .none): return nil
-            case let (.some(left), .none): return .left(left)
-            case let (.none, .some(right)): return .right(right)
-            case let (.some(left), .some(right)): return .both(left: left, right: right)
-            }
-        }
-    }
-}
-
-extension Validator.And.Failure: CustomStringConvertible {
-    public var description: String {
-        func describe(_ failure: ValidatorFailure, isLeft: Bool) -> String {
-            (failure as? CustomStringConvertible)?.description
-                ?? "\(isLeft ? "left" : "right") validation failed"
-        }
-
-        switch self {
-        case let .left(failure):
-            return describe(failure, isLeft: true)
-        case let .right(failure):
-            return describe(failure, isLeft: false)
-        case let .both(left, right):
-            return """
-                \(describe(left, isLeft: true))\
-                 and \
-                \(describe(right, isLeft: false)))
-                """
+        public func validate(_ data: T) -> Result {
+            .init(left: lhs.validate(data), right: rhs.validate(data))
         }
     }
 }

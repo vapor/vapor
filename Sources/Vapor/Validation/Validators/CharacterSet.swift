@@ -17,9 +17,26 @@ extension Validator {
 
     /// Validates that a `String` contains characters in a given `CharacterSet`.
     public struct CharacterSet: ValidatorType {
-        public struct Failure: ValidatorFailure {
+        public struct Result: ValidatorResult {
             public let characterSet: Foundation.CharacterSet
-            public let invalidSlice: Substring
+            public let invalidSlice: Substring?
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                var string: String
+                if let invalidSlice = invalidSlice {
+                    string = "contains an invalid character: '\(invalidSlice)'"
+                } else {
+                    string = "contains valid characters"
+                }
+                if !characterSet.traits.isEmpty {
+                    string += " (allowed: \(characterSet.traits.joined(separator: ", ")))"
+                }
+                return string
+            }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool { invalidSlice != nil }
         }
 
         /// `CharacterSet` to validate against.
@@ -30,28 +47,12 @@ extension Validator {
         }
 
         /// See `Validator`.
-        public func validate(_ s: String) -> Failure? {
-            if let range = s.rangeOfCharacter(from: characterSet.inverted) {
-                return .init(
-                    characterSet: characterSet,
-                    invalidSlice: s[range]
-                )
-            } else {
-                return nil
-            }
+        public func validate(_ s: String) -> Result {
+            .init(
+                characterSet: characterSet,
+                invalidSlice: s.rangeOfCharacter(from: characterSet.inverted).map { s[$0] }
+            )
         }
-    }
-}
-
-extension Validator.CharacterSet.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        var string = "contains an invalid character: '\(invalidSlice)'"
-        if !characterSet.traits.isEmpty {
-            string += " (allowed: \(characterSet.traits.joined(separator: ", ")))"
-        }
-        return string
     }
 }
 

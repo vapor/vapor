@@ -1,3 +1,5 @@
+import Foundation
+
 extension Validator where T: Equatable {
 
     /// Validates whether an item is contained in the supplied array.
@@ -12,8 +14,16 @@ extension Validator where T: Equatable {
 
     /// Validates whether an item is contained in the supplied array.
     public struct In: ValidatorType {
-        public struct Failure: ValidatorFailure {
+        public struct Result: ValidatorResult {
             let elementDescriptions: () -> [String]
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                "contained in \(elementDescriptions().joined(separator: ", ")))"
+            }
+
+            /// See `ValidatorResult`.
+            public let failed: Bool
         }
 
         /// Closure to determine whether an element is in the sequence.
@@ -27,17 +37,8 @@ extension Validator where T: Equatable {
         }
 
         /// See `Validator`.
-        public func validate(_ item: T) -> Failure? {
-            contains(item) ? nil : .init(elementDescriptions: elementDescriptions)
+        public func validate(_ item: T) -> Result {
+            .init(elementDescriptions: elementDescriptions, failed: contains(item))
         }
     }
 }
-
-extension Validator.In.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        "is not in: \(elementDescriptions().joined(separator: ", "))"
-    }
-}
-

@@ -28,9 +28,39 @@ extension Validator where T: Comparable {
 
     /// Validates whether the data is within a supplied int range.
     public struct Range: ValidatorType {
-        public enum Failure: ValidatorFailure {
-            case lessThan(min: T)
-            case greaterThan(max: T)
+        public enum Result: ValidatorResult {
+            case between(min: T, max: T)
+            case greaterThanOrEqualToMin(T)
+            case greaterThanMax(T)
+            case lessThanOrEqualToMax(T)
+            case lessThanMin(T)
+            case unconstrained
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                switch self {
+                case let .between(min, max):
+                    return "between \(min) and \(max)"
+                case let .greaterThanOrEqualToMin(min):
+                    return "greater than or equal to minimum of \(min)"
+                case let .greaterThanMax(max):
+                    return "greater than maximum of \(max)"
+                case let .lessThanMin(min):
+                    return "less than minimum of \(min)"
+                case let .lessThanOrEqualToMax(max):
+                    return "less than or equal to maximum of \(max)"
+                case .unconstrained:
+                    return "unconstrained"
+                }
+            }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool {
+                switch self {
+                case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax, .unconstrained: return false
+                case .greaterThanMax, .lessThanMin: return true
+                }
+            }
         }
 
         /// the minimum possible value, if nil, not checked
@@ -47,29 +77,21 @@ extension Validator where T: Comparable {
         }
 
         /// See `ValidatorType`.
-        public func validate(_ data: T) -> Failure? {
-            if let min = self.min, data < min {
-                return .lessThan(min: min)
+        public func validate(_ comparable: T) -> Result {
+            switch (min, max) {
+            case let (.some(min), .some(max)) where comparable >= min && comparable <= max:
+                return .between(min: min, max: max)
+            case let (.some(min), _) where comparable < min:
+                return .lessThanMin(min)
+            case let (_, .some(max)) where comparable > max:
+                return .greaterThanMax(max)
+            case let (.some(min), _):
+                return .greaterThanOrEqualToMin(min)
+            case let (_, .some(max)):
+                return .lessThanOrEqualToMax(max)
+            case (.none, .none):
+                return .unconstrained
             }
-
-            if let max = self.max, data > max {
-                return .greaterThan(max: max)
-            }
-
-            return nil
-        }
-    }
-}
-
-extension Validator.Range.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        switch self {
-        case .greaterThan(let max):
-            return "is greater than \(max)"
-        case .lessThan(let min):
-            return "is less than \(min)"
         }
     }
 }

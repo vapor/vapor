@@ -7,15 +7,20 @@ extension Validator {
 
     /// Combines two validators, if either is true the validation will succeed.
     struct Or: ValidatorType {
-        struct Failure: ValidatorFailure {
-            let left: ValidatorFailure
-            let right: ValidatorFailure
+        public struct Result: ValidatorResult {
+            public let left: ValidatorResult
+            public let right: ValidatorResult
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
+            }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool { left.failed && right.failed }
         }
 
-        /// left validator
         let lhs: Validator<T>
-
-        /// right validator
         let rhs: Validator<T>
 
         public init(lhs: Validator<T>, rhs: Validator<T>) {
@@ -24,21 +29,8 @@ extension Validator {
         }
 
         /// See Validator.validate
-        public func validate(_ data: T) -> Failure? {
-            switch (lhs.validate(data), rhs.validate(data)) {
-            case let (.some(left), .some(right)): return .init(left: left, right: right)
-            default: return nil
-            }
+        public func validate(_ data: T) -> Result {
+            .init(left: lhs.validate(data), right: rhs.validate(data))
         }
-    }
-}
-
-extension Validator.Or.Failure: CustomStringConvertible {
-    public var description: String {
-        """
-        \((left as? CustomStringConvertible)?.description ?? "left validation failed")\
-         and \
-        \((right as? CustomStringConvertible)?.description ?? "right validation failed")
-        """
     }
 }

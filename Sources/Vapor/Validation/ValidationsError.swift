@@ -1,11 +1,12 @@
 public struct ValidationsError: Error {
-    public let failedValidations: [FailedValidation]
+    public let failures: [PathedValidatorResult]
 
-    init?(_ failedValidations: [FailedValidation]) {
-        guard !failedValidations.isEmpty else {
+    init?(_ pathedValidatorResults: [PathedValidatorResult]) {
+        self.failures = pathedValidatorResults.filter { $0.result.failed }
+
+        if failures.isEmpty {
             return nil
         }
-        self.failedValidations = failedValidations
     }
 }
 
@@ -13,8 +14,8 @@ extension ValidationsError: CustomStringConvertible {
 
     /// See `CustomStringConvertible`.
     public var description: String {
-        failedValidations.map { failedValidation in
-            "\(failedValidation.path.dotPath): \(String(describing: failedValidation))"
+        failures.map { failure in
+            "\(failure.path.dotPath): is \(failure.result.failed ? "not " : "")\(failure.result.description))"
         }.joined(separator: "\n")
     }
 }

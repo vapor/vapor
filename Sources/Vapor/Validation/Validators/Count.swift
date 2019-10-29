@@ -22,9 +22,47 @@ extension Validator where T: Collection {
 
     /// Validates whether the item's count is within a supplied int range.
     public struct Count: ValidatorType {
-        public enum Failure: ValidatorFailure {
-            case lessThan(min: Int)
-            case greaterThan(max: Int)
+        public enum Result: ValidatorResult {
+            case between(min: Int, max: Int)
+            case greaterThanOrEqualToMin(Int)
+            case greaterThanMax(Int)
+            case lessThanOrEqualToMax(Int)
+            case lessThanMin(Int)
+            case unconstrained
+
+            /// See `CustomStringConvertible`.
+            public var description: String {
+                func elementDescription(count: Int) -> String {
+                    let useSingularForm = count == 1 && count != 0
+
+                    let element = T.Element.self is Character.Type ? "character" : "item"
+
+                    return "\(count) \(element)\(useSingularForm ? "" : "s")"
+                }
+
+                switch self {
+                case let .between(min, max):
+                    return "between \(min) and \(elementDescription(count: max))"
+                case let .greaterThanOrEqualToMin(min):
+                    return "greater than or equal to minimum of \(elementDescription(count: min))"
+                case let .greaterThanMax(max):
+                    return "greater than maximum of \(elementDescription(count: max))"
+                case let .lessThanMin(min):
+                    return "less than minimum of \(elementDescription(count: min))"
+                case let .lessThanOrEqualToMax(max):
+                    return "less than or equal to maximum of \(elementDescription(count: max))"
+                case .unconstrained:
+                    return "unconstrained"
+                }
+            }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool {
+                switch self {
+                case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax, .unconstrained: return false
+                case .greaterThanMax, .lessThanMin: return true
+                }
+            }
         }
 
         /// the minimum possible value, if nil, not checked
@@ -41,37 +79,22 @@ extension Validator where T: Collection {
         }
 
         /// See `ValidatorType`.
-        public func validate(_ data: T) -> Failure? {
-            if let min = self.min, data.count < min {
-                return .lessThan(min: min)
+        public func validate(_ data: T) -> Result {
+            let count = data.count
+            switch (min, max) {
+            case let (.some(min), .some(max)) where count >= min && count <= max:
+                return .between(min: min, max: max)
+            case let (.some(min), _) where count < min:
+                return .lessThanMin(min)
+            case let (_, .some(max)) where count > max:
+                return .greaterThanMax(max)
+            case let (.some(min), _):
+                return .greaterThanOrEqualToMin(min)
+            case let (_, .some(max)):
+                return .lessThanOrEqualToMax(max)
+            case (.none, .none):
+                return .unconstrained
             }
-
-            if let max = self.max, data.count > max {
-                return .greaterThan(max: max)
-            }
-
-            return nil
-        }
-    }
-}
-
-extension Validator.Count.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        switch self {
-        case .lessThan(let min):
-            return "is less than required minimum of \(elementDescription(count: min))"
-        case .greaterThan(let max):
-            return "is greater than required maximum of \(elementDescription(count: max))"
-        }
-    }
-
-    private func elementDescription(count: Int) -> String {
-        if T.Element.self is Character.Type {
-            return count == 1 ? "1 character" : "\(count) characters"
-        } else {
-            return count == 1 ? "1 item" : "\(count) items"
         }
     }
 }

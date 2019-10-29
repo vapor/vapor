@@ -8,30 +8,31 @@ extension Validator where T == String {
     public static var url: Validator<T> {
         URL().validator()
     }
+}
+
+extension Validator {
 
     /// Validates whether a string is a valid email address.
     public struct URL: ValidatorType {
-        public struct Failure: ValidatorFailure {}
+        public struct Result: ValidatorResult {
+            /// See `CustomStringConvertible`.
+            public let description = "a valid URL"
+
+            /// See `ValidatorResult`.
+            public let failed: Bool
+        }
 
         public init() {}
 
         /// See `Validator`.
-        public func validate(_ data: String) -> Failure? {
+        public func validate(_ data: String) -> Result {
             guard
                 let url = Foundation.URL(string: data),
                 url.isFileURL || (url.host != nil && url.scheme != nil)
             else {
-                return .init()
+                return .init(failed: true)
             }
-            return nil
+            return .init(failed: false)
         }
-    }
-}
-
-extension Validator.URL.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        "is not a valid URL"
     }
 }

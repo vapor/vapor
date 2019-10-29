@@ -1,11 +1,11 @@
 public struct Validator<T: Decodable> {
-    public let validate: (_ data: T) -> ValidatorFailure?
+    public let validate: (_ data: T) -> ValidatorResult
 }
 
 public protocol ValidatorType {
     associatedtype Data: Decodable
-    associatedtype Failure: ValidatorFailure
-    func validate(_ data: Data) -> Failure?
+    associatedtype Result: ValidatorResult
+    func validate(_ data: Data) -> Result
     func validator() -> Validator<Data>
 }
 

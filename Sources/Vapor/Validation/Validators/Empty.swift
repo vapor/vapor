@@ -7,21 +7,19 @@ extension Validator where T: Collection {
 
     /// Validates whether the data is empty.
     public struct Empty: ValidatorType {
-        public struct Failure: ValidatorFailure {}
+        public struct Result: ValidatorResult {
+            /// See `CustomStringConvertible`.
+            public let description = "empty"
+
+            /// See `ValidatorResult`.
+            public let failed: Bool
+        }
 
         public init() {}
 
         /// See `ValidatorType`.
-        public func validate(_ data: T) -> Failure? {
-            data.isEmpty ? nil : .init()
+        public func validate(_ data: T) -> Result {
+            .init(failed: !data.isEmpty)
         }
-    }
-}
-
-extension Validator.Empty.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        "is not empty"
     }
 }

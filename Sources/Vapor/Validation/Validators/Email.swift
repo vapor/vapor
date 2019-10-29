@@ -4,38 +4,41 @@ extension Validator where T == String {
     public static var email: Validator<T> {
         Email().validator()
     }
+}
+
+extension Validator {
 
     /// Validates whether a `String` is a valid email address.
     public struct Email: ValidatorType {
 
-        public struct Failure: ValidatorFailure {}
+        public struct Result: ValidatorResult {
+
+            /// See `CustomStringConvertible`.
+            public let description = "a valid email address"
+
+            /// See `ValidatorResult`.
+            public let failed: Bool
+        }
 
         public init() {}
 
         /// See `ValidatorType`.
-        public func validate(_ s: String) -> Failure? {
+        public func validate(_ string: String) -> Result {
             guard
-                let range = s.range(of: regex, options: [.regularExpression]),
-                range.lowerBound == s.startIndex && range.upperBound == s.endIndex,
-                s.count <= 80, // total length
-                s.split(separator: "@")[0].count <= 64 // length before `@`
+                let range = string.range(of: regex, options: [.regularExpression]),
+                range.lowerBound == string.startIndex && range.upperBound == string.endIndex,
+                // FIXME: these numbers are incorrect and too restrictive
+                string.count <= 80, // total length
+                string.split(separator: "@")[0].count <= 64 // length before `@`
             else {
-                return .init()
+                return .init(failed: true)
             }
-
-            return nil
+            return .init(failed: false)
         }
     }
 }
 
-extension Validator.Email.Failure: CustomStringConvertible {
-
-    /// See `CustomStringConvertible`.
-    public var description: String {
-        "is not a valid email address"
-    }
-}
-
+// FIXME: this regex is too strict with capitalization of the domain part
 private let regex: String = """
 (?:[a-zA-Z0-9!#$%\\&‘*+/=?\\^_`{|}~-]+(?:\\.[a-zA-Z0-9!#$%\\&'*+/=?\\^_`{|}\
 ~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\\

@@ -26,8 +26,14 @@ extension Validator {
 
     /// A validator that ignores nil values.
     public struct NilIgnoring: ValidatorType {
-        public struct Failure: ValidatorFailure {
-            let failure: ValidatorFailure
+        public struct Result: ValidatorResult {
+            let result: ValidatorResult?
+
+            /// See `CustomStringConvertible`.
+            public var description: String { result?.description ?? "nil" }
+
+            /// See `ValidatorResult`.
+            public var failed: Bool { result?.failed == true }
         }
 
         let base: Validator<T>
@@ -38,17 +44,8 @@ extension Validator {
         }
 
         /// See `ValidatorType`.
-        public func validate(_ data: T?) -> Failure? {
-            if let failure = data.flatMap(base.validate) {
-                return .init(failure: failure)
-            }
-            return nil
+        public func validate(_ data: T?) -> Result {
+            .init(result: data.flatMap(base.validate))
         }
-    }
-}
-
-extension Validator.NilIgnoring.Failure: CustomStringConvertible {
-    public var description: String {
-        (failure as? CustomStringConvertible)?.description ?? "unknown validation failed"
     }
 }

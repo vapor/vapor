@@ -1,5 +1,3 @@
-public protocol ValidatorFailure {}
-
-public struct MissingRequiredValueFailure: ValidatorFailure {}
-
-public struct TypeMismatchValidatorFailure: ValidatorFailure {}
+public protocol ValidatorResult: CustomStringConvertible {
+    var failed: Bool { get }
+}
