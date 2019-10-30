@@ -36,6 +36,10 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///
     public var http: HTTPRequest
     
+    /// The readable path for the request
+    ///
+    ///     print(req.readablePath) // "GET/users/:userId"
+    ///
     public var readablePath: String?
 
     // MARK: Services
