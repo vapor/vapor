@@ -1,116 +1,64 @@
-import NIO
-
 public final class Application {
     public var environment: Environment
-    
-    public let eventLoopGroup: EventLoopGroup
-    
+    public var services: Services
+    public let sync: Lock
     public var userInfo: [AnyHashable: Any]
-    
-    public let lock: NSLock
-    
-    private let configure: (inout Services) throws -> ()
-    
-    private let threadPool: NIOThreadPool
-    
-    private var didShutdown: Bool
-    
-    public var running: Running?
-    
+    public private(set) var didShutdown: Bool
+    internal let eventLoopGroup: EventLoopGroup
     public var logger: Logger
+    private var isBooted: Bool
 
-    private var _services: Services!
-    
-    public struct Running {
-        public var stop: () -> Void
-        public init(stop: @escaping () -> Void) {
-            self.stop = {
-                DispatchQueue.global().async {
-                    stop()
-                }
-            }
-        }
+    public var providers: [Provider] {
+        return self.services.providers
     }
     
-    public init(
-        environment: Environment = .development,
-        configure: @escaping (inout Services) throws -> () = { _ in }
-    ) {
+    public init(environment: Environment = .development) {
         self.environment = environment
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.services = .init()
+        self.sync = .init()
         self.userInfo = [:]
         self.didShutdown = false
-        self.configure = configure
-        self.lock = NSLock()
-        self.threadPool = .init(numberOfThreads: 1)
-        self.threadPool.start()
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.logger = .init(label: "codes.vapor.application")
-    }
-    
-    public func makeServices() throws -> Services {
-        var s = Services.default()
-        try self.configure(&s)
-        s.register(Application.self) { c in
-            return self
-        }
-        s.register(NIOThreadPool.self) { c in
-            return self.threadPool
-        }
-        return s
-    }
-    
-    public func makeContainer() -> EventLoopFuture<Container> {
-        return self.makeContainer(on: self.eventLoopGroup.next())
-    }
-    
-    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        do {
-            return try _makeContainer(on: eventLoop)
-        } catch {
-            return self.eventLoopGroup.next().makeFailedFuture(error)
-        }
-    }
-    
-    private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        let s = try self.makeServices()
-        return Container.boot(environment: self.environment, services: s, on: eventLoop)
+        self.isBooted = false
+        self.registerDefaultServices()
     }
 
     // MARK: Run
-
-    public func boot() throws {
-        self._services = try self.makeServices()
-        try self._services.providers.forEach { try $0.willBoot(self) }
-        try self._services.providers.forEach { try $0.didBoot(self) }
-    }
     
     public func run() throws {
-        self.logger = .init(label: "codes.vapor.application")
         defer { self.shutdown() }
         do {
-            try self.runCommands()
+            try self.start()
+            try self.running?.onStop.wait()
         } catch {
             self.logger.report(error: error)
             throw error
         }
     }
     
-    public func runCommands() throws {
-        let eventLoop = self.eventLoopGroup.next()
+    public func start() throws {
+        try self.boot()
+        let eventLoop = self.make(EventLoop.self)
         try self.loadDotEnv(on: eventLoop).wait()
-        let c = try self.makeContainer(on: eventLoop).wait()
-        defer { c.shutdown() }
-        let command = try c.make(Commands.self).group()
-        let console = try c.make(Console.self)
-        var runInput = self.environment.commandInput
-        try console.run(command, input: &runInput)
+        let command = self.make(Commands.self).group()
+        let console = self.make(Console.self)
+        try console.run(command, input: self.environment.commandInput)
     }
-    
+
+    public func boot() throws {
+        guard !self.isBooted else {
+            return
+        }
+        self.isBooted = true
+        try self.providers.forEach { try $0.willBoot(self) }
+        try self.providers.forEach { try $0.didBoot(self) }
+    }
     
     private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         return DotEnvFile.load(
             path: ".env",
-            fileio: .init(threadPool: self.threadPool),
+            fileio: .init(threadPool: self.make()),
             on: eventLoop
         ).recover { error in
             self.logger.debug("Could not load .env file: \(error)")
@@ -118,27 +66,67 @@ public final class Application {
     }
     
     public func shutdown() {
+        assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
-        if self._services != nil {
-            self._services.providers.forEach { $0.willShutdown(self) }
-        }
+
+        self.logger.trace("Notifying service providers of shutdown")
+        self.services.providers.forEach { $0.willShutdown(self) }
+
+        self.logger.trace("Shutting down services")
+        self.services.shutdown()
+
+        self.logger.trace("Clearing Application.userInfo")
+        self.userInfo = [:]
+
+        self.logger.trace("Shutting down EventLoopGroup")
         do {
             try self.eventLoopGroup.syncShutdownGracefully()
         } catch {
-            self.logger.error("EventLoopGroup failed to shutdown: \(error)")
+            self.logger.error("Shutting down EventLoopGroup failed: \(error)")
         }
-        do {
-            try self.threadPool.syncShutdownGracefully()
-        } catch {
-            self.logger.error("ThreadPool failed to shutdown: \(error)")
-        }
+
         self.didShutdown = true
-        self.userInfo = [:]
+        self.logger.trace("Application shutdown complete")
     }
     
     deinit {
+        self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
             assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }
     }
+}
+
+
+extension Application {
+    public var running: Running? {
+        get {
+            return self.make(RunningService.self).current
+        }
+        set {
+            self.make(RunningService.self).current = newValue
+        }
+    }
+}
+
+
+public struct Running {
+    public static func start(using promise: EventLoopPromise<Void>) -> Running {
+        return self.init(promise: promise)
+    }
+    
+    public var onStop: EventLoopFuture<Void> {
+        return self.promise.futureResult
+    }
+
+    private let promise: EventLoopPromise<Void>
+
+    public func stop() {
+        self.promise.succeed(())
+    }
+}
+
+final class RunningService {
+    var current: Running?
+    init() { }
 }

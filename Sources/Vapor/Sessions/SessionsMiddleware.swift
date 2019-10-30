@@ -40,7 +40,7 @@ public final class SessionsMiddleware: Middleware {
         if let cookieValue = request.cookies[config.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
-            return sessions.readSession(id).flatMap { data in
+            return sessions.readSession(id, for: request).flatMap { data in
                 cache.session = .init(id: id, data: data ?? .init())
                 return next.respond(to: request).flatMap { res in
                     return self.addCookies(to: res, for: request, cache: cache)
@@ -62,10 +62,10 @@ public final class SessionsMiddleware: Middleware {
             let createOrUpdate: EventLoopFuture<SessionID>
             if let id = session.id {
                 // A cookie exists, just update this session.
-                createOrUpdate = sessions.updateSession(id, to: session.data)
+                createOrUpdate = sessions.updateSession(id, to: session.data, for: request)
             } else {
                 // No cookie, this is a new session.
-                createOrUpdate = sessions.createSession(session.data)
+                createOrUpdate = sessions.createSession(session.data, for: request)
             }
 
             // After create or update, set cookie on the response.
@@ -78,13 +78,13 @@ public final class SessionsMiddleware: Middleware {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
-            return self.sessions.deleteSession(id).map {
+            return self.sessions.deleteSession(id, for: request).map {
                 response.cookies[self.config.cookieName] = .expired
                 return response
             }
         } else {
             // no session or existing cookie
-            return self.sessions.eventLoop.makeSucceededFuture(response)
+            return request.eventLoop.makeSucceededFuture(response)
         }
     }
 }

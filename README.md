@@ -39,17 +39,35 @@ If you find a **bug**, please [create an issue](https://github.com/vapor/vapor/i
 
 If you find a **security vulnerability**, please contact [security@vapor.codes](mailto:security@vapor.codes) as soon as possible.
 
-### 💙 Code of Conduct
+### 💛 Sponsors
 
-Our goal is to create a safe and empowering environment for anyone who decides to use or contribute to Vapor. Please help us make the community a better place by abiding to this [Code of Conduct](https://github.com/vapor/vapor/blob/master/Docs/code_of_conduct.md) during your interactions surrounding this project.
+Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsorship).
 
-### 🏫 Tutorials
+<a href="http://nodesagency.com">
+    <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
+</a>
+<a href="https://www.skelpo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
+</a>
+<a href="https://github.com/Joannis">
+    <img src="https://user-images.githubusercontent.com/1342803/66939358-ec882880-f010-11e9-98a2-481e87de65c0.png" height="100px" alt="Joannis">
+</a>
+<a href="https://github.com/kylebrowning">
+    <img src="https://user-images.githubusercontent.com/1342803/67107440-7ca5a980-f19a-11e9-8619-b029c96399f7.png" height="100px" alt="Kyle Browning">
+</a>
 
-The awesome Vapor community is always adding new tutorials and articles out there, [Vapor University](http://vapor.university) is a great place to get started!
+### 💚 Backers
+Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
 
-### 👥 Backers
-
-Support us with a monthly donation and help us continue our activities. [[Become a backer](https://opencollective.com/vapor#backer)]
+<a href="https://github.com/MrLotU"><img src="https://avatars3.githubusercontent.com/u/18392003?s=120" width="60px"></a>
+<a href="https://github.com/tkrajacic"><img src="https://avatars3.githubusercontent.com/u/873717?s=120" width="60px"></a>
+<a href="https://github.com/slashmo"><img src="https://avatars3.githubusercontent.com/u/16192401?s=120" width="60px"></a>
+<a href="https://github.com/ScottRobbins"><img src="https://avatars3.githubusercontent.com/u/6894359?s=120" width="60px"></a>
+<a href="https://github.com/ksmandersen"><img src="https://avatars3.githubusercontent.com/u/178181?s=120" width="60px"></a>
+<a href="https://github.com/twof"><img src="https://avatars3.githubusercontent.com/u/5561501?s=120" width="60px"></a>
+<a href="https://github.com/grundoon"><img src="https://avatars3.githubusercontent.com/u/876321?s=120" width="60px"></a>
+<a href="https://github.com/tylermrolfe"><img src="https://avatars3.githubusercontent.com/u/1797243?s=120" width="60px"></a>
+<a href="https://github.com/maartene"><img src="https://avatars3.githubusercontent.com/u/5150271?s=120" width="60px"></a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/1/website" target="_blank"><img src="https://opencollective.com/vapor/backer/1/avatar.svg"></a>
@@ -81,62 +99,23 @@ Support us with a monthly donation and help us continue our activities. [[Become
 <a href="https://opencollective.com/vapor/backer/27/website" target="_blank"><img src="https://opencollective.com/vapor/backer/27/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/28/website" target="_blank"><img src="https://opencollective.com/vapor/backer/28/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/29/website" target="_blank"><img src="https://opencollective.com/vapor/backer/29/avatar.svg"></a>
-
-
-### 🥇 Sponsors
-
-Proudly sponsored by [Nodes](http://nodesagency.com) (🏅), [Skelpo](https://www.skelpo.com) (🥉), and our [Open Collective sponsors](https://opencollective.com/vapor#sponsor).
-
-- 🥇 Become a [Gold sponsor](mailto:sponsor@vapor.codes)
-- 🥈 Become a [Silver sponsor](mailto:sponsor@vapor.codes)
-- 🥉 Become a [Bronze sponsor](mailto:sponsor@vapor.codes)
-- 👥 [Contribute on Open Collective](https://opencollective.com/vapor#sponsor)
-
-<a href="http://nodesagency.com">
-    <img src="https://cloud.githubusercontent.com/assets/5750489/21993104/2e0db68a-dbe7-11e6-9402-35f9f04743a7.png" width="320" alt="Nodes">
-</a>
-
-<br>
-
-<a href="https://www.skelpo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/34183530-43ded348-e4e9-11e7-9fe3-c513b1f02ef9.png" width="320" alt="Skelpo">
-</a>
-
-<br>
-<br>
-
-<a href="http://dominickm.com" target="_blank">
-    <img width="64px" src="https://opencollective.com/proxy/images/?src=https%3A%2F%2Fopencollective-production.s3-us-west-1.amazonaws.com%2Fd0eaeb81cc9440518ad8457cfcdba0d0_965d9960-82ca-11e6-a262-73c13d37e1af.jpeg" alt="Michael Dominick">
-</a>
-<a href="https://opencollective.com/vapor/sponsor/0/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/0/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/1/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/1/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/2/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/2/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/3/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/3/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/4/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/4/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/5/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/5/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/6/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/6/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/7/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/7/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/8/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/8/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/9/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/9/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/10/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/10/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/11/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/11/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/12/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/12/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/13/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/13/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/14/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/14/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/15/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/15/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/16/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/16/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/17/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/17/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/18/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/18/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/19/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/19/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/20/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/20/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/21/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/21/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/22/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/22/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/23/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/23/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/24/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/24/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/25/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/25/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/26/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/26/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/27/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/27/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/28/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/28/avatar.svg"></a>
-<a href="https://opencollective.com/vapor/sponsor/29/website" target="_blank"><img src="https://opencollective.com/vapor/sponsor/29/avatar.svg"></a>
-
+<a href="https://opencollective.com/vapor/backer/30/website" target="_blank"><img src="https://opencollective.com/vapor/backer/30/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/31/website" target="_blank"><img src="https://opencollective.com/vapor/backer/31/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/32/website" target="_blank"><img src="https://opencollective.com/vapor/backer/32/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/33/website" target="_blank"><img src="https://opencollective.com/vapor/backer/33/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/34/website" target="_blank"><img src="https://opencollective.com/vapor/backer/34/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/35/website" target="_blank"><img src="https://opencollective.com/vapor/backer/35/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/36/website" target="_blank"><img src="https://opencollective.com/vapor/backer/36/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/37/website" target="_blank"><img src="https://opencollective.com/vapor/backer/37/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/38/website" target="_blank"><img src="https://opencollective.com/vapor/backer/38/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/39/website" target="_blank"><img src="https://opencollective.com/vapor/backer/39/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/40/website" target="_blank"><img src="https://opencollective.com/vapor/backer/40/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/41/website" target="_blank"><img src="https://opencollective.com/vapor/backer/41/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/42/website" target="_blank"><img src="https://opencollective.com/vapor/backer/42/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/43/website" target="_blank"><img src="https://opencollective.com/vapor/backer/43/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/44/website" target="_blank"><img src="https://opencollective.com/vapor/backer/44/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/45/website" target="_blank"><img src="https://opencollective.com/vapor/backer/45/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/46/website" target="_blank"><img src="https://opencollective.com/vapor/backer/46/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/47/website" target="_blank"><img src="https://opencollective.com/vapor/backer/47/avatar.svg"></a>
+<a href="https://opencollective.com/vapor/backer/48/website" target="_blank"><img src="https://opencollective.com/vapor/backer/48/avatar.svg"></a>
 [![analytics](http://www.google-analytics.com/collect?v=1&t=pageview&_s=1&dl=https%3A%2F%2Fgithub.com%2Fvapor%2Fvapor&_u=MAC~&cid=1757014354.1393964045&tid=UA-76177358-6)]()

@@ -5,32 +5,22 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias OutboundOut = Response
     
     let responder: Responder
-    let errorHandler: (Error) -> ()
     
-    init(responder: Responder, errorHandler: @escaping (Error) -> ()) {
+    init(responder: Responder) {
         self.responder = responder
-        self.errorHandler = errorHandler
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
         
-        // change HEAD -> GET
-        let originalMethod = request.method
-        switch request.method {
-        case .HEAD: request.method = .GET
-        default: break
-        }
-        
         // query delegate for response
         self.responder.respond(to: request).whenComplete { response in
             switch response {
             case .failure(let error):
-                self.errorHandler(error)
-                context.close(promise: nil)
+                self.errorCaught(context: context, error: error)
             case .success(let response):
                 let contentLength = response.headers.firstValue(name: .contentLength)
-                if originalMethod == .HEAD {
+                if request.method == .HEAD {
                     response.body = .init()
                 }
                 response.headers.replaceOrAdd(name: .contentLength, value: contentLength ?? "0")

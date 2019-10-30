@@ -41,11 +41,6 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     /// Additional components.
     let path: [PathComponent]
     
-    /// See `HTTPRoutesBuilder`.
-    var eventLoop: EventLoop {
-        return self.root.eventLoop
-    }
-    
     /// Creates a new `PathGroup`.
     init(root: RoutesBuilder, path: [PathComponent]) {
         self.root = root

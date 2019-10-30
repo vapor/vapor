@@ -25,8 +25,13 @@ public struct Environment: Equatable {
     ///     - arguments: `CommandInput` to parse `--env` flag from.
     /// - returns: The detected environment, or default env.
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
+        struct EnvironmentSignature: CommandSignature {
+            @Option(name: "env", short: "e", help: "Change the application's environment")
+            var environment: String?
+            init() { }
+        }
         var env: Environment
-        if let value = try commandInput.parse(option: Option<String>(name: "env", short: "e", type: .value)) {
+        if let value = try EnvironmentSignature(from: &commandInput).environment {
             switch value {
             case "prod", "production": env = .production
             case "dev", "development": env = .development
@@ -49,17 +54,17 @@ public struct Environment: Equatable {
 
     /// An environment for developing your application.
     public static var development: Environment {
-        return .init(name: "development")
+        return .init(name: "development", arguments: ["vapor"])
     }
 
     /// An environment for testing your application.
     public static var testing: Environment {
-        return .init(name: "testing")
+        return .init(name: "testing", arguments: ["vapor"])
     }
 
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment {
-        return .init(name: name)
+        return .init(name: name, arguments: ["vapor"])
     }
 
     // MARK: Env

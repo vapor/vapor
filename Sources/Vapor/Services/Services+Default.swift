@@ -1,169 +1,188 @@
-extension Services {
-    /// Vapor's default services. This includes many services required to successfully
-    /// boot an Application. Only for special use cases should you create an empty `Services` struct.
-    public static func `default`() -> Services {
-        var s = Services()
+extension Application {
+    func registerDefaultServices() {
+        // core
+        self.register(singleton: RunningService.self) { app in
+            return .init()
+        }
+        self.register(singleton: NIOThreadPool.self, boot: { app in
+            let pool = NIOThreadPool(numberOfThreads: 1)
+            pool.start()
+            return pool
+        }, shutdown: { pool in
+            try pool.syncShutdownGracefully()
+        })
+        self.register(EventLoopGroup.self) { app in
+            return app.eventLoopGroup
+        }
+        self.register(EventLoop.self) { app in
+            return app.make(EventLoopGroup.self).next()
+        }
 
         // client
-        s.register(HTTPClient.Configuration.self) { c in
+        self.register(HTTPClient.Configuration.self) { app in
             return .init()
         }
-        s.register(Client.self) { c in
-            return try c.make(HTTPClient.self)
+        self.register(request: Client.self) { req in
+            return RequestClient(http: req.application.make(), req: req)
         }
-        s.register(HTTPClient.self) { c in
-            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        self.register(Client.self) { c in
+            return ApplicationClient(http: c.make())
         }
+        self.register(singleton: HTTPClient.self, boot: { app in
+            return .init(
+                eventLoopGroupProvider: .shared(app.make()),
+                configuration: app.make()
+            )
+        }, shutdown: { s in
+            try s.syncShutdown()
+        })
 
         // ws client
-        s.register(WebSocketClient.Configuration.self) { c in
+        self.register(WebSocketClient.Configuration.self) { c in
             return .init()
         }
-        s.register(WebSocketClient.self) { c in
-            return try .init(eventLoopGroupProvider: .shared(c.eventLoop), configuration: c.make())
+        self.register(WebSocketClient.self) { app in
+            return .init(eventLoopGroupProvider: .shared(app.make()), configuration: app.make())
         }
 
         // auth
-        s.register(PasswordVerifier.self) { c in
-            return BCryptDigest()
+        self.register(PasswordVerifier.self) { c in
+            return c.make(BCryptDigest.self)
         }
-        s.register(PlaintextVerifier.self) { c in
+        self.register(BCryptDigest.self) { c in
+            return Bcrypt
+        }
+        self.register(PlaintextVerifier.self) { c in
             return PlaintextVerifier()
         }
-        s.register(PasswordVerifier.self) { c in
-            return try c.make(PlaintextVerifier.self)
+        self.register(PasswordVerifier.self) { c in
+            return c.make(PlaintextVerifier.self)
         }
         
         // routes
-        s.register(Routes.self) { c in
-            return .init(eventLoop: c.eventLoop)
+        self.register(singleton: Routes.self) { app in
+            return .init()
         }
         
         // sessions
-        s.register(SessionsMiddleware.self) { c in
-            return try .init(sessions: c.make(), config: c.make())
+        self.register(SessionsMiddleware.self) { c in
+            return .init(sessions: c.make(), config: c.make())
         }
-        s.register(Sessions.self) { c in
-            return try c.make(MemorySessions.self)
+        self.register(Sessions.self) { c in
+            return c.make(MemorySessions.self)
         }
-        s.register(MemorySessions.self) { c in
-            return try MemorySessions(storage: c.make(), on: c.eventLoop)
+        self.register(MemorySessions.self) { app in
+            return MemorySessions(storage: app.make())
         }
-        s.register(MemorySessions.Storage.self) { c in
-            let app = try c.make(Application.self)
-            app.lock.lock()
-            defer { app.lock.unlock() }
-            let key = "memory-sessions-storage"
-            if let existing = app.userInfo[key] as? MemorySessions.Storage {
-                return existing
-            } else {
-                let new = MemorySessions.Storage()
-                app.userInfo[key] = new
-                return new
-            }
+        self.register(singleton: MemorySessions.Storage.self) { app in
+            return .init()
         }
         
-        s.register(SessionsConfig.self) { c in
+        self.register(SessionsConfig.self) { c in
             return .default()
         }
 
         // middleware
-        s.register(MiddlewareConfiguration.self) { c in
+        self.register(MiddlewareConfiguration.self) { c in
             var middleware = MiddlewareConfiguration()
-            try middleware.use(c.make(ErrorMiddleware.self))
+            middleware.use(c.make(ErrorMiddleware.self))
             return middleware
         }
-        s.register(FileMiddleware.self) { c in
-            return try .init(
-                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory,
-                fileio: c.make()
+        self.register(FileMiddleware.self) { c in
+            return .init(
+                publicDirectory: c.make(DirectoryConfiguration.self).publicDirectory
             )
         }
-        s.register(ErrorMiddleware.self) { c in
+        self.register(ErrorMiddleware.self) { c in
             return .default(environment: c.environment)
         }
 
         // console
-        s.register(Console.self) { c in
+        self.register(Console.self) { c in
             return Terminal()
         }
         
         // server
-        s.register(HTTPServer.Configuration.self) { c in
+        self.register(HTTPServer.Configuration.self) { c in
             return .init()
         }
-        s.register(Server.self) { c in
-            return try c.make(HTTPServer.self)
+        self.register(Server.self) { c in
+            return c.make(HTTPServer.self)
         }
-        s.register(HTTPServer.self) { c in
-            return try .init(application: c.make(), configuration: c.make())
-        }
-        s.register(Responder.self) { c in
+        self.register(singleton: HTTPServer.self, boot: { app in
+            return .init(
+                application: app,
+                responder: app.make(),
+                configuration: app.make(),
+                on: app.make()
+            )
+        }, shutdown: { server in
+            server.shutdown()
+        })
+        self.register(Responder.self) { c in
             // initialize all `[Middleware]` from config
             let middleware = try c
                 .make(MiddlewareConfiguration.self)
                 .resolve()
             
             // create HTTP routes
-            let routes = try c.make(Routes.self)
+            let routes = c.make(Routes.self)
             
             // return new responder
             return ApplicationResponder(routes: routes, middleware: middleware)
         }
 
         // commands
-        s.register(ServeCommand.self) { c in
-            return try .init(server: c.make())
+        self.register(singleton: ServeCommand.self, boot: { app in
+            return .init(server: app.make(), running: app.make())
+        }, shutdown: { serve in
+            serve.shutdown()
+        })
+        self.register(RoutesCommand.self) { c in
+            return .init(routes: c.make())
         }
-        s.register(RoutesCommand.self) { c in
-            return try .init(routes: c.make())
-        }
-        s.register(BootCommand.self) { c in
+        self.register(BootCommand.self) { c in
             return .init()
         }
-        s.register(CommandConfiguration.self) { c in
-            return try .default(on: c)
+        self.register(CommandConfiguration.self) { app in
+            var config = CommandConfiguration()
+            config.use(app.make(ServeCommand.self), as: "serve", isDefault: true)
+            config.use(app.make(RoutesCommand.self), as: "routes")
+            config.use(app.make(BootCommand.self), as: "boot")
+            return config
         }
-        s.register(Commands.self) { c in
+        self.register(Commands.self) { c in
             return try c.make(CommandConfiguration.self).resolve()
         }
 
         // directory
-        s.register(DirectoryConfiguration.self) { c in
+        self.register(DirectoryConfiguration.self) { c in
             return .detect()
         }
 
         // logging
-        s.register(ConsoleLogger.self) { container in
-            return try ConsoleLogger(console: container.make())
-        }
-        s.register(Logger.self) { c in
-            return try c.make(Application.self).logger
+        self.register(Logger.self) { app in
+            return app.logger
         }
 
         // view
-        s.register(ViewRenderer.self) { c in
-            return try c.make(PlaintextRenderer.self)
+        self.register(ViewRenderer.self) { c in
+            return c.make(PlaintextRenderer.self)
         }
-        s.register(PlaintextRenderer.self) { c in
-            return try PlaintextRenderer(
-                threadPool: c.make(NIOThreadPool.self),
-                viewsDirectory: c.make(DirectoryConfiguration.self).viewsDirectory,
-                eventLoop: c.eventLoop
+        self.register(PlaintextRenderer.self) { app in
+            return PlaintextRenderer(
+                threadPool: app.make(),
+                viewsDirectory: app.make(DirectoryConfiguration.self).viewsDirectory,
+                eventLoopGroup: app.make()
             )
         }
 
         // file
-        s.register(NonBlockingFileIO.self) { c in
-            return try .init(threadPool: c.make())
+        self.register(NonBlockingFileIO.self) { app in
+            return .init(threadPool: app.make())
         }
-        s.register(FileIO.self) { c in
-            return try .init(io: c.make(), allocator: c.make(), on: c.eventLoop)
-        }
-        s.register(ByteBufferAllocator.self) { c in
+        self.register(ByteBufferAllocator.self) { c in
             return .init()
         }
-
-        return s
     }
 }

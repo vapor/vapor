@@ -33,16 +33,7 @@ extension Request {
             }
         }
         
-        /// Consumes the body if it is a stream. Otherwise, returns the same value as the `data` property.
-        ///
-        ///     let data = try httpRes.body.consumeData(max: 1_000_000, on: ...).wait()
-        ///
-        /// - parameters:
-        ///     - max: The maximum streaming body size to allow.
-        ///            This only applies to streaming bodies, like chunked streams.
-        ///            Defaults to 1MB.
-        ///     - eventLoop: The event loop to perform this async work on.
-        public func collect(max: Int = 1_000_000) -> EventLoopFuture<ByteBuffer?> {
+        public func collect(max: Int? = nil) -> EventLoopFuture<ByteBuffer?> {
             switch self.request.bodyStorage {
             case .stream(let stream):
                 return stream.consume(max: max, on: self.request.eventLoop).map { buffer in

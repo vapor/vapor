@@ -1,13 +1,25 @@
-public final class Routes: RoutesBuilder {
-    public var routes: [Route]
-    public var eventLoop: EventLoop
+public final class Routes: RoutesBuilder, CustomStringConvertible {
+    public var all: [Route]
+
+    public var description: String {
+        return self.all.description
+    }
     
-    public init(eventLoop: EventLoop) {
-        self.routes = []
-        self.eventLoop = eventLoop
+    public init() {
+        self.all = []
     }
     
     public func add(_ route: Route) {
-        self.routes.append(route)
+        self.all.append(route)
+    }
+}
+
+extension Application: RoutesBuilder {
+    public func add(_ route: Route) {
+        self.routes.add(route)
+    }
+    
+    public var routes: Routes {
+        return self.make()
     }
 }

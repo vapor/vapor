@@ -1,11 +1,11 @@
 struct ServiceExtension<T> {
-    public let closure: (inout T, Container) throws -> Void
+    let closure: (inout T, Application) throws -> Void
     
-    public init(closure: @escaping (inout T, Container) throws -> Void) {
+    init(closure: @escaping (inout T, Application) throws -> Void) {
         self.closure = closure
     }
     
-    public func serviceExtend(_ instance: inout T, _ c: Container) throws {
-        try closure(&instance, c)
+    func serviceExtend(_ instance: inout T, _ app: Application) throws {
+        try closure(&instance, app)
     }
 }

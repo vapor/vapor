@@ -1,11 +1,14 @@
 extension LoggingSystem {
     public static func bootstrap(from environment: inout Environment) throws {
+        struct LogSignature: CommandSignature {
+            @Option(name: "log", help: "Change log level")
+            var level: Logger.Level?
+            init() { }
+        }
         try LoggingSystem.bootstrap(
             console: Terminal(),
-            level: environment.commandInput.parseOption(
-                value: Logger.Level.self,
-                name: "log"
-                ) ?? (environment == .production ? .error: .info)
+            level: LogSignature(from: &environment.commandInput).level
+                ?? (environment == .production ? .notice: .info)
         )
     }
 }
@@ -34,19 +37,5 @@ extension Logger.Level: LosslessStringConvertible {
         case .error: return "error"
         case .critical: return "critical"
         }
-    }
-}
-
-private extension CommandInput {
-    mutating func parseOption<Value>(
-        value: Value.Type,
-        name: String,
-        short: Character? = nil
-        ) throws -> Value?
-        where Value: LosslessStringConvertible
-    {
-        let option = Option<Value>(name: name, short: short, type: .value, help: "")
-        return try self.parse(option: option)
-            .flatMap { Value.init($0) }
     }
 }

@@ -18,8 +18,8 @@ public struct MiddlewareConfiguration {
     /// - warning: Ensure the `Middleware` is thread-safe when using this method.
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
-    public mutating func use<M>(_ middleware: M) where M: Middleware {
-        storage.append(middleware)
+    public mutating func use(_ middleware: Middleware) {
+        self.storage.append(middleware)
     }
 
     /// Resolves the configured middleware for a given container

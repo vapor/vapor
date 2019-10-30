@@ -90,7 +90,7 @@ extension URLQueryContainer {
     public subscript<D>(_ type: D.Type, at keyPath: [CodingKeyRepresentable]) -> D?
         where D: Decodable
     {
-        return try? get(at: keyPath)
+        return try? get(type, at: keyPath)
     }
 
     /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
@@ -105,7 +105,7 @@ extension URLQueryContainer {
     public func get<D>(_ type: D.Type = D.self, at keyPath: CodingKeyRepresentable...) throws -> D
         where D: Decodable
     {
-        return try get(at: keyPath)
+        return try get(type, at: keyPath)
     }
 
     /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
