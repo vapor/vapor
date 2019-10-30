@@ -35,6 +35,8 @@ public final class Request: ContainerAlias, DatabaseConnectable, HTTPMessageCont
     ///     print(req.http.url.path) // "/hello"
     ///
     public var http: HTTPRequest
+    
+    public var readablePath: String?
 
     // MARK: Services
 

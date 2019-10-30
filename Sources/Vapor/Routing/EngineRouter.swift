@@ -39,7 +39,10 @@ public final class EngineRouter: Router {
         let path: [Substring] = request.http.urlString
             .split(separator: "?", maxSplits: 1)[0]
             .split(separator: "/")
-        return router.route(path: [request.http.method.substring] + path, parameters: &request._parameters)
+        let result: (Responder?, String?) = router.route(path: [request.http.method.substring] + path, parameters: &request._parameters)
+        let responder = result.0
+        request.readablePath = result.1
+        return responder
     }
 }
 
