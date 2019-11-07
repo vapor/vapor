@@ -21,47 +21,39 @@ public final class ErrorMiddleware: Middleware {
             let status: HTTPResponseStatus
             let reason: String
             let headers: HTTPHeaders
+            let source: ErrorSource?
 
             // inspect the error type
             switch error {
-            case let abort as Abort:
-                // this is an abort error, we should use its status, reason, and headers
-                reason = abort.reason
-                status = abort.status
-                headers = abort.headers
-                
-                // Report with the values from the error
-                req.logger.report(error: error, verbose: !environment.isRelease, file: abort.file, function: abort.function, line: abort.line)
-                
             case let abort as AbortError:
                 // this is an abort error, we should use its status, reason, and headers
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
-                
-                // log the error
-                req.logger.report(error: error, verbose: !environment.isRelease)
-                
+                source = abort.source
             case let error as LocalizedError where !environment.isRelease:
                 // if not release mode, and error is debuggable, provide debug
                 // info directly to the developer
                 reason = error.localizedDescription
                 status = .internalServerError
                 headers = [:]
-                
-                // log the error
-                req.logger.report(error: error, verbose: !environment.isRelease)
+                source = nil
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
                 reason = "Something went wrong."
                 status = .internalServerError
                 headers = [:]
-                
-                // log the error
+                source = nil
+            }
+            
+            // Report with the values from the error
+            if let source = source {
+                req.logger.report(error: error, verbose: !environment.isRelease, file: source.file, function: source.function, line: source.line)
+            } else {
                 req.logger.report(error: error, verbose: !environment.isRelease)
             }
-
+            
             // create a Response with appropriate status
             let response = Response(status: status, headers: headers)
             
