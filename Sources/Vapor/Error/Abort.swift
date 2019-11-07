@@ -40,6 +40,8 @@ public struct Abort: AbortError {
     /// The column where the errror is thrown
     public var column: UInt
     
+    /// Wrap this error's source location into a usable struct for
+    /// the `AbortError` protocol.
     public var source: ErrorSource? {
         return .init(file: self.file, line: self.line, function: self.function)
     }
