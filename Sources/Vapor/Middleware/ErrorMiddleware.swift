@@ -17,9 +17,6 @@ public final class ErrorMiddleware: Middleware {
     ///     - log: Log destination.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            // log the error
-            req.logger.report(error: error, verbose: !environment.isRelease)
-
             // variables to determine
             let status: HTTPResponseStatus
             let reason: String
@@ -27,23 +24,42 @@ public final class ErrorMiddleware: Middleware {
 
             // inspect the error type
             switch error {
+            case let abort as Abort:
+                // this is an abort error, we should use its status, reason, and headers
+                reason = abort.reason
+                status = abort.status
+                headers = abort.headers
+                
+                // Report with the values from the error
+                req.logger.report(error: error, verbose: !environment.isRelease, file: abort.file, function: abort.function, line: abort.line)
+                
             case let abort as AbortError:
                 // this is an abort error, we should use its status, reason, and headers
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
+                
+                // log the error
+                req.logger.report(error: error, verbose: !environment.isRelease)
+                
             case let error as LocalizedError where !environment.isRelease:
                 // if not release mode, and error is debuggable, provide debug
                 // info directly to the developer
                 reason = error.localizedDescription
                 status = .internalServerError
                 headers = [:]
+                
+                // log the error
+                req.logger.report(error: error, verbose: !environment.isRelease)
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
                 reason = "Something went wrong."
                 status = .internalServerError
                 headers = [:]
+                
+                // log the error
+                req.logger.report(error: error, verbose: !environment.isRelease)
             }
 
             // create a Response with appropriate status
