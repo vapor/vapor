@@ -17,6 +17,20 @@ public protocol AbortError: LocalizedError, CustomStringConvertible {
 
     /// The human-readable (and hopefully understandable) reason for this error.
     var reason: String { get }
+    
+    var source: ErrorSource? { get }
+}
+
+public struct ErrorSource {
+    public let file: String
+    public let line: UInt
+    public let function: String
+    
+    public init(file: String = #file, line: UInt = #line, function: String = #function) {
+        self.file = file
+        self.line = line
+        self.function = function
+    }
 }
 
 extension AbortError {
@@ -27,6 +41,10 @@ extension AbortError {
 
     public var errorDescription: String? {
         return self.description
+    }
+    
+    public var source: ErrorSource? {
+        return nil
     }
 }
 
