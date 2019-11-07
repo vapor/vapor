@@ -40,6 +40,10 @@ public struct Abort: AbortError {
     /// The column where the errror is thrown
     public var column: UInt
     
+    public var source: ErrorSource? {
+        return .init(file: self.file, line: self.line, function: self.function)
+    }
+    
     public var description: String {
         return "Abort \(self.status.code): \(self.reason)"
     }
