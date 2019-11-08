@@ -17,13 +17,11 @@ public final class ErrorMiddleware: Middleware {
     ///     - log: Log destination.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            // log the error
-            req.logger.report(error: error, verbose: !environment.isRelease)
-
             // variables to determine
             let status: HTTPResponseStatus
             let reason: String
             let headers: HTTPHeaders
+            let source: ErrorSource?
 
             // inspect the error type
             switch error {
@@ -32,20 +30,30 @@ public final class ErrorMiddleware: Middleware {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
+                source = abort.source
             case let error as LocalizedError where !environment.isRelease:
                 // if not release mode, and error is debuggable, provide debug
                 // info directly to the developer
                 reason = error.localizedDescription
                 status = .internalServerError
                 headers = [:]
+                source = nil
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
                 reason = "Something went wrong."
                 status = .internalServerError
                 headers = [:]
+                source = nil
             }
-
+            
+            // Report with the values from the error
+            if let source = source {
+                req.logger.report(error: error, verbose: !environment.isRelease, file: source.file, function: source.function, line: source.line)
+            } else {
+                req.logger.report(error: error, verbose: !environment.isRelease)
+            }
+            
             // create a Response with appropriate status
             let response = Response(status: status, headers: headers)
             

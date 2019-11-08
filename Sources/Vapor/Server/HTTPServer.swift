@@ -53,30 +53,12 @@ public final class HTTPServer: Server {
         
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
-        
-        /// Creates a new `HTTPServerConfig`.
-        ///
-        /// - parameters:
-        ///     - hostname: Socket hostname to bind to. Usually `localhost` or `::1`.
-        ///     - port: Socket port to bind to. Usually `8080` for development and `80` for production.
-        ///     - backlog: OS socket backlog size.
-        ///     - workerCount: Number of `Worker`s to use for responding to incoming requests.
-        ///                    This should be (and is by default) equal to the number of logical cores.
-        ///     - maxBodySize: Requests with bodies larger than this maximum will be rejected.
-        ///                    Streaming bodies, like chunked bodies, ignore this maximum.
-        ///     - reuseAddress: When `true`, can prevent errors re-binding to a socket after successive server restarts.
-        ///     - tcpNoDelay: When `true`, OS will attempt to minimize TCP packet delay.
-        ///     - webSocketMaxFrameSize: Number of webSocket maxFrameSize.
-        ///     - supportCompression: When `true`, HTTP server will support gzip and deflate compression.
-        ///     - supportPipelining: When `true`, HTTP server will support pipelined requests.
-        ///     - serverName: If set, this name will be serialized as the `Server` header in outgoing responses.
-        ///     - upgraders: An array of `HTTPProtocolUpgrader` to check for with each request.
-        ///     - logger: Any uncaught server or responder errors will be logged here.
+
         public init(
             hostname: String = "127.0.0.1",
             port: Int = 8080,
             backlog: Int = 256,
-            maxBodySize: Int = 1_000_000,
+            maxBodySize: Int = 1 << 14,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
@@ -113,19 +95,27 @@ public final class HTTPServer: Server {
         }
         return connection.channel.closeFuture
     }
-    
-    private let application: Application
+
+    private let responder: Responder
     private let configuration: Configuration
-    private let responder: HTTPServerResponder
+    private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
     private var didShutdown: Bool
     private var didStart: Bool
+
+    private var application: Application
     
-    init(application: Application, configuration: Configuration) {
+    init(
+        application: Application,
+        responder: Responder,
+        configuration: Configuration,
+        on eventLoopGroup: EventLoopGroup
+    ) {
         self.application = application
+        self.responder = responder
         self.configuration = configuration
-        self.responder = .init(application: application)
+        self.eventLoopGroup = eventLoopGroup
         self.didStart = false
         self.didShutdown = false
     }
@@ -140,91 +130,35 @@ public final class HTTPServer: Server {
         // print starting message
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
-        self.application.logger.info("Server starting on \(address)")
+        self.configuration.logger.notice("Server starting on \(address)")
+        
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
+            application: self.application,
             responder: self.responder,
             configuration: configuration,
-            on: self.application.eventLoopGroup
+            on: self.eventLoopGroup
         ).wait()
-
-        // allow the server to be stopped or waited for
-        self.application.running = .init(
-            onStop: self.onShutdown,
-            stop: { [weak self] in
-                guard let self = self else {
-                    fatalError("Server deinitialized before shutdown")
-                }
-                self.shutdown()
-            }
-        )
 
         self.didStart = true
     }
     
     public func shutdown() {
-        self.application.sync.lock()
-        defer { self.application.sync.unlock() }
-
         guard let connection = self.connection else {
-            fatalError("Called shutdown before start")
+            return
         }
-        self.application.logger.debug("Requesting server shutdown")
+        self.configuration.logger.debug("Requesting HTTP server shutdown")
         do {
             try connection.close().wait()
         } catch {
-            self.application.logger.error("Could not stop server: \(error)")
+            self.configuration.logger.error("Could not stop HTTP server: \(error)")
         }
-        self.application.logger.debug("Server shutting down")
+        self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown = true
-        self.responder.shutdown()
     }
     
     deinit {
         assert(!self.didStart || self.didShutdown, "HTTPServer did not shutdown before deinitializing")
-    }
-}
-
-private final class HTTPServerResponder: Responder {
-    let application: Application
-    private let responderCache: ThreadSpecificVariable<ResponderCache>
-    private var containers: [Container]
-    
-    init(application: Application) {
-        self.application = application
-        self.responderCache = .init()
-        self.containers = []
-    }
-    
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.logger.info("\(request.method) \(request.url)")
-        if let responder = self.responderCache.currentValue?.responder {
-            return responder.respond(to: request)
-        } else {
-            return application.makeContainer(on: request.eventLoop).flatMapThrowing { container -> Responder in
-                self.containers.append(container)
-                let responder = try container.make(Responder.self)
-                self.responderCache.currentValue = ResponderCache(responder: responder)
-                return responder
-            }.flatMap { responder in
-                return responder.respond(to: request)
-            }
-        }
-    }
-    
-    func shutdown() {
-        let containers = self.containers
-        self.containers = []
-        for container in containers {
-            container.shutdown()
-        }
-    }
-}
-
-private final class ResponderCache {
-    var responder: Responder
-    init(responder: Responder) {
-        self.responder = responder
     }
 }
 
@@ -233,6 +167,7 @@ private final class HTTPServerConnection {
     let quiesce: ServerQuiescingHelper
     
     static func start(
+        application: Application,
         responder: Responder,
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
@@ -249,7 +184,7 @@ private final class HTTPServerConnection {
             }
             
             // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { channel in
+            .childChannelInitializer { [weak application] channel in
                 // add TLS handlers if configured
                 if var tlsConfiguration = configuration.tlsConfiguration {
                     // prioritize http/2
@@ -274,6 +209,7 @@ private final class HTTPServerConnection {
                                 mode: .server,
                                 inboundStreamStateInitializer: { (channel, streamID) in
                                     return channel.pipeline.addVaporHTTP2Handlers(
+                                        application: application!,
                                         responder: responder,
                                         configuration: configuration,
                                         streamID: streamID
@@ -282,6 +218,7 @@ private final class HTTPServerConnection {
                             ).map { _ in }
                         }, http1PipelineConfigurator: { pipeline in
                             return pipeline.addVaporHTTP1Handlers(
+                                application: application!,
                                 responder: responder,
                                 configuration: configuration
                             )
@@ -291,7 +228,11 @@ private final class HTTPServerConnection {
                     guard !configuration.supportVersions.contains(.two) else {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
                     }
-                    return channel.pipeline.addVaporHTTP1Handlers(responder: responder, configuration: configuration)
+                    return channel.pipeline.addVaporHTTP1Handlers(
+                        application: application!,
+                        responder: responder,
+                        configuration: configuration
+                    )
                 }
             }
             
@@ -345,6 +286,7 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
 
 private extension ChannelPipeline {
     func addVaporHTTP2Handlers(
+        application: Application,
         responder: Responder,
         configuration: HTTPServer.Configuration,
         streamID: HTTP2StreamID
@@ -357,6 +299,7 @@ private extension ChannelPipeline {
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
+            application: application,
             maxBodySize: configuration.maxBodySize
         )
         handlers.append(serverReqDecoder)
@@ -377,7 +320,11 @@ private extension ChannelPipeline {
         }
     }
     
-    func addVaporHTTP1Handlers(responder: Responder, configuration: HTTPServer.Configuration) -> EventLoopFuture<Void> {
+    func addVaporHTTP1Handlers(
+        application: Application,
+        responder: Responder,
+        configuration: HTTPServer.Configuration
+    ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [RemovableChannelHandler] = []
         
@@ -397,12 +344,16 @@ private extension ChannelPipeline {
         
         // add response compressor if configured
         if configuration.supportCompression {
-            let compressionHandler = HTTPResponseCompressor()
-            handlers.append(compressionHandler)
+            let requestDecompressionHandler = NIOHTTPRequestDecompressor(limit: .none)
+            let responseCompressionHandler = HTTPResponseCompressor()
+
+            handlers.append(responseCompressionHandler)
+            handlers.append(requestDecompressionHandler)
         }
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
+            application: application,
             maxBodySize: configuration.maxBodySize
         )
         handlers.append(serverReqDecoder)

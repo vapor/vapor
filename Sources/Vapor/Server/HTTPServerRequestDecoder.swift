@@ -25,8 +25,10 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
 
     var isWritable: Bool
     var hasReadPending: Bool
+    var application: Application
     
-    init(maxBodySize: Int) {
+    init(application: Application, maxBodySize: Int) {
+        self.application = application
         self.maxBodySize = maxBodySize
         self.requestState = .ready
         self.logger = Logger(label: "codes.vapor.server")
@@ -43,11 +45,13 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             switch self.requestState {
             case .ready:
                 let request = Request(
+                    application: self.application,
                     method: head.method,
                     url: .init(string: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
                     remoteAddress: context.channel.remoteAddress,
+                    logger: self.application.logger,
                     on: context.channel.eventLoop
                 )
                 switch head.version.major {

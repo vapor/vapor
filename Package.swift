@@ -3,15 +3,25 @@ import PackageDescription
 
 let package = Package(
     name: "vapor",
+    platforms: [
+       .macOS(.v10_14)
+    ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
+        .library(name: "XCTVapor", targets: ["XCTVapor"])
     ],
     dependencies: [
+        // HTTP client library built on SwiftNIO
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
+    
         // Sugary extensions for the SwiftNIO library
-        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-alpha"),
+        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-beta"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-alpha.2"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-beta"),
+
+        // Parses and serializes multipart-encoded data with Codable support.
+        .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0-beta"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-alpha.2"),
@@ -34,40 +44,36 @@ let package = Package(
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
-        // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0-alpha.1"),
-
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta"),
     ],
     targets: [
         // C helpers
         .target(name: "CBcrypt"),
-        .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
         .target(name: "CURLParser"),
 
         // Vapor
         .target(name: "Vapor", dependencies: [
+            "AsyncHTTPClient",
             "AsyncKit",
             "CBcrypt",
-            "CMultipartParser",
             "COperatingSystem",
             "CURLParser",
             "ConsoleKit",
             "Logging",
+            "MultipartKit",
             "NIO",
             "NIOExtras",
             "NIOFoundationCompat",
             "NIOHTTPCompression",
             "NIOHTTP1",
             "NIOHTTP2",
-            "AsyncHTTPClient",
             "NIOSSL",
             "NIOWebSocket",
             "OpenCrypto",
             "RoutingKit",
-            "WebSocketKit"
+            "WebSocketKit",
         ]),
 
         // Development

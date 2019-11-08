@@ -32,96 +32,83 @@ public final class RoutesCommand: Command {
 
     /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
-        let console = context.console
-        
-        var longestMethod = 0
-        var longestPath = 0
-
-        for route in self.routes.routes {
-            let method = route.method.string
-            if method.count > longestMethod {
-                longestMethod = method.count
+        let includeDescription = !self.routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
+        context.console.outputASCIITable(self.routes.all.map { route -> [ConsoleText] in
+            var pathText: ConsoleText = ""
+            if route.path.isEmpty {
+                pathText += "/".consoleText(.info)
             }
-
-            var pathLength = 0
-
             for path in route.path {
+                pathText += "/".consoleText(.info)
                 switch path {
-                case .constant(let const):
-                    pathLength += const.count + 1 // /const
-                case .parameter(let param):
-                    pathLength += param.count + 2 // /:param
-                case .anything, .catchall:
-                    pathLength += 2 // /*
-                }
-            }
-
-            if pathLength > longestPath {
-                longestPath = pathLength
-            }
-        }
-
-        func hr() {
-            console.print("+-", newLine: false)
-            for _ in 0..<longestMethod {
-                console.print("-", newLine: false)
-            }
-            console.print("-+-", newLine: false)
-            for _ in 0..<longestPath {
-                console.print("-", newLine: false)
-            }
-            console.print("-+")
-        }
-
-        hr()
-
-        for route in routes.routes {
-            console.print("| ", newLine: false)
-
-            let method = route.method.string
-            console.success(method, newLine: false)
-
-            for _ in 0..<longestMethod - method.count {
-                console.print(" ", newLine: false)
-            }
-
-            console.print(" | ", newLine: false)
-
-            var pathLength = 0
-
-            route.path.forEach { comp in
-                switch comp {
-                case .constant(let const):
-                    console.info("/", newLine: false)
-                    console.print(const, newLine: false)
-                    pathLength += const.count + 1
-                case .parameter(let param):
-                    console.info("/", newLine: false)
-                    console.print(":", newLine: false)
-                    console.info(param, newLine: false)
-                    pathLength += param.count + 2
+                case .constant(let string):
+                    pathText += string.consoleText()
+                case .parameter(let name):
+                    pathText += ":".consoleText(.info)
+                    pathText += name.consoleText()
                 case .anything:
-                    console.info("/:", newLine: false)
-                    pathLength += 2
+                    pathText += ":".consoleText(.info)
                 case .catchall:
-                    console.info("/*", newLine: false)
-                    pathLength += 2
+                    pathText += "*".consoleText(.info)
                 }
             }
-
-            for _ in 0..<longestPath - pathLength {
-                console.print(" ", newLine: false)
+            var column = [route.method.string.consoleText(), pathText]
+            if includeDescription {
+                let desc = route.userInfo["description"]
+                    .flatMap { $0 as? String }
+                    .flatMap { $0.consoleText() } ?? ""
+                column.append(desc)
             }
-
-            console.print(" |")
-            hr()
-        }
+            return column
+        })
     }
 }
 
-private extension Data {
-    /// Converts `Data` to a `String`.
-    var string: String {
-        return String(data: self, encoding: .utf8) ?? "<invalid utf8>"
+extension Console {
+    func outputASCIITable(_ rows: [[ConsoleText]]) {
+        var columnWidths: [Int] = []
+
+        // calculate longest columns
+        for row in rows {
+            for (i, column) in row.enumerated() {
+                if columnWidths.count <= i {
+                    columnWidths.append(0)
+                }
+                if column.description.count > columnWidths[i] {
+                    columnWidths[i] = column.description.count
+                }
+            }
+        }
+        
+        func hr() {
+            var text: ConsoleText = ""
+            for columnWidth in columnWidths {
+                text += "+"
+                text += "-"
+                for _ in 0..<columnWidth {
+                    text += "-"
+                }
+                text += "-"
+            }
+            text += "+"
+            self.output(text)
+        }
+        
+        for row in rows {
+            hr()
+            var text: ConsoleText = ""
+            for (i, column) in row.enumerated() {
+                text += "| "
+                text += column
+                for _ in 0..<(columnWidths[i] - column.description.count) {
+                    text += " "
+                }
+                text += " "
+            }
+            text += "|"
+            self.output(text)
+        }
+        
+        hr()
     }
 }

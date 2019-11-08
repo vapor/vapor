@@ -66,11 +66,6 @@ private final class MiddlewareGroup: RoutesBuilder {
     /// Router to cascade to.
     let root: RoutesBuilder
 
-    /// See `HTTPRoutesBuilder`.
-    var eventLoop: EventLoop {
-        return self.root.eventLoop
-    }
-
     /// Additional middleware.
     let middleware: [Middleware]
 

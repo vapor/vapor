@@ -1,15 +1,14 @@
 import Vapor
 
-public func configure(_ s: inout Services) {
-    s.extend(Routes.self) { r, c in
-        try routes(r, c)
-    }
+public func configure(_ app: Application) throws {
+    // providers here
 
-    s.global(MemoryCache.self) { _ in
+    // overrides
+    app.register(singleton: MemoryCache.self) { _ in
         return .init()
     }
     
-    s.register(HTTPServer.Configuration.self) { c in
+    app.register(HTTPServer.Configuration.self) { c in
         switch c.environment {
         case .tls:
             return try .init(
@@ -29,6 +28,9 @@ public func configure(_ s: inout Services) {
             return .init(hostname: "127.0.0.1", port: 8080)
         }
     }
+    
+    // routes
+    try routes(app)
 }
 
 final class MemoryCache {
