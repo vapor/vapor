@@ -1,5 +1,6 @@
 public struct Validation {
     enum ValidationType {
+    case preValidated(PathedValidatorResult)
     case nested([Validation], BasicCodingKey, Bool = true)
     case value((KeyedDecodingContainer<BasicCodingKey>) -> (BasicCodingKey, ValidatorResult)?)
     }
@@ -28,6 +29,14 @@ public struct Validation {
 
     public init(key: String, required: Bool = true, validatable: Validatable.Type) {
         self.init(key: key, required: required, validations: validatable.validations())
+    }
+
+    /// Creates a `Validation` from an existing `ValidatorResult` and a key. This allows you to include `ValidatorResults`
+    /// that are impossible to achieve using the `validate(from:)` method, eg. when the validation requires a database lookup.
+    /// - Parameter key: The key associated with the result.
+    /// - Parameter result: The pre-existing `ValidatorResult`.
+    public init(key: String, result: ValidatorResult) {
+        type = .preValidated(.init(key: BasicCodingKey.key(key), result: result))
     }
 }
 
@@ -58,6 +67,8 @@ extension Sequence where Element == Validation {
     func run(on container: KeyedDecodingContainer<BasicCodingKey>) -> [PathedValidatorResult] {
         flatMap { validation -> [PathedValidatorResult] in
             switch validation.type {
+            case let .preValidated(result):
+                return [result]
             case let .nested(validations, key, required):
                 do {
                     let nestedContainer = try container.nestedContainer(keyedBy: BasicCodingKey.self, forKey: key)

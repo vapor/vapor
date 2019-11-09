@@ -41,12 +41,6 @@ class ValidationTests: XCTestCase {
         }
     }
 
-    func assert<T>(_ data: T, validatedAs validator: Validator<T>, hasDescription description: String, failed: Bool, file: StaticString = #file, line: UInt = #line) {
-        let result = validator.validate(data)
-        XCTAssertEqual(result.description, description, file: file, line: line)
-        XCTAssertEqual(result.failed, failed, file: file, line: line)
-    }
-
     func testASCII() throws {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", validatedAs: .ascii, hasDescription: "contains valid characters", failed: false)
         assert("\n\r\t", validatedAs: .ascii, hasDescription: "contains valid characters", failed: false)
@@ -114,6 +108,23 @@ class ValidationTests: XCTestCase {
         assert("www.somedomain.com/", validatedAs: .url, hasDescription: "a valid URL", failed: true)
         assert("bananas", validatedAs: .url, hasDescription: "a valid URL", failed: true)
     }
+
+    func testPreexistingValidatorResultIsIncluded() throws {
+        struct CustomValidatorResult: ValidatorResult {
+            let failed = true
+            let description = "right"
+        }
+        let validations = [Validation(key: "key", result: CustomValidatorResult())]
+        XCTAssertThrowsError(try validations.validate(json: "{}")) { error in
+            XCTAssertEqual((error as? ValidationsError)?.description, "key: is not right")
+        }
+    }
+}
+
+private func assert<T>(_ data: T, validatedAs validator: Validator<T>, hasDescription description: String, failed: Bool, file: StaticString = #file, line: UInt = #line) {
+    let result = validator.validate(data)
+    XCTAssertEqual(result.description, description, file: file, line: line)
+    XCTAssertEqual(result.failed, failed, file: file, line: line)
 }
 
 private final class User: Validatable, Codable {
