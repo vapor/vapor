@@ -604,8 +604,8 @@ final class ApplicationTests: XCTestCase {
         }
 
         try app.testable().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
-            XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "email is not a valid email address")
+            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertContains(res.body.string, "email: is not a valid email address")
         }
     }
 

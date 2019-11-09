@@ -38,7 +38,7 @@ extension Validator where T: Equatable {
 
         /// See `Validator`.
         public func validate(_ item: T) -> Result {
-            .init(elementDescriptions: elementDescriptions, failed: contains(item))
+            .init(elementDescriptions: elementDescriptions, failed: !contains(item))
         }
     }
 }

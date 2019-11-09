@@ -37,7 +37,7 @@ class ValidationTests: XCTestCase {
                 XCTFail("error is not of type ValidationsError")
                 return
             }
-            XCTAssertEqual(validationsError.description, "name: contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)")
+            XCTAssertTrue(validationsError.description.contains("contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)"))
         }
     }
 
