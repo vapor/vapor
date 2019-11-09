@@ -1,5 +1,3 @@
-import Foundation
-
 extension Validator where T: Equatable {
 
     /// Validates whether an item is contained in the supplied array.
@@ -8,37 +6,36 @@ extension Validator where T: Equatable {
     }
 
     /// Validates whether an item is contained in the supplied sequence.
-    public static func `in`<S: Sequence>(_ array: S) -> Validator<T> where S.Element == T {
-        In(array).validator()
+    public static func `in`<S: Sequence>(_ sequence: S) -> Validator<T> where S.Element == T {
+        In(sequence).validator()
     }
 
-    /// Validates whether an item is contained in the supplied array.
-    public struct In: ValidatorType {
-        public struct Result: ValidatorResult {
-            let elementDescriptions: () -> [String]
+    /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
+    public struct InValidatorResult: ValidatorResult {
 
-            /// See `CustomStringConvertible`.
-            public var description: String {
-                "contained in \(elementDescriptions().joined(separator: ", ")))"
-            }
+        /// Descriptions of the elements of the supplied sequence.
+        public let elementDescriptions: [String]
 
-            /// See `ValidatorResult`.
-            public let failed: Bool
+        /// See `CustomStringConvertible`.
+        public var description: String {
+            "contained in \(elementDescriptions.joined(separator: ", ")))"
         }
 
-        /// Closure to determine whether an element is in the sequence.
+        /// See `ValidatorResult`.
+        public let failed: Bool
+    }
+
+    struct In: ValidatorType {
         let contains: (T) -> Bool
         let elementDescriptions: () -> [String]
 
-        /// Creates a new `InValidator`.
-        public init<S: Sequence>(_ sequence: S) where S.Element == T {
+        init<S: Sequence>(_ sequence: S) where S.Element == T {
             contains = sequence.contains
             elementDescriptions = { sequence.map(String.init(describing:)) }
         }
 
-        /// See `Validator`.
-        public func validate(_ item: T) -> Result {
-            .init(elementDescriptions: elementDescriptions, failed: !contains(item))
+        func validate(_ item: T) -> InValidatorResult {
+            .init(elementDescriptions: elementDescriptions(), failed: !contains(item))
         }
     }
 }

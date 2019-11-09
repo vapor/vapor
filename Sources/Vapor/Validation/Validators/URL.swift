@@ -12,20 +12,18 @@ extension Validator where T == String {
 
 extension Validator {
 
-    /// Validates whether a string is a valid email address.
-    public struct URL: ValidatorType {
-        public struct Result: ValidatorResult {
-            /// See `CustomStringConvertible`.
-            public let description = "a valid URL"
+    /// `ValidatorResult` of a validator that validates whether a string is a valid URL.
+    public struct URLValidatorResult: ValidatorResult {
 
-            /// See `ValidatorResult`.
-            public let failed: Bool
-        }
+        /// See `CustomStringConvertible`.
+        public let description = "a valid URL"
 
-        public init() {}
+        /// See `ValidatorResult`.
+        public let failed: Bool
+    }
 
-        /// See `Validator`.
-        public func validate(_ data: String) -> Result {
+    struct URL: ValidatorType {
+        func validate(_ data: String) -> URLValidatorResult {
             guard
                 let url = Foundation.URL(string: data),
                 url.isFileURL || (url.host != nil && url.scheme != nil)

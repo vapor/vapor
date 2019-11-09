@@ -26,58 +26,54 @@ extension Validator where T: Comparable & Strideable {
 
 extension Validator where T: Comparable {
 
-    /// Validates whether the data is within a supplied int range.
-    public struct Range: ValidatorType {
-        public enum Result: ValidatorResult {
-            case between(min: T, max: T)
-            case greaterThanOrEqualToMin(T)
-            case greaterThanMax(T)
-            case lessThanOrEqualToMax(T)
-            case lessThanMin(T)
-            case unconstrained
+    /// `ValidatorResult` of a validator that validates whether the data is within a supplied range.
+    public enum RangeValidatorResult: ValidatorResult {
 
-            /// See `CustomStringConvertible`.
-            public var description: String {
-                switch self {
-                case let .between(min, max):
-                    return "between \(min) and \(max)"
-                case let .greaterThanOrEqualToMin(min):
-                    return "greater than or equal to minimum of \(min)"
-                case let .greaterThanMax(max):
-                    return "greater than maximum of \(max)"
-                case let .lessThanMin(min):
-                    return "less than minimum of \(min)"
-                case let .lessThanOrEqualToMax(max):
-                    return "less than or equal to maximum of \(max)"
-                case .unconstrained:
-                    return "unconstrained"
-                }
-            }
+        /// The data was between `min` and `max`.
+        case between(min: T, max: T)
 
-            /// See `ValidatorResult`.
-            public var failed: Bool {
-                switch self {
-                case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax, .unconstrained: return false
-                case .greaterThanMax, .lessThanMin: return true
-                }
+        /// The data was greater than or equal to `min`.
+        case greaterThanOrEqualToMin(T)
+
+        /// The data was greater than `max`.
+        case greaterThanMax(T)
+
+        /// The data was less than or equal to `max`.
+        case lessThanOrEqualToMax(T)
+
+        /// The data was less than `min`.
+        case lessThanMin(T)
+
+        /// See `CustomStringConvertible`.
+        public var description: String {
+            switch self {
+            case let .between(min, max):
+                return "between \(min) and \(max)"
+            case let .greaterThanOrEqualToMin(min):
+                return "greater than or equal to minimum of \(min)"
+            case let .greaterThanMax(max):
+                return "greater than maximum of \(max)"
+            case let .lessThanMin(min):
+                return "less than minimum of \(min)"
+            case let .lessThanOrEqualToMax(max):
+                return "less than or equal to maximum of \(max)"
             }
         }
 
-        /// the minimum possible value, if nil, not checked
-        /// - note: inclusive
-        let min: T?
+        /// See `ValidatorResult`.
+        public var failed: Bool {
+            switch self {
+            case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax: return false
+            case .greaterThanMax, .lessThanMin: return true
+            }
+        }
+    }
 
-        /// the maximum possible value, if nil, not checked
-        /// - note: inclusive
+    struct Range: ValidatorType {
+        let min: T?
         let max: T?
 
-        public init(min: T? = nil, max: T? = nil) {
-            self.min = min
-            self.max = max
-        }
-
-        /// See `ValidatorType`.
-        public func validate(_ comparable: T) -> Result {
+        func validate(_ comparable: T) -> RangeValidatorResult {
             switch (min, max) {
             case let (.some(min), .some(max)) where comparable >= min && comparable <= max:
                 return .between(min: min, max: max)
@@ -90,7 +86,9 @@ extension Validator where T: Comparable {
             case let (_, .some(max)):
                 return .lessThanOrEqualToMax(max)
             case (.none, .none):
-                return .unconstrained
+                // This cannot happen because the four static methods on `Validator` that can make
+                // this validator all result in at least a minimum or a maximum or both.
+                fatalError("No minimum or maximum was supplied to the Range validator")
             }
         }
     }

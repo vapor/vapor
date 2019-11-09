@@ -5,31 +5,30 @@ public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
 
 extension Validator {
 
-    /// Combines two validators, if either is true the validation will succeed.
-    struct Or: ValidatorType {
-        public struct Result: ValidatorResult {
-            public let left: ValidatorResult
-            public let right: ValidatorResult
+    /// `ValidatorResult` of "Or" `Validator` that combines two `ValidatorResults`.
+    /// If either result is successful the combined result is as well.
+    public struct OrValidatorResult: ValidatorResult {
 
-            /// See `CustomStringConvertible`.
-            public var description: String {
-                "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
-            }
+        /// `ValidatorResult` of left hand side of the "Or" validation.
+        public let left: ValidatorResult
 
-            /// See `ValidatorResult`.
-            public var failed: Bool { left.failed && right.failed }
+        /// `ValidatorResult` of right hand side of the "Or" validation.
+        public let right: ValidatorResult
+
+        /// See `CustomStringConvertible`.
+        public var description: String {
+            "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
         }
 
+        /// See `ValidatorResult`.
+        public var failed: Bool { left.failed && right.failed }
+    }
+
+    struct Or: ValidatorType {
         let lhs: Validator<T>
         let rhs: Validator<T>
 
-        public init(lhs: Validator<T>, rhs: Validator<T>) {
-            self.lhs = lhs
-            self.rhs = rhs
-        }
-
-        /// See Validator.validate
-        public func validate(_ data: T) -> Result {
+        func validate(_ data: T) -> OrValidatorResult {
             .init(left: lhs.validate(data), right: rhs.validate(data))
         }
     }

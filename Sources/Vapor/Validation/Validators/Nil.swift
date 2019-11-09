@@ -5,19 +5,18 @@ extension Validator where T: OptionalType {
         Nil().validator()
     }
 
-    /// Validates that the data is `nil`.
-    public struct Nil: ValidatorType {
-        public struct Result: ValidatorResult {
+    /// `ValidatorResult` of a validator that validates that the data is `nil`.
+    public struct NilValidatorResult: ValidatorResult {
 
-            /// See `CustomStringConvertible`.
-            public let description = "nil"
+        /// See `CustomStringConvertible`.
+        public let description = "nil"
 
-            /// See `ValidatorResult`.
-            public let failed: Bool
-        }
+        /// See `ValidatorResult`.
+        public let failed: Bool
+    }
 
-        /// See `Validator`.
-        public func validate(_ data: T) -> Result {
+    struct Nil: ValidatorType {
+        func validate(_ data: T) -> NilValidatorResult {
             .init(failed: data.wrapped != nil)
         }
     }

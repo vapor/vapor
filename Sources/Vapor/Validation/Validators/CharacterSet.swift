@@ -15,39 +15,37 @@ extension Validator {
         CharacterSet(characterSet: characterSet).validator()
     }
 
-    /// Validates that a `String` contains characters in a given `CharacterSet`.
-    public struct CharacterSet: ValidatorType {
-        public struct Result: ValidatorResult {
-            public let characterSet: Foundation.CharacterSet
-            public let invalidSlice: Substring?
+    /// `ValidatorResult` of a validator that validates that a `String` contains characters in a given `CharacterSet`.
+    public struct CharacterSetValidatorResult: ValidatorResult {
 
-            /// See `CustomStringConvertible`.
-            public var description: String {
-                var string: String
-                if let invalidSlice = invalidSlice {
-                    string = "contains an invalid character: '\(invalidSlice)'"
-                } else {
-                    string = "contains valid characters"
-                }
-                if !characterSet.traits.isEmpty {
-                    string += " (allowed: \(characterSet.traits.joined(separator: ", ")))"
-                }
-                return string
+        /// The set of characters the input may contain.
+        public let characterSet: Foundation.CharacterSet
+
+        /// On validation failure, the first substring of the input with characters not contained in `characterSet`.
+        public let invalidSlice: Substring?
+
+        /// See `CustomStringConvertible`.
+        public var description: String {
+            var string: String
+            if let invalidSlice = invalidSlice {
+                string = "contains an invalid character: '\(invalidSlice)'"
+            } else {
+                string = "contains valid characters"
             }
-
-            /// See `ValidatorResult`.
-            public var failed: Bool { invalidSlice != nil }
+            if !characterSet.traits.isEmpty {
+                string += " (allowed: \(characterSet.traits.joined(separator: ", ")))"
+            }
+            return string
         }
 
-        /// `CharacterSet` to validate against.
+        /// See `ValidatorResult`.
+        public var failed: Bool { invalidSlice != nil }
+    }
+
+    struct CharacterSet: ValidatorType {
         let characterSet: Foundation.CharacterSet
 
-        public init(characterSet: Foundation.CharacterSet) {
-            self.characterSet = characterSet
-        }
-
-        /// See `Validator`.
-        public func validate(_ s: String) -> Result {
+        func validate(_ s: String) -> CharacterSetValidatorResult {
             .init(
                 characterSet: characterSet,
                 invalidSlice: s.rangeOfCharacter(from: characterSet.inverted).map { s[$0] }

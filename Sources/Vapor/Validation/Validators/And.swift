@@ -4,30 +4,31 @@ public func && <T: Decodable>(lhs: Validator<T>, rhs: Validator<T>) -> Validator
 }
 
 extension Validator {
-    // TODO: after hiding `ValidatorType`s, consider merging this with Or to create on LogicValidator that takes an operator like `&&`, `||` to reduce code duplication
-    public struct And: ValidatorType {
-        public struct Result: ValidatorResult {
-            public let left: ValidatorResult
-            public let right: ValidatorResult
 
-            /// See `CustomStringConvertible`.
-            public var description: String {
-                "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
-            }
+    /// `ValidatorResult` of "And" `Validator` that combines two `ValidatorResults`.
+    /// If both results are successful the combined result is as well.
+    public struct AndValidatorResult: ValidatorResult {
 
-            /// See `ValidatorResult`.
-            public var failed: Bool { left.failed || right.failed }
+        /// `ValidatorResult` of left hand side of the "And" validation.
+        public let left: ValidatorResult
+
+        /// `ValidatorResult` of right hand side of the "And" validation.
+        public let right: ValidatorResult
+
+        /// See `CustomStringConvertible`.
+        public var description: String {
+            "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
         }
 
+        /// See `ValidatorResult`.
+        public var failed: Bool { left.failed || right.failed }
+    }
+
+    struct And: ValidatorType {
         let lhs: Validator<T>
         let rhs: Validator<T>
 
-        public init(lhs: Validator<T>, rhs: Validator<T>) {
-            self.lhs = lhs
-            self.rhs = rhs
-        }
-
-        public func validate(_ data: T) -> Result {
+        func validate(_ data: T) -> AndValidatorResult {
             .init(left: lhs.validate(data), right: rhs.validate(data))
         }
     }

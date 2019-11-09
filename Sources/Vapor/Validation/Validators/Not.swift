@@ -5,23 +5,23 @@ public prefix func !<T: Decodable> (validator: Validator<T>) -> Validator<T> {
 
 extension Validator {
 
-    /// Inverts a validator.
+    /// Inverted `ValidatorResult`.
+    public struct NotValidatorResult: ValidatorResult {
+
+        /// The inverted `ValidatorResult`.
+        public let inverted: ValidatorResult
+
+        /// See `CustomStringConvertible`.
+        public var description: String { "not \(inverted)" }
+
+        /// See `ValidatorResult`.
+        public var failed: Bool { !inverted.failed }
+    }
+
     struct Not: ValidatorType {
-        struct Result: ValidatorResult {
-            let inverted: ValidatorResult
-
-            /// See `CustomStringConvertible`.
-            var description: String { "not \(inverted)" }
-
-            /// See `ValidatorResult`.
-            var failed: Bool { !inverted.failed }
-        }
-
-        /// The inverted `Validator`.
         let validator: Validator<T>
 
-        /// See `ValidatorType`
-        func validate(_ data: T) -> Result {
+        func validate(_ data: T) -> NotValidatorResult {
             .init(inverted: validator.validate(data))
         }
     }

@@ -8,22 +8,18 @@ extension Validator where T == String {
 
 extension Validator {
 
-    /// Validates whether a `String` is a valid email address.
-    public struct Email: ValidatorType {
+    /// `ValidatorResult` of a validator that validates whether a `String` is a valid email address.
+    public struct EmailValidatorResult: ValidatorResult {
 
-        public struct Result: ValidatorResult {
+        /// See `CustomStringConvertible`.
+        public let description = "a valid email address"
 
-            /// See `CustomStringConvertible`.
-            public let description = "a valid email address"
+        /// See `ValidatorResult`.
+        public let failed: Bool
+    }
 
-            /// See `ValidatorResult`.
-            public let failed: Bool
-        }
-
-        public init() {}
-
-        /// See `ValidatorType`.
-        public func validate(_ string: String) -> Result {
+    struct Email: ValidatorType {
+        func validate(_ string: String) -> EmailValidatorResult {
             guard
                 let range = string.range(of: regex, options: [.regularExpression]),
                 range.lowerBound == string.startIndex && range.upperBound == string.endIndex,

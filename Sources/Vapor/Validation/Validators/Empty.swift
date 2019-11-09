@@ -1,24 +1,22 @@
 extension Validator where T: Collection {
 
-    /// Validates that the data is empty. You can also check a non empty state by combining with the `NotValidator`.
+    /// Validates that the data is empty. You can also check a non empty state by negating this validator: `!.empty`.
     public static var empty: Validator<T> {
         Empty().validator()
     }
 
-    /// Validates whether the data is empty.
-    public struct Empty: ValidatorType {
-        public struct Result: ValidatorResult {
-            /// See `CustomStringConvertible`.
-            public let description = "empty"
+    /// `ValidatorResult` of a validator that validates whether the data is empty.
+    public struct EmptyValidatorResult: ValidatorResult {
 
-            /// See `ValidatorResult`.
-            public let failed: Bool
-        }
+        /// See `CustomStringConvertible`.
+        public let description = "empty"
 
-        public init() {}
+        /// See `ValidatorResult`.
+        public let failed: Bool
+    }
 
-        /// See `ValidatorType`.
-        public func validate(_ data: T) -> Result {
+    struct Empty: ValidatorType {
+        func validate(_ data: T) -> EmptyValidatorResult {
             .init(failed: !data.isEmpty)
         }
     }
