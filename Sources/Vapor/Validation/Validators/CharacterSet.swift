@@ -66,7 +66,7 @@ private extension Foundation.CharacterSet {
 
     /// ASCII (byte 0..<128) character set.
     static var ascii: CharacterSet {
-        CharacterSet(charactersIn: Unicode.Scalar(0)..<Unicode.Scalar(128))
+        .init((0..<128).map(Unicode.Scalar.init))
     }
 
     /// Returns an array of strings describing the contents of this `CharacterSet`.
