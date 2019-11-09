@@ -2,7 +2,7 @@ import Vapor
 import XCTest
 
 class ValidationTests: XCTestCase {
-    func testValidate() throws {
+    func testValidate() {
         let valid = """
         {
             "name": "Tanner",
@@ -41,7 +41,7 @@ class ValidationTests: XCTestCase {
         }
     }
 
-    func testASCII() throws {
+    func testASCII() {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", validatedAs: .ascii, hasDescription: "contains valid characters", failed: false)
         assert("\n\r\t", validatedAs: .ascii, hasDescription: "contains valid characters", failed: false)
         assert("\n\r\t\u{129}", validatedAs: .ascii, hasDescription: "contains an invalid character: 'ĩ'", failed: true)
@@ -49,19 +49,19 @@ class ValidationTests: XCTestCase {
         assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", validatedAs: .ascii, hasDescription: "contains an invalid character: '🤠'", failed: true)
     }
 
-    func testAlphanumeric() throws {
+    func testAlphanumeric() {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", validatedAs: .alphanumeric, hasDescription: "contains valid characters (allowed: A-Z, a-z, 0-9)", failed: false)
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", validatedAs: .alphanumeric, hasDescription: "contains an invalid character: '+' (allowed: A-Z, a-z, 0-9)", failed: true)
     }
 
-    func testEmpty() throws {
+    func testEmpty() {
         assert("", validatedAs: .empty, hasDescription: "empty", failed: false)
         assert("something", validatedAs: .empty, hasDescription: "empty", failed: true)
         assert([Int](), validatedAs: .empty, hasDescription: "empty", failed: false)
         assert([1, 2], validatedAs: .empty, hasDescription: "empty", failed: true)
     }
 
-    func testEmail() throws {
+    func testEmail() {
         assert("tanner@vapor.codes", validatedAs: .email, hasDescription: "a valid email address", failed: false)
         assert("tanner@vapor.codestanner@vapor.codes", validatedAs: .email, hasDescription: "a valid email address", failed: true)
         assert("tanner@vapor.codes.", validatedAs: .email, hasDescription: "a valid email address", failed: true)
@@ -71,7 +71,7 @@ class ValidationTests: XCTestCase {
         assert("asdf", validatedAs: .email, hasDescription: "a valid email address", failed: true)
     }
     
-    func testRange() throws {
+    func testRange() {
         assert(4, validatedAs: .range(-5...5), hasDescription: "between -5 and 5", failed: false)
         assert(5, validatedAs: .range(-5...5), hasDescription: "between -5 and 5", failed: false)
         assert(-5, validatedAs: .range(-5...5), hasDescription: "between -5 and 5", failed: false)
@@ -85,7 +85,7 @@ class ValidationTests: XCTestCase {
         assert(6, validatedAs: .range(-5..<6), hasDescription: "greater than maximum of 5", failed: true)
     }
 
-    func testCountCharacters() throws {
+    func testCountCharacters() {
         assert("1", validatedAs: .count(1...6), hasDescription: "between 1 and 6 characters", failed: false)
         assert("123", validatedAs: .count(1...6), hasDescription: "between 1 and 6 characters", failed: false)
         assert("123456", validatedAs: .count(1...6), hasDescription: "between 1 and 6 characters", failed: false)
@@ -93,7 +93,7 @@ class ValidationTests: XCTestCase {
         assert("1234567", validatedAs: .count(1...6), hasDescription: "greater than maximum of 6 characters", failed: true)
     }
 
-    func testCountItems() throws {
+    func testCountItems() {
         assert([1], validatedAs: .count(1...6), hasDescription: "between 1 and 6 items", failed: false)
         assert([1, 2, 3], validatedAs: .count(1...6), hasDescription: "between 1 and 6 items", failed: false)
         assert([1, 2, 3, 4, 5, 6], validatedAs: .count(1...6), hasDescription: "between 1 and 6 items", failed: false)
@@ -101,7 +101,7 @@ class ValidationTests: XCTestCase {
         assert([1, 2, 3, 4, 5, 6, 7], validatedAs: .count(1...6), hasDescription: "greater than maximum of 6 items", failed: true)
     }
 
-    func testURL() throws {
+    func testURL() {
         assert("https://www.somedomain.com/somepath.png", validatedAs: .url, hasDescription: "a valid URL", failed: false)
         assert("https://www.somedomain.com/", validatedAs: .url, hasDescription: "a valid URL", failed: false)
         assert("file:///Users/vapor/rocks/somePath.png", validatedAs: .url, hasDescription: "a valid URL", failed: false)
@@ -109,7 +109,7 @@ class ValidationTests: XCTestCase {
         assert("bananas", validatedAs: .url, hasDescription: "a valid URL", failed: true)
     }
 
-    func testPreexistingValidatorResultIsIncluded() throws {
+    func testPreexistingValidatorResultIsIncluded() {
         struct CustomValidatorResult: ValidatorResult {
             let failed = true
             let description = "right"
@@ -120,7 +120,7 @@ class ValidationTests: XCTestCase {
         }
     }
 
-    func testDoubleNegationIsAvoided() throws {
+    func testDoubleNegationIsAvoided() {
         let validations = [Validation(key: "key", as: String.self, validator: !.empty)]
         XCTAssertThrowsError(try validations.validate(json: #"{"key": ""}"#)) { error in
             XCTAssertEqual((error as? ValidationsError)?.description, "key: is empty")
