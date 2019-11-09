@@ -119,6 +119,13 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual((error as? ValidationsError)?.description, "key: is not right")
         }
     }
+
+    func testDoubleNegationIsAvoided() throws {
+        let validations = [Validation(key: "key", as: String.self, validator: !.empty)]
+        XCTAssertThrowsError(try validations.validate(json: #"{"key": ""}"#)) { error in
+            XCTAssertEqual((error as? ValidationsError)?.description, "key: is empty")
+        }
+    }
 }
 
 private func assert<T>(_ data: T, validatedAs validator: Validator<T>, hasDescription description: String, failed: Bool, file: StaticString = #file, line: UInt = #line) {
