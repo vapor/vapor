@@ -18,7 +18,7 @@ extension Validator {
     /// `ValidatorResult` of a validator that validates that a `String` contains characters in a given `CharacterSet`.
     public struct CharacterSetValidatorResult: ValidatorResult {
 
-        /// The set of characters the input may contain.
+        /// The set of characters the input is allowed to contain.
         public let characterSet: Foundation.CharacterSet
 
         /// On validation failure, the first substring of the input with characters not contained in `characterSet`.
@@ -27,14 +27,17 @@ extension Validator {
         /// See `CustomStringConvertible`.
         public var description: String {
             var string: String
+
             if let invalidSlice = invalidSlice {
                 string = "contains an invalid character: '\(invalidSlice)'"
             } else {
-                string = "contains valid characters"
+                string = "contains only valid characters"
             }
+
             if !characterSet.traits.isEmpty {
                 string += " (allowed: \(characterSet.traits.joined(separator: ", ")))"
             }
+
             return string
         }
 
@@ -44,6 +47,10 @@ extension Validator {
 
     struct CharacterSet: ValidatorType {
         let characterSet: Foundation.CharacterSet
+
+        func inverted() -> CharacterSet {
+            .init(characterSet: characterSet.inverted)
+        }
 
         func validate(_ s: String) -> CharacterSetValidatorResult {
             .init(
@@ -62,7 +69,7 @@ public func +(lhs: CharacterSet, rhs: CharacterSet) -> CharacterSet {
     lhs.union(rhs)
 }
 
-private extension Foundation.CharacterSet {
+private extension CharacterSet {
 
     /// ASCII (byte 0..<128) character set.
     static var ascii: CharacterSet {

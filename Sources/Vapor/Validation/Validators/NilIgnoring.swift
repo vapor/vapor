@@ -27,7 +27,7 @@ extension Validator {
     /// `ValidatorResult` of a validator that ignores nil values.
     public struct NilIgnoringValidatorResult: ValidatorResult {
 
-        /// Result of a validation or nil if the input was nil.
+        /// Result of a validation or nil if the input is nil.
         let result: ValidatorResult?
 
         /// See `CustomStringConvertible`.
@@ -39,6 +39,10 @@ extension Validator {
 
     struct NilIgnoring: ValidatorType {
         let base: Validator<T>
+
+        func inverted() -> NilIgnoring {
+            .init(base: base.inverted())
+        }
 
         func validate(_ data: T?) -> NilIgnoringValidatorResult {
             .init(result: data.flatMap(base.validate))

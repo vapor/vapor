@@ -21,78 +21,48 @@ extension Validator where T: Collection {
     }
 
     /// `ValidatorResult` of a validator  that validates whether the item's `count` is within a supplied int range.
-    public enum CountValidatorResult: ValidatorResult {
+    public struct CountValidatorResult: ValidatorResult {
 
-        /// The `count` was between `min` and `max`.
-        case between(min: Int, max: Int)
+        /// The `failed` state is inverted.
+        public let isInverted: Bool
 
-        /// The `count` was greater than or equal to `min`.
-        case greaterThanOrEqualToMin(Int)
-
-        /// The `count` was greater than `max`.
-        case greaterThanMax(Int)
-
-        /// The `count` was less than or equal to `max`.
-        case lessThanOrEqualToMax(Int)
-
-        /// The `count` was less than `min`.
-        case lessThanMin(Int)
+        /// The position of the count relative to the range.
+        public let rangeResult: RangeResult<Int>
 
         /// See `CustomStringConvertible`.
         public var description: String {
-            func elementDescription(count: Int) -> String {
+            rangeResult.describe { count in
                 let useSingularForm = count == 1 && count != 0
 
                 let element = T.Element.self is Character.Type ? "character" : "item"
 
                 return "\(count) \(element)\(useSingularForm ? "" : "s")"
             }
-
-            switch self {
-            case let .between(min, max):
-                return "between \(min) and \(elementDescription(count: max))"
-            case let .greaterThanOrEqualToMin(min):
-                return "greater than or equal to minimum of \(elementDescription(count: min))"
-            case let .greaterThanMax(max):
-                return "greater than maximum of \(elementDescription(count: max))"
-            case let .lessThanMin(min):
-                return "less than minimum of \(elementDescription(count: min))"
-            case let .lessThanOrEqualToMax(max):
-                return "less than or equal to maximum of \(elementDescription(count: max))"
-            }
         }
 
         /// See `ValidatorResult`.
         public var failed: Bool {
-            switch self {
-            case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax: return false
-            case .greaterThanMax, .lessThanMin: return true
-            }
+            rangeResult.isWithinRange == isInverted 
         }
     }
 
     struct Count: ValidatorType {
+        let isInverted: Bool
         let min: Int?
         let max: Int?
 
+        init(isInverted: Bool = false, min: Int?, max: Int?) {
+            self.isInverted = isInverted
+            self.min = min
+            self.max = max
+        }
+
+        func inverted() -> Count {
+            .init(isInverted: !isInverted, min: min, max: max)
+        }
+
         func validate(_ data: T) -> CountValidatorResult {
-            let count = data.count
-            switch (min, max) {
-            case let (.some(min), .some(max)) where count >= min && count <= max:
-                return .between(min: min, max: max)
-            case let (.some(min), _) where count < min:
-                return .lessThanMin(min)
-            case let (_, .some(max)) where count > max:
-                return .greaterThanMax(max)
-            case let (.some(min), _):
-                return .greaterThanOrEqualToMin(min)
-            case let (_, .some(max)):
-                return .lessThanOrEqualToMax(max)
-            case (.none, .none):
-                // This cannot happen because the four static methods on `Validator` that can make
-                // this validator all result in at least a minimum or a maximum or both.
-                fatalError("No minimum or maximum was supplied to the Count validator")
-            }
+            .init(isInverted: isInverted, rangeResult: .init(min: min, max: max, value: data.count))
         }
     }
 }

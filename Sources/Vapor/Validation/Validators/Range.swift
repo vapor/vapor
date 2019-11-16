@@ -26,70 +26,39 @@ extension Validator where T: Comparable & Strideable {
 
 extension Validator where T: Comparable {
 
-    /// `ValidatorResult` of a validator that validates whether the data is within a supplied range.
-    public enum RangeValidatorResult: ValidatorResult {
+    /// `ValidatorResult` of a validator that validates whether the input is within a supplied range.
+    public struct RangeValidatorResult: ValidatorResult {
 
-        /// The data was between `min` and `max`.
-        case between(min: T, max: T)
+        /// The `failed` state is inverted.
+        public let isInverted: Bool
 
-        /// The data was greater than or equal to `min`.
-        case greaterThanOrEqualToMin(T)
-
-        /// The data was greater than `max`.
-        case greaterThanMax(T)
-
-        /// The data was less than or equal to `max`.
-        case lessThanOrEqualToMax(T)
-
-        /// The data was less than `min`.
-        case lessThanMin(T)
+        /// The position of the data relative to the range.
+        public let rangeResult: RangeResult<T>
 
         /// See `CustomStringConvertible`.
-        public var description: String {
-            switch self {
-            case let .between(min, max):
-                return "between \(min) and \(max)"
-            case let .greaterThanOrEqualToMin(min):
-                return "greater than or equal to minimum of \(min)"
-            case let .greaterThanMax(max):
-                return "greater than maximum of \(max)"
-            case let .lessThanMin(min):
-                return "less than minimum of \(min)"
-            case let .lessThanOrEqualToMax(max):
-                return "less than or equal to maximum of \(max)"
-            }
-        }
+        public var description: String { rangeResult.describe() }
 
         /// See `ValidatorResult`.
-        public var failed: Bool {
-            switch self {
-            case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax: return false
-            case .greaterThanMax, .lessThanMin: return true
-            }
-        }
+        public var failed: Bool { !rangeResult.isWithinRange }
     }
 
     struct Range: ValidatorType {
+        let isInverted: Bool
         let min: T?
         let max: T?
 
+        init(isInverted: Bool = false, min: T?, max: T?) {
+            self.isInverted = isInverted
+            self.min = min
+            self.max = max
+        }
+
+        func inverted() -> Range {
+            .init(isInverted: !isInverted, min: min, max: max)
+        }
+
         func validate(_ comparable: T) -> RangeValidatorResult {
-            switch (min, max) {
-            case let (.some(min), .some(max)) where comparable >= min && comparable <= max:
-                return .between(min: min, max: max)
-            case let (.some(min), _) where comparable < min:
-                return .lessThanMin(min)
-            case let (_, .some(max)) where comparable > max:
-                return .greaterThanMax(max)
-            case let (.some(min), _):
-                return .greaterThanOrEqualToMin(min)
-            case let (_, .some(max)):
-                return .lessThanOrEqualToMax(max)
-            case (.none, .none):
-                // This cannot happen because the four static methods on `Validator` that can make
-                // this validator all result in at least a minimum or a maximum or both.
-                fatalError("No minimum or maximum was supplied to the Range validator")
-            }
+            .init(isInverted: isInverted, rangeResult: .init(min: min, max: max, value: comparable))
         }
     }
 }

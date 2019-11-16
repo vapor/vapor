@@ -13,29 +13,43 @@ extension Validator where T: Equatable {
     /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
     public struct InValidatorResult: ValidatorResult {
 
+        /// The item is contained in the supplied sequence.
+        public let contained: Bool
+
         /// Descriptions of the elements of the supplied sequence.
         public let elementDescriptions: [String]
 
+        /// The `failed` state is inverted.
+        public let isInverted: Bool
+
         /// See `CustomStringConvertible`.
         public var description: String {
-            "contained in \(elementDescriptions.joined(separator: ", ")))"
+            "\(contained ? "" : "not ")contained in \(elementDescriptions.joined(separator: ", ")))"
         }
 
         /// See `ValidatorResult`.
-        public let failed: Bool
+        public var failed: Bool { contained == isInverted }
     }
 
     struct In: ValidatorType {
         let contains: (T) -> Bool
         let elementDescriptions: () -> [String]
+        let isInverted: Bool
 
-        init<S: Sequence>(_ sequence: S) where S.Element == T {
-            contains = sequence.contains
-            elementDescriptions = { sequence.map(String.init(describing:)) }
+        func inverted() -> In {
+            .init(contains: contains, elementDescriptions: elementDescriptions, isInverted: !isInverted)
         }
 
         func validate(_ item: T) -> InValidatorResult {
-            .init(elementDescriptions: elementDescriptions(), failed: !contains(item))
+            .init(contained: contains(item), elementDescriptions: elementDescriptions(), isInverted: isInverted)
         }
+    }
+}
+
+extension Validator.In {
+    init<S: Sequence>(_ sequence: S) where S.Element == T {
+        contains = sequence.contains
+        elementDescriptions = { sequence.map(String.init(describing:)) }
+        isInverted = false
     }
 }

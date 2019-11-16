@@ -2,7 +2,7 @@ extension Validator where T == String {
 
     /// Validates whether a `String` is a valid email address.
     public static var email: Validator<T> {
-        Email().validator()
+        Email(isInverted: false).validator()
     }
 }
 
@@ -11,14 +11,26 @@ extension Validator {
     /// `ValidatorResult` of a validator that validates whether a `String` is a valid email address.
     public struct EmailValidatorResult: ValidatorResult {
 
+        /// The `failed` state is inverted.
+        public let isInverted: Bool
+
+        /// The input is a valid email address
+        public let isValidEmail: Bool
+
         /// See `CustomStringConvertible`.
-        public let description = "a valid email address"
+        public var description: String { "is \(isValidEmail ? "" : "not ")a valid email address" }
 
         /// See `ValidatorResult`.
-        public let failed: Bool
+        public var failed: Bool { isValidEmail == isInverted }
     }
 
     struct Email: ValidatorType {
+        let isInverted: Bool
+
+        func inverted() -> Email {
+            .init(isInverted: !isInverted)
+        }
+
         func validate(_ string: String) -> EmailValidatorResult {
             guard
                 let range = string.range(of: regex, options: [.regularExpression]),
@@ -27,9 +39,9 @@ extension Validator {
                 string.count <= 80, // total length
                 string.split(separator: "@")[0].count <= 64 // length before `@`
             else {
-                return .init(failed: true)
+                return .init(isInverted: isInverted, isValidEmail: false)
             }
-            return .init(failed: false)
+            return .init(isInverted: isInverted, isValidEmail: true)
         }
     }
 }

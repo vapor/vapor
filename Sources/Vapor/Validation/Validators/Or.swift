@@ -9,16 +9,14 @@ extension Validator {
     /// If either result is successful the combined result is as well.
     public struct OrValidatorResult: ValidatorResult {
 
-        /// `ValidatorResult` of left hand side of the "Or" validation.
+        /// `ValidatorResult` of left hand side.
         public let left: ValidatorResult
 
-        /// `ValidatorResult` of right hand side of the "Or" validation.
+        /// `ValidatorResult` of right hand side.
         public let right: ValidatorResult
 
         /// See `CustomStringConvertible`.
-        public var description: String {
-            "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
-        }
+        public var description: String { "\(left) and \(right)" }
 
         /// See `ValidatorResult`.
         public var failed: Bool { left.failed && right.failed }
@@ -27,6 +25,10 @@ extension Validator {
     struct Or: ValidatorType {
         let lhs: Validator<T>
         let rhs: Validator<T>
+
+        func inverted() -> And {
+            .init(lhs: lhs.inverted(), rhs: rhs.inverted())
+        }
 
         func validate(_ data: T) -> OrValidatorResult {
             .init(left: lhs.validate(data), right: rhs.validate(data))

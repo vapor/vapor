@@ -15,8 +15,7 @@ extension ValidationsError: CustomStringConvertible {
     /// See `CustomStringConvertible`.
     public var description: String {
         failures.map { failure in
-            "\(failure.path.dotPath): is \(failure.result.failed ? "not " : "")\(failure.result.description)"
-                .replacingOccurrences(of: "not not ", with: "")
+            "\(failure.path.dotPath): \(failure.result.description)"
         }.joined(separator: "\n")
     }
 }

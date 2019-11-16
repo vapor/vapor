@@ -16,9 +16,7 @@ extension Validator {
         public let right: ValidatorResult
 
         /// See `CustomStringConvertible`.
-        public var description: String {
-            "\(left.failed ? "not " : "")\(left) and \(right.failed ? "not " : "")\(right)"
-        }
+        public var description: String { "\(left) and \(right)" }
 
         /// See `ValidatorResult`.
         public var failed: Bool { left.failed || right.failed }
@@ -27,6 +25,10 @@ extension Validator {
     struct And: ValidatorType {
         let lhs: Validator<T>
         let rhs: Validator<T>
+
+        func inverted() -> Or {
+            .init(lhs: lhs.inverted(), rhs: rhs.inverted())
+        }
 
         func validate(_ data: T) -> AndValidatorResult {
             .init(left: lhs.validate(data), right: rhs.validate(data))
