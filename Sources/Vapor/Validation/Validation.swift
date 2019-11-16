@@ -7,7 +7,8 @@ public struct Validation {
 
     let type: ValidationType
 
-    public init<T: Decodable>(key: BasicCodingKey, as: T.Type = T.self, required: Bool = true, validator: Validator<T>) {
+    public init<T: Decodable>(_ key: String, as: T.Type = T.self, required: Bool = true, is validator: Validator<T>) {
+        let key = BasicCodingKey(key)
         type = .value {
             KeyedValidation(required: required, key: key, validator: validator)
                 .validate($0)
@@ -15,27 +16,23 @@ public struct Validation {
         }
     }
 
-    public init<T: Decodable>(key: String, as: T.Type = T.self, required: Bool = true, validator: Validator<T>) {
-        self.init(key: BasicCodingKey(key), required: required, validator: validator)
-    }
-
-    public init(key: String, required: Bool = true, validations: [Validation]) {
+    public init(_ key: String, required: Bool = true, validations: [Validation]) {
         type = .nested(validations, BasicCodingKey(key), required)
     }
 
-    public init(key: String, required: Bool = true, validations: Validation ...) {
-        self.init(key: key, required: required, validations: validations)
+    public init(_ key: String, required: Bool = true, validations: Validation ...) {
+        self.init(key, required: required, validations: validations)
     }
 
-    public init(key: String, required: Bool = true, validatable: Validatable.Type) {
-        self.init(key: key, required: required, validations: validatable.validations())
+    public init(_ key: String, required: Bool = true, validatable: Validatable.Type) {
+        self.init(key, required: required, validations: validatable.validations())
     }
 
     /// Creates a `Validation` from an existing `ValidatorResult` and a key. This allows you to include `ValidatorResults`
     /// that are impossible to achieve using the `validate(from:)` method, eg. when the validation requires a database lookup.
     /// - Parameter key: The key associated with the result.
     /// - Parameter result: The pre-existing `ValidatorResult`.
-    public init(key: String, result: ValidatorResult) {
+    public init(_ key: String, result: ValidatorResult) {
         type = .preValidated(.init(key: BasicCodingKey.key(key), result: result))
     }
 }

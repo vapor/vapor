@@ -114,14 +114,14 @@ class ValidationTests: XCTestCase {
             let failed = true
             let description = "custom description"
         }
-        let validations = [Validation(key: "key", result: CustomValidatorResult())]
+        let validations = [Validation("key", result: CustomValidatorResult())]
         XCTAssertThrowsError(try validations.validate(json: "{}")) { error in
             XCTAssertEqual((error as? ValidationsError)?.description, "key: custom description")
         }
     }
 
     func testDoubleNegationIsAvoided() {
-        let validations = [Validation(key: "key", as: String.self, validator: !.empty)]
+        let validations = [Validation("key", as: String.self, is: !.empty)]
         XCTAssertThrowsError(try validations.validate(json: #"{"key": ""}"#)) { error in
             XCTAssertEqual((error as? ValidationsError)?.description, "key: is empty")
         }
@@ -164,24 +164,24 @@ private final class User: Validatable, Codable {
     static func validations() -> [Validation] {
         [
             // validate name is at least 5 characters and alphanumeric
-            Validation(key: "name", as: String.self, validator: .count(5...) && .alphanumeric),
+            .init("name", as: String.self, is: .count(5...) && .alphanumeric),
             // validate age is 18 or older
-            Validation(key: "age", as: Int.self, validator: .range(18...)),
+            .init("age", as: Int.self, is: .range(18...)),
             // validate the email is valid and is not nil
-            Validation(key: "email", as: String?.self, validator: !.nil && .email),
-            Validation(key: "email", as: String?.self, validator: .email && !.nil), // test other way
+            .init("email", as: String?.self, is: !.nil && .email),
+            .init("email", as: String?.self, is: .email && !.nil), // test other way
             // validate the email is valid or is nil
-            Validation(key: "email", as: String?.self, validator: .nil || .email),
-            Validation(key: "email", as: String?.self, validator: .email || .nil), // test other way
+            .init("email", as: String?.self, is: .nil || .email),
+            .init("email", as: String?.self, is: .email || .nil), // test other way
             // validate that the lucky number is nil or is 5 or 7
-            Validation(key: "luckyNumber", as: Int?.self, validator: .nil || .in(5, 7)),
+            .init("luckyNumber", as: Int?.self, is: .nil || .in(5, 7)),
             // validate that the profile picture is nil or a valid URL
-            Validation(key: "profilePictureURL", as: String?.self, validator: .url || .nil),
-            Validation(key: "preferredColors", as: [String].self, validator: !.empty),
+            .init("profilePictureURL", as: String?.self, is: .url || .nil),
+            .init("preferredColors", as: [String].self, is: !.empty),
             // pet validations
-            Validation(key: "pet", validations: [
-                Validation(key: "name", as: String.self, validator: .count(5...) && .characterSet(.alphanumerics + .whitespaces)),
-                Validation(key: "age", as: Int.self, validator: .range(3...))
+            .init("pet", validations: [
+                .init("name", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)),
+                .init("age", as: Int.self, is: .range(3...))
             ])
         ]
     }

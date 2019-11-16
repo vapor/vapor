@@ -587,7 +587,7 @@ final class ApplicationTests: XCTestCase {
     func testValidationError() throws {
         struct User: Content, Validatable {
             static func validations() -> [Validation] {
-                [Validation(key: "email", validator: .email)]
+                [.init("email", is: .email)]
             }
 
             var name: String
