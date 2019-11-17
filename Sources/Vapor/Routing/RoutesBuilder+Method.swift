@@ -35,8 +35,28 @@ extension RoutesBuilder {
     }
     
     @discardableResult
+    public func get<Response>(
+        _ path: [PathComponent],
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.GET, path, use: closure)
+    }
+    
+    @discardableResult
     public func post<Response>(
         _ path: PathComponent...,
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.POST, path, use: closure)
+    }
+    
+    @discardableResult
+    public func post<Response>(
+        _ path: [PathComponent],
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
@@ -55,6 +75,16 @@ extension RoutesBuilder {
     }
     
     @discardableResult
+    public func patch<Response>(
+        _ path: [PathComponent],
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.PATCH, path, use: closure)
+    }
+    
+    @discardableResult
     public func put<Response>(
         _ path: PathComponent...,
         use closure: @escaping (Request) throws -> Response
@@ -65,8 +95,28 @@ extension RoutesBuilder {
     }
     
     @discardableResult
+    public func put<Response>(
+        _ path: [PathComponent],
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.PUT, path, use: closure)
+    }
+    
+    @discardableResult
     public func delete<Response>(
         _ path: PathComponent...,
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.DELETE, path, use: closure)
+    }
+    
+    @discardableResult
+    public func delete<Response>(
+        _ path: [PathComponent],
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
