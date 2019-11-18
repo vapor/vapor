@@ -12,17 +12,7 @@ struct ApplicationClient: Client {
 
 extension Request {
     public var client: Client {
-        return self.make()
-    }
-
-    public func make<S>(_ service: S.Type = S.self) -> S {
-        return try! self.application.make(for: self)
-    }
-}
-
-extension Application {
-    public var client: Client {
-        return self.make()
+        return RequestClient(http: self.application.core.client, req: self)
     }
 }
 

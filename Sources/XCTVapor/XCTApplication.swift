@@ -19,14 +19,12 @@ extension Application {
     
     private struct Live: XCTApplicationTester {
         let app: Application
-        let server: Server
         let port: Int
 
         init(app: Application, port: Int) throws {
             self.app = app
             self.port = port
-            self.server = app.make(Server.self)
-            try server.start(hostname: "localhost", port: port)
+            
         }
 
         @discardableResult
@@ -39,6 +37,8 @@ extension Application {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
+            let server = try app.server.start(hostname: "localhost", port: port)
+            defer { server.shutdown() }
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var request = try HTTPClient.Request(
@@ -75,7 +75,7 @@ extension Application {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
-            let responder = self.app.make(Responder.self)
+            let responder = self.app.makeResponder()
             var headers = headers
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
@@ -89,11 +89,15 @@ extension Application {
                 headers: headers,
                 collectedBody: body,
                 remoteAddress: nil,
-                on: self.app.make()
+                on: self.app.eventLoopGroup.next()
             )
-            let res = try responder.respond(to: request).wait()
-            response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
-            try closure(response)
+            do {
+                let res = try responder.respond(to: request).wait()
+                response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
+                try closure(response)
+            } catch {
+                XCTFail("\(error)", file: file, line: line)
+            }
             return self
         }
     }

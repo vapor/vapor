@@ -1,5 +1,5 @@
 /// Configuration options for sessions.
-public struct SessionsConfig {
+public struct SessionsConfiguration {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
     public let cookieFactory: (SessionID) -> HTTPCookies.Value
 
@@ -21,7 +21,7 @@ public struct SessionsConfig {
     }
 
     /// `SessionsConfig` with basic cookie factory.
-    public static func `default`() -> SessionsConfig {
+    public static func `default`() -> SessionsConfiguration {
         return .init(cookieName: "vapor-session") { sessionID in
             return HTTPCookies.Value(
                 string: sessionID.string,

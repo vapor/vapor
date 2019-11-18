@@ -14,7 +14,7 @@
 /// See `SessionsConfig` and `Sessions` for more information.
 public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
-    let config: SessionsConfig
+    let configuration: SessionsConfiguration
 
     /// Session store.
     public let sessions: Sessions
@@ -24,9 +24,12 @@ public final class SessionsMiddleware: Middleware {
     /// - parameters:
     ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
     ///     - config: `SessionsConfig` to use for naming and creating cookie values.
-    public init(sessions: Sessions, config: SessionsConfig) {
+    public init(
+        sessions: Sessions,
+        configuration: SessionsConfiguration = .default()
+    ) {
         self.sessions = sessions
-        self.config = config
+        self.configuration = configuration
     }
 
     /// See `Middleware.respond`
@@ -37,7 +40,7 @@ public final class SessionsMiddleware: Middleware {
         cache.middlewareFlag = true
 
         // Check for an existing session
-        if let cookieValue = request.cookies[config.cookieName] {
+        if let cookieValue = request.cookies[self.configuration.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
             return sessions.readSession(id, for: request).flatMap { data in
@@ -71,15 +74,15 @@ public final class SessionsMiddleware: Middleware {
             // After create or update, set cookie on the response.
             return createOrUpdate.map { id in
                 // the session has an id, set the cookie
-                response.cookies[self.config.cookieName] = self.config.cookieFactory(id)
+                response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id)
                 return response
             }
-        } else if let cookieValue = request.cookies[self.config.cookieName] {
+        } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
             return self.sessions.deleteSession(id, for: request).map {
-                response.cookies[self.config.cookieName] = .expired
+                response.cookies[self.configuration.cookieName] = .expired
                 return response
             }
         } else {

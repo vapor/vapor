@@ -23,7 +23,7 @@ public struct MiddlewareConfiguration {
     }
 
     /// Resolves the configured middleware for a given container
-    internal func resolve() throws -> [Middleware] {
+    internal func resolve() -> [Middleware] {
         return self.storage
     }
 }

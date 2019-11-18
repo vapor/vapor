@@ -28,7 +28,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
+            TestAuthenticator(on: app.eventLoopGroup).middleware(), Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.requireAuthenticated(Test.self).name
         }
@@ -69,7 +69,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            TestAuthenticator(on: app.make()).middleware(), Test.guardMiddleware()
+            TestAuthenticator(on: app.eventLoopGroup).middleware(), Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.requireAuthenticated(Test.self).name
         }
@@ -126,9 +126,9 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            app.make(SessionsMiddleware.self),
-            TestSessionAuthenticator(on: app.make()).middleware(),
-            TestBearerAuthenticator(on: app.make()).middleware(),
+            SessionsMiddleware(sessions: app.sessions),
+            TestSessionAuthenticator(on: app.eventLoopGroup).middleware(),
+            TestBearerAuthenticator(on: app.eventLoopGroup).middleware(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
             return try req.requireAuthenticated(Test.self).name

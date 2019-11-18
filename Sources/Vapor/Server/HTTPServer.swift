@@ -10,7 +10,7 @@ public enum HTTPVersionMajor: Equatable, Hashable {
     case two
 }
 
-public final class HTTPServer: Server {
+public final class HTTPServer {
     /// Engine server config struct.
     ///
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
@@ -120,16 +120,10 @@ public final class HTTPServer: Server {
         self.didShutdown = false
     }
     
-    public func start(hostname: String?, port: Int?) throws {
-        var configuration = self.configuration
-        
-        // determine which hostname / port to bind to
-        configuration.hostname = hostname ?? self.configuration.hostname
-        configuration.port = port ?? self.configuration.port
-        
+    public func start() throws {
         // print starting message
         let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
-        let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        let address = "\(scheme)://\(self.configuration.hostname):\(self.configuration.port)"
         self.configuration.logger.notice("Server starting on \(address)")
         
         // start the actual HTTPServer

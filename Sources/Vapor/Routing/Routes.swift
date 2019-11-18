@@ -18,8 +18,4 @@ extension Application: RoutesBuilder {
     public func add(_ route: Route) {
         self.routes.add(route)
     }
-    
-    public var routes: Routes {
-        return self.make()
-    }
 }

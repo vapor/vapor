@@ -23,11 +23,15 @@ public final class RoutesCommand: Command {
     }
 
     /// `Router` to use for printing routes.
-    private let routes: Routes
+    private let application: Application
+    
+    private var routes: Routes {
+        self.application.routes
+    }
 
     /// Create a new `RoutesCommand`.
-    public init(routes: Routes) {
-        self.routes = routes
+    init(application: Application) {
+        self.application = application
     }
 
     /// See `Command`.

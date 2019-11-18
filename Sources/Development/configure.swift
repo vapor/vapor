@@ -1,32 +1,21 @@
 import Vapor
 
 public func configure(_ app: Application) throws {
-    // providers here
-
-    // overrides
-    app.register(singleton: MemoryCache.self) { _ in
-        return .init()
-    }
-    
-    app.register(HTTPServer.Configuration.self) { c in
-        switch c.environment {
-        case .tls:
-            return try .init(
-                hostname: "127.0.0.1",
-                port: 8443,
-                tlsConfiguration: .forServer(
-                    certificateChain: [
-                        .certificate(.init(
-                            file: "/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem",
-                            format: .pem
-                        ))
-                    ],
-                    privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
-                )
-            )
-        default:
-            return .init(hostname: "127.0.0.1", port: 8080)
-        }
+    app.server.configuration.hostname = "127.0.0.1"
+    switch app.environment {
+    case .tls:
+        app.server.configuration.port = 8443
+        try app.server.configuration.tlsConfiguration = .forServer(
+            certificateChain: [
+                .certificate(.init(
+                    file: "/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem",
+                    format: .pem
+                ))
+            ],
+            privateKey: .file("/Users/tanner0101/dev/vapor/net-kit/certs/key.pem")
+        )
+    default:
+        app.server.configuration.port = 8080
     }
     
     // routes

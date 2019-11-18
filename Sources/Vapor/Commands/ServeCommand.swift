@@ -25,34 +25,32 @@ public final class ServeCommand: Command {
         return "Begins serving the app over HTTP."
     }
 
-    private let server: Server
-    private let running: RunningService
+    private let application: Application
     private var signalSources: [DispatchSourceSignal]
     private var didShutdown: Bool
+    private var server: Server.Running?
 
     /// Create a new `ServeCommand`.
-    init(server: Server, running: RunningService) {
-        self.server = server
-        self.running = running
+    init(application: Application) {
+        self.application = application
         self.signalSources = []
         self.didShutdown = false
     }
 
     /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
-        try self.server.start(
-            hostname: signature.hostname
-                // 0.0.0.0:8080, 0.0.0.0, parse hostname
-                ?? signature.bind?.split(separator: ":").first.flatMap(String.init),
-            port: signature.port
-                // 0.0.0.0:8080, :8080, parse port
-                ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-        )
+        let hostname = signature.hostname
+            // 0.0.0.0:8080, 0.0.0.0, parse hostname
+            ?? signature.bind?.split(separator: ":").first.flatMap(String.init)
+        let port = signature.port
+            // 0.0.0.0:8080, :8080, parse port
+            ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
+        let server = try self.application.server.start(hostname: hostname, port: port)
+        self.server = server
 
         // allow the server to be stopped or waited for
-        let promise = self.server.onShutdown.eventLoop.makePromise(of: Void.self)
-        self.server.onShutdown.cascade(to: promise)
-        self.running.current = .start(using: promise)
+        let promise = self.application.eventLoopGroup.next().makePromise(of: Void.self)
+        self.application.running = .start(using: promise)
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
@@ -72,6 +70,10 @@ public final class ServeCommand: Command {
 
     func shutdown() {
         self.didShutdown = true
+        self.application.running?.stop()
+        if let server = server {
+            server.shutdown()
+        }
         self.signalSources.forEach { $0.cancel() } // clear refs
         self.signalSources = []
     }
