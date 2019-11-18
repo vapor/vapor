@@ -39,7 +39,6 @@ extension ApplicationTests {
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testRootGet", testRootGet),
         ("testSessionDestroy", testSessionDestroy),
-        ("testSingletonServiceShutdown", testSingletonServiceShutdown),
         ("testStreamFile", testStreamFile),
         ("testStreamFileConnectionClose", testStreamFileConnectionClose),
         ("testSwiftError", testSwiftError),
