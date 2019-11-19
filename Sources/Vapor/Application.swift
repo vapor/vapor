@@ -56,8 +56,9 @@ public final class Application {
     }
     
     private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+        let directoryConfig = DirectoryConfiguration.detect()
         return DotEnvFile.load(
-            path: ".env",
+            path: directoryConfig.workingDirectory + ".env",
             fileio: .init(threadPool: self.make()),
             on: eventLoop
         ).recover { error in
