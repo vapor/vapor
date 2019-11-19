@@ -9,52 +9,10 @@ public protocol Provider: class {
 }
 
 extension Provider {
-    public func lazy<T>(
-        get storage: ReferenceWritableKeyPath<Self, T?>,
-        as default: @autoclosure () -> T
-    ) -> T {
-        self.lazy(get: storage, as: `default`)
-    }
-    
-    public func lazy<T>(
-        get storage: ReferenceWritableKeyPath<Self, T?>,
-        as default: () -> T
-    ) -> T {
-        if let existing = self[keyPath: storage] {
-            // fast path
-            return existing
-        } else {
-            // slow path
-            #warning("synchronize access")
-            if let existing = self[keyPath: storage] {
-                return existing
-            } else {
-                let new = `default`()
-                self[keyPath: storage] = new
-                return new
-            }
-        }
-    }
-    
-    public func lazy<T>(
-        set storage: ReferenceWritableKeyPath<Self, T?>,
-        to value: T,
-        shutdown: (T) -> () = { _ in }
-    ) {
-        #warning("synchronize access")
-        if let existing = self[keyPath: storage] {
-            shutdown(existing)
-        }
-        self[keyPath: storage] = value
-    }
-}
-
-extension Provider {
     public func willBoot() throws { }
     public func didBoot() throws { }
     public func shutdown() { }
 }
-
 
 public final class Providers {
     private var lookup: [ObjectIdentifier: Provider]
