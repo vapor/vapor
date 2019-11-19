@@ -1,4 +1,4 @@
-public struct Server {
+public final class Server {
     let application: Application
     public var configuration: HTTPServer.Configuration
     
@@ -21,7 +21,7 @@ public struct Server {
         configuration.port = port ?? self.configuration.port
         let server = HTTPServer(
             application: self.application,
-            responder: self.application.makeResponder(),
+            responder: self.application.responder,
             configuration: configuration,
             on: self.application.eventLoopGroup
         )

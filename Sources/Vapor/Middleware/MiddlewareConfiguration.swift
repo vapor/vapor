@@ -1,6 +1,9 @@
+@available(*, deprecated, renamed: "Middlewares")
+public typealias MiddlewareConfiguration = Middlewares
+
 /// Configures an application's active `Middleware`.
 /// Middleware will be used in the order they are added.
-public struct MiddlewareConfiguration {
+public struct Middlewares {
     /// The configured middleware.
     private var storage: [Middleware]
 

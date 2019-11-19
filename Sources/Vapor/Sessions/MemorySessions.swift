@@ -1,5 +1,5 @@
 /// Simple in-memory sessions implementation.
-public struct MemorySessions: Sessions {
+public struct MemorySessions: SessionDriver {
     public let storage: Storage
     
     public final class Storage {

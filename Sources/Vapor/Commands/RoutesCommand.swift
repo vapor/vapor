@@ -22,16 +22,11 @@ public final class RoutesCommand: Command {
         return "Displays all registered routes."
     }
 
-    /// `Router` to use for printing routes.
-    private let application: Application
-    
-    private var routes: Routes {
-        self.application.routes
-    }
+    private var routes: Routes
 
     /// Create a new `RoutesCommand`.
-    init(application: Application) {
-        self.application = application
+    init(routes: Routes) {
+        self.routes = routes
     }
 
     /// See `Command`.

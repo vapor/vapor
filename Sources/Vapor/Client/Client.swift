@@ -1,5 +1,6 @@
 public protocol Client {
     var eventLoopGroup: EventLoopGroup { get }
+    func `for`(_ request: Request) -> Client
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse>
 }
 

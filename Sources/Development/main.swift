@@ -1,2 +1,6 @@
-// normally this would be in a separate target
-try app(.detect()).run()
+import Vapor
+
+let app = try Application(.detect())
+defer { app.shutdown() }
+try configure(app)
+try app.run()
