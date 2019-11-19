@@ -1,5 +1,3 @@
-
-
 public final class Application {
     public var environment: Environment
     public var providers: Providers

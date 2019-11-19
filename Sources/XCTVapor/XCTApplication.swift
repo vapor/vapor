@@ -75,7 +75,6 @@ extension Application {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
-            let responder = self.app.makeResponder()
             var headers = headers
             if let body = body {
                 headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
@@ -92,7 +91,7 @@ extension Application {
                 on: self.app.eventLoopGroup.next()
             )
             do {
-                let res = try responder.respond(to: request).wait()
+                let res = try self.app.responder.respond(to: request).wait()
                 response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
                 try closure(response)
             } catch {

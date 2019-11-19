@@ -34,6 +34,7 @@ public final class Providers {
         where T: Provider
     {
         self.lookup[ObjectIdentifier(T.self)] = provider
+        self.all.append(provider)
     }
     
     public func require<T>(
@@ -61,7 +62,9 @@ public final class Providers {
     }
     
     func shutdown() {
+        self.didShutdown = true
         self.all.reversed().forEach { $0.shutdown() }
+        self.clear()
     }
     
     deinit {

@@ -17,7 +17,19 @@ public final class SessionsMiddleware: Middleware {
     let configuration: SessionsConfiguration
 
     /// Session store.
-    public let sessions: SessionDriver
+    public let session: SessionDriver
+    
+    /// Creates a new `SessionsMiddleware`.
+    ///
+    /// - parameters:
+    ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
+    ///     - config: `SessionsConfig` to use for naming and creating cookie values.
+    public convenience init(
+        sessions: Sessions,
+        configuration: SessionsConfiguration = .default()
+    ) {
+        self.init(session: sessions.driver, configuration: configuration)
+    }
 
     /// Creates a new `SessionsMiddleware`.
     ///
@@ -25,10 +37,10 @@ public final class SessionsMiddleware: Middleware {
     ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
     ///     - config: `SessionsConfig` to use for naming and creating cookie values.
     public init(
-        sessions: SessionDriver,
+        session: SessionDriver,
         configuration: SessionsConfiguration = .default()
     ) {
-        self.sessions = sessions
+        self.session = session
         self.configuration = configuration
     }
 
@@ -43,7 +55,7 @@ public final class SessionsMiddleware: Middleware {
         if let cookieValue = request.cookies[self.configuration.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
-            return sessions.readSession(id, for: request).flatMap { data in
+            return self.session.readSession(id, for: request).flatMap { data in
                 cache.session = .init(id: id, data: data ?? .init())
                 return next.respond(to: request).flatMap { res in
                     return self.addCookies(to: res, for: request, cache: cache)
@@ -65,10 +77,10 @@ public final class SessionsMiddleware: Middleware {
             let createOrUpdate: EventLoopFuture<SessionID>
             if let id = session.id {
                 // A cookie exists, just update this session.
-                createOrUpdate = sessions.updateSession(id, to: session.data, for: request)
+                createOrUpdate = self.session.updateSession(id, to: session.data, for: request)
             } else {
                 // No cookie, this is a new session.
-                createOrUpdate = sessions.createSession(session.data, for: request)
+                createOrUpdate = self.session.createSession(session.data, for: request)
             }
 
             // After create or update, set cookie on the response.
@@ -81,7 +93,7 @@ public final class SessionsMiddleware: Middleware {
             // The request had a session cookie, but now there is no session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
-            return self.sessions.deleteSession(id, for: request).map {
+            return self.session.deleteSession(id, for: request).map {
                 response.cookies[self.configuration.cookieName] = .expired
                 return response
             }

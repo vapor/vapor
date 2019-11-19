@@ -24,7 +24,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.grouped([
@@ -65,7 +65,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
 
         app.routes.grouped([
@@ -122,7 +122,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.grouped([
@@ -170,7 +170,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
 
-        var config = MiddlewareConfiguration()
+        var config = Middlewares()
         config.use(TestAuthenticator().middleware())
     }
 }
