@@ -39,8 +39,6 @@ public final class Application {
     
     public func start() throws {
         try self.boot()
-        let eventLoop = self.make(EventLoop.self)
-        try self.loadDotEnv(on: eventLoop).wait()
         let command = self.make(Commands.self).group()
         let console = self.make(Console.self)
         try console.run(command, input: self.environment.commandInput)
@@ -55,7 +53,7 @@ public final class Application {
         try self.providers.forEach { try $0.didBoot(self) }
     }
     
-    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
+    public func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let directoryConfig = DirectoryConfiguration.detect()
         return DotEnvFile.load(
             path: directoryConfig.workingDirectory + ".env",
