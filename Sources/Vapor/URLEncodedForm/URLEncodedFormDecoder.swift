@@ -226,7 +226,11 @@ private struct _Decoder: Decoder {
         
         func superDecoder(forKey key: Key) throws -> Decoder {
             guard let data = self.data[key.stringValue] else {
-                fatalError()
+                throw DecodingError.keyNotFound(key, .init(
+                    codingPath: self.codingPath + [key],
+                    debugDescription: "Key not found",
+                    underlyingError: nil
+                ))
             }
             return _Decoder(data: data, codingPath: self.codingPath + [key])
         }
