@@ -1,55 +1,41 @@
 extension Validator where T: Equatable {
-
     /// Validates whether an item is contained in the supplied array.
     public static func `in`(_ array: T...) -> Validator<T> {
         .in(array)
     }
 
     /// Validates whether an item is contained in the supplied sequence.
-    public static func `in`<S: Sequence>(_ sequence: S) -> Validator<T> where S.Element == T {
-        In(sequence).validator()
-    }
-
-    /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
-    public struct InValidatorResult: ValidatorResult {
-
-        /// The item is contained in the supplied sequence.
-        public let contained: Bool
-
-        /// Descriptions of the elements of the supplied sequence.
-        public let elementDescriptions: [String]
-
-        /// The `failed` state is inverted.
-        public let isInverted: Bool
-
-        /// See `CustomStringConvertible`.
-        public var description: String {
-            "\(contained ? "" : "not ")contained in \(elementDescriptions.joined(separator: ", ")))"
-        }
-
-        /// See `ValidatorResult`.
-        public var failed: Bool { contained == isInverted }
-    }
-
-    struct In: ValidatorType {
-        let contains: (T) -> Bool
-        let elementDescriptions: () -> [String]
-        let isInverted: Bool
-
-        func inverted() -> In {
-            .init(contains: contains, elementDescriptions: elementDescriptions, isInverted: !isInverted)
-        }
-
-        func validate(_ item: T) -> InValidatorResult {
-            .init(contained: contains(item), elementDescriptions: elementDescriptions(), isInverted: isInverted)
+    public static func `in`<S>(_ sequence: S) -> Validator<T>
+        where S: Sequence, S.Element == T
+    {
+        .init {
+            ValidatorResults.In(item: $0, items: .init(sequence))
         }
     }
 }
 
-extension Validator.In {
-    init<S: Sequence>(_ sequence: S) where S.Element == T {
-        contains = sequence.contains
-        elementDescriptions = { sequence.map(String.init(describing:)) }
-        isInverted = false
+extension ValidatorResults {
+    /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
+    public struct In<T> where T: Equatable {
+        /// Description of the item.
+        public let item: T
+        
+        /// Descriptions of the elements of the supplied sequence.
+        public let items: [T]
+    }
+
+}
+
+extension ValidatorResults.In: ValidatorResult {
+    public var isFailure: Bool {
+        !self.items.contains(self.item)
+    }
+    
+    public var successDescription: String? {
+        "in \(self.items)"
+    }
+    
+    public var failureDescription: String? {
+        "not in \(self.items)"
     }
 }

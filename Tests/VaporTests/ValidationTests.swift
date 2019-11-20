@@ -18,7 +18,7 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertNoThrow(try User.validate(json: valid))
-        let invalid = """
+        let invalidUser = """
         {
             "name": "Tan!ner",
             "age": 24,
@@ -32,106 +32,186 @@ class ValidationTests: XCTestCase {
             }
         }
         """
-        XCTAssertThrowsError(try User.validate(json: invalid)) { error in
-            guard let validationsError = error as? ValidationsError else {
-                XCTFail("error is not of type ValidationsError")
-                return
+        XCTAssertThrowsError(try User.validate(json: invalidUser)) { error in
+            XCTAssertEqual("\(error)",
+                           "name contains '!' (allowed: A-Z, a-z, 0-9)")
+        }
+        let invalidPet = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "email": "me@tanner.xyz",
+            "luckyNumber": 5,
+            "profilePictureURL": "https://foo.jpg",
+            "preferredColors": ["blue"],
+            "pet": {
+                "name": "Zi!zek",
+                "age": 3
             }
-            XCTAssertTrue(validationsError.description.contains("contains an invalid character: '!' (allowed: A-Z, a-z, 0-9)"))
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidPet)) { error in
+            XCTAssertEqual("\(error)",
+                           "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        }
+    }
+    
+    func testCatchError() throws {
+        let invalidUser = """
+        {
+            "name": "Tan!ner",
+            "age": 24,
+            "email": "me@tanner.xyz",
+            "luckyNumber": 5,
+            "profilePictureURL": "https://foo.jpg",
+            "preferredColors": ["blue"],
+            "pet": {
+                "name": "Zizek",
+                "age": 3
+            }
+        }
+        """
+        do {
+            try User.validate(json: invalidUser)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "name")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "contains '!' (allowed: A-Z, a-z, 0-9)")
+            let and = name.result as! ValidatorResults.And
+            let count = and.left as! ValidatorResults.Range<Int>
+            XCTAssertEqual(count.result, .greaterThanOrEqualToMin(5))
+            let character = and.right as! ValidatorResults.CharacterSet
+            XCTAssertEqual(character.invalidSlice, "!")
         }
     }
 
     func testASCII() {
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", validatedAs: .ascii, hasDescription: "contains only valid characters", failed: false)
-        assert("\n\r\t", validatedAs: .ascii, hasDescription: "contains only valid characters", failed: false)
-        assert("\n\r\t\u{129}", validatedAs: .ascii, hasDescription: "contains an invalid character: 'ĩ'", failed: true)
-        assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", validatedAs: .ascii, hasDescription: "contains only valid characters", failed: false)
-        assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", validatedAs: .ascii, hasDescription: "contains an invalid character: '🤠'", failed: true)
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .ascii)
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", fails: !.ascii, "contains only ASCII")
+        assert("\n\r\t", passes: .ascii)
+        assert("\n\r\t\u{129}", fails: .ascii, "contains 'ĩ' (allowed: ASCII)")
+        assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
+        assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
     }
 
     func testAlphanumeric() {
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", validatedAs: .alphanumeric, hasDescription: "contains only valid characters (allowed: A-Z, a-z, 0-9)", failed: false)
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", validatedAs: .alphanumeric, hasDescription: "contains an invalid character: '+' (allowed: A-Z, a-z, 0-9)", failed: true)
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
     func testEmpty() {
-        assert("", validatedAs: .empty, hasDescription: "is empty", failed: false)
-        assert("something", validatedAs: .empty, hasDescription: "is not empty", failed: true)
-        assert([Int](), validatedAs: .empty, hasDescription: "is empty", failed: false)
-        assert([1, 2], validatedAs: .empty, hasDescription: "is not empty", failed: true)
+        assert("", passes: .empty)
+        assert("something", fails: .empty, "is not empty")
+        assert([Int](), passes: .empty)
+        assert([Int](), fails: !.empty, "is empty")
+        assert([1, 2], fails: .empty, "is not empty")
+        assert([1, 2], passes: !.empty)
     }
 
     func testEmail() {
-        assert("tanner@vapor.codes", validatedAs: .email, hasDescription: "is a valid email address", failed: false)
-        assert("tanner@vapor.codestanner@vapor.codes", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
-        assert("tanner@vapor.codes.", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
-        assert("tanner@@vapor.codes", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
-        assert("@vapor.codes", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
-        assert("tanner@codes", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
-        assert("asdf", validatedAs: .email, hasDescription: "is not a valid email address", failed: true)
+        assert("tanner@vapor.codes", passes: .email)
+        assert("tanner@vapor.codes", fails: !.email, "is a valid email address")
+        assert("tanner@vapor.codestanner@vapor.codes", fails: .email, "is not a valid email address")
+        assert("tanner@vapor.codes.", fails: .email, "is not a valid email address")
+        assert("tanner@@vapor.codes", fails: .email, "is not a valid email address")
+        assert("@vapor.codes", fails: .email, "is not a valid email address")
+        assert("tanner@codes", fails: .email, "is not a valid email address")
+        assert("asdf", fails: .email, "is not a valid email address")
+        assert("asdf", passes: !.email)
     }
-    
+
     func testRange() {
-        assert(4, validatedAs: .range(-5...5), hasDescription: "is between -5 and 5", failed: false)
-        assert(5, validatedAs: .range(-5...5), hasDescription: "is between -5 and 5", failed: false)
-        assert(-5, validatedAs: .range(-5...5), hasDescription: "is between -5 and 5", failed: false)
-        assert(6, validatedAs: .range(-5...5), hasDescription: "is greater than maximum of 5", failed: true)
-        assert(-6, validatedAs: .range(-5...5), hasDescription: "is less than minimum of -5", failed: true)
-        assert(.max, validatedAs: .range(5...), hasDescription: "is greater than or equal to minimum of 5", failed: false)
-        assert(-5, validatedAs: .range(-5..<6), hasDescription: "is between -5 and 5", failed: false)
-        assert(-4, validatedAs: .range(-5..<6), hasDescription: "is between -5 and 5", failed: false)
-        assert(5, validatedAs: .range(-5..<6), hasDescription: "is between -5 and 5", failed: false)
-        assert(-6, validatedAs: .range(-5..<6), hasDescription: "is less than minimum of -5", failed: true)
-        assert(6, validatedAs: .range(-5..<6), hasDescription: "is greater than maximum of 5", failed: true)
+        assert(4, passes: .range(-5...5))
+        assert(4, fails: !.range(-5...5), "is between -5 and 5")
+        assert(5, passes: .range(-5...5))
+        assert(-5, passes: .range(-5...5))
+        assert(6, fails: .range(-5...5), "is greater than maximum of 5")
+        assert(-6, fails: .range(-5...5), "is less than minimum of -5")
+        assert(.max, passes: .range(5...))
+        assert(-5, passes: .range(-5..<6))
+        assert(-4, passes: .range(-5..<6))
+        assert(5, passes: .range(-5..<6))
+        assert(-6, fails: .range(-5..<6), "is less than minimum of -5")
+        assert(6, fails: .range(-5..<6), "is greater than maximum of 5")
+        assert(6, passes: !.range(-5..<6))
     }
 
     func testCountCharacters() {
-        assert("1", validatedAs: .count(1...6), hasDescription: "is between 1 and 6 characters", failed: false)
-        assert("123", validatedAs: .count(1...6), hasDescription: "is between 1 and 6 characters", failed: false)
-        assert("123456", validatedAs: .count(1...6), hasDescription: "is between 1 and 6 characters", failed: false)
-        assert("", validatedAs: .count(1...6), hasDescription: "is less than minimum of 1 character", failed: true)
-        assert("1234567", validatedAs: .count(1...6), hasDescription: "is greater than maximum of 6 characters", failed: true)
+        assert("1", passes: .count(1...6))
+        assert("1", fails: !.count(1...6), "is between 1 and 6 character(s)")
+        assert("123", passes: .count(1...6))
+        assert("123456", passes: .count(1...6))
+        assert("", fails: .count(1...6), "is less than minimum of 1 character(s)")
+        assert("1234567", fails: .count(1...6), "is greater than maximum of 6 character(s)")
     }
 
     func testCountItems() {
-        assert([1], validatedAs: .count(1...6), hasDescription: "is between 1 and 6 items", failed: false)
-        assert([1, 2, 3], validatedAs: .count(1...6), hasDescription: "is between 1 and 6 items", failed: false)
-        assert([1, 2, 3, 4, 5, 6], validatedAs: .count(1...6), hasDescription: "is between 1 and 6 items", failed: false)
-        assert([Int](), validatedAs: .count(1...6), hasDescription: "is less than minimum of 1 item", failed: true)
-        assert([1, 2, 3, 4, 5, 6, 7], validatedAs: .count(1...6), hasDescription: "is greater than maximum of 6 items", failed: true)
+        assert([1], passes: .count(1...6))
+        assert([1], fails: !.count(1...6), "is between 1 and 6 item(s)")
+        assert([1, 2, 3], passes: .count(1...6))
+        assert([1, 2, 3, 4, 5, 6], passes: .count(1...6))
+        assert([Int](), fails: .count(1...6), "is less than minimum of 1 item(s)")
+        assert([1, 2, 3, 4, 5, 6, 7], fails: .count(1...6), "is greater than maximum of 6 item(s)")
     }
 
     func testURL() {
-        assert("https://www.somedomain.com/somepath.png", validatedAs: .url, hasDescription: "a valid URL", failed: false)
-        assert("https://www.somedomain.com/", validatedAs: .url, hasDescription: "a valid URL", failed: false)
-        assert("file:///Users/vapor/rocks/somePath.png", validatedAs: .url, hasDescription: "a valid URL", failed: false)
-        assert("www.somedomain.com/", validatedAs: .url, hasDescription: "an invalid URL", failed: true)
-        assert("bananas", validatedAs: .url, hasDescription: "an invalid URL", failed: true)
+        assert("https://www.somedomain.com/somepath.png", passes: .url)
+        assert("https://www.somedomain.com/somepath.png", fails: !.url, "is a valid URL")
+        assert("https://www.somedomain.com/", passes: .url)
+        assert("file:///Users/vapor/rocks/somePath.png", passes: .url)
+        assert("www.somedomain.com/", fails: .url, "is an invalid URL")
+        assert("bananas", fails: .url, "is an invalid URL")
+        assert("bananas", passes: !.url)
     }
 
-    func testPreexistingValidatorResultIsIncluded() {
+    func testPreexistingValidatorResultIsIncluded() throws {
         struct CustomValidatorResult: ValidatorResult {
-            let failed = true
-            let description = "custom description"
+            var isFailure: Bool {
+                true
+            }
+            var successDescription: String? {
+                nil
+            }
+            var failureDescription: String? {
+                "custom description"
+            }
         }
-        let validations = [Validation(key: "key", result: CustomValidatorResult())]
-        XCTAssertThrowsError(try validations.validate(json: "{}")) { error in
-            XCTAssertEqual((error as? ValidationsError)?.description, "key: custom description")
-        }
+        var validations = Validations()
+        validations.add("key", result: CustomValidatorResult())
+        let error = try validations.validate(json: "{}").error
+        XCTAssertEqual(error?.description, "key custom description")
     }
 
-    func testDoubleNegationIsAvoided() {
-        let validations = [Validation(key: "key", as: String.self, validator: !.empty)]
-        XCTAssertThrowsError(try validations.validate(json: #"{"key": ""}"#)) { error in
-            XCTAssertEqual((error as? ValidationsError)?.description, "key: is empty")
-        }
+    func testDoubleNegationIsAvoided() throws {
+        var validations = Validations()
+        validations.add("key", as: String.self, is: !.empty)
+        let error = try validations.validate(json: #"{"key": ""}"#).error
+        XCTAssertEqual(error?.description, "key is empty")
     }
 }
 
-private func assert<T>(_ data: T, validatedAs validator: Validator<T>, hasDescription description: String, failed: Bool, file: StaticString = #file, line: UInt = #line) {
+private func assert<T>(
+    _ data: T,
+    fails validator: Validator<T>,
+    _ description: String,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
     let result = validator.validate(data)
-    XCTAssertEqual(result.description, description, file: file, line: line)
-    XCTAssertEqual(result.failed, failed, file: file, line: line)
+    XCTAssert(result.isFailure, result.successDescription!, file: file, line: line)
+    XCTAssertEqual(description, result.failureDescription!, file: file, line: line)
+}
+
+private func assert<T>(
+    _ data: T,
+    passes validator: Validator<T>,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    let result = validator.validate(data)
+    XCTAssert(!result.isFailure, result.failureDescription!, file: file, line: line)
 }
 
 private final class User: Validatable, Codable {
@@ -161,28 +241,27 @@ private final class User: Validatable, Codable {
         self.preferredColors = preferredColors
     }
 
-    static func validations() -> [Validation] {
-        [
-            // validate name is at least 5 characters and alphanumeric
-            Validation(key: "name", as: String.self, validator: .count(5...) && .alphanumeric),
-            // validate age is 18 or older
-            Validation(key: "age", as: Int.self, validator: .range(18...)),
-            // validate the email is valid and is not nil
-            Validation(key: "email", as: String?.self, validator: !.nil && .email),
-            Validation(key: "email", as: String?.self, validator: .email && !.nil), // test other way
-            // validate the email is valid or is nil
-            Validation(key: "email", as: String?.self, validator: .nil || .email),
-            Validation(key: "email", as: String?.self, validator: .email || .nil), // test other way
-            // validate that the lucky number is nil or is 5 or 7
-            Validation(key: "luckyNumber", as: Int?.self, validator: .nil || .in(5, 7)),
-            // validate that the profile picture is nil or a valid URL
-            Validation(key: "profilePictureURL", as: String?.self, validator: .url || .nil),
-            Validation(key: "preferredColors", as: [String].self, validator: !.empty),
-            // pet validations
-            Validation(key: "pet", validations: [
-                Validation(key: "name", as: String.self, validator: .count(5...) && .characterSet(.alphanumerics + .whitespaces)),
-                Validation(key: "age", as: Int.self, validator: .range(3...))
-            ])
-        ]
+    static func validations(_ v: inout Validations) {
+        // validate name is at least 5 characters and alphanumeric
+        v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+        // validate age is 18 or older
+        v.add("age", as: Int.self, is: .range(18...))
+        // validate the email is valid and is not nil
+        v.add("email", as: String?.self, is: !.nil && .email)
+        v.add("email", as: String?.self, is: .email && !.nil) // test other way
+        // validate the email is valid or is nil
+        v.add("email", as: String?.self, is: .nil || .email)
+        v.add("email", as: String?.self, is: .email || .nil) // test other way
+        // validate that the lucky number is nil or is 5 or 7
+        v.add("luckyNumber", as: Int?.self, is: .nil || .in(5, 7))
+        // validate that the profile picture is nil or a valid URL
+        v.add("profilePictureURL", as: String?.self, is: .url || .nil)
+        v.add("preferredColors", as: [String].self, is: !.empty)
+        // pet validations
+        v.add("pet") { pet in
+            pet.add("name", as: String.self,
+                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+            pet.add("age", as: Int.self, is: .range(3...))
+        }
     }
 }

@@ -586,8 +586,8 @@ final class ApplicationTests: XCTestCase {
 
     func testValidationError() throws {
         struct User: Content, Validatable {
-            static func validations() -> [Validation] {
-                [Validation(key: "email", validator: .email)]
+            static func validations(_ v: inout Validations) {
+                v.add("email", is: .email)
             }
 
             var name: String
@@ -597,15 +597,17 @@ final class ApplicationTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.post("users") { req -> String in
+        app.post("users") { req -> User in
             try User.validate(req)
-            _ = try req.content.decode(User.self)
-            return "ok"
+            return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
+        try app.testable().test(.POST, "/users", json: [
+            "name": "vapor",
+            "email": "foo"
+        ]) { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
-            XCTAssertContains(res.body.string, "email: is not a valid email address")
+            XCTAssertContains(res.body.string, "email is not a valid email address")
         }
     }
 

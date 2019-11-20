@@ -18,7 +18,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-beta"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-beta"),
+        .package(url: "https://github.com/vapor/console-kit.git", .branch("master")),
 
         // Parses and serializes multipart-encoded data with Codable support.
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0-beta"),

@@ -1,21 +1,29 @@
-public struct ValidationsError: Error {
-    public let failures: [PathedValidatorResult]
-
-    init?(_ pathedValidatorResults: [PathedValidatorResult]) {
-        self.failures = pathedValidatorResults.filter { $0.result.failed }
-
-        if failures.isEmpty {
+public struct ValidationsResult {
+    public let results: [ValidationResult]
+    
+    public var error: ValidationsError? {
+        let failures = self.results.filter { $0.result.isFailure }
+        if !failures.isEmpty {
+            return ValidationsError(failures: failures)
+        } else {
             return nil
+        }
+    }
+    
+    public func assert() throws {
+        if let error = self.error {
+            throw error
         }
     }
 }
 
-extension ValidationsError: CustomStringConvertible {
+public struct ValidationsError: Error {
+    public let failures: [ValidationResult]
+}
 
-    /// See `CustomStringConvertible`.
+extension ValidationsError: CustomStringConvertible {
     public var description: String {
-        failures.map { failure in
-            "\(failure.path.dotPath): \(failure.result.description)"
-        }.joined(separator: "\n")
+        self.failures.compactMap { $0.failureDescription }
+            .joined(separator: ", ")
     }
 }
