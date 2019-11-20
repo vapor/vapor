@@ -1,6 +1,12 @@
 import XCTVapor
 import COperatingSystem
 
+extension ValidationsError: AbortError {
+    public var reason: String { description }
+
+    public var status: HTTPResponseStatus { .unprocessableEntity }
+}
+
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
@@ -143,7 +149,6 @@ final class ApplicationTests: XCTestCase {
         app.routes.get("hello", ":a", ":b") { req in
             return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
         }
-
         try app.testable().test(.GET, "/hello/vapor") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "vapor")
@@ -331,7 +336,6 @@ final class ApplicationTests: XCTestCase {
                 image: File(data: "<contents of image>", filename: "droplet.png")
             )
         }
-
         try app.testable().test(.GET, "/multipart") { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
@@ -427,7 +431,6 @@ final class ApplicationTests: XCTestCase {
         app.get("urlencodedform") { req -> User in
             return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
-
         try app.testable().test(.GET, "/urlencodedform") { res in
             debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
@@ -583,10 +586,8 @@ final class ApplicationTests: XCTestCase {
 
     func testValidationError() throws {
         struct User: Content, Validatable {
-            static func validations() -> Validations {
-                var validations = Validations()
-                validations.add("email", as: String.self, is: .email)
-                return validations
+            static func validations() -> [Validation] {
+                [Validation(key: "email", validator: .email)]
             }
 
             var name: String
@@ -603,8 +604,8 @@ final class ApplicationTests: XCTestCase {
         }
 
         try app.testable().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
-            XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "email is not a valid email address")
+            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertContains(res.body.string, "email: is not a valid email address")
         }
     }
 
@@ -799,8 +800,8 @@ final class ApplicationTests: XCTestCase {
     func testSessionDestroy() throws {
         final class MockKeyedCache: SessionDriver {
             static var ops: [String] = []
-
             init() { }
+
 
             func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
                 Self.ops.append("create \(data)")
