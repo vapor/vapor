@@ -1,62 +1,51 @@
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
-///
-///     try validations.add(\.email, .nil || .email)
-///
 public func ||<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    return lhs || NilIgnoringValidator(rhs).validator()
+    lhs || Validator.NilIgnoring(base: rhs).validator()
 }
 
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
-///
-///     try validations.add(\.email, .nil || .email)
-///
 public func ||<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    return NilIgnoringValidator(lhs).validator() || rhs
+    Validator.NilIgnoring(base: lhs).validator() || rhs
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
-///
-///     try validations.add(\.email, !.nil && .email)
-///
 public func &&<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    return lhs && NilIgnoringValidator(rhs).validator()
+    lhs && Validator.NilIgnoring(base: rhs).validator()
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
-///
-///     try validations.add(\.email, !.nil && .email)
-///
 public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    return NilIgnoringValidator(lhs).validator() && rhs
+    Validator.NilIgnoring(base: lhs).validator() && rhs
 }
 
-// MARK: Private
+extension Validator {
 
-/// A validator that ignores nil values.
-private struct NilIgnoringValidator<T>: ValidatorType where T: Codable {
-    /// right validator
-    let base: Validator<T>
+    /// `ValidatorResult` of a validator that ignores nil values.
+    public struct NilIgnoringValidatorResult: ValidatorResult {
 
-    /// See `ValidatorType`.
-    public var validatorReadable: String {
-        return base.readable
+        /// Result of a validation or nil if the input is nil.
+        let result: ValidatorResult?
+
+        /// See `CustomStringConvertible`.
+        public var description: String { result?.description ?? "nil" }
+
+        /// See `ValidatorResult`.
+        public var failed: Bool { result?.failed == true }
     }
 
-    /// Creates a new `NilIgnoringValidator`.
-    init(_ base: Validator<T>) {
-        self.base = base
-    }
+    struct NilIgnoring: ValidatorType {
+        let base: Validator<T>
 
-    /// See `ValidatorType`.
-    func validate(_ data: T?) -> ValidatorFailure? {
-        if let data = data {
-            return self.base.validate(data)
-        } else {
-            return nil
+        func inverted() -> NilIgnoring {
+            .init(base: base.inverted())
+        }
+
+        func validate(_ data: T?) -> NilIgnoringValidatorResult {
+            .init(result: data.flatMap(base.validate))
         }
     }
 }
