@@ -1,4 +1,7 @@
+/// An error that is thrown when a validation results in at least 1 failed validation.
 public struct ValidationsError: Error {
+
+    /// A non-empty list of failed `PathedValidatorResult`s.
     public let failures: [PathedValidatorResult]
 
     init?(_ pathedValidatorResults: [PathedValidatorResult]) {

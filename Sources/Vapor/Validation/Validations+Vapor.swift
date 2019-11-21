@@ -1,4 +1,7 @@
 extension Sequence where Element == Validation {
+
+    /// Validate the data in the body of this `Request` according to the `Validation`s.
+    /// - Parameter request: The `Request` containing the data to be validated in the body.
     public func validate(_ request: Request) throws {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableEntity)
@@ -13,6 +16,9 @@ extension Sequence where Element == Validation {
 }
 
 extension Validatable {
+
+    /// Validate the data in the body of this `Request` according to this `Validatable`.
+    /// - Parameter request: The `Request` containing the data to be validated in the body.
     public static func validate(_ request: Request) throws {
         try validations().validate(request)
     }
