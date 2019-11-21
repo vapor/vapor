@@ -16,7 +16,17 @@ extension Validator {
         public let right: ValidatorResult
 
         /// See `CustomStringConvertible`.
-        public var description: String { "\(left) and \(right)" }
+        public var description: String {
+            switch (left.failed, right.failed) {
+            case (true, true),
+                 (false, false):
+                return "\(left) and \(right)"
+            case (true, false):
+                return left.description
+            case (false, true):
+                return right.description
+            }
+        }
 
         /// See `ValidatorResult`.
         public var failed: Bool { left.failed || right.failed }
