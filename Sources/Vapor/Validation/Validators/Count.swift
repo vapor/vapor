@@ -19,7 +19,7 @@ extension Validator where T: Collection {
         .count(min: range.lowerBound, max: range.upperBound.advanced(by: -1))
     }
     
-    public static func count(min: Int?, max: Int?) -> Validator<T> {
+    static func count(min: Int?, max: Int?) -> Validator<T> {
         let suffix: String
         if T.self is String.Type {
             suffix = "character"

@@ -48,11 +48,13 @@ extension ValidatorResults.CharacterSet: ValidatorResult {
     }
     
     public var successDescription: String? {
-        return "contains only \(self.allowedCharacterString)"
+        "contains only \(self.allowedCharacterString)"
     }
     
     public var failureDescription: String? {
-        return "contains '\(self.invalidSlice!)' (allowed: \(self.allowedCharacterString))"
+        self.invalidSlice.map {
+            "contains '\($0)' (allowed: \(self.allowedCharacterString))"
+        }
     }
 }
 
