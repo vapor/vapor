@@ -1,7 +1,7 @@
 public struct Validation {
     enum ValidationType {
-    case preValidated(PathedValidatorResult)
     case nested([Validation], BasicCodingKey, Bool = true)
+    case preValidated(PathedValidatorResult)
     case value((KeyedDecodingContainer<BasicCodingKey>) -> (BasicCodingKey, ValidatorResult)?)
     }
 
@@ -64,8 +64,6 @@ extension Sequence where Element == Validation {
     func run(on container: KeyedDecodingContainer<BasicCodingKey>) -> [PathedValidatorResult] {
         flatMap { validation -> [PathedValidatorResult] in
             switch validation.type {
-            case let .preValidated(result):
-                return [result]
             case let .nested(validations, key, required):
                 do {
                     let nestedContainer = try container.nestedContainer(keyedBy: BasicCodingKey.self, forKey: key)
@@ -76,6 +74,8 @@ extension Sequence where Element == Validation {
                     }
                     return [.init(key: key, result: Validation.MissingRequiredValue())]
                 }
+            case let .preValidated(result):
+                return [result]
             case let .value(validate):
                 return validate(container).map(PathedValidatorResult.init).map { [$0] } ?? []
             }
