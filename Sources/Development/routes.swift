@@ -120,7 +120,7 @@ public func routes(_ app: Application) throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(SessionsMiddleware(sessions: app.session))
+        .grouped(SessionsMiddleware(session: app.session))
     sessions.get("get") { req -> String in
         return req.session.data["name"] ?? "n/a"
     }

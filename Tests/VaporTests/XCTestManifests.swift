@@ -114,6 +114,7 @@ extension ValidationTests {
     static let __allTests__ValidationTests = [
         ("testAlphanumeric", testAlphanumeric),
         ("testASCII", testASCII),
+        ("testCatchError", testCatchError),
         ("testCountCharacters", testCountCharacters),
         ("testCountItems", testCountItems),
         ("testDoubleNegationIsAvoided", testDoubleNegationIsAvoided),
