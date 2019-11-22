@@ -39,7 +39,6 @@ extension ApplicationTests {
         ("testResponseEncodableStatus", testResponseEncodableStatus),
         ("testRootGet", testRootGet),
         ("testSessionDestroy", testSessionDestroy),
-        ("testSingletonServiceShutdown", testSingletonServiceShutdown),
         ("testStreamFile", testStreamFile),
         ("testStreamFileConnectionClose", testStreamFileConnectionClose),
         ("testSwiftError", testSwiftError),
@@ -115,6 +114,7 @@ extension ValidationTests {
     static let __allTests__ValidationTests = [
         ("testAlphanumeric", testAlphanumeric),
         ("testASCII", testASCII),
+        ("testCatchError", testCatchError),
         ("testCountCharacters", testCountCharacters),
         ("testCountItems", testCountItems),
         ("testDoubleNegationIsAvoided", testDoubleNegationIsAvoided),

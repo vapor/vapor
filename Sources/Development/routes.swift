@@ -93,7 +93,7 @@ public func routes(_ app: Application) throws {
         return .ok
     }
 
-    let cache = app.make(MemoryCache.self)
+    let cache = MemoryCache()
     app.get("cache", "get", ":key") { req -> String in
         guard let key = req.parameters.get("key") else {
             throw Abort(.internalServerError)
@@ -120,7 +120,7 @@ public func routes(_ app: Application) throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(app.make(SessionsMiddleware.self))
+        .grouped(SessionsMiddleware(session: app.session))
     sessions.get("get") { req -> String in
         return req.session.data["name"] ?? "n/a"
     }
@@ -156,5 +156,10 @@ public func routes(_ app: Application) throws {
     }
     users.get(":userID") { req in
         return req.parameters.get("userID") ?? "no id"
+    }
+    
+    app.directory.viewsDirectory = "/Users/tanner/Desktop"
+    app.get("view") { req in
+        req.view.render("hello.txt", ["name": "world"])
     }
 }

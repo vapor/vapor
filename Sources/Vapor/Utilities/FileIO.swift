@@ -2,7 +2,11 @@ import NIO
 
 extension Request {
     public var fileio: FileIO {
-        return .init(io: self.application.make(), allocator: self.application.make(), request: self)
+        return .init(
+            io: self.application.fileio,
+            allocator: self.application.allocator,
+            request: self
+        )
     }
 }
 

@@ -5,6 +5,10 @@ struct ApplicationClient: Client {
         return self.http.eventLoopGroup
     }
 
+    func `for`(_ request: Request) -> Client {
+        RequestClient(http: self.http, req: request)
+    }
+    
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
         return self.http.send(request, eventLoop: .indifferent)
     }
@@ -12,17 +16,7 @@ struct ApplicationClient: Client {
 
 extension Request {
     public var client: Client {
-        return self.make()
-    }
-
-    public func make<S>(_ service: S.Type = S.self) -> S {
-        return try! self.application.make(for: self)
-    }
-}
-
-extension Application {
-    public var client: Client {
-        return self.make()
+        return self.application.client.for(self)
     }
 }
 
@@ -32,6 +26,10 @@ struct RequestClient: Client {
 
     var eventLoopGroup: EventLoopGroup {
         return self.http.eventLoopGroup
+    }
+    
+    func `for`(_ request: Request) -> Client {
+        RequestClient(http: self.http, req: request)
     }
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {

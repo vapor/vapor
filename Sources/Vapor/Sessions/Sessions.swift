@@ -1,23 +1,37 @@
-/// Capable of managing CRUD operations for `Session`s.
-public protocol Sessions {
-    func createSession(
-        _ data: SessionData,
-        for request: Request
-    ) -> EventLoopFuture<SessionID>
+extension Application {
+    public var session: SessionDriver {
+        self.sessions.driver
+    }
     
-    func readSession(
-        _ sessionID: SessionID,
-        for request: Request
-    ) -> EventLoopFuture<SessionData?>
+    public var sessions: Sessions {
+        self.providers.require(Sessions.self)
+    }
+}
+
+public final class Sessions: Provider {
+    public let application: Application
     
-    func updateSession(
-        _ sessionID: SessionID,
-        to data: SessionData,
-        for request: Request
-    ) -> EventLoopFuture<SessionID>
+    let memoryStorage: MemorySessions.Storage
+    var factory: (() -> (SessionDriver))?
     
-    func deleteSession(
-        _ sessionID: SessionID,
-        for request: Request
-    ) -> EventLoopFuture<Void>
+    public var driver: SessionDriver {
+        if let factory = self.factory {
+            return factory()
+        } else {
+            return self.memory
+        }
+    }
+    
+    public var memory: MemorySessions {
+        .init(storage: self.memoryStorage)
+    }
+    
+    public init(_ application: Application) {
+        self.memoryStorage = .init()
+        self.application = application
+    }
+    
+    public func use(_ factory: @escaping () -> (SessionDriver)) {
+        self.factory = factory
+    }
 }

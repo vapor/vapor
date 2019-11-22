@@ -23,29 +23,35 @@ public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
 }
 
 extension Validator {
-
-    /// `ValidatorResult` of a validator that ignores nil values.
-    public struct NilIgnoringValidatorResult: ValidatorResult {
-
-        /// Result of a validation or nil if the input is nil.
-        let result: ValidatorResult?
-
-        /// See `CustomStringConvertible`.
-        public var description: String { result?.description ?? "nil" }
-
-        /// See `ValidatorResult`.
-        public var failed: Bool { result?.failed == true }
-    }
-
-    struct NilIgnoring: ValidatorType {
+    struct NilIgnoring {
         let base: Validator<T>
+    }
+}
 
-        func inverted() -> NilIgnoring {
-            .init(base: base.inverted())
-        }
+extension Validator.NilIgnoring: ValidatorType {
+    func validate(_ data: T?) -> ValidatorResult {
+        ValidatorResults.NilIgnoring(result: data.flatMap(self.base.validate))
+    }
+}
 
-        func validate(_ data: T?) -> NilIgnoringValidatorResult {
-            .init(result: data.flatMap(base.validate))
-        }
+extension ValidatorResults {
+    /// `ValidatorResult` of a validator that ignores nil values.
+    public struct NilIgnoring {
+        /// Result of a validation or nil if the input is nil.
+        public let result: ValidatorResult?
+    }
+}
+
+extension ValidatorResults.NilIgnoring: ValidatorResult {
+    public var isFailure: Bool {
+        result?.isFailure == true
+    }
+    
+    public var successDescription: String? {
+        self.result?.successDescription
+    }
+    
+    public var failureDescription: String? {
+        self.result?.failureDescription
     }
 }
