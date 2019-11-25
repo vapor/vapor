@@ -12,19 +12,10 @@ import Darwin.C
 ///
 public struct DirectoryConfiguration {
     /// Path to the current working directory.
-    public let workingDirectory: String
-
-    public var resourcesDirectory: String {
-        return self.workingDirectory + "Resources/"
-    }
-
-    public var viewsDirectory: String {
-        return self.resourcesDirectory + "Views/"
-    }
-
-    public var publicDirectory: String {
-        return self.workingDirectory + "Public/"
-    }
+    public var workingDirectory: String
+    public var resourcesDirectory: String
+    public var viewsDirectory: String
+    public var publicDirectory: String
     
     /// Create a new `DirectoryConfig` with a custom working directory.
     ///
@@ -32,6 +23,9 @@ public struct DirectoryConfiguration {
     ///     - workingDirectory: Custom working directory path.
     public init(workingDirectory: String) {
         self.workingDirectory = workingDirectory.finished(with: "/")
+        self.resourcesDirectory = self.workingDirectory + "Resources/"
+        self.viewsDirectory = self.resourcesDirectory + "Views/"
+        self.publicDirectory = self.workingDirectory + "Public/"
     }
     
     /// Creates a `DirectoryConfig` by deriving a working directory using the `#file` variable or `getcwd` method.

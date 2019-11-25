@@ -1,10 +1,16 @@
 import XCTVapor
 import COperatingSystem
 
+extension ValidationsError: AbortError {
+    public var reason: String { description }
+
+    public var status: HTTPResponseStatus { .unprocessableEntity }
+}
+
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(environment: test)
+        let app = Application(test)
         defer { app.shutdown() }
         try app.start()
         guard let running = app.running else {
@@ -64,7 +70,7 @@ final class ApplicationTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: complexJSON),
-            on: app.make()
+            on: app.eventLoopGroup.next()
         )
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
@@ -74,7 +80,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
 
-        let request = Request(application: app, on: app.make())
+        let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
         request.url.path = "/foo"
         print(request.url.string)
@@ -94,7 +100,7 @@ final class ApplicationTests: XCTestCase {
             application: app,
             method: .GET,
             url: .init(string: "/path?foo=a"),
-            on: app.make()
+            on: app.eventLoopGroup.next()
         )
 
         XCTAssertEqual(try req.query.get(String.self, at: "foo"), "a")
@@ -121,7 +127,7 @@ final class ApplicationTests: XCTestCase {
             application: app,
             method: .GET,
             url: .init(string: "/path"),
-            on: app.make()
+            on: app.eventLoopGroup.next()
         )
         XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
             if let error = error as? Abort {
@@ -134,7 +140,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testParameter() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("hello", ":a") { req in
@@ -143,7 +149,6 @@ final class ApplicationTests: XCTestCase {
         app.routes.get("hello", ":a", ":b") { req in
             return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
         }
-
         try app.testable().test(.GET, "/hello/vapor") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "vapor")
@@ -156,7 +161,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testJSON() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
                 
         app.routes.get("json") { req -> [String: String] in
@@ -171,7 +176,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testRootGet() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("") { req -> String in
@@ -191,7 +196,7 @@ final class ApplicationTests: XCTestCase {
     }
     
     func testLiveServer() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("ping") { req -> String in
@@ -206,7 +211,7 @@ final class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1537
     func testQueryStringRunning() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("todos") { req in
@@ -224,7 +229,7 @@ final class ApplicationTests: XCTestCase {
         {"name":"hi","bar":"asdf"}
         """
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("decode_error") { req -> String in
@@ -250,7 +255,7 @@ final class ApplicationTests: XCTestCase {
             var message: String = "hi"
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("encode") { req -> Response in
@@ -296,7 +301,7 @@ final class ApplicationTests: XCTestCase {
             var image: File
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("multipart") { req -> User in
@@ -321,7 +326,7 @@ final class ApplicationTests: XCTestCase {
             var image: File
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("multipart") { req -> User in
@@ -331,7 +336,6 @@ final class ApplicationTests: XCTestCase {
                 image: File(data: "<contents of image>", filename: "droplet.png")
             )
         }
-
         try app.testable().test(.GET, "/multipart") { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
@@ -343,7 +347,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testWebSocketClient() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
 
         app.get("ws") { req -> EventLoopFuture<String> in
@@ -369,7 +373,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testViewResponse() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("view") { req -> View in
@@ -392,7 +396,7 @@ final class ApplicationTests: XCTestCase {
             var luckyNumbers: [Int]
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("urlencodedform") { req -> HTTPStatus in
@@ -421,13 +425,12 @@ final class ApplicationTests: XCTestCase {
             var luckyNumbers: [Int]
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("urlencodedform") { req -> User in
             return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
-
         try app.testable().test(.GET, "/urlencodedform") { res in
             debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
@@ -446,7 +449,7 @@ final class ApplicationTests: XCTestCase {
             var luckyNumbers: [Int]
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("urlencodedform") { req -> HTTPStatus in
@@ -502,7 +505,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStreamFile() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("file-stream") { req in
@@ -517,7 +520,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testStreamFileConnectionClose() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
  
         app.get("file-stream") { req in
@@ -534,7 +537,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testCustomEncode() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("custom-encode") { req -> Response in
@@ -561,7 +564,7 @@ final class ApplicationTests: XCTestCase {
             var missing: String
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.post("decode-fail") { req -> String in
@@ -583,33 +586,33 @@ final class ApplicationTests: XCTestCase {
 
     func testValidationError() throws {
         struct User: Content, Validatable {
-            static func validations() -> Validations {
-                var validations = Validations()
-                validations.add("email", as: String.self, is: .email)
-                return validations
+            static func validations(_ v: inout Validations) {
+                v.add("email", is: .email)
             }
 
             var name: String
             var email: String
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.post("users") { req -> String in
+        app.post("users") { req -> User in
             try User.validate(req)
-            _ = try req.content.decode(User.self)
-            return "ok"
+            return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.POST, "/users", json: ["name": "vapor", "email": "foo"]) { res in
-            XCTAssertEqual(res.status, .badRequest)
+        try app.testable().test(.POST, "/users", json: [
+            "name": "vapor",
+            "email": "foo"
+        ]) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
     }
 
     func testAnyResponse() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("foo") { req -> AnyResponse in
@@ -644,7 +647,7 @@ final class ApplicationTests: XCTestCase {
             }
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.routes.get("foo") { req -> IntOrString in
@@ -665,62 +668,49 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testVaporProvider() throws {
-        final class FooProvider: Provider {
-            var registerFlag: Bool = false
+        final class Foo: Provider {
+            let application: Application
+            init(_ application: Application) {
+                self.application = application
+            }
+            
             var willBootFlag: Bool = false
             var didBootFlag: Bool = false
-            var willShutdownFlag: Bool = false
+            var shutdownFlag: Bool = false
 
-            func register(_ app: Application) {
-                self.registerFlag = true
-            }
-
-            func willBoot(_ app: Application) throws {
+            func willBoot() throws {
                 self.willBootFlag = true
             }
 
-            func didBoot(_ app: Application) throws {
+            func didBoot() throws {
                 self.didBootFlag = true
             }
 
-            func willShutdown(_ app: Application) {
-                self.willShutdownFlag = true
+            func shutdown() {
+                self.shutdownFlag = true
             }
         }
-        let foo = FooProvider()
+        
+        let app = Application(.testing)
+        
+        app.use(Foo.self)
+        let foo = app.providers.require(Foo.self)
 
-        XCTAssertEqual(foo.registerFlag, false)
         XCTAssertEqual(foo.willBootFlag, false)
         XCTAssertEqual(foo.didBootFlag, false)
-        XCTAssertEqual(foo.willShutdownFlag, false)
-
-        let app = Application()
-
-        XCTAssertEqual(foo.registerFlag, false)
-        XCTAssertEqual(foo.willBootFlag, false)
-        XCTAssertEqual(foo.didBootFlag, false)
-        XCTAssertEqual(foo.willShutdownFlag, false)
-
-        app.provider(foo)
-
-        XCTAssertEqual(foo.registerFlag, true)
-        XCTAssertEqual(foo.willBootFlag, false)
-        XCTAssertEqual(foo.didBootFlag, false)
-        XCTAssertEqual(foo.willShutdownFlag, false)
+        XCTAssertEqual(foo.shutdownFlag, false)
 
         try app.boot()
 
-        XCTAssertEqual(foo.registerFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
-        XCTAssertEqual(foo.willShutdownFlag, false)
+        XCTAssertEqual(foo.shutdownFlag, false)
 
         app.shutdown()
 
-        XCTAssertEqual(foo.registerFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
-        XCTAssertEqual(foo.willShutdownFlag, true)
+        XCTAssertEqual(foo.shutdownFlag, true)
     }
 
     func testResponseEncodableStatus() throws {
@@ -728,7 +718,7 @@ final class ApplicationTests: XCTestCase {
             var name: String
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.post("users") { req -> EventLoopFuture<Response> in
@@ -747,7 +737,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testHeadRequest() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("hello") { req -> String in
@@ -763,12 +753,13 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testInvalidCookie() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.grouped(app.make(SessionsMiddleware.self)).get("get") { req -> String in
-            return req.session.data["name"] ?? "n/a"
-        }
+        app.grouped(SessionsMiddleware(sessions: app.sessions))
+            .get("get") { req -> String in
+                return req.session.data["name"] ?? "n/a"
+            }
 
         var headers = HTTPHeaders()
         headers.cookie["vapor-session"] = "asdf"
@@ -792,7 +783,7 @@ final class ApplicationTests: XCTestCase {
             }
         }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.grouped(
@@ -809,10 +800,10 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testSessionDestroy() throws {
-        final class MockKeyedCache: Sessions {
+        final class MockKeyedCache: SessionDriver {
             static var ops: [String] = []
-
             init() { }
+
 
             func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
                 Self.ops.append("create \(data)")
@@ -840,10 +831,9 @@ final class ApplicationTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         
-        app.register(Sessions.self) { c in
-            return MockKeyedCache()
-        }
-        let sessions = app.routes.grouped(app.make(SessionsMiddleware.self))
+        let cache = MockKeyedCache()
+        app.sessions.use { cache }
+        let sessions = app.routes.grouped(SessionsMiddleware(sessions: app.sessions))
         sessions.get("set") { req -> String in
             req.session.data["foo"] = "bar"
             return "set"
@@ -884,14 +874,14 @@ final class ApplicationTests: XCTestCase {
         struct TestQueryStringContainer: Content {
             var name: String
         }
-        let req = Request(application: app, on: app.make())
+        let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
     }
 
     // https://github.com/vapor/vapor/issues/1787
     func testGH1787() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("no-content") { req -> String in
@@ -908,7 +898,7 @@ final class ApplicationTests: XCTestCase {
     func testMissingBody() throws {
         struct User: Content { }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("user") { req -> User in
@@ -923,7 +913,7 @@ final class ApplicationTests: XCTestCase {
     func testSwiftError() throws {
         struct Foo: Error { }
         
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
         app.get("error") { req -> String in
@@ -980,12 +970,10 @@ final class ApplicationTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.register(extension: HTTPServer.Configuration.self) { config, app in
-            config.port = 8085
-        }
+        app.server.configuration.port = 8085
         
         app.webSocket("bar") { req, ws in
             ws.close(promise: nil)
@@ -996,7 +984,7 @@ final class ApplicationTests: XCTestCase {
         do {
             try WebSocket.connect(
                 to: "ws://localhost:8085/foo",
-                on: app.make()
+                on: app.eventLoopGroup.next()
             ) { _ in  }.wait()
             XCTFail("should have failed")
         } catch {
@@ -1009,9 +997,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         try app.boot()
         
-        let client = app.make(Client.self)
-
-        let res = try client.post("http://httpbin.org/anything") { req in
+        let res = try app.client.post("http://httpbin.org/anything") { req in
             try req.content.encode(["hello": "world"])
         }.wait()
 
@@ -1024,32 +1010,32 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
     }
 
-    func testSingletonServiceShutdown() throws {
-        final class Foo {
-            var didShutdown = false
-        }
-        struct Bar { }
-        
-        let app = Application(environment: .testing)
-        app.register(singleton: Foo.self, boot: { c in
-            return Foo()
-        }, shutdown: { foo in
-            foo.didShutdown = true
-        })
-        // test normal singleton method
-        app.register(Bar.self) { c in
-            return .init()
-        }
-
-        let foo = app.make(Foo.self)
-        XCTAssertEqual(foo.didShutdown, false)
-        app.shutdown()
-        XCTAssertEqual(foo.didShutdown, true)
-    }
+//    func testSingletonServiceShutdown() throws {
+//        final class Foo {
+//            var didShutdown = false
+//        }
+//        struct Bar { }
+//
+//        let app = Application(environment: .testing)
+//        app.register(singleton: Foo.self, boot: { c in
+//            return Foo()
+//        }, shutdown: { foo in
+//            foo.didShutdown = true
+//        })
+//        // test normal singleton method
+//        app.register(Bar.self) { c in
+//            return .init()
+//        }
+//
+//        let foo = app.make(Foo.self)
+//        XCTAssertEqual(foo.didShutdown, false)
+//        app.shutdown()
+//        XCTAssertEqual(foo.didShutdown, true)
+//    }
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
         app.webSocket("foo") { req, ws in
             ws.send("foo")
@@ -1057,10 +1043,10 @@ final class ApplicationTests: XCTestCase {
         }
 
         try app.start()
-        let promise = app.make(EventLoop.self).makePromise(of: String.self)
+        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
             to: "ws://localhost:8080/foo",
-            on: app.make()
+            on: app.eventLoopGroup.next()
         ) { ws in
             // do nothing
             ws.onText { ws, string in
@@ -1077,7 +1063,7 @@ final class ApplicationTests: XCTestCase {
             arguments: ["vapor", "serve", "--port", "8123"]
         )
         
-        let app = Application(environment: env)
+        let app = Application(env)
         defer { app.shutdown() }
         
         app.get("foo") { req in
@@ -1090,7 +1076,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testBoilerplateClient() throws {
-        let app = Application(environment: .init(
+        let app = Application(.init(
             name: "xctest",
             arguments: ["vapor", "serve", "-b", "localhost:8080", "--log", "trace"]
         ))
@@ -1115,7 +1101,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testBoilerplate() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
 
         app.get("hello") { req in
@@ -1129,7 +1115,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testChangeRequestLogLevel() throws {
-        let app = Application(environment: .testing)
+        let app = Application(.testing)
         defer { app.shutdown() }
 
         app.get("trace") { req -> String in

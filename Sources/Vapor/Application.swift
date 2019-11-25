@@ -1,30 +1,32 @@
 public final class Application {
     public var environment: Environment
-    public var services: Services
+    public var providers: Providers
+    public let eventLoopGroup: EventLoopGroup
     public let sync: Lock
     public var userInfo: [AnyHashable: Any]
     public private(set) var didShutdown: Bool
-    internal let eventLoopGroup: EventLoopGroup
     public var logger: Logger
     private var isBooted: Bool
-
-    public var providers: [Provider] {
-        return self.services.providers
-    }
     
-    public init(environment: Environment = .development) {
+    public init(_ environment: Environment = .development) {
         self.environment = environment
-        self.services = .init()
+        self.providers = .init()
+        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.sync = .init()
         self.userInfo = [:]
         self.didShutdown = false
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.logger = .init(label: "codes.vapor.application")
         self.isBooted = false
-        self.registerDefaultServices()
+        self.use(Core.self)
+        self.use(HTTP.self)
+        self.use(Views.self)
+        self.use(Sessions.self)
     }
 
-    // MARK: Run
+    public func use<T>(_ provider: T.Type) where T: Provider {
+        let provider = T(self)
+        self.providers.add(provider)
+    }
     
     public func run() throws {
         defer { self.shutdown() }
@@ -39,8 +41,7 @@ public final class Application {
     
     public func start() throws {
         try self.boot()
-        let command = self.make(Commands.self).group()
-        let console = self.make(Console.self)
+        let command = self.commands.group()
         try console.run(command, input: self.environment.commandInput)
     }
 
@@ -49,15 +50,14 @@ public final class Application {
             return
         }
         self.isBooted = true
-        try self.providers.forEach { try $0.willBoot(self) }
-        try self.providers.forEach { try $0.didBoot(self) }
+        try self.providers.boot()
     }
     
     public func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
         let directoryConfig = DirectoryConfiguration.detect()
         return DotEnvFile.load(
             path: directoryConfig.workingDirectory + ".env",
-            fileio: .init(threadPool: self.make()),
+            fileio: .init(threadPool: self.threadPool),
             on: eventLoop
         ).recover { error in
             self.logger.debug("Could not load .env file: \(error)")
@@ -68,12 +68,10 @@ public final class Application {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
 
-        self.logger.trace("Notifying service providers of shutdown")
-        self.services.providers.forEach { $0.willShutdown(self) }
-
-        self.logger.trace("Shutting down services")
-        self.services.shutdown()
-
+        self.logger.trace("Shutting down providers")
+        self.providers.shutdown()
+        self.providers.clear()
+        
         self.logger.trace("Clearing Application.userInfo")
         self.userInfo = [:]
 
@@ -94,38 +92,4 @@ public final class Application {
             assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }
     }
-}
-
-
-extension Application {
-    public var running: Running? {
-        get {
-            return self.make(RunningService.self).current
-        }
-        set {
-            self.make(RunningService.self).current = newValue
-        }
-    }
-}
-
-
-public struct Running {
-    public static func start(using promise: EventLoopPromise<Void>) -> Running {
-        return self.init(promise: promise)
-    }
-    
-    public var onStop: EventLoopFuture<Void> {
-        return self.promise.futureResult
-    }
-
-    private let promise: EventLoopPromise<Void>
-
-    public func stop() {
-        self.promise.succeed(())
-    }
-}
-
-final class RunningService {
-    var current: Running?
-    init() { }
 }
