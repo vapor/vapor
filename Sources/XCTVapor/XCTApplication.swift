@@ -152,7 +152,10 @@ extension XCTApplicationTester {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         try body.writeBytes(JSONEncoder().encode(json))
         var realHeaders = headers
-        realHeaders.replaceOrAdd(name: .contentType, value: HTTPMediaType.json.serialize())
+        // Allow caller to override the Content-Type for JSON.
+        if !realHeaders.contains(name: .contentType) {
+            realHeaders.add(name: .contentType, value: HTTPMediaType.json.serialize())
+        }
         return try self.test(method, path, headers: realHeaders, body: body, closure: closure)
     }
 }
