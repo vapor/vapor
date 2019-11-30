@@ -1129,6 +1129,20 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "done")
         }
     }
+    
+    func testTestWithJsonPreservesHTTPHeaders() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get("check") { (req: Request) -> String in
+            return req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING"
+        }
+        try app.start()
+        
+        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], json: ["foo": "bar"], closure: { res in
+            XCTAssertEqual(res.body.string, "PRESENT")
+        })
+    }
 }
 
 private extension ByteBuffer {
