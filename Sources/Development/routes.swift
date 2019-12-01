@@ -9,6 +9,12 @@ public func routes(_ app: Application) throws {
     app.on(.GET, "ping", body: .stream) { req in
         return "123" as StaticString
     }
+    
+    app.get("metrics") { (req) -> EventLoopFuture<String> in
+        let prom = req.eventLoop.makePromise(of: String.self)
+        try MetricsSystem.prometheus().collect(into: prom)
+        return prom.futureResult
+    }
 
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
@@ -161,5 +167,19 @@ public func routes(_ app: Application) throws {
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
     app.get("view") { req in
         req.view.render("hello.txt", ["name": "world"])
+    }
+    
+    app.grouped(MyMiddleware()).get { req in
+        return "abc" as StaticString
+    }
+}
+
+struct MyMiddleware: Middleware {
+    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        let res = next.respond(to: request)
+        return res.map { response in
+            print(response.description)
+            return response
+        }
     }
 }

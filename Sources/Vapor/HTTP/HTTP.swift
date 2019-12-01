@@ -41,6 +41,7 @@ public final class HTTP: Provider {
     public init(_ application: Application) {
         self.routes = .init()
         self.middleware = .init()
+        self.middleware.use(MetricsMiddleware()) // This should always be the first in the chain, so we time the entire request.
         self.middleware.use(ErrorMiddleware.default(environment: application.environment))
         self.serveCommand = ServeCommand(application: application)
         application.commands.use(self.serveCommand, as: "serve", isDefault: true)

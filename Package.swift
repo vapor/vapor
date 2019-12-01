@@ -44,6 +44,11 @@ let package = Package(
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
+        // Swift metrics API
+        .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0"),
+        
+        .package(url: "https://github.com/MrLotU/SwiftPrometheus.git", .branch("master")),
+
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta"),
     ],
@@ -62,6 +67,7 @@ let package = Package(
             "CURLParser",
             "ConsoleKit",
             "Logging",
+            "Metrics",
             "MultipartKit",
             "NIO",
             "NIOExtras",
@@ -77,7 +83,7 @@ let package = Package(
         ]),
 
         // Development
-        .target(name: "Development", dependencies: ["Vapor"]),
+        .target(name: "Development", dependencies: ["Vapor", "SwiftPrometheus"]),
 
         // Testing
         .target(name: "XCTVapor", dependencies: ["Vapor"]),
