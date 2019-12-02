@@ -1,3 +1,4 @@
+import Vapor
 import XCTVapor
 import COperatingSystem
 
@@ -1128,6 +1129,34 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
         }
+    }
+    
+    func testTestWithJsonPreservesHTTPHeaders() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get("check") { (req: Request) -> String in
+            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+        }
+        
+        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], json: ["foo": "bar"], closure: { res in
+            XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
+        })
+    }
+    
+    func testTestWithJsonAllowsContentTypeOverride() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get("check") { (req: Request) -> String in
+            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+        }
+        // Me and my sadistic sense of humor.
+        ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
+        
+        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT", "Content-Type": "application/xml"], json: ["foo": "bar"], closure: { res in
+            XCTAssertEqual(res.body.string, "PRESENT.application/xml")
+        })
     }
 }
 
