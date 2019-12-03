@@ -49,12 +49,16 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
 </a>
+<a href="https://github.com/gwynne">
+    <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
+</a>
 <a href="https://github.com/Joannis">
     <img src="https://user-images.githubusercontent.com/1342803/66939358-ec882880-f010-11e9-98a2-481e87de65c0.png" height="100px" alt="Joannis">
 </a>
 <a href="https://github.com/kylebrowning">
     <img src="https://user-images.githubusercontent.com/1342803/67107440-7ca5a980-f19a-11e9-8619-b029c96399f7.png" height="100px" alt="Kyle Browning">
 </a>
+
 
 ### 💚 Backers
 Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
