@@ -40,10 +40,10 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
     }
 
     /// See `Middleware`.
-    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to req: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         guard req.isAuthenticated(A.self) else {
             return req.eventLoop.makeFailedFuture(self.error)
         }
-        return next.respond(to: req)
+        return next.respond(to: req, on: route)
     }
 }

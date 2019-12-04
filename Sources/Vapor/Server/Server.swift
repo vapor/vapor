@@ -22,6 +22,7 @@ public final class Server {
         let server = HTTPServer(
             application: self.application,
             responder: self.application.responder,
+            router: self.application.router,
             configuration: configuration,
             on: self.application.eventLoopGroup
         )

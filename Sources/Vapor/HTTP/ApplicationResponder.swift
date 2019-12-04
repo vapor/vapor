@@ -1,68 +1,12 @@
-/// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
+/// Vapor's main `Responder` type. Responds based on the Route it receives.
 public struct ApplicationResponder: Responder {
-    private let responder: Responder
-    
-    /// Creates a new `ApplicationResponder`.
-    public init(routes: Routes, middleware: [Middleware] = []) {
-        let router = RoutesResponder(routes: routes)
-        self.responder = middleware.makeResponder(chainingTo: router)
-    }
+    /// Creates a new `RouteResponder`.
+    public init() { }
 
     /// See `Responder`.
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, on route: Route) -> EventLoopFuture<Response> {
         request.logger.info("\(request.method) \(request.url.path)")
-        return self.responder.respond(to: request)
+        return route.responder.respond(to: request, on: route)
             .hop(to: request.eventLoop)
-    }
-}
-
-// MARK: Private
-
-/// Converts a `Router` into a `Responder`.
-internal struct RoutesResponder: Responder {
-    private let router: TrieRouter<Responder>
-
-    /// Creates a new `RouterResponder`.
-    init(routes: Routes) {
-        let router = TrieRouter(Responder.self)
-        for route in routes.all {
-            // remove any empty path components
-            let path = route.path.filter { component in
-                switch component {
-                case .constant(let string):
-                    return string != ""
-                default:
-                    return true
-                }
-            }
-            let route = RoutingKit.Route<Responder>(
-                path: [.constant(route.method.string)] + path,
-                output: route.responder
-            )
-            router.register(route: route)
-        }
-        self.router = router
-    }
-
-    /// See `Responder`.
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        guard let responder = self.route(request) else {
-            return request.eventLoop.makeFailedFuture(Abort(.notFound))
-        }
-        return responder.respond(to: request)
-    }
-    
-    /// See `Router`.
-    private func route(_ request: Request) -> Responder? {
-        let pathComponents = request.url.path
-            .split(separator: "/")
-            .map(String.init)
-        
-        let method = (request.method == .HEAD) ? .GET : request.method
-        
-        return self.router.route(
-            path: [method.string] + pathComponents,
-            parameters: &request.parameters
-        )
     }
 }

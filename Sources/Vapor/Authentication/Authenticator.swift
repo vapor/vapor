@@ -103,11 +103,11 @@ private final class RequestAuthenticationMiddleware<A>: Middleware
         self.authenticator = authenticator
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue
         if request.isAuthenticated(A.User.self) {
-            return next.respond(to: request)
+            return next.respond(to: request, on: route)
         }
 
         // auth user on connection
@@ -116,7 +116,7 @@ private final class RequestAuthenticationMiddleware<A>: Middleware
                 // set authed on request
                 request.authenticate(a)
             }
-            return next.respond(to: request)
+            return next.respond(to: request, on: route)
         }
     }
 }

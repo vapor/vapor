@@ -5,26 +5,34 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias OutboundOut = Response
     
     let responder: Responder
+    let router: Router
     
-    init(responder: Responder) {
+    init(responder: Responder, router: Router) {
         self.responder = responder
+        self.router = router
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
         
         // query delegate for response
-        self.responder.respond(to: request).whenComplete { response in
-            switch response {
-            case .failure(let error):
-                self.errorCaught(context: context, error: error)
-            case .success(let response):
-                let contentLength = response.headers.firstValue(name: .contentLength)
-                if request.method == .HEAD {
-                    response.body = .init()
+        let routeResult = self.router.getRoute(for: request)
+        switch routeResult {
+        case .failure(let error):
+            self.errorCaught(context: context, error: error)
+        case.success(let route):
+            self.responder.respond(to: request, on: route).whenComplete { response in
+                switch response {
+                case .failure(let error):
+                    self.errorCaught(context: context, error: error)
+                case .success(let response):
+                    let contentLength = response.headers.firstValue(name: .contentLength)
+                    if request.method == .HEAD {
+                        response.body = .init()
+                    }
+                    response.headers.replaceOrAdd(name: .contentLength, value: contentLength ?? "0")
+                    self.serialize(response, for: request, context: context)
                 }
-                response.headers.replaceOrAdd(name: .contentLength, value: contentLength ?? "0")
-                self.serialize(response, for: request, context: context)
             }
         }
     }

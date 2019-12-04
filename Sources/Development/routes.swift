@@ -168,18 +168,4 @@ public func routes(_ app: Application) throws {
     app.get("view") { req in
         req.view.render("hello.txt", ["name": "world"])
     }
-    
-    app.grouped(MyMiddleware()).get { req in
-        return "abc" as StaticString
-    }
-}
-
-struct MyMiddleware: Middleware {
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        let res = next.respond(to: request)
-        return res.map { response in
-            print(response.description)
-            return response
-        }
-    }
 }

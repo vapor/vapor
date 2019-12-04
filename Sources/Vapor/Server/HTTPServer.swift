@@ -97,6 +97,7 @@ public final class HTTPServer {
     }
 
     private let responder: Responder
+    private let router: Router
     private let configuration: Configuration
     private let eventLoopGroup: EventLoopGroup
     
@@ -109,11 +110,13 @@ public final class HTTPServer {
     init(
         application: Application,
         responder: Responder,
+        router: Router,
         configuration: Configuration,
         on eventLoopGroup: EventLoopGroup
     ) {
         self.application = application
         self.responder = responder
+        self.router = router
         self.configuration = configuration
         self.eventLoopGroup = eventLoopGroup
         self.didStart = false
@@ -130,6 +133,7 @@ public final class HTTPServer {
         self.connection = try HTTPServerConnection.start(
             application: self.application,
             responder: self.responder,
+            router: self.router,
             configuration: configuration,
             on: self.eventLoopGroup
         ).wait()
@@ -163,6 +167,7 @@ private final class HTTPServerConnection {
     static func start(
         application: Application,
         responder: Responder,
+        router: Router,
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
@@ -205,6 +210,7 @@ private final class HTTPServerConnection {
                                     return channel.pipeline.addVaporHTTP2Handlers(
                                         application: application!,
                                         responder: responder,
+                                        router: router,
                                         configuration: configuration,
                                         streamID: streamID
                                     )
@@ -214,6 +220,7 @@ private final class HTTPServerConnection {
                             return pipeline.addVaporHTTP1Handlers(
                                 application: application!,
                                 responder: responder,
+                                router: router,
                                 configuration: configuration
                             )
                         })
@@ -225,6 +232,7 @@ private final class HTTPServerConnection {
                     return channel.pipeline.addVaporHTTP1Handlers(
                         application: application!,
                         responder: responder,
+                        router: router,
                         configuration: configuration
                     )
                 }
@@ -282,6 +290,7 @@ private extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
         responder: Responder,
+        router: Router,
         configuration: HTTPServer.Configuration,
         streamID: HTTP2StreamID
     ) -> EventLoopFuture<Void> {
@@ -306,7 +315,7 @@ private extension ChannelPipeline {
         handlers.append(serverResEncoder)
         
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, router: router)
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
@@ -317,6 +326,7 @@ private extension ChannelPipeline {
     func addVaporHTTP1Handlers(
         application: Application,
         responder: Responder,
+        router: Router,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
         // create server pipeline array
@@ -359,7 +369,7 @@ private extension ChannelPipeline {
         )
         handlers.append(serverResEncoder)
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, router: router)
 
         // add HTTP upgrade handler
         let upgrader = HTTPServerUpgradeHandler(

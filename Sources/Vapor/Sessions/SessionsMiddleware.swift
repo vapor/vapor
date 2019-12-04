@@ -45,7 +45,7 @@ public final class SessionsMiddleware: Middleware {
     }
 
     /// See `Middleware.respond`
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // Create a session cache
         let cache = SessionCache()
         request._sessionCache = cache
@@ -57,13 +57,13 @@ public final class SessionsMiddleware: Middleware {
             let id = SessionID(string: cookieValue.string)
             return self.session.readSession(id, for: request).flatMap { data in
                 cache.session = .init(id: id, data: data ?? .init())
-                return next.respond(to: request).flatMap { res in
+                return next.respond(to: request, on: route).flatMap { res in
                     return self.addCookies(to: res, for: request, cache: cache)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
-            return next.respond(to: request).flatMap { response in
+            return next.respond(to: request, on: route).flatMap { response in
                 return self.addCookies(to: response, for: request, cache: cache)
             }
         }

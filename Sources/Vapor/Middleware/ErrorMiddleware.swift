@@ -82,8 +82,8 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        return next.respond(to: request).flatMapErrorThrowing { error in
+    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        return next.respond(to: request, on: route).flatMapErrorThrowing { error in
             return self.closure(request, error)
         }
     }

@@ -21,9 +21,9 @@ private final class RedirectMiddleware<A>: Middleware where A: Authenticatable {
     }
 
     /// See Middleware.respond
-    func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to req: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         if req.isAuthenticated(A.self) {
-            return next.respond(to: req)
+            return next.respond(to: req, on: route)
         }
         let redirect = req.redirect(to: path)
         return req.eventLoop.makeSucceededFuture(redirect)

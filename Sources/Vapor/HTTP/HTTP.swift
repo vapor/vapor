@@ -10,10 +10,13 @@ extension Application {
     
     
     public var responder: Responder {
-        ApplicationResponder(
+        ApplicationResponder()
+    }
+    
+    var router: Router {
+        ApplicationRouter(
             routes: self.routes,
-            middleware: self.middleware.resolve()
-        )
+            middleware: self.middleware.resolve())
     }
     
     public var server: Server {

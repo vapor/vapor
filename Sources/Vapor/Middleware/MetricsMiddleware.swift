@@ -21,10 +21,10 @@ public final class MetricsMiddleware: Middleware {
     }
     
     /// See `Middleware`.
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let start = DispatchTime.now().uptimeNanoseconds
         
-        let res = next.respond(to: request)
+        let res = next.respond(to: request, on: route)
         
         res.whenComplete { result in
             switch result {

@@ -63,11 +63,11 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
     }
 
     /// See Middleware.respond
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue
         if request.isAuthenticated(A.User.self) {
-            return next.respond(to: request)
+            return next.respond(to: request, on: route)
         }
         
         let future: EventLoopFuture<Void>
@@ -87,7 +87,7 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
         // map the auth future to a resopnse
         return future.flatMap { _ in
             // respond to the request
-            return next.respond(to: request).map { response in
+            return next.respond(to: request, on: route).map { response in
                 if let user = request.authenticated(A.User.self) {
                     // if a user has been authed (or is still authed), store in the session
                     request.session.authenticate(user)
