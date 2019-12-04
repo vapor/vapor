@@ -91,9 +91,18 @@ extension Application {
                 on: self.app.eventLoopGroup.next()
             )
             do {
-                let res = try self.app.responder.respond(to: request).wait()
-                response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
-                try closure(response)
+                switch app.router.getRoute(for: request) {
+                case .success(let route):
+                    let res = try self.app.responder.respond(to: request, on: route).wait()
+                    response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
+                    try closure(response)
+                case .failure(let error):
+                    if let abort = error as? AbortError {
+                        try closure(XCTHTTPResponse(status: abort.status, headers: abort.headers, body: .init(string: abort.reason)))
+                    } else {
+                        throw error
+                    }
+                }
             } catch {
                 XCTFail("\(error)", file: file, line: line)
             }

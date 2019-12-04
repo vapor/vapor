@@ -1,8 +1,7 @@
 /// Gets a `Route` from a `Request`.
-internal struct ApplicationRouter: Router {
+public struct ApplicationRouter: Router {
     private let router: TrieRouter<Route>
-
-    let middleware: [Middleware]
+    private let middleware: [Middleware]
         
     /// Creates a new `RouterResponder`.
     init(routes: Routes, middleware: [Middleware]) {
@@ -28,7 +27,7 @@ internal struct ApplicationRouter: Router {
     }
     
     /// See `Router`.
-    func getRoute(for request: Request) -> Result<Route, Error> {
+    public func getRoute(for request: Request) -> Result<Route, Error> {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)

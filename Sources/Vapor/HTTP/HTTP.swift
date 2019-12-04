@@ -13,7 +13,7 @@ extension Application {
         ApplicationResponder()
     }
     
-    var router: Router {
+    public var router: Router {
         ApplicationRouter(
             routes: self.routes,
             middleware: self.middleware.resolve())
