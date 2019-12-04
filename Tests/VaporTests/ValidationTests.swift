@@ -86,6 +86,15 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual(character.invalidSlice, "!")
         }
     }
+    
+    func testNotReadability() {
+        assert("vapor!🤠",
+               fails: .ascii && .alphanumeric,
+               "contains '🤠' (allowed: ASCII) and contains '!' (allowed: A-Z, a-z, 0-9)")
+        assert("vapor",
+               fails: !(.ascii && .alphanumeric),
+               "contains only ASCII and contains only A-Z, a-z, 0-9")
+    }
 
     func testASCII() {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
@@ -205,8 +214,8 @@ private func assert<T>(
     line: UInt = #line
 ) {
     let result = validator.validate(data)
-    XCTAssert(result.isFailure, result.successDescription!, file: file, line: line)
-    XCTAssertEqual(description, result.failureDescription!, file: file, line: line)
+    XCTAssert(result.isFailure, result.successDescription ?? "n/a", file: file, line: line)
+    XCTAssertEqual(description, result.failureDescription ?? "n/a", file: file, line: line)
 }
 
 private func assert<T>(
@@ -216,7 +225,7 @@ private func assert<T>(
     line: UInt = #line
 ) {
     let result = validator.validate(data)
-    XCTAssert(!result.isFailure, result.failureDescription!, file: file, line: line)
+    XCTAssert(!result.isFailure, result.failureDescription ?? "n/a", file: file, line: line)
 }
 
 private final class User: Validatable, Codable {
