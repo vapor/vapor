@@ -46,8 +46,6 @@ let package = Package(
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0"),
-        
-        .package(url: "https://github.com/MrLotU/SwiftPrometheus.git", .branch("master")),
 
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta"),
@@ -83,7 +81,7 @@ let package = Package(
         ]),
 
         // Development
-        .target(name: "Development", dependencies: ["Vapor", "SwiftPrometheus"]),
+        .target(name: "Development", dependencies: ["Vapor"]),
 
         // Testing
         .target(name: "XCTVapor", dependencies: ["Vapor"]),

@@ -29,9 +29,9 @@ public final class MetricsMiddleware: Middleware {
         res.whenComplete { result in
             switch result {
             case .success(let res):
-                self.updateMetrics(for: request, label: self.requestsCountLabel, start: start, status: res.status.code)
+                self.updateMetrics(for: request, on: route, label: self.requestsCountLabel, start: start, status: res.status.code)
             case .failure(_):
-                self.updateMetrics(for: request, label: self.requestsErrorsLabel, start: start)
+                self.updateMetrics(for: request, on: route, label: self.requestsErrorsLabel, start: start)
             }
         }
         
@@ -39,17 +39,17 @@ public final class MetricsMiddleware: Middleware {
     }
     
     /// Records the requests metrics.
-    private func updateMetrics(for request: Request, label: String, start: UInt64, status: UInt? = nil) {
+    private func updateMetrics(for request: Request, on route: Route, label: String, start: UInt64, status: UInt? = nil) {
         var counterDimensions = [
             ("method", request.method.string),
-            ("path", request.url.path)
+            ("path", route.description)
         ]
         if let status = status {
             counterDimensions.append(("status", "\(status)"))
         }
         let timerDimensions = [
             ("method", request.method.string),
-            ("path", request.url.path)
+            ("path", route.description)
         ]
         Counter(label: label, dimensions: counterDimensions).increment()
         let time = DispatchTime.now().uptimeNanoseconds - start

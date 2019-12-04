@@ -1,10 +1,7 @@
 import Vapor
-import Prometheus
 
 public func configure(_ app: Application) throws {
     try LoggingSystem.bootstrap(from: &app.environment)
-    let prom = PrometheusClient()
-    MetricsSystem.bootstrap(prom)
     
     app.server.configuration.hostname = "0.0.0.0"
     switch app.environment {
@@ -22,8 +19,6 @@ public func configure(_ app: Application) throws {
     default:
         app.server.configuration.port = 8080
     }
-    
-    app.middleware.use(MetricsMiddleware())
     
     // routes
     try routes(app)

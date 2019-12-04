@@ -10,13 +10,6 @@ public func routes(_ app: Application) throws {
         return "123" as StaticString
     }
     
-    app.get("metrics") { (req) -> EventLoopFuture<String> in
-        let prom = req.eventLoop.makePromise(of: String.self)
-        try MetricsSystem.prometheus().collect(into: prom)
-        return prom.futureResult
-    }
-
-
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
