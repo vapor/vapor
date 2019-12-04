@@ -7,19 +7,19 @@ jobs:
       image: vapor/swift:5.1-xenial
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
     - run: swift test
   bionic:
     container: 
       image: vapor/swift:5.1-bionic
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
     - run: swift test
   thread:
     container: 
       image: vapor/swift:5.1-bionic
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@v1
     - run: swift test --sanitize=thread

@@ -21,6 +21,6 @@ extension ValidatorResults.Not: ValidatorResult {
     }
     
     public var failureDescription: String? {
-        self.result.successDescription
+        return self.result.successDescription
     }
 }
