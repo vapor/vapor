@@ -3,7 +3,7 @@ import Vapor
 public func configure(_ app: Application) throws {
     try LoggingSystem.bootstrap(from: &app.environment)
     
-    app.server.configuration.hostname = "0.0.0.0"
+    app.server.configuration.hostname = "127.0.0.1"
     switch app.environment {
     case .tls:
         app.server.configuration.port = 8443
