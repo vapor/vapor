@@ -66,7 +66,7 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue
-        if request.isAuthenticated(A.User.self) {
+        if request.auth.has(A.User.self) {
             return next.respond(to: request)
         }
         
@@ -76,7 +76,7 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
             future = self.authenticator.resolve(sessionID: aID).map { user in
                 // if the user was found, auth it
                 if let user = user {
-                    request.authenticate(user)
+                    request.auth.login(user)
                 }
             }
         } else {
@@ -88,7 +88,7 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
         return future.flatMap { _ in
             // respond to the request
             return next.respond(to: request).map { response in
-                if let user = request.authenticated(A.User.self) {
+                if let user = request.auth.get(A.User.self) {
                     // if a user has been authed (or is still authed), store in the session
                     request.session.authenticate(user)
                 } else if request.hasSession {

@@ -3,7 +3,7 @@ public struct XCTHTTPResponse {
     public var headers: HTTPHeaders
     public var body: Response.Body
 }
-    
+
 //    @discardableResult
 //    public func assertStatus(is status: HTTPStatus, file: StaticString = #file, line: UInt = #line) -> XCTHTTPResponse {
 //        XCTAssertEqual(self.response.status, status, file: file, line: line)
@@ -37,6 +37,32 @@ public struct XCTHTTPResponse {
 extension Response.Body {
     var isEmpty: Bool {
         return self.count == 0
+    }
+}
+
+public func XCTAssertContent<D>(
+    _ type: D.Type,
+    _ res: XCTHTTPResponse,
+    file: StaticString = #file,
+    line: UInt = #line,
+    _ closure: (D) -> ()
+)
+    where D: Decodable
+{
+    guard let body = res.body.buffer else {
+        XCTFail("response does not contain body", file: file, line: line)
+        return
+    }
+    guard let contentType = res.headers.contentType else {
+        XCTFail("response does not contain content type", file: file, line: line)
+        return
+    }
+    do {
+        let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
+        let content = try decoder.decode(D.self, from: body, headers: res.headers)
+        closure(content)
+    } catch {
+        XCTFail("could not decode body: \(error)", file: file, line: line)
     }
 }
 
