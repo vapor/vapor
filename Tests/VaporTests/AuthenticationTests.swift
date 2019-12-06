@@ -9,18 +9,12 @@ final class AuthenticationTests: XCTestCase {
         struct TestAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            let eventLoopGroup: EventLoopGroup
-
-            init(on eventLoopGroup: EventLoopGroup) {
-                self.eventLoopGroup = eventLoopGroup
-            }
-
-            func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
                 guard bearer.token == "test" else {
-                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
+                    return request.eventLoop.makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return self.eventLoopGroup.next().makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(test)
             }
         }
         
@@ -28,9 +22,9 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            TestAuthenticator(on: app.eventLoopGroup).middleware(), Test.guardMiddleware()
+            TestAuthenticator().middleware(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.requireAuthenticated(Test.self).name
+            return try req.auth.require(Test.self).name
         }
 
         try app.testable().test(.GET, "/test") { res in
@@ -50,18 +44,12 @@ final class AuthenticationTests: XCTestCase {
         struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
-            let eventLoopGroup: EventLoopGroup
-
-            init(on eventLoopGroup: EventLoopGroup) {
-                self.eventLoopGroup = eventLoopGroup
-            }
-
-            func authenticate(basic: BasicAuthorization) -> EventLoopFuture<Test?> {
+            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Test?> {
                 guard basic.username == "test" && basic.password == "secret" else {
-                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
+                    return request.eventLoop.makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return self.eventLoopGroup.next().makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(test)
             }
         }
         
@@ -69,9 +57,9 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            TestAuthenticator(on: app.eventLoopGroup).middleware(), Test.guardMiddleware()
+            TestAuthenticator().middleware(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.requireAuthenticated(Test.self).name
+            return try req.auth.require(Test.self).name
         }
         
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
@@ -94,31 +82,21 @@ final class AuthenticationTests: XCTestCase {
         struct TestBearerAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            let eventLoopGroup: EventLoopGroup
-            init(on eventLoopGroup: EventLoopGroup) {
-                self.eventLoopGroup = eventLoopGroup
-            }
-
-            func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
                 guard bearer.token == "test" else {
-                    return self.eventLoopGroup.next().makeSucceededFuture(nil)
+                    return request.eventLoop.makeSucceededFuture(nil)
                 }
                 let test = Test(name: "Vapor")
-                return self.eventLoopGroup.next().makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(test)
             }
         }
 
         struct TestSessionAuthenticator: SessionAuthenticator {
             typealias User = Test
 
-            let eventLoopGroup: EventLoopGroup
-            init(on eventLoopGroup: EventLoopGroup) {
-                self.eventLoopGroup = eventLoopGroup
-            }
-
-            func resolve(sessionID: String) -> EventLoopFuture<Test?> {
+            func resolve(sessionID: String, for request: Request) -> EventLoopFuture<Test?> {
                 let test = Test(name: sessionID)
-                return self.eventLoopGroup.next().makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(test)
             }
         }
         
@@ -127,11 +105,11 @@ final class AuthenticationTests: XCTestCase {
         
         app.routes.grouped([
             SessionsMiddleware(sessions: app.sessions),
-            TestSessionAuthenticator(on: app.eventLoopGroup).middleware(),
-            TestBearerAuthenticator(on: app.eventLoopGroup).middleware(),
+            TestSessionAuthenticator().middleware(),
+            TestBearerAuthenticator().middleware(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
-            return try req.requireAuthenticated(Test.self).name
+            return try req.auth.require(Test.self).name
         }
 
         var sessionCookie: HTTPCookies.Value?
@@ -165,8 +143,8 @@ final class AuthenticationTests: XCTestCase {
         struct TestAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<Test?> {
-                return EmbeddedEventLoop().makeSucceededFuture(nil)
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
+                return request.eventLoop.makeSucceededFuture(nil)
             }
         }
 

@@ -22,7 +22,7 @@ private final class RedirectMiddleware<A>: Middleware where A: Authenticatable {
 
     /// See Middleware.respond
     func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        if req.isAuthenticated(A.self) {
+        if req.auth.has(A.self) {
             return next.respond(to: req)
         }
         let redirect = req.redirect(to: path)

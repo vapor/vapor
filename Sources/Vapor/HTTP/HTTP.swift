@@ -47,7 +47,6 @@ public final class HTTP: Provider {
         application.commands.use(RoutesCommand(routes: self.routes), as: "routes")
         
         self.server = .init(application)
-        #warning("TODO: make configurable")
         self.client = ApplicationClient(http: .init(
             eventLoopGroupProvider: .shared(application.eventLoopGroup),
             configuration: .init()

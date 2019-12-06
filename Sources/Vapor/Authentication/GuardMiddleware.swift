@@ -41,7 +41,7 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
 
     /// See `Middleware`.
     public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        guard req.isAuthenticated(A.self) else {
+        guard req.auth.has(A.self) else {
             return req.eventLoop.makeFailedFuture(self.error)
         }
         return next.respond(to: req)
