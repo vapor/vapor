@@ -2,7 +2,7 @@ public protocol SessionAuthenticator: Authenticator
     where Self.User: SessionAuthenticatable
 {
     /// Authenticate a model with the supplied ID.
-    func resolve(sessionID: User.SessionID) -> EventLoopFuture<User?>
+    func resolve(sessionID: User.SessionID, for request: Request) -> EventLoopFuture<User?>
 }
 
 extension SessionAuthenticator {
@@ -73,7 +73,7 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
         let future: EventLoopFuture<Void>
         if let aID = request.session.authenticated(A.User.self) {
             // try to find user with id from session
-            future = self.authenticator.resolve(sessionID: aID).map { user in
+            future = self.authenticator.resolve(sessionID: aID, for: request).map { user in
                 // if the user was found, auth it
                 if let user = user {
                     request.auth.login(user)
