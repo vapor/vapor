@@ -1,5 +1,5 @@
 /// Gets a `Route` from a `Request`.
-public struct Router {
+struct Router {
     private let router: TrieRouter<Route>
     private let middleware: [Middleware]
     private let notFoundRoute: Route

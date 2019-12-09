@@ -1,7 +1,7 @@
 public struct ApplicationResponder: Responder {
     private let router: Router
     
-    public init(_ router: Router) {
+    init(_ router: Router) {
         self.router = router
     }
     
