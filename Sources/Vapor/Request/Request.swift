@@ -25,7 +25,7 @@ public final class Request: CustomStringConvertible {
     // MARK: Metadata
     
     /// Route object we found for this request.
-    /// This holds metadata that can be used for Metrics.
+    /// This holds metadata that can be used for (for example) Metrics.
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
