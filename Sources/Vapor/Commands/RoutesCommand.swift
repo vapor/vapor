@@ -22,17 +22,14 @@ public final class RoutesCommand: Command {
         return "Displays all registered routes."
     }
 
-    private var routes: Routes
-
     /// Create a new `RoutesCommand`.
-    init(routes: Routes) {
-        self.routes = routes
-    }
+    init() { }
 
     /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
-        let includeDescription = !self.routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
-        context.console.outputASCIITable(self.routes.all.map { route -> [ConsoleText] in
+        let routes = context.application.routes
+        let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
+        context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
             var pathText: ConsoleText = ""
             if route.path.isEmpty {
                 pathText += "/".consoleText(.info)

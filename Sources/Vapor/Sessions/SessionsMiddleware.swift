@@ -18,18 +18,6 @@ public final class SessionsMiddleware: Middleware {
 
     /// Session store.
     public let session: SessionDriver
-    
-    /// Creates a new `SessionsMiddleware`.
-    ///
-    /// - parameters:
-    ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
-    ///     - config: `SessionsConfig` to use for naming and creating cookie values.
-    public convenience init(
-        sessions: Sessions,
-        configuration: SessionsConfiguration = .default()
-    ) {
-        self.init(session: sessions.driver, configuration: configuration)
-    }
 
     /// Creates a new `SessionsMiddleware`.
     ///

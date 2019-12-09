@@ -15,19 +15,19 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
     
         // Sugary extensions for the SwiftNIO library
-        .package(url: "https://github.com/vapor/async-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-beta.2"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-beta.2"),
 
         // Parses and serializes multipart-encoded data with Codable support.
-        .package(url: "https://github.com/vapor/multipart-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0-beta.2"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/vapor/open-crypto.git", .branch("master")),
+        .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-beta.2"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-beta.2"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.2.0"),
@@ -45,7 +45,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", .branch("master")),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2"),
     ],
     targets: [
         // C helpers

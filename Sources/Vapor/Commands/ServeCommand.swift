@@ -1,3 +1,4 @@
+
 /// Starts serving the `Application`'s `Responder` over HTTP.
 ///
 ///     $ swift run Run serve
@@ -25,14 +26,13 @@ public final class ServeCommand: Command {
         return "Begins serving the app over HTTP."
     }
 
-    private let application: Application
     private var signalSources: [DispatchSourceSignal]
     private var didShutdown: Bool
-    private var server: Server.Running?
+    private var server: Application.Server.Running?
+    private var running: Application.Running?
 
     /// Create a new `ServeCommand`.
-    init(application: Application) {
-        self.application = application
+    init() {
         self.signalSources = []
         self.didShutdown = false
     }
@@ -45,12 +45,13 @@ public final class ServeCommand: Command {
         let port = signature.port
             // 0.0.0.0:8080, :8080, parse port
             ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-        let server = try self.application.server.start(hostname: hostname, port: port)
+        let server = try context.application.server.start(hostname: hostname, port: port)
         self.server = server
 
         // allow the server to be stopped or waited for
-        let promise = self.application.eventLoopGroup.next().makePromise(of: Void.self)
-        self.application.running = .start(using: promise)
+        let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)
+        context.application.running = .start(using: promise)
+        self.running = context.application.running
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
@@ -70,7 +71,7 @@ public final class ServeCommand: Command {
 
     func shutdown() {
         self.didShutdown = true
-        self.application.running?.stop()
+        self.running?.stop()
         if let server = server {
             server.shutdown()
         }

@@ -1,37 +1,67 @@
 extension Application {
-    public var session: SessionDriver {
-        self.sessions.driver
-    }
-    
     public var sessions: Sessions {
-        self.providers.require(Sessions.self)
+        .init(application: self)
     }
-}
 
-public final class Sessions: Provider {
-    public let application: Application
-    
-    let memoryStorage: MemorySessions.Storage
-    var factory: (() -> (SessionDriver))?
-    
-    public var driver: SessionDriver {
-        if let factory = self.factory {
-            return factory()
-        } else {
-            return self.memory
+    public struct Sessions {
+        public struct Provider {
+            public static var memory: Self {
+                .init {
+                    $0.sessions.use { $0.sessions.memory }
+                }
+            }
+
+            let run: (Application) -> ()
+
+            public init(_ run: @escaping (Application) -> ()) {
+                self.run = run
+            }
         }
-    }
-    
-    public var memory: MemorySessions {
-        .init(storage: self.memoryStorage)
-    }
-    
-    public init(_ application: Application) {
-        self.memoryStorage = .init()
-        self.application = application
-    }
-    
-    public func use(_ factory: @escaping () -> (SessionDriver)) {
-        self.factory = factory
+
+        final class Storage {
+            let memory: MemorySessions.Storage
+            var makeDriver: ((Application) -> SessionDriver)?
+            init() {
+                self.memory = .init()
+            }
+        }
+
+        struct Key: StorageKey {
+            typealias Value = Storage
+        }
+
+        let application: Application
+
+        public var driver: SessionDriver {
+            guard let makeDriver = self.storage.makeDriver else {
+                fatalError("No driver configured. Configure with app.sessions.use(...)")
+            }
+            return makeDriver(self.application)
+        }
+
+        public var memory: MemorySessions {
+            .init(storage: self.storage.memory)
+        }
+
+        public func use(_ provider: Provider) {
+            provider.run(self.application)
+        }
+
+        public func use(_ makeDriver: @escaping (Application) -> (SessionDriver)) {
+            self.storage.makeDriver = makeDriver
+        }
+
+        var storage: Storage {
+            guard let storage = self.application.storage[Key.self] else {
+                fatalError("Sessions not configured. Configure with app.sessions.initialize()")
+            }
+            return storage
+        }
+
+        func initialize() {
+            self.application.storage[Key.self] = .init()
+            self.use(.memory)
+        }
+
     }
 }
