@@ -1,7 +1,6 @@
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 public struct ApplicationResponder: Responder {
     private let router: TrieRouter<Route>
-    private let middleware: [Middleware]
     private let notFoundRoute: Route
 
     private let requestsCountLabel: String = "http_requests_total"
@@ -15,7 +14,6 @@ public struct ApplicationResponder: Responder {
         let notFoundResponder = middleware.makeResponder(chainingTo: BasicResponder(closure: { _ in throw Abort(.notFound) }))
         self.notFoundRoute = Route(method: .GET, path: [], responder: notFoundResponder, requestType: Request.self, responseType: Response.self)
         self.router = TrieRouter(Route.self)
-        self.middleware = middleware
         for route in routes.all {
             route.responder = middleware.makeResponder(chainingTo: route.responder)
             // remove any empty path components
