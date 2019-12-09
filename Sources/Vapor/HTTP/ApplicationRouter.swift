@@ -1,5 +1,5 @@
 /// Gets a `Route` from a `Request`.
-public struct ApplicationRouter: Router {
+public struct Router {
     private let router: TrieRouter<Route>
     private let middleware: [Middleware]
     private let notFoundRoute: Route
@@ -32,7 +32,7 @@ public struct ApplicationRouter: Router {
     }
     
     /// See `Router`.
-    public func getRoute(for request: Request) -> Result<Route, Error> {
+    public func getRoute(for request: Request) -> Route {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)
@@ -43,9 +43,9 @@ public struct ApplicationRouter: Router {
             path: [method.string] + pathComponents,
             parameters: &request.parameters
         ) else {
-            return .success(notFoundRoute)
+            return notFoundRoute
         }
         request.route = route
-        return .success(route)
+        return route
     }
 }

@@ -21,7 +21,7 @@ public final class Server {
         configuration.port = port ?? self.configuration.port
         let server = HTTPServer(
             application: self.application,
-            router: self.application.router,
+            responder: self.application.responder,
             configuration: configuration,
             on: self.application.eventLoopGroup
         )
