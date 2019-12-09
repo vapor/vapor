@@ -1,3 +1,25 @@
+extension Application: XCTApplicationTester {
+    public func performTest(
+        method: HTTPMethod,
+        path: String,
+        headers: HTTPHeaders,
+        body: ByteBuffer?,
+        file: StaticString,
+        line: UInt,
+        closure: (XCTHTTPResponse) throws -> ()
+    ) throws -> XCTApplicationTester {
+        try self.testable().performTest(
+            method: method,
+            path: path,
+            headers: headers,
+            body: body,
+            file: file,
+            line: line,
+            closure: closure
+        )
+    }
+}
+
 extension Application {
     public enum Method {
         case inMemory
@@ -24,7 +46,6 @@ extension Application {
         init(app: Application, port: Int) throws {
             self.app = app
             self.port = port
-            
         }
 
         @discardableResult
