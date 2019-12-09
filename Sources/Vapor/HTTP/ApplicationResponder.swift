@@ -13,7 +13,7 @@ public struct ApplicationResponder: Responder {
         // This `Route` is used to return a 404 response, instead of an error.
         let notFoundResponder = middleware.makeResponder(chainingTo: BasicResponder(closure: { _ in throw Abort(.notFound) }))
         self.notFoundRoute = Route(method: .GET, path: [], responder: notFoundResponder, requestType: Request.self, responseType: Response.self)
-        self.router = TrieRouter(Route.self)
+        let router = TrieRouter(Route.self)
         for route in routes.all {
             route.responder = middleware.makeResponder(chainingTo: route.responder)
             // remove any empty path components
@@ -31,10 +31,12 @@ public struct ApplicationResponder: Responder {
             )
             router.register(route: route)
         }
+        self.router = router
     }
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.logger.info("\(request.method) \(request.url.path)")
         let start = DispatchTime.now().uptimeNanoseconds
         let res = self.getRoute(for: request).responder.respond(to: request)
         
