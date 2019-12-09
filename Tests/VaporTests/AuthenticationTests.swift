@@ -104,7 +104,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            SessionsMiddleware(sessions: app.sessions),
+            SessionsMiddleware(session: app.sessions.driver),
             TestSessionAuthenticator().middleware(),
             TestBearerAuthenticator().middleware(),
             Test.guardMiddleware(),

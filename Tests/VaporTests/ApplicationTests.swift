@@ -668,34 +668,35 @@ final class ApplicationTests: XCTestCase {
         }
     }
 
-    func testVaporProvider() throws {
-        final class Foo: Provider {
-            let application: Application
-            init(_ application: Application) {
-                self.application = application
-            }
-            
-            var willBootFlag: Bool = false
-            var didBootFlag: Bool = false
-            var shutdownFlag: Bool = false
+    func testVaporLifecycleHandler() throws {
+        final class Foo: LifecycleHandler {
+            var willBootFlag: Bool
+            var didBootFlag: Bool
+            var shutdownFlag: Bool
 
-            func willBoot() throws {
+            init() {
+                self.willBootFlag = false
+                self.didBootFlag = false
+                self.shutdownFlag = false
+            }
+
+            func willBoot(_ application: Application) throws {
                 self.willBootFlag = true
             }
 
-            func didBoot() throws {
+            func didBoot(_ application: Application) throws {
                 self.didBootFlag = true
             }
 
-            func shutdown() {
+            func shutdown(_ application: Application) {
                 self.shutdownFlag = true
             }
         }
         
         let app = Application(.testing)
-        
-        app.use(Foo.self)
-        let foo = app.providers.require(Foo.self)
+
+        let foo = Foo()
+        app.lifecycle.use(foo)
 
         XCTAssertEqual(foo.willBootFlag, false)
         XCTAssertEqual(foo.didBootFlag, false)
@@ -757,7 +758,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.grouped(SessionsMiddleware(sessions: app.sessions))
+        app.grouped(SessionsMiddleware(session: app.sessions.driver))
             .get("get") { req -> String in
                 return req.session.data["name"] ?? "n/a"
             }
@@ -833,8 +834,8 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         let cache = MockKeyedCache()
-        app.sessions.use { cache }
-        let sessions = app.routes.grouped(SessionsMiddleware(sessions: app.sessions))
+        app.sessions.use { _ in cache }
+        let sessions = app.routes.grouped(SessionsMiddleware(session: app.sessions.driver))
         sessions.get("set") { req -> String in
             req.session.data["foo"] = "bar"
             return "set"

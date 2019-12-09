@@ -7,7 +7,7 @@ extension CommandContext {
             return application
         }
         set {
-            self.userInfo["application"] = self
+            self.userInfo["application"] = newValue
         }
     }
 }

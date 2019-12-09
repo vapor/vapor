@@ -25,7 +25,7 @@ extension Application {
 
         public var configuration: HTTPServer.Configuration {
             get { self.application.http.storage.serverConfiguration }
-            set { self.application.http.storage.serverConfiguration = newValue }
+            nonmutating set { self.application.http.storage.serverConfiguration = newValue }
         }
 
         public struct Running {
