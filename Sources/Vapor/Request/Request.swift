@@ -24,6 +24,11 @@ public final class Request: CustomStringConvertible {
     
     // MARK: Metadata
     
+    /// Route object we found for this request.
+    /// This holds metadata that can be used for Metrics.
+    ///
+    ///     req.route?.description // "GET /hello/:name"
+    ///
     public internal(set) var route: Route?
 
     // MARK: Content
