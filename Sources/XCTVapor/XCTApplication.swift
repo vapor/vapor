@@ -112,7 +112,7 @@ extension Application {
                 on: self.app.eventLoopGroup.next()
             )
             do {
-                let res = try app.responder.respond(to: request).wait()
+                let res = try self.app.responder.respond(to: request).wait()
                 response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
                 try closure(response)
             } catch {

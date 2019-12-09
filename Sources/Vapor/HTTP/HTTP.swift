@@ -8,8 +8,9 @@ extension Application {
         set { self.http.storage.middleware = newValue }
     }
 
+
     public var responder: Responder {
-        ApplicationResponder(Router(routes: self.routes, middleware: self.middleware.resolve()))
+        ApplicationResponder(routes: self.routes, middleware: self.middleware.resolve())
     }
 
     public var client: Client {
