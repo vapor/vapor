@@ -8,11 +8,6 @@ extension Application {
         set { self.http.middleware = newValue }
     }
     
-    
-    public var responder: Responder {
-        ApplicationResponder()
-    }
-    
     public var router: Router {
         ApplicationRouter(
             routes: self.routes,

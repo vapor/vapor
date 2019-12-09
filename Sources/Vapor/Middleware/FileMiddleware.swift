@@ -16,7 +16,7 @@ public final class FileMiddleware: Middleware {
     }
 
     /// See `Middleware`.
-    public func respond(to request: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // make a copy of the path
         var path = request.url.path
 
@@ -36,7 +36,7 @@ public final class FileMiddleware: Middleware {
         // check if file exists and is not a directory
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: filePath, isDirectory: &isDir), !isDir.boolValue else {
-            return next.respond(to: request, on: route)
+            return next.respond(to: request)
         }
 
         // stream the file

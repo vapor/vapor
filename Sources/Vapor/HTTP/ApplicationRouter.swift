@@ -2,9 +2,14 @@
 public struct ApplicationRouter: Router {
     private let router: TrieRouter<Route>
     private let middleware: [Middleware]
+    private let notFoundRoute: Route
         
     /// Creates a new `RouterResponder`.
     init(routes: Routes, middleware: [Middleware]) {
+        // We create & store this at init time to not impact performance later on in the application.
+        // This `Route` is used to return a 404 response, instead of an error.
+        let notFoundResponder = middleware.makeResponder(chainingTo: BasicResponder(closure: { _ in throw Abort(.notFound) }))
+        self.notFoundRoute = Route(method: .GET, path: [], responder: notFoundResponder, requestType: Request.self, responseType: Response.self)
         self.router = TrieRouter(Route.self)
         self.middleware = middleware
         for route in routes.all {
@@ -38,8 +43,9 @@ public struct ApplicationRouter: Router {
             path: [method.string] + pathComponents,
             parameters: &request.parameters
         ) else {
-            return .failure(Abort(.notFound))
+            return .success(notFoundRoute)
         }
+        request.route = route
         return .success(route)
     }
 }

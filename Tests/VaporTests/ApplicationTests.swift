@@ -778,9 +778,9 @@ final class ApplicationTests: XCTestCase {
             init(_ pos: String) {
                 self.pos = pos
             }
-            func respond(to req: Request, on route: Route, chainingTo next: Responder) -> EventLoopFuture<Response> {
+            func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
                 OrderMiddleware.order.append(pos)
-                return next.respond(to: req, on: route)
+                return next.respond(to: req)
             }
         }
         

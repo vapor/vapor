@@ -93,7 +93,7 @@ extension Application {
             do {
                 switch app.router.getRoute(for: request) {
                 case .success(let route):
-                    let res = try self.app.responder.respond(to: request, on: route).wait()
+                    let res = try route.responder.respond(to: request).wait()
                     response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
                     try closure(response)
                 case .failure(let error):

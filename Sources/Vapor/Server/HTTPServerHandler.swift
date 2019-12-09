@@ -4,11 +4,9 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
     
-    let responder: Responder
     let router: Router
     
-    init(responder: Responder, router: Router) {
-        self.responder = responder
+    init(router: Router) {
         self.router = router
     }
     
@@ -21,7 +19,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         case .failure(let error):
             self.errorCaught(context: context, error: error)
         case.success(let route):
-            self.responder.respond(to: request, on: route).whenComplete { response in
+            route.responder.respond(to: request).whenComplete { response in
                 switch response {
                 case .failure(let error):
                     self.errorCaught(context: context, error: error)

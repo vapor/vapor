@@ -21,6 +21,10 @@ public final class Request: CustomStringConvertible {
     public var headers: HTTPHeaders
     
     internal var isKeepAlive: Bool
+    
+    // MARK: Metadata
+    
+    public internal(set) var route: Route?
 
     // MARK: Content
 

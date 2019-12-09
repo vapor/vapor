@@ -19,7 +19,7 @@ public struct BasicResponder: Responder {
     }
 
     /// See `Responder`.
-    public func respond(to request: Request, on: Route) -> EventLoopFuture<Response> {
+    public func respond(to request: Request) -> EventLoopFuture<Response> {
         do {
             return try closure(request)
         } catch {
