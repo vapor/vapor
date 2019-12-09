@@ -26,3 +26,15 @@ public struct SessionID: Equatable, Hashable {
         self.string = string
     }
 }
+
+extension SessionID: Codable {
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        try self.init(string: container.decode(String.self))
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.string)
+    }
+}

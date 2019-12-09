@@ -1,62 +1,82 @@
 extension Application {
     public var console: Console {
-        get { self.core.console }
-        set { self.core.console = newValue }
+        get { self.core.storage.console }
+        set { self.core.storage.console = newValue }
     }
-    
+
     public var commands: Commands {
-        get { self.core.commands }
-        set { self.core.commands = newValue }
+        get { self.core.storage.commands }
+        set { self.core.storage.commands = newValue }
     }
-    
+
     public var threadPool: NIOThreadPool {
-        self.core.threadPool
+        self.core.storage.threadPool
     }
     public var fileio: NonBlockingFileIO {
         .init(threadPool: self.threadPool)
     }
-    
-    public var allocator: ByteBufferAllocator {
-        self.core.allocator
-    }
-    
-    public var running: Running? {
-        get { self.core.running.current }
-        set { self.core.running.current = newValue }
-    }
-    
-    public var directory: DirectoryConfiguration {
-        get { self.core.directory }
-        set { self.core.directory = newValue }
-    }
-    
-    var core: Core {
-        self.providers.require(Core.self)
-    }
-}
 
-final class Core: Provider {
-    var console: Console
-    var commands: Commands
-    var threadPool: NIOThreadPool
-    var allocator: ByteBufferAllocator
-    var running: RunningService
-    var directory: DirectoryConfiguration
-    public let application: Application
-    
-    public init(_ application: Application) {
-        self.application = application
-        self.console = Terminal()
-        self.commands = Commands()
-        commands.use(BootCommand(), as: "boot")
-        self.threadPool = NIOThreadPool(numberOfThreads: 1)
-        self.threadPool.start()
-        self.allocator = .init()
-        self.running = .init()
-        self.directory = .detect()
+    public var allocator: ByteBufferAllocator {
+        self.core.storage.allocator
     }
-    
-    func shutdown() {
-        try! self.threadPool.syncShutdownGracefully()
+
+    public var running: Running? {
+        get { self.core.storage.running.current }
+        set { self.core.storage.running.current = newValue }
+    }
+
+    public var directory: DirectoryConfiguration {
+        get { self.core.storage.directory }
+        set { self.core.storage.directory = newValue }
+    }
+
+    internal var core: Core {
+        .init(application: self)
+    }
+
+    public struct Core {
+        final class Storage {
+            var console: Console
+            var commands: Commands
+            var threadPool: NIOThreadPool
+            var allocator: ByteBufferAllocator
+            var running: Application.Running.Storage
+            var directory: DirectoryConfiguration
+
+            init() {
+                self.console = Terminal()
+                self.commands = Commands()
+                self.commands.use(BootCommand(), as: "boot")
+                self.threadPool = NIOThreadPool(numberOfThreads: 1)
+                self.threadPool.start()
+                self.allocator = .init()
+                self.running = .init()
+                self.directory = .detect()
+            }
+        }
+
+        struct LifecycleHandler: Vapor.LifecycleHandler {
+            func shutdown(_ application: Application) {
+                try! application.threadPool.syncShutdownGracefully()
+            }
+        }
+
+        struct Key: StorageKey {
+            typealias Value = Storage
+        }
+
+        let application: Application
+
+        var storage: Storage {
+            guard let storage = self.application.storage[Key.self] else {
+                fatalError("Core not configured. Configure with app.core.initialize()")
+            }
+            return storage
+        }
+
+        func initialize() {
+            self.application.storage[Key.self] = .init()
+            self.application.lifecycle.use(LifecycleHandler())
+        }
     }
 }
