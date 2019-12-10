@@ -23,18 +23,19 @@ public final class Application {
     public init(_ environment: Environment = .development) {
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        self.storage = .init()
         self.sync = .init()
         self.userInfo = [:]
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
+        self.storage = .init(logger: self.logger)
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
         self.views.initialize()
-        self.http.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
+        self.commands.use(self.server.command, as: "serve", isDefault: true)
+        self.commands.use(RoutesCommand(), as: "routes")
     }
     
     public func run() throws {
@@ -86,6 +87,7 @@ public final class Application {
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
+        self.storage.shutdown()
         self.storage.clear()
         self.userInfo = [:]
 
