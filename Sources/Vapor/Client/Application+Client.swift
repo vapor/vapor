@@ -21,7 +21,7 @@ extension Application {
             }
         }
 
-        struct ClientKey: StorageKey {
+        struct ClientKey: StorageKey, LockKey {
             typealias Value = HTTPClient
         }
 
@@ -29,8 +29,9 @@ extension Application {
             if let existing = self.application.storage[ClientKey.self] {
                 return existing
             } else {
-                self.application.sync.lock()
-                defer { self.application.sync.unlock() }
+                let lock = self.application.locks.lock(for: ClientKey.self)
+                lock.lock()
+                defer { lock.unlock() }
                 if let existing = self.application.storage[ClientKey.self] {
                     return existing
                 }

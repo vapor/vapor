@@ -1159,6 +1159,34 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "PRESENT.application/xml")
         })
     }
+
+    func testApplicationClientThreadSafety() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let startingPistol = DispatchGroup()
+        startingPistol.enter()
+        startingPistol.enter()
+
+        let finishLine = DispatchGroup()
+        finishLine.enter()
+        Thread.async {
+            startingPistol.leave()
+            startingPistol.wait()
+            XCTAssert(type(of: app.client.http) == HTTPClient.self)
+            finishLine.leave()
+        }
+
+        finishLine.enter()
+        Thread.async {
+            startingPistol.leave()
+            startingPistol.wait()
+            XCTAssert(type(of: app.client.http) == HTTPClient.self)
+            finishLine.leave()
+        }
+
+        finishLine.wait()
+    }
 }
 
 private extension ByteBuffer {

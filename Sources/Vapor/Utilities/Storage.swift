@@ -13,10 +13,12 @@ public struct Storage {
         }
     }
     let logger: Logger
+    let sync: Lock
 
     public init(logger: Logger = .init(label: "codes.vapor.storage")) {
         self.storage = [:]
         self.logger = logger
+        self.sync = .init()
     }
 
     public mutating func clear() {
