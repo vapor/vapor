@@ -1187,6 +1187,19 @@ final class ApplicationTests: XCTestCase {
 
         finishLine.wait()
     }
+
+    func testRequestRemoteAddress() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") {
+            $0.remoteAddress?.description ?? "n/a"
+        }
+
+        try app.testable(method: .running).test(.GET, "remote") { res in
+            XCTAssertContains(res.body.string, "IP")
+        }
+    }
 }
 
 private extension ByteBuffer {
