@@ -3,8 +3,8 @@
 ///     let id = try req.parameters.next(Int.self)
 ///
 public struct ParametersContainer {
-    /// Private `Request`.
-    private let request: Request
+    /// Public `Request`.
+    public let request: Request
 
     /// The `ParameterValue`s that this request collected as it was being routed.
     public var values: [ParameterValue] {
