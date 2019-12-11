@@ -34,4 +34,8 @@ public func routes(_ router: Router) throws {
     router.get("client") { req in
         return try req.client().get("http://vapor.codes").map { $0.description }
     }
+
+    r.get("secret") { (req) -> EventLoopFuture<String> in
+        return try Environment.secret(key: "PASSWORD_SECRET", container: c)
+    }
 }
