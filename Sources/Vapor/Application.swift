@@ -1,3 +1,8 @@
+import class NIO.MultiThreadedEventLoopGroup
+#if canImport(Network)
+import class NIOTransportServices.NIOTSEventLoopGroup
+#endif
+
 public protocol LockKey { }
 
 public final class Application {
@@ -51,7 +56,11 @@ public final class Application {
 
     public init(_ environment: Environment = .development) {
         self.environment = environment
+        #if canImport(Network)
+        self.eventLoopGroup = NIOTSEventLoopGroup(loopCount: System.coreCount)
+        #else
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        #endif
         self.locks = .init()
         self.userInfo = [:]
         self.didShutdown = false

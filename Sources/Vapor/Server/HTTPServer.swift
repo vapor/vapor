@@ -4,6 +4,9 @@ import NIOHTTP1
 import NIOHTTP2
 import NIOHTTPCompression
 import NIOSSL
+#if canImport(Network)
+import class NIOTransportServices.NIOTSListenerBootstrap
+#endif
 
 public enum HTTPVersionMajor: Equatable, Hashable {
     case one
@@ -167,74 +170,41 @@ private final class HTTPServerConnection {
         on eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
+        #if canImport(Network)
+        let bootstrap = NIOTSListenerBootstrap(group: eventLoopGroup).childChannelInitializer { [weak application] channel in
+            channel.initializeVaporServerHandling(
+                application: application!,
+                responder: responder,
+                configuration: configuration
+            )
+        }
+        #else
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
-            // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
-            .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
-            
-            // Set handlers that are applied to the Server's channel
+            .serverChannelOption(
+                ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR),
+                value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0)
+            )
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
             }
-            
-            // Set the handlers that are applied to the accepted Channels
             .childChannelInitializer { [weak application] channel in
-                // add TLS handlers if configured
-                if var tlsConfiguration = configuration.tlsConfiguration {
-                    // prioritize http/2
-                    if configuration.supportVersions.contains(.two) {
-                        tlsConfiguration.applicationProtocols.append("h2")
-                    }
-                    if configuration.supportVersions.contains(.one) {
-                        tlsConfiguration.applicationProtocols.append("http/1.1")
-                    }
-                    let sslContext: NIOSSLContext
-                    let tlsHandler: NIOSSLServerHandler
-                    do {
-                        sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = try NIOSSLServerHandler(context: sslContext)
-                    } catch {
-                        configuration.logger.error("Could not configure TLS: \(error)")
-                        return channel.close(mode: .all)
-                    }
-                    return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
-                        return channel.pipeline.configureHTTP2SecureUpgrade(h2PipelineConfigurator: { pipeline in
-                            return channel.configureHTTP2Pipeline(
-                                mode: .server,
-                                inboundStreamStateInitializer: { (channel, streamID) in
-                                    return channel.pipeline.addVaporHTTP2Handlers(
-                                        application: application!,
-                                        responder: responder,
-                                        configuration: configuration,
-                                        streamID: streamID
-                                    )
-                                }
-                            ).map { _ in }
-                        }, http1PipelineConfigurator: { pipeline in
-                            return pipeline.addVaporHTTP1Handlers(
-                                application: application!,
-                                responder: responder,
-                                configuration: configuration
-                            )
-                        })
-                    }
-                } else {
-                    guard !configuration.supportVersions.contains(.two) else {
-                        fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
-                    }
-                    return channel.pipeline.addVaporHTTP1Handlers(
-                        application: application!,
-                        responder: responder,
-                        configuration: configuration
-                    )
-                }
+                channel.initializeVaporServerHandling(
+                    application: application!,
+                    responder: responder,
+                    configuration: configuration
+                )
             }
-            
-            // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
-            .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
-            .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
+            .childChannelOption(
+                ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY),
+                value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0)
+            )
+            .childChannelOption(
+                ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR),
+                value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0)
+            )
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
-        // .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: 1)
+        #endif
         
         return bootstrap.bind(host: configuration.hostname, port: configuration.port).map { channel in
             return .init(channel: channel, quiesce: quiesce)
@@ -261,6 +231,64 @@ private final class HTTPServerConnection {
     
     deinit {
         assert(!self.channel.isActive, "HTTPServerConnection deinitialized without calling shutdown()")
+    }
+}
+
+extension Channel {
+    func initializeVaporServerHandling(
+        application: Application,
+        responder: Responder,
+        configuration: HTTPServer.Configuration
+    ) -> EventLoopFuture<Void>{
+        // add TLS handlers if configured
+        if var tlsConfiguration = configuration.tlsConfiguration {
+            // prioritize http/2
+            if configuration.supportVersions.contains(.two) {
+                tlsConfiguration.applicationProtocols.append("h2")
+            }
+            if configuration.supportVersions.contains(.one) {
+                tlsConfiguration.applicationProtocols.append("http/1.1")
+            }
+            let sslContext: NIOSSLContext
+            let tlsHandler: NIOSSLServerHandler
+            do {
+                sslContext = try NIOSSLContext(configuration: tlsConfiguration)
+                tlsHandler = try NIOSSLServerHandler(context: sslContext)
+            } catch {
+                configuration.logger.error("Could not configure TLS: \(error)")
+                return self.close(mode: .all)
+            }
+            return self.pipeline.addHandler(tlsHandler).flatMap { _ in
+                self.pipeline.configureHTTP2SecureUpgrade(h2PipelineConfigurator: { pipeline in
+                    self.configureHTTP2Pipeline(
+                        mode: .server,
+                        inboundStreamStateInitializer: { (channel, streamID) in
+                            channel.pipeline.addVaporHTTP2Handlers(
+                                application: application,
+                                responder: responder,
+                                configuration: configuration,
+                                streamID: streamID
+                            )
+                        }
+                    ).map { _ in }
+                }, http1PipelineConfigurator: { pipeline in
+                    pipeline.addVaporHTTP1Handlers(
+                        application: application,
+                        responder: responder,
+                        configuration: configuration
+                    )
+                })
+            }
+        } else {
+            guard !configuration.supportVersions.contains(.two) else {
+                fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
+            }
+            return self.pipeline.addVaporHTTP1Handlers(
+                application: application,
+                responder: responder,
+                configuration: configuration
+            )
+        }
     }
 }
 
