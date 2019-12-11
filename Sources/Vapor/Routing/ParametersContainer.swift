@@ -4,7 +4,7 @@
 ///
 public struct ParametersContainer {
     /// Private `Request`.
-    private let request: Request
+    public let request: Request
 
     /// The `ParameterValue`s that this request collected as it was being routed.
     public var values: [ParameterValue] {
