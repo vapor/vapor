@@ -1,8 +1,9 @@
+public protocol LockKey { }
+
 public final class Application {
     public var environment: Environment
     public let eventLoopGroup: EventLoopGroup
     public var storage: Storage
-    public let sync: Lock
     public var userInfo: [AnyHashable: Any]
     public private(set) var didShutdown: Bool
     public var logger: Logger
@@ -20,21 +21,50 @@ public final class Application {
     }
     public var lifecycle: Lifecycle
 
+    public final class Locks {
+        public let main: Lock
+        var storage: [ObjectIdentifier: Lock]
+
+        init() {
+            self.main = .init()
+            self.storage = [:]
+        }
+
+        public func lock<Key>(for key: Key.Type) -> Lock
+            where Key: LockKey
+        {
+            self.main.lock()
+            defer { self.main.unlock() }
+            if let existing = self.storage[ObjectIdentifier(Key.self)] {
+                return existing
+            } else {
+                let new = Lock()
+                self.storage[ObjectIdentifier(Key.self)] = new
+                return new
+            }
+        }
+    }
+    public var locks: Locks
+    public var sync: Lock {
+        self.locks.main
+    }
+
     public init(_ environment: Environment = .development) {
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        self.storage = .init()
-        self.sync = .init()
+        self.locks = .init()
         self.userInfo = [:]
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
+        self.storage = .init(logger: self.logger)
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
         self.views.initialize()
-        self.http.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
+        self.commands.use(self.server.command, as: "serve", isDefault: true)
+        self.commands.use(RoutesCommand(), as: "routes")
     }
     
     public func run() throws {
@@ -86,6 +116,7 @@ public final class Application {
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
+        self.storage.shutdown()
         self.storage.clear()
         self.userInfo = [:]
 
