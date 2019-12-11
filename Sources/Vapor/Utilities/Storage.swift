@@ -36,6 +36,10 @@ public struct Storage {
         }
     }
 
+    public func contains<Key>(_ key: Key.Type) -> Bool {
+        self.storage.keys.contains(ObjectIdentifier(Key.self))
+    }
+
     public func get<Key>(_ key: Key.Type) -> Key.Value?
         where Key: StorageKey
     {
