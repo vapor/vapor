@@ -1200,6 +1200,24 @@ final class ApplicationTests: XCTestCase {
             XCTAssertContains(res.body.string, "IP")
         }
     }
+
+    func testClientConfigurationChange() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.client.configuration.redirectConfiguration = .disallow
+
+        app.get("redirect") {
+            $0.redirect(to: "foo")
+        }
+
+        let server = try app.server.start(hostname: "localhost", port: 8080)
+        defer { server.shutdown() }
+
+        let res = try app.client.get("http://localhost:8080/redirect").wait()
+
+        XCTAssertEqual(res.status, .seeOther)
+    }
 }
 
 private extension ByteBuffer {

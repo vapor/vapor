@@ -18,7 +18,7 @@ extension Application {
             }
             nonmutating set {
                 if self.application.storage.contains(ClientKey.self) {
-                    self.application.logger.warning("Cannot mutate client configuration after client has been initialized")
+                    self.application.logger.warning("Cannot modify client configuration after client has been used")
                 }
                 self.application.storage[ConfigurationKey.self] = newValue
             }
