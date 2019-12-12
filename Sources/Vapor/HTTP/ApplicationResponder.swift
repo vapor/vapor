@@ -25,11 +25,7 @@ public struct ApplicationResponder: Responder {
                     return true
                 }
             }
-            let route = RoutingKit.Route<Route>(
-                path: [.constant(route.method.string)] + path,
-                output: route
-            )
-            router.register(route: route)
+            router.register(route, at: [.constant(route.method.string)] + path)
         }
         self.router = router
     }
