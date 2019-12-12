@@ -8,7 +8,7 @@ public struct ApplicationResponder: Responder {
     private let requestsErrorsLabel: String = "http_request_errors_total"
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware]) {
+    public init(routes: Routes, middleware: [Middleware] = []) {
         // We create & store this at init time to not impact performance later on in the application.
         // This `Route` is used to return a 404 response, instead of an error.
         let notFoundResponder = middleware.makeResponder(chainingTo: BasicResponder(closure: { _ in throw Abort(.notFound) }))
