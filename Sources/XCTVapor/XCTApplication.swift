@@ -58,10 +58,11 @@ extension Application {
             line: UInt,
             closure: (XCTHTTPResponse) throws -> ()
         ) throws -> XCTApplicationTester {
-            let server = try app.server.start(hostname: "localhost", port: port)
+            let server = try app.server.start(hostname: "localhost", port: self.port)
             defer { server.shutdown() }
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
+            let path = path.hasPrefix("/") ? path : "/\(path)"
             var request = try HTTPClient.Request(
                 url: "http://localhost:\(self.port)\(path)",
                 method: method,
