@@ -21,6 +21,15 @@ public final class Request: CustomStringConvertible {
     public var headers: HTTPHeaders
     
     internal var isKeepAlive: Bool
+    
+    // MARK: Metadata
+    
+    /// Route object we found for this request.
+    /// This holds metadata that can be used for (for example) Metrics.
+    ///
+    ///     req.route?.description // "GET /hello/:name"
+    ///
+    public internal(set) var route: Route?
 
     // MARK: Content
 

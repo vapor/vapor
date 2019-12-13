@@ -27,7 +27,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-beta.2"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/routing-kit.git", .branch("master")),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.2.0"),
@@ -43,6 +43,9 @@ let package = Package(
         
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
+
+        // Swift metrics API
+        .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0"),
 
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2"),
@@ -62,6 +65,7 @@ let package = Package(
             "CURLParser",
             "ConsoleKit",
             "Logging",
+            "Metrics",
             "MultipartKit",
             "NIO",
             "NIOExtras",

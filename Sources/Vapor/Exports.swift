@@ -8,6 +8,7 @@
 @_exported import Foundation
 
 @_exported import Logging
+@_exported import Metrics
 
 @_exported import MultipartKit
 
