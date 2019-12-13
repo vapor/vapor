@@ -1218,6 +1218,18 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertEqual(res.status, .seeOther)
     }
+
+    func testClientResponseCodable() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let res = try app.client.get("https://httpbin.org/json").wait()
+
+        let encoded = try JSONEncoder().encode(res)
+        let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
+        
+        XCTAssertEqual(res, decoded)
+    }
 }
 
 private extension ByteBuffer {
