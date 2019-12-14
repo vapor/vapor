@@ -65,6 +65,7 @@ public final class Application {
         self.sessions.use(.memory)
         self.commands.use(self.server.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
+        self.loadDotEnv()
     }
     
     public func run() throws {
@@ -80,8 +81,6 @@ public final class Application {
     
     public func start() throws {
         try self.boot()
-        let eventLoop = self.eventLoopGroup.next()
-        try self.loadDotEnv(on: eventLoop).wait()
         let command = self.commands.group()
         var context = CommandContext(console: self.console, input: self.environment.commandInput)
         context.application = self
@@ -97,12 +96,15 @@ public final class Application {
         try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
-    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return DotEnvFile.load(
-            path: ".env",
-            fileio: .init(threadPool: self.threadPool),
-            on: eventLoop
-        ).recover { error in
+    private func loadDotEnv() {
+        do {
+            try DotEnvFile.load(
+                path: ".env",
+                fileio: .init(threadPool: self.threadPool),
+                on: self.eventLoopGroup.next()
+            ).wait()
+        } catch {
+
             self.logger.debug("Could not load .env file: \(error)")
         }
     }
