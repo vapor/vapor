@@ -19,7 +19,6 @@ public func configure(_ app: Application) throws {
     default:
         app.server.configuration.port = 8080
     }
-    app.server.configuration.supportVersions = [.two]
     
     // routes
     try routes(app)
