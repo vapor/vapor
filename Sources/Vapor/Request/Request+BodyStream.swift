@@ -25,7 +25,6 @@ extension Request {
             if case .end = chunk {
                 self.isClosed = true
             }
-            
             if let handler = handler {
                 handler(chunk, promise)
             } else {
@@ -50,6 +49,20 @@ extension Request {
                 next?.succeed(())
             }
             return promise.futureResult
+        }
+    }
+}
+
+extension BodyStreamResult: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .buffer(let buffer):
+            let value = String(decoding: buffer.readableBytesView, as: UTF8.self)
+            return "buffer(\(value))"
+        case .error(let error):
+            return "error(\(error))"
+        case .end:
+            return "end"
         }
     }
 }
