@@ -72,9 +72,9 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 let stream = Request.BodyStream(on: context.eventLoop)
                 request.bodyStorage = .stream(stream)
                 context.fireChannelRead(self.wrapInboundOut(request))
-                let done = stream.write(.buffer(previousBuffer)).flatMap {
-                    stream.write(.buffer(buffer))
-                }
+                let a = stream.write(.buffer(previousBuffer))
+                let b = stream.write(.buffer(buffer))
+                let done = a.and(b).transform(to: ())
                 self.updateReadability(done, context: context)
                 self.requestState = .streamingBody(stream)
             case .streamingBody(let stream):

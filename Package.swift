@@ -85,6 +85,9 @@ let package = Package(
 
         // Testing
         .target(name: "XCTVapor", dependencies: ["Vapor"]),
-        .testTarget(name: "VaporTests", dependencies: ["XCTVapor"]),
+        .testTarget(name: "VaporTests", dependencies: [
+            "NIOTestUtils",
+            "XCTVapor"
+        ]),
     ]
 )
