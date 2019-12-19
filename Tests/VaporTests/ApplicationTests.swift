@@ -1237,30 +1237,13 @@ final class ApplicationTests: XCTestCase {
         
         let payload = [UInt8].random(count: 1 << 20)
         
-        
-        app.on(.POST, "payload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
-            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            var active = 0
-            req.body.drain { part in
-                active += 1
-                XCTAssertEqual(active, 1)
-                let read = req.eventLoop.makePromise(of: Void.self)
-                switch part {
-                case .buffer:
-                    req.eventLoop.scheduleTask(in: .seconds(1)) {
-                        active -= 1
-                        read.succeed(())
-                    }
-                case .end:
-                    active -= 1
-                    promise.succeed(.ok)
-                case .error(let error):
-                    active -= 1
-                    promise.fail(error)
-                }
-                return read.futureResult
+        app.post("payload") { req -> HTTPStatus in
+            guard let data = req.body.data else {
+                throw Abort(.internalServerError)
             }
-            return promise.futureResult
+            XCTAssertEqual(payload.count, data.readableBytes)
+            XCTAssertEqual([UInt8](data.readableBytesView), payload)
+            return .ok
         }
         
         var buffer = ByteBufferAllocator().buffer(capacity: payload.count)

@@ -23,8 +23,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     
     private let logger: Logger
 
-    var downstreamIsReady: Bool
-    var readBuffer: [NIOAny]
+    var pendingWriteCount: Int
     var hasReadPending: Bool
     var application: Application
     
@@ -33,17 +32,12 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         self.maxBodySize = maxBodySize
         self.requestState = .ready
         self.logger = Logger(label: "codes.vapor.server")
-        self.downstreamIsReady = true
-        self.readBuffer = []
+        self.pendingWriteCount = 0
         self.hasReadPending = false
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         assert(context.channel.eventLoop.inEventLoop)
-        guard self.downstreamIsReady else {
-            self.readBuffer.append(data)
-            return
-        }
         let part = self.unwrapInboundIn(data)
         self.logger.trace("Decoded HTTP part: \(part)")
         switch part {
@@ -69,22 +63,20 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 self.requestState = .awaitingBody(request)
             default: assertionFailure("Unexpected state: \(self.requestState)")
             }
-        case .body(var buffer):
+        case .body(let buffer):
             switch self.requestState {
             case .ready: assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
                 self.requestState = .awaitingEnd(request, buffer)
-            case .awaitingEnd(let request, var previousBuffer):
+            case .awaitingEnd(let request, let previousBuffer):
                 let stream = Request.BodyStream(on: context.eventLoop)
                 request.bodyStorage = .stream(stream)
                 context.fireChannelRead(self.wrapInboundOut(request))
-                previousBuffer.writeBuffer(&buffer)
-                let downstreamReady = stream.write(.buffer(previousBuffer))
-                self.stopReading(until: downstreamReady, context: context)
+                self.write(.buffer(previousBuffer), to: stream, context: context)
+                self.write(.buffer(buffer), to: stream, context: context)
                 self.requestState = .streamingBody(stream)
             case .streamingBody(let stream):
-                let downstreamReady = stream.write(.buffer(buffer))
-                self.stopReading(until: downstreamReady, context: context)
+                self.write(.buffer(buffer), to: stream, context: context)
             }
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Tail headers are not supported.")
@@ -96,35 +88,24 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 request.bodyStorage = .collected(buffer)
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .streamingBody(let stream):
-                let downstreamReady = stream.write(.end)
-                self.stopReading(until: downstreamReady, context: context)
+                self.write(.end, to: stream, context: context)
             }
             self.requestState = .ready
         }
     }
 
     func read(context: ChannelHandlerContext) {
-        if self.downstreamIsReady {
+        if self.pendingWriteCount <= 0 {
             context.read()
         } else {
             self.hasReadPending = true
         }
     }
-    
-    func channelReadComplete(context: ChannelHandlerContext) {
-        context.fireChannelReadComplete()
-    }
 
-    func stopReading(until future: EventLoopFuture<Void>, context: ChannelHandlerContext) {
-        assert(self.downstreamIsReady, "downstream not ready")
-        self.downstreamIsReady = false
-        future.whenComplete { result in
-            self.downstreamIsReady = true
-            var buffer = self.readBuffer
-            self.readBuffer = []
-            while let data = buffer.popLast() {
-                self.channelRead(context: context, data: data)
-            }
+    func write(_ part: BodyStreamResult, to stream: Request.BodyStream, context: ChannelHandlerContext) {
+        self.pendingWriteCount += 1
+        stream.write(part).whenComplete { result in
+            self.pendingWriteCount -= 1
             if self.hasReadPending {
                 self.hasReadPending = false
                 self.read(context: context)
