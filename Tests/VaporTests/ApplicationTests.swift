@@ -1230,6 +1230,28 @@ final class ApplicationTests: XCTestCase {
         
         XCTAssertEqual(res, decoded)
     }
+    
+    func testMultipleChunkBody() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let payload = [UInt8].random(count: 1 << 20)
+        
+        app.post("payload") { req -> HTTPStatus in
+            guard let data = req.body.data else {
+                throw Abort(.internalServerError)
+            }
+            XCTAssertEqual(payload.count, data.readableBytes)
+            XCTAssertEqual([UInt8](data.readableBytesView), payload)
+            return .ok
+        }
+        
+        var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
+        buffer.writeBytes(payload)
+        try app.testable(method: .running).test(.POST, "payload", body: buffer) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+    }
 }
 
 private extension ByteBuffer {
