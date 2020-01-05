@@ -159,10 +159,11 @@ public func routes(_ app: Application) throws {
     }
 
     app.directory.viewsDirectory = "/Users/tanner/Desktop"
-    app.get("view") { req in
+    app.get("view") { req -> EventLoopFuture<View> in
         req.view.render("hello.txt", ["name": "world"])
+    }
 
-    r.get("secret") { (req) -> EventLoopFuture<String> in
-        return try Environment.secret(key: "PASSWORD_SECRET", container: c)
+    app.get("secret") { (req) -> EventLoopFuture<String> in
+        return try Environment.secret(key: "PASSWORD_SECRET", fileIO: app.fileio, on: req.eventLoop)
     }
 }
