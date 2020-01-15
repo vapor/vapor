@@ -28,8 +28,8 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - path: Group path components separated by commas.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ path: PathComponent..., configure: (RoutesBuilder) -> ()) {
-        configure(HTTPRoutesGroup(root: self, path: path))
+    public func group(_ path: PathComponent..., configure: (RoutesBuilder) throws -> ()) rethrows {
+        try configure(HTTPRoutesGroup(root: self, path: path))
     }
 }
 
