@@ -4,6 +4,30 @@ public struct XCTHTTPResponse {
     public var body: Response.Body
 }
 
+extension XCTHTTPResponse {
+    private struct _ContentContainer: ContentContainer {
+        var body: String
+        var headers: HTTPHeaders
+
+        var contentType: HTTPMediaType? {
+            return self.headers.contentType
+        }
+
+        mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
+            fatalError("Encoding to test response is not supported")
+        }
+
+        func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            body.writeString(self.body)
+            return try decoder.decode(D.self, from: body, headers: self.headers)
+        }
+    }
+
+    public var content: ContentContainer {
+        _ContentContainer(body: self.body.string ?? "", headers: self.headers)
+    }
+}
 //    @discardableResult
 //    public func assertStatus(is status: HTTPStatus, file: StaticString = #file, line: UInt = #line) -> XCTHTTPResponse {
 //        XCTAssertEqual(self.response.status, status, file: file, line: line)

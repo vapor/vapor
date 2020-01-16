@@ -109,14 +109,14 @@ final class ApplicationTests: XCTestCase {
             if case .typeMismatch(_, let context) = error as? DecodingError {
                 XCTAssertEqual(context.debugDescription, "Data found at 'foo' was not Int")
             } else {
-                XCTFail("Catched error \"\(error)\", but not the expected: \"DecodingError.typeMismatch\"")
+                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.typeMismatch\"")
             }
         }
         XCTAssertThrowsError(try req.query.get(String.self, at: "bar")) { error in
             if case .valueNotFound(_, let context) = error as? DecodingError {
                 XCTAssertEqual(context.debugDescription, "No String was found at 'bar'")
             } else {
-                XCTFail("Catched error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
+                XCTFail("Caught error \"\(error)\", but not the expected: \"DecodingError.valueNotFound\"")
             }
         }
 
@@ -131,10 +131,10 @@ final class ApplicationTests: XCTestCase {
             on: app.eventLoopGroup.next()
         )
         XCTAssertThrowsError(try req.query.get(Int.self, at: "foo")) { error in
-            if let error = error as? Abort {
-                XCTAssertEqual(error.status, .unsupportedMediaType)
+            if let error = error as? DecodingError {
+                XCTAssertEqual(error.status, .badRequest)
             } else {
-                XCTFail("Catched error \"\(error)\", but not the expected: \"\(Abort(.unsupportedMediaType))\"")
+                XCTFail("Caught error \"\(error)\"")
             }
         }
         XCTAssertEqual(req.query[String.self, at: "foo"], nil)
