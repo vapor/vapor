@@ -69,7 +69,6 @@ public final class Application {
     }
     
     public func run() throws {
-        defer { self.shutdown() }
         do {
             try self.start()
             try self.running?.onStop.wait()
