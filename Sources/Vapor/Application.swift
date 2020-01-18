@@ -50,6 +50,7 @@ public final class Application {
     }
 
     public init(_ environment: Environment = .development) {
+        Backtrace.install()
         self.environment = environment
         self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         self.locks = .init()

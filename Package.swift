@@ -28,6 +28,9 @@ let package = Package(
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-beta.3"),
+
+        // 💥 Backtraces for Swift on Linux
+        .package(url: "https://github.com/ianpartridge/swift-backtrace.git", from: "1.1.1"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.2.0"),
@@ -60,6 +63,7 @@ let package = Package(
         .target(name: "Vapor", dependencies: [
             "AsyncHTTPClient",
             "AsyncKit",
+            "Backtrace",
             "CBcrypt",
             "COperatingSystem",
             "CURLParser",
