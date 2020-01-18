@@ -1,6 +1,7 @@
 @_exported import AsyncKit
 
 @_exported import class AsyncHTTPClient.HTTPClient
+@_exported import enum Backtrace.Backtrace
 
 @_exported import OpenCrypto
 @_exported import RoutingKit
