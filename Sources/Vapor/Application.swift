@@ -59,6 +59,7 @@ public final class Application {
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
+        Backtrace.install()
         self.environment = environment
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
@@ -84,7 +85,6 @@ public final class Application {
     }
     
     public func run() throws {
-        defer { self.shutdown() }
         do {
             try self.start()
             try self.running?.onStop.wait()
