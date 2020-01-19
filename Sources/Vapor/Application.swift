@@ -2,6 +2,7 @@ public protocol LockKey { }
 
 public final class Application {
     public var environment: Environment
+    public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     public var storage: Storage
     public var userInfo: [AnyHashable: Any]
@@ -48,11 +49,25 @@ public final class Application {
     public var sync: Lock {
         self.locks.main
     }
+    
+    public enum EventLoopGroupProvider {
+        case shared(EventLoopGroup)
+        case createNew
+    }
 
-    public init(_ environment: Environment = .development) {
+    public init(
+        _ environment: Environment = .development,
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
+    ) {
         Backtrace.install()
         self.environment = environment
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
         self.locks = .init()
         self.userInfo = [:]
         self.didShutdown = false
@@ -122,11 +137,16 @@ public final class Application {
         self.storage.clear()
         self.userInfo = [:]
 
-        self.logger.trace("Shutting down EventLoopGroup")
-        do {
-            try self.eventLoopGroup.syncShutdownGracefully()
-        } catch {
-            self.logger.error("Shutting down EventLoopGroup failed: \(error)")
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+        case .createNew:
+            self.logger.trace("Shutting down EventLoopGroup")
+            do {
+                try self.eventLoopGroup.syncShutdownGracefully()
+            } catch {
+                self.logger.error("Shutting down EventLoopGroup failed: \(error)")
+            }
         }
 
         self.didShutdown = true
