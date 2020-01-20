@@ -7,8 +7,18 @@ public struct ValidatorResults {
 
     public struct Missing { }
 
+    public struct NotFound { }
+
     public struct Codable {
         public let error: Error
+    }
+
+    public struct Invalid {
+        let reason: String
+    }
+
+    public struct TypeMismatch {
+        let type: Any.Type
     }
 }
 
@@ -55,6 +65,49 @@ extension ValidatorResults.Missing: ValidatorResult {
     
     public var failureDescription: String? {
         "is required"
+    }
+}
+
+extension ValidatorResults.Invalid: ValidatorResult {
+    public var isFailure: Bool {
+        true
+    }
+
+    public var successDescription: String? {
+        nil
+    }
+
+    public var failureDescription: String? {
+        "is invalid: \(self.reason)"
+    }
+}
+
+extension ValidatorResults.NotFound: ValidatorResult {
+    public var isFailure: Bool {
+        true
+    }
+
+    public var successDescription: String? {
+        nil
+    }
+
+    public var failureDescription: String? {
+        "cannot be null"
+    }
+}
+
+
+extension ValidatorResults.TypeMismatch: ValidatorResult {
+    public var isFailure: Bool {
+        true
+    }
+
+    public var successDescription: String? {
+        nil
+    }
+
+    public var failureDescription: String? {
+        "is not a(n) \(self.type)"
     }
 }
 
