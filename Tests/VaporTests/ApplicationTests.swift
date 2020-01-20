@@ -2,12 +2,6 @@ import Vapor
 import XCTVapor
 import COperatingSystem
 
-extension ValidationsError: AbortError {
-    public var reason: String { description }
-
-    public var status: HTTPResponseStatus { .unprocessableEntity }
-}
-
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
@@ -607,7 +601,7 @@ final class ApplicationTests: XCTestCase {
             "name": "vapor",
             "email": "foo"
         ]) { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
     }
