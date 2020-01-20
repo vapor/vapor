@@ -12,9 +12,15 @@ public struct Validation {
                 } else {
                     result = ValidatorResults.Skipped()
                 }
+            } catch DecodingError.valueNotFound {
+                result = ValidatorResults.NotFound()
+           } catch DecodingError.typeMismatch(let type, _) {
+                result = ValidatorResults.TypeMismatch(type: type)
+            } catch DecodingError.dataCorrupted(let context) {
+                result = ValidatorResults.Invalid(reason: context.debugDescription)
             } catch {
-                result = ValidatorResults.Codable(error: error)
-            }
+               result = ValidatorResults.Codable(error: error)
+           }
             return .init(key: key, result: result)
         }
     }

@@ -30,18 +30,18 @@ extension ValidatorResults.Nil: ValidatorResult {
     public var successDescription: String? {
         switch self.isNil {
         case true:
-            return "not nil"
-        default:
-            return nil
+            return "is not null"
+        case false:
+            return "is null"
         }
     }
     
     public var failureDescription: String? {
         switch self.isNil {
         case true:
-            return "nil"
-        default:
-            return nil
+            return "is null"
+        case false:
+            return "is not null"
         }
     }
 }
