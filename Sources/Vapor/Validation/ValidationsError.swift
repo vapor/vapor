@@ -27,3 +27,13 @@ extension ValidationsError: CustomStringConvertible {
             .joined(separator: ", ")
     }
 }
+
+extension ValidationsError: AbortError {
+    public var status: HTTPResponseStatus {
+        .badRequest
+    }
+
+    public var reason: String {
+        self.description
+    }
+}

@@ -76,7 +76,8 @@ extension DecodingError: AbortError {
     /// See `AbortError.reason`
     public var reason: String {
         switch self {
-        case .dataCorrupted(let ctx): return ctx.debugDescription
+        case .dataCorrupted(let ctx):
+            return "\(ctx.debugDescription) for key \(ctx.codingPath.dotPath)"
         case .keyNotFound(let key, let ctx):
             let path: String
             if ctx.codingPath.count > 0 {

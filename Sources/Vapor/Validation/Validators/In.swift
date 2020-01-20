@@ -1,4 +1,4 @@
-extension Validator where T: Equatable {
+extension Validator where T: Equatable & CustomStringConvertible {
     /// Validates whether an item is contained in the supplied array.
     public static func `in`(_ array: T...) -> Validator<T> {
         .in(array)
@@ -16,7 +16,7 @@ extension Validator where T: Equatable {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
-    public struct In<T> where T: Equatable {
+    public struct In<T> where T: Equatable & CustomStringConvertible {
         /// Description of the item.
         public let item: T
         
@@ -32,10 +32,26 @@ extension ValidatorResults.In: ValidatorResult {
     }
     
     public var successDescription: String? {
-        "in \(self.items)"
+        self.makeDescription(not: false)
     }
     
     public var failureDescription: String? {
-        "not in \(self.items)"
+        self.makeDescription(not: true)
+    }
+
+    func makeDescription(not: Bool) -> String {
+        let description: String
+        switch self.items.count {
+        case 1:
+            description = self.items[0].description
+        case 2:
+            description = "\(self.items[0].description) or \(self.items[1].description)"
+        default:
+            let first = self.items[0..<(self.items.count - 1)]
+                .map { $0.description }.joined(separator: ", ")
+            let last = self.items[self.items.count - 1].description
+            description = "\(first), or \(last)"
+        }
+        return "is\(not ? " not" : " ") \(description)"
     }
 }
