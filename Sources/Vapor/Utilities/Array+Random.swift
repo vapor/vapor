@@ -25,3 +25,9 @@ extension Array where Element: FixedWidthInteger {
         return array
     }
 }
+
+extension Array where Element == UInt8 {
+    public var base64: String {
+        Data(self).base64EncodedString()
+    }
+}
