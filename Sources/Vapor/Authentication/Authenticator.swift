@@ -39,32 +39,6 @@ extension BearerAuthenticator {
     }
 }
 
-// MARK: User Token
-
-public protocol UserTokenAuthenticator: RequestAuthenticator {
-    associatedtype TokenAuthenticator: RequestAuthenticator where
-        TokenAuthenticator.User: AuthenticationToken,
-        TokenAuthenticator.User.User == User
-
-    var tokenAuthenticator: TokenAuthenticator { get }
-    func authenticate(token: TokenAuthenticator.User, for request: Request) -> EventLoopFuture<User?>
-}
-
-extension UserTokenAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<User?> {
-        return self.tokenAuthenticator.authenticate(request: request).flatMap { token in
-            guard let token = token else {
-                return request.eventLoop.makeSucceededFuture(nil)
-            }
-            return self.authenticate(token: token, for: request)
-        }
-    }
-}
-
-public protocol AuthenticationToken {
-    associatedtype User
-}
-
 // MARK: Credentials
 
 public protocol CredentialsAuthenticator: RequestAuthenticator {
