@@ -10,7 +10,7 @@ public final class ServeCommand: Command {
         var hostname: String?
         
         @Option(name: "port", short: "p", help: "Set the port the server will run on.")
-        var port: String?
+        var port: Int?
         
         @Option(name: "bind", short: "b", help: "Convenience for setting hostname and port together.")
         var bind: String?
@@ -42,7 +42,7 @@ public final class ServeCommand: Command {
         let hostname = signature.hostname
             // 0.0.0.0:8080, 0.0.0.0, parse hostname
             ?? signature.bind?.split(separator: ":").first.flatMap(String.init)
-        let port = signature.port?.fixedPort
+        let port = signature.port
             // 0.0.0.0:8080, :8080, parse port
             ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         let server = try context.application.server.start(hostname: hostname, port: port)
@@ -81,16 +81,5 @@ public final class ServeCommand: Command {
     
     deinit {
         assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
-    }
-}
-
-private extension String {
-    // Fixes an issue with Heroku where the port is prefixed with \
-    var fixedPort: Int? {
-        if self.hasPrefix("\\") && self.count >= 2 {
-            return Int(self.dropFirst())
-        } else {
-            return Int(self)
-        }
     }
 }
