@@ -8,6 +8,7 @@ extension LoggingSystem {
         try LoggingSystem.bootstrap(
             console: Terminal(),
             level: LogSignature(from: &environment.commandInput).level
+                ?? Environment.process.LOG_LEVEL
                 ?? (environment == .production ? .notice: .info)
         )
     }
