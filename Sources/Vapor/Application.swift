@@ -81,7 +81,9 @@ public final class Application {
         self.sessions.use(.memory)
         self.commands.use(self.server.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        self.loadDotEnv()
+        // Load specific .env first since values are not overridden.
+        self.loadDotEnv(named: ".env.\(self.environment.name)")
+        self.loadDotEnv(named: ".env")
     }
     
     public func run() throws {
@@ -111,16 +113,15 @@ public final class Application {
         try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
-    private func loadDotEnv() {
+    private func loadDotEnv(named name: String) {
         do {
             try DotEnvFile.load(
-                path: ".env",
+                path: name,
                 fileio: .init(threadPool: self.threadPool),
                 on: self.eventLoopGroup.next()
             ).wait()
         } catch {
-
-            self.logger.debug("Could not load .env file: \(error)")
+            self.logger.debug("Could not load \(name) file: \(error)")
         }
     }
     
