@@ -1,6 +1,6 @@
-<!-- 🚀 Thank you for contributing! --->
+<!-- 🚀 Thank you for contributing! -->
 
-<!-- When this PR is merged, the title and body will be  -->
-<!-- used to generate a release automatically.  -->
+<!-- When this PR is merged, the title and body will be -->
+<!-- used to generate a release automatically. -->
 
-<!-- So make it pretty and use plenty of examples.  -->
+<!-- Make the change clear and use examples if possible. -->
