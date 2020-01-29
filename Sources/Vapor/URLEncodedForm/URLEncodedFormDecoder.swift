@@ -128,7 +128,7 @@ private struct _Decoder: Decoder {
             throw DecodingError.valueNotFound(Any.self, at: codingPath)
         }
 
-        return SingleValueContainer(data: self.data!, codingPath: codingPath)
+        return SingleValueContainer(data: data, codingPath: codingPath)
     }
     
     struct SingleValueContainer: SingleValueDecodingContainer {
