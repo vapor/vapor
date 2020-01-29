@@ -82,6 +82,7 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
     }
     
+    // https://github.com/vapor/vapor/pull/2163
     func testWrappedSingleValueQueryDecoding() throws {
         let app = Application()
         defer { app.shutdown() }
