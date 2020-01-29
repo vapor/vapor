@@ -78,10 +78,31 @@ final class ApplicationTests: XCTestCase {
         let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
         request.url.path = "/foo"
-        print(request.url.string)
         request.url.query = "hello=world"
-        print(request.url.string)
         try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
+    }
+    
+    // https://github.com/vapor/vapor/pull/2163
+    func testWrappedSingleValueQueryDecoding() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.headers.contentType = .json
+        request.url.path = "/foo"
+        request.url.query = ""
+        
+        // Think of property wrappers, or MongoKitten's ObjectId
+        struct StringWrapper: Decodable {
+            let string: String
+            
+            init(from decoder: Decoder) throws {
+                let container = try decoder.singleValueContainer()
+                string = try container.decode(String.self)
+            }
+        }
+        
+        XCTAssertThrowsError(try request.query.get(StringWrapper.self, at: "hello"))
     }
 
     func testQueryGet() throws {
