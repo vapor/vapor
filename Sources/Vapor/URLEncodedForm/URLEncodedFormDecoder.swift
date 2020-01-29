@@ -124,7 +124,11 @@ private struct _Decoder: Decoder {
 
     /// See `Decoder`
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return SingleValueContainer(data: self.data!, codingPath: codingPath)
+        guard let data = self.data else {
+            throw DecodingError.valueNotFound(Any.self, at: codingPath)
+        }
+
+        return SingleValueContainer(data: data, codingPath: codingPath)
     }
     
     struct SingleValueContainer: SingleValueDecodingContainer {
