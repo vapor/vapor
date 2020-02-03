@@ -39,7 +39,7 @@ struct urlparser_field_data {
     uint16_t len;               /* Length of run in buffer */
 };
 
-/* Result structure for http_parser_parse_url().
+/* Result structure for urlparser_parse_url().
  *
  * Callers should index into field_data[] with UF_* values iff field_set
  * has the relevant (1 << UF_*) bit set. As a courtesy to clients (and
