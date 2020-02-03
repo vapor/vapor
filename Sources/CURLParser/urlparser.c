@@ -85,7 +85,7 @@ static const int8_t unhex[256] =
 };
 
 
-#if HTTP_PARSER_STRICT
+#if URLPARSER_STRICT
 # define T(v) 0
 #else
 # define T(v) v
@@ -243,7 +243,7 @@ enum http_host_state
 
 #define STRICT_TOKEN(c)     ((c == ' ') ? 0 : tokens[(unsigned char)c])
 
-#if HTTP_PARSER_STRICT
+#if URLPARSER_STRICT
 #define TOKEN(c)            STRICT_TOKEN(c)
 #define IS_URL_CHAR(c)      (BIT_AT(normal_url_char, (unsigned char)c))
 #define IS_HOST_CHAR(c)     (IS_ALPHANUM(c) || (c) == '.' || (c) == '-')
@@ -257,9 +257,9 @@ enum http_host_state
 
 /* Our URL parser.
  *
- * This is designed to be shared by http_parser_execute() for URL validation,
+ * This is designed to be shared by urlparser_execute() for URL validation,
  * hence it has a state transition + byte-for-byte interface. In addition, it
- * is meant to be embedded in http_parser_parse_url(), which does the dirty
+ * is meant to be embedded in urlparser_parse_url(), which does the dirty
  * work of turning state transitions URL components for its API.
  *
  * This function should only be invoked with non-space characters. It is
@@ -273,7 +273,7 @@ parse_url_char(enum state s, const char ch)
         return s_dead;
     }
 
-#if HTTP_PARSER_STRICT
+#if URLPARSER_STRICT
     if (ch == '\t' || ch == '\f') {
         return s_dead;
     }
@@ -579,7 +579,7 @@ http_parse_host(const char * buf, struct urlparser_url *u, int found_at) {
 }
 
 void
-http_parser_url_init(struct urlparser_url *u) {
+urlparser_url_init(struct urlparser_url *u) {
     memset(u, 0, sizeof(*u));
 }
 
