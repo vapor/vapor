@@ -9,6 +9,7 @@ extension Logger {
     ///                Defaults to `true`.
     public func report(
         error e: Error,
+        path: String? = nil,
         verbose: Bool = true,
         file: String = #file,
         function: String = #function,
@@ -17,7 +18,15 @@ extension Logger {
     ) {
         switch e {
         case let debuggable as Debuggable:
-            let errorString = "\(debuggable.fullIdentifier): \(debuggable.reason)"
+            
+            let pathString: String
+            if let path = path {
+                pathString = " \(path)"
+            } else {
+                pathString = ""
+            }
+            
+            let errorString = "\(debuggable.fullIdentifier):\(pathString) \(debuggable.reason)"
             if let source = debuggable.sourceLocation {
                 error(errorString, file: source.file.lastPart, function: source.function, line: source.line, column: source.column)
             } else {

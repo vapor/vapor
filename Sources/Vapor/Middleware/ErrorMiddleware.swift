@@ -23,7 +23,9 @@ public final class ErrorMiddleware: Middleware, ServiceType {
     public static func `default`(environment: Environment, log: Logger) -> ErrorMiddleware {
         return .init { req, error in
             // log the error
-            log.report(error: error, verbose: !environment.isRelease)
+            log.report(error: error,
+                       path: req.http.urlString,
+                       verbose: !environment.isRelease)
 
             // variables to determine
             let status: HTTPResponseStatus
