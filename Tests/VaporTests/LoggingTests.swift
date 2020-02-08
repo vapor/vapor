@@ -56,4 +56,9 @@ class LoggingTests : XCTestCase {
         
         XCTAssert(loggerProvider.logger.didLog(string: "Abort.500: /fail/me Internal Server Error"))
     }
+    
+    static let allTests = [
+        ("testNotFoundLogging", testNotFoundLogging),
+        ("testInternalServerErrorLogging", testInternalServerErrorLogging)
+    ]
 }
