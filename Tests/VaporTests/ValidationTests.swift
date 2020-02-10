@@ -7,6 +7,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tanner",
             "age": 24,
+            "gender": "female",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -22,6 +23,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tan!ner",
             "age": 24,
+            "gender": "female",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -40,6 +42,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tanner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -61,6 +64,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tan!ner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -204,6 +208,33 @@ class ValidationTests: XCTestCase {
         let error = try validations.validate(json: #"{"key": ""}"#).error
         XCTAssertEqual(error?.description, "key is empty")
     }
+
+    func testCaseOf() {
+
+        enum StringEnumType: String {
+            case case1, case2
+        }
+        assert("case1", passes: .caseOf(StringEnumType.self))
+        assert("case2", passes: .caseOf(StringEnumType.self))
+        assert("case1", fails: !.caseOf(StringEnumType.self), "is StringEnumType")
+        assert("case3", fails: .caseOf(StringEnumType.self), "value {case3} cannot be represented as StringEnumType.")
+
+        enum IntEnumType: Int {
+            case case1 = 1, case2 = 2
+        }
+        assert(1, passes: .caseOf(IntEnumType.self))
+        assert(2, passes: .caseOf(IntEnumType.self))
+        assert(1, fails: !.caseOf(IntEnumType.self), "is IntEnumType")
+        assert(3, fails: .caseOf(IntEnumType.self), "value {3} cannot be represented as IntEnumType.")
+
+        enum IterableEnumType: String, CaseIterable {
+            case case1, case2
+        }
+        assert("case1", passes: .caseOf(IterableEnumType.self))
+        assert("case2", passes: .caseOf(IterableEnumType.self))
+        assert("case2", fails: !.caseOf(IterableEnumType.self), "is IterableEnumType")
+        assert("case3", fails: .caseOf(IterableEnumType.self), "value {case3} cannot be represented as IterableEnumType. Possiblue values: case1, case2")
+    }
 }
 
 private func assert<T>(
@@ -229,9 +260,14 @@ private func assert<T>(
 }
 
 private final class User: Validatable, Codable {
+    enum Gender: String, Codable {
+        case male, female
+    }
+    
     var id: Int?
     var name: String
     var age: Int
+    var gender: Gender
     var email: String?
     var pet: Pet
     var luckyNumber: Int?
@@ -247,10 +283,11 @@ private final class User: Validatable, Codable {
         }
     }
 
-    init(id: Int? = nil, name: String, age: Int, pet: Pet, preferredColors: [String] = []) {
+    init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = []) {
         self.id = id
         self.name = name
         self.age = age
+        self.gender = gender
         self.pet = pet
         self.preferredColors = preferredColors
     }
@@ -260,6 +297,8 @@ private final class User: Validatable, Codable {
         v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
         // validate age is 18 or older
         v.add("age", as: Int.self, is: .range(18...))
+        // validate gender is of type Gender
+        v.add("gender", as: String.self, is: .caseOf(Gender.self))
         // validate the email is valid and is not nil
         v.add("email", as: String?.self, is: !.nil && .email)
         v.add("email", as: String?.self, is: .email && !.nil) // test other way
