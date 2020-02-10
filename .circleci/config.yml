@@ -1,6 +1,6 @@
 version: 2
 
-jobs:  
+jobs:
   macos:
     macos:
       xcode: "9.2"
