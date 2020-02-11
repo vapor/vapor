@@ -14,7 +14,8 @@ class ValidationTests: XCTestCase {
             "pet": {
                 "name": "Zizek",
                 "age": 3
-            }
+            },
+            "isAdmin": true
         }
         """
         XCTAssertNoThrow(try User.validate(json: valid))
@@ -29,7 +30,8 @@ class ValidationTests: XCTestCase {
             "pet": {
                 "name": "Zizek",
                 "age": 3
-            }
+            },
+            "isAdmin": true
         }
         """
         XCTAssertThrowsError(try User.validate(json: invalidUser)) { error in
@@ -47,12 +49,32 @@ class ValidationTests: XCTestCase {
             "pet": {
                 "name": "Zi!zek",
                 "age": 3
-            }
+            },
+            "isAdmin": true
         }
         """
         XCTAssertThrowsError(try User.validate(json: invalidPet)) { error in
             XCTAssertEqual("\(error)",
                            "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        }
+        let invalidBool = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "email": "me@tanner.xyz",
+            "luckyNumber": 5,
+            "profilePictureURL": "https://foo.jpg",
+            "preferredColors": ["blue"],
+            "pet": {
+                "name": "Zizek",
+                "age": 3
+            },
+            "isAdmin": "true"
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidBool)) { error in
+            XCTAssertEqual("\(error)",
+                           "isAdmin is not a(n) Bool")
         }
     }
     
@@ -68,7 +90,8 @@ class ValidationTests: XCTestCase {
             "pet": {
                 "name": "Zizek",
                 "age": 3
-            }
+            },
+            "isAdmin": true
         }
         """
         do {
@@ -179,6 +202,17 @@ class ValidationTests: XCTestCase {
         assert("bananas", fails: .url, "is an invalid URL")
         assert("bananas", passes: !.url)
     }
+    
+    func testValid() {
+        assert("some random string", passes: .valid)
+        assert(true, passes: .valid)
+        assert("123", passes: .valid)
+        assert([1, 2, 3], passes: .valid)
+        assert(Date.init(), passes: .valid)
+        assert("some random string", fails: !.valid, "is valid")
+        assert(true, fails: !.valid, "is valid")
+        assert("123", fails: !.valid, "is valid")
+    }
 
     func testPreexistingValidatorResultIsIncluded() throws {
         struct CustomValidatorResult: ValidatorResult {
@@ -237,6 +271,7 @@ private final class User: Validatable, Codable {
     var luckyNumber: Int?
     var profilePictureURL: String?
     var preferredColors: [String]
+    var isAdmin: Bool
     
     struct Pet: Codable {
         var name: String
@@ -247,12 +282,13 @@ private final class User: Validatable, Codable {
         }
     }
 
-    init(id: Int? = nil, name: String, age: Int, pet: Pet, preferredColors: [String] = []) {
+    init(id: Int? = nil, name: String, age: Int, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
         self.id = id
         self.name = name
         self.age = age
         self.pet = pet
         self.preferredColors = preferredColors
+        self.isAdmin = isAdmin
     }
 
     static func validations(_ v: inout Validations) {
@@ -277,5 +313,6 @@ private final class User: Validatable, Codable {
                     is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
             pet.add("age", as: Int.self, is: .range(3...))
         }
+        v.add("isAdmin", as: Bool.self)
     }
 }
