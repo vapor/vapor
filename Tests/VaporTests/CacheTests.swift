@@ -32,6 +32,14 @@ class CacheTests: XCTestCase {
         XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: requested), required)
     }
 
+    func testNoMatching() {
+        let requested = Date()
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "random garbage"))
+        let response = ClientResponse(status: .ok, headers: headers, body: nil)
+
+        XCTAssertNil(response.headers.getCacheExpiration(requestSentAt: requested))
+    }
+
     private func dateFromFormat(format: String, dateStr: String) -> Date {
         let fmt = DateFormatter()
         fmt.locale = Locale(identifier: "en_US_POSIX")

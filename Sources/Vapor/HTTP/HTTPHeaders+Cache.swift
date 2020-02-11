@@ -8,44 +8,23 @@ extension HTTPHeaders {
     /// - Parameter requestSentAt: Should be passed the `Date` when the request was sent.
     public func getCacheExpiration(requestSentAt: Date) -> Date? {
         // Cache-Control header takes priority over the Expires header
-        if case let .set(date) = self.cacheControlDate(requestSentAt: requestSentAt) {
+        if case let .set(date) = cacheControlDate(requestSentAt: requestSentAt) {
             return date
         }
 
-        guard let expires = self.firstValue(name: .expires) else { return nil }
-
-        // https://tools.ietf.org/html/rfc7231#section-7.1.1.1
-        let fmt = DateFormatter()
-        fmt.locale = Locale(identifier: "en_US_POSIX")
-        fmt.timeZone = TimeZone(secondsFromGMT: 0)
-
-        // Preferred format
-        fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
-        if let date = fmt.date(from: expires) {
-            return date
-        }
-
-        // Obsolete RFC 850 format
-        fmt.dateFormat = "EEEE, dd-MMM-yy hh:mm:ss zzz"
-        if let date = fmt.date(from: expires) {
-            return date
-        }
-
-        // Obsolete ANSI C asctime() format
-        fmt.dateFormat = "EEE MMM d hh:mm:s yyyy"
-        if let date = fmt.date(from: expires) {
-            return date
+        if let expires = expiresDate() {
+            return expires
         }
 
         return nil
     }
 
     private func cacheControlDate(requestSentAt: Date) -> CacheDateResponse {
-        guard let cacheControl = self.firstValue(name: .cacheControl) else {
+        guard let cacheControl = firstValue(name: .cacheControl) else {
             return .ignore
         }
 
-        let pattern = #"^max-age\s*=\s*(\d+)$"#
+        let pattern = #"^max-age=(\d+)$"#
         let regex = try! NSRegularExpression(pattern: pattern, options: .caseInsensitive)
 
         var set = CharacterSet.whitespacesAndNewlines
@@ -53,7 +32,11 @@ extension HTTPHeaders {
 
         var newDate: Date?
 
-        for value in cacheControl.components(separatedBy: set) {
+        let components = cacheControl
+            .filter { !($0.isWhitespace || $0.isNewline) }
+            .components(separatedBy: set)
+
+        for value in components {
             if value == "no-store" {
                 return .set(nil)
             }
@@ -79,5 +62,34 @@ extension HTTPHeaders {
         }
 
         return .set(desired)
+    }
+
+    private func expiresDate() -> Date? {
+        guard let expires = firstValue(name: .expires) else { return nil }
+
+        // https://tools.ietf.org/html/rfc7231#section-7.1.1.1
+        let fmt = DateFormatter()
+        fmt.locale = Locale(identifier: "en_US_POSIX")
+        fmt.timeZone = TimeZone(secondsFromGMT: 0)
+
+        // Preferred format
+        fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
+        if let date = fmt.date(from: expires) {
+            return date
+        }
+
+        // Obsolete RFC 850 format
+        fmt.dateFormat = "EEEE, dd-MMM-yy hh:mm:ss zzz"
+        if let date = fmt.date(from: expires) {
+            return date
+        }
+
+        // Obsolete ANSI C asctime() format
+        fmt.dateFormat = "EEE MMM d hh:mm:s yyyy"
+        if let date = fmt.date(from: expires) {
+            return date
+        }
+
+        return nil
     }
 }
