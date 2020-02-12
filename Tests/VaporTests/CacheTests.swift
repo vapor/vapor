@@ -10,7 +10,7 @@ class CacheTests: XCTestCase {
 
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertNil(response.headers.getCacheExpiration(requestSentAt: requested))
+        XCTAssertNil(response.headers.getExpirationDate(requestSentAt: requested))
     }
 
     func testNoStore() {
@@ -18,7 +18,7 @@ class CacheTests: XCTestCase {
         let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "no-store, max-age=12"))
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertNil(response.headers.getCacheExpiration(requestSentAt: requested))
+        XCTAssertNil(response.headers.getExpirationDate(requestSentAt: requested))
     }
 
     func testMaxAge() {
@@ -29,7 +29,7 @@ class CacheTests: XCTestCase {
 
         let required = requested.addingTimeInterval(TimeInterval(seconds))
 
-        XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: requested), required)
+        XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: requested), required)
     }
 
     func testNoMatching() {
@@ -37,12 +37,12 @@ class CacheTests: XCTestCase {
         let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "random garbage"))
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertNil(response.headers.getCacheExpiration(requestSentAt: requested))
+        XCTAssertNil(response.headers.getExpirationDate(requestSentAt: requested))
     }
 
     func testMissingHeader() {
         let response = ClientResponse(status: .ok)
-        XCTAssertNil(response.headers.getCacheExpiration(requestSentAt: Date()))
+        XCTAssertNil(response.headers.getExpirationDate(requestSentAt: Date()))
     }
 
     private func dateFromFormat(format: String, dateStr: String) -> Date {
@@ -61,7 +61,7 @@ class CacheTests: XCTestCase {
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: Date()), required)
+        XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: Date()), required)
     }
 
     func testObsoleteFormatOne() {
@@ -71,7 +71,7 @@ class CacheTests: XCTestCase {
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: Date()), required)
+        XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: Date()), required)
     }
 
     func testObsoleteFormatTwo() {
@@ -81,7 +81,7 @@ class CacheTests: XCTestCase {
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: Date()), required)
+        XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: Date()), required)
     }
 
     func testMaxAgeOverridesExpires() {
@@ -95,6 +95,6 @@ class CacheTests: XCTestCase {
 
         let response = ClientResponse(status: .ok, headers: headers)
 
-        XCTAssertEqual(response.headers.getCacheExpiration(requestSentAt: requested), required)
+        XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: requested), required)
     }
 }
