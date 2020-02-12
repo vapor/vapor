@@ -9,7 +9,7 @@ struct RequestClient: Client {
     let req: Request
 
     var eventLoopGroup: EventLoopGroup {
-        return self.http.eventLoopGroup
+        return self.req.eventLoop
     }
 
     func `for`(_ request: Request) -> Client {

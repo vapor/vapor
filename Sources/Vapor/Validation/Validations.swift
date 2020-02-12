@@ -8,7 +8,7 @@ public struct Validations {
     public mutating func add<T>(
         _ key: ValidationKey,
         as type: T.Type = T.self,
-        is validator: Validator<T>,
+        is validator: Validator<T> = .valid,
         required: Bool = true
     ) {
         let validation = Validation(key: key, required: required, validator: validator)
