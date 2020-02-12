@@ -101,19 +101,12 @@ internal struct URLEncodedFormParser {
 
     /// Sets mutable form-urlencoded input to a value at the given `[URLEncodedFormEncodedSubKey]` path.
     private func set(_ base: inout URLEncodedFormData, to data: URLEncodedFormData, at path: [URLEncodedFormEncodedSubKey]) {
-        guard path.count >= 1 else {
-            base = data
-            return
-        }
-
-        let first = path[0]
-
         var child: URLEncodedFormData
         switch path.count {
         case 1:
             child = data
         case 2...:
-            switch first {
+            switch path[0] {
             case .array:
                 /// always append to the last element of the array
                 child = base.array?.last ?? .array([])
@@ -122,10 +115,12 @@ internal struct URLEncodedFormParser {
                 child = base.dictionary?[key] ?? .dictionary([:])
                 set(&child, to: data, at: Array(path[1...]))
             }
-        default: fatalError()
+        default:
+            base = data
+            return
         }
 
-        switch first {
+        switch path[0] {
         case .array:
             if case .array(var arr) = base {
                 /// always append
