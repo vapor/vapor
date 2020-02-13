@@ -124,7 +124,7 @@ extension HTTPHeaders {
                     }
 
                     let parts = str.components(separatedBy: "=")
-                    guard parts.count == 2, let seconds = Int(parts[1]) else {
+                    guard parts.count == 2, let seconds = Int(parts[1]), seconds >= 0 else {
                         return
                     }
 
