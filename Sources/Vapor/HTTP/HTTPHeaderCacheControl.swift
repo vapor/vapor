@@ -16,33 +16,33 @@ extension HTTPHeaders {
 
         /// Indicates that once a resource becomes stale, caches must not use their stale copy without
         /// successful [validation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#Cache_validation) on the origin server.
-        public var mustRevalidate = false
+        public var mustRevalidate: Bool
 
         /// Caches must check with the origin server for
         /// [validation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#Cache_validation) before using the cached copy.
-        public var noCache = false
+        public var noCache: Bool
 
         /// The cache **should not store anything** about the client request or server response.
-        public var noStore = false
+        public var noStore: Bool
 
         /// No transformations or conversions should be made to the resource. The Content-Encoding, Content-Range, Content-Type headers must not be modified
         /// by a proxy. A non-transparent proxy or browser feature such as
         /// [Google's Light Mode](https://support.google.com/webmasters/answer/6211428?hl=en) might, for example, convert between image
         /// formats in order to save cache space or to reduce the amount of traffic on a slow link. The `no-transform` directive disallows this.
-        public var noTransform = false
+        public var noTransform: Bool
 
         /// The response may be cached by any cache, even if the response is normally non-cacheable
-        public var isPublic = false
+        public var isPublic: Bool
 
         /// The response is for a single user and **must not** be stored by a shared cache. A private cache (like the user's browser cache) may store the response.
-        public var isPrivate = false
+        public var isPrivate: Bool
 
         /// Like `must-revalidate`, but only for shared caches (e.g., proxies). Ignored by private caches.
-        public var proxyRevalidate = false
+        public var proxyRevalidate: Bool
 
         /// Indicates to not retrieve new data. This being the case, the server wishes the client to obtain a response only once and then cache. From this moment the
         /// client should keep releasing a cached copy and avoid contacting the origin-server to see if a newer copy exists.
-        public var onlyIfCached = false
+        public var onlyIfCached: Bool
 
         /// Indicates that the response body **will not change** over time.
         ///
@@ -50,7 +50,7 @@ extension HTTPHeaders {
         /// not send a conditional revalidation for it (e.g. `If-None-Match` or `If-Modified-Since`) to check for updates, even when the user explicitly refreshes
         /// the page. Clients that aren't aware of this extension must ignore them as per the HTTP specification. In Firefox, immutable is only honored on https:// transactions.
         /// For more information, see also this [blog post](https://bitsup.blogspot.de/2016/05/cache-control-immutable.html).
-        public var immutable = false
+        public var immutable: Bool
 
         /// The maximum amount of time a resource is considered fresh. Unlike the`Expires` header, this directive is relative to the time of the request.
         public var maxAge: Int?
@@ -69,6 +69,18 @@ extension HTTPHeaders {
 
         /// Indicates the client will accept a stale response if the check for a fresh one fails. The value indicates how many *seconds* long the client will accept the stale response after the initial expiration.
         public var staleIfError: Int?
+
+        public init() {
+            self.mustRevalidate = false
+            self.noCache = false
+            self.noStore = false
+            self.noTransform = false
+            self.isPublic = false
+            self.isPrivate = false
+            self.proxyRevalidate = false
+            self.onlyIfCached = false
+            self.immutable = false
+        }
 
         private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
             "must-revalidate": \.mustRevalidate,
@@ -163,12 +175,12 @@ extension HTTPHeaders {
 
     /// Gets the value of the `Cache-Control` header, if present.
     public var cacheControl: CacheControl? {
-        get { firstValue(name: .cacheControl).flatMap(CacheControl.parse) }
+        get { self.firstValue(name: .cacheControl).flatMap(CacheControl.parse) }
         set {
             if let new = newValue?.serialize() {
-                replaceOrAdd(name: .cacheControl, value: new)
+                self.replaceOrAdd(name: .cacheControl, value: new)
             } else {
-                remove(name: .expires)
+                self.remove(name: .expires)
             }
         }
     }

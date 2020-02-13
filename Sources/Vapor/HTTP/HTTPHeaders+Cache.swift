@@ -11,7 +11,7 @@ extension HTTPHeaders {
     /// grab the `cacheControl` and `expires` headers yourself.
     ///
     /// - Parameter requestSentAt: Should be passed the `Date` when the request was sent.
-    public func getExpirationDate(requestSentAt: Date) -> Date? {
+    public func expirationDate(requestSentAt: Date) -> Date? {
         // Cache-Control header takes priority over the Expires header
         if let cacheControl = cacheControl {
             guard cacheControl.noStore == false else {
