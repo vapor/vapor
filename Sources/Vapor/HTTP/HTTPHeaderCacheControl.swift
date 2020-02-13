@@ -141,14 +141,22 @@ extension HTTPHeaders {
 
         /// Generates the header string for this instance.
         public func serialize() -> String {
-            let options = Self.exactMatch
+            var options = Self.exactMatch
                 .filter { self[keyPath: $0.value] == true }
                 .map { $0.key }
 
-            let optionsWithSeconds = Self.prefix
+            var optionsWithSeconds = Self.prefix
                 .filter { self[keyPath: $0.value] != nil }
                 .map { "\($0.key)=\(self[keyPath: $0.value]!)" }
 
+            if let maxStale = self.maxStale {
+                if let seconds = maxStale.seconds {
+                    optionsWithSeconds.append("max-stale=\(seconds)")
+                } else {
+                    options.append("max-stale")
+                }
+            }
+            
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
     }
