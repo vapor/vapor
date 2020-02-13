@@ -14,7 +14,7 @@ extension HTTPHeaders {
     public func getExpirationDate(requestSentAt: Date) -> Date? {
         // Cache-Control header takes priority over the Expires header
         if let cacheControl = cacheControl {
-            guard !cacheControl.contains(.noStore) else {
+            guard cacheControl.noStore == false else {
                 return nil
             }
 

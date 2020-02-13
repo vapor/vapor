@@ -97,4 +97,34 @@ class CacheTests: XCTestCase {
 
         XCTAssertEqual(response.headers.getExpirationDate(requestSentAt: requested), required)
     }
+
+    func testFlags() {
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "no-store, max-age=12"))
+        let response = ClientResponse(status: .ok, headers: headers)
+
+        XCTAssertTrue(response.headers.cacheControl!.noStore)
+        XCTAssertFalse(response.headers.cacheControl!.immutable)
+        XCTAssertEqual(response.headers.cacheControl!.maxAge, 12)
+    }
+
+    func textMaxStaleNoValue() {
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "max-stale"))
+        let response = ClientResponse(status: .ok, headers: headers)
+
+        let cache = response.headers.cacheControl!
+
+        XCTAssertNotNil(cache.maxStale)
+        XCTAssertNil(cache.maxStale?.seconds)
+    }
+
+    func textMaxStaleNoWithValue() {
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "max-stale=12"))
+        let response = ClientResponse(status: .ok, headers: headers)
+
+        let cache = response.headers.cacheControl!
+
+        XCTAssertNotNil(cache.maxStale)
+        XCTAssertNotNil(cache.maxStale?.seconds)
+        XCTAssertEqual(cache.maxStale?.seconds, 12)
+    }
 }

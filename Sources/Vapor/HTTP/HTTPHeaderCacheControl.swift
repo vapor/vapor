@@ -5,42 +5,44 @@ extension HTTPHeaders {
     /// Represents the HTTP `Cache-Control` header.
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
-    public struct CacheControl: OptionSet {
+    public struct CacheControl {
+        /// The max-stale option can be present with no value, or be present with a number of seconds.  By using
+        /// a struct you can check the nullability of the `maxStale` variable as well as then check the nullability
+        /// of the `seconds` to differentiate.
         public struct MaxStale {
-            var seconds: Int?
+            /// The upper limit of staleness the client will accept.
+            public var seconds: Int?
         }
-
-        // MARK: - Option Values
 
         /// Indicates that once a resource becomes stale, caches must not use their stale copy without
         /// successful [validation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#Cache_validation) on the origin server.
-        public static let mustRevalidate = Self(rawValue: 1 << 0)
+        public var mustRevalidate = false
 
         /// Caches must check with the origin server for
         /// [validation](https://developer.mozilla.org/en-US/docs/Web/HTTP/Caching#Cache_validation) before using the cached copy.
-        public static let noCache = Self(rawValue: 1 << 1)
+        public var noCache = false
 
         /// The cache **should not store anything** about the client request or server response.
-        public static let noStore = Self(rawValue: 1 << 2)
+        public var noStore = false
 
         /// No transformations or conversions should be made to the resource. The Content-Encoding, Content-Range, Content-Type headers must not be modified
         /// by a proxy. A non-transparent proxy or browser feature such as
         /// [Google's Light Mode](https://support.google.com/webmasters/answer/6211428?hl=en) might, for example, convert between image
         /// formats in order to save cache space or to reduce the amount of traffic on a slow link. The `no-transform` directive disallows this.
-        public static let noTransform = Self(rawValue: 1 << 3)
+        public var noTransform = false
 
         /// The response may be cached by any cache, even if the response is normally non-cacheable
-        public static let isPublic = Self(rawValue: 1 << 4)
+        public var isPublic = false
 
         /// The response is for a single user and **must not** be stored by a shared cache. A private cache (like the user's browser cache) may store the response.
-        public static let isPrivate = Self(rawValue: 1 << 5)
+        public var isPrivate = false
 
         /// Like `must-revalidate`, but only for shared caches (e.g., proxies). Ignored by private caches.
-        public static let proxyRevalidate = Self(rawValue: 1 << 6)
+        public var proxyRevalidate = false
 
         /// Indicates to not retrieve new data. This being the case, the server wishes the client to obtain a response only once and then cache. From this moment the
         /// client should keep releasing a cached copy and avoid contacting the origin-server to see if a newer copy exists.
-        public static let onlyIfCached = Self(rawValue: 1 << 7)
+        public var onlyIfCached = false
 
         /// Indicates that the response body **will not change** over time.
         ///
@@ -48,10 +50,7 @@ extension HTTPHeaders {
         /// not send a conditional revalidation for it (e.g. `If-None-Match` or `If-Modified-Since`) to check for updates, even when the user explicitly refreshes
         /// the page. Clients that aren't aware of this extension must ignore them as per the HTTP specification. In Firefox, immutable is only honored on https:// transactions.
         /// For more information, see also this [blog post](https://bitsup.blogspot.de/2016/05/cache-control-immutable.html).
-        public static let immutable = Self(rawValue: 1 << 9)
-
-        // MARK: - Properties
-        public var rawValue = 0
+        public var immutable = false
 
         /// The maximum amount of time a resource is considered fresh. Unlike the`Expires` header, this directive is relative to the time of the request.
         public var maxAge: Int?
@@ -71,21 +70,15 @@ extension HTTPHeaders {
         /// Indicates the client will accept a stale response if the check for a fresh one fails. The value indicates how many *seconds* long the client will accept the stale response after the initial expiration.
         public var staleIfError: Int?
 
-        /// Initializes the class
-        /// - Parameter rawValue: The initial value.
-        public init(rawValue: Int) {
-            self.rawValue = rawValue
-        }
-
-        private static let exactMatch: [String: Self] = [
-            "must-revalidate": Self.mustRevalidate,
-            "no-cache": Self.noCache,
-            "no-store": Self.noStore,
-            "no-transform": Self.noTransform,
-            "public": Self.isPublic,
-            "private": Self.isPrivate,
-            "proxy-revalidate": Self.proxyRevalidate,
-            "only-if-cached": Self.onlyIfCached
+        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+            "must-revalidate": \.mustRevalidate,
+            "no-cache": \.noCache,
+            "no-store": \.noStore,
+            "no-transform": \.noTransform,
+            "public": \.isPublic,
+            "private": \.isPrivate,
+            "proxy-revalidate": \.proxyRevalidate,
+            "only-if-cached": \.onlyIfCached
         ]
 
         private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
@@ -105,14 +98,15 @@ extension HTTPHeaders {
             var cache = CacheControl()
 
             value
-                .trimmingCharacters(in: .whitespacesAndNewlines)
+                .replacingOccurrences(of: " ", with: "")
+                .replacingOccurrences(of: "\t", with: "")
                 .lowercased()
                 .split(separator: ",")
                 .forEach {
                     let str = String($0)
-                    
-                    if let value = Self.exactMatch[str] {
-                        cache.insert(value)
+
+                    if let keyPath = Self.exactMatch[str] {
+                        cache[keyPath: keyPath] = true
                         foundSomething = true
                         return
                     }
@@ -148,7 +142,7 @@ extension HTTPHeaders {
         /// Generates the header string for this instance.
         public func serialize() -> String {
             let options = Self.exactMatch
-                .filter { contains($0.value) }
+                .filter { self[keyPath: $0.value] == true }
                 .map { $0.key }
 
             let optionsWithSeconds = Self.prefix
