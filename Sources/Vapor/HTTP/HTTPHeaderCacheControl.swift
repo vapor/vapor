@@ -6,6 +6,10 @@ extension HTTPHeaders {
     /// - See Also:
     /// [Cache-Control docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control)
     public struct CacheControl: OptionSet {
+        public struct MaxStale {
+            var seconds: Int?
+        }
+
         // MARK: - Option Values
 
         /// Indicates that once a resource becomes stale, caches must not use their stale copy without
@@ -38,9 +42,6 @@ extension HTTPHeaders {
         /// client should keep releasing a cached copy and avoid contacting the origin-server to see if a newer copy exists.
         public static let onlyIfCached = Self(rawValue: 1 << 7)
 
-        /// Indicates the client will accept a stale response.  If the `maxStale` property is set, indicates the upper limit of staleness the client will accept.
-        public static let maxStale = Self(rawValue: 1 << 8)
-
         /// Indicates that the response body **will not change** over time.
         ///
         /// The resource, if *unexpired*, is unchanged on the server and therefore the client should
@@ -59,7 +60,7 @@ extension HTTPHeaders {
         public var sMaxAge: Int?
 
         /// Indicates the client will accept a stale response. An optional value in seconds indicates the upper limit of staleness the client will accept.
-        public var maxStale: Int?
+        public var maxStale: MaxStale?
 
         /// Indicates the client wants a response that will still be fresh for at least the specified number of seconds.
         public var minFresh: Int?
@@ -84,14 +85,12 @@ extension HTTPHeaders {
             "public": Self.isPublic,
             "private": Self.isPrivate,
             "proxy-revalidate": Self.proxyRevalidate,
-            "only-if-cached": Self.onlyIfCached,
-            "max-stale": Self.maxStale
+            "only-if-cached": Self.onlyIfCached
         ]
 
         private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
             "max-age": \.maxAge,
             "s-maxage": \.sMaxAge,
-            "max-stale": \.maxStale,
             "min-fresh": \.minFresh,
             "stale-while-revalidate": \.staleWhileRevalidate,
             "stale-if-error": \.staleIfError
@@ -118,14 +117,25 @@ extension HTTPHeaders {
                         return
                     }
 
-                    let parts = str.components(separatedBy: "=")
-                    guard parts.count == 2, let keyPath = Self.prefix[parts[0]], let seconds = Int(parts[1]) else {
+                    if value == "max-stale" {
+                        cache.maxStale = .init()
+                        foundSomething = true
                         return
                     }
 
-                    if keyPath == \.maxStale {
-                        cache.insert(Self.maxStale)
+                    let parts = str.components(separatedBy: "=")
+                    guard parts.count == 2, let seconds = Int(parts[1]) else {
+                        return
+                    }
+
+                    if parts[0] == "max-stale" {
+                        cache.maxStale = .init(seconds: seconds)
                         foundSomething = true
+                        return
+                    }
+
+                    guard let keyPath = Self.prefix[parts[0]] else {
+                        return
                     }
 
                     cache[keyPath: keyPath] = seconds
