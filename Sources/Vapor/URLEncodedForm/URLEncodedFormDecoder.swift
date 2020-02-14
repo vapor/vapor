@@ -118,6 +118,8 @@ private struct _Decoder: Decoder {
         switch data {
         case .array(let arr):
             return UnkeyedContainer(data: arr, codingPath: self.codingPath)
+        case .string(let s):
+            return UnkeyedContainer(data: [.string(s)], codingPath: self.codingPath)
         default: fatalError()
         }
     }

@@ -20,7 +20,41 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.foos[0], .baz)
         XCTAssertEqual(user.nums[0], 3.14)
     }
-    
+
+    func testDecodeWithoutArrayBrackets() throws {
+        let data = """
+        name=Tanner&age=23&pets=Zizek&pets=Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
+        """
+        
+        let user = try URLEncodedFormDecoder().decode(User.self, from: data)
+        XCTAssertEqual(user.name, "Tanner")
+        XCTAssertEqual(user.age, 23)
+        XCTAssertEqual(user.pets.count, 2)
+        XCTAssertEqual(user.pets.first, "Zizek")
+        XCTAssertEqual(user.pets.last, "Foo")
+        XCTAssertEqual(user.dict["a"], 1)
+        XCTAssertEqual(user.dict["b"], 2)
+        XCTAssertEqual(user.foos[0], .baz)
+        XCTAssertEqual(user.nums[0], 3.14)
+    }
+
+    func testDecodeArraysToSignleton() throws {
+        let data = """
+        name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+        """
+        
+        let user = try URLEncodedFormDecoder().decode(User.self, from: data)
+        XCTAssertEqual(user.name, "Tanner")
+        XCTAssertEqual(user.age, 23)
+        XCTAssertEqual(user.pets.count, 2)
+        XCTAssertEqual(user.pets.first, "Zizek")
+        XCTAssertEqual(user.pets.last, "Foo")
+        XCTAssertEqual(user.dict["a"], 1)
+        XCTAssertEqual(user.dict["b"], 2)
+        XCTAssertEqual(user.foos[0], .baz)
+        XCTAssertEqual(user.nums[0], 3.14)
+    }
+
     func testEncode() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14])
         let result = try URLEncodedFormEncoder().encode(user)
