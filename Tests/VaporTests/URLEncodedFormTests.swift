@@ -38,9 +38,9 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.nums[0], 3.14)
     }
 
-    func testDecodeArraysToSignleton() throws {
+    func testDecodeArraysToSingleValue() throws {
         let data = """
-        name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+        name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a][]=1&dict[b][]=2&foos[]=baz&nums[]=3.14
         """
         
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
