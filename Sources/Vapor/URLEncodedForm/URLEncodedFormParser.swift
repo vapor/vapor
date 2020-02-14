@@ -117,7 +117,6 @@ internal struct URLEncodedFormParser {
 
         let first = path[0]
 
-        ///Produce a child
         var child: URLEncodedFormData
         switch path.count {
         case 1:
@@ -134,7 +133,7 @@ internal struct URLEncodedFormParser {
                 }
             }
         case 2...:
-            switch first {
+            switch path[0] {
             case .array:
                 /// This part of the code should never be hit as we throw an error if we encounter an array in the middle ie `obj[key1][][key2]`
                 /// always append to the last element of the array

@@ -101,12 +101,13 @@ private struct _Decoder: Decoder {
         where Key: CodingKey
     {
         guard let data = self.data else {
-            fatalError()
+            throw DecodingError.valueNotFound([String: Any].self, at: codingPath)
         }
         switch data {
         case .dictionary(let dict):
             return KeyedDecodingContainer(KeyedContainer<Key>(data: dict, codingPath: self.codingPath))
-        default: fatalError()
+        default:
+            throw DecodingError.valueNotFound([String: Any].self, at: codingPath)
         }
     }
 
@@ -120,7 +121,8 @@ private struct _Decoder: Decoder {
             return UnkeyedContainer(data: arr, codingPath: self.codingPath)
         case .string(let s):
             return UnkeyedContainer(data: [.string(s)], codingPath: self.codingPath)
-        default: fatalError()
+        default:
+            throw DecodingError.valueNotFound([Any].self, at: codingPath)
         }
     }
 
@@ -203,23 +205,25 @@ private struct _Decoder: Decoder {
             where NestedKey: CodingKey
         {
             guard let data = self.data[key.stringValue] else {
-                fatalError()
+                throw DecodingError.valueNotFound([String: Any].self, at: codingPath)
             }
             switch data {
             case .dictionary(let dict):
                 return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: dict, codingPath: self.codingPath + [key]))
-            default: fatalError()
+            default:
+                throw DecodingError.valueNotFound([String: Any].self, at: codingPath)
             }
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
             guard let data = self.data[key.stringValue] else {
-                fatalError()
+                throw DecodingError.valueNotFound([Any].self, at: codingPath)
             }
             switch data {
             case .array(let arr):
                 return UnkeyedContainer(data: arr, codingPath: self.codingPath + [key])
-            default: fatalError()
+            default:
+                throw DecodingError.valueNotFound([Any].self, at: codingPath)
             }
         }
         
@@ -285,7 +289,8 @@ private struct _Decoder: Decoder {
             switch self.data[self.currentIndex] {
             case .dictionary(let dict):
                 return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: dict, codingPath: self.codingPath))
-            default: fatalError()
+            default:
+                throw DecodingError.valueNotFound([String: Any].self, at: codingPath + [BasicCodingKey.index(currentIndex)])
             }
         }
         
@@ -294,7 +299,8 @@ private struct _Decoder: Decoder {
             switch self.data[self.currentIndex] {
             case .array(let arr):
                 return UnkeyedContainer(data: arr, codingPath: self.codingPath)
-            default: fatalError()
+            default:
+                throw DecodingError.valueNotFound([Any].self, at: codingPath + [BasicCodingKey.index(currentIndex)])
             }
         }
         
