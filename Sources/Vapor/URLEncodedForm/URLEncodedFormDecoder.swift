@@ -35,7 +35,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///                        Empty values are URL-Encoded keys with no value following the `=` sign.
     ///     - omitFlags: If `true`, flags will be omitted.
     ///                  Flags are URL-encoded keys with no following `=` sign.
-    public init(omitEmptyValues: Bool = false, omitFlags: Bool = false) {
+    public init(omitEmptyValues: Bool = false, omitFlags: Bool = false, splitVariablesOn: Character = "&", splitKeyValueOn: Character = "=") {
         self.parser = URLEncodedFormParser(omitEmptyValues: omitEmptyValues, omitFlags: omitFlags)
         self.omitFlags = omitFlags
         self.omitEmptyValues = omitEmptyValues
