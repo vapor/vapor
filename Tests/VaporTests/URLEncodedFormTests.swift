@@ -101,7 +101,49 @@ final class URLEncodedFormTests: XCTestCase {
         let form = try URLEncodedFormParser().parse(data)
         XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
     }
+  
+    func testArrayWithoutBrackets() throws {
+      let data = "greetings=hello&greetings=hola"
+      let form = try URLEncodedFormParser().parse(data)
+      XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
+    }
+  
+    func testSubArray() throws {
+        let data = "greetings[sub][]=hello&greetings[sub][]=hola"
+        let form = try URLEncodedFormParser().parse(data)
+        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+    }
+
+    func testSubArray2() throws {
+        let data = "greetings[sub]=hello&greetings[sub][]=hola"
+        let form = try URLEncodedFormParser().parse(data)
+        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+    }
     
+    func testSubArray3() throws {
+        let data = "greetings[sub][]=hello&greetings[sub]=hola"
+        let form = try URLEncodedFormParser().parse(data)
+        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+    }
+
+    func testSubArray4() throws {
+        let data = "greetings[sub][]=hello&greetings[sub]=hola&greetings[sub]=bonjour"
+        let form = try URLEncodedFormParser().parse(data)
+        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola", "bonjour"]]])
+    }
+
+    //If we do want to be able to address arrays that are in the "middle" we need to support indexing like greetings[sub][0][a]=hello
+    func testInvalidDict() throws {
+        let data = "greetings[sub][][a]=hello&greetings[sub][][a]=hola"
+        XCTAssertThrowsError(try URLEncodedFormParser().parse(data))
+    }
+
+    func testSubArrayWithoutBrackets() throws {
+        let data = "greetings[sub]=hello&greetings[sub]=hola"
+        let form = try URLEncodedFormParser().parse(data)
+        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+    }
+
     func testOptions() throws {
         let data = "hello=&foo"
         let normal = try URLEncodedFormParser().parse(data)
