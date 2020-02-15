@@ -1279,6 +1279,36 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }
     }
+
+    func testArbitraryJSON() throws {
+        let payload = """
+        {
+          "slideshow": {
+            "author": "Yours Truly",
+            "date": "date of publication",
+            "slides": [
+              {
+                "title": "Wake up to WonderWidgets!",
+                "type": "all"
+              },
+              {
+                "items": [
+                  "Why <em>WonderWidgets</em> are great",
+                  "Who <em>buys</em> WonderWidgets"
+                ],
+                "title": "Overview",
+                "type": "all"
+              }
+            ],
+            "title": "Sample Slide Show"
+          }
+        }
+        """
+
+        let json = try JSONDecoder().decode(ArbitraryJSON.self, from: payload.data(using: .utf8)!)
+        let data = try JSONEncoder().encode(json)
+        print(String(decoding: data, as: UTF8.self))
+    }
 }
 
 private extension ByteBuffer {
