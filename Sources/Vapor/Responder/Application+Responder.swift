@@ -63,3 +63,9 @@ extension Application {
         }
     }
 }
+
+extension Application.Responder: Responder {
+    public func respond(to request: Request) -> EventLoopFuture<Response> {
+        self.make().respond(to: request)
+    }
+}
