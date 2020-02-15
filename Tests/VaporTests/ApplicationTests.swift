@@ -104,6 +104,18 @@ final class ApplicationTests: XCTestCase {
         
         XCTAssertThrowsError(try request.query.get(StringWrapper.self, at: "hello"))
     }
+    
+    func testCrashingArrayWithPercentEncoding() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.headers.contentType = .json
+        request.url.path = "/"
+        request.url.query = "emailsToSearch%5B%5D=xyz"
+        
+        XCTAssertThrowsError(try request.query.get([String].self, at: "emailsToSearch[]"))
+    }
 
     func testQueryGet() throws {
         let app = Application()
