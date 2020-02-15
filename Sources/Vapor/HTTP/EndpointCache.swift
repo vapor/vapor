@@ -5,10 +5,10 @@ public enum CachingDataError: Swift.Error {
 
 /// Handles the complexities of HTTP caching.
 public final class EndpointCache<T> where T: Decodable {
-    internal var cached: T?
-    internal var request: EventLoopFuture<T>?
-    internal var headers: HTTPHeaders?
-    internal var cacheUntil: Date?
+    private var cached: T?
+    private var request: EventLoopFuture<T>?
+    private var headers: HTTPHeaders?
+    private var cacheUntil: Date?
 
     private let sync: Lock
     private let uri: URI
