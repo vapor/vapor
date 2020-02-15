@@ -36,8 +36,8 @@ extension Application {
             return factory(self.application)
         }
 
-        public var `default`: ApplicationResponder {
-            .init(
+        public var `default`: Vapor.Responder {
+            ApplicationResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve()
             )
