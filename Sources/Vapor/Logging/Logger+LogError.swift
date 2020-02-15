@@ -9,6 +9,7 @@ extension Logger {
     ///                Defaults to `true`.
     public func report(
         error e: Error,
+        request: Request? = nil,
         verbose: Bool = true,
         file: String = #file,
         function: String = #function,
@@ -17,7 +18,15 @@ extension Logger {
     ) {
         switch e {
         case let debuggable as Debuggable:
-            let errorString = "\(debuggable.fullIdentifier): \(debuggable.reason)"
+            
+            let requestString: String
+            if let request = request {
+                requestString = " \(request.http.method) \(request.http.urlString)"
+            } else {
+                requestString = ""
+            }
+            
+            let errorString = "\(debuggable.fullIdentifier):\(requestString) \(debuggable.reason)"
             if let source = debuggable.sourceLocation {
                 error(errorString, file: source.file.lastPart, function: source.function, line: source.line, column: source.column)
             } else {
