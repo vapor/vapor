@@ -23,7 +23,7 @@ class LoggingTests : XCTestCase {
             _ = try app.make(Responder.self).respond(to: req).wait()
         } catch {}
         
-        XCTAssert(loggerProvider.logger.didLog(string: "Abort.404: /hello/vapor Not Found"))
+        XCTAssert(loggerProvider.logger.didLog(string: "Abort.404: GET /hello/vapor Not Found"))
     }
     
     func testInternalServerErrorLogging() throws {
@@ -37,7 +37,7 @@ class LoggingTests : XCTestCase {
         
         let router = EngineRouter.default()
     
-        router.get("fail/me") { (_) -> String in
+        router.post("fail/me") { (_) -> String in
             throw Abort(.internalServerError)
         }
         
@@ -46,7 +46,7 @@ class LoggingTests : XCTestCase {
         let app = try Application(config: config, services: services)
         
         let req = Request(
-            http: HTTPRequest(method: .GET, url: "/fail/me"),
+            http: HTTPRequest(method: .POST, url: "/fail/me"),
             using: app
         )
         
@@ -54,7 +54,7 @@ class LoggingTests : XCTestCase {
             _ = try app.make(Responder.self).respond(to: req).wait()
         } catch {}
         
-        XCTAssert(loggerProvider.logger.didLog(string: "Abort.500: /fail/me Internal Server Error"))
+        XCTAssert(loggerProvider.logger.didLog(string: "Abort.500: POST /fail/me Internal Server Error"))
     }
     
     static let allTests = [

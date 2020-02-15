@@ -7,6 +7,7 @@ XCTMain([
     // Vapor
     testCase(ApplicationTests.allTests),
     testCase(MiddlewareTests.allTests),
+    testCase(LoggingTests.allTests)
 ])
 
 #endif
