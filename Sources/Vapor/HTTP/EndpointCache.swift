@@ -68,7 +68,7 @@ public final class EndpointCache<T> where T: Decodable {
         }
     }
 
-    internal func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
+    private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPHeaders = [:]
         if let eTag = self.headers?.firstValue(name: .eTag) {
