@@ -1,4 +1,4 @@
-public enum CachingDataError: Swift.Error {
+public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
     case badJSON(Error)
 }
@@ -88,7 +88,7 @@ public final class EndpointCache<T> where T: Decodable {
             self.uri, headers: headers
         ).flatMapThrowing { response -> ClientResponse in
             if !(response.status == .notModified || response.status == .ok) {
-                throw CachingDataError.unexpctedResponseStatus(response.status, uri: self.uri)
+                throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
             }
 
             return response
@@ -125,7 +125,7 @@ public final class EndpointCache<T> where T: Decodable {
                 do {
                     data = try response.content.decode(T.self)
                 } catch {
-                    return eventLoop.makeFailedFuture(CachingDataError.badJSON(error))
+                    return eventLoop.makeFailedFuture(EndpointCacheError.badJSON(error))
                 }
 
                 if self.cacheUntil != nil {
