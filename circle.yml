@@ -1,4 +1,13 @@
 version: 2
 jobs:
+  test:
+    docker:
+      - image: ubuntu:18.04
+    steps:
+      - run: echo "done"
 workflows:
   version: 2
+  test:
+    jobs:
+      - test
+
