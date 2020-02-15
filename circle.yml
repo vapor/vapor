@@ -1,0 +1,13 @@
+version: 2
+jobs:
+  test:
+    docker:
+      - image: ubuntu:18.04
+    steps:
+      - run: echo "Testing is done via GitHub actions"
+workflows:
+  version: 2
+  test:
+    jobs:
+      - test
+
