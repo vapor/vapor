@@ -1,11 +1,10 @@
+public enum CachingDataError: Swift.Error {
+    case unexpctedResponseStatus(HTTPStatus, uri: URI)
+    case badJSON(Error)
+}
 
 /// Handles the complexities of HTTP caching.
-open class EndpointCache<T: Decodable> {
-    public enum CachingDataError: Swift.Error {
-        case unexpctedResponseStatus(HTTPStatus, uri: URI)
-        case badJSON(Error)
-    }
-
+public final class EndpointCache<T> where T: Decodable {
     internal var cached: T?
     internal var request: EventLoopFuture<T>?
     internal var headers: HTTPHeaders?
@@ -27,7 +26,7 @@ open class EndpointCache<T: Decodable> {
     ///   - request: The `Request` which is initiating the download.
     ///   - logger: An optional logger
     public func get(on request: Request, logger: Logger? = nil) -> EventLoopFuture<T> {
-        return self.download(on: request.eventLoop, using: request.client, logger: logger)
+        return self.download(on: request.eventLoop, using: request.client, logger: logger ?? request.logger)
     }
 
     /// Downloads the resource.
@@ -35,7 +34,7 @@ open class EndpointCache<T: Decodable> {
     ///   - eventLoop: The `EventLoop` to use for the download.
     ///   - client: The `Client` which will perform the download.
     ///   - logger: An optional logger
-    public func get(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
+    public func get(using client: Client, logger: Logger? = nil, on eventLoop: EventLoop) -> EventLoopFuture<T> {
         self.sync.lock()
         defer { self.sync.unlock() }
 
@@ -55,10 +54,11 @@ open class EndpointCache<T: Decodable> {
 
         logger?.debug("Requesting data from \(self.uri)")
 
-        self.request = self.download(on: eventLoop, using: client, logger: logger)
+        let request = self.download(on: eventLoop, using: client, logger: logger)
+        self.request = request
 
         // Once the request finishes, clear the current request and return the data.
-        return self.request!.map { data in
+        return request.map { data in
             // Synchronize access to shared state
             self.sync.lock()
             defer { self.sync.unlock() }
@@ -99,7 +99,7 @@ open class EndpointCache<T: Decodable> {
 
             if let cacheControl = response.headers.cacheControl, cacheControl.noStore == true {
                 // The server *shouldn't* give an expiration with no-store, but...
-                self.removeCaching()
+                self.clearCache()
             } else {
                 self.headers = response.headers
                 self.cacheUntil = self.headers?.expirationDate(requestSentAt: requestSentAt)
@@ -111,14 +111,14 @@ open class EndpointCache<T: Decodable> {
 
                 guard let cached = self.cached else {
                     // This shouldn't actually be possible, but just in case.
-                    self.removeCaching()
+                    self.clearCache()
                     return self.download(on: eventLoop, using: client, logger: logger)
                 }
 
                 return eventLoop.makeSucceededFuture(cached)
 
             case .ok:
-                logger?.debug("New data should be (possibly) cached")
+                logger?.debug("New data received")
 
                 let data: T
 
@@ -160,13 +160,13 @@ open class EndpointCache<T: Decodable> {
                 }
             }
 
-            self.removeCaching()
+            self.clearCache()
 
             return eventLoop.makeFailedFuture(error)
         }
     }
 
-    private func removeCaching() {
+    private func clearCache() {
         self.cached = nil
         self.headers = nil
         self.cacheUntil = nil
