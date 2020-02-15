@@ -29,7 +29,7 @@ extension Application {
 
         let application: Application
 
-        public func make() -> Vapor.Responder {
+        public var current: Vapor.Responder {
             guard let factory = self.storage.factory else {
                 fatalError("No responder configured. Configure with app.responder.use(...)")
             }
@@ -37,7 +37,7 @@ extension Application {
         }
 
         public var `default`: Vapor.Responder {
-            ApplicationResponder(
+            DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.resolve()
             )
@@ -66,6 +66,6 @@ extension Application {
 
 extension Application.Responder: Responder {
     public func respond(to request: Request) -> EventLoopFuture<Response> {
-        self.make().respond(to: request)
+        self.current.respond(to: request)
     }
 }

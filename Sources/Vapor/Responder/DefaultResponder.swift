@@ -1,5 +1,5 @@
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct ApplicationResponder: Responder {
+internal struct DefaultResponder: Responder {
     private let router: TrieRouter<Route>
     private let notFoundRoute: Route
 
