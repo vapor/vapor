@@ -79,6 +79,8 @@ public final class Application {
         self.views.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
+        self.responder.initialize()
+        self.responder.use(.default)
         self.commands.use(self.server.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
         // Load specific .env first since values are not overridden.

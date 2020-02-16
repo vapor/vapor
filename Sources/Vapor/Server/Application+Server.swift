@@ -49,7 +49,7 @@ extension Application {
             configuration.port = port ?? self.configuration.port
             let server = HTTPServer(
                 application: self.application,
-                responder: self.application.responder,
+                responder: self.application.responder.current,
                 configuration: configuration,
                 on: self.application.eventLoopGroup
             )
