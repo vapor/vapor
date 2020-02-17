@@ -1358,6 +1358,13 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(test.number, 1)
         }
     }
+
+    func testHexEncoding() throws {
+        let bytes: [UInt8] = [1, 42, 128, 240]
+        XCTAssertEqual(bytes.hex, "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
+    }
 }
 
 extension Application.Responder {
