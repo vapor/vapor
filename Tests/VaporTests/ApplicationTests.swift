@@ -1326,9 +1326,7 @@ final class ApplicationTests: XCTestCase {
             defer { current += 1 }
             let res = Response()
             try res.content.encode(Test(number: current))
-            var cacheControl = HTTPHeaders.CacheControl()
-            cacheControl.maxAge = 1
-            res.headers.cacheControl = cacheControl
+            res.headers.cacheControl = .init(maxAge: 1)
             return res
         }
 
