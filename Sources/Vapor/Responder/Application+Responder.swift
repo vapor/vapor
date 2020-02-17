@@ -27,7 +27,7 @@ extension Application {
             typealias Value = Storage
         }
 
-        let application: Application
+        public let application: Application
 
         public var current: Vapor.Responder {
             guard let factory = self.storage.factory else {
