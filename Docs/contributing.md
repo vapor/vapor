@@ -35,6 +35,7 @@ Each repo under the Vapor organization has at least one [volunteer maintainer.](
 
 - [@tanner0101](https://github.com/tanner0101)
 - [@MrLotU](https://github.com/MrLotU)
+- [@Joannis](https://github.com/Joannis)
 
 ## Extras
 
