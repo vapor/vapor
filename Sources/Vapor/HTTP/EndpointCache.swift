@@ -1,6 +1,6 @@
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
-    case badJSON(Error)
+    case contentDecodeFailure(Error)
 }
 
 /// Handles the complexities of HTTP caching.
@@ -125,7 +125,7 @@ public final class EndpointCache<T> where T: Decodable {
                 do {
                     data = try response.content.decode(T.self)
                 } catch {
-                    return eventLoop.makeFailedFuture(EndpointCacheError.badJSON(error))
+                    return eventLoop.makeFailedFuture(EndpointCacheError.contentDecodeFailure(error))
                 }
 
                 if self.cacheUntil != nil {
