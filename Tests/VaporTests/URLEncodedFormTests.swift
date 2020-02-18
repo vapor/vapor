@@ -114,93 +114,179 @@ final class URLEncodedFormTests: XCTestCase {
     
     func testBasic() throws {
         let data = "hello=world&foo=bar"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["hello": "world", "foo": "bar"])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(children: ["hello" : URLEncodedFormData2(values: ["world"]), "foo" : URLEncodedFormData2(values: ["bar"])])
+        XCTAssertEqual(form, expected)
     }
     
     func testBasicWithAmpersand() throws {
         let data = "hello=world&foo=bar%26bar"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["hello": "world", "foo": "bar&bar"])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(children: ["hello" : URLEncodedFormData2(values: ["world"]), "foo" : URLEncodedFormData2(values: ["bar&bar"])])
+        XCTAssertEqual(form, expected)
     }
     
     func testDictionary() throws {
         let data = "greeting[en]=hello&greeting[es]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greeting": ["es": "hola", "en": "hello"]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(
+            children: [
+                "greeting": URLEncodedFormData2(
+                    children: [
+                        "es": URLEncodedFormData2(values: ["hola"]),
+                        "en": URLEncodedFormData2(values: ["hello"])
+                    ]
+                )
+            ]
+        )
+        XCTAssertEqual(form, expected)
     }
     
     func testArray() throws {
         let data = "greetings[]=hello&greetings[]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(children: [
+            "greetings": URLEncodedFormData2(children:[
+                "": URLEncodedFormData2(values: ["hello", "hola"])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
   
     func testArrayWithoutBrackets() throws {
-      let data = "greetings=hello&greetings=hola"
-      let form = try URLEncodedFormParser().parse(data)
-      XCTAssertEqual(form, ["greetings": ["hello", "hola"]])
+        let data = "greetings=hello&greetings=hola"
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(children: [
+            "greetings": URLEncodedFormData2(values: ["hello", "hola"])
+        ])
+        XCTAssertEqual(form, expected)
     }
   
     func testSubArray() throws {
         let data = "greetings[sub][]=hello&greetings[sub][]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2([
+                    "": URLEncodedFormData2([
+                        "hello",
+                        "hola"
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
 
     func testSubArray2() throws {
         let data = "greetings[sub]=hello&greetings[sub][]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2(values: ["hello"], children: [
+                    "": URLEncodedFormData2([
+                        "hola"
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
     
     func testSubArray3() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2(values: ["hola"], children: [
+                    "": URLEncodedFormData2([
+                        "hello"
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
 
     func testSubArray4() throws {
         let data = "greetings[sub][]=hello&greetings[sub]=hola&greetings[sub]=bonjour"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola", "bonjour"]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2(values: ["hola", "bonjour"], children: [
+                    "": URLEncodedFormData2([
+                        "hello"
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
 
-    //If we do want to be able to address arrays that are in the "middle" we need to support indexing like greetings[sub][0][a]=hello
-    func testInvalidDict() throws {
+    func testBracketsInTheMiddle() throws {
         let data = "greetings[sub][][a]=hello&greetings[sub][][a]=hola"
-        XCTAssertThrowsError(try URLEncodedFormParser().parse(data))
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2([
+                    "": URLEncodedFormData2([
+                        "a": URLEncodedFormData2(["hello", "hola"])
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
 
     func testSubArrayWithoutBrackets() throws {
         let data = "greetings[sub]=hello&greetings[sub]=hola"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["greetings": ["sub":["hello", "hola"]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "greetings": URLEncodedFormData2([
+                "sub": URLEncodedFormData2(["hello", "hola"])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
 
-    func testOptions() throws {
+    func testFlags() throws {
         let data = "hello=&foo"
-        let normal = try URLEncodedFormParser().parse(data)
-        let noEmpty = try URLEncodedFormParser(omitEmptyValues: true).parse(data)
-        let noFlags = try URLEncodedFormParser(omitFlags: true).parse(data)
-        
-        XCTAssertEqual(normal, ["hello": "", "foo": "true"])
-        XCTAssertEqual(noEmpty, ["foo": "true"])
-        XCTAssertEqual(noFlags, ["hello": ""])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2(values: ["foo"], children:[
+            "hello": URLEncodedFormData2("")
+        ])
+        XCTAssertEqual(form, expected)
     }
     
     func testPercentDecoding() throws {
         let data = "aaa%5B%5D=%2Bbbb%20+ccc&d[]=1&d[]=2"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["aaa[]": "+bbb  ccc", "d": ["1","2"]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "aaa[]": URLEncodedFormData2("+bbb  ccc"),
+            "d": URLEncodedFormData2([
+                "": URLEncodedFormData2(["1","2"])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
     
     func testNestedParsing() throws {
         // a[][b]=c&a[][b]=c
         // [a:[[b:c],[b:c]]
         let data = "a[b][c][d][hello]=world"
-        let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["a": ["b": ["c": ["d": ["hello": "world"]]]]])
+        let form = try URLEncodedFormParser2().parse(data)
+        let expected = URLEncodedFormData2([
+            "a": URLEncodedFormData2([
+                "b": URLEncodedFormData2([
+                    "c": URLEncodedFormData2([
+                        "d": URLEncodedFormData2([
+                            "hello": URLEncodedFormData2("world")
+                        ])
+                    ])
+                ])
+            ])
+        ])
+        XCTAssertEqual(form, expected)
     }
     
     // MARK: Serializer

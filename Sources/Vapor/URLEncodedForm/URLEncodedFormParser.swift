@@ -51,10 +51,30 @@ internal struct URLEncodedFormParser2 {
     }
 }
 
-internal struct URLEncodedFormData2 {
-    var values: [String] = []
+internal struct URLEncodedFormData2: Equatable {
+    var values: [String]
     // If you have an array
-    var children: [String: URLEncodedFormData2] = [:]
+    var children: [String: URLEncodedFormData2]
+    
+    init(values: [String] = [], children: [String: URLEncodedFormData2] = [:]) {
+        self.values = values
+        self.children = children
+    }
+    
+    init(_ value: String) {
+        self.values = [value]
+        self.children = [:]
+    }
+
+    init(_ values: [String]) {
+        self.values = values
+        self.children = [:]
+    }
+
+    init(_ children: [String: URLEncodedFormData2]) {
+        self.values = []
+        self.children = children
+    }
     
     mutating func set(value: String, forPath path: [String]) {
         guard let firstElement = path.first else {
