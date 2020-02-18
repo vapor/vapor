@@ -246,29 +246,22 @@ class ValidationTests: XCTestCase {
 
     func testCaseOf() {
 
-        enum StringEnumType: String {
-            case case1, case2
+        enum StringEnumType: String, CaseIterable {
+            case case1, case2, case3 = "CASE3"
         }
         assert("case1", passes: .case(of: StringEnumType.self))
         assert("case2", passes: .case(of: StringEnumType.self))
         assert("case1", fails: !.case(of: StringEnumType.self), "is StringEnumType")
-        assert("case3", fails: .case(of: StringEnumType.self), "has an invalid value.")
+        assert("case3", fails: .case(of: StringEnumType.self), "is not case1, case2 or CASE3.")
 
-        enum IntEnumType: Int {
+        enum IntEnumType: Int, CaseIterable {
             case case1 = 1, case2 = 2
         }
         assert(1, passes: .case(of: IntEnumType.self))
         assert(2, passes: .case(of: IntEnumType.self))
         assert(1, fails: !.case(of: IntEnumType.self), "is IntEnumType")
-        assert(3, fails: .case(of: IntEnumType.self), "has an invalid value.")
+        assert(3, fails: .case(of: IntEnumType.self), "is not 1 or 2.")
 
-        enum IterableEnumType: String, CaseIterable {
-            case case1, case2, other
-        }
-        assert("case1", passes: .case(of: IterableEnumType.self))
-        assert("case2", passes: .case(of: IterableEnumType.self))
-        assert("case2", fails: !.case(of: IterableEnumType.self), "is IterableEnumType")
-        assert("case3", fails: .case(of: IterableEnumType.self), "is not case1, case2 or other.")
     }
 }
 
@@ -295,7 +288,7 @@ private func assert<T>(
 }
 
 private final class User: Validatable, Codable {
-    enum Gender: String, Codable {
+    enum Gender: String, CaseIterable, Codable {
         case male, female, other
     }
     
