@@ -30,13 +30,11 @@ extension ValidatorResults.Case: ValidatorResult {
     }
 
     public var failureDescription: String? {
-        let message: String
         var cases = E.allCases.map { "\($0.rawValue)" }
         var suffix = ""
         if cases.count > 1 {
             suffix = " or \(cases.removeLast())"
         }
-        message = "is not \(cases.joined(separator: ", "))\(suffix)."
-        return message
+        return "is not \(cases.joined(separator: ", "))\(suffix)."
     }
 }
