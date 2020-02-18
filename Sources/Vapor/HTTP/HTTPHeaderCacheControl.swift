@@ -70,38 +70,42 @@ extension HTTPHeaders {
         /// Indicates the client will accept a stale response if the check for a fresh one fails. The value indicates how many *seconds* long the client will accept the stale response after the initial expiration.
         public var staleIfError: Int?
 
-        public init() {
-            self.mustRevalidate = false
-            self.noCache = false
-            self.noStore = false
-            self.noTransform = false
-            self.isPublic = false
-            self.isPrivate = false
-            self.proxyRevalidate = false
-            self.onlyIfCached = false
-            self.immutable = false
+        /// Creates a new `CacheControl`.
+        public init(
+            mustRevalidated: Bool = false,
+            noCache: Bool = false,
+            noStore: Bool = false,
+            noTransform: Bool = false,
+            isPublic: Bool = false,
+            isPrivate: Bool = false,
+            proxyRevalidate: Bool = false,
+            onlyIfCached: Bool = false,
+            immutable: Bool = false,
+            maxAge: Int? = nil,
+            sMaxAge: Int? = nil,
+            maxStale: MaxStale? = nil,
+            minFresh: Int? = nil,
+            staleWhileRevalidate: Int? = nil,
+            staleIfError: Int? = nil
+        ) {
+            self.mustRevalidate = mustRevalidated
+            self.noCache = noCache
+            self.noStore = noStore
+            self.noTransform = noTransform
+            self.isPublic = isPublic
+            self.isPrivate = isPrivate
+            self.proxyRevalidate = proxyRevalidate
+            self.onlyIfCached = onlyIfCached
+            self.immutable = immutable
+            self.maxAge = maxAge
+            self.sMaxAge = sMaxAge
+            self.maxStale = maxStale
+            self.minFresh = minFresh
+            self.staleWhileRevalidate = staleWhileRevalidate
+            self.staleIfError = staleIfError
         }
 
-        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
-            "must-revalidate": \.mustRevalidate,
-            "no-cache": \.noCache,
-            "no-store": \.noStore,
-            "no-transform": \.noTransform,
-            "public": \.isPublic,
-            "private": \.isPrivate,
-            "proxy-revalidate": \.proxyRevalidate,
-            "only-if-cached": \.onlyIfCached
-        ]
-
-        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
-            "max-age": \.maxAge,
-            "s-maxage": \.sMaxAge,
-            "min-fresh": \.minFresh,
-            "stale-while-revalidate": \.staleWhileRevalidate,
-            "stale-if-error": \.staleIfError
-        ]
-
-        internal static func parse(_ value: String) -> CacheControl? {
+        public static func parse(_ value: String) -> CacheControl? {
             var set = CharacterSet.whitespacesAndNewlines
             set.insert(",")
 
@@ -171,6 +175,25 @@ extension HTTPHeaders {
             
             return (options + optionsWithSeconds).joined(separator: ", ")
         }
+
+        private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+            "must-revalidate": \.mustRevalidate,
+            "no-cache": \.noCache,
+            "no-store": \.noStore,
+            "no-transform": \.noTransform,
+            "public": \.isPublic,
+            "private": \.isPrivate,
+            "proxy-revalidate": \.proxyRevalidate,
+            "only-if-cached": \.onlyIfCached
+        ]
+
+        private static let prefix: [String: WritableKeyPath<Self, Int?>] = [
+            "max-age": \.maxAge,
+            "s-maxage": \.sMaxAge,
+            "min-fresh": \.minFresh,
+            "stale-while-revalidate": \.staleWhileRevalidate,
+            "stale-if-error": \.staleIfError
+        ]
     }
 
     /// Gets the value of the `Cache-Control` header, if present.

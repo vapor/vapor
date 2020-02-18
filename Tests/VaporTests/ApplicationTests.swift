@@ -1279,6 +1279,131 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }
     }
+
+    func testEndpointCacheNoCache() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        var current = 0
+        struct Test: Content {
+            let number: Int
+        }
+
+        app.get("number") { req -> Test in
+            defer { current += 1 }
+            return Test(number: current)
+        }
+
+        let cache = EndpointCache<Test>(uri: "/number")
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 1)
+        }
+    }
+
+    func testEndpointCacheMaxAge() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        var current = 0
+        struct Test: Content {
+            let number: Int
+        }
+
+        app.get("number") { req -> Response in
+            defer { current += 1 }
+            let res = Response()
+            try res.content.encode(Test(number: current))
+            res.headers.cacheControl = .init(maxAge: 1)
+            return res
+        }
+
+        let cache = EndpointCache<Test>(uri: "/number")
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        // wait for expiry
+        sleep(1)
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 1)
+        }
+    }
+
+    func testHexEncoding() throws {
+        let bytes: [UInt8] = [1, 42, 128, 240]
+        XCTAssertEqual(bytes.hex, "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
+    }
+}
+
+extension Application.Responder {
+    /// Creates a `Client` from an `Application`'s  current`Responder`.
+    var client: Client {
+        ResponderClient(responder: self.current, application: self.application)
+    }
+}
+
+struct ResponderClient: Client {
+    let responder: Responder
+    let application: Application
+
+    var eventLoopGroup: EventLoopGroup {
+        self.application.eventLoopGroup
+    }
+
+    func `for`(_ request: Request) -> Client {
+        self
+    }
+
+
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        self.responder.respond(to: .init(
+            application: self.application,
+            method: request.method,
+            url: request.url,
+            version: .init(major: 1, minor: 1),
+            headersNoUpdate: request.headers,
+            collectedBody: request.body,
+            remoteAddress: nil,
+            logger: application.logger,
+            on: application.eventLoopGroup.next()
+        )).map { res in
+            ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
+        }
+    }
+
+
 }
 
 private extension ByteBuffer {
