@@ -36,7 +36,7 @@ extension ValidatorResults.Case: ValidatorResult {
         if cases.count > 1 {
             suffix = " or \(cases.removeLast())"
         }
-        message = "is not \(cases.map { "\($0)" }.joined(separator: ", "))\(suffix)."
+        message = "is not \(cases.joined(separator: ", "))\(suffix)."
         return message
     }
 }
