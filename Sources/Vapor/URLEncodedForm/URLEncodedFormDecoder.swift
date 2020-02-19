@@ -15,7 +15,7 @@ public struct URLEncodedFormCodingConfig {
             - explodeArraysOn: Uses this character to create arrays. If set to `,`, `arr=v1,v2` would populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
 
      */
-    init(bracketsAsArray: Bool = true, flagsAsBool: Bool = true, explodeArraysOn: Character? = nil) {
+    public init(bracketsAsArray: Bool = true, flagsAsBool: Bool = true, explodeArraysOn: Character? = nil) {
         self.bracketsAsArray = bracketsAsArray
         self.flagsAsBool = flagsAsBool
         self.explodeArraysOn = explodeArraysOn
@@ -84,7 +84,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public func decode<D>(_ decodable: D.Type, from string: String, with codingConfig: URLEncodedFormCodingConfig? = nil) throws -> D where D : Decodable {
         
         let parsedData = try self.parser.parse(string)
-        let decoder = _Decoder2(data: parsedData, codingPath: [], with: codingConfig ?? self.codingConfig) //TODO: Allow user to configure a global config
+        let decoder = _Decoder2(data: parsedData, codingPath: [], with: codingConfig ?? self.codingConfig)
         return try D(from: decoder)
     }
 }
