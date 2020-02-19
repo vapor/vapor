@@ -251,16 +251,23 @@ class ValidationTests: XCTestCase {
         }
         assert("case1", passes: .case(of: StringEnumType.self))
         assert("case2", passes: .case(of: StringEnumType.self))
-        assert("case1", fails: !.case(of: StringEnumType.self), "is StringEnumType")
-        assert("case3", fails: .case(of: StringEnumType.self), "is not case1, case2 or CASE3.")
+        assert("case1", fails: !.case(of: StringEnumType.self), "is case1, case2, or CASE3")
+        assert("case3", fails: .case(of: StringEnumType.self), "is not case1, case2, or CASE3")
 
         enum IntEnumType: Int, CaseIterable {
             case case1 = 1, case2 = 2
         }
         assert(1, passes: .case(of: IntEnumType.self))
         assert(2, passes: .case(of: IntEnumType.self))
-        assert(1, fails: !.case(of: IntEnumType.self), "is IntEnumType")
-        assert(3, fails: .case(of: IntEnumType.self), "is not 1 or 2.")
+        assert(1, fails: !.case(of: IntEnumType.self), "is 1 or 2")
+        assert(3, fails: .case(of: IntEnumType.self), "is not 1 or 2")
+
+        enum SingleCaseEnum: String, CaseIterable {
+            case case1 = "CASE1"
+        }
+        assert("CASE1", passes: .case(of: SingleCaseEnum.self))
+        assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
+        assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
 
     }
 }

@@ -26,15 +26,27 @@ extension ValidatorResults.Case: ValidatorResult {
     }
 
     public var successDescription: String? {
-        "is \(E.self)"
+        makeDescription(not: false)
     }
 
     public var failureDescription: String? {
-        var cases = E.allCases.map { "\($0.rawValue)" }
-        var suffix = ""
-        if cases.count > 1 {
-            suffix = " or \(cases.removeLast())"
+        makeDescription(not: true)
+    }
+
+    func makeDescription(not: Bool) -> String {
+        let items = E.allCases.map { "\($0.rawValue)" }
+        let description: String
+        switch items.count {
+        case 1:
+            description = items[0].description
+        case 2:
+            description = "\(items[0].description) or \(items[1].description)"
+        default:
+            let first = items[0..<(items.count - 1)]
+                .map { $0.description }.joined(separator: ", ")
+            let last = items[items.count - 1].description
+            description = "\(first), or \(last)"
         }
-        return "is not \(cases.joined(separator: ", "))\(suffix)."
+        return "is\(not ? " not" : "") \(description)"
     }
 }
