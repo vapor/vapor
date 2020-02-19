@@ -228,6 +228,13 @@ private struct _Decoder2: Decoder {
                     values = values + valuesInBracket.values
                 }
             }
+            if let explodeArraysOn = codingConfig.explodeArraysOn {
+                var explodedValues: [String] = []
+                for value in values {
+                    explodedValues = explodedValues + value.split(separator: explodeArraysOn).map(String.init)
+                }
+                values = explodedValues
+            }
             self.values = values
             self.codingConfig = codingConfig
             self.currentIndex = 0
