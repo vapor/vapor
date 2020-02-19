@@ -1,3 +1,27 @@
+
+/**
+ Used to capture URLForm Coding Configuration used for encoding and decoding
+ */
+public struct URLEncodedFormCodingConfig {
+    let bracketsAsArray: Bool
+    let flagsAsBool: Bool
+    let explodeArraysOn: Character?
+    
+    /**
+     - parameters:
+            - bracketsAsArray: Set to `true` allows you to parse `arr[]=v1&arr[]=v2` as an array with key `arr`. Otherwise you would use  `arr` without  a bracket like `arr=v1&arr=v2`
+            - flagsAsBool: Set to `true` allows you to parse `flag1&flag2` as boolean variables where object with variable `flag1` and `flag2` would decode to `true` or `false` depending on if the value was present or not.
+                           If this flag is set to true, it will always resolve for an optional `Bool`.
+            - explodeArraysOn: Uses this character to create arrays. If set to `,`, `arr=v1,v2` would populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
+
+     */
+    init(bracketsAsArray: Bool = true, flagsAsBool: Bool = true, explodeArraysOn: Character? = nil) {
+        self.bracketsAsArray = bracketsAsArray
+        self.flagsAsBool = flagsAsBool
+        self.explodeArraysOn = explodeArraysOn
+    }
+}
+
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` `Data`.
 ///
 ///     print(data) // "name=Vapor&age=3"
@@ -11,6 +35,7 @@
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
+
     /// The underlying `URLEncodedFormEncodedParser`
     private let parser: URLEncodedFormParser2
 
@@ -53,8 +78,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         return try self.decode(D.self, from: string)
     }
     
-    public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
-        return try self.decode(D.self, from: url.query ?? "")
+    public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D: Decodable {
+        return try self.decode(D.self, from: url.query ?? "", with: nil)
+    }
+    
+    public func decode<D>(_ decodable: D.Type, from url: URI, with decodingConfig: URLEncodedFormCodingConfig? = nil) throws -> D where D : Decodable {
+        return try self.decode(D.self, from: url.query ?? "", with: decodingConfig)
     }
     
 
@@ -69,9 +98,10 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///     - from: `Data` to decode a `D` from.
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
-    public func decode<D>(_ decodable: D.Type, from string: String) throws -> D where D : Decodable {
+    public func decode<D>(_ decodable: D.Type, from string: String, with decodingConfig: URLEncodedFormCodingConfig? = nil) throws -> D where D : Decodable {
+        
         let parsedData = try self.parser.parse(string)
-        let decoder = _Decoder2(data: parsedData, codingPath: [])
+        let decoder = _Decoder2(data: parsedData, codingPath: [], with: decodingConfig ?? URLEncodedFormCodingConfig()) //TODO: Allow user to configure a global config
         return try D(from: decoder)
     }
 }
@@ -81,6 +111,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 private struct _Decoder2: Decoder {
     var data: URLEncodedFormData2
     var codingPath: [CodingKey]
+    var decodingConfig: URLEncodedFormCodingConfig
     
     /// See `Decoder`
     var userInfo: [CodingUserInfoKey: Any] {
@@ -88,13 +119,15 @@ private struct _Decoder2: Decoder {
     }
     
     /// Creates a new `_URLEncodedFormDecoder`.
-    init(data: URLEncodedFormData2, codingPath: [CodingKey]) {
+    init(data: URLEncodedFormData2, codingPath: [CodingKey], with decodingConfig: URLEncodedFormCodingConfig) {
         self.data = data
         self.codingPath = codingPath
+        self.decodingConfig = decodingConfig
+        
     }
     
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return KeyedDecodingContainer(KeyedContainer<Key>(data: data, codingPath: self.codingPath))
+        return KeyedDecodingContainer(KeyedContainer<Key>(data: data, codingPath: self.codingPath, with: decodingConfig))
     }
     
     struct KeyedContainer<Key>: KeyedDecodingContainerProtocol
@@ -102,16 +135,16 @@ private struct _Decoder2: Decoder {
     {
         let data: URLEncodedFormData2
         var codingPath: [CodingKey]
-        let treatBracketsAsArray: Bool
-        
+        var decodingConfig: URLEncodedFormCodingConfig
+
         var allKeys: [Key] {
             return data.children.keys.compactMap { Key(stringValue: String($0)) }
         }
         
-        init(data: URLEncodedFormData2, codingPath: [CodingKey], treatBracketsAsArray: Bool = true) {
+        init(data: URLEncodedFormData2, codingPath: [CodingKey], with decodingConfig: URLEncodedFormCodingConfig) {
             self.data = data
             self.codingPath = codingPath
-            self.treatBracketsAsArray = treatBracketsAsArray
+            self.decodingConfig = decodingConfig
         }
         
         func contains(_ key: Key) -> Bool {
@@ -127,13 +160,19 @@ private struct _Decoder2: Decoder {
             let child = data.children[key.stringValue] ?? URLEncodedFormData2()
             if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
                 var values = child.values
-                if treatBracketsAsArray {
+                if decodingConfig.bracketsAsArray {
                     // empty brackets turn into empty strings!
                     if let valuesInBracket = child.children[""] {
                         values = values + valuesInBracket.values
                     }
                 }
                 guard let value = values.last else {
+                    if decodingConfig.flagsAsBool {
+                        //If no values found see if we are decoding a boolean
+                        if let _ = T.self as? Bool.Type {
+                            return data.values.contains(key.stringValue) as! T
+                        }
+                    }
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
                 }
                 if let result = convertible.init(urlEncodedFormValue: value) {
@@ -142,7 +181,7 @@ private struct _Decoder2: Decoder {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath + [key])
                 }
             } else {
-                let decoder = _Decoder2(data: child, codingPath: self.codingPath + [key])
+                let decoder = _Decoder2(data: child, codingPath: self.codingPath + [key], with: decodingConfig)
                 return try T(from: decoder)
             }
         }
@@ -153,37 +192,38 @@ private struct _Decoder2: Decoder {
             guard let child = data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([String: Any].self, at: self.codingPath + [key])
             }
-            return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: child, codingPath: self.codingPath + [key]))
+            return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: child, codingPath: self.codingPath + [key], with: decodingConfig))
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
             guard let child = data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([Any].self, at: self.codingPath + [key])
             }
-            return UnkeyedContainer(data: child, codingPath: self.codingPath + [key])
+            return UnkeyedContainer(data: child, codingPath: self.codingPath + [key], with: decodingConfig)
         }
         
         func superDecoder() throws -> Decoder {
-            return _Decoder2(data: data, codingPath: self.codingPath)
+            return _Decoder2(data: data, codingPath: self.codingPath, with: decodingConfig)
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
             guard let child = data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([Any].self, at: self.codingPath + [key])
             }
-            return _Decoder2(data: child, codingPath: self.codingPath)
+            return _Decoder2(data: child, codingPath: self.codingPath, with: decodingConfig)
         }
     }
     
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        return UnkeyedContainer(data: data, codingPath: codingPath)
+        return UnkeyedContainer(data: data, codingPath: codingPath, with: decodingConfig)
     }
     
     struct UnkeyedContainer: UnkeyedDecodingContainer {
         let data: URLEncodedFormData2
         let values: [String]
         var codingPath: [CodingKey]
-        
+        var decodingConfig: URLEncodedFormCodingConfig
+
         var count: Int? {
             return values.count
         }
@@ -195,17 +235,18 @@ private struct _Decoder2: Decoder {
         }
         var currentIndex: Int
         
-        init(data: URLEncodedFormData2, codingPath: [CodingKey], treatBracketsAsArray: Bool = true) {
+        init(data: URLEncodedFormData2, codingPath: [CodingKey], with decodingConfig: URLEncodedFormCodingConfig) {
             self.data = data
             self.codingPath = codingPath
             var values = data.values
-            if treatBracketsAsArray {
+            if decodingConfig.bracketsAsArray {
                 // empty brackets turn into empty strings!
                 if let valuesInBracket = data.children[""] {
                     values = values + valuesInBracket.values
                 }
             }
             self.values = values
+            self.decodingConfig = decodingConfig
             self.currentIndex = 0
         }
         
@@ -223,7 +264,7 @@ private struct _Decoder2: Decoder {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath)
                 }
             } else {
-                let decoder = _Decoder2(data: data, codingPath: self.codingPath)
+                let decoder = _Decoder2(data: data, codingPath: self.codingPath, with: decodingConfig)
                 return try T(from: decoder)
             }
         }
@@ -246,25 +287,27 @@ private struct _Decoder2: Decoder {
     }
     
     func singleValueContainer() throws -> SingleValueDecodingContainer {
-        return SingleValueContainer(data: data, codingPath: codingPath)
+        return SingleValueContainer(data: data, codingPath: codingPath, with: decodingConfig)
     }
     
     struct SingleValueContainer: SingleValueDecodingContainer {
         let data: URLEncodedFormData2
         let values: [String]
         var codingPath: [CodingKey]
+        var decodingConfig: URLEncodedFormCodingConfig
         
-        init(data: URLEncodedFormData2, codingPath: [CodingKey], treatBracketsAsArray: Bool = true) {
+        init(data: URLEncodedFormData2, codingPath: [CodingKey], with decodingConfig: URLEncodedFormCodingConfig) {
             self.data = data
             self.codingPath = codingPath
             var values = data.values
-            if treatBracketsAsArray {
+            if decodingConfig.bracketsAsArray {
                 // empty brackets turn into empty strings!
                 if let valuesInBracket = data.children[""] {
                     values = values + valuesInBracket.values
                 }
             }
             self.values = values
+            self.decodingConfig = decodingConfig
         }
         
         func decodeNil() -> Bool {
@@ -272,7 +315,6 @@ private struct _Decoder2: Decoder {
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
-            //TODO: Figure out how to handle boolean as they can be `?isBool&key=value`
             if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
                 guard let value = values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
@@ -283,7 +325,7 @@ private struct _Decoder2: Decoder {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath)
                 }
             } else {
-                let decoder = _Decoder2(data: data, codingPath: self.codingPath)
+                let decoder = _Decoder2(data: data, codingPath: self.codingPath, with: decodingConfig)
                 return try T(from: decoder)
             }
         }

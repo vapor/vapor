@@ -100,7 +100,15 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(string.contains("name=Ziz"), true)
         XCTAssertEqual(string.contains("type=cat"), true)
     }
-    
+
+    func testFlagDecodingAsBool() throws {
+        struct Foo: Codable {
+            var flag: Bool
+        }
+        let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
+        XCTAssertEqual(foo.flag, true)
+    }
+
     /// https://github.com/vapor/url-encoded-form/issues/3
     func testGH3() throws {
         struct Foo: Codable {
