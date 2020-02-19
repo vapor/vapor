@@ -6,7 +6,7 @@ final class URLEncodedFormTests: XCTestCase {
     
     func testDecode() throws {
         let data = """
-        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14&url=https%3A%2F%2Fvapor.codes
         """
         
         let user = try URLEncodedFormDecoder().decode(User.self, from: data)
@@ -19,10 +19,11 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.dict["b"], 2)
         XCTAssertEqual(user.foos[0], .baz)
         XCTAssertEqual(user.nums[0], 3.14)
+        XCTAssertEqual(user.url, URL(string: "https://vapor.codes"))
     }
     
     func testEncode() throws {
-        let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14])
+        let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], url: URL(string: "https://vapor.codes")!)
         let result = try URLEncodedFormEncoder().encode(user)
         XCTAssert(result.contains("pets[]=Zizek"))
         XCTAssert(result.contains("pets[]=Foo"))
@@ -32,10 +33,11 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("dict[b]=2"))
         XCTAssert(result.contains("foos[]=baz"))
         XCTAssert(result.contains("nums[]=3.14"))
+        XCTAssert(result.contains("url=https://vapor.codes"))
     }
     
     func testCodable() throws {
-        let a = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [], nums: [])
+        let a = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [], nums: [], url: URL(string: "https://vapor.codes")!)
         let body = try URLEncodedFormEncoder().encode(a)
         print(body)
         let b = try! URLEncodedFormDecoder().decode(User.self, from: body)
@@ -162,6 +164,7 @@ private struct User: Codable, Equatable {
     var dict: [String: Int]
     var foos: [Foo]
     var nums: [Decimal]
+    var url: URL
 }
 
 private enum Foo: String, Codable {

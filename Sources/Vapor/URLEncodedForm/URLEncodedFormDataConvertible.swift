@@ -25,6 +25,22 @@ extension String: URLEncodedFormDataConvertible {
     }
 }
 
+extension URL: URLEncodedFormDataConvertible {
+    /// `URLEncodedFormDataConvertible` conformance.
+    init?(urlEncodedFormData: URLEncodedFormData) {
+        guard let url = urlEncodedFormData.url else {
+            return nil
+        }
+
+        self = url
+    }
+
+    /// `URLEncodedFormDataConvertible` conformance.
+    var urlEncodedFormData: URLEncodedFormData? {
+        return .string(self.absoluteString)
+    }
+}
+
 extension FixedWidthInteger {
     /// `URLEncodedFormDataConvertible` conformance.
     init?(urlEncodedFormData: URLEncodedFormData) {
