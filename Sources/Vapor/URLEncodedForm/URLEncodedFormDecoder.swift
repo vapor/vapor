@@ -5,20 +5,20 @@
 public struct URLEncodedFormCodingConfig {
     let bracketsAsArray: Bool
     let flagsAsBool: Bool
-    let explodeArraysOn: Character?
+    let arraySeparator: Character?
     
     /**
      - parameters:
             - bracketsAsArray: Set to `true` allows you to parse `arr[]=v1&arr[]=v2` as an array with key `arr`. Otherwise you would use  `arr` without  a bracket like `arr=v1&arr=v2`
             - flagsAsBool: Set to `true` allows you to parse `flag1&flag2` as boolean variables where object with variable `flag1` and `flag2` would decode to `true` or `false` depending on if the value was present or not.
                            If this flag is set to true, it will always resolve for an optional `Bool`.
-            - explodeArraysOn: Uses this character to create arrays. If set to `,`, `arr=v1,v2` would populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
+            - arraySeparator: Uses this character to create arrays. If set to `,`, `arr=v1,v2` would populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
 
      */
-    public init(bracketsAsArray: Bool = true, flagsAsBool: Bool = true, explodeArraysOn: Character? = nil) {
+    public init(bracketsAsArray: Bool = true, flagsAsBool: Bool = true, arraySeparator: Character? = nil) {
         self.bracketsAsArray = bracketsAsArray
         self.flagsAsBool = flagsAsBool
-        self.explodeArraysOn = explodeArraysOn
+        self.arraySeparator = arraySeparator
     }
 }
 
@@ -82,7 +82,6 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D>(_ decodable: D.Type, from string: String, with codingConfig: URLEncodedFormCodingConfig? = nil) throws -> D where D : Decodable {
-        
         let parsedData = try self.parser.parse(string)
         let decoder = _Decoder(data: parsedData, codingPath: [], with: codingConfig ?? self.codingConfig)
         return try D(from: decoder)
@@ -229,7 +228,7 @@ private struct _Decoder: Decoder {
                     values = values + valuesInBracket.values
                 }
             }
-            if let explodeArraysOn = codingConfig.explodeArraysOn {
+            if let explodeArraysOn = codingConfig.arraySeparator {
                 var explodedValues: [String] = []
                 for value in values {
                     explodedValues = explodedValues + value.split(separator: explodeArraysOn).map(String.init)

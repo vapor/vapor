@@ -22,12 +22,16 @@ internal struct URLEncodedFormParser2 {
             )
             switch kv.count {
             case 1:
-                let value = kv[0].removingPercentEncoding!
+                guard let value = kv[0].removingPercentEncoding else {
+                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[0])"))
+                }
                 result.set(value: value, forPath: [])
             case 2:
                 let key = kv[0]
-                let value = kv[1].removingPercentEncoding!
-                result.set(value: value, forPath: try parseKey(key: key))
+                guard let value = kv[1].removingPercentEncoding else {
+                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[1])"))
+                }
+                result.set(value: value, forPath: try parseKey(key: Substring(key)))
             default:
                 //Empty `&&`
                 continue
@@ -45,16 +49,24 @@ internal struct URLEncodedFormParser2 {
                 }
                 element = element.prefix(element.count-1) //Remove the `]`
             }
-            path.append(element.removingPercentEncoding!)
+            guard let percentDecodedElement = element.removingPercentEncoding else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(element)"))
+            }
+            path.append(percentDecodedElement)
         }
         return path
     }
 }
 
+
 internal struct URLEncodedFormData2: Equatable {
     var values: [String]
     // If you have an array
     var children: [String: URLEncodedFormData2]
+    
+    var hasOnlyValues: Bool {
+        return children.count == 0
+    }
     
     init(values: [String] = [], children: [String: URLEncodedFormData2] = [:]) {
         self.values = values

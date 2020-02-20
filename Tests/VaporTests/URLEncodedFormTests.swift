@@ -26,7 +26,7 @@ final class URLEncodedFormTests: XCTestCase {
         name=Tanner&age=23&pets=Zizek,Foo&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
         """
         
-        let user = try URLEncodedFormDecoder(with: URLEncodedFormCodingConfig(explodeArraysOn: ",")).decode(User.self, from: data)
+        let user = try URLEncodedFormDecoder(with: URLEncodedFormCodingConfig(arraySeparator: ",")).decode(User.self, from: data)
         XCTAssertEqual(user.name, "Tanner")
         XCTAssertEqual(user.age, 23)
         XCTAssertEqual(user.pets.count, 2)
