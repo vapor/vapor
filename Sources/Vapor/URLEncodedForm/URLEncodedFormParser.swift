@@ -13,7 +13,7 @@ internal struct URLEncodedFormParser {
     
     func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacingOccurrences(of: "+", with: " ")
-        var result = URLEncodedFormData()
+        var result: URLEncodedFormData = []
         for pair in plusDecodedQuery.split(separator: splitVariablesOn) {
             let kv = pair.split(
                 separator: splitKeyValueOn,

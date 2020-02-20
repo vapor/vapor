@@ -1,5 +1,6 @@
 /// Represents application/x-www-form-urlencoded encoded data.
-internal struct URLEncodedFormData: Equatable {
+internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
+    
     var values: [String]
     // If you have an array
     var children: [String: URLEncodedFormData]
@@ -7,27 +8,27 @@ internal struct URLEncodedFormData: Equatable {
     var hasOnlyValues: Bool {
         return children.count == 0
     }
-    
+
     init(values: [String] = [], children: [String: URLEncodedFormData] = [:]) {
         self.values = values
         self.children = children
     }
     
-    init(_ value: String) {
-        self.values = [value]
+    init(stringLiteral: String) {
+        self.values = [stringLiteral]
         self.children = [:]
     }
     
-    init(_ values: [String]) {
-        self.values = values
+    init(arrayLiteral: String...) {
+        self.values = arrayLiteral
         self.children = [:]
     }
     
-    init(_ children: [String: URLEncodedFormData]) {
+    init(dictionaryLiteral: (String, URLEncodedFormData)...) {
         self.values = []
-        self.children = children
+        self.children = Dictionary(uniqueKeysWithValues: dictionaryLiteral)
     }
-    
+        
     mutating func set(value: String, forPath path: [String]) {
         guard let firstElement = path.first else {
             values.append(value)
@@ -37,7 +38,7 @@ internal struct URLEncodedFormData: Equatable {
         if let existingChild = children[firstElement] {
             child = existingChild
         } else {
-            child = URLEncodedFormData()
+            child = []
         }
         child.set(value: value, forPath: Array(path[1...]))
         children[firstElement] = child

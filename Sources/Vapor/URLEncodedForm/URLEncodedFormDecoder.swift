@@ -117,7 +117,7 @@ private struct _Decoder: Decoder {
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
-            let child = data.children[key.stringValue] ?? URLEncodedFormData()
+            let child = data.children[key.stringValue] ?? []
             if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
                 var values = child.values
                 if codingConfig.bracketsAsArray {

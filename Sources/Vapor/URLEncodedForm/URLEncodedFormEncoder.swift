@@ -72,7 +72,7 @@ private class _Encoder: Encoder {
     private var container: _Container? = nil
     
     var data: URLEncodedFormData {
-        return container?.data ?? URLEncodedFormData()
+        return container?.data ?? []
     }
     
     var userInfo: [CodingUserInfoKey: Any] {
@@ -108,7 +108,7 @@ private class _Encoder: Encoder {
         where Key: CodingKey
     {
         var codingPath: [CodingKey]
-        var internalData: URLEncodedFormData = URLEncodedFormData()
+        var internalData: URLEncodedFormData = []
         var childContainers: [String: _Container] = [:]
 
         var data: URLEncodedFormData {
@@ -136,7 +136,7 @@ private class _Encoder: Encoder {
             where T : Encodable
         {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                internalData.children[key.stringValue] = URLEncodedFormData(convertible.urlEncodedFormValue)
+                internalData.children[key.stringValue] = URLEncodedFormData(stringLiteral: convertible.urlEncodedFormValue)
             } else {
                 let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
                 try value.encode(to: encoder)
@@ -175,7 +175,7 @@ private class _Encoder: Encoder {
     private final class UnkeyedContainer: UnkeyedEncodingContainer, _Container {
         var codingPath: [CodingKey]
         var count: Int = 0
-        var internalData: URLEncodedFormData = URLEncodedFormData()
+        var internalData: URLEncodedFormData = []
         var childContainers: [Int: _Container] = [:]
         private let codingConfig: URLEncodedFormCodingConfig
 
@@ -212,7 +212,7 @@ private class _Encoder: Encoder {
             if let convertible = value as? URLEncodedFormFieldConvertible {
                 let value = convertible.urlEncodedFormValue
                 if codingConfig.bracketsAsArray {
-                    var emptyStringChild = internalData.children[""] ?? URLEncodedFormData()
+                    var emptyStringChild = internalData.children[""] ?? []
                     emptyStringChild.values.append(value)
                     internalData.children[""] = emptyStringChild
                 } else {
@@ -224,7 +224,7 @@ private class _Encoder: Encoder {
                 let childData = encoder.data
                 if childData.hasOnlyValues {
                     if codingConfig.bracketsAsArray {
-                        var emptyStringChild = internalData.children[""] ?? URLEncodedFormData()
+                        var emptyStringChild = internalData.children[""] ?? []
                         emptyStringChild.values.append(contentsOf: childData.values)
                         internalData.children[""] = emptyStringChild
                     } else {
@@ -266,7 +266,7 @@ private class _Encoder: Encoder {
         var codingPath: [CodingKey]
         
         /// The data being encoded
-        var data: URLEncodedFormData = URLEncodedFormData()
+        var data: URLEncodedFormData = []
         
         private let codingConfig: URLEncodedFormCodingConfig
 
