@@ -29,7 +29,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     
     /// `URLContentEncoder` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI) throws where E : Encodable {
-        try self.encode(encodable, to: &url)
+        try self.encode(encodable, to: &url, codingConfig: nil)
     }
 
     public func encode<E>(_ encodable: E, to url: inout URI, codingConfig: URLEncodedFormCodingConfig? = nil) throws where E : Encodable {
@@ -53,24 +53,26 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         if decodingConfigToUse.flagsAsBool {
             throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
         }
-        let encoder = _Encoder2(codingPath: [], codingConfig: decodingConfigToUse)
+        let encoder = _Encoder(codingPath: [], codingConfig: decodingConfigToUse)
         try encodable.encode(to: encoder)
-        let serializer = URLEncodedForm2Serializer()
+        let serializer = URLEncodedFormSerializer()
         return try serializer.serialize(encoder.data)
     }
 }
 
-private protocol _Container2 {
-    var data: URLEncodedFormData2 { get }
+// MARK: Private
+
+private protocol _Container {
+    var data: URLEncodedFormData { get }
 }
 
-private class _Encoder2: Encoder {
+private class _Encoder: Encoder {
 
     var codingPath: [CodingKey]
-    private var container: _Container2? = nil
+    private var container: _Container? = nil
     
-    var data: URLEncodedFormData2 {
-        return container?.data ?? URLEncodedFormData2()
+    var data: URLEncodedFormData {
+        return container?.data ?? URLEncodedFormData()
     }
     
     var userInfo: [CodingUserInfoKey: Any] {
@@ -102,14 +104,14 @@ private class _Encoder2: Encoder {
         return container
     }
     
-    private final class KeyedContainer<Key>: KeyedEncodingContainerProtocol, _Container2
+    private final class KeyedContainer<Key>: KeyedEncodingContainerProtocol, _Container
         where Key: CodingKey
     {
         var codingPath: [CodingKey]
-        var internalData: URLEncodedFormData2 = URLEncodedFormData2()
-        var childContainers: [String: _Container2] = [:]
+        var internalData: URLEncodedFormData = URLEncodedFormData()
+        var childContainers: [String: _Container] = [:]
 
-        var data: URLEncodedFormData2 {
+        var data: URLEncodedFormData {
             var result = internalData
             for (key, childContainer) in childContainers {
                 result.children[key] = childContainer.data
@@ -134,9 +136,9 @@ private class _Encoder2: Encoder {
             where T : Encodable
         {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                internalData.children[key.stringValue] = URLEncodedFormData2(convertible.urlEncodedFormValue)
+                internalData.children[key.stringValue] = URLEncodedFormData(convertible.urlEncodedFormValue)
             } else {
-                let encoder = _Encoder2(codingPath: codingPath + [key], codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
                 try value.encode(to: encoder)
                 internalData.children[key.stringValue] = encoder.data
             }
@@ -170,14 +172,14 @@ private class _Encoder2: Encoder {
     }
     
     /// Private `UnkeyedEncodingContainer`.
-    private final class UnkeyedContainer: UnkeyedEncodingContainer, _Container2 {
+    private final class UnkeyedContainer: UnkeyedEncodingContainer, _Container {
         var codingPath: [CodingKey]
         var count: Int = 0
-        var internalData: URLEncodedFormData2 = URLEncodedFormData2()
-        var childContainers: [Int: _Container2] = [:]
+        var internalData: URLEncodedFormData = URLEncodedFormData()
+        var childContainers: [Int: _Container] = [:]
         private let codingConfig: URLEncodedFormCodingConfig
 
-        var data: URLEncodedFormData2 {
+        var data: URLEncodedFormData {
             var result = internalData
             for (key, childContainer) in childContainers {
                 result.children[String(key)] = childContainer.data
@@ -210,19 +212,19 @@ private class _Encoder2: Encoder {
             if let convertible = value as? URLEncodedFormFieldConvertible {
                 let value = convertible.urlEncodedFormValue
                 if codingConfig.bracketsAsArray {
-                    var emptyStringChild = internalData.children[""] ?? URLEncodedFormData2()
+                    var emptyStringChild = internalData.children[""] ?? URLEncodedFormData()
                     emptyStringChild.values.append(value)
                     internalData.children[""] = emptyStringChild
                 } else {
                     internalData.values.append(value)
                 }
             } else {
-                let encoder = _Encoder2(codingPath: codingPath, codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)
                 let childData = encoder.data
                 if childData.hasOnlyValues {
                     if codingConfig.bracketsAsArray {
-                        var emptyStringChild = internalData.children[""] ?? URLEncodedFormData2()
+                        var emptyStringChild = internalData.children[""] ?? URLEncodedFormData()
                         emptyStringChild.values.append(contentsOf: childData.values)
                         internalData.children[""] = emptyStringChild
                     } else {
@@ -259,12 +261,12 @@ private class _Encoder2: Encoder {
     }
 
     /// Private `SingleValueEncodingContainer`.
-    private final class SingleValueContainer: SingleValueEncodingContainer, _Container2 {
+    private final class SingleValueContainer: SingleValueEncodingContainer, _Container {
         /// See `SingleValueEncodingContainer`
         var codingPath: [CodingKey]
         
         /// The data being encoded
-        var data: URLEncodedFormData2 = URLEncodedFormData2()
+        var data: URLEncodedFormData = URLEncodedFormData()
         
         private let codingConfig: URLEncodedFormCodingConfig
 
@@ -284,226 +286,11 @@ private class _Encoder2: Encoder {
             if let convertible = value as? URLEncodedFormFieldConvertible {
                 data.values.append(convertible.urlEncodedFormValue)
             } else {
-                let encoder = _Encoder2(codingPath: self.codingPath, codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)
                 data = encoder.data
             }
         }
-    }
-}
-
-/// MARK: Private
-
-protocol _Container {
-    var data: _Data? { get }
-}
-
-enum _Data {
-    case container(_Container)
-    case data(URLEncodedFormData)
-    
-    func resolve() -> URLEncodedFormData {
-        switch self {
-        case .container(let container):
-            return container.data!.resolve()
-        case .data(let data):
-            return data
-        }
-    }
-}
-
-/// Private `Encoder`.
-private final class _Encoder: Encoder {
-    var userInfo: [CodingUserInfoKey: Any] {
-        return [:]
-    }
-    let codingPath: [CodingKey]
-    var container: _Container?
-
-    /// Creates a new form url-encoded encoder
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-        self.container = nil
-    }
-
-    /// See `Encoder`
-    func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key>
-        where Key: CodingKey
-    {
-        let container = KeyedContainer<Key>(codingPath: codingPath)
-        self.container = container
-        return .init(container)
-    }
-
-    /// See `Encoder`
-    func unkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedContainer(codingPath: codingPath)
-        self.container = container
-        return container
-    }
-
-    /// See `Encoder`
-    func singleValueContainer() -> SingleValueEncodingContainer {
-        let container = SingleValueContainer(codingPath: codingPath)
-        self.container = container
-        return container
-    }
-}
-
-/// Private `SingleValueEncodingContainer`.
-private final class SingleValueContainer: SingleValueEncodingContainer, _Container {
-    /// See `SingleValueEncodingContainer`
-    var codingPath: [CodingKey]
-
-    /// The data being encoded
-    var data: _Data?
-
-    /// Creates a new single value encoder
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-    }
-
-    /// See `SingleValueEncodingContainer`
-    func encodeNil() throws {
-        // skip
-    }
-
-    /// See `SingleValueEncodingContainer`
-    func encode<T>(_ value: T) throws where T: Encodable {
-        if let convertible = value as? URLEncodedFormDataConvertible {
-            if let converted = convertible.urlEncodedFormData {
-                self.data = .data(converted)
-            } else {
-                throw EncodingError.invalidValue(value, at: self.codingPath)
-            }
-        } else {
-            let encoder = _Encoder(codingPath: self.codingPath)
-            try value.encode(to: encoder)
-            self.data = encoder.container!.data!
-        }
-    }
-}
-
-
-/// Private `KeyedEncodingContainerProtocol`.
-private final class KeyedContainer<Key>: KeyedEncodingContainerProtocol, _Container
-    where Key: CodingKey
-{
-    var codingPath: [CodingKey]
-    
-    var data: _Data? {
-        return .data(.dictionary(self.dictionary.mapValues { $0.resolve() }))
-    }
-    
-    var dictionary: [String: _Data]
-
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-        self.dictionary = [:]
-    }
-    
-    /// See `KeyedEncodingContainerProtocol`
-    func encodeNil(forKey key: Key) throws {
-        // skip
-    }
-
-    /// See `KeyedEncodingContainerProtocol`
-    func encode<T>(_ value: T, forKey key: Key) throws
-        where T : Encodable
-    {
-        if let convertible = value as? URLEncodedFormDataConvertible {
-            guard let converted = convertible.urlEncodedFormData else {
-                throw EncodingError.invalidValue(value, at: self.codingPath + [key])
-            }
-            self.dictionary[key.stringValue] = .data(converted)
-        } else {
-            let encoder = _Encoder(codingPath: codingPath + [key])
-            try value.encode(to: encoder)
-            self.dictionary[key.stringValue] = encoder.container!.data!
-        }
-    }
-
-    /// See `KeyedEncodingContainerProtocol`
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
-        where NestedKey: CodingKey
-    {
-        let container = KeyedContainer<NestedKey>(codingPath: self.codingPath + [key])
-        self.dictionary[key.stringValue] = .container(container)
-        return .init(container)
-    }
-
-    /// See `KeyedEncodingContainerProtocol`
-    func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-        let container = UnkeyedContainer(codingPath: self.codingPath + [key])
-        self.dictionary[key.stringValue] = .container(container)
-        return container
-    }
-
-    /// See `KeyedEncodingContainerProtocol`
-    func superEncoder() -> Encoder {
-        fatalError()
-    }
-
-    /// See `KeyedEncodingContainerProtocol`
-    func superEncoder(forKey key: Key) -> Encoder {
-        fatalError()
-    }
-}
-
-/// Private `UnkeyedEncodingContainer`.
-private final class UnkeyedContainer: UnkeyedEncodingContainer, _Container {
-    var codingPath: [CodingKey]
-    var count: Int
-    var data: _Data? {
-        return .data(.array(self.array.map { $0.resolve() }))
-    }
-    var array: [_Data]
-
-    init(codingPath: [CodingKey]) {
-        self.codingPath = codingPath
-        self.count = 0
-        self.array = []
-    }
-
-    func encodeNil() throws {
-        // skip
-    }
-
-    func encode<T>(_ value: T) throws where T: Encodable {
-        defer { self.count += 1 }
-        if let convertible = value as? URLEncodedFormDataConvertible {
-            guard let converted = convertible.urlEncodedFormData else {
-                throw EncodingError.invalidValue(value, at: self.codingPath )
-            }
-            self.array.append(.data(converted))
-        } else {
-            let encoder = _Encoder(codingPath: codingPath)
-            try value.encode(to: encoder)
-            self.array.append(encoder.container!.data!)
-        }
-    }
-
-    /// See UnkeyedEncodingContainer.nestedContainer
-    func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey>
-        where NestedKey: CodingKey
-    {
-        defer { self.count += 1 }
-        let container = KeyedContainer<NestedKey>(codingPath: self.codingPath)
-        self.array.append(.container(container))
-        return .init(container)
-    }
-
-    /// See UnkeyedEncodingContainer.nestedUnkeyedContainer
-    func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-        defer { self.count += 1 }
-        let container = UnkeyedContainer(codingPath: self.codingPath)
-        self.array.append(.container(container))
-        return container
-    }
-
-    /// See UnkeyedEncodingContainer.superEncoder
-    func superEncoder() -> Encoder {
-        fatalError()
     }
 }
 

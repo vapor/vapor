@@ -1,7 +1,7 @@
 /**
  Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
  */
-internal struct URLEncodedFormParser2 {
+internal struct URLEncodedFormParser {
     let splitVariablesOn: Character
     let splitKeyValueOn: Character
     
@@ -11,9 +11,9 @@ internal struct URLEncodedFormParser2 {
         self.splitKeyValueOn = splitKeyValueOn
     }
     
-    func parse(_ query: String) throws -> URLEncodedFormData2 {
+    func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacingOccurrences(of: "+", with: " ")
-        var result = URLEncodedFormData2()
+        var result = URLEncodedFormData()
         for pair in plusDecodedQuery.split(separator: splitVariablesOn) {
             let kv = pair.split(
                 separator: splitKeyValueOn,
