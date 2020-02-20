@@ -2,7 +2,6 @@
 internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
     
     var values: [String]
-    // If you have an array
     var children: [String: URLEncodedFormData]
     
     var hasOnlyValues: Bool {
