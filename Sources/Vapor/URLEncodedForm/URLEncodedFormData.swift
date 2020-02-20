@@ -1,4 +1,49 @@
 /// Represents application/x-www-form-urlencoded encoded data.
+internal struct URLEncodedFormData2: Equatable {
+    var values: [String]
+    // If you have an array
+    var children: [String: URLEncodedFormData2]
+    
+    var hasOnlyValues: Bool {
+        return children.count == 0
+    }
+    
+    init(values: [String] = [], children: [String: URLEncodedFormData2] = [:]) {
+        self.values = values
+        self.children = children
+    }
+    
+    init(_ value: String) {
+        self.values = [value]
+        self.children = [:]
+    }
+    
+    init(_ values: [String]) {
+        self.values = values
+        self.children = [:]
+    }
+    
+    init(_ children: [String: URLEncodedFormData2]) {
+        self.values = []
+        self.children = children
+    }
+    
+    mutating func set(value: String, forPath path: [String]) {
+        guard let firstElement = path.first else {
+            values.append(value)
+            return
+        }
+        var child: URLEncodedFormData2
+        if let existingChild = children[firstElement] {
+            child = existingChild
+        } else {
+            child = URLEncodedFormData2()
+        }
+        child.set(value: value, forPath: Array(path[1...]))
+        children[firstElement] = child
+    }
+}
+
 enum URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable, CustomStringConvertible {
     /// Stores a string, this is the root storage.
     case string(String)

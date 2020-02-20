@@ -15,7 +15,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     private let codingConfig: URLEncodedFormCodingConfig
 
     /// Create a new `URLEncodedFormEncoder`.
-    public init(with codingConfig: URLEncodedFormCodingConfig = URLEncodedFormCodingConfig()) {
+    public init(with codingConfig: URLEncodedFormCodingConfig = URLEncodedFormCodingConfig(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
         self.codingConfig = codingConfig
     }
     
@@ -29,6 +29,10 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     
     /// `URLContentEncoder` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI) throws where E : Encodable {
+        try self.encode(encodable, to: &url)
+    }
+
+    public func encode<E>(_ encodable: E, to url: inout URI, codingConfig: URLEncodedFormCodingConfig? = nil) throws where E : Encodable {
         url.query = try self.encode(encodable)
     }
 
@@ -42,10 +46,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///     - encodable: Generic `Encodable` object (`E`) to encode.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E) throws -> String
+    public func encode<E>(_ encodable: E, codingConfig: URLEncodedFormCodingConfig? = nil) throws -> String
         where E: Encodable
     {
-        let encoder = _Encoder2(codingPath: [], codingConfig: codingConfig)
+        let decodingConfigToUse = codingConfig ?? self.codingConfig
+        if decodingConfigToUse.flagsAsBool {
+            throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
+        }
+        let encoder = _Encoder2(codingPath: [], codingConfig: decodingConfigToUse)
         try encodable.encode(to: encoder)
         let serializer = URLEncodedForm2Serializer()
         return try serializer.serialize(encoder.data)
@@ -173,6 +181,17 @@ private class _Encoder2: Encoder {
             var result = internalData
             for (key, childContainer) in childContainers {
                 result.children[String(key)] = childContainer.data
+            }
+            if let arraySeparator = codingConfig.arraySeparator {
+                var valuesToImplode = result.values
+                result.values = []
+                if codingConfig.bracketsAsArray,
+                    let emptyStringChild = internalData.children[""] {
+                    valuesToImplode = valuesToImplode + emptyStringChild.values
+                    internalData.children[""]?.values = []
+                }
+                let implodedValue = valuesToImplode.joined(separator: String(arraySeparator))
+                result.values = [implodedValue]
             }
             return result
         }
