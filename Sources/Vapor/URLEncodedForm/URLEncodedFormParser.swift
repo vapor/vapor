@@ -12,7 +12,7 @@ internal struct URLEncodedFormParser {
     }
     
     func parse(_ query: String) throws -> URLEncodedFormData {
-        let plusDecodedQuery = query.replacingOccurrences(of: "+", with: " ")
+        let plusDecodedQuery = query.replacingOccurrences(of: "+", with: "%20")
         var result: URLEncodedFormData = []
         for pair in plusDecodedQuery.split(separator: splitVariablesOn) {
             let kv = pair.split(
@@ -22,16 +22,18 @@ internal struct URLEncodedFormParser {
             )
             switch kv.count {
             case 1:
-                guard let value = kv[0].removingPercentEncoding else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[0])"))
-                }
-                result.set(value: value, forPath: [])
+                let value = String(kv[0])
+//                guard let value = kv[0].removingPercentEncoding else {
+//                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[0])"))
+//                }
+                result.set(value: .encoded(value), forPath: [])
             case 2:
                 let key = kv[0]
-                guard let value = kv[1].removingPercentEncoding else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[1])"))
-                }
-                result.set(value: value, forPath: try parseKey(key: Substring(key)))
+                let value = String(kv[1])
+//                guard let value = kv[1].removingPercentEncoding else {
+//                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[1])"))
+//                }
+                result.set(value: .encoded(value), forPath: try parseKey(key: Substring(key)))
             default:
                 //Empty `&&`
                 continue

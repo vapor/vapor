@@ -16,9 +16,9 @@ struct URLEncodedFormSerializer {
         let key = try codingPath.toURLEncodedKey()
         for value in data.values {
             if codingPath.count == 0 {
-                try entries.append(value.urlEncoded())
+                try entries.append(value.encoded())
             } else {
-                try entries.append(key + String(splitKeyValueOn) + value.urlEncoded())
+                try entries.append(key + String(splitKeyValueOn) + value.encoded())
             }
         }
         for (key, child) in data.children {
@@ -57,7 +57,7 @@ extension Array where Element == CodingKey {
 
 // MARK: Utilties
 
-private extension String {
+extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
         guard let result = self.addingPercentEncoding(withAllowedCharacters: _allowedCharacters) else {

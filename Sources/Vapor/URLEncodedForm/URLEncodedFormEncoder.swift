@@ -56,14 +56,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         let encoder = _Encoder(codingPath: [], codingConfig: decodingConfigToUse)
         try encodable.encode(to: encoder)
         let serializer = URLEncodedFormSerializer()
-        return try serializer.serialize(encoder.data)
+        return try serializer.serialize(encoder.getData())
     }
 }
 
 // MARK: Private
 
 private protocol _Container {
-    var data: URLEncodedFormData { get }
+    func getData() throws -> URLEncodedFormData
 }
 
 private class _Encoder: Encoder {
@@ -71,8 +71,8 @@ private class _Encoder: Encoder {
     var codingPath: [CodingKey]
     private var container: _Container? = nil
     
-    var data: URLEncodedFormData {
-        return container?.data ?? []
+    func getData() throws -> URLEncodedFormData {
+        return try container?.getData() ?? []
     }
     
     var userInfo: [CodingUserInfoKey: Any] {
@@ -111,10 +111,10 @@ private class _Encoder: Encoder {
         var internalData: URLEncodedFormData = []
         var childContainers: [String: _Container] = [:]
 
-        var data: URLEncodedFormData {
+        func getData() throws -> URLEncodedFormData {
             var result = internalData
             for (key, childContainer) in childContainers {
-                result.children[key] = childContainer.data
+                result.children[key] = try childContainer.getData()
             }
             return result
         }
@@ -140,7 +140,7 @@ private class _Encoder: Encoder {
             } else {
                 let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
                 try value.encode(to: encoder)
-                internalData.children[key.stringValue] = encoder.data
+                internalData.children[key.stringValue] = try encoder.getData()
             }
         }
         
@@ -179,10 +179,10 @@ private class _Encoder: Encoder {
         var childContainers: [Int: _Container] = [:]
         private let codingConfig: URLEncodedFormCodingConfig
 
-        var data: URLEncodedFormData {
+        func getData() throws -> URLEncodedFormData {
             var result = internalData
             for (key, childContainer) in childContainers {
-                result.children[String(key)] = childContainer.data
+                result.children[String(key)] = try childContainer.getData()
             }
             if let arraySeparator = codingConfig.arraySeparator {
                 var valuesToImplode = result.values
@@ -192,8 +192,10 @@ private class _Encoder: Encoder {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
                     result.children[""]?.values = []
                 }
-                let implodedValue = valuesToImplode.joined(separator: String(arraySeparator))
-                result.values = [implodedValue]
+                let implodedValue = try valuesToImplode.map({ (value: URLEncodedFormPercentEncodedFragment) -> String in
+                    return try value.encoded()
+                }).joined(separator: String(arraySeparator))
+                result.values = [.encoded(implodedValue)]
             }
             return result
         }
@@ -213,15 +215,15 @@ private class _Encoder: Encoder {
                 let value = convertible.urlEncodedFormValue
                 if codingConfig.bracketsAsArray {
                     var emptyStringChild = internalData.children[""] ?? []
-                    emptyStringChild.values.append(value)
+                    emptyStringChild.values.append(.decoded(value))
                     internalData.children[""] = emptyStringChild
                 } else {
-                    internalData.values.append(value)
+                    internalData.values.append(.decoded(value))
                 }
             } else {
                 let encoder = _Encoder(codingPath: codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)
-                let childData = encoder.data
+                let childData = try encoder.getData()
                 if childData.hasOnlyValues {
                     if codingConfig.bracketsAsArray {
                         var emptyStringChild = internalData.children[""] ?? []
@@ -231,7 +233,7 @@ private class _Encoder: Encoder {
                         internalData.values.append(contentsOf: childData.values)
                     }
                 } else {
-                    internalData.children[count.description] = encoder.data
+                    internalData.children[count.description] = try encoder.getData()
                 }
             }
         }
@@ -265,6 +267,10 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         var codingPath: [CodingKey]
         
+        func getData() throws -> URLEncodedFormData {
+            return data
+        }
+
         /// The data being encoded
         var data: URLEncodedFormData = []
         
@@ -284,11 +290,11 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                data.values.append(convertible.urlEncodedFormValue)
+                data.values.append(.decoded(convertible.urlEncodedFormValue))
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)
-                data = encoder.data
+                data = try encoder.getData()
             }
         }
     }
