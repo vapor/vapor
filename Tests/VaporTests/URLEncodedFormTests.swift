@@ -72,6 +72,30 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.nums[0], 3.14)
     }
 
+    func testDecodeWithoutFlagsAsBoolFailsWhenBoolIsRequired() throws {
+        let codingConfig = URLEncodedFormCodingConfig(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)
+        let dataWithoutBool = """
+        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+        """
+
+        XCTAssertThrowsError(try URLEncodedFormDecoder(with: codingConfig).decode(User.self, from: dataWithoutBool))
+
+        let dataWithBool = """
+        name=Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14&isCool=false
+        """
+        let user = try URLEncodedFormDecoder(with: codingConfig).decode(User.self, from: dataWithBool)
+        XCTAssertEqual(user.name, "Tanner")
+        XCTAssertEqual(user.age, 23)
+        XCTAssertEqual(user.pets.count, 2)
+        XCTAssertEqual(user.pets.first, "Zizek")
+        XCTAssertEqual(user.pets.last, "Foo")
+        XCTAssertEqual(user.dict["a"], 1)
+        XCTAssertEqual(user.dict["b"], 2)
+        XCTAssertEqual(user.foos[0], .baz)
+        XCTAssertEqual(user.nums[0], 3.14)
+        XCTAssertEqual(user.isCool, false)
+    }
+
     func testEncode() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder().encode(user)
