@@ -26,14 +26,14 @@ internal struct URLEncodedFormParser {
 //                guard let value = kv[0].removingPercentEncoding else {
 //                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[0])"))
 //                }
-                result.set(value: .encoded(value), forPath: [])
+                result.set(value: .urlEncoded(value), forPath: [])
             case 2:
                 let key = kv[0]
                 let value = String(kv[1])
 //                guard let value = kv[1].removingPercentEncoding else {
 //                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(kv[1])"))
 //                }
-                result.set(value: .encoded(value), forPath: try parseKey(key: Substring(key)))
+                result.set(value: .urlEncoded(value), forPath: try parseKey(key: Substring(key)))
             default:
                 //Empty `&&`
                 continue

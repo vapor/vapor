@@ -16,9 +16,9 @@ struct URLEncodedFormSerializer {
         let key = try codingPath.toURLEncodedKey()
         for value in data.values {
             if codingPath.count == 0 {
-                try entries.append(value.encoded())
+                try entries.append(value.asUrlEncoded())
             } else {
-                try entries.append(key + String(splitKeyValueOn) + value.encoded())
+                try entries.append(key + String(splitKeyValueOn) + value.asUrlEncoded())
             }
         }
         for (key, child) in data.children {

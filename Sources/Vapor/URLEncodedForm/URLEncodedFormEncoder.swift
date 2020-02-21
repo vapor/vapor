@@ -193,9 +193,9 @@ private class _Encoder: Encoder {
                     result.children[""]?.values = []
                 }
                 let implodedValue = try valuesToImplode.map({ (value: URLEncodedFormPercentEncodedFragment) -> String in
-                    return try value.encoded()
+                    return try value.asUrlEncoded()
                 }).joined(separator: String(arraySeparator))
-                result.values = [.encoded(implodedValue)]
+                result.values = [.urlEncoded(implodedValue)]
             }
             return result
         }
@@ -215,10 +215,10 @@ private class _Encoder: Encoder {
                 let value = convertible.urlEncodedFormValue
                 if codingConfig.bracketsAsArray {
                     var emptyStringChild = internalData.children[""] ?? []
-                    emptyStringChild.values.append(.decoded(value))
+                    emptyStringChild.values.append(.urlDecoded(value))
                     internalData.children[""] = emptyStringChild
                 } else {
-                    internalData.values.append(.decoded(value))
+                    internalData.values.append(.urlDecoded(value))
                 }
             } else {
                 let encoder = _Encoder(codingPath: codingPath, codingConfig: codingConfig)
@@ -290,7 +290,7 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                data.values.append(.decoded(convertible.urlEncodedFormValue))
+                data.values.append(.urlDecoded(convertible.urlEncodedFormValue))
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)

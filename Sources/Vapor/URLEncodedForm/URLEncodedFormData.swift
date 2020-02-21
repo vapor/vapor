@@ -2,29 +2,29 @@
 //Keeps track if the string was percent encoded or not. Prevents double encoding/double decoding
 enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable {
     init(stringLiteral: String) {
-        self = .decoded(stringLiteral)
+        self = .urlDecoded(stringLiteral)
     }
     
-    case encoded(String)
-    case decoded(String)
+    case urlEncoded(String)
+    case urlDecoded(String)
     
-    func encoded() throws -> String {
+    func asUrlEncoded() throws -> String {
         switch self {
-        case .encoded(let encoded):
+        case .urlEncoded(let encoded):
             return encoded
-        case .decoded(let decoded):
+        case .urlDecoded(let decoded):
             return try decoded.urlEncoded()
         }
     }
     
-    func decoded() throws -> String {
+    func asUrlDecoded() throws -> String {
         switch self {
-        case .encoded(let encoded):
+        case .urlEncoded(let encoded):
             guard let decoded = encoded.removingPercentEncoding else {
                 throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
             }
             return decoded
-        case .decoded(let decoded):
+        case .urlDecoded(let decoded):
             return decoded
         }
     }
@@ -32,7 +32,7 @@ enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable
     //Do comparison and hashing using the decoded version as there are multiple ways something can be encoded. Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
     static func == (lhs: URLEncodedFormPercentEncodedFragment, rhs: URLEncodedFormPercentEncodedFragment) -> Bool {
         do {
-            return try lhs.decoded() == rhs.decoded()
+            return try lhs.asUrlDecoded() == rhs.asUrlDecoded()
         } catch {
             return false
         }
@@ -40,7 +40,7 @@ enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable
     
     func hash(into: inout Hasher) {
         do {
-            try decoded().hash(into: &into)
+            try asUrlDecoded().hash(into: &into)
         } catch {
             
         }
@@ -48,7 +48,7 @@ enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable
     
     var hashValue: Int {
         do {
-            return try decoded().hashValue
+            return try asUrlDecoded().hashValue
         } catch {
             return 0
         }
@@ -66,7 +66,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         return children.count == 0
     }
     
-    var allChildKeysAreNumbers: Bool {
+    var allChildKeysAreSequentialIntegers: Bool {
         for i in 0...children.count-1 {
             if !children.keys.contains(String(i)) {
                 return false
@@ -81,13 +81,13 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
     
     init(stringLiteral: String) {
-        self.values = [.decoded(stringLiteral)]
+        self.values = [.urlDecoded(stringLiteral)]
         self.children = [:]
     }
     
     init(arrayLiteral: String...) {
         self.values = arrayLiteral.map({ (s: String) -> URLEncodedFormPercentEncodedFragment in
-            return .decoded(s)
+            return .urlDecoded(s)
         })
         self.children = [:]
     }
