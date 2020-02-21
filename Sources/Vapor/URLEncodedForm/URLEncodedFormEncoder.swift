@@ -190,7 +190,7 @@ private class _Encoder: Encoder {
                 if codingConfig.bracketsAsArray,
                     let emptyStringChild = internalData.children[""] {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
-                    internalData.children[""]?.values = []
+                    result.children[""]?.values = []
                 }
                 let implodedValue = valuesToImplode.joined(separator: String(arraySeparator))
                 result.values = [implodedValue]

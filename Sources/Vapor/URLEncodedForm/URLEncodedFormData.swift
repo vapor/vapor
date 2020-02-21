@@ -7,6 +7,15 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     var hasOnlyValues: Bool {
         return children.count == 0
     }
+    
+    var allChildKeysAreNumbers: Bool {
+        for i in 0...children.count-1 {
+            if !children.keys.contains(String(i)) {
+                return false
+            }
+        }
+        return true
+    }
 
     init(values: [String] = [], children: [String: URLEncodedFormData] = [:]) {
         self.values = values

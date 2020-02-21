@@ -183,8 +183,14 @@ private struct _Decoder: Decoder {
         let values: [String]
         var codingPath: [CodingKey]
         var codingConfig: URLEncodedFormCodingConfig
+        var allChildKeysAreNumbers: Bool
 
         var count: Int? {
+            //Did we get an array with arr[0]=a&arr[1]=b indexing?
+            if allChildKeysAreNumbers {
+                return data.children.count
+            }
+            //No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
             return values.count
         }
         var isAtEnd: Bool {
@@ -198,41 +204,72 @@ private struct _Decoder: Decoder {
         init(data: URLEncodedFormData, codingPath: [CodingKey], with codingConfig: URLEncodedFormCodingConfig) {
             self.data = data
             self.codingPath = codingPath
-            var values = data.values
-            if codingConfig.bracketsAsArray {
-                // empty brackets turn into empty strings!
-                if let valuesInBracket = data.children[""] {
-                    values = values + valuesInBracket.values
-                }
-            }
-            if let explodeArraysOn = codingConfig.arraySeparator {
-                var explodedValues: [String] = []
-                for value in values {
-                    explodedValues = explodedValues + value.split(separator: explodeArraysOn).map(String.init)
-                }
-                values = explodedValues
-            }
-            self.values = values
             self.codingConfig = codingConfig
             self.currentIndex = 0
+            //Did we get an array with arr[0]=a&arr[1]=b indexing?
+            //Cache this result
+            self.allChildKeysAreNumbers = data.children.count > 0 && data.allChildKeysAreNumbers
+            
+            if allChildKeysAreNumbers {
+                self.values = data.values
+            } else {
+                //No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
+                var values = data.values
+                if codingConfig.bracketsAsArray {
+                    // empty brackets turn into empty strings!
+                    if let valuesInBracket = data.children[""] {
+                        values = values + valuesInBracket.values
+                    }
+                }
+                if let explodeArraysOn = codingConfig.arraySeparator {
+                    var explodedValues: [String] = []
+                    for value in values {
+                        explodedValues = explodedValues + value.split(separator: explodeArraysOn).map(String.init)
+                    }
+                    values = explodedValues
+                }
+                self.values = values
+            }
         }
         
         func decodeNil() throws -> Bool {
             return false
         }
         
+        struct _CodingKey: CodingKey {
+            var stringValue: String
+            
+            init(stringValue: String) {
+                self.stringValue = stringValue
+            }
+            
+            var intValue: Int?
+            
+            init?(intValue: Int) {
+                self.intValue = intValue
+                self.stringValue = String(intValue)
+            }
+        }
+
         mutating func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
-            let value = values[self.currentIndex]
-            defer { self.currentIndex += 1 }
-            if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
-                if let result = convertible.init(urlEncodedFormValue: String(value)) {
-                    return result as! T
-                } else {
-                    throw DecodingError.typeMismatch(T.self, at: self.codingPath)
-                }
-            } else {
-                let decoder = _Decoder(data: data, codingPath: self.codingPath, with: codingConfig)
+            defer { currentIndex += 1 }
+            if allChildKeysAreNumbers {
+                let childData = data.children[String(currentIndex)]! //We can force an unwrap because in the constructor we checked data.allChildKeysAreNumbers
+                let decoder = _Decoder(data: childData, codingPath: self.codingPath + [_CodingKey(stringValue: String(currentIndex)) as CodingKey] , with: codingConfig)
                 return try T(from: decoder)
+            } else {
+                let value = values[self.currentIndex]
+                if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
+                    if let result = convertible.init(urlEncodedFormValue: String(value)) {
+                        return result as! T
+                    } else {
+                        throw DecodingError.typeMismatch(T.self, at: self.codingPath)
+                    }
+                } else {
+                    //We need to pass in the value to be decoded
+                    let decoder = _Decoder(data: [value], codingPath: self.codingPath, with: codingConfig)
+                    return try T(from: decoder)
+                }
             }
         }
         
