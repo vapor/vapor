@@ -51,7 +51,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2.5"),
     ],
     targets: [
         // C helpers
