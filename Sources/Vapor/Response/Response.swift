@@ -33,7 +33,7 @@ public final class Response: CustomStringConvertible {
     }
 
     internal enum Upgrader {
-        case webSocket(onUpgrade: (WebSocket) -> ())
+        case webSocket(maxFrameSize: Int?, onUpgrade: (WebSocket) -> ())
     }
     
     internal var upgrader: Upgrader?

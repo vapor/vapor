@@ -51,8 +51,9 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
                 switch upgrader {
-                case .webSocket(let onUpgrade):
-                    let webSocketUpgrader = NIOWebSocketServerUpgrader(automaticErrorHandling: false, shouldUpgrade: { channel, _ in
+                case .webSocket(let maxFrameSize, let onUpgrade):
+                    let maxFrameSize = maxFrameSize ?? 1 << 14
+                    let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: maxFrameSize, automaticErrorHandling: false, shouldUpgrade: { channel, _ in
                         return channel.eventLoop.makeSucceededFuture([:])
                     }, upgradePipelineHandler: { channel, req in
                         return WebSocket.server(on: channel, onUpgrade: onUpgrade)
