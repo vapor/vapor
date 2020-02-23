@@ -10,6 +10,7 @@
 ///
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
+/// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
 public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
     private let codingConfig: URLEncodedFormCodingConfig
@@ -50,6 +51,12 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         where E: Encodable
     {
         let decodingConfigToUse = codingConfig ?? self.codingConfig
+        /**
+         This implementation of the encoder does not support encoding to "flags".
+         In order to do so, the children of a `URLEncodedFormData` would need to
+         reference the parent as `SingleValueContainer` does not have a reference
+         to the parent at that time.
+         */
         if decodingConfigToUse.flagsAsBool {
             throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
         }
