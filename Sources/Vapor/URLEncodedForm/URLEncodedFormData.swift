@@ -1,6 +1,6 @@
 
 //Keeps track if the string was percent encoded or not. Prevents double encoding/double decoding
-enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable {
+enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     init(stringLiteral: String) {
         self = .urlDecoded(stringLiteral)
     }
@@ -30,7 +30,7 @@ enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable
     }
     
     //Do comparison and hashing using the decoded version as there are multiple ways something can be encoded. Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
-    static func == (lhs: URLEncodedFormPercentEncodedFragment, rhs: URLEncodedFormPercentEncodedFragment) -> Bool {
+    static func == (lhs: URLQueryFragment, rhs: URLQueryFragment) -> Bool {
         do {
             return try lhs.asUrlDecoded() == rhs.asUrlDecoded()
         } catch {
@@ -59,7 +59,7 @@ enum URLEncodedFormPercentEncodedFragment: ExpressibleByStringLiteral, Equatable
 /// Represents application/x-www-form-urlencoded encoded data.
 internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
     
-    var values: [URLEncodedFormPercentEncodedFragment]
+    var values: [URLQueryFragment]
     var children: [String: URLEncodedFormData]
     
     var hasOnlyValues: Bool {
@@ -75,7 +75,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         return true
     }
 
-    init(values: [URLEncodedFormPercentEncodedFragment] = [], children: [String: URLEncodedFormData] = [:]) {
+    init(values: [URLQueryFragment] = [], children: [String: URLEncodedFormData] = [:]) {
         self.values = values
         self.children = children
     }
@@ -86,7 +86,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
     }
     
     init(arrayLiteral: String...) {
-        self.values = arrayLiteral.map({ (s: String) -> URLEncodedFormPercentEncodedFragment in
+        self.values = arrayLiteral.map({ (s: String) -> URLQueryFragment in
             return .urlDecoded(s)
         })
         self.children = [:]
@@ -97,7 +97,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         self.children = Dictionary(uniqueKeysWithValues: dictionaryLiteral)
     }
         
-    mutating func set(value: URLEncodedFormPercentEncodedFragment, forPath path: [String]) {
+    mutating func set(value: URLQueryFragment, forPath path: [String]) {
         guard let firstElement = path.first else {
             values.append(value)
             return

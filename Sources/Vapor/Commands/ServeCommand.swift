@@ -44,9 +44,7 @@ public final class ServeCommand: Command {
             ?? signature.bind?.split(separator: ":").first.flatMap(String.init)
         let port = signature.port
             // 0.0.0.0:8080, :8080, parse port
-          ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap({ (s: String) -> Int? in
-            return Int(s)
-          })
+          ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
         let server = try context.application.server.start(hostname: hostname, port: port)
         self.server = server
 

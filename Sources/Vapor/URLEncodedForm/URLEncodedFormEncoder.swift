@@ -136,7 +136,7 @@ private class _Encoder: Encoder {
             where T : Encodable
         {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                internalData.children[key.stringValue] = URLEncodedFormData(stringLiteral: convertible.urlEncodedFormValue)
+                internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlEncodedFormValue])
             } else {
                 let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
                 try value.encode(to: encoder)
@@ -192,7 +192,7 @@ private class _Encoder: Encoder {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
                     result.children[""]?.values = []
                 }
-                let implodedValue = try valuesToImplode.map({ (value: URLEncodedFormPercentEncodedFragment) -> String in
+                let implodedValue = try valuesToImplode.map({ (value: URLQueryFragment) -> String in
                     return try value.asUrlEncoded()
                 }).joined(separator: String(arraySeparator))
                 result.values = [.urlEncoded(implodedValue)]
@@ -215,10 +215,10 @@ private class _Encoder: Encoder {
                 let value = convertible.urlEncodedFormValue
                 if codingConfig.bracketsAsArray {
                     var emptyStringChild = internalData.children[""] ?? []
-                    emptyStringChild.values.append(.urlDecoded(value))
+                    emptyStringChild.values.append(value)
                     internalData.children[""] = emptyStringChild
                 } else {
-                    internalData.values.append(.urlDecoded(value))
+                    internalData.values.append(value)
                 }
             } else {
                 let encoder = _Encoder(codingPath: codingPath, codingConfig: codingConfig)
@@ -290,7 +290,7 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
             if let convertible = value as? URLEncodedFormFieldConvertible {
-                data.values.append(.urlDecoded(convertible.urlEncodedFormValue))
+                data.values.append(convertible.urlEncodedFormValue)
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)

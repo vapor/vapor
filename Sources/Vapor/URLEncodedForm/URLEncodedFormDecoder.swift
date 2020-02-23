@@ -135,7 +135,7 @@ private struct _Decoder: Decoder {
                     }
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
                 }
-                if let result = convertible.init(urlEncodedFormValue: try value.asUrlDecoded()) {
+                if let result = convertible.init(urlEncodedFormValue: value) {
                     return result as! T
                 } else {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath + [key])
@@ -180,7 +180,7 @@ private struct _Decoder: Decoder {
     
     struct UnkeyedContainer: UnkeyedDecodingContainer {
         let data: URLEncodedFormData
-        let values: [URLEncodedFormPercentEncodedFragment]
+        let values: [URLQueryFragment]
         var codingPath: [CodingKey]
         var codingConfig: URLEncodedFormCodingConfig
         var allChildKeysAreNumbers: Bool
@@ -222,9 +222,9 @@ private struct _Decoder: Decoder {
                     }
                 }
                 if let explodeArraysOn = codingConfig.arraySeparator {
-                    var explodedValues: [URLEncodedFormPercentEncodedFragment] = []
+                    var explodedValues: [URLQueryFragment] = []
                     for value in values {
-                        explodedValues = try explodedValues + value.asUrlEncoded().split(separator: explodeArraysOn).map({ (ss: Substring) -> URLEncodedFormPercentEncodedFragment in
+                        explodedValues = try explodedValues + value.asUrlEncoded().split(separator: explodeArraysOn).map({ (ss: Substring) -> URLQueryFragment in
                             return .urlEncoded(String(ss))
                         })
                     }
@@ -262,7 +262,7 @@ private struct _Decoder: Decoder {
             } else {
                 let value = values[self.currentIndex]
                 if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
-                    if let result = convertible.init(urlEncodedFormValue: try value.asUrlDecoded()) {
+                    if let result = convertible.init(urlEncodedFormValue: value) {
                         return result as! T
                     } else {
                         throw DecodingError.typeMismatch(T.self, at: self.codingPath)
@@ -298,7 +298,7 @@ private struct _Decoder: Decoder {
     
     struct SingleValueContainer: SingleValueDecodingContainer {
         let data: URLEncodedFormData
-        let values: [URLEncodedFormPercentEncodedFragment]
+        let values: [URLQueryFragment]
         var codingPath: [CodingKey]
         var codingConfig: URLEncodedFormCodingConfig
         
@@ -325,7 +325,7 @@ private struct _Decoder: Decoder {
                 guard let value = values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
                 }
-                if let result = convertible.init(urlEncodedFormValue: try value.asUrlDecoded()) {
+                if let result = convertible.init(urlEncodedFormValue: value) {
                     return result as! T
                 } else {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath)
