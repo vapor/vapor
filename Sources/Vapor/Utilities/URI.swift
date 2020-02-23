@@ -85,7 +85,7 @@ public struct URI: ExpressibleByStringLiteral, CustomStringConvertible {
 
     public var port: Int? {
         get {
-          return self.parse(.port).flatMap(Int.init)
+            return self.parse(.port).flatMap(Int.init)
         }
         set {
             self = .init(
