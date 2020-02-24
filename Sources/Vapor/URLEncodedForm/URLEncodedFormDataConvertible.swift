@@ -1,11 +1,11 @@
 import struct Foundation.Decimal
 
-/// Capable of converting to / from `URLEncodedFormData`.
+/// Capable of converting to / from `URLQueryFragment`.
 protocol URLEncodedFormFieldConvertible {
-    /// Converts `URLEncodedFormData` to self.
+    /// Converts `URLQueryFragment` to self.
     init?(urlEncodedFormValue value: URLQueryFragment)
     
-    /// Converts self to `URLEncodedFormData`.
+    /// Converts self to `URLQueryFragment`.
     var urlEncodedFormValue: URLQueryFragment { get }
 }
 

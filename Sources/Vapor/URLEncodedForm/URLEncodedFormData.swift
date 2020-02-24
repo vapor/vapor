@@ -8,6 +8,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     case urlEncoded(String)
     case urlDecoded(String)
     
+    ///Returns the URL Encoded version
     func asUrlEncoded() throws -> String {
         switch self {
         case .urlEncoded(let encoded):
@@ -17,6 +18,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         }
     }
     
+    ///Returns the URL Decoded version
     func asUrlDecoded() throws -> String {
         switch self {
         case .urlEncoded(let encoded):
@@ -29,7 +31,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         }
     }
     
-    //Do comparison and hashing using the decoded version as there are multiple ways something can be encoded. Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
+    ///Do comparison and hashing using the decoded version as there are multiple ways something can be encoded. Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
     static func == (lhs: URLQueryFragment, rhs: URLQueryFragment) -> Bool {
         do {
             return try lhs.asUrlDecoded() == rhs.asUrlDecoded()

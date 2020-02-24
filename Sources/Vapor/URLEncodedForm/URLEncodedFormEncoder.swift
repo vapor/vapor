@@ -14,8 +14,14 @@
 public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
     private let codingConfig: URLEncodedFormCodingConfig
-
-    /// Create a new `URLEncodedFormEncoder`.
+    /**
+     Create a new `URLEncodedFormEncoder`.
+     
+            ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
+     
+     - parameters:
+        - codingConfig: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
+     */
     public init(with codingConfig: URLEncodedFormCodingConfig = URLEncodedFormCodingConfig(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
         self.codingConfig = codingConfig
     }
@@ -45,6 +51,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///
     /// - parameters:
     ///     - encodable: Generic `Encodable` object (`E`) to encode.
+    ///     - codingConfig: Overwrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
     public func encode<E>(_ encodable: E, codingConfig: URLEncodedFormCodingConfig? = nil) throws -> String

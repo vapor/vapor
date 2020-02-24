@@ -18,10 +18,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 
     private let codingConfig: URLEncodedFormCodingConfig
 
-    /// Create a new `URLEncodedFormDecoder`.
+    /// Create a new `URLEncodedFormDecoder`. Can be configured by using the global `ContentConfiguration` class
+    ///
+    ///     ContentConfiguration.global.use(urlDecoder: URLEncodedFormDecoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
     ///
     /// - parameters:
-    ///     - codingConfig: Defines how decoding is done
+    ///     - codingConfig: Defines how decoding is done see `URLEncodedFormCodingConfig` for more information
     public init(with codingConfig: URLEncodedFormCodingConfig = URLEncodedFormCodingConfig(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil)) {
         self.parser = URLEncodedFormParser()
         self.codingConfig = codingConfig
@@ -42,6 +44,16 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         return try self.decode(D.self, from: url.query ?? "", with: nil)
     }
     
+    /**
+     Decodes the URL's query string to the type provided
+     
+            let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
+     
+     - parameters:
+        - decodable: Type to decode to
+        - url: URL to read the query string from
+        - codingConfig: Overwrides the default coding configuration
+     */
     public func decode<D>(_ decodable: D.Type, from url: URI, with codingConfig: URLEncodedFormCodingConfig? = nil) throws -> D where D : Decodable {
         return try self.decode(D.self, from: url.query ?? "", with: codingConfig)
     }
