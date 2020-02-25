@@ -5,8 +5,27 @@ public protocol Authenticator {
     associatedtype User: Authenticatable
 }
 
-public protocol RequestAuthenticator: Authenticator {
+public protocol RequestAuthenticator: Authenticator, Middleware {
     func authenticate(request: Request) -> EventLoopFuture<User?>
+}
+
+extension RequestAuthenticator {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        // if the user has already been authenticated
+        // by a previous middleware, continue
+        if request.authc.has(User.self) {
+            return next.respond(to: request)
+        }
+
+        // auth user on connection
+        return self.authenticate(request: request).flatMap { a in
+            if let a = a {
+                // set authed on request
+                request.authc.login(a)
+            }
+            return next.respond(to: request)
+        }
+    }
 }
 
 // MARK: Basic
@@ -56,41 +75,5 @@ extension CredentialsAuthenticator {
             return request.eventLoop.makeSucceededFuture(nil)
         }
         return self.authenticate(credentials: credentials, for: request)
-    }
-}
-
-
-// MARK: Middleware
-
-extension RequestAuthenticator {
-    public func middleware() -> Middleware {
-        return RequestAuthenticationMiddleware<Self>(authenticator: self)
-    }
-}
-
-private final class RequestAuthenticationMiddleware<A>: Middleware
-    where A: RequestAuthenticator
-{
-    public let authenticator: A
-
-    public init(authenticator: A) {
-        self.authenticator = authenticator
-    }
-
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        // if the user has already been authenticated
-        // by a previous middleware, continue
-        if request.auth.has(A.User.self) {
-            return next.respond(to: request)
-        }
-
-        // auth user on connection
-        return self.authenticator.authenticate(request: request).flatMap { a in
-            if let a = a {
-                // set authed on request
-                request.auth.login(a)
-            }
-            return next.respond(to: request)
-        }
     }
 }

@@ -22,9 +22,9 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            TestAuthenticator().middleware(), Test.guardMiddleware()
+            TestAuthenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            try req.authc.require(Test.self).name
         }
 
         try app.testable().test(.GET, "/test") { res in
@@ -57,9 +57,9 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            TestAuthenticator().middleware(), Test.guardMiddleware()
+            TestAuthenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            try req.authc.require(Test.self).name
         }
         
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
@@ -105,11 +105,11 @@ final class AuthenticationTests: XCTestCase {
         
         app.routes.grouped([
             SessionsMiddleware(session: app.sessions.driver),
-            TestSessionAuthenticator().middleware(),
-            TestBearerAuthenticator().middleware(),
+            TestSessionAuthenticator(),
+            TestBearerAuthenticator(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            try req.authc.require(Test.self).name
         }
 
         var sessionCookie: HTTPCookies.Value?
@@ -149,6 +149,6 @@ final class AuthenticationTests: XCTestCase {
         }
 
         var config = Middlewares()
-        config.use(TestAuthenticator().middleware())
+        config.use(TestAuthenticator())
     }
 }

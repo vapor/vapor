@@ -1,14 +1,9 @@
 extension Request {
-    public var authc: Authentication {
+    public var authz: Authorization {
         return .init(request: self)
     }
 
-    @available(*, deprecated, renamed: "authc")
-    public var auth: Authentication {
-        self.authc
-    }
-
-    public struct Authentication {
+    public struct Authorization {
         let request: Request
         init(request: Request) {
             self.request = request
@@ -16,19 +11,19 @@ extension Request {
     }
 }
 
-extension Request.Authentication {
+extension Request.Authorization {
     // MARK: Authenticate
 
     /// Authenticates the supplied instance for this request.
-    public func login<A>(_ instance: A)
-        where A: Authenticatable
+    public func add<A>(_ instance: A)
+        where A: Authorizable
     {
         self.cache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
-    public func logout<A>(_ type: A.Type = A.self)
-        where A: Authenticatable
+    public func remove<A>(_ type: A.Type = A.self)
+        where A: Authorizable
     {
         self.cache[A.self] = nil
     }
@@ -39,7 +34,7 @@ extension Request.Authentication {
     /// instance of that type has been authenticated or if there
     /// was a problem.
     public func require<A>(_ type: A.Type = A.self) throws -> A
-        where A: Authenticatable
+        where A: Authorizable
     {
         guard let a = self.get(A.self) else {
             self.request.logger.error("\(A.self) has not been authorized")
@@ -51,14 +46,14 @@ extension Request.Authentication {
     /// Returns the authenticated instance of the supplied type.
     /// note: nil if no type has been authed.
     public func get<A>(_ type: A.Type = A.self) -> A?
-        where A: Authenticatable
+        where A: Authorizable
     {
         return self.cache[A.self]
     }
 
     /// Returns true if the type has been authenticated.
     public func has<A>(_ type: A.Type = A.self) -> Bool
-        where A: Authenticatable
+        where A: Authorizable
     {
         return self.get(A.self) != nil
     }
@@ -67,7 +62,7 @@ extension Request.Authentication {
     /// using the request container as a singleton. Authenticated
     /// objects can then be stored here by middleware and fetched
     /// later in route closures.
-    private final class AuthenticationCache {
+    private final class AuthorizationCache {
         /// The internal storage.
         private var storage: [ObjectIdentifier: Any]
 
@@ -78,27 +73,27 @@ extension Request.Authentication {
 
         /// Access the cache using types.
         internal subscript<A>(_ type: A.Type) -> A?
-            where A: Authenticatable
+            where A: Authorizable
             {
             get { return storage[ObjectIdentifier(A.self)] as? A }
             set { storage[ObjectIdentifier(A.self)] = newValue }
         }
     }
 
-    private var cache: AuthenticationCache {
+    private var cache: AuthorizationCache {
         get {
-            if let existing = self.request.userInfo[_authenticationCacheKey] as? AuthenticationCache {
+            if let existing = self.request.userInfo[_authorizationCacheKey] as? AuthorizationCache {
                 return existing
             } else {
-                let new = AuthenticationCache()
-                self.request.userInfo[_authenticationCacheKey] = new
+                let new = AuthorizationCache()
+                self.request.userInfo[_authorizationCacheKey] = new
                 return new
             }
         }
         set {
-            self.request.userInfo[_authenticationCacheKey] = newValue
+            self.request.userInfo[_authorizationCacheKey] = newValue
         }
     }
 }
 
-private let _authenticationCacheKey = "authc"
+private let _authorizationCacheKey = "authz"

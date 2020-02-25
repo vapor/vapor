@@ -338,9 +338,10 @@ final class ApplicationTests: XCTestCase {
             return decoded
         }
 
-        try app.testable().test(.GET, "/multipart", headers: [
-            "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        try app.testable().test(.GET, "/multipart", beforeRequest: { req in
+            req.headers.contentType = .formData(boundary: "123")
+            req.body = .init(string: data)
+        }) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqualJSON(res.body.string, expected)
         }
@@ -435,12 +436,10 @@ final class ApplicationTests: XCTestCase {
             return .ok
         }
 
-        var headers = HTTPHeaders()
-        headers.contentType = .urlEncodedForm
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
-
-        try app.testable().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+        try app.testable().test(.GET, "/urlencodedform", beforeRequest: { req in
+            req.headers.contentType = .urlEncodedForm
+            req.body = .init(string: "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
+        }) { res in
             XCTAssertEqual(res.status.code, 200)
         }
     }
@@ -600,13 +599,11 @@ final class ApplicationTests: XCTestCase {
             return "ok"
         }
 
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeString(#"{"here":"hi"}"#)
-        var headers = HTTPHeaders()
-        headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
-        headers.contentType = .json
 
-        try app.testable().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+        try app.testable().test(.POST, "/decode-fail", beforeRequest: { req in
+            req.headers.contentType = .json
+            req.body = .init(string: #"{"here":"hi"}"#)
+        }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "missing")
         }
@@ -630,10 +627,12 @@ final class ApplicationTests: XCTestCase {
             return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.POST, "/users", json: [
-            "name": "vapor",
-            "email": "foo"
-        ]) { res in
+        try app.testable().test(.POST, "/users", beforeRequest: { req in
+            try req.content.encode([
+                "name": "vapor",
+                "email": "foo"
+            ], as: .json)
+        }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
@@ -756,7 +755,9 @@ final class ApplicationTests: XCTestCase {
                 .encodeResponse(status: .created, for: req)
         }
 
-        try app.testable().test(.POST, "/users", json: ["name": "vapor"]) { res in
+        try app.testable().test(.POST, "/users", beforeRequest: { req in
+            try req.content.encode(["name": "vapor"])
+        }) { res in
             XCTAssertEqual(res.status, .created)
             XCTAssertEqual(res.headers.contentType, .json)
             XCTAssertEqual(res.body.string, """
@@ -777,7 +778,7 @@ final class ApplicationTests: XCTestCase {
         try app.testable(method: .running).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
-            XCTAssertEqual(res.body.count, 0)
+            XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
 
@@ -919,7 +920,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.GET, "/no-content") { res in
             XCTAssertEqual(res.status.code, 204)
-            XCTAssertEqual(res.body.count, 0)
+            XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
 
@@ -1167,7 +1168,10 @@ final class ApplicationTests: XCTestCase {
             return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
         }
         
-        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], json: ["foo": "bar"], closure: { res in
+        try app.test(.GET, "/check", beforeRequest: { req in
+            req.headers.replaceOrAdd(name: "X-Test-Value", value: "PRESENT")
+            try req.content.encode(["foo": "bar"])
+        }, afterResponse: { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
         })
     }
@@ -1180,9 +1184,15 @@ final class ApplicationTests: XCTestCase {
             return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
         }
         // Me and my sadistic sense of humor.
-        ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
-        
-        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT", "Content-Type": "application/xml"], json: ["foo": "bar"], closure: { res in
+        try ContentConfiguration.global.use(
+            decoder: ContentConfiguration.global.requireDecoder(for: .json),
+            for: .xml
+        )
+        try app.testable().test(.GET, "/check", beforeRequest: { req in
+            req.headers.replaceOrAdd(name: "X-Test-Value", value: "PRESENT")
+            try req.content.encode(["foo": "bar"], as: .json)
+            req.headers.contentType = .xml
+        }, afterResponse: { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/xml")
         })
     }
@@ -1273,9 +1283,9 @@ final class ApplicationTests: XCTestCase {
             return .ok
         }
         
-        var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
-        buffer.writeBytes(payload)
-        try app.testable(method: .running).test(.POST, "payload", body: buffer) { res in
+        try app.testable(method: .running).test(.POST, "payload", beforeRequest: { req in
+            req.body.writeBytes(payload)
+        }) { res in
             XCTAssertEqual(res.status, .ok)
         }
     }

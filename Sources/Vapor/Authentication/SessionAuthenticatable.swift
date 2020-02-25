@@ -1,4 +1,4 @@
-public protocol SessionAuthenticator: Authenticator
+public protocol SessionAuthenticator: Authenticator, Middleware
     where Self.User: SessionAuthenticatable
 {
     /// Authenticate a model with the supplied ID.
@@ -6,8 +6,42 @@ public protocol SessionAuthenticator: Authenticator
 }
 
 extension SessionAuthenticator {
-    public func middleware() -> Middleware {
-        return SessionAuthenticationMiddleware<Self>(authenticator: self)
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        // if the user has already been authenticated
+        // by a previous middleware, continue
+        if request.authc.has(User.self) {
+            return next.respond(to: request)
+        }
+
+        let future: EventLoopFuture<Void>
+        if let aID = request.session.authenticated(User.self) {
+            // try to find user with id from session
+            future = self.resolve(sessionID: aID, for: request).map { user in
+                // if the user was found, auth it
+                if let user = user {
+                    request.authc.login(user)
+                }
+            }
+        } else {
+            // no need to authenticate
+            future = request.eventLoop.makeSucceededFuture(())
+        }
+
+        // map the auth future to a resopnse
+        return future.flatMap { _ in
+            // respond to the request
+            return next.respond(to: request).map { response in
+                if let user = request.authc.get(User.self) {
+                    // if a user has been authed (or is still authed), store in the session
+                    request.session.authenticate(user)
+                } else if request.hasSession {
+                    // if no user is authed, it's possible they've been unauthed.
+                    // remove from session.
+                    request.session.unauthenticate(User.self)
+                }
+                return response
+            }
+        }
     }
 }
 
@@ -49,55 +83,5 @@ extension Session {
     {
         return self.data["_" + A.sessionName + "Session"]
             .flatMap { A.SessionID.init($0) }
-    }
-}
-
-private final class SessionAuthenticationMiddleware<A>: Middleware
-    where A: SessionAuthenticator
-{
-    let authenticator: A
-
-    /// create a new password auth middleware
-    public init(authenticator: A) {
-        self.authenticator = authenticator
-    }
-
-    /// See Middleware.respond
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        // if the user has already been authenticated
-        // by a previous middleware, continue
-        if request.auth.has(A.User.self) {
-            return next.respond(to: request)
-        }
-        
-        let future: EventLoopFuture<Void>
-        if let aID = request.session.authenticated(A.User.self) {
-            // try to find user with id from session
-            future = self.authenticator.resolve(sessionID: aID, for: request).map { user in
-                // if the user was found, auth it
-                if let user = user {
-                    request.auth.login(user)
-                }
-            }
-        } else {
-            // no need to authenticate
-            future = request.eventLoop.makeSucceededFuture(())
-        }
-
-        // map the auth future to a resopnse
-        return future.flatMap { _ in
-            // respond to the request
-            return next.respond(to: request).map { response in
-                if let user = request.auth.get(A.User.self) {
-                    // if a user has been authed (or is still authed), store in the session
-                    request.session.authenticate(user)
-                } else if request.hasSession {
-                    // if no user is authed, it's possible they've been unauthed.
-                    // remove from session.
-                    request.session.unauthenticate(A.User.self)
-                }
-                return response
-            }
-        }
     }
 }
