@@ -81,7 +81,18 @@ final class ApplicationTests: XCTestCase {
         request.url.query = "hello=world"
         try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
     }
-    
+
+    func testQueryAsArray() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.headers.contentType = .json
+        request.url.path = "/foo"
+        request.url.query = "hello=world"
+        try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world"])
+    }
+
     // https://github.com/vapor/vapor/pull/2163
     func testWrappedSingleValueQueryDecoding() throws {
         let app = Application()
