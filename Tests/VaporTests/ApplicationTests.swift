@@ -90,7 +90,9 @@ final class ApplicationTests: XCTestCase {
         request.headers.contentType = .json
         request.url.path = "/foo"
         request.url.query = "hello=world"
-        try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world"])
+        request.url.query = "hello=world&hello[]=you"
+        try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world", "you"])
+        try XCTAssertEqual(request.query.get([String].self, at: "goodbye"), [])
     }
 
     // https://github.com/vapor/vapor/pull/2163
