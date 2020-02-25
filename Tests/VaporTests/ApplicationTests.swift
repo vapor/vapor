@@ -89,7 +89,6 @@ final class ApplicationTests: XCTestCase {
         let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
         request.url.path = "/foo"
-        request.url.query = "hello=world"
         request.url.query = "hello=world&hello[]=you"
         try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world", "you"])
         try XCTAssertEqual(request.query.get([String].self, at: "goodbye"), [])
