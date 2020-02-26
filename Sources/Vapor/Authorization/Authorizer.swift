@@ -9,14 +9,21 @@ public protocol RequestAuthorizer: Authorizer, Middleware {
 
 public protocol ParameterAuthorizer: RequestAuthorizer {
     associatedtype Value: LosslessStringConvertible
-    var name: String { get }
+    var parameter: PathComponent { get }
     func authorize(parameter: Value, for request: Request) -> EventLoopFuture<Void>
 }
 
 extension ParameterAuthorizer {
     public func authorize(request: Request) -> EventLoopFuture<Void> {
-        guard let parameter = request.parameters.get(self.name, as: Value.self) else {
-            request.logger.error("Authorization: Missing parameter: \(self.name)")
+        let name: String
+        switch self.parameter {
+        case .parameter(let n):
+            name = n
+        default:
+            fatalError("Path component must be a parameter: \(self.parameter)")
+        }
+        guard let parameter = request.parameters.get(name, as: Value.self) else {
+            request.logger.error("Authorization: Missing parameter: \(name)")
             return request.eventLoop.makeFailedFuture(Abort(.forbidden))
         }
         return self.authorize(parameter: parameter, for: request)

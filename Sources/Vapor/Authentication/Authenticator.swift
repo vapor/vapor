@@ -9,6 +9,13 @@ public protocol RequestAuthenticator: Authenticator, Middleware {
     func authenticate(request: Request) -> EventLoopFuture<User?>
 }
 
+extension Authenticator where Self: Middleware {
+    @available(*, deprecated, message: "middleware() call is no longer required.")
+    public func middleware() -> Middleware {
+        self
+    }
+}
+
 extension RequestAuthenticator {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
