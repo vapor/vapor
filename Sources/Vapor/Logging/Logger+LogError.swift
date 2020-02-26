@@ -6,11 +6,17 @@ extension Logger {
     ///     - request: Optional `Request` associated with this error.
     public func report(
         error: Error,
-        request: Request? = nil,
         file: String = #file,
         function: String = #function,
         line: Int = #line
     ) {
+        let source: ErrorSource?
+        if let abort = error as? AbortError {
+            source = abort.source
+        } else {
+            source = nil
+        }
+
         let reason: String
         switch error {
         case let localized as LocalizedError:
@@ -20,18 +26,12 @@ extension Logger {
         default:
             reason = "\(error)"
         }
-        let message: Logger.Message
-        if let request = request {
-            message = "\(request.method) \(request.url.path): \(reason)"
-        } else {
-            message = .init(stringLiteral: reason)
-        }
         self.log(
             level: .error,
-            message,
-            file: file,
-            function: function,
-            line: numericCast(line)
+            .init(stringLiteral: reason),
+            file: source?.file ?? file,
+            function: source?.function ?? function,
+            line: numericCast(source?.line ?? line)
         )
     }
 }
