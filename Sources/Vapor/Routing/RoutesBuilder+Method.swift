@@ -33,6 +33,16 @@ extension RoutesBuilder {
     {
         return self.on(.GET, path, use: closure)
     }
+
+    @discardableResult
+    public func get<Response>(
+        _ path: [PathComponent],
+        use closure: @escaping (Request) throws -> Response
+    ) -> Route
+        where Response: ResponseEncodable
+    {
+        return self.on(.GET, path, use: closure)
+    }
     
     @discardableResult
     public func post<Response>(
