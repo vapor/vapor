@@ -49,9 +49,15 @@ public final class ErrorMiddleware: Middleware {
             
             // Report with the values from the error
             if let source = source {
-                req.logger.report(error: error, verbose: !environment.isRelease, file: source.file, function: source.function, line: source.line)
+                req.logger.report(
+                    error: error,
+                    request: req,
+                    file: source.file,
+                    function: source.function,
+                    line: source.line
+                )
             } else {
-                req.logger.report(error: error, verbose: !environment.isRelease)
+                req.logger.report(error: error, request: req)
             }
             
             // create a Response with appropriate status

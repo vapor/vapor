@@ -1,18 +1,15 @@
 extension Logger {
-    /// Reports an `Error` to this `Logger`, first checking if it is `Debuggable`
-    /// for improved debug info.
+    /// Reports an `Error` to this `Logger`.
     ///
     /// - parameters:
     ///     - error: `Error` to log.
-    ///     - verbose: If `true`, extra lines of debug information will be printed containing
-    ///                things like suggested fixes, possible causes, or other info.
-    ///                Defaults to `true`.
+    ///     - request: Optional `Request` associated with this error.
     public func report(
         error: Error,
-        verbose: Bool = true,
+        request: Request? = nil,
         file: String = #file,
         function: String = #function,
-        line: UInt = #line
+        line: Int = #line
     ) {
         let reason: String
         switch error {
@@ -23,12 +20,18 @@ extension Logger {
         default:
             reason = "\(error)"
         }
+        let message: Logger.Message
+        if let request = request {
+            message = "\(request.method) \(request.url.path): \(reason)"
+        } else {
+            message = .init(stringLiteral: reason)
+        }
         self.log(
             level: .error,
-            .init(stringLiteral: reason),
+            message,
             file: file,
             function: function,
-            line: line
+            line: numericCast(line)
         )
     }
 }

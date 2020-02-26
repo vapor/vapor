@@ -163,9 +163,41 @@ public func routes(_ app: Application) throws {
         req.view.render("hello.txt", ["name": "world"])
     }
 
+    app.get("error") { req -> String in
+        throw TestError()
+    }
+
     app.get("secret") { (req) -> EventLoopFuture<String> in
         return Environment
             .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
             .unwrap(or: Abort(.badRequest))
+    }
+}
+
+struct TestError: AbortError {
+    var status: HTTPResponseStatus {
+        .internalServerError
+    }
+
+    var reason: String {
+        "This is a test."
+    }
+
+    let file: String
+    let function: String
+    let line: Int
+
+    var source: ErrorSource? {
+        ErrorSource(file: self.file, function: self.function, line: self.line)
+    }
+
+    init(
+        file: String = #file,
+        function: String = #function,
+        line: Int = #line
+    ) {
+        self.file = file
+        self.function = function
+        self.line = line
     }
 }
