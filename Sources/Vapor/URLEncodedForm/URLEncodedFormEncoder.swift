@@ -147,8 +147,8 @@ private class _Encoder: Encoder {
         func encode<T>(_ value: T, forKey key: Key) throws
             where T : Encodable
         {
-            if let convertible = value as? URLEncodedFormFieldConvertible {
-                internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlEncodedFormValue])
+            if let convertible = value as? URLQueryFragmentConvertible {
+                internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
                 try value.encode(to: encoder)
@@ -223,8 +223,8 @@ private class _Encoder: Encoder {
         
         func encode<T>(_ value: T) throws where T: Encodable {
             defer { count += 1 }
-            if let convertible = value as? URLEncodedFormFieldConvertible {
-                let value = convertible.urlEncodedFormValue
+            if let convertible = value as? URLQueryFragmentConvertible {
+                let value = convertible.urlQueryFragmentValue
                 if codingConfig.bracketsAsArray {
                     var emptyStringChild = internalData.children[""] ?? []
                     emptyStringChild.values.append(value)
@@ -301,8 +301,8 @@ private class _Encoder: Encoder {
         
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
-            if let convertible = value as? URLEncodedFormFieldConvertible {
-                data.values.append(convertible.urlEncodedFormValue)
+            if let convertible = value as? URLQueryFragmentConvertible {
+                data.values.append(convertible.urlQueryFragmentValue)
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
                 try value.encode(to: encoder)

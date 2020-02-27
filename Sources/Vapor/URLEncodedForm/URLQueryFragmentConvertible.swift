@@ -1,30 +1,30 @@
 import struct Foundation.Decimal
 
 /// Capable of converting to / from `URLQueryFragment`.
-protocol URLEncodedFormFieldConvertible {
+protocol URLQueryFragmentConvertible {
     /// Converts `URLQueryFragment` to self.
-    init?(urlEncodedFormValue value: URLQueryFragment)
+    init?(urlQueryFragmentValue value: URLQueryFragment)
     
     /// Converts self to `URLQueryFragment`.
-    var urlEncodedFormValue: URLQueryFragment { get }
+    var urlQueryFragmentValue: URLQueryFragment { get }
 }
 
-extension String: URLEncodedFormFieldConvertible {
-    init?(urlEncodedFormValue value: URLQueryFragment) {
+extension String: URLQueryFragmentConvertible {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let result = try? value.asUrlDecoded() else {
             return nil
         }
         self = result
     }
     
-    var urlEncodedFormValue: URLQueryFragment {
+    var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self)
     }
 }
 
 extension FixedWidthInteger {
     /// `URLEncodedFormDataConvertible` conformance.
-    init?(urlEncodedFormValue value: URLQueryFragment) {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
             let fwi = Self.init(decodedString) else {
             return nil
@@ -33,26 +33,26 @@ extension FixedWidthInteger {
     }
     
     /// `URLEncodedFormDataConvertible` conformance.
-    var urlEncodedFormValue: URLQueryFragment {
+    var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
     }
 }
 
-extension Int: URLEncodedFormFieldConvertible { }
-extension Int8: URLEncodedFormFieldConvertible { }
-extension Int16: URLEncodedFormFieldConvertible { }
-extension Int32: URLEncodedFormFieldConvertible { }
-extension Int64: URLEncodedFormFieldConvertible { }
-extension UInt: URLEncodedFormFieldConvertible { }
-extension UInt8: URLEncodedFormFieldConvertible { }
-extension UInt16: URLEncodedFormFieldConvertible { }
-extension UInt32: URLEncodedFormFieldConvertible { }
-extension UInt64: URLEncodedFormFieldConvertible { }
+extension Int: URLQueryFragmentConvertible { }
+extension Int8: URLQueryFragmentConvertible { }
+extension Int16: URLQueryFragmentConvertible { }
+extension Int32: URLQueryFragmentConvertible { }
+extension Int64: URLQueryFragmentConvertible { }
+extension UInt: URLQueryFragmentConvertible { }
+extension UInt8: URLQueryFragmentConvertible { }
+extension UInt16: URLQueryFragmentConvertible { }
+extension UInt32: URLQueryFragmentConvertible { }
+extension UInt64: URLQueryFragmentConvertible { }
 
 
 extension BinaryFloatingPoint {
     /// `URLEncodedFormDataConvertible` conformance.
-    init?(urlEncodedFormValue value: URLQueryFragment) {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
             let double = Double(decodedString) else {
             return nil
@@ -61,17 +61,17 @@ extension BinaryFloatingPoint {
     }
     
     /// `URLEncodedFormDataConvertible` conformance.
-    var urlEncodedFormValue: URLQueryFragment {
+    var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(Double(self).description)
     }
 }
 
-extension Float: URLEncodedFormFieldConvertible { }
-extension Double: URLEncodedFormFieldConvertible { }
+extension Float: URLQueryFragmentConvertible { }
+extension Double: URLQueryFragmentConvertible { }
 
-extension Bool: URLEncodedFormFieldConvertible {
+extension Bool: URLQueryFragmentConvertible {
     /// `URLEncodedFormDataConvertible` conformance.
-    init?(urlEncodedFormValue value: URLQueryFragment) {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded() else {
             return nil
         }
@@ -83,14 +83,14 @@ extension Bool: URLEncodedFormFieldConvertible {
     }
     
     /// `URLEncodedFormDataConvertible` conformance.
-    var urlEncodedFormValue: URLQueryFragment {
+    var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
     }
 }
 
-extension Decimal: URLEncodedFormFieldConvertible {
+extension Decimal: URLQueryFragmentConvertible {
     /// `URLEncodedFormDataConvertible` conformance.
-    init?(urlEncodedFormValue value: URLQueryFragment) {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
         guard let decodedString = try? value.asUrlDecoded(),
             let decimal = Decimal(string: decodedString) else {
             return nil
@@ -99,7 +99,7 @@ extension Decimal: URLEncodedFormFieldConvertible {
     }
     
     /// `URLEncodedFormDataConvertible` conformance.
-    var urlEncodedFormValue: URLQueryFragment {
+    var urlQueryFragmentValue: URLQueryFragment {
         return .urlDecoded(self.description)
     }
 }

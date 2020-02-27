@@ -130,7 +130,7 @@ private struct _Decoder: Decoder {
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = data.children[key.stringValue] ?? []
-            if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
+            if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                 var values = child.values
                 if codingConfig.bracketsAsArray {
                     // empty brackets turn into empty strings!
@@ -147,7 +147,7 @@ private struct _Decoder: Decoder {
                     }
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
                 }
-                if let result = convertible.init(urlEncodedFormValue: value) {
+                if let result = convertible.init(urlQueryFragmentValue: value) {
                     return result as! T
                 } else {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath + [key])
@@ -273,8 +273,8 @@ private struct _Decoder: Decoder {
                 return try T(from: decoder)
             } else {
                 let value = values[self.currentIndex]
-                if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
-                    if let result = convertible.init(urlEncodedFormValue: value) {
+                if let convertible = T.self as? URLQueryFragmentConvertible.Type {
+                    if let result = convertible.init(urlQueryFragmentValue: value) {
                         return result as! T
                     } else {
                         throw DecodingError.typeMismatch(T.self, at: self.codingPath)
@@ -329,11 +329,11 @@ private struct _Decoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
-            if let convertible = T.self as? URLEncodedFormFieldConvertible.Type {
+            if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                 guard let value = values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
                 }
-                if let result = convertible.init(urlEncodedFormValue: value) {
+                if let result = convertible.init(urlQueryFragmentValue: value) {
                     return result as! T
                 } else {
                     throw DecodingError.typeMismatch(T.self, at: self.codingPath)
