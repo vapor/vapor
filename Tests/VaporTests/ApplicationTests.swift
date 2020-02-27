@@ -1118,6 +1118,9 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(res.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
+            }.flatMapErrorThrowing {
+                req.application.running?.stop()
+                throw $0
             }
         }
 
