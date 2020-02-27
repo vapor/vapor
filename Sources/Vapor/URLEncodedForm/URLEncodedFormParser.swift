@@ -1,6 +1,4 @@
-/**
- Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
- */
+/// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
 internal struct URLEncodedFormParser {
     let splitVariablesOn: Character
     let splitKeyValueOn: Character

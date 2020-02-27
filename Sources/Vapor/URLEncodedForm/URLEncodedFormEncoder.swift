@@ -13,16 +13,15 @@
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
 public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
-    private let codingConfig: URLEncodedFormCodingConfig
-    /**
-     Create a new `URLEncodedFormEncoder`.
-     
-            ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
-     
-     - parameters:
-        - codingConfig: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
-     */
-    public init(with codingConfig: URLEncodedFormCodingConfig = URLEncodedFormCodingConfig(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
+    private let codingConfig: URLEncodedFormCodingConfiguration
+
+/// Create a new `URLEncodedFormEncoder`.
+///
+///        ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
+///
+/// - parameters:
+///    - codingConfig: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
+    public init(with codingConfig: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
         self.codingConfig = codingConfig
     }
     
@@ -39,7 +38,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         try self.encode(encodable, to: &url, codingConfig: nil)
     }
 
-    public func encode<E>(_ encodable: E, to url: inout URI, codingConfig: URLEncodedFormCodingConfig? = nil) throws where E : Encodable {
+    public func encode<E>(_ encodable: E, to url: inout URI, codingConfig: URLEncodedFormCodingConfiguration? = nil) throws where E : Encodable {
         url.query = try self.encode(encodable)
     }
 
@@ -54,16 +53,15 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///     - codingConfig: Overwrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E, codingConfig: URLEncodedFormCodingConfig? = nil) throws -> String
+    public func encode<E>(_ encodable: E, codingConfig: URLEncodedFormCodingConfiguration? = nil) throws -> String
         where E: Encodable
     {
         let decodingConfigToUse = codingConfig ?? self.codingConfig
-        /**
-         This implementation of the encoder does not support encoding to "flags".
-         In order to do so, the children of a `URLEncodedFormData` would need to
-         reference the parent as `SingleValueContainer` does not have a reference
-         to the parent at that time.
-         */
+
+///     This implementation of the encoder does not support encoding to "flags".
+///     In order to do so, the children of a `URLEncodedFormData` would need to
+///     reference the parent as `SingleValueContainer` does not have a reference
+///     to the parent at that time.
         if decodingConfigToUse.flagsAsBool {
             throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
         }
@@ -93,9 +91,9 @@ private class _Encoder: Encoder {
         return [:]
     }
 
-    private let codingConfig: URLEncodedFormCodingConfig
+    private let codingConfig: URLEncodedFormCodingConfiguration
 
-    init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfig) {
+    init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
         self.codingPath = codingPath
         self.codingConfig = codingConfig
     }
@@ -133,9 +131,9 @@ private class _Encoder: Encoder {
             return result
         }
         
-        private let codingConfig: URLEncodedFormCodingConfig
+        private let codingConfig: URLEncodedFormCodingConfiguration
 
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfig) {
+        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
             self.codingConfig = codingConfig
         }
@@ -191,7 +189,7 @@ private class _Encoder: Encoder {
         var count: Int = 0
         var internalData: URLEncodedFormData = []
         var childContainers: [Int: _Container] = [:]
-        private let codingConfig: URLEncodedFormCodingConfig
+        private let codingConfig: URLEncodedFormCodingConfiguration
 
         func getData() throws -> URLEncodedFormData {
             var result = internalData
@@ -214,7 +212,7 @@ private class _Encoder: Encoder {
             return result
         }
         
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfig) {
+        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
             self.codingConfig = codingConfig
         }
@@ -288,10 +286,10 @@ private class _Encoder: Encoder {
         /// The data being encoded
         var data: URLEncodedFormData = []
         
-        private let codingConfig: URLEncodedFormCodingConfig
+        private let codingConfig: URLEncodedFormCodingConfiguration
 
         /// Creates a new single value encoder
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfig) {
+        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
             self.codingConfig = codingConfig
         }

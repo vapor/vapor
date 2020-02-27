@@ -47,15 +47,6 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
             
         }
     }
-    
-    var hashValue: Int {
-        do {
-            return try asUrlDecoded().hashValue
-        } catch {
-            return 0
-        }
-    }
-    
 }
 
 /// Represents application/x-www-form-urlencoded encoded data.
