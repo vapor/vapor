@@ -55,13 +55,20 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.nums[0], 3.14)
     }
 
-    func testDecodeArraysToSingleValue() throws {
+    func testDecodeArraysToSingleValueFails() throws {
         let data = """
         name[]=Tanner&age[]=23&pets[]=Zizek&pets[]=Foo&dict[a][]=1&dict[b][]=2&foos[]=baz&nums[]=3.14
         """
-        
-        let user = try URLEncodedFormDecoder().decode(User.self, from: data)
-        XCTAssertEqual(user.name, "Tanner")
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(User.self, from: data))
+    }
+    
+    func testDecodeStringWithCommas() throws {
+        let codingConfig = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: true, arraySeparator: ",")
+        let data = """
+        name=Vapor, Tanner&age=23&pets[]=Zizek&pets[]=Foo&dict[a]=1&dict[b]=2&foos[]=baz&nums[]=3.14
+        """
+        let user = try URLEncodedFormDecoder(configuration: codingConfig).decode(User.self, from: data)
+        XCTAssertEqual(user.name, "Vapor, Tanner")
         XCTAssertEqual(user.age, 23)
         XCTAssertEqual(user.pets.count, 2)
         XCTAssertEqual(user.pets.first, "Zizek")

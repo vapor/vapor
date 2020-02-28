@@ -131,14 +131,7 @@ private struct _Decoder: Decoder {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = data.children[key.stringValue] ?? []
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
-                var values = child.values
-                if codingConfig.bracketsAsArray {
-                    // empty brackets turn into empty strings!
-                    if let valuesInBracket = child.children[""] {
-                        values = values + valuesInBracket.values
-                    }
-                }
-                guard let value = values.last else {
+                guard let value = child.values.last else {
                     if codingConfig.flagsAsBool {
                         //If no values found see if we are decoding a boolean
                         if let _ = T.self as? Bool.Type {
@@ -306,21 +299,12 @@ private struct _Decoder: Decoder {
     
     struct SingleValueContainer: SingleValueDecodingContainer {
         let data: URLEncodedFormData
-        let values: [URLQueryFragment]
         var codingPath: [CodingKey]
         var codingConfig: URLEncodedFormCodingConfiguration
         
         init(data: URLEncodedFormData, codingPath: [CodingKey], with codingConfig: URLEncodedFormCodingConfiguration) {
             self.data = data
             self.codingPath = codingPath
-            var values = data.values
-            if codingConfig.bracketsAsArray {
-                // empty brackets turn into empty strings!
-                if let valuesInBracket = data.children[""] {
-                    values = values + valuesInBracket.values
-                }
-            }
-            self.values = values
             self.codingConfig = codingConfig
         }
         
@@ -330,7 +314,7 @@ private struct _Decoder: Decoder {
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
-                guard let value = values.last else {
+              guard let value = data.values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
                 }
                 if let result = convertible.init(urlQueryFragmentValue: value) {
