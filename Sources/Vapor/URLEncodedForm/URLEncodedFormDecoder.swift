@@ -24,7 +24,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///
     /// - parameters:
     ///     - configuration: Defines how decoding is done see `URLEncodedFormCodingConfig` for more information
-    public init(configuration: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil)) {
+    public init(configuration: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: true, arraySeparator: ",")) {
         self.parser = URLEncodedFormParser()
         self.configuration = configuration
     }
