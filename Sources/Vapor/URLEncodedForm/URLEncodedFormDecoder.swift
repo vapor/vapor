@@ -290,7 +290,7 @@ private struct _Decoder: Decoder {
         }
         
         mutating func superDecoder() throws -> Decoder {
-            throw DecodingError.typeMismatch(Array<Any>.self, at: codingPath)
+            return _Decoder(data: data, codingPath: codingPath, configuration: configuration)
         }
     }
     
