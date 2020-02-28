@@ -209,6 +209,15 @@ final class URLEncodedFormTests: XCTestCase {
         let decodedUsers = try URLEncodedFormDecoder(configuration: codingConfig).decode(Users.self, from: result)
         XCTAssertEqual(decodedUsers, usersToEncode)
     }
+    
+    func testInheritanceCoding() throws {
+        let toEncode = ChildClass()
+        toEncode.baseField = "Base Value"
+        toEncode.childField = "Child Field"
+        let result = try URLEncodedFormEncoder().encode(toEncode)
+        let decoded = try URLEncodedFormDecoder().decode(ChildClass.self, from: result)
+        XCTAssertEqual(decoded, toEncode)
+    }
 
     func testMultiObjectArrayEncodeWithArraySeparator() throws {
         let codingConfig = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: ",")
@@ -431,6 +440,20 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
+}
+
+class BaseClass: Codable, Equatable {
+    var baseField: String?
+    static func == (lhs: BaseClass, rhs: BaseClass) -> Bool {
+        return lhs.baseField == rhs.baseField
+    }
+}
+
+class ChildClass: BaseClass {
+    var childField: String?
+    static func == (lhs: ChildClass, rhs: ChildClass) -> Bool {
+        return lhs.baseField == rhs.baseField && lhs.childField == rhs.childField
+    }
 }
 
 private struct Users: Codable, Equatable {
