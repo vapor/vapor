@@ -219,6 +219,15 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decoded, toEncode)
     }
 
+    func testArraysOfArraysOfObjects() throws {
+        let toEncode = [[User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)]]
+        let result = try URLEncodedFormEncoder().encode(toEncode)
+        let kvs = result.split(separator: "&")
+        XCTAssert(kvs.contains("0[0][name]=Tanner"))
+        let decoded = try URLEncodedFormDecoder().decode([[User]].self, from: result)
+        XCTAssertEqual(decoded, toEncode)
+    }
+    
     func testMultiObjectArrayEncodeWithArraySeparator() throws {
         let codingConfig = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: ",")
 
