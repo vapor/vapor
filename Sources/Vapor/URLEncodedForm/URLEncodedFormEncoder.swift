@@ -13,16 +13,16 @@
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
 public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
-    private let codingConfig: URLEncodedFormCodingConfiguration
+    private let configuration: URLEncodedFormCodingConfiguration
 
 /// Create a new `URLEncodedFormEncoder`.
 ///
 ///        ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
 ///
 /// - parameters:
-///    - codingConfig: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
-    public init(with codingConfig: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
-        self.codingConfig = codingConfig
+///    - configuration: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
+    public init(configuration: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
+        self.configuration = configuration
     }
     
     /// `ContentEncoder` conformance.
@@ -35,11 +35,11 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     
     /// `URLContentEncoder` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI) throws where E : Encodable {
-        try self.encode(encodable, to: &url, codingConfig: nil)
+        try self.encode(encodable, to: &url, configuration: nil)
     }
 
-    public func encode<E>(_ encodable: E, to url: inout URI, codingConfig: URLEncodedFormCodingConfiguration? = nil) throws where E : Encodable {
-        url.query = try self.encode(encodable)
+    public func encode<E>(_ encodable: E, to url: inout URI, configuration: URLEncodedFormCodingConfiguration? = nil) throws where E : Encodable {
+        url.query = try self.encode(encodable, configuration: configuration)
     }
 
     /// Encodes the supplied `Encodable` object to `Data`.
@@ -50,13 +50,13 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///
     /// - parameters:
     ///     - encodable: Generic `Encodable` object (`E`) to encode.
-    ///     - codingConfig: Overwrides the  coding config for this encoding call.
+    ///     - configuration: Overwrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E, codingConfig: URLEncodedFormCodingConfiguration? = nil) throws -> String
+    public func encode<E>(_ encodable: E, configuration: URLEncodedFormCodingConfiguration? = nil) throws -> String
         where E: Encodable
     {
-        let decodingConfigToUse = codingConfig ?? self.codingConfig
+        let decodingConfigToUse = configuration ?? self.configuration
 
 ///     This implementation of the encoder does not support encoding to "flags".
 ///     In order to do so, the children of a `URLEncodedFormData` would need to
@@ -65,7 +65,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         if decodingConfigToUse.flagsAsBool {
             throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
         }
-        let encoder = _Encoder(codingPath: [], codingConfig: decodingConfigToUse)
+        let encoder = _Encoder(codingPath: [], configuration: decodingConfigToUse)
         try encodable.encode(to: encoder)
         let serializer = URLEncodedFormSerializer()
         return try serializer.serialize(encoder.getData())
@@ -91,27 +91,27 @@ private class _Encoder: Encoder {
         return [:]
     }
 
-    private let codingConfig: URLEncodedFormCodingConfiguration
+    private let configuration: URLEncodedFormCodingConfiguration
 
-    init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
+    init(codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
         self.codingPath = codingPath
-        self.codingConfig = codingConfig
+        self.configuration = configuration
     }
 
     func container<Key>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> where Key : CodingKey {
-        let container = KeyedContainer<Key>(codingPath: codingPath, codingConfig: codingConfig)
+        let container = KeyedContainer<Key>(codingPath: codingPath, configuration: configuration)
         self.container = container
         return .init(container)
     }
         
     func unkeyedContainer() -> UnkeyedEncodingContainer {
-        let container = UnkeyedContainer(codingPath: codingPath, codingConfig: codingConfig)
+        let container = UnkeyedContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
         return container
     }
     
     func singleValueContainer() -> SingleValueEncodingContainer {
-        let container = SingleValueContainer(codingPath: codingPath, codingConfig: codingConfig)
+        let container = SingleValueContainer(codingPath: codingPath, configuration: configuration)
         self.container = container
         return container
     }
@@ -131,11 +131,11 @@ private class _Encoder: Encoder {
             return result
         }
         
-        private let codingConfig: URLEncodedFormCodingConfiguration
+        private let configuration: URLEncodedFormCodingConfiguration
 
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
+        init(codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
-            self.codingConfig = codingConfig
+            self.configuration = configuration
         }
         
         /// See `KeyedEncodingContainerProtocol`
@@ -150,7 +150,7 @@ private class _Encoder: Encoder {
             if let convertible = value as? URLQueryFragmentConvertible {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
-                let encoder = _Encoder(codingPath: codingPath + [key], codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: codingPath + [key], configuration: configuration)
                 try value.encode(to: encoder)
                 internalData.children[key.stringValue] = try encoder.getData()
             }
@@ -160,14 +160,14 @@ private class _Encoder: Encoder {
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type, forKey key: Key) -> KeyedEncodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
-            let container = KeyedContainer<NestedKey>(codingPath: self.codingPath + [key], codingConfig: codingConfig)
+            let container = KeyedContainer<NestedKey>(codingPath: self.codingPath + [key], configuration: configuration)
             childContainers[key.stringValue] = container
             return .init(container)
         }
         
         /// See `KeyedEncodingContainerProtocol`
         func nestedUnkeyedContainer(forKey key: Key) -> UnkeyedEncodingContainer {
-            let container = UnkeyedContainer(codingPath: self.codingPath + [key], codingConfig: codingConfig)
+            let container = UnkeyedContainer(codingPath: self.codingPath + [key], configuration: configuration)
             childContainers[key.stringValue] = container
             return container
         }
@@ -189,17 +189,17 @@ private class _Encoder: Encoder {
         var count: Int = 0
         var internalData: URLEncodedFormData = []
         var childContainers: [Int: _Container] = [:]
-        private let codingConfig: URLEncodedFormCodingConfiguration
+        private let configuration: URLEncodedFormCodingConfiguration
 
         func getData() throws -> URLEncodedFormData {
             var result = internalData
             for (key, childContainer) in childContainers {
                 result.children[String(key)] = try childContainer.getData()
             }
-            if let arraySeparator = codingConfig.arraySeparator {
+            if let arraySeparator = configuration.arraySeparator {
                 var valuesToImplode = result.values
                 result.values = []
-                if codingConfig.bracketsAsArray,
+                if configuration.bracketsAsArray,
                     let emptyStringChild = internalData.children[""] {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
                     result.children[""]?.values = []
@@ -212,9 +212,9 @@ private class _Encoder: Encoder {
             return result
         }
         
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
+        init(codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
-            self.codingConfig = codingConfig
+            self.configuration = configuration
         }
         
         func encodeNil() throws {
@@ -225,7 +225,7 @@ private class _Encoder: Encoder {
             defer { count += 1 }
             if let convertible = value as? URLQueryFragmentConvertible {
                 let value = convertible.urlQueryFragmentValue
-                if codingConfig.bracketsAsArray {
+                if configuration.bracketsAsArray {
                     var emptyStringChild = internalData.children[""] ?? []
                     emptyStringChild.values.append(value)
                     internalData.children[""] = emptyStringChild
@@ -233,11 +233,11 @@ private class _Encoder: Encoder {
                     internalData.values.append(value)
                 }
             } else {
-                let encoder = _Encoder(codingPath: codingPath, codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: codingPath, configuration: configuration)
                 try value.encode(to: encoder)
                 let childData = try encoder.getData()
                 if childData.hasOnlyValues {
-                    if codingConfig.bracketsAsArray {
+                    if configuration.bracketsAsArray {
                         var emptyStringChild = internalData.children[""] ?? []
                         emptyStringChild.values.append(contentsOf: childData.values)
                         internalData.children[""] = emptyStringChild
@@ -255,7 +255,7 @@ private class _Encoder: Encoder {
             where NestedKey: CodingKey
         {
             defer { count += 1 }
-            let container = KeyedContainer<NestedKey>(codingPath: self.codingPath, codingConfig: codingConfig)
+            let container = KeyedContainer<NestedKey>(codingPath: self.codingPath, configuration: configuration)
             childContainers[count] = container
             return .init(container)
         }
@@ -263,7 +263,7 @@ private class _Encoder: Encoder {
         /// See UnkeyedEncodingContainer.nestedUnkeyedContainer
         func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
             defer { count += 1 }
-            let container = UnkeyedContainer(codingPath: self.codingPath, codingConfig: codingConfig)
+            let container = UnkeyedContainer(codingPath: self.codingPath, configuration: configuration)
             childContainers[count] = container
             return container
         }
@@ -286,12 +286,12 @@ private class _Encoder: Encoder {
         /// The data being encoded
         var data: URLEncodedFormData = []
         
-        private let codingConfig: URLEncodedFormCodingConfiguration
+        private let configuration: URLEncodedFormCodingConfiguration
 
         /// Creates a new single value encoder
-        init(codingPath: [CodingKey], codingConfig: URLEncodedFormCodingConfiguration) {
+        init(codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
             self.codingPath = codingPath
-            self.codingConfig = codingConfig
+            self.configuration = configuration
         }
         
         /// See `SingleValueEncodingContainer`
@@ -304,7 +304,7 @@ private class _Encoder: Encoder {
             if let convertible = value as? URLQueryFragmentConvertible {
                 data.values.append(convertible.urlQueryFragmentValue)
             } else {
-                let encoder = _Encoder(codingPath: self.codingPath, codingConfig: codingConfig)
+                let encoder = _Encoder(codingPath: self.codingPath, configuration: configuration)
                 try value.encode(to: encoder)
                 data = try encoder.getData()
             }
