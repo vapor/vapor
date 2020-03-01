@@ -23,10 +23,10 @@ public protocol AbortError: LocalizedError, CustomStringConvertible {
 
 public struct ErrorSource {
     public let file: String
-    public let line: UInt
     public let function: String
+    public let line: Int
     
-    public init(file: String = #file, line: UInt = #line, function: String = #function) {
+    public init(file: String = #file, function: String = #function, line: Int = #line) {
         self.file = file
         self.line = line
         self.function = function
@@ -37,6 +37,10 @@ extension AbortError {
     /// See `AbortError`.
     public var headers: HTTPHeaders {
         return [:]
+    }
+
+    public var description: String {
+        return "\(Self.self) \(self.status.code): \(self.reason)"
     }
 
     public var errorDescription: String? {

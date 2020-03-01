@@ -1,19 +1,22 @@
 extension Logger {
-    /// Reports an `Error` to this `Logger`, first checking if it is `Debuggable`
-    /// for improved debug info.
+    /// Reports an `Error` to this `Logger`.
     ///
     /// - parameters:
     ///     - error: `Error` to log.
-    ///     - verbose: If `true`, extra lines of debug information will be printed containing
-    ///                things like suggested fixes, possible causes, or other info.
-    ///                Defaults to `true`.
+    ///     - request: Optional `Request` associated with this error.
     public func report(
         error: Error,
-        verbose: Bool = true,
         file: String = #file,
         function: String = #function,
-        line: UInt = #line
+        line: Int = #line
     ) {
+        let source: ErrorSource?
+        if let abort = error as? AbortError {
+            source = abort.source
+        } else {
+            source = nil
+        }
+
         let reason: String
         switch error {
         case let localized as LocalizedError:
@@ -26,9 +29,9 @@ extension Logger {
         self.log(
             level: .error,
             .init(stringLiteral: reason),
-            file: file,
-            function: function,
-            line: line
+            file: source?.file ?? file,
+            function: source?.function ?? function,
+            line: numericCast(source?.line ?? line)
         )
     }
 }
