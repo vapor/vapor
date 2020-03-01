@@ -41,6 +41,9 @@ public final class HTTPServer {
         /// When `true`, HTTP server will support gzip and deflate compression.
         public var supportCompression: Bool
         
+        /// Limit of data to decompress when HTTP compression is supported.
+        public var decompressionLimit: NIOHTTPDecompression.DecompressionLimit
+        
         /// When `true`, HTTP server will support pipelined requests.
         public var supportPipelining: Bool
         
@@ -63,6 +66,7 @@ public final class HTTPServer {
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
             supportCompression: Bool = false,
+            decompressionLimit: NIOHTTPDecompression.DecompressionLimit = .ratio(10),
             supportPipelining: Bool = false,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
@@ -77,6 +81,7 @@ public final class HTTPServer {
             self.tcpNoDelay = tcpNoDelay
             self.webSocketMaxFrameSize = webSocketMaxFrameSize
             self.supportCompression = supportCompression
+            self.decompressionLimit = decompressionLimit
             self.supportPipelining = supportPipelining
             if let supportVersions = supportVersions {
                 self.supportVersions = supportVersions
@@ -338,7 +343,7 @@ private extension ChannelPipeline {
         
         // add response compressor if configured
         if configuration.supportCompression {
-            let requestDecompressionHandler = NIOHTTPRequestDecompressor(limit: .none)
+            let requestDecompressionHandler = NIOHTTPRequestDecompressor(limit: configuration.decompressionLimit)
             let responseCompressionHandler = HTTPResponseCompressor()
 
             handlers.append(responseCompressionHandler)

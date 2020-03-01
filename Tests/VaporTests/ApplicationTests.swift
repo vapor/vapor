@@ -1,6 +1,7 @@
 import Vapor
 import XCTVapor
 import COperatingSystem
+import AsyncHTTPClient
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -1129,6 +1130,9 @@ final class ApplicationTests: XCTestCase {
                 XCTAssertEqual(res.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
+            }.flatMapErrorThrowing {
+                req.application.running?.stop()
+                throw $0
             }
         }
 
@@ -1291,6 +1295,158 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }
     }
+
+    func testEndpointCacheNoCache() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        var current = 0
+        struct Test: Content {
+            let number: Int
+        }
+
+        app.get("number") { req -> Test in
+            defer { current += 1 }
+            return Test(number: current)
+        }
+
+        let cache = EndpointCache<Test>(uri: "/number")
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 1)
+        }
+    }
+
+    func testEndpointCacheMaxAge() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        var current = 0
+        struct Test: Content {
+            let number: Int
+        }
+
+        app.get("number") { req -> Response in
+            defer { current += 1 }
+            let res = Response()
+            try res.content.encode(Test(number: current))
+            res.headers.cacheControl = .init(maxAge: 1)
+            return res
+        }
+
+        let cache = EndpointCache<Test>(uri: "/number")
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 0)
+        }
+        // wait for expiry
+        sleep(1)
+        do {
+            let test = try cache.get(
+                using: app.responder.client,
+                logger: app.logger,
+                on: app.eventLoopGroup.next()
+            ).wait()
+            XCTAssertEqual(test.number, 1)
+        }
+    }
+
+    func testHexEncoding() throws {
+        let bytes: [UInt8] = [1, 42, 128, 240]
+        XCTAssertEqual(bytes.hex, "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
+    }
+    
+    func testConfigureHTTPDecompressionLimit() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let smallOrigString = "Hello, world!"
+        let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAA=")! // "Hello, world!"
+        let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
+
+        app.server.configuration.supportCompression = true
+        app.server.configuration.decompressionLimit = .size(smallBody.readableBytes) // Max out at the smaller payload (.size is of compressed data)
+        app.post("gzip") { $0.body.string ?? "" }
+        
+        let tester = try XCTUnwrap(app.testable(method: .running(port: 8080)))
+        
+        // Small payload should just barely get through.
+        _ = try XCTUnwrap(tester.test(.POST, "/gzip", headers: ["Content-Encoding": "gzip"], body: smallBody) { XCTAssertEqual($0.body.string, smallOrigString) })
+        
+        // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
+        // protocol decoding errors are only ever logged and can't be directly caught.
+        XCTAssertThrowsError(try tester.test(.POST, "/gzip", headers: ["Content-Encoding": "gzip"], body: bigBody) {
+            XCTFail("Unexpected response \($0)")
+        }) { error in
+            guard let clientError = try? XCTUnwrap(error as? HTTPClientError) else { return } // XCTUnwrap() isn't enough because this closure can't throw, sigh
+            XCTAssertEqual(clientError, HTTPClientError.remoteConnectionClosed)
+        }
+    }
+}
+
+extension Application.Responder {
+    /// Creates a `Client` from an `Application`'s  current`Responder`.
+    var client: Client {
+        ResponderClient(responder: self.current, application: self.application)
+    }
+}
+
+struct ResponderClient: Client {
+    let responder: Responder
+    let application: Application
+
+    var eventLoopGroup: EventLoopGroup {
+        self.application.eventLoopGroup
+    }
+
+    func `for`(_ request: Request) -> Client {
+        self
+    }
+
+
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        self.responder.respond(to: .init(
+            application: self.application,
+            method: request.method,
+            url: request.url,
+            version: .init(major: 1, minor: 1),
+            headersNoUpdate: request.headers,
+            collectedBody: request.body,
+            remoteAddress: nil,
+            logger: application.logger,
+            on: application.eventLoopGroup.next()
+        )).map { res in
+            ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
+        }
+    }
+
+
 }
 
 private extension ByteBuffer {
@@ -1302,5 +1458,12 @@ private extension ByteBuffer {
     
     var string: String? {
         return self.getString(at: self.readerIndex, length: self.readableBytes)
+    }
+    
+    init?(base64String: String) {
+        guard let decoded = Data(base64Encoded: base64String) else { return nil }
+        var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)
+        buffer.writeBytes(decoded)
+        self = buffer
     }
 }

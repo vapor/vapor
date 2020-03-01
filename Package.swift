@@ -4,7 +4,7 @@ import PackageDescription
 let package = Package(
     name: "vapor",
     platforms: [
-       .macOS(.v10_14)
+       .macOS(.v10_15)
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -24,7 +24,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0-beta.2"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/vapor/open-crypto.git", from: "4.0.0-beta.2"),
+        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-beta.3"),
@@ -51,7 +51,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "1.2.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-beta.2.5"),
     ],
     targets: [
         // C helpers
@@ -79,7 +79,7 @@ let package = Package(
             "NIOHTTP2",
             "NIOSSL",
             "NIOWebSocket",
-            "OpenCrypto",
+            "Crypto",
             "RoutingKit",
             "WebSocketKit",
         ]),

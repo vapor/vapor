@@ -7,6 +7,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tanner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -23,6 +24,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tan!ner",
             "age": 24,
+            "gender": "other",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -42,6 +44,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tanner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -61,6 +64,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tanner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -83,6 +87,7 @@ class ValidationTests: XCTestCase {
         {
             "name": "Tan!ner",
             "age": 24,
+            "gender": "male",
             "email": "me@tanner.xyz",
             "luckyNumber": 5,
             "profilePictureURL": "https://foo.jpg",
@@ -238,6 +243,33 @@ class ValidationTests: XCTestCase {
         let error = try validations.validate(json: #"{"key": ""}"#).error
         XCTAssertEqual(error?.description, "key is empty")
     }
+
+    func testCaseOf() {
+
+        enum StringEnumType: String, CaseIterable {
+            case case1, case2, case3 = "CASE3"
+        }
+        assert("case1", passes: .case(of: StringEnumType.self))
+        assert("case2", passes: .case(of: StringEnumType.self))
+        assert("case1", fails: !.case(of: StringEnumType.self), "is case1, case2, or CASE3")
+        assert("case3", fails: .case(of: StringEnumType.self), "is not case1, case2, or CASE3")
+
+        enum IntEnumType: Int, CaseIterable {
+            case case1 = 1, case2 = 2
+        }
+        assert(1, passes: .case(of: IntEnumType.self))
+        assert(2, passes: .case(of: IntEnumType.self))
+        assert(1, fails: !.case(of: IntEnumType.self), "is 1 or 2")
+        assert(3, fails: .case(of: IntEnumType.self), "is not 1 or 2")
+
+        enum SingleCaseEnum: String, CaseIterable {
+            case case1 = "CASE1"
+        }
+        assert("CASE1", passes: .case(of: SingleCaseEnum.self))
+        assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
+        assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
+
+    }
 }
 
 private func assert<T>(
@@ -263,9 +295,14 @@ private func assert<T>(
 }
 
 private final class User: Validatable, Codable {
+    enum Gender: String, CaseIterable, Codable {
+        case male, female, other
+    }
+    
     var id: Int?
     var name: String
     var age: Int
+    var gender: Gender
     var email: String?
     var pet: Pet
     var luckyNumber: Int?
@@ -282,10 +319,11 @@ private final class User: Validatable, Codable {
         }
     }
 
-    init(id: Int? = nil, name: String, age: Int, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
+    init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
         self.id = id
         self.name = name
         self.age = age
+        self.gender = gender
         self.pet = pet
         self.preferredColors = preferredColors
         self.isAdmin = isAdmin
@@ -296,6 +334,8 @@ private final class User: Validatable, Codable {
         v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
         // validate age is 18 or older
         v.add("age", as: Int.self, is: .range(18...))
+        // validate gender is of type Gender
+        v.add("gender", as: String.self, is: .case(of: Gender.self))
         // validate the email is valid and is not nil
         v.add("email", as: String?.self, is: !.nil && .email)
         v.add("email", as: String?.self, is: .email && !.nil) // test other way

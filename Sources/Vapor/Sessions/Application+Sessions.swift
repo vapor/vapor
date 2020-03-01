@@ -60,8 +60,6 @@ extension Application {
 
         func initialize() {
             self.application.storage[Key.self] = .init()
-            self.use(.memory)
         }
-
     }
 }

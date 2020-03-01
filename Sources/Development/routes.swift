@@ -162,4 +162,10 @@ public func routes(_ app: Application) throws {
     app.get("view") { req in
         req.view.render("hello.txt", ["name": "world"])
     }
+
+    app.get("secret") { (req) -> EventLoopFuture<String> in
+        return Environment
+            .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
+            .unwrap(or: Abort(.badRequest))
+    }
 }

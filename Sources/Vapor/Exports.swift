@@ -3,7 +3,7 @@
 @_exported import class AsyncHTTPClient.HTTPClient
 @_exported import enum Backtrace.Backtrace
 
-@_exported import OpenCrypto
+@_exported import Crypto
 @_exported import RoutingKit
 @_exported import ConsoleKit
 @_exported import Foundation
