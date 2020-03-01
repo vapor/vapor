@@ -643,10 +643,12 @@ final class ApplicationTests: XCTestCase {
             return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.POST, "/users", json: [
-            "name": "vapor",
-            "email": "foo"
-        ]) { res in
+        try app.testable().test(.POST, "/users", beforeRequest: { req in
+            try req.content.encode([
+                "name": "vapor",
+                "email": "foo"
+            ], as: .json)
+        }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
         }
@@ -664,10 +666,14 @@ final class ApplicationTests: XCTestCase {
             }
         }
 
-        try app.testable().test(.GET, "/foo?number=true") { res in
+        try app.testable().test(.GET, "/foo", beforeRequest: { req in
+            try req.query.encode(["number": "true"])
+        }) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo?number=false") { res in
+        }.test(.GET, "/foo", beforeRequest: { req in
+            try req.query.encode(["number": "false"])
+        }) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "string")
         }
@@ -769,7 +775,9 @@ final class ApplicationTests: XCTestCase {
                 .encodeResponse(status: .created, for: req)
         }
 
-        try app.testable().test(.POST, "/users", json: ["name": "vapor"]) { res in
+        try app.testable().test(.POST, "/users", beforeRequest: { req in
+            try req.content.encode(["name": "vapor"], as: .json)
+        }) { res in
             XCTAssertEqual(res.status, .created)
             XCTAssertEqual(res.headers.contentType, .json)
             XCTAssertEqual(res.body.string, """
@@ -790,7 +798,7 @@ final class ApplicationTests: XCTestCase {
         try app.testable(method: .running).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
-            XCTAssertEqual(res.body.count, 0)
+            XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
 
@@ -932,7 +940,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.GET, "/no-content") { res in
             XCTAssertEqual(res.status.code, 204)
-            XCTAssertEqual(res.body.count, 0)
+            XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
 
@@ -1183,9 +1191,11 @@ final class ApplicationTests: XCTestCase {
             return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
         }
         
-        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], json: ["foo": "bar"], closure: { res in
+        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+            try req.content.encode(["foo": "bar"], as: .json)
+        }) { res in
             XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
-        })
+        }
     }
     
     func testTestWithJsonAllowsContentTypeOverride() throws {
@@ -1198,9 +1208,14 @@ final class ApplicationTests: XCTestCase {
         // Me and my sadistic sense of humor.
         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
         
-        try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT", "Content-Type": "application/xml"], json: ["foo": "bar"], closure: { res in
-            XCTAssertEqual(res.body.string, "PRESENT.application/xml")
-        })
+        try app.testable().test(.GET, "/check", headers: [
+            "X-Test-Value": "PRESENT"
+        ], beforeRequest: { req in
+            try req.content.encode(["foo": "bar"], as: .json)
+            req.headers.contentType = .xml
+        }) { res in
+            XCTAssertEqual(res.body.string, "PRESENT.application/xml; charset=utf-8")
+        }
     }
 
     func testApplicationClientThreadSafety() throws {
@@ -1393,19 +1408,28 @@ final class ApplicationTests: XCTestCase {
         app.server.configuration.supportCompression = true
         app.server.configuration.decompressionLimit = .size(smallBody.readableBytes) // Max out at the smaller payload (.size is of compressed data)
         app.post("gzip") { $0.body.string ?? "" }
-        
-        let tester = try XCTUnwrap(app.testable(method: .running(port: 8080)))
-        
+
+        let server = try app.server.start()
+        defer { server.shutdown() }
+
         // Small payload should just barely get through.
-        _ = try XCTUnwrap(tester.test(.POST, "/gzip", headers: ["Content-Encoding": "gzip"], body: smallBody) { XCTAssertEqual($0.body.string, smallOrigString) })
+        let res = try app.client.post("http://localhost:8080/gzip") { req in
+            req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+            req.body = smallBody
+        }.wait()
+        XCTAssertEqual(res.body?.string, smallOrigString)
         
         // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
         // protocol decoding errors are only ever logged and can't be directly caught.
-        XCTAssertThrowsError(try tester.test(.POST, "/gzip", headers: ["Content-Encoding": "gzip"], body: bigBody) {
-            XCTFail("Unexpected response \($0)")
-        }) { error in
-            guard let clientError = try? XCTUnwrap(error as? HTTPClientError) else { return } // XCTUnwrap() isn't enough because this closure can't throw, sigh
-            XCTAssertEqual(clientError, HTTPClientError.remoteConnectionClosed)
+        do {
+            _ = try app.client.post("http://localhost:8080/gzip") { req in
+                req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
+                req.body = bigBody
+            }.wait()
+        } catch let error as HTTPClientError {
+            XCTAssertEqual(error, HTTPClientError.remoteConnectionClosed)
+        } catch {
+            XCTFail("\(error)")
         }
     }
 }

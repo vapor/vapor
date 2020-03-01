@@ -1,22 +1,6 @@
 extension Application: XCTApplicationTester {
-    public func performTest(
-        method: HTTPMethod,
-        path: String,
-        headers: HTTPHeaders,
-        body: ByteBuffer?,
-        file: StaticString,
-        line: UInt,
-        closure: (XCTHTTPResponse) throws -> ()
-    ) throws -> XCTApplicationTester {
-        try self.testable().performTest(
-            method: method,
-            path: path,
-            headers: headers,
-            body: body,
-            file: file,
-            line: line,
-            closure: closure
-        )
+    public func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
+         try self.testable().performTest(request: request)
     }
 }
 
@@ -48,36 +32,29 @@ extension Application {
             self.port = port
         }
 
-        @discardableResult
-        public func performTest(
-            method: HTTPMethod,
-            path: String,
-            headers: HTTPHeaders,
-            body: ByteBuffer?,
-            file: StaticString,
-            line: UInt,
-            closure: (XCTHTTPResponse) throws -> ()
-        ) throws -> XCTApplicationTester {
+        func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
             let server = try app.server.start(hostname: "localhost", port: self.port)
             defer { server.shutdown() }
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
-            let path = path.hasPrefix("/") ? path : "/\(path)"
-            var request = try HTTPClient.Request(
-                url: "http://localhost:\(self.port)\(path)",
-                method: method,
-                headers: headers
-            )
-            if let body = body {
-                request.body = .byteBuffer(body)
+            var path = request.url.path
+            path = path.hasPrefix("/") ? path : "/\(path)"
+            var url = "http://localhost:\(self.port)\(path)"
+            if let query = request.url.query {
+                url += "?\(query)"
             }
-            let response = try client.execute(request: request).wait()
-            try closure(XCTHTTPResponse(
+            var clientRequest = try HTTPClient.Request(
+                url: url,
+                method: request.method,
+                headers: request.headers
+            )
+            clientRequest.body = .byteBuffer(request.body)
+            let response = try client.execute(request: clientRequest).wait()
+            return XCTHTTPResponse(
                 status: response.status,
                 headers: response.headers,
-                body: response.body.flatMap { .init(buffer: $0) } ?? .init()
-            ))
-            return self
+                body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
+            )
         }
     }
 
@@ -89,52 +66,34 @@ extension Application {
 
         @discardableResult
         public func performTest(
-            method: HTTPMethod,
-            path: String,
-            headers: HTTPHeaders,
-            body: ByteBuffer?,
-            file: StaticString,
-            line: UInt,
-            closure: (XCTHTTPResponse) throws -> ()
-        ) throws -> XCTApplicationTester {
-            var headers = headers
-            if let body = body {
-                headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
-            }
-            let path = path.hasPrefix("/") ? path : "/" + path
-            let response: XCTHTTPResponse
+            request: XCTHTTPRequest
+        ) throws -> XCTHTTPResponse {
+            var headers = request.headers
+            headers.replaceOrAdd(
+                name: .contentLength,
+                value: request.body.readableBytes.description
+            )
             let request = Request(
                 application: app,
-                method: method,
-                url: .init(string: path),
+                method: request.method,
+                url: request.url,
                 headers: headers,
-                collectedBody: body,
+                collectedBody: request.body,
                 remoteAddress: nil,
                 on: self.app.eventLoopGroup.next()
             )
-            do {
-                let res = try self.app.responder.respond(to: request).wait()
-                response = XCTHTTPResponse(status: res.status, headers: res.headers, body: res.body)
-                try closure(response)
-            } catch {
-                XCTFail("\(error)", file: file, line: line)
-            }
-            return self
+            let res = try self.app.responder.respond(to: request).wait()
+            return XCTHTTPResponse(
+                status: res.status,
+                headers: res.headers,
+                body: res.body.buffer ?? ByteBufferAllocator().buffer(capacity: 0)
+            )
         }
     }
 }
 
 public protocol XCTApplicationTester {
-    @discardableResult
-    func performTest(
-        method: HTTPMethod,
-        path: String,
-        headers: HTTPHeaders,
-        body: ByteBuffer?,
-        file: StaticString,
-        line: UInt,
-        closure: (XCTHTTPResponse) throws -> ()
-    ) throws -> XCTApplicationTester
+    func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse
 }
 
 extension XCTApplicationTester {
@@ -146,38 +105,23 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #file,
         line: UInt = #line,
-        closure: (XCTHTTPResponse) throws -> () = { _ in }
+        beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
+        afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
     ) throws -> XCTApplicationTester {
-        return try self.performTest(
+        var request = XCTHTTPRequest(
             method: method,
-            path: path,
+            url: .init(path: path),
             headers: headers,
-            body: body,
-            file: file,
-            line: line,
-            closure: closure
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
         )
-    }
-
-    @discardableResult
-    public func test<Body>(
-        _ method: HTTPMethod,
-        _ path: String,
-        headers: HTTPHeaders = [:],
-        json: Body,
-        file: StaticString = #file,
-        line: UInt = #line,
-        closure: (XCTHTTPResponse) throws -> () = { _ in }
-    ) throws -> XCTApplicationTester
-        where Body: Encodable
-    {
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        try body.writeBytes(JSONEncoder().encode(json))
-        var realHeaders = headers
-        // Allow caller to override the Content-Type for JSON.
-        if !realHeaders.contains(name: .contentType) {
-            realHeaders.add(name: .contentType, value: HTTPMediaType.json.serialize())
+        try beforeRequest(&request)
+        do {
+            let response = try self.performTest(request: request)
+            try afterResponse(response)
+        } catch {
+            XCTFail("\(error)", file: file, line: line)
+            throw error
         }
-        return try self.test(method, path, headers: realHeaders, body: body, closure: closure)
+        return self
     }
 }
