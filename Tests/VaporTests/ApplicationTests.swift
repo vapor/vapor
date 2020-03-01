@@ -1456,10 +1456,6 @@ private extension ByteBuffer {
         self = buffer
     }
     
-    var string: String? {
-        return self.getString(at: self.readerIndex, length: self.readableBytes)
-    }
-    
     init?(base64String: String) {
         guard let decoded = Data(base64Encoded: base64String) else { return nil }
         var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)

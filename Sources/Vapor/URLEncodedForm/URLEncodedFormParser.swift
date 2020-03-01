@@ -14,7 +14,7 @@ internal struct URLEncodedFormParser {
         var result: URLEncodedFormData = []
         for pair in plusDecodedQuery.split(separator: splitVariablesOn) {
             let kv = pair.split(
-                separator: splitKeyValueOn,
+                separator: self.splitKeyValueOn,
                 maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
                 omittingEmptySubsequences: false
             )
@@ -39,7 +39,7 @@ internal struct URLEncodedFormParser {
         for var element in key.split(separator: "[") {
             if path.count > 0 { //First one is not wrapped with `[]`
                 guard element.last == "]" else {
-                    throw URLEncodedFormError(identifier: "malformedKey", reason: "Malformed form-urlencoded key encountered. Sub-indexes in keys must end with ']'. For example `obj[key]`")
+                    throw URLEncodedFormError.malformedKey(key: .init(key))
                 }
                 element = element.prefix(element.count-1) //Remove the `]`
             }

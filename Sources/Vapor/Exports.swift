@@ -1,7 +1,6 @@
 @_exported import AsyncKit
 
 @_exported import class AsyncHTTPClient.HTTPClient
-@_exported import enum Backtrace.Backtrace
 
 @_exported import Crypto
 @_exported import RoutingKit
@@ -10,8 +9,6 @@
 
 @_exported import Logging
 @_exported import Metrics
-
-@_exported import MultipartKit
 
 @_exported import struct NIO.ByteBuffer
 @_exported import struct NIO.ByteBufferAllocator

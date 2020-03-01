@@ -1,15 +1,17 @@
-
 /// Errors thrown while encoding/decoding `application/x-www-form-urlencoded` data.
-public struct URLEncodedFormError: Error {
-    /// See Debuggable.identifier
-    public let identifier: String
+enum URLEncodedFormError: Error {
+    case malformedKey(key: String)
+}
 
-    /// See Debuggable.reason
-    public let reason: String
+extension URLEncodedFormError: AbortError {
+    var status: HTTPResponseStatus {
+        .badRequest
+    }
 
-    /// Creates a new `URLEncodedFormError`.
-    public init(identifier: String, reason: String) {
-        self.identifier = identifier
-        self.reason = reason
+    var reason: String {
+        switch self {
+        case .malformedKey(let path):
+            return "Malformed form-urlencoded key encountered: \(path)"
+        }
     }
 }

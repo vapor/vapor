@@ -1,4 +1,3 @@
-
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` `Data`.
 ///
 ///     print(data) // "name=Vapor&age=3"
@@ -12,11 +11,33 @@
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
+    /// Used to capture URLForm Coding Configuration used for decoding
+    public struct Configuration {
+        let boolFlags: Bool
+        let arraySeparators: [Character]
+
+        /// Creates a new `URLEncodedFormCodingConfiguration`.
+        /// - parameters:
+        ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
+        ///                  where object with variable `flag1` and `flag2` would decode to `true`
+        ///                  or `false` depending on if the value was present or not. If this flag is set to
+        ///                  true, it will always resolve for an optional `Bool`.
+        ///     - arraySeparators: Uses these characters to decode arrays. If set to `,`, `arr=v1,v2` would
+        ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
+        public init(
+            boolFlags: Bool = true,
+            arraySeparators: [Character] = [",", "|"]
+        ) {
+            self.boolFlags = boolFlags
+            self.arraySeparators = arraySeparators
+        }
+    }
+
 
     /// The underlying `URLEncodedFormEncodedParser`
     private let parser: URLEncodedFormParser
 
-    private let configuration: URLEncodedFormCodingConfiguration
+    private let configuration: Configuration
 
     /// Create a new `URLEncodedFormDecoder`. Can be configured by using the global `ContentConfiguration` class
     ///
@@ -24,7 +45,9 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///
     /// - parameters:
     ///     - configuration: Defines how decoding is done see `URLEncodedFormCodingConfig` for more information
-    public init(configuration: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: true, arraySeparator: ",")) {
+    public init(
+        configuration: Configuration = .init()
+    ) {
         self.parser = URLEncodedFormParser()
         self.configuration = configuration
     }
@@ -39,23 +62,17 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
         return try self.decode(D.self, from: string)
     }
-    
-    public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D: Decodable {
-        return try self.decode(D.self, from: url.query ?? "", configuration: nil)
-    }
-    
-    /**
-     Decodes the URL's query string to the type provided
-     
-            let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
-     
-     - parameters:
-        - decodable: Type to decode to
-        - url: URL to read the query string from
-        - configuration: Overwrides the default coding configuration
-     */
-    public func decode<D>(_ decodable: D.Type, from url: URI, configuration: URLEncodedFormCodingConfiguration? = nil) throws -> D where D : Decodable {
-        return try self.decode(D.self, from: url.query ?? "", configuration: configuration)
+
+    /// Decodes the URL's query string to the type provided
+    ///
+    ///     let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
+    ///
+    /// - parameters:
+    ///     - decodable: Type to decode to
+    ///     - url: URL to read the query string from
+    ///     - configuration: Overwrides the default coding configuration
+    public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
+        return try self.decode(D.self, from: url.query ?? "")
     }
     
 
@@ -71,9 +88,9 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///     - configuration: Overwrides the default coding configuration
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
-    public func decode<D>(_ decodable: D.Type, from string: String, configuration: URLEncodedFormCodingConfiguration? = nil) throws -> D where D : Decodable {
+    public func decode<D>(_ decodable: D.Type, from string: String) throws -> D where D : Decodable {
         let parsedData = try self.parser.parse(string)
-        let decoder = _Decoder(data: parsedData, codingPath: [], configuration: configuration ?? self.configuration)
+        let decoder = _Decoder(data: parsedData, codingPath: [], configuration: self.configuration)
         return try D(from: decoder)
     }
 }
@@ -84,7 +101,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 private struct _Decoder: Decoder {
     var data: URLEncodedFormData
     var codingPath: [CodingKey]
-    var configuration: URLEncodedFormCodingConfiguration
+    var configuration: URLEncodedFormDecoder.Configuration
     
     /// See `Decoder`
     var userInfo: [CodingUserInfoKey: Any] {
@@ -92,15 +109,21 @@ private struct _Decoder: Decoder {
     }
     
     /// Creates a new `_URLEncodedFormDecoder`.
-    init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
+    init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormDecoder.Configuration) {
         self.data = data
         self.codingPath = codingPath
         self.configuration = configuration
         
     }
     
-    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        return KeyedDecodingContainer(KeyedContainer<Key>(data: data, codingPath: self.codingPath, configuration: configuration))
+    func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key>
+        where Key: CodingKey
+    {
+        return KeyedDecodingContainer(KeyedContainer<Key>(
+            data: data,
+            codingPath: self.codingPath,
+            configuration: configuration
+        ))
     }
     
     struct KeyedContainer<Key>: KeyedDecodingContainerProtocol
@@ -108,35 +131,39 @@ private struct _Decoder: Decoder {
     {
         let data: URLEncodedFormData
         var codingPath: [CodingKey]
-        var configuration: URLEncodedFormCodingConfiguration
+        var configuration: URLEncodedFormDecoder.Configuration
 
         var allKeys: [Key] {
-            return data.children.keys.compactMap { Key(stringValue: String($0)) }
+            return self.data.children.keys.compactMap { Key(stringValue: String($0)) }
         }
         
-        init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
+        init(
+            data: URLEncodedFormData,
+            codingPath: [CodingKey],
+            configuration: URLEncodedFormDecoder.Configuration
+        ) {
             self.data = data
             self.codingPath = codingPath
             self.configuration = configuration
         }
         
         func contains(_ key: Key) -> Bool {
-            return data.children[key.stringValue] != nil
+            return self.data.children[key.stringValue] != nil
         }
         
         func decodeNil(forKey key: Key) throws -> Bool {
-            return data.children[key.stringValue] == nil
+            return self.data.children[key.stringValue] == nil
         }
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
-            let child = data.children[key.stringValue] ?? []
+            let child = self.data.children[key.stringValue] ?? []
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                 guard let value = child.values.last else {
-                    if configuration.flagsAsBool {
+                    if self.configuration.boolFlags {
                         //If no values found see if we are decoding a boolean
                         if let _ = T.self as? Bool.Type {
-                            return data.values.contains(.urlDecoded(key.stringValue)) as! T
+                            return self.data.values.contains(.urlDecoded(key.stringValue)) as! T
                         }
                     }
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
@@ -152,31 +179,38 @@ private struct _Decoder: Decoder {
             }
         }
         
-        func nestedContainer<NestedKey>(keyedBy type: NestedKey.Type, forKey key: Key) throws -> KeyedDecodingContainer<NestedKey>
+        func nestedContainer<NestedKey>(
+            keyedBy type: NestedKey.Type,
+            forKey key: Key
+        ) throws -> KeyedDecodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
-            guard let child = data.children[key.stringValue] else {
+            guard let child = self.data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([String: Any].self, at: self.codingPath + [key])
             }
             return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: child, codingPath: self.codingPath + [key], configuration: configuration))
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-            guard let child = data.children[key.stringValue] else {
+            guard let child = self.data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([Any].self, at: self.codingPath + [key])
             }
-            return try UnkeyedContainer(data: child, codingPath: self.codingPath + [key], configuration: configuration)
+            return try UnkeyedContainer(
+                data: child,
+                codingPath: self.codingPath + [key],
+                configuration: configuration
+            )
         }
         
         func superDecoder() throws -> Decoder {
-            return _Decoder(data: data, codingPath: self.codingPath, configuration: configuration)
+            return _Decoder(data: data, codingPath: self.codingPath, configuration: self.configuration)
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
-            guard let child = data.children[key.stringValue] else {
+            guard let child = self.data.children[key.stringValue] else {
                 throw DecodingError.valueNotFound([Any].self, at: self.codingPath + [key])
             }
-            return _Decoder(data: child, codingPath: self.codingPath, configuration: configuration)
+            return _Decoder(data: child, codingPath: self.codingPath, configuration: self.configuration)
         }
     }
     
@@ -188,16 +222,16 @@ private struct _Decoder: Decoder {
         let data: URLEncodedFormData
         let values: [URLQueryFragment]
         var codingPath: [CodingKey]
-        var configuration: URLEncodedFormCodingConfiguration
+        var configuration: URLEncodedFormDecoder.Configuration
         var allChildKeysAreNumbers: Bool
 
         var count: Int? {
-            //Did we get an array with arr[0]=a&arr[1]=b indexing?
-            if allChildKeysAreNumbers {
+            // Did we get an array with arr[0]=a&arr[1]=b indexing?
+            if self.allChildKeysAreNumbers {
                 return data.children.count
             }
-            //No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
-            return values.count
+            // No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
+            return self.values.count
         }
         var isAtEnd: Bool {
             guard let count = self.count else {
@@ -207,27 +241,30 @@ private struct _Decoder: Decoder {
         }
         var currentIndex: Int
         
-        init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) throws {
+        init(
+            data: URLEncodedFormData,
+            codingPath: [CodingKey],
+            configuration: URLEncodedFormDecoder.Configuration
+        ) throws {
             self.data = data
             self.codingPath = codingPath
             self.configuration = configuration
             self.currentIndex = 0
-            //Did we get an array with arr[0]=a&arr[1]=b indexing?
-            //Cache this result
+            // Did we get an array with arr[0]=a&arr[1]=b indexing?
+            // Cache this result
             self.allChildKeysAreNumbers = data.children.count > 0 && data.allChildKeysAreSequentialIntegers
             
             if allChildKeysAreNumbers {
                 self.values = data.values
             } else {
-                //No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
+                // No we got an array with arr[]=a&arr[]=b or arr=a&arr=b
                 var values = data.values
-                if configuration.bracketsAsArray {
-                    // empty brackets turn into empty strings!
-                    if let valuesInBracket = data.children[""] {
-                        values = values + valuesInBracket.values
-                    }
+                // empty brackets turn into empty strings!
+                if let valuesInBracket = data.children[""] {
+                    values = values + valuesInBracket.values
                 }
-                if let explodeArraysOn = configuration.arraySeparator {
+                // parse out any character separated array values
+                for explodeArraysOn in configuration.arraySeparators {
                     var explodedValues: [URLQueryFragment] = []
                     for value in values {
                         explodedValues = try explodedValues + value.asUrlEncoded().split(separator: explodeArraysOn).map({ (ss: Substring) -> URLQueryFragment in
@@ -260,13 +297,19 @@ private struct _Decoder: Decoder {
         }
 
         mutating func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
-            defer { currentIndex += 1 }
-            if allChildKeysAreNumbers {
-                let childData = data.children[String(currentIndex)]! //We can force an unwrap because in the constructor we checked data.allChildKeysAreNumbers
-                let decoder = _Decoder(data: childData, codingPath: self.codingPath + [_CodingKey(stringValue: String(currentIndex)) as CodingKey] , configuration: configuration)
+            defer { self.currentIndex += 1 }
+            if self.allChildKeysAreNumbers {
+                let childData = self.data.children[String(self.currentIndex)]!
+                //We can force an unwrap because in the constructor
+                // we checked data.allChildKeysAreNumbers
+                let decoder = _Decoder(
+                    data: childData,
+                    codingPath: self.codingPath + [_CodingKey(stringValue: String(currentIndex)) as CodingKey] ,
+                    configuration: self.configuration
+                )
                 return try T(from: decoder)
             } else {
-                let value = values[self.currentIndex]
+                let value = self.values[self.currentIndex]
                 if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                     if let result = convertible.init(urlQueryFragmentValue: value) {
                         return result as! T
@@ -301,9 +344,13 @@ private struct _Decoder: Decoder {
     struct SingleValueContainer: SingleValueDecodingContainer {
         let data: URLEncodedFormData
         var codingPath: [CodingKey]
-        var configuration: URLEncodedFormCodingConfiguration
+        var configuration: URLEncodedFormDecoder.Configuration
         
-        init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormCodingConfiguration) {
+        init(
+            data: URLEncodedFormData,
+            codingPath: [CodingKey],
+            configuration: URLEncodedFormDecoder.Configuration
+        ) {
             self.data = data
             self.codingPath = codingPath
             self.configuration = configuration
