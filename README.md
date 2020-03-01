@@ -1,7 +1,7 @@
 [![Vapor](https://user-images.githubusercontent.com/1742140/43014701-5ad8f7de-8c4d-11e8-86d2-4db3d71581aa.png)](http://vapor.team)
 
 <p align="center">
-	<a href="https://docs.vapor.codes/3.0/">
+	<a href="https://docs.vapor.codes/4.0/">
         <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
     </a>
     <a href="https://discord.gg/vapor">
@@ -10,11 +10,11 @@
     <a href="LICENSE">
         <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
-    <a href="https://circleci.com/gh/vapor/vapor">
-        <img src="https://img.shields.io/badge/build-passing-brightgreen.svg" alt="Continuous Integration">
+    <a href="https://github.com/vapor/vapor/actions">
+        <img src="https://github.com/vapor/vapor/workflows/test/badge.svg" alt="Continuous Integration">
     </a>
     <a href="https://swift.org">
-        <img src="https://img.shields.io/badge/swift-5.1-brightgreen.svg" alt="Swift 5.1">
+        <img src="https://img.shields.io/badge/swift-5.2-brightgreen.svg" alt="Swift 5.2">
     </a>
     <a href="https://twitter.com/codevapor">
         <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
