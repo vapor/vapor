@@ -1,5 +1,5 @@
-// Keeps track if the string was percent encoded or not.
-// Prevents double encoding/double decoding
+/// Keeps track if the string was percent encoded or not.
+/// Prevents double encoding/double decoding
 enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     init(stringLiteral: String) {
         self = .urlDecoded(stringLiteral)
@@ -8,7 +8,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     case urlEncoded(String)
     case urlDecoded(String)
     
-    ///Returns the URL Encoded version
+    /// Returns the URL Encoded version
     func asUrlEncoded() throws -> String {
         switch self {
         case .urlEncoded(let encoded):
@@ -18,7 +18,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         }
     }
     
-    ///Returns the URL Decoded version
+    /// Returns the URL Decoded version
     func asUrlDecoded() throws -> String {
         switch self {
         case .urlEncoded(let encoded):
@@ -31,7 +31,8 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         }
     }
     
-    ///Do comparison and hashing using the decoded version as there are multiple ways something can be encoded. Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
+    /// Do comparison and hashing using the decoded version as there are multiple ways something can be encoded.
+    /// Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
     static func == (lhs: URLQueryFragment, rhs: URLQueryFragment) -> Bool {
         do {
             return try lhs.asUrlDecoded() == rhs.asUrlDecoded()
@@ -44,7 +45,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
         do {
             try self.asUrlDecoded().hash(into: &into)
         } catch {
-            
+            Logger(label: "codes.vapor.url").report(error: error)
         }
     }
 }
@@ -91,16 +92,16 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         
     mutating func set(value: URLQueryFragment, forPath path: [String]) {
         guard let firstElement = path.first else {
-            values.append(value)
+            self.values.append(value)
             return
         }
         var child: URLEncodedFormData
-        if let existingChild = children[firstElement] {
+        if let existingChild = self.children[firstElement] {
             child = existingChild
         } else {
             child = []
         }
         child.set(value: value, forPath: Array(path[1...]))
-        children[firstElement] = child
+        self.children[firstElement] = child
     }
 }
