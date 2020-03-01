@@ -1,5 +1,3 @@
-import struct NIO.ByteBufferAllocator
-
 /// A single part of a `multipart`-encoded message.
 public struct MultipartPart: Equatable {
     /// The part's headers.

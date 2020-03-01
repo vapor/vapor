@@ -2,7 +2,6 @@ import Vapor
 import XCTVapor
 import COperatingSystem
 import AsyncHTTPClient
-import NIO
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
