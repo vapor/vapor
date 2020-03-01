@@ -1,5 +1,5 @@
-
-//Keeps track if the string was percent encoded or not. Prevents double encoding/double decoding
+// Keeps track if the string was percent encoded or not.
+// Prevents double encoding/double decoding
 enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     init(stringLiteral: String) {
         self = .urlDecoded(stringLiteral)
@@ -42,7 +42,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
     
     func hash(into: inout Hasher) {
         do {
-            try asUrlDecoded().hash(into: &into)
+            try self.asUrlDecoded().hash(into: &into)
         } catch {
             
         }
@@ -51,7 +51,6 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 
 /// Represents application/x-www-form-urlencoded encoded data.
 internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
-    
     var values: [URLQueryFragment]
     var children: [String: URLEncodedFormData]
     

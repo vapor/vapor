@@ -1,4 +1,3 @@
-
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` `Data`.
 ///
 ///     print(data) // "name=Vapor&age=3"
@@ -12,7 +11,6 @@
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
-
     /// The underlying `URLEncodedFormEncodedParser`
     private let parser: URLEncodedFormParser
 
@@ -44,16 +42,14 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         return try self.decode(D.self, from: url.query ?? "", configuration: nil)
     }
     
-    /**
-     Decodes the URL's query string to the type provided
-     
-            let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
-     
-     - parameters:
-        - decodable: Type to decode to
-        - url: URL to read the query string from
-        - configuration: Overwrides the default coding configuration
-     */
+    /// Decodes the URL's query string to the type provided
+    ///
+    ///     let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
+    ///
+    /// - parameters:
+    ///     - decodable: Type to decode to
+    ///     - url: URL to read the query string from
+    ///     - configuration: Overwrides the default coding configuration
     public func decode<D>(_ decodable: D.Type, from url: URI, configuration: URLEncodedFormCodingConfiguration? = nil) throws -> D where D : Decodable {
         return try self.decode(D.self, from: url.query ?? "", configuration: configuration)
     }

@@ -1,7 +1,6 @@
 import struct Foundation.CharacterSet
 
 struct URLEncodedFormSerializer {
-    
     let splitVariablesOn: Character
     let splitKeyValueOn: Character
     
@@ -42,7 +41,6 @@ struct URLEncodedFormSerializer {
         }
     }
 }
-
 
 extension Array where Element == CodingKey {
     func toURLEncodedKey() throws -> String {

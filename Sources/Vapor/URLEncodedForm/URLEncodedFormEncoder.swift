@@ -12,15 +12,14 @@
 /// url-encoded forms.
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
 public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
-
     private let configuration: URLEncodedFormCodingConfiguration
 
-/// Create a new `URLEncodedFormEncoder`.
-///
-///        ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
-///
-/// - parameters:
-///    - configuration: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
+    /// Create a new `URLEncodedFormEncoder`.
+    ///
+    ///        ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
+    ///
+    /// - parameters:
+    ///    - configuration: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
     public init(configuration: URLEncodedFormCodingConfiguration = URLEncodedFormCodingConfiguration(bracketsAsArray: true, flagsAsBool: false, arraySeparator: nil)) {
         self.configuration = configuration
     }
@@ -58,10 +57,10 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     {
         let decodingConfigToUse = configuration ?? self.configuration
 
-///     This implementation of the encoder does not support encoding to "flags".
-///     In order to do so, the children of a `URLEncodedFormData` would need to
-///     reference the parent as `SingleValueContainer` does not have a reference
-///     to the parent at that time.
+        // This implementation of the encoder does not support encoding to "flags".
+        // In order to do so, the children of a `URLEncodedFormData` would need to
+        // reference the parent as `SingleValueContainer` does not have a reference
+        // to the parent at that time.
         if decodingConfigToUse.flagsAsBool {
             throw Abort(.internalServerError, reason: "URLEncodedFormEncoder does not support flagsAsBool")
         }
