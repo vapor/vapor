@@ -82,7 +82,19 @@ final class ApplicationTests: XCTestCase {
         request.url.query = "hello=world"
         try XCTAssertEqual(request.query.get(String.self, at: "hello"), "world")
     }
-    
+
+    func testQueryAsArray() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        request.headers.contentType = .json
+        request.url.path = "/foo"
+        request.url.query = "hello=world&hello[]=you"
+        try XCTAssertEqual(request.query.get([String].self, at: "hello"), ["world", "you"])
+        try XCTAssertEqual(request.query.get([String].self, at: "goodbye"), [])
+    }
+
     // https://github.com/vapor/vapor/pull/2163
     func testWrappedSingleValueQueryDecoding() throws {
         let app = Application()
@@ -106,7 +118,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertThrowsError(try request.query.get(StringWrapper.self, at: "hello"))
     }
     
-    func testCrashingArrayWithPercentEncoding() throws {
+    func testNotCrashingArrayWithPercentEncoding() throws {
         let app = Application()
         defer { app.shutdown() }
 
@@ -114,8 +126,8 @@ final class ApplicationTests: XCTestCase {
         request.headers.contentType = .json
         request.url.path = "/"
         request.url.query = "emailsToSearch%5B%5D=xyz"
-        
-        XCTAssertThrowsError(try request.query.get([String].self, at: "emailsToSearch[]"))
+        let parsed = try request.query.get([String].self, at: "emailsToSearch[]")
+        XCTAssertEqual(parsed, ["xyz"])
     }
 
     func testQueryGet() throws {
