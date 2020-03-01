@@ -1,5 +1,5 @@
 import XCTest
-import MultipartKit
+import Vapor
 
 class MultipartTests: XCTestCase {
     let named = """

@@ -10,8 +10,6 @@
 @_exported import Logging
 @_exported import Metrics
 
-@_exported import MultipartKit
-
 @_exported import struct NIO.ByteBuffer
 @_exported import struct NIO.ByteBufferAllocator
 @_exported import protocol NIO.Channel

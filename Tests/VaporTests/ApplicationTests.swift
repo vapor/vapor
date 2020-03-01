@@ -2,6 +2,7 @@ import Vapor
 import XCTVapor
 import COperatingSystem
 import AsyncHTTPClient
+import NIO
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -1442,10 +1443,6 @@ private extension ByteBuffer {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(string)
         self = buffer
-    }
-    
-    var string: String? {
-        return self.getString(at: self.readerIndex, length: self.readableBytes)
     }
     
     init?(base64String: String) {

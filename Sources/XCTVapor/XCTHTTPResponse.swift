@@ -1,3 +1,5 @@
+import NIO
+
 public struct XCTHTTPResponse {
     public var status: HTTPStatus
     public var headers: HTTPHeaders

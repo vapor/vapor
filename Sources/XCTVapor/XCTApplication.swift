@@ -1,3 +1,5 @@
+import NIO
+
 extension Application: XCTApplicationTester {
     public func performTest(
         method: HTTPMethod,
