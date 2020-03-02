@@ -1,7 +1,7 @@
 import XCTest
 import Vapor
 
-final class BCryptTests: XCTestCase {
+final class BcryptTests: XCTestCase {
     func testVersion() throws {
         let digest = try Bcrypt.hash("foo", cost: 6)
         XCTAssert(digest.hasPrefix("$2b$06$"))
