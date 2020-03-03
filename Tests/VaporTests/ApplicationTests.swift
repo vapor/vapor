@@ -1432,6 +1432,13 @@ final class ApplicationTests: XCTestCase {
             XCTFail("\(error)")
         }
     }
+
+    func testBase32() throws {
+        let data = Data([1, 2, 3, 4])
+        XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
+        XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
+
+    }
 }
 
 extension Application.Responder {
