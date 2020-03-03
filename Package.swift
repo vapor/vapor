@@ -52,6 +52,7 @@ let package = Package(
     ],
     targets: [
         // C helpers
+        .target(name: "CBase32"),
         .target(name: "CBcrypt"),
         .target(name: "CMultipartParser"),
         .target(name: "COperatingSystem"),
@@ -62,6 +63,7 @@ let package = Package(
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
             .product(name: "AsyncKit", package: "async-kit"),
             .product(name: "Backtrace", package: "swift-backtrace"),
+            .target(name: "CBase32"),
             .target(name: "CBcrypt"),
             .target(name: "CMultipartParser"),
             .target(name: "COperatingSystem"),

@@ -1,0 +1,4 @@
+module CBase32 [system][extern_c] {
+ header "../cbase32.h"
+ export *
+}
