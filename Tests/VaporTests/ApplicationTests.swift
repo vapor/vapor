@@ -1437,7 +1437,12 @@ final class ApplicationTests: XCTestCase {
         let data = Data([1, 2, 3, 4])
         XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
         XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
+    }
 
+    func testCookieQuotes() throws {
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)  
+        XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
     }
 }
 
