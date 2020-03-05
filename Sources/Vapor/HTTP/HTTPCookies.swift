@@ -72,7 +72,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
                 name = String(parts[0]).trimmingCharacters(in: .whitespaces)
                 string = String(parts[1])
                     .trimmingCharacters(in: .whitespaces)
-                    .removeDoubleQuotes()
+                    .removingDoubleQuotes()
             default: return nil
             }
             
@@ -313,7 +313,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
 
 
 private extension String {
-    func removeDoubleQuotes() -> Self {
+    func removingDoubleQuotes() -> Self {
         switch (self.first, self.last) {
         case (Character.doubleQuote, Character.doubleQuote):
             return .init(self.dropFirst().dropLast())
