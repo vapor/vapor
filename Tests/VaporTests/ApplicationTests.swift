@@ -1441,7 +1441,7 @@ final class ApplicationTests: XCTestCase {
 
     func testCookieQuotes() throws {
         var headers = HTTPHeaders()
-        headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)  
+        headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
         XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
     }
 }
