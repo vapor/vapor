@@ -1,18 +1,11 @@
 extension Validator {
     /// Validates nothing. Can be used as placeholder to validate successful decoding
     public static var valid: Validator<T> {
-        Valid().validator()
-    }
-    
-    struct Valid { }
-}
-
-extension Validator.Valid: ValidatorType {
-    func validate(_ data: T) -> ValidatorResult {
-        ValidatorResults.Valid()
+        .init { _ in
+            ValidatorResults.Valid()
+        }
     }
 }
-
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that the data is valid`.
