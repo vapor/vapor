@@ -1,7 +1,18 @@
 extension Validator where T == String {
     /// Validates whether a `String` is a valid email address.
     public static var email: Validator<T> {
-        Email().validator()
+        .init {
+            guard
+                let range = $0.range(of: regex, options: [.regularExpression]),
+                range.lowerBound == $0.startIndex && range.upperBound == $0.endIndex,
+                // FIXME: these numbers are incorrect and too restrictive
+                $0.count <= 80, // total length
+                $0.split(separator: "@")[0].count <= 64 // length before `@`
+            else {
+                return ValidatorResults.Email(isValidEmail: false)
+            }
+            return ValidatorResults.Email(isValidEmail: true)
+        }
     }
 }
 
@@ -26,27 +37,6 @@ extension ValidatorResults.Email: ValidatorResult {
         "is not a valid email address"
     }
 }
-
-extension Validator {
-    struct Email { }
-}
-
-extension Validator.Email: ValidatorType {
-    func validate(_ string: String) -> ValidatorResult {
-        guard
-            let range = string.range(of: regex, options: [.regularExpression]),
-            range.lowerBound == string.startIndex && range.upperBound == string.endIndex,
-            // FIXME: these numbers are incorrect and too restrictive
-            string.count <= 80, // total length
-            string.split(separator: "@")[0].count <= 64 // length before `@`
-        else {
-            return ValidatorResults.Email(isValidEmail: false)
-        }
-        return ValidatorResults.Email(isValidEmail: true)
-    }
-}
-
-
 
 // FIXME: this regex is too strict with capitalization of the domain part
 private let regex: String = """

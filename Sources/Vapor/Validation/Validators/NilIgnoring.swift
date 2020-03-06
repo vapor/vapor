@@ -1,37 +1,33 @@
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
 public func ||<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    lhs || Validator.NilIgnoring(base: rhs).validator()
+    lhs || .init {
+        ValidatorResults.NilIgnoring(result: $0.flatMap(rhs.validate))
+    }
 }
 
 /// Combines an optional and non-optional `Validator` using OR logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
 public func ||<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    Validator.NilIgnoring(base: lhs).validator() || rhs
+    .init {
+        ValidatorResults.NilIgnoring(result: $0.flatMap(lhs.validate))
+    } || rhs
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
 public func &&<T> (lhs: Validator<T?>, rhs: Validator<T>) -> Validator<T?> {
-    lhs && Validator.NilIgnoring(base: rhs).validator()
+    lhs && .init {
+        ValidatorResults.NilIgnoring(result: $0.flatMap(rhs.validate))
+    }
 }
 
 /// Combines an optional and non-optional `Validator` using AND logic. The non-optional
 /// validator will simply ignore `nil` values, assuming the other `Validator` handles them.
 public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
-    Validator.NilIgnoring(base: lhs).validator() && rhs
-}
-
-extension Validator {
-    struct NilIgnoring {
-        let base: Validator<T>
-    }
-}
-
-extension Validator.NilIgnoring: ValidatorType {
-    func validate(_ data: T?) -> ValidatorResult {
-        ValidatorResults.NilIgnoring(result: data.flatMap(self.base.validate))
-    }
+    .init {
+        ValidatorResults.NilIgnoring(result: $0.flatMap(lhs.validate))
+    } && rhs
 }
 
 extension ValidatorResults {
