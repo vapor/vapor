@@ -8,7 +8,6 @@
 @_exported import Foundation
 
 @_exported import Logging
-@_exported import Metrics
 
 @_exported import struct NIO.ByteBuffer
 @_exported import struct NIO.ByteBufferAllocator

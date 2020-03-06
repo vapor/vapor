@@ -1,3 +1,5 @@
+import Metrics
+
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
     private let router: TrieRouter<Route>
