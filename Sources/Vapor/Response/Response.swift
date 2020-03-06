@@ -37,6 +37,8 @@ public final class Response: CustomStringConvertible {
     }
     
     internal var upgrader: Upgrader?
+
+    public var storage: Storage
     
     /// Get and set `HTTPCookies` for this `HTTPResponse`
     /// This accesses the `"Set-Cookie"` header.
@@ -131,6 +133,7 @@ public final class Response: CustomStringConvertible {
         self.version = version
         self.headers = headers
         self.body = body
+        self.storage = .init()
     }
 }
 
