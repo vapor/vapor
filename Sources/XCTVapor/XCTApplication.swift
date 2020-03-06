@@ -83,10 +83,10 @@ extension Application {
                 on: self.app.eventLoopGroup.next()
             )
             let res = try self.app.responder.respond(to: request).wait()
-            return XCTHTTPResponse(
+            return try XCTHTTPResponse(
                 status: res.status,
                 headers: res.headers,
-                body: res.body.buffer ?? ByteBufferAllocator().buffer(capacity: 0)
+                body: res.body.collect(on: request.eventLoop).wait() ?? ByteBufferAllocator().buffer(capacity: 0)
             )
         }
     }
