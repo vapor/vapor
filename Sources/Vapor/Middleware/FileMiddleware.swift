@@ -31,8 +31,7 @@ public final class FileMiddleware: Middleware {
         }
 
         // create absolute file path
-        let filePath = publicDirectory + (path.removingPercentEncoding ?? path)
-        print(filePath)
+        let filePath = self.publicDirectory + (path.removingPercentEncoding ?? path)
 
         // check if file exists and is not a directory
         var isDir: ObjCBool = false
