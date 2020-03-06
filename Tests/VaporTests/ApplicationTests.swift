@@ -988,36 +988,6 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(c.wait(), [1, 2])
     }
 
-    func testDotEnvRead() throws {
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let pool = NIOThreadPool(numberOfThreads: 1)
-        pool.start()
-        let fileio = NonBlockingFileIO(threadPool: pool)
-        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
-        let path = "/" + folder + "/Utilities/test.env"
-        let file = try DotEnvFile.read(path: path, fileio: fileio, on: elg.next()).wait()
-        let test = file.lines.map { $0.description }.joined(separator: "\n")
-        XCTAssertEqual(test, """
-        NODE_ENV=development
-        BASIC=basic
-        AFTER_LINE=after_line
-        UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
-        EMPTY=
-        SINGLE_QUOTES=single_quotes
-        DOUBLE_QUOTES=double_quotes
-        EXPAND_NEWLINES=expand\nnewlines
-        DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
-        DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
-        EQUAL_SIGNS=equals==
-        RETAIN_INNER_QUOTES={"foo": "bar"}
-        RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
-        INCLUDE_SPACE=some spaced out string
-        USERNAME=therealnerdybeast@example.tld
-        """)
-        try pool.syncShutdownGracefully()
-        try elg.syncShutdownGracefully()
-    }
-
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() throws {
         let app = Application(.testing)
