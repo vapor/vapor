@@ -1488,6 +1488,19 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         })
     }
+
+    func testPercentDecodedFilePath() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+        try app.test(.GET, "/Utilities/foo%20bar.html") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
+        }
+    }
 }
 
 extension Application.Responder {
