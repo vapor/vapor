@@ -1,18 +1,11 @@
 extension Validator where T: OptionalType {
     /// Validates that the data is `nil`. Combine with the not-operator `!` to validate that the data is not `nil`.
     public static var `nil`: Validator<T> {
-        Nil().validator()
-    }
-
-    struct Nil { }
-}
-
-extension Validator.Nil: ValidatorType {
-    func validate(_ data: T) -> ValidatorResult {
-        ValidatorResults.Nil(isNil: data.wrapped == nil)
+        .init {
+            ValidatorResults.Nil(isNil: $0.wrapped == nil)
+        }
     }
 }
-
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that the data is `nil`.

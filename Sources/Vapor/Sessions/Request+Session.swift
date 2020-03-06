@@ -34,21 +34,18 @@ extension Request {
     public func destroySession() {
         self._sessionCache.session = nil
     }
+
+    private struct SessionCacheKey: StorageKey {
+        typealias Value = SessionCache
+    }
     
     internal var _sessionCache: SessionCache {
-        get {
-            if let existing = self.userInfo[_sessionCacheKey] as? SessionCache {
-                return existing
-            } else {
-                let new = SessionCache()
-                self.userInfo[_sessionCacheKey] = new
-                return new
-            }
-        }
-        set {
-            self.userInfo[_sessionCacheKey] = newValue
+        if let existing = self.storage[SessionCacheKey.self] {
+            return existing
+        } else {
+            let new = SessionCache()
+            self.storage[SessionCacheKey.self] = new
+            return new
         }
     }
 }
-
-private let _sessionCacheKey = "session"

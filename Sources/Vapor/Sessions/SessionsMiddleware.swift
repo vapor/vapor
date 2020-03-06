@@ -34,32 +34,30 @@ public final class SessionsMiddleware: Middleware {
 
     /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        // Create a session cache
-        let cache = SessionCache()
-        request._sessionCache = cache
-        cache.middlewareFlag = true
+        // Signal middleware has been added.
+        request._sessionCache.middlewareFlag = true
 
         // Check for an existing session
         if let cookieValue = request.cookies[self.configuration.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
             return self.session.readSession(id, for: request).flatMap { data in
-                cache.session = .init(id: id, data: data ?? .init())
+                request._sessionCache.session = .init(id: id, data: data ?? .init())
                 return next.respond(to: request).flatMap { res in
-                    return self.addCookies(to: res, for: request, cache: cache)
+                    return self.addCookies(to: res, for: request)
                 }
             }
         } else {
             // No cookie value exists, simply respond.
             return next.respond(to: request).flatMap { response in
-                return self.addCookies(to: response, for: request, cache: cache)
+                return self.addCookies(to: response, for: request)
             }
         }
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to response: Response, for request: Request, cache: SessionCache) -> EventLoopFuture<Response> {
-        if let session = cache.session {
+    private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
+        if let session = request._sessionCache.session {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let createOrUpdate: EventLoopFuture<SessionID>
