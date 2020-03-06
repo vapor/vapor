@@ -1439,7 +1439,54 @@ final class ApplicationTests: XCTestCase {
         let data = Data([1, 2, 3, 4])
         XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
         XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
+    }
 
+    func testSimilarRoutingPath() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("api","addresses") { req in
+            "a"
+        }
+        app.get("api", "addresses","search", ":id") { req in
+            "b"
+        }
+
+        try app.testable(method: .running).test(.GET, "/api/addresses/") { res in
+            XCTAssertEqual(res.body.string, "a")
+        }.test(.GET, "/api/addresses/search/test") { res in
+            XCTAssertEqual(res.body.string, "b")
+        }.test(.GET, "/api/addresses/search/") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "/api/addresses/search") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
+
+    func testCollectedResponseBodyEnd() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
+            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            req.body.drain { result in
+                switch result {
+                case .buffer: break
+                case .error(let error):
+                    promise.fail(error)
+                case .end:
+                    promise.succeed(.ok)
+                }
+                return req.eventLoop.makeSucceededFuture(())
+            }
+            return promise.futureResult
+        }
+
+        try app.testable(method: .running).test(.POST, "drain", beforeRequest: { req in
+            try req.content.encode(["hello": "world"])
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+        })
     }
 }
 
