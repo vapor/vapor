@@ -31,6 +31,8 @@
 @_exported import struct NIOHTTP1.HTTPVersion
 @_exported import enum NIOHTTP1.HTTPResponseStatus
 
+@_exported import enum NIOHTTPCompression.NIOHTTPDecompression
+
 @_exported import struct NIOSSL.TLSConfiguration
 
 @_exported import WebSocketKit

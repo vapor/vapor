@@ -1405,8 +1405,10 @@ final class ApplicationTests: XCTestCase {
         let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAA=")! // "Hello, world!"
         let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
 
-        app.server.configuration.supportCompression = true
-        app.server.configuration.decompressionLimit = .size(smallBody.readableBytes) // Max out at the smaller payload (.size is of compressed data)
+        // Max out at the smaller payload (.size is of compressed data)
+        app.server.configuration.requestDecompression = .enabled(
+            limit: .size(smallBody.readableBytes)
+        )
         app.post("gzip") { $0.body.string ?? "" }
 
         let server = try app.server.start()

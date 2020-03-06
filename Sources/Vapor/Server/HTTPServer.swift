@@ -37,12 +37,68 @@ public final class HTTPServer {
         
         /// Number of webSocket maxFrameSize.
         public var webSocketMaxFrameSize: Int
-        
-        /// When `true`, HTTP server will support gzip and deflate compression.
-        public var supportCompression: Bool
-        
-        /// Limit of data to decompress when HTTP compression is supported.
-        public var decompressionLimit: NIOHTTPDecompression.DecompressionLimit
+
+        /// Response compression configuration.
+        public var responseCompression: CompressionConfiguration
+
+        /// Supported HTTP compression options.
+        public struct CompressionConfiguration {
+            /// Disables compression. This is the default.
+            public static var disabled: Self {
+                .init(storage: .disabled)
+            }
+
+            /// Enables compression with default configuration.
+            public static var enabled: Self {
+                .enabled(initialByteBufferCapacity: 1024)
+            }
+
+            /// Enables compression with custom configuration.
+            public static func enabled(
+                initialByteBufferCapacity: Int
+            ) -> Self {
+                .init(storage: .enabled(
+                    initialByteBufferCapacity: initialByteBufferCapacity
+                ))
+            }
+
+            enum Storage {
+                case disabled
+                case enabled(initialByteBufferCapacity: Int)
+            }
+
+            var storage: Storage
+        }
+
+        /// Request decompression configuration.
+        public var requestDecompression: DecompressionConfiguration
+
+        /// Supported HTTP decompression options.
+        public struct DecompressionConfiguration {
+            /// Disables decompression. This is the default option.
+            public static var disabled: Self {
+                .init(storage: .disabled)
+            }
+
+            /// Enables decompression with default configuration.
+            public static var enabled: Self {
+                .enabled(limit: .ratio(10))
+            }
+
+            /// Enables decompression with custom configuration.
+            public static func enabled(
+                limit: NIOHTTPDecompression.DecompressionLimit
+            ) -> Self {
+                .init(storage: .enabled(limit: limit))
+            }
+
+            enum Storage {
+                case disabled
+                case enabled(limit: NIOHTTPDecompression.DecompressionLimit)
+            }
+
+            var storage: Storage
+        }
         
         /// When `true`, HTTP server will support pipelined requests.
         public var supportPipelining: Bool
@@ -65,8 +121,8 @@ public final class HTTPServer {
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
-            supportCompression: Bool = false,
-            decompressionLimit: NIOHTTPDecompression.DecompressionLimit = .ratio(10),
+            responseCompression: CompressionConfiguration = .disabled,
+            requestDecompression: DecompressionConfiguration = .disabled,
             supportPipelining: Bool = false,
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
@@ -80,8 +136,8 @@ public final class HTTPServer {
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.webSocketMaxFrameSize = webSocketMaxFrameSize
-            self.supportCompression = supportCompression
-            self.decompressionLimit = decompressionLimit
+            self.responseCompression = responseCompression
+            self.requestDecompression = requestDecompression
             self.supportPipelining = supportPipelining
             if let supportVersions = supportVersions {
                 self.supportVersions = supportVersions
@@ -342,12 +398,25 @@ private extension ChannelPipeline {
         }
         
         // add response compressor if configured
-        if configuration.supportCompression {
-            let requestDecompressionHandler = NIOHTTPRequestDecompressor(limit: configuration.decompressionLimit)
-            let responseCompressionHandler = HTTPResponseCompressor()
-
+        switch configuration.responseCompression.storage {
+        case .enabled(let initialByteBufferCapacity):
+            let responseCompressionHandler = HTTPResponseCompressor(
+                initialByteBufferCapacity: initialByteBufferCapacity
+            )
             handlers.append(responseCompressionHandler)
+        case .disabled:
+            break
+        }
+
+        // add request decompressor if configured
+        switch configuration.requestDecompression.storage {
+        case .enabled(let limit):
+            let requestDecompressionHandler = NIOHTTPRequestDecompressor(
+                limit: limit
+            )
             handlers.append(requestDecompressionHandler)
+        case .disabled:
+            break
         }
         
         // add NIO -> HTTP request decoder
