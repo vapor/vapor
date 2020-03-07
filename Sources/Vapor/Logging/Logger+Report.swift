@@ -11,7 +11,7 @@ extension Logger {
         line: UInt = #line
     ) {
         let source: ErrorSource?
-        if let abort = error as? AbortError {
+        if let abort = error as? Debuggable {
             source = abort.source
         } else {
             source = nil
