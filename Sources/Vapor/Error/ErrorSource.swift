@@ -1,5 +1,5 @@
 /// A source-code location.
-public struct SourceLocation {
+public struct ErrorSource {
     /// File in which this location exists.
     public var file: String
 
@@ -16,7 +16,13 @@ public struct SourceLocation {
     public var range: Range<UInt>?
 
     /// Creates a new `SourceLocation`
-    public init(file: String, function: String, line: UInt, column: UInt, range: Range<UInt>?) {
+    public init(
+        file: String,
+        function: String,
+        line: UInt,
+        column: UInt,
+        range: Range<UInt>? = nil
+    ) {
         self.file = file
         self.function = function
         self.line = line
@@ -25,15 +31,21 @@ public struct SourceLocation {
     }
 }
 
-extension SourceLocation {
-    /// Creates a new `SourceLocation` for the current call site.
+extension ErrorSource {
+    /// Creates a new `ErrorSource` for the current call site.
     public static func capture(
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
         range: Range<UInt>? = nil
-    ) -> SourceLocation {
-        return SourceLocation(file: file, function: function, line: line, column: column, range: range)
+    ) -> Self {
+        return self.init(
+            file: file,
+            function: function,
+            line: line,
+            column: column,
+            range: range
+        )
     }
 }

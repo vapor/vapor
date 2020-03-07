@@ -24,8 +24,8 @@ public protocol Debuggable: CustomDebugStringConvertible, CustomStringConvertibl
     /// The reason for the error. Usually one sentence (that should end with a period).
     var reason: String { get }
 
-    /// Optional source location for this error
-    var sourceLocation: SourceLocation? { get }
+    /// Optional source for this error
+    var source: ErrorSource? { get }
 
     /// Stack trace from which this error originated (must set this from the error's init)
     var stackTrace: [String]? { get }
@@ -110,7 +110,7 @@ extension Debuggable {
     }
 
     /// See `Debuggable`
-    public var sourceLocation: SourceLocation? {
+    public var source: ErrorSource? {
         return nil
     }
 
@@ -170,7 +170,7 @@ extension Debuggable {
                 print.append("⚠️ [\(fullIdentifier): \(reason)]")
         }
 
-        if let source = sourceLocation {
+        if let source = source {
             switch format {
                 case .long:
                     var help: [String] = []

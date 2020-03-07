@@ -21,18 +21,6 @@ public protocol AbortError: LocalizedError, CustomStringConvertible {
     var source: ErrorSource? { get }
 }
 
-public struct ErrorSource {
-    public let file: String
-    public let function: String
-    public let line: Int
-    
-    public init(file: String = #file, function: String = #function, line: Int = #line) {
-        self.file = file
-        self.line = line
-        self.function = function
-    }
-}
-
 extension AbortError {
     /// See `AbortError`.
     public var headers: HTTPHeaders {
