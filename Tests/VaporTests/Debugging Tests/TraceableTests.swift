@@ -17,8 +17,4 @@ class TraceableTests: XCTestCase {
             debugPrint(error)
         }
     }
-
-    static let allTests = [
-        ("testPrintable", testPrintable),
-    ]
 }

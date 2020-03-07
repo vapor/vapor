@@ -3,14 +3,6 @@ import Foundation
 @testable import Vapor
 
 class FooErrorTests: XCTestCase {
-    static let allTests = [
-        ("testPrintable", testPrintable),
-        ("testOmitEmptyFields", testOmitEmptyFields),
-        ("testReadableName", testReadableName),
-        ("testIdentifier", testIdentifier),
-        ("testCausesAndSuggestions", testCausesAndSuggestions),
-    ]
-
     let error: FooError = .noFoo
 
     func testPrintable() throws {

@@ -21,9 +21,4 @@ class GeneralTests: XCTestCase {
         let expectation = "⚠️ MinimumError: Not enabled\n- id: MinimumError.alpha\n"
         XCTAssertEqual(description, expectation)
     }
-
-    static let allTests = [
-        ("testBulletedList", testBulletedList),
-        ("testMinimumConformance", testMinimumConformance),
-    ]
 }
