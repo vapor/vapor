@@ -13,18 +13,22 @@ class DirectoryConfigurationTests: XCTestCase {
         let tempDirectoryURL = URL(fileURLWithPath: try createTemporaryDirectory(), isDirectory: true)
         defer { try? FileManager.default.removeItem(at: tempDirectoryURL) }
         
+        let buildProductsForConfigURL = tempDirectoryURL
+            .appendingPathComponent("Build", isDirectory: true)
+            .appendingPathComponent("Products", isDirectory: true)
+            .appendingPathComponent("Debug", isDirectory: true)
         let fakeWorkspaceURL = tempDirectoryURL.appendingPathComponent("Workspace", isDirectory: true)
         let plistInfo: [String: Any] = ["LastAccessedDate": Date(), "WorkspacePath": fakeWorkspaceURL.path]
         let plistData = try PropertyListSerialization.data(fromPropertyList: plistInfo, format: .xml, options: 0)
         
-        try FileManager.default.createDirectory(at: tempDirectoryURL.appendingPathComponent("Build", isDirectory: true), withIntermediateDirectories: false)
+        try FileManager.default.createDirectory(at: buildProductsForConfigURL, withIntermediateDirectories: true)
         try FileManager.default.createDirectory(at: tempDirectoryURL.appendingPathComponent("Index", isDirectory: true), withIntermediateDirectories: false)
         try FileManager.default.createDirectory(at: fakeWorkspaceURL, withIntermediateDirectories: false)
                 
         try plistData.write(to: tempDirectoryURL.appendingPathComponent("info.plist", isDirectory: false))
         try Data().write(to: fakeWorkspaceURL.appendingPathComponent("Package.swift", isDirectory: false))
         
-        guard FileManager.default.changeCurrentDirectoryPath(tempDirectoryURL.path) else {
+        guard FileManager.default.changeCurrentDirectoryPath(buildProductsForConfigURL.path) else {
             throw CocoaError(.fileWriteUnknown)
         }
         

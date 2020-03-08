@@ -46,9 +46,10 @@ public struct DirectoryConfiguration {
             let WorkspacePath: String
             var workspaceURL: URL { URL(fileURLWithPath: WorkspacePath, isDirectory: true) }
         }
-        if (try? workingDirectoryURL.checkSubpathExists(at: "Build", isDirectory: true)) ?? false,
-           (try? workingDirectoryURL.checkSubpathExists(at: "Index", isDirectory: true)) ?? false,
-           let infoPlistData = try? Data.init(contentsOf: workingDirectoryURL.appendingPathComponent("info.plist", isDirectory: false)),
+        let possibleBuildAreaURL = workingDirectoryURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+        if (try? possibleBuildAreaURL.checkSubpathExists(at: "Build", isDirectory: true)) ?? false,
+           (try? possibleBuildAreaURL.checkSubpathExists(at: "Index", isDirectory: true)) ?? false,
+           let infoPlistData = try? Data.init(contentsOf: possibleBuildAreaURL.appendingPathComponent("info.plist", isDirectory: false)),
            let workspaceInfo = try? PropertyListDecoder().decode(BuildAreaInfo.self, from: infoPlistData),
            (try? workspaceInfo.workspaceURL.checkSubpathExists(at: "Package.swift", isDirectory: false)) ?? false
         {
