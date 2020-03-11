@@ -74,8 +74,8 @@ public struct HTTPHeaderValue: Codable {
     
     /// Serializes this `HeaderValue` to a `String`.
     public func serialize() -> String {
-        var string = "\(value)"
-        for (key, val) in parameters {
+        var string = "\(self.value)"
+        for (key, val) in self.parameters {
             string += "; \(key)=\"\(val)\""
         }
         return string
@@ -85,31 +85,38 @@ public struct HTTPHeaderValue: Codable {
     ///
     ///     guard let headerValue = HTTPHeaderValue.parse("application/json; charset=utf8") else { ... }
     ///
-    public static func parse(_ data: String) -> HTTPHeaderValue? {
-        let data = data
-        
-        /// separate the zero or more parameters
-        let parts = data.split(separator: ";", maxSplits: 1)
-        
-        /// there must be at least one part, the value
-        guard let value = parts.first else {
-            /// should never hit this
-            return nil
-        }
-        
+    public static func parse(_ data: String, hasValue: Bool = true) -> HTTPHeaderValue? {
+        /// The main parameter value
+        let value: Substring
         /// get the remaining parameters string
         var remaining: Substring
-        
-        switch parts.count {
-        case 1:
-            /// no parameters, early exit
-            return HTTPHeaderValue(String(value), parameters: [:])
-        case 2: remaining = parts[1]
-        default: return nil
-        }
-        
+
         /// collect all of the parameters
         var parameters: [String: String] = [:]
+
+        if hasValue {
+            /// separate the zero or more parameters
+            let parts = data.split(separator: ";", maxSplits: 1)
+            /// there must be at least one part, the value
+            guard let firstValue = parts.first else {
+                /// should never hit this
+                return nil
+            }
+            value = firstValue
+
+            switch parts.count {
+            case 1:
+                /// no parameters, early exit
+                remaining = ""
+            case 2:
+                remaining = parts[1]
+            default:
+                return nil
+            }
+        } else {
+            value = ""
+            remaining = .init(data)
+        }
         
         /// loop over all parts after the value
         parse: while remaining.count > 0 {

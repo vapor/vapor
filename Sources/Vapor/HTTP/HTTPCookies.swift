@@ -310,21 +310,3 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         set { cookies[name] = newValue }
     }
 }
-
-
-private extension String {
-    func removingDoubleQuotes() -> Self {
-        switch (self.first, self.last) {
-        case (Character.doubleQuote, Character.doubleQuote):
-            return .init(self.dropFirst().dropLast())
-        default:
-            return self
-        }
-    }
-}
-
-private extension Character {
-    static var doubleQuote: Self {
-        .init(Unicode.Scalar(0x22))
-    }
-}
