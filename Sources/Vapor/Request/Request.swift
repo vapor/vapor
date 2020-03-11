@@ -186,4 +186,43 @@ public final class Request: CustomStringConvertible {
         self.logger = logger
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
     }
+
+    /// Creates a `Response` object that has a status of 201 (Created) and includes the `Location` HTTP header.
+    ///
+    /// Intended to be used in routes that create a new object.
+    ///
+    /// ### Note ###
+    /// The return type of your route should be `EventLoopFuture<Response>`
+    ///
+    /// ### Example ###
+    /// ```swift
+    /// func create(req: Request) throws -> EventLoopFuture<Response> {
+    ///    let todo = try req.content.decode(Todo.self)
+    ///    return todo.save(on: req.db).flatMapThrowing {
+    ///        return try req.makeCreatedResponse(for: todo)
+    ///    }
+    /// }
+    /// ```
+    /// - Parameters:
+    ///   - obj: The newly created model.
+    ///   - mediaType: How to encode the response, defaulting to `.json`
+    ///   - customLocation: The location header to use. Defaults to the current route with the `obj` ID appended.
+    /// - Throws: If the object hasn't been created or the encoding fails.
+    /// - Returns: A `Response` object.
+    public func makeCreatedResponse<T>(for obj: T, as mediaType: HTTPMediaType = .json, at customLocation: String? = nil) throws -> Response where T: Model {
+        let location: String
+        if let customLocation = customLocation {
+            location = customLocation
+        } else {
+            let id = try obj.requireID()
+            location = "\(self.url.string)/\(id)"
+        }
+
+        let headers = HTTPHeaders([("Location", location)])
+        let response = Response(status: .created, headers: headers)
+
+        try response.content.encode(obj, as: mediaType)
+
+        return response
+    }
 }
