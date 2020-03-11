@@ -23,7 +23,7 @@ public final class ErrorMiddleware: Middleware {
             let headers: HTTPHeaders
             
             // directly return response if error conforms to HasCustomResponse
-            if let responseError = error as? ErrorWithCustomResponse {
+            if let responseError = error as? HasCustomResponse {
                 return responseError.customResponse()
             }
 

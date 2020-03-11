@@ -38,7 +38,7 @@ extension ValidationsError: AbortError {
     }
 }
 
-extension ValidationsError: ErrorWithCustomResponse {
+extension ValidationsError: HasCustomResponse {
     internal struct ErrorResponse: Codable {
         var error: Bool
         var reason: String
