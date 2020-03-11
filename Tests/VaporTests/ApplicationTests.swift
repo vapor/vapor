@@ -1411,6 +1411,12 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
     }
 
+    func testCookieQuotes() throws {
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
+        XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
+    }
+
     func testSimilarRoutingPath() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
