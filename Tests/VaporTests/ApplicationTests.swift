@@ -629,6 +629,7 @@ final class ApplicationTests: XCTestCase {
         struct User: Content, Validatable {
             static func validations(_ v: inout Validations) {
                 v.add("email", is: .email)
+                v.add("email", is: .ascii)
             }
 
             var name: String
@@ -652,7 +653,7 @@ final class ApplicationTests: XCTestCase {
         try app.testable().test(.POST, "/users", beforeRequest: { req in
             try req.content.encode([
                 "name": "vapor",
-                "email": "foo"
+                "email": "foo®"
             ], as: .json)
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
@@ -660,7 +661,7 @@ final class ApplicationTests: XCTestCase {
             XCTAssertContent(ValidationErrorResponse.self, res, { error in
                 XCTAssertTrue(error.error)
                 XCTAssertContains(error.reason, "email is not a valid email address")
-                XCTAssertEqual(error.validationErrors["email"], "email is not a valid email address")
+                XCTAssertEqual(error.validationErrors["email"], "email is not a valid email address, email contains \'®\' (allowed: ASCII)")
             })
         }
     }

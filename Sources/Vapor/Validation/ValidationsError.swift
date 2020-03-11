@@ -47,8 +47,12 @@ extension ValidationsError: HasCustomResponse {
     
     public func customResponse() -> Response {
         // collect validationErrors
-        let validationErrors = self.failures.reduce(into: [String: String]()) {
-            $0[$1.key.description] = $1.failureDescription ?? ""
+        var validationErrors: [String: String] = [:]
+        
+        self.failures.forEach { failure in
+            validationErrors = validationErrors.merging([failure.key.description: failure.failureDescription ?? ""]) {
+                return $0 + ", " + $1
+            }
         }
         
         // create a Response with appropriate status
