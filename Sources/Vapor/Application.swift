@@ -7,7 +7,6 @@ public final class Application {
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     public var storage: Storage
-    public var userInfo: [AnyHashable: Any]
     public private(set) var didShutdown: Bool
     public var logger: Logger
     private var isBooted: Bool
@@ -71,7 +70,6 @@ public final class Application {
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         self.locks = .init()
-        self.userInfo = [:]
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
         self.storage = .init(logger: self.logger)
@@ -140,7 +138,6 @@ public final class Application {
         self.logger.trace("Clearing Application storage")
         self.storage.shutdown()
         self.storage.clear()
-        self.userInfo = [:]
 
         switch self.eventLoopGroupProvider {
         case .shared:

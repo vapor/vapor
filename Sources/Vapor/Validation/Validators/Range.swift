@@ -21,7 +21,7 @@ extension Validator where T: Comparable {
         .range(min: range.lowerBound, max: nil)
     }
     
-    public static func range(min: T?, max: T?) -> Validator<T> {
+    static func range(min: T?, max: T?) -> Validator<T> {
         .range(min: min, max: max, \.self)
     }
 }

@@ -84,20 +84,17 @@ extension Request {
         }
     }
 
+    private struct AuthenticationCacheKey: StorageKey {
+        typealias Value = AuthenticationCache
+    }
+
     internal var _authenticationCache: AuthenticationCache {
-        get {
-            if let existing = self.userInfo[_authenticationCacheKey] as? AuthenticationCache {
-                return existing
-            } else {
-                let new = AuthenticationCache()
-                self.userInfo[_authenticationCacheKey] = new
-                return new
-            }
-        }
-        set {
-            self.userInfo[_authenticationCacheKey] = newValue
+        if let existing = self.storage[AuthenticationCacheKey.self] {
+            return existing
+        } else {
+            let new = AuthenticationCache()
+            self.storage[AuthenticationCacheKey.self] = new
+            return new
         }
     }
 }
-
-private let _authenticationCacheKey = "authc"

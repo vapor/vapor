@@ -8,7 +8,6 @@
 @_exported import Foundation
 
 @_exported import Logging
-@_exported import Metrics
 
 @_exported import struct NIO.ByteBuffer
 @_exported import struct NIO.ByteBufferAllocator
@@ -30,6 +29,8 @@
 @_exported import enum NIOHTTP1.HTTPMethod
 @_exported import struct NIOHTTP1.HTTPVersion
 @_exported import enum NIOHTTP1.HTTPResponseStatus
+
+@_exported import enum NIOHTTPCompression.NIOHTTPDecompression
 
 @_exported import struct NIOSSL.TLSConfiguration
 

@@ -988,36 +988,6 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(c.wait(), [1, 2])
     }
 
-    func testDotEnvRead() throws {
-        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let pool = NIOThreadPool(numberOfThreads: 1)
-        pool.start()
-        let fileio = NonBlockingFileIO(threadPool: pool)
-        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
-        let path = "/" + folder + "/Utilities/test.env"
-        let file = try DotEnvFile.read(path: path, fileio: fileio, on: elg.next()).wait()
-        let test = file.lines.map { $0.description }.joined(separator: "\n")
-        XCTAssertEqual(test, """
-        NODE_ENV=development
-        BASIC=basic
-        AFTER_LINE=after_line
-        UNDEFINED_EXPAND=$TOTALLY_UNDEFINED_ENV_KEY
-        EMPTY=
-        SINGLE_QUOTES=single_quotes
-        DOUBLE_QUOTES=double_quotes
-        EXPAND_NEWLINES=expand\nnewlines
-        DONT_EXPAND_NEWLINES_1=dontexpand\\nnewlines
-        DONT_EXPAND_NEWLINES_2=dontexpand\\nnewlines
-        EQUAL_SIGNS=equals==
-        RETAIN_INNER_QUOTES={"foo": "bar"}
-        RETAIN_INNER_QUOTES_AS_STRING={"foo": "bar"}
-        INCLUDE_SPACE=some spaced out string
-        USERNAME=therealnerdybeast@example.tld
-        """)
-        try pool.syncShutdownGracefully()
-        try elg.syncShutdownGracefully()
-    }
-
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() throws {
         let app = Application(.testing)
@@ -1405,8 +1375,10 @@ final class ApplicationTests: XCTestCase {
         let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAA=")! // "Hello, world!"
         let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
 
-        app.server.configuration.supportCompression = true
-        app.server.configuration.decompressionLimit = .size(smallBody.readableBytes) // Max out at the smaller payload (.size is of compressed data)
+        // Max out at the smaller payload (.size is of compressed data)
+        app.server.configuration.requestDecompression = .enabled(
+            limit: .size(smallBody.readableBytes)
+        )
         app.post("gzip") { $0.body.string ?? "" }
 
         let server = try app.server.start()
@@ -1443,6 +1415,67 @@ final class ApplicationTests: XCTestCase {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
         XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
+    }
+
+    func testSimilarRoutingPath() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("api","addresses") { req in
+            "a"
+        }
+        app.get("api", "addresses","search", ":id") { req in
+            "b"
+        }
+
+        try app.testable(method: .running).test(.GET, "/api/addresses/") { res in
+            XCTAssertEqual(res.body.string, "a")
+        }.test(.GET, "/api/addresses/search/test") { res in
+            XCTAssertEqual(res.body.string, "b")
+        }.test(.GET, "/api/addresses/search/") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "/api/addresses/search") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
+
+    func testCollectedResponseBodyEnd() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
+            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            req.body.drain { result in
+                switch result {
+                case .buffer: break
+                case .error(let error):
+                    promise.fail(error)
+                case .end:
+                    promise.succeed(.ok)
+                }
+                return req.eventLoop.makeSucceededFuture(())
+            }
+            return promise.futureResult
+        }
+
+        try app.testable(method: .running).test(.POST, "drain", beforeRequest: { req in
+            try req.content.encode(["hello": "world"])
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+        })
+    }
+
+    func testPercentDecodedFilePath() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+        try app.test(.GET, "/Utilities/foo%20bar.html") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
+        }
     }
 }
 

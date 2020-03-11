@@ -128,8 +128,8 @@ public final class Request: CustomStringConvertible {
     public let eventLoop: EventLoop
     
     public var parameters: Parameters
-    
-    public var userInfo: [AnyHashable: Any]
+
+    public var storage: Storage
     
     public convenience init(
         application: Application,
@@ -181,7 +181,7 @@ public final class Request: CustomStringConvertible {
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
         self.parameters = .init()
-        self.userInfo = [:]
+        self.storage = .init()
         self.isKeepAlive = true
         self.logger = logger
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)

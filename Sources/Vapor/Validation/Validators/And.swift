@@ -51,6 +51,4 @@ extension ValidatorResults.And: ValidatorResult {
             return nil
         }
     }
-    
-    
 }
