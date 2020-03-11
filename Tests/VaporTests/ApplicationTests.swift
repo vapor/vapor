@@ -382,7 +382,7 @@ final class ApplicationTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
+            XCTAssertContains(res.body.string, "filename=droplet.png")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -555,7 +555,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.GET, "/file-stream") { res in
             let test = "the quick brown fox"
-            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
@@ -572,7 +572,7 @@ final class ApplicationTests: XCTestCase {
         headers.replaceOrAdd(name: .connection, value: "close")
         try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
             let test = "the quick brown fox"
-            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
@@ -797,7 +797,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
+            XCTAssertEqual(res.headers.first(name: .contentLength), "2")
             XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
@@ -1158,7 +1158,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get("check") { (req: Request) -> String in
-            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
         
         try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
@@ -1173,7 +1173,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get("check") { (req: Request) -> String in
-            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
         // Me and my sadistic sense of humor.
         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)

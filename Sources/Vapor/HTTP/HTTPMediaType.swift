@@ -140,13 +140,14 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
     ///     guard let mediaType = HTTPMediaType.parse("application/json; charset=utf8") else { ... }
     ///
     public static func parse(_ data: String) -> HTTPMediaType? {
-        guard let headerValue = HTTPHeaderValue.parse(data) else {
+        var parser = HTTPHeaderValueParser(string: data)
+        guard let value = parser.nextValue() else {
             /// not a valid header value
             return nil
         }
         
         /// parse out type and subtype
-        let typeParts = headerValue.value.split(separator: "/", maxSplits: 2)
+        let typeParts = value.split(separator: "/", maxSplits: 2)
         guard typeParts.count == 2 else {
             /// the type was not form `foo/bar`
             return nil
@@ -154,8 +155,16 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
         
         let type = String(typeParts[0]).trimmingCharacters(in: .whitespaces)
         let subType = String(typeParts[1]).trimmingCharacters(in: .whitespaces)
-        
-        return HTTPMediaType(type: .init(type), subType: .init(subType), parameters: headerValue.parameters)
+
+        var parameters: [String: String] = [:]
+        while let (key, value) = parser.nextParameter() {
+            parameters[key] = value
+        }
+        return HTTPMediaType(
+            type: type,
+            subType: subType,
+            parameters: parameters
+        )
     }
     
     /// Creates a `MediaType` from a file extension, if possible.

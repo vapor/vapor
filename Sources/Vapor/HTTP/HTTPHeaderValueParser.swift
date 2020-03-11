@@ -1,6 +1,37 @@
+struct HTTPHeaderValueSerializer {
+    let value: String?
+    let parameters: [(String, String)]
+
+    init(value: String?, parameters: [(String, String)]) {
+        self.value = value
+        self.parameters = parameters
+    }
+
+    func serialize() -> String {
+        var header = ""
+
+        if let value = self.value {
+            header += value
+        }
+
+        for (key, value) in self.parameters {
+            if !header.isEmpty {
+                header += "; "
+            }
+            header += "\(key)=\(value)"
+        }
+
+        return header
+    }
+}
+
+
 struct HTTPHeaderValueParser {
     var current: Substring
-    init(string: String) {
+    
+    init<S>(string: S)
+        where S: StringProtocol
+    {
         self.current = .init(string)
     }
 
@@ -9,15 +40,15 @@ struct HTTPHeaderValueParser {
             return nil
         }
         let value: Substring
-        if let separator = self.nextSeparator() {
-            if let doubleQuote = self.nextDoubleQuote(), doubleQuote < separator {
+        if let semicolon = self.nextSemicolon() {
+            if let doubleQuote = self.nextDoubleQuote(), doubleQuote < semicolon {
                 guard let nextDoubleQuote = self.nextDoubleQuote(skip: 1) else {
                     return nil
                 }
                 value = self.pop(to: nextDoubleQuote)
                 self.pop()
             } else {
-                value = self.pop(to: separator)
+                value = self.pop(to: semicolon)
                 self.pop()
             }
         } else {
@@ -41,8 +72,8 @@ struct HTTPHeaderValueParser {
             key = self.pop(to: equals)
             self.pop()
 
-            if let separator = self.nextSeparator() {
-                if let doubleQuote = self.nextDoubleQuote(), doubleQuote < separator {
+            if let semicolon = self.nextSemicolon() {
+                if let doubleQuote = self.nextDoubleQuote(), doubleQuote < semicolon {
                     // quoted value
                     guard let nextDoubleQuote = self.nextDoubleQuote(skip: 1) else {
                         return nil
@@ -50,7 +81,7 @@ struct HTTPHeaderValueParser {
                     value = self.pop(to: nextDoubleQuote)
                     self.pop()
                 } else {
-                    value = self.pop(to: separator)
+                    value = self.pop(to: semicolon)
                     self.pop()
                 }
             } else {
@@ -101,23 +132,8 @@ struct HTTPHeaderValueParser {
         return startIndex
     }
 
-    private func nextSeparator() -> Substring.Index? {
-        let semicolon = self.current.firstIndex(of: ";")
-        let comma = self.current.firstIndex(of: ",")
-        switch (semicolon, comma) {
-        case (.none, .none):
-            return nil
-        case (.some(let semicolon), .none):
-            return semicolon
-        case (.none, .some(let comma)):
-            return comma
-        case (.some(let semicolon), .some(let comma)):
-            if semicolon < comma {
-                return semicolon
-            } else {
-                return comma
-            }
-        }
+    private func nextSemicolon() -> Substring.Index? {
+        self.current.firstIndex(of: ";")
     }
 
     private func nextEquals() -> Substring.Index? {

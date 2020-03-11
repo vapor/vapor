@@ -76,33 +76,56 @@ final class HTTPHeaderValueTests: XCTestCase {
     func testForwarded() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: "for=192.0.2.60;proto=http;by=203.0.113.43")
-        XCTAssertEqual(headers.forwarded?.for, ["192.0.2.60"])
-        XCTAssertEqual(headers.forwarded?.proto, ["http"])
-        XCTAssertEqual(headers.forwarded?.by, ["203.0.113.43"])
+        XCTAssertEqual(headers.forwarded.first?.for, "192.0.2.60")
+        XCTAssertEqual(headers.forwarded.first?.proto, "http")
+        XCTAssertEqual(headers.forwarded.first?.by, "203.0.113.43")
     }
 
     func testForwarded_quote() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: #"For="[2001:db8:cafe::17]:4711""#)
-        XCTAssertEqual(headers.forwarded?.for, ["[2001:db8:cafe::17]:4711"])
+        XCTAssertEqual(headers.forwarded.first?.for, "[2001:db8:cafe::17]:4711")
     }
 
     func testForwarded_multiple() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: #"for=192.0.2.43, for="[2001:db8:cafe::17]""#)
-        XCTAssertEqual(headers.forwarded?.for, [
+        XCTAssertEqual(headers.forwarded.map { $0.for }, [
             "192.0.2.43",
             "[2001:db8:cafe::17]",
         ])
     }
 
-    func testForwardedFor_multiple() throws {
+    func testForwarded_multiple_deprecated() throws {
         let headers = HTTPHeaders([
             ("X-Forwarded-For", "192.0.2.43, 2001:db8:cafe::17 ")
         ])
-        XCTAssertEqual(headers.forwarded?.for, [
+        XCTAssertEqual(headers.forwarded.map { $0.for }, [
             "192.0.2.43",
             "2001:db8:cafe::17",
         ])
+    }
+
+    func testForwarded_serialization() throws {
+        var headers = HTTPHeaders()
+        headers.forwarded.append(.init(
+            by: "203.0.113.43",
+            for: "192.0.2.60",
+            host: nil,
+            proto: "http"
+        ))
+        XCTAssertEqual(
+            headers.first(name: "Forwarded"),
+            "by=203.0.113.43; for=192.0.2.60; proto=http"
+        )
+    }
+
+    func testContentDisposition() throws {
+        let headers = HTTPHeaders([
+            ("Content-Disposition", #"form-data; name="fieldName"; filename="filename.jpg""#)
+        ])
+        XCTAssertEqual(headers.contentDisposition?.value, .formData)
+        XCTAssertEqual(headers.contentDisposition?.name, "fieldName")
+        XCTAssertEqual(headers.contentDisposition?.filename, "filename.jpg")
     }
 }

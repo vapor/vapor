@@ -3,7 +3,7 @@ extension HTTPHeaders {
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies {
         get {
-            return self.firstValue(name: .cookie)
+            return self.first(name: .cookie)
                 .flatMap(HTTPCookies.parse) ?? [:]
         }
         set {
@@ -57,23 +57,9 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - data: `LosslessDataConvertible` to parse the cookie from.
         /// - returns: `HTTPCookie` or `nil` if the data is invalid.
         public static func parse(_ data: String) -> (String, Value)? {
-            /// Parse `HeaderValue` or return nil.
-            guard let header = HTTPHeaderValue.parse(data) else {
+            var parser = HTTPHeaderValueParser(string: data)
+            guard let (name, string) = parser.nextParameter() else {
                 return nil
-            }
-            
-            /// Fetch name and value.
-            var name: String
-            var string: String
-            
-            let parts = header.value.split(separator: "=", maxSplits: 1, omittingEmptySubsequences: false)
-            switch parts.count {
-            case 2:
-                name = String(parts[0]).trimmingCharacters(in: .whitespaces)
-                string = String(parts[1])
-                    .trimmingCharacters(in: .whitespaces)
-                    .removingDoubleQuotes()
-            default: return nil
             }
             
             /// Fetch params.
@@ -84,9 +70,9 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             var secure = false
             var httpOnly = false
             var sameSite: SameSitePolicy?
-            
-            for (key, val) in header.parameters {
-                switch key {
+
+            while let (key, val) = parser.nextParameter() {
+                switch key.lowercased() {
                 case "domain": domain = val
                 case "path": path = val
                 case "expires": expires = Date(rfc1123: val)

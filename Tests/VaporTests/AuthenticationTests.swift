@@ -115,7 +115,7 @@ final class AuthenticationTests: XCTestCase {
         var sessionCookie: HTTPCookies.Value?
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
-            XCTAssertNil(res.headers.firstValue(name: .setCookie))
+            XCTAssertNil(res.headers.first(name: .setCookie))
         }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
@@ -131,7 +131,7 @@ final class AuthenticationTests: XCTestCase {
         .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-            XCTAssertNotNil(res.headers.firstValue(name: .setCookie))
+            XCTAssertNotNil(res.headers.first(name: .setCookie))
         }
     }
 

@@ -413,6 +413,12 @@ extension HTTPHeaders {
         public static let xDeviceUserAgent = Name("X-Device-User-Agent")
         /// X-Requested-With header.
         public static let xRequestedWith = Name("X-Requested-With")
+        /// X-Forwarded-For header.
+        public static let xForwardedFor = Name("X-Forwarded-For")
+        /// X-Forwarded-Host header.
+        public static let xForwardedHost = Name("X-Forwarded-Host")
+        /// X-Forwarded-Proto header.
+        public static let xForwardedProto = Name("X-Forwarded-Proto")
     }
     
     /// Add a header name/value pair to the block.
@@ -426,7 +432,7 @@ extension HTTPHeaders {
     //      recommended.
     /// - Parameter value: The header field value to add for the given name.
     public mutating func add(name: Name, value: String) {
-        add(name: name.lowercased, value: value)
+       self.add(name: name.lowercased, value: value)
     }
     
     /// Add a header name/value pair to the block, replacing any previous values for the
@@ -443,7 +449,7 @@ extension HTTPHeaders {
     //      recommended.
     /// - Parameter value: The header field value to add for the given name.
     public mutating func replaceOrAdd(name: Name, value: String) {
-        replaceOrAdd(name: name.lowercased, value: value)
+        self.replaceOrAdd(name: name.lowercased, value: value)
     }
     
     /// Remove all values for a given header name from the block.
@@ -452,7 +458,7 @@ extension HTTPHeaders {
     ///
     /// - Parameter name: The name of the header field to remove from the block.
     public mutating func remove(name: Name) {
-        remove(name: name.lowercased)
+        self.remove(name: name.lowercased)
     }
     
     /// Retrieve all of the values for a given header field name from the block.
@@ -467,20 +473,23 @@ extension HTTPHeaders {
     /// - Parameter name: The header field name whose values are to be retrieved.
     /// - Returns: A list of the values for that header field name.
     public subscript(name: Name) -> [String] {
-        return self[name.lowercased]
+        self[name.lowercased]
     }
     
     /// Returns `true` if the `HTTPHeaders` contains a value for the supplied name.
     /// - Parameter name: The header field name to check.
     public func contains(name: Name) -> Bool {
-        return self.contains(name: name.lowercased)
+        self.contains(name: name.lowercased)
     }
     
     /// Returns the first header value with the supplied name.
     /// - Parameter name: The header field name whose values are to be retrieved.
-    public func firstValue(name: Name) -> String? {
-        // fixme: optimize
-        return self[name.lowercased].first
+    public func first(name: Name) -> String? {
+        self.first(name: name.lowercased)
+    }
+
+    public subscript(canonicalForm name: Name) -> [Substring] {
+        self[canonicalForm: name.lowercased]
     }
 }
 
