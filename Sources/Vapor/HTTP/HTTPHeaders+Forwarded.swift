@@ -67,8 +67,7 @@ extension HTTPHeaders {
         static func parse<S>(_ data: S) -> Self?
             where S: StringProtocol
         {
-            var parser = HTTPHeaderValueParser(string: data)
-
+            var parser = ValueParser(string: data)
             var forwarded = Forwarded()
             while let (key, value) = parser.nextParameter() {
                 switch key.lowercased() {
@@ -84,7 +83,6 @@ extension HTTPHeaders {
                     return nil
                 }
             }
-
             return forwarded
         }
 
@@ -102,7 +100,7 @@ extension HTTPHeaders {
             if let proto = self.proto {
                 parameters.append(("proto", proto))
             }
-            let serializer = HTTPHeaderValueSerializer(
+            let serializer = ValueSerializer(
                 value: nil,
                 parameters: parameters
             )

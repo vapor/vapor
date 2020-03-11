@@ -140,7 +140,7 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
     ///     guard let mediaType = HTTPMediaType.parse("application/json; charset=utf8") else { ... }
     ///
     public static func parse(_ data: String) -> HTTPMediaType? {
-        var parser = HTTPHeaderValueParser(string: data)
+        var parser = HTTPHeaders.ValueParser(string: data)
         guard let value = parser.nextValue() else {
             /// not a valid header value
             return nil

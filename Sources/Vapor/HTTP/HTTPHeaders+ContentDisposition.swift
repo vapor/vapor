@@ -39,7 +39,7 @@ extension HTTPHeaders {
         static func parse<S>(_ data: S) -> Self?
             where S: StringProtocol
         {
-            var parser = HTTPHeaderValueParser(string: data)
+            var parser = ValueParser(string: data)
             guard let value = parser.nextValue() else {
                 return nil
             }
@@ -65,7 +65,7 @@ extension HTTPHeaders {
             if let filename = self.filename {
                 parameters.append(("filename", filename))
             }
-            let serializer = HTTPHeaderValueSerializer(
+            let serializer = ValueSerializer(
                 value: self.value.string,
                 parameters: parameters
             )

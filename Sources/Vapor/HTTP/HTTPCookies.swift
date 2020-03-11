@@ -57,7 +57,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - data: `LosslessDataConvertible` to parse the cookie from.
         /// - returns: `HTTPCookie` or `nil` if the data is invalid.
         public static func parse(_ data: String) -> (String, Value)? {
-            var parser = HTTPHeaderValueParser(string: data)
+            var parser = HTTPHeaders.ValueParser(string: data)
             guard let (name, string) = parser.nextParameter() else {
                 return nil
             }

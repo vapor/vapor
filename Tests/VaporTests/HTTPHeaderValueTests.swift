@@ -3,26 +3,26 @@ import XCTest
 
 final class HTTPHeaderValueTests: XCTestCase {
     func testValue() throws {
-        var parser = HTTPHeaderValueParser(string: "foobar")
+        var parser = HTTPHeaders.ValueParser(string: "foobar")
         XCTAssertEqual(parser.nextValue(), "foobar")
     }
     func testValue_whitespace() throws {
-        var parser = HTTPHeaderValueParser(string: " foobar  ")
+        var parser = HTTPHeaders.ValueParser(string: " foobar  ")
         XCTAssertEqual(parser.nextValue(), "foobar")
     }
 
     func testValue_semicolon_quote() throws {
-        var parser = HTTPHeaderValueParser(string: #""foo;bar""#)
+        var parser = HTTPHeaders.ValueParser(string: #""foo;bar""#)
         XCTAssertEqual(parser.nextValue(), "foo;bar")
     }
 
     func testValue_semicolon_quote_escape() throws {
-        var parser = HTTPHeaderValueParser(string: #""foo;\"bar""#)
+        var parser = HTTPHeaders.ValueParser(string: #""foo;\"bar""#)
         XCTAssertEqual(parser.nextValue(), #"foo;"bar"#)
     }
 
     func testParameter() throws {
-        var parser = HTTPHeaderValueParser(string: "application/json; charset=utf8")
+        var parser = HTTPHeaders.ValueParser(string: "application/json; charset=utf8")
         XCTAssertEqual(parser.nextValue(), "application/json")
         let charset = parser.nextParameter()
         XCTAssertEqual(charset?.key, "charset")
@@ -30,7 +30,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testParameter_multiple() throws {
-        var parser = HTTPHeaderValueParser(string: "foo; bar=1; baz=2")
+        var parser = HTTPHeaders.ValueParser(string: "foo; bar=1; baz=2")
         XCTAssertEqual(parser.nextValue(), "foo")
         let bar = parser.nextParameter()
         XCTAssertEqual(bar?.key, "bar")
@@ -41,7 +41,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testParameter_multiple_quote() throws {
-        var parser = HTTPHeaderValueParser(string: #"foo; bar=1; baz="2""#)
+        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2""#)
         XCTAssertEqual(parser.nextValue(), "foo")
         let bar = parser.nextParameter()
         XCTAssertEqual(bar?.key, "bar")
@@ -52,7 +52,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testParameter_multiple_semicolon_quote() throws {
-        var parser = HTTPHeaderValueParser(string: #"foo; bar=1; baz="2;3""#)
+        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;3""#)
         XCTAssertEqual(parser.nextValue(), "foo")
         let bar = parser.nextParameter()
         XCTAssertEqual(bar?.key, "bar")
@@ -63,7 +63,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testParameter_multiple_semicolon_equal_quote() throws {
-        var parser = HTTPHeaderValueParser(string: #"foo; bar=1; baz="2;=3""#)
+        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;=3""#)
         XCTAssertEqual(parser.nextValue(), "foo")
         let bar = parser.nextParameter()
         XCTAssertEqual(bar?.key, "bar")
