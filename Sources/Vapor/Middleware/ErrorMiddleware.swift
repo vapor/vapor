@@ -21,6 +21,11 @@ public final class ErrorMiddleware: Middleware {
             let status: HTTPResponseStatus
             let reason: String
             let headers: HTTPHeaders
+            
+            // directly return response if error conforms to HasCustomResponse
+            if let responseError = error as? ErrorWithCustomResponse {
+                return responseError.customResponse()
+            }
 
             // inspect the error type
             switch error {

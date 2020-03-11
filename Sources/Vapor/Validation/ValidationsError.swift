@@ -37,3 +37,32 @@ extension ValidationsError: AbortError {
         self.description
     }
 }
+
+extension ValidationsError: ErrorWithCustomResponse {
+    internal struct ErrorResponse: Codable {
+        var error: Bool
+        var reason: String
+        var validationErrors: [String: String]
+    }
+    
+    public func customResponse() -> Response {
+        // collect validationErrors
+        let validationErrors = self.failures.reduce(into: [String: String]()) {
+            $0[$1.key.description] = $1.failureDescription ?? ""
+        }
+        
+        // create a Response with appropriate status
+        let response = Response(status: status, headers: headers)
+        
+        // attempt to serialize the error to json
+        do {
+            let errorResponse = ErrorResponse(error: true, reason: reason, validationErrors: validationErrors)
+            response.body = try .init(data: JSONEncoder().encode(errorResponse))
+            response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
+        } catch {
+            response.body = .init(string: "Oops: \(error)")
+            response.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
+        }
+        return response
+    }
+}

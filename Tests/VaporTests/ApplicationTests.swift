@@ -635,6 +635,12 @@ final class ApplicationTests: XCTestCase {
             var email: String
         }
         
+        struct ValidationErrorResponse: Codable {
+            var error: Bool
+            var reason: String
+            var validationErrors: [String: String]
+        }
+        
         let app = Application(.testing)
         defer { app.shutdown() }
         
@@ -651,6 +657,11 @@ final class ApplicationTests: XCTestCase {
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
+            XCTAssertContent(ValidationErrorResponse.self, res, { error in
+                XCTAssertTrue(error.error)
+                XCTAssertContains(error.reason, "email is not a valid email address")
+                XCTAssertEqual(error.validationErrors["email"], "email is not a valid email address")
+            })
         }
     }
 
