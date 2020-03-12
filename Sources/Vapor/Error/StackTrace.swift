@@ -17,7 +17,7 @@ public struct StackTrace {
             file = String(fileParts[0])
             switch fileParts.count {
             case 2:
-                let mangledName = String(fileParts[1].dropLast())
+                let mangledName = String(fileParts[1].dropLast().split(separator: "+")[0])
                 function = _stdlib_demangleName(mangledName)
             default:
                 function = String(parts[1])
