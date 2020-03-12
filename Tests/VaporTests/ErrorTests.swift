@@ -94,6 +94,10 @@ final class ErrorTests: XCTestCase {
             logger.report(error: error)
         }
     }
+
+    func testStackTrace() {
+        print(StackTrace.capture().description)
+    }
 }
 
 private enum MinimumError: String, DebuggableError {
