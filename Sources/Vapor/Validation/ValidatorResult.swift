@@ -54,7 +54,7 @@ extension ValidatorResults.NestedCollection: ValidatorResult {
         self.results.flatMap { nested in
             nested.value.filter { !$0.isFailure }
                 .compactMap { $0.successDescription }
-                .map { "[\(nested.key)] \($0)" }
+                .map { "Index \(nested.key) \($0)" }
         }.joined(separator: " and ")
     }
     
