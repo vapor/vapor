@@ -46,19 +46,23 @@ public struct DirectoryConfiguration {
             let WorkspacePath: String
             var workspaceURL: URL { URL(fileURLWithPath: WorkspacePath, isDirectory: true) }
         }
-        let possibleBuildAreaURL = workingDirectoryURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
-        if (try? possibleBuildAreaURL.checkSubpathExists(at: "Build", isDirectory: true)) ?? false,
-           (try? possibleBuildAreaURL.checkSubpathExists(at: "Index", isDirectory: true)) ?? false,
-           let infoPlistData = try? Data.init(contentsOf: possibleBuildAreaURL.appendingPathComponent("info.plist", isDirectory: false)),
-           let workspaceInfo = try? PropertyListDecoder().decode(BuildAreaInfo.self, from: infoPlistData),
-           (try? workspaceInfo.workspaceURL.checkSubpathExists(at: "Package.swift", isDirectory: false)) ?? false
-        {
-            // There are `Build` and `Index` directories, the `info.plist` file's structure matches the expected
-            // format, the detected workspace has a `Package.swift` in it, and this is an Xcode build. That's
-            // probably a pretty safe sanity check.
-            return DirectoryConfiguration(workingDirectory: workspaceInfo.WorkspacePath)
+        do {
+            let possibleBuildAreaURL = workingDirectoryURL.deletingLastPathComponent().deletingLastPathComponent().deletingLastPathComponent()
+            if try possibleBuildAreaURL.checkSubpathExists(at: "Build", isDirectory: true),
+               try possibleBuildAreaURL.checkSubpathExists(at: "Index", isDirectory: true),
+               let infoPlistData = try Data(contentsOfExisting: possibleBuildAreaURL.appendingPathComponent("info.plist", isDirectory: false)),
+               let workspaceInfo = try PropertyListDecoder().decode(BuildAreaInfo?.self, from: infoPlistData),
+               try workspaceInfo.workspaceURL.checkSubpathExists(at: "Package.swift", isDirectory: false)
+            {
+                // There are `Build` and `Index` directories, the `info.plist` file's structure matches the expected
+                // format, the detected workspace has a `Package.swift` in it, and this is an Xcode build. That's
+                // probably a pretty safe sanity check.
+                return DirectoryConfiguration(workingDirectory: workspaceInfo.WorkspacePath)
+            }
+        } catch {
+            Logger(label: "codes.vapor.directory-config")
+                .notice("Failed to automatically detect Xcode working directory: \(error)")
         }
-        
         // Okay, all that failed. Do our usual sodden `DerivedData` check.
         if workingDirectory.contains("DerivedData") {
             Logger(label: "codes.vapor.directory-config")
@@ -80,8 +84,14 @@ public extension String {
     }
 }
 
+extension Data {
+    /// Same as `init(contentsOf:options:)`, but returns `nil` instead of
+    /// throwing if the file doesn't exist on disk.
+    init?(contentsOfExisting url: URL, options: Data.ReadingOptions = []) throws {
         do {
+            try self.init(contentsOf: url, options: options)
         } catch CocoaError.fileReadNoSuchFile {
+            return nil
         }
     }
 }
