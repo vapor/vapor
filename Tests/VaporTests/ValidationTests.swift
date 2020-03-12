@@ -137,8 +137,8 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
-            XCTAssert("\(error)".contains("[0] title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)"))
-            XCTAssert("\(error)".contains("[1] title is less than minimum of 5 character(s)"))
+            XCTAssert("\(error)".contains("Index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)"))
+            XCTAssert("\(error)".contains("Index 1 title is less than minimum of 5 character(s)"))
         }
     }
     
