@@ -432,10 +432,10 @@ private final class User: Validatable, Codable {
         }
         v.add("isAdmin", as: Bool.self)
         // validate arrays of hobbies
-        v.add("hobbies", as: [Hobby].self, is: !.empty)
-        v.addForEach("hobbies") { hobby in
+        v.add(forEach: "hobbies") { hobby in
             hobby.add("title", as: String.self,
                     is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
         }
+        v.add("hobbies", as: [Hobby].self, is: !.empty)
     }
 }

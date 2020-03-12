@@ -34,8 +34,8 @@ public struct Validations {
         self.storage.append(validation)
     }
     
-    public mutating func addForEach(
-        _ key: ValidationKey,
+    public mutating func add(
+        forEach key: ValidationKey,
         required: Bool = true,
         _ nested: (inout Validations) -> ()
     ) {
