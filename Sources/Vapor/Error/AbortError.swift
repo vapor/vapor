@@ -8,35 +8,23 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: LocalizedError, CustomStringConvertible {
+public protocol AbortError: DebuggableError {
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
     /// Optional `HTTPHeaders` to add to the error response.
     var headers: HTTPHeaders { get }
-
-    /// The human-readable (and hopefully understandable) reason for this error.
-    var reason: String { get }
-    
-    var source: ErrorSource? { get }
 }
 
 extension AbortError {
+    /// See `DebuggableError`.
+    public var identifier: String {
+        self.status.code.description
+    }
+
     /// See `AbortError`.
     public var headers: HTTPHeaders {
-        return [:]
-    }
-
-    public var description: String {
-        return "\(Self.self) \(self.status.code): \(self.reason)"
-    }
-
-    public var errorDescription: String? {
-        return self.description
-    }
-    
-    public var source: ErrorSource? {
-        return nil
+        [:]
     }
 }
 

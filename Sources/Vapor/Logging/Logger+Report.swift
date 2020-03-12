@@ -11,20 +11,24 @@ extension Logger {
         line: UInt = #line
     ) {
         let source: ErrorSource?
-        if let abort = error as? Debuggable {
-            source = abort.source
-        } else {
-            source = nil
-        }
-
         let reason: String
         switch error {
+        case let debuggable as DebuggableError:
+            if self.logLevel <= .debug {
+                reason = debuggable.debuggableHelp(format: .short)
+            } else {
+                reason = debuggable.debuggableHelp(format: .long)
+            }
+            source = debuggable.source
         case let localized as LocalizedError:
             reason = localized.localizedDescription
+            source = nil
         case let convertible as CustomStringConvertible:
             reason = convertible.description
+            source = nil
         default:
             reason = "\(error)"
+            source = nil
         }
         self.log(
             level: .error,

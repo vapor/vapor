@@ -2,7 +2,7 @@ import Foundation
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.
-public protocol Debuggable: CustomDebugStringConvertible, CustomStringConvertible, LocalizedError {
+public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, CustomStringConvertible {
     /// A readable name for the error's Type. This is usually
     /// similar to the Type name of the error with spaces added.
     /// This will normally be printed proceeding the error's reason.
@@ -28,7 +28,7 @@ public protocol Debuggable: CustomDebugStringConvertible, CustomStringConvertibl
     var source: ErrorSource? { get }
 
     /// Stack trace from which this error originated (must set this from the error's init)
-    var stackTrace: [String]? { get }
+    var stackTrace: StackTrace? { get }
 
     /// A `String` array describing the possible causes of the error.
     /// - note: Defaults to an empty array.
@@ -56,26 +56,17 @@ public protocol Debuggable: CustomDebugStringConvertible, CustomStringConvertibl
     var gitHubIssues: [String] { get }
 }
 
-
-/// MARK: Computed
-extension Debuggable {
-    /// Generates a stack trace from the call point. Must call this from the error's init.
-    public static func makeStackTrace() -> [String] {
-        return Thread.callStackSymbols
-    }
-}
-
-extension Debuggable {
+extension DebuggableError {
     public var fullIdentifier: String {
-        return Self.typeIdentifier + "." + identifier
+        return Self.typeIdentifier + "." + self.identifier
     }
 }
 
 // MARK: Defaults
-extension Debuggable {
+extension DebuggableError {
     /// See `Debuggable`
     public static var readableName: String {
-        return typeIdentifier
+        self.typeIdentifier
     }
 
     /// See `Debuggable`
@@ -86,66 +77,74 @@ extension Debuggable {
 
     /// See `Debuggable`
     public var possibleCauses: [String] {
-        return []
+        []
     }
 
     /// See `Debuggable`
     public var suggestedFixes: [String] {
-        return []
+        []
     }
 
     /// See `Debuggable`
     public var documentationLinks: [String] {
-        return []
+        []
     }
 
     /// See `Debuggable`
     public var stackOverflowQuestions: [String] {
-        return []
+        []
     }
 
     /// See `Debuggable`
     public var gitHubIssues: [String] {
-        return []
+        []
     }
 
     /// See `Debuggable`
     public var source: ErrorSource? {
-        return nil
+        nil
     }
 
     /// See `Debuggable`
-    public var stackTrace: [String]? {
-        return nil
+    public var stackTrace: StackTrace? {
+        nil
     }
 }
 
 /// MARK: Custom...StringConvertible
-extension Debuggable {
+extension DebuggableError {
     /// See `CustomDebugStringConvertible`
     public var debugDescription: String {
-        return debuggableHelp(format: .long)
+        self.debuggableHelp(format: .long)
     }
 
     /// See `CustomStringConvertible`
     public var description: String {
-        return debuggableHelp(format: .short)
+        self.debuggableHelp(format: .short)
     }
 }
 
 // MARK: Localized
-extension Debuggable {
+extension DebuggableError {
     /// A localized message describing what error occurred.
-    public var errorDescription: String? { return description }
+    public var errorDescription: String? {
+        self.description
+    }
 
     /// A localized message describing the reason for the failure.
-    public var failureReason: String? { return reason }
+    public var failureReason: String? {
+        self.reason
+    }
 
     /// A localized message describing how one might recover from the failure.
-    public var recoverySuggestion: String? { return suggestedFixes.first }
+    public var recoverySuggestion: String? {
+        self.suggestedFixes.first
+    }
 
     /// A localized message providing "help" text if the user requests help.
-    public var helpAnchor: String? { return documentationLinks.first }
+    public var helpAnchor: String? {
+        self.documentationLinks.first
+    }
 }
 
 
@@ -156,7 +155,7 @@ public enum HelpFormat {
     case long
 }
 
-extension Debuggable {
+extension DebuggableError {
     /// A computed property returning a `String` that encapsulates why the error occurred, suggestions on how to
     /// fix the problem, and resources to consult in debugging (if these are available).
     /// - note: This representation is best used with functions like print()
@@ -164,69 +163,72 @@ extension Debuggable {
         var print: [String] = []
 
         switch format {
-            case .long:
-                print.append("⚠️ \(Self.readableName): \(reason)\n- id: \(fullIdentifier)")
-            case .short:
-                print.append("⚠️ [\(fullIdentifier): \(reason)]")
+        case .long:
+            print.append("\(Self.readableName): \(self.reason)\n- id: \(self.fullIdentifier)")
+        case .short:
+            print.append("\(self.fullIdentifier): \(self.reason)")
         }
 
-        if let source = source {
+        if let source = self.source {
             switch format {
-                case .long:
-                    var help: [String] = []
-                    help.append("File: \(source.file)")
-                    help.append(" - func: \(source.function)")
-                    help.append(" - line: \(source.line)")
-                    help.append(" - column: \(source.column)")
-                    if let range = source.range {
-                        help.append("- range: \(range)")
-                    }
-                    print.append(help.joined(separator: "\n"))
-                case .short:
-                    var string = "[\(source.file):\(source.line):\(source.column)"
-                    if let range = source.range {
-                        string += " (\(range))"
-                    }
-                    string += "]"
-                    print.append(string)
+            case .long:
+                var help: [String] = []
+                help.append("File: \(source.file)")
+                help.append("- func: \(source.function)")
+                help.append("- line: \(source.line)")
+                help.append("- column: \(source.column)")
+                if let range = source.range {
+                    help.append("- range: \(range)")
+                }
+                print.append(help.joined(separator: "\n"))
+            case .short:
+                var string = "[\(source.file):\(source.line):\(source.column)"
+                if let range = source.range {
+                    string += " (\(range))"
+                }
+                string += "]"
+                print.append(string)
             }
         }
 
         switch format {
-            case .long:
-                if !possibleCauses.isEmpty {
-                    print.append("Here are some possible causes: \(possibleCauses.bulletedList)")
-                }
-
-                if !suggestedFixes.isEmpty {
-                    print.append("These suggestions could address the issue: \(suggestedFixes.bulletedList)")
-                }
-
-                if !documentationLinks.isEmpty {
-                    print.append("Vapor's documentation talks about this: \(documentationLinks.bulletedList)")
-                }
-
-                if !stackOverflowQuestions.isEmpty {
-                    print.append("These Stack Overflow links might be helpful: \(stackOverflowQuestions.bulletedList)")
-                }
-
-                if !gitHubIssues.isEmpty {
-                    print.append("See these Github issues for discussion on this topic: \(gitHubIssues.bulletedList)")
+        case .long:
+            if !self.possibleCauses.isEmpty {
+                print.append("Here are some possible causes:\(self.possibleCauses.bulletedList)")
             }
-            case .short:
-                if possibleCauses.count > 0 {
-                    print.append("[Possible causes: \(possibleCauses.joined(separator: " "))]")
-                }
-                if suggestedFixes.count > 0 {
-                    print.append("[Suggested fixes: \(suggestedFixes.joined(separator: " "))]")
+
+            if !self.suggestedFixes.isEmpty {
+                print.append("These suggestions could address the issue:\(self.suggestedFixes.bulletedList)")
+            }
+
+            if !self.documentationLinks.isEmpty {
+                print.append("Vapor's documentation talks about this:\(self.documentationLinks.bulletedList)")
+            }
+
+            if !self.stackOverflowQuestions.isEmpty {
+                print.append("These Stack Overflow links might be helpful:\(self.stackOverflowQuestions.bulletedList)")
+            }
+
+            if !self.gitHubIssues.isEmpty {
+                print.append("See these Github issues for discussion on this topic:\(self.gitHubIssues.bulletedList)")
+            }
+            if let stackTrace = self.stackTrace {
+                print.append("Stack trace:\n\(stackTrace)")
+            }
+        case .short:
+            if self.possibleCauses.count > 0 {
+                print.append("[Possible causes: \(self.possibleCauses.joined(separator: " "))]")
+            }
+            if self.suggestedFixes.count > 0 {
+                print.append("[Suggested fixes: \(self.suggestedFixes.joined(separator: " "))]")
             }
         }
 
         switch format {
-            case .long:
-                return print.joined(separator: "\n\n") + "\n"
-            case .short:
-                return print.joined(separator: " ")
+        case .long:
+            return print.joined(separator: "\n\n")
+        case .short:
+            return print.joined(separator: " ")
         }
     }
 }
@@ -234,6 +236,6 @@ extension Debuggable {
 
 extension Sequence where Iterator.Element == String {
     var bulletedList: String {
-        return map { "\n- \($0)" } .joined()
+        self.map { "\n- \($0)" } .joined()
     }
 }

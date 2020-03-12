@@ -183,27 +183,24 @@ struct TestError: AbortError {
         "This is a test."
     }
 
-    let file: String
-    let function: String
-    let line: UInt
-    let column: UInt
-    let range: Range<UInt>?
-
-    var source: ErrorSource? {
-        ErrorSource(file: file, function: function, line: line, column: column, range: range)
-    }
+    var source: ErrorSource?
+    var stackTrace: StackTrace?
 
     init(
         file: String = #file,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
-        range: Range<UInt>? = nil
+        range: Range<UInt>? = nil,
+        stackTrace: StackTrace = .capture()
     ) {
-        self.file = file
-        self.function = function
-        self.line = line
-        self.column = column
-        self.range = range
+        self.source = .init(
+            file: file,
+            function: function,
+            line: line,
+            column: column,
+            range: range
+        )
+        self.stackTrace = stackTrace
     }
 }
