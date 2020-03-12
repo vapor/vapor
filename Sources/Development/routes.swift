@@ -185,19 +185,25 @@ struct TestError: AbortError {
 
     let file: String
     let function: String
-    let line: Int
+    let line: UInt
+    let column: UInt
+    let range: Range<UInt>?
 
     var source: ErrorSource? {
-        ErrorSource(file: self.file, function: self.function, line: self.line)
+        ErrorSource(file: file, function: function, line: line, column: column, range: range)
     }
 
     init(
         file: String = #file,
         function: String = #function,
-        line: Int = #line
+        line: UInt = #line,
+        column: UInt = #column,
+        range: Range<UInt>? = nil
     ) {
         self.file = file
         self.function = function
         self.line = line
+        self.column = column
+        self.range = range
     }
 }
