@@ -5,15 +5,34 @@ public struct StackTrace {
 
     public var frames: [Frame] {
         self.raw.dropFirst(2).map { line in
+            let file: String
+            let function: String
+            #if os(Linux)
+            let parts = line.split(
+                separator: " ",
+                maxSplits: 1,
+                omittingEmptySubsequences: true
+            )
+            let fileParts = parts[0].split(separator: "(")
+            file = String(fileParts[0])
+            switch fileParts.count {
+            case 2:
+                let mangledName = String(fileParts[1].dropLast())
+                function = _stdlib_demangleName(mangledName)
+            default:
+                function = String(parts[1])
+            }
+            #else
             let parts = line.split(
                 separator: " ",
                 maxSplits: 3,
                 omittingEmptySubsequences: true
             )
-            let file = String(parts[1])
+            file = String(parts[1])
             let functionParts = parts[3].split(separator: "+")
             let mangledName = String(functionParts[0]).trimmingCharacters(in: .whitespaces)
-            let function = _stdlib_demangleName(mangledName)
+            function = _stdlib_demangleName(mangledName)
+            #endif
             return Frame(file: file, function: function)
         }
     }
