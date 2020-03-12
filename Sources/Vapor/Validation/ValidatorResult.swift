@@ -2,6 +2,10 @@ public struct ValidatorResults {
     public struct Nested {
         public let results: [ValidatorResult]
     }
+
+    public struct NestedCollection {
+        public let results: [Int: [ValidatorResult]]
+    }
     
     public struct Skipped { }
 
@@ -37,6 +41,29 @@ extension ValidatorResults.Nested: ValidatorResult {
         self.results.filter { $0.isFailure }
             .compactMap { $0.failureDescription }
             .joined(separator: " and ")
+    }
+}
+
+extension ValidatorResults.NestedCollection: ValidatorResult {
+    public var isFailure: Bool {
+        !self.results.flatMap { $0.value }
+            .filter { $0.isFailure }.isEmpty
+    }
+    
+    public var successDescription: String? {
+        self.results.flatMap { nested in
+            nested.value.filter { !$0.isFailure }
+                .compactMap { $0.successDescription }
+                .map { "[\(nested.key)] \($0)" }
+        }.joined(separator: " and ")
+    }
+    
+    public var failureDescription: String? {
+        self.results.flatMap { nested in
+            nested.value.filter { $0.isFailure }
+                .compactMap { $0.failureDescription }
+                .map { "[\(nested.key)] \($0)" }
+        }.joined(separator: " and ")
     }
 }
 
