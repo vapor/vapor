@@ -67,25 +67,41 @@ extension MetadataValue: ExpressibleByArrayLiteral {
 }
 
 extension MetadataValue: Encodable {
-    enum CodingKeys: String, CodingKey {
-        case string
-        case stringConvertible
-        case dictionary
-        case array
+    struct DictionaryCodingKeys: CodingKey {
+        var stringValue: String
+        
+        var intValue: Int?
+        
+        init?(intValue: Int) {
+            self.intValue = intValue
+            self.stringValue = "\(intValue)"
+        }
+        
+        init?(stringValue: String) {
+            self.stringValue = stringValue
+            self.intValue = nil
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.singleValueContainer()
-
         switch self {
         case .string(let value):
+            var container = encoder.singleValueContainer()
             try container.encode(value)
         case .stringConvertible(let value):
+            var container = encoder.singleValueContainer()
             try container.encode(value.description)
         case .dictionary(let value):
-            try container.encode(value)
+            var container = encoder.container(keyedBy: DictionaryCodingKeys.self)
+            try value.forEach { (key, value) in
+                let codingKey = DictionaryCodingKeys.init(stringValue: key)!
+                try container.encode(value, forKey: codingKey)
+            }
         case .array(let value):
-            try container.encode(value)
+            var container = encoder.unkeyedContainer()
+            try value.forEach { element in
+                try container.encode(element)
+            }
         }
     }
 }
