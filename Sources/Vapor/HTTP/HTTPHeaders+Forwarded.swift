@@ -67,24 +67,26 @@ extension HTTPHeaders {
         static func parse<S>(_ data: S) -> Self?
             where S: StringProtocol
         {
-            var parser = ValueParser(string: data)
-            var forwarded = Forwarded()
-            while let (key, value) = parser.nextParameter() {
-                let value = String(value)
-                switch key.lowercased() {
-                case "by":
-                    forwarded.by = value
-                case "for":
-                    forwarded.for = value
-                case "host":
-                    forwarded.host = value
-                case "proto":
-                    forwarded.proto = value
-                default:
-                    return nil
-                }
-            }
-            return forwarded
+            #warning("TODO: fixme")
+            fatalError()
+//            var parser = ValueParser(string: data)
+//            var forwarded = Forwarded()
+//            while let (key, value) = parser.nextParameter() {
+//                let value = String(value)
+//                switch key.lowercased() {
+//                case "by":
+//                    forwarded.by = value
+//                case "for":
+//                    forwarded.for = value
+//                case "host":
+//                    forwarded.host = value
+//                case "proto":
+//                    forwarded.proto = value
+//                default:
+//                    return nil
+//                }
+//            }
+//            return forwarded
         }
 
         func serialize() -> String {

@@ -40,16 +40,25 @@ extension HTTPHeaders {
             where S: StringProtocol
         {
             var parser = ValueParser(string: data)
-            guard let value = parser.nextValue() else {
+            guard let directives = parser.nextValue() else {
                 return nil
             }
-            var header = ContentDisposition(.init(string: .init(value)))
-            while let (key, value) = parser.nextParameter() {
-                switch key.lowercased() {
+            guard let first = directives.first else {
+                return nil
+            }
+            guard first.parameter == nil else {
+                return nil
+            }
+            var header = ContentDisposition(.init(string: .init(first.value)))
+            for directive in directives[1...] {
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                switch directive.value.lowercased() {
                 case "name":
-                    header.name = .init(value)
+                    header.name = .init(parameter)
                 case "filename":
-                    header.filename = .init(value)
+                    header.filename = .init(parameter)
                 default:
                     return nil
                 }

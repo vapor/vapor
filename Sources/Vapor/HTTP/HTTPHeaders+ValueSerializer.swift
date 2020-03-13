@@ -1,14 +1,14 @@
 extension HTTPHeaders {
-    public struct ValueSerializer {
+    struct ValueSerializer {
         let value: String?
         let parameters: [(String, String)]
 
-        public init(value: String?, parameters: [(String, String)]) {
+        init(value: String?, parameters: [(String, String)]) {
             self.value = value
             self.parameters = parameters
         }
 
-        public func serialize() -> String {
+        func serialize() -> String {
             var header = ""
 
             if let value = self.value {

@@ -4,73 +4,92 @@ import XCTest
 final class HTTPHeaderValueTests: XCTestCase {
     func testValue() throws {
         var parser = HTTPHeaders.ValueParser(string: "foobar")
-        XCTAssertEqual(parser.nextValue(), "foobar")
+        XCTAssertEqual(parser.nextValue(), [.init(value: "foobar")])
     }
+
     func testValue_whitespace() throws {
         var parser = HTTPHeaders.ValueParser(string: " foobar  ")
-        XCTAssertEqual(parser.nextValue(), "foobar")
+        XCTAssertEqual(parser.nextValue(), [.init(value: "foobar")])
     }
 
     func testValue_semicolon_quote() throws {
         var parser = HTTPHeaders.ValueParser(string: #""foo;bar""#)
-        XCTAssertEqual(parser.nextValue(), "foo;bar")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "foo;bar")
+        ])
     }
 
     func testValue_semicolon_quote_escape() throws {
         var parser = HTTPHeaders.ValueParser(string: #""foo;\"bar""#)
-        XCTAssertEqual(parser.nextValue(), #"foo;"bar"#)
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: #"foo;"bar"#)
+        ])
     }
 
-    func testParameter() throws {
+    func testValue_directives() throws {
+        var parser = HTTPHeaders.ValueParser(string: #"a; b=c, d"#)
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "a"),
+            .init(value: "b", parameter: "c"),
+        ])
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "d")
+        ])
+    }
+
+    func testValue_directives_quote() throws {
+        var parser = HTTPHeaders.ValueParser(string: #""a;b"; c="d;e", f"#)
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "a;b"),
+            .init(value: "c", parameter: "d;e"),
+        ])
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "f")
+        ])
+    }
+
+    func testValue_directives_contentType() throws {
         var parser = HTTPHeaders.ValueParser(string: "application/json; charset=utf8")
-        XCTAssertEqual(parser.nextValue(), "application/json")
-        let charset = parser.nextParameter()
-        XCTAssertEqual(charset?.key, "charset")
-        XCTAssertEqual(charset?.value, "utf8")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "application/json"),
+            .init(value: "charset", parameter: "utf8"),
+        ])
     }
 
-    func testParameter_multiple() throws {
+    func testValue_directives_multiple() throws {
         var parser = HTTPHeaders.ValueParser(string: "foo; bar=1; baz=2")
-        XCTAssertEqual(parser.nextValue(), "foo")
-        let bar = parser.nextParameter()
-        XCTAssertEqual(bar?.key, "bar")
-        XCTAssertEqual(bar?.value, "1")
-        let baz = parser.nextParameter()
-        XCTAssertEqual(baz?.key, "baz")
-        XCTAssertEqual(baz?.value, "2")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "foo"),
+            .init(value: "bar", parameter: "1"),
+            .init(value: "baz", parameter: "2"),
+        ])
     }
 
-    func testParameter_multiple_quote() throws {
+    func testValue_directives_multiple_quote() throws {
         var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2""#)
-        XCTAssertEqual(parser.nextValue(), "foo")
-        let bar = parser.nextParameter()
-        XCTAssertEqual(bar?.key, "bar")
-        XCTAssertEqual(bar?.value, "1")
-        let baz = parser.nextParameter()
-        XCTAssertEqual(baz?.key, "baz")
-        XCTAssertEqual(baz?.value, "2")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "foo"),
+            .init(value: "bar", parameter: "1"),
+            .init(value: "baz", parameter: "2"),
+        ])
     }
 
-    func testParameter_multiple_semicolon_quote() throws {
+    func testValue_directives_multiple_quotedSemicolon() throws {
         var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;3""#)
-        XCTAssertEqual(parser.nextValue(), "foo")
-        let bar = parser.nextParameter()
-        XCTAssertEqual(bar?.key, "bar")
-        XCTAssertEqual(bar?.value, "1")
-        let baz = parser.nextParameter()
-        XCTAssertEqual(baz?.key, "baz")
-        XCTAssertEqual(baz?.value, "2;3")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "foo"),
+            .init(value: "bar", parameter: "1"),
+            .init(value: "baz", parameter: "2;3"),
+        ])
     }
 
-    func testParameter_multiple_semicolon_equal_quote() throws {
+    func testValue_directives_multiple_quotedSemicolonEqual() throws {
         var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;=3""#)
-        XCTAssertEqual(parser.nextValue(), "foo")
-        let bar = parser.nextParameter()
-        XCTAssertEqual(bar?.key, "bar")
-        XCTAssertEqual(bar?.value, "1")
-        let baz = parser.nextParameter()
-        XCTAssertEqual(baz?.key, "baz")
-        XCTAssertEqual(baz?.value, "2;=3")
+        XCTAssertEqual(parser.nextValue(), [
+            .init(value: "foo"),
+            .init(value: "bar", parameter: "1"),
+            .init(value: "baz", parameter: "2;=3"),
+        ])
     }
 
     func testForwarded() throws {

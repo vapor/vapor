@@ -57,45 +57,47 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - data: `LosslessDataConvertible` to parse the cookie from.
         /// - returns: `HTTPCookie` or `nil` if the data is invalid.
         public static func parse(_ data: String) -> (String, Value)? {
-            var parser = HTTPHeaders.ValueParser(string: data)
-            guard let (name, string) = parser.nextParameter() else {
-                return nil
-            }
-            
-            /// Fetch params.
-            var expires: Date?
-            var maxAge: Int?
-            var domain: String?
-            var path: String?
-            var secure = false
-            var httpOnly = false
-            var sameSite: SameSitePolicy?
-
-            while let (key, value) = parser.nextParameter() {
-                let val = String(value)
-                switch key.lowercased() {
-                case "domain": domain = val
-                case "path": path = val
-                case "expires": expires = Date(rfc1123: val)
-                case "httponly": httpOnly = true
-                case "secure": secure = true
-                case "max-age": maxAge = Int(val) ?? 0
-                case "samesite": sameSite = SameSitePolicy(rawValue: val)
-                default: break
-                }
-            }
-            
-            let value = Value(
-                string: .init(string),
-                expires: expires,
-                maxAge: maxAge,
-                domain: domain,
-                path: path,
-                isSecure: secure,
-                isHTTPOnly: httpOnly,
-                sameSite: sameSite
-            )
-            return (.init(name), value)
+            #warning("TODO: fix")
+            fatalError()
+//            var parser = HTTPHeaders.ValueParser(string: data)
+//            guard let (name, string) = parser.nextParameter() else {
+//                return nil
+//            }
+//
+//            /// Fetch params.
+//            var expires: Date?
+//            var maxAge: Int?
+//            var domain: String?
+//            var path: String?
+//            var secure = false
+//            var httpOnly = false
+//            var sameSite: SameSitePolicy?
+//
+//            while let (key, value) = parser.nextParameter() {
+//                let val = String(value)
+//                switch key.lowercased() {
+//                case "domain": domain = val
+//                case "path": path = val
+//                case "expires": expires = Date(rfc1123: val)
+//                case "httponly": httpOnly = true
+//                case "secure": secure = true
+//                case "max-age": maxAge = Int(val) ?? 0
+//                case "samesite": sameSite = SameSitePolicy(rawValue: val)
+//                default: break
+//                }
+//            }
+//
+//            let value = Value(
+//                string: .init(string),
+//                expires: expires,
+//                maxAge: maxAge,
+//                domain: domain,
+//                path: path,
+//                isSecure: secure,
+//                isHTTPOnly: httpOnly,
+//                sameSite: sameSite
+//            )
+//            return (.init(name), value)
         }
         
         // MARK: Properties

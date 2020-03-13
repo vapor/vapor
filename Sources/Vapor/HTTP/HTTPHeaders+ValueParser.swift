@@ -1,5 +1,23 @@
 extension HTTPHeaders {
-    public struct ValueParser {
+    struct Directive: Equatable, CustomStringConvertible {
+        var value: Substring
+        var parameter: Substring?
+
+        var description: String {
+            if let parameter = self.parameter {
+                return "\(self.value)=\(parameter)"
+            } else {
+                return "\(self.value)"
+            }
+        }
+
+        init(value: Substring, parameter: Substring? = nil) {
+            self.value = value
+            self.parameter = parameter
+        }
+    }
+
+    struct ValueParser {
         var current: Substring
 
         public init<S>(string: S)
@@ -8,18 +26,54 @@ extension HTTPHeaders {
             self.current = .init(string)
         }
 
-        public mutating func nextValue() -> Substring? {
+        mutating func nextValue() -> [Directive]? {
             guard !self.current.isEmpty else {
                 return nil
             }
+            var directives: [Directive] = []
+            while let directive = self.nextDirective() {
+                directives.append(directive)
+            }
+            return directives
+        }
+
+        private mutating func nextDirective() -> Directive? {
             self.popWhitespace()
+            guard !self.current.isEmpty else {
+                return nil
+            }
+
+            if self.current.first == .comma {
+                self.pop()
+                return nil
+            }
+
             let value: Substring
+            let parameter: Substring?
+            if let equals = self.firstParameterToken() {
+                value = self.pop(to: equals)
+                self.pop()
+                parameter = self.nextDirectiveValue()
+            } else {
+                value = self.nextDirectiveValue()
+                parameter = nil
+            }
+            return .init(
+                value: value.trimLinearWhitespace(),
+                parameter: parameter?.trimLinearWhitespace()
+                    .unescapingDoubleQuotes()
+            )
+        }
+
+        private mutating func nextDirectiveValue() -> Substring {
+            let value: Substring
+            self.popWhitespace()
             if self.current.first == .doubleQuote {
                 self.pop()
                 guard let nextDoubleQuote = self.firstUnescapedDoubleQuote() else {
-                    return nil
+                    return self.pop(to: self.current.endIndex)
                 }
-                value = self.pop(to: nextDoubleQuote)
+                value = self.pop(to: nextDoubleQuote).unescapingDoubleQuotes()
                 self.pop()
                 self.popWhitespace()
                 if self.current.first == .semicolon {
@@ -28,32 +82,12 @@ extension HTTPHeaders {
             } else if let semicolon = self.current.firstIndex(of: .semicolon) {
                 value = self.pop(to: semicolon)
                 self.pop()
+            } else if let comma = self.current.firstIndex(of: .comma) {
+                value = self.pop(to: comma)
             } else {
-                value = self.current
-                self.current = ""
+                value = self.pop(to: self.current.endIndex)
             }
-            return value.trimLinearWhitespace().unescapingDoubleQuotes()
-        }
-
-        public mutating func nextParameter() -> (key: Substring, value: Substring)? {
-            guard let equals = self.current.firstIndex(of: .equals) else {
-                return nil
-            }
-            if let doubleQuote = self.firstUnescapedDoubleQuote(), doubleQuote < equals {
-                // quoted keys not supported
-                return nil
-            }
-            let key = self.pop(to: equals)
-            self.pop()
-            self.popWhitespace()
-            guard let value = self.nextValue() else {
-                return nil
-            }
-            return (
-                key: key.trimLinearWhitespace(),
-                value: value.trimLinearWhitespace()
-                    .unescapingDoubleQuotes()
-            )
+            return value
         }
 
         private mutating func popWhitespace() {
@@ -72,6 +106,18 @@ extension HTTPHeaders {
             let value = self.current[..<index]
             self.current = self.current[index...]
             return value
+        }
+
+        private func firstParameterToken() -> Substring.Index? {
+            for index in self.current.indices {
+                let character = self.current[index]
+                if character == .equals {
+                    return index
+                } else if !character.isDirectiveKey {
+                    return nil
+                }
+            }
+            return nil
         }
 
         private func firstUnescapedDoubleQuote() -> Substring.Index? {
@@ -118,6 +164,16 @@ private extension Character {
     }
     static var equals: Self {
         .init("=")
+    }
+    static var dash: Self {
+        .init("-")
+    }
+    static var comma: Self {
+        .init(",")
+    }
+
+    var isDirectiveKey: Bool {
+        self.isLetter || self == .dash
     }
 }
 

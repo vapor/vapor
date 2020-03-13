@@ -199,14 +199,15 @@ public struct HTTPHeaderValue: Codable {
     ///     guard let headerValue = HTTPHeaderValue.parse("application/json; charset=utf8") else { ... }
     ///
     public static func parse(_ data: String) -> HTTPHeaderValue? {
-        var parser = HTTPHeaders.ValueParser(string: data)
-        guard let value = parser.nextValue() else {
-            return nil
-        }
-        var parameters: [String: String] = [:]
-        while let (key, value) = parser.nextParameter() {
-            parameters[.init(key)] = .init(value)
-        }
-        return .init(.init(value), parameters: parameters)
+        fatalError()
+//        var parser = HTTPHeaders.ValueParser(string: data)
+//        guard let value = parser.nextValue() else {
+//            return nil
+//        }
+//        var parameters: [String: String] = [:]
+//        while let (key, value) = parser.nextParameter() {
+//            parameters[.init(key)] = .init(value)
+//        }
+//        return .init(.init(value), parameters: parameters)
     }
 }
