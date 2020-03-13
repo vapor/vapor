@@ -1,14 +1,17 @@
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
     /// Structure of `ErrorMiddleware` default response.
-    internal struct ErrorResponse: Codable {
+    internal struct ErrorResponse: Encodable {
         /// Always `true` to indicate this is a non-typical JSON response.
         var error: Bool
 
         /// The reason for the error.
         var reason: String
+        
+        /// The errors metadata
+        var metadata: Metadata
     }
-
+    
     /// Create a default `ErrorMiddleware`. Logs errors to a `Logger` based on `Environment`
     /// and converts `Error` to `Response` based on conformance to `AbortError` and `Debuggable`.
     ///
@@ -21,6 +24,7 @@ public final class ErrorMiddleware: Middleware {
             let status: HTTPResponseStatus
             let reason: String
             let headers: HTTPHeaders
+            let metadata: Metadata
 
             // inspect the error type
             switch error {
@@ -29,18 +33,21 @@ public final class ErrorMiddleware: Middleware {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
+                metadata = abort.metadata
             case let error as LocalizedError where !environment.isRelease:
                 // if not release mode, and error is debuggable, provide debug
                 // info directly to the developer
                 reason = error.localizedDescription
                 status = .internalServerError
                 headers = [:]
+                metadata = [:]
             default:
                 // not an abort error, and not debuggable or in dev mode
                 // just deliver a generic 500 to avoid exposing any sensitive error info
                 reason = "Something went wrong."
                 status = .internalServerError
                 headers = [:]
+                metadata = [:]
             }
             
             // Report the error to logger.
@@ -51,7 +58,7 @@ public final class ErrorMiddleware: Middleware {
             
             // attempt to serialize the error to json
             do {
-                let errorResponse = ErrorResponse(error: true, reason: reason)
+                let errorResponse = ErrorResponse(error: true, reason: reason, metadata: metadata)
                 response.body = try .init(data: JSONEncoder().encode(errorResponse))
                 response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
             } catch {

@@ -18,6 +18,9 @@ public protocol AbortError: LocalizedError, CustomStringConvertible {
     /// The human-readable (and hopefully understandable) reason for this error.
     var reason: String { get }
     
+    /// Some metadata for the error
+    var metadata: Metadata { get }
+    
     var source: ErrorSource? { get }
 }
 
@@ -49,6 +52,10 @@ extension AbortError {
     
     public var source: ErrorSource? {
         return nil
+    }
+
+    public var metadata: Metadata {
+        return [:]
     }
 }
 
