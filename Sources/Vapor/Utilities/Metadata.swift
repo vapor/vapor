@@ -75,16 +75,17 @@ extension MetadataValue: Encodable {
     }
 
     public func encode(to encoder: Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
+        var container = encoder.singleValueContainer()
+
         switch self {
         case .string(let value):
-            try container.encode(value, forKey: .string)
+            try container.encode(value)
         case .stringConvertible(let value):
-            try container.encode(value.description, forKey: .stringConvertible)
+            try container.encode(value.description)
         case .dictionary(let value):
-            try container.encode(value, forKey: .dictionary)
+            try container.encode(value)
         case .array(let value):
-            try container.encode(value, forKey: .array)
+            try container.encode(value)
         }
     }
 }
