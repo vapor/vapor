@@ -651,6 +651,7 @@ final class ApplicationTests: XCTestCase {
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
+            XCTAssertContains(res.body.string, "{\"validationErrors\":\"[\"email\": [\"email is not a valid email address\"]]\"}")
         }
     }
 

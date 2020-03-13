@@ -36,4 +36,15 @@ extension ValidationsError: AbortError {
     public var reason: String {
         self.description
     }
+    
+    public var metadata: Metadata {
+        var validationErrors: [String: [String]] = [:]
+        
+        self.failures.forEach { failure in
+            let validationError = [failure.key.description: [failure.failureDescription ?? ""]]
+            validationErrors.merge(validationError) { $0 + $1 }
+        }
+        
+        return ["validationErrors" : "\(validationErrors)"]
+    }
 }
