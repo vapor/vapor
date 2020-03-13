@@ -426,15 +426,19 @@ private final class User: Validatable, Codable {
         v.add("preferredColors", as: [String].self, is: !.empty)
         // pet validations
         v.add("pet") { pet in
-            pet.add("name", as: String.self,
-                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+            pet.add("name",
+                as: String.self,
+                is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)
+            )
             pet.add("age", as: Int.self, is: .range(3...))
         }
         v.add("isAdmin", as: Bool.self)
         // validate arrays of hobbies
         v.add(forEach: "hobbies") { hobby in
-            hobby.add("title", as: String.self,
-                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+            hobby.add("title",
+                as: String.self,
+                is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)
+            )
         }
         v.add("hobbies", as: [Hobby].self, is: !.empty)
     }
