@@ -98,7 +98,7 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
     /// - type: `"application"`
     /// - subtype: `"json"`
     /// - parameters: ["charset": "utf8"]
-    public let parameters: [String: String]
+    public var parameters: [String: String]
     
     /// Converts this `MediaType` into its string representation.
     ///
@@ -135,38 +135,30 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
         self.parameters = parameters
     }
     
-    /// Parse a `MediaType` from a `String`.
-    ///
-    ///     guard let mediaType = HTTPMediaType.parse("application/json; charset=utf8") else { ... }
-    ///
-    public static func parse(_ data: String) -> HTTPMediaType? {
-        #warning("TODO: fix")
-        fatalError()
-//        var parser = HTTPHeaders.ValueParser(string: data)
-//        guard let value = parser.nextValue() else {
-//            /// not a valid header value
-//            return nil
-//        }
-//
-//        /// parse out type and subtype
-//        let typeParts = value.split(separator: "/", maxSplits: 2)
-//        guard typeParts.count == 2 else {
-//            /// the type was not form `foo/bar`
-//            return nil
-//        }
-//
-//        let type = String(typeParts[0]).trimmingCharacters(in: .whitespaces)
-//        let subType = String(typeParts[1]).trimmingCharacters(in: .whitespaces)
-//
-//        var parameters: [String: String] = [:]
-//        while let (key, value) = parser.nextParameter() {
-//            parameters[.init(key)] = .init(value)
-//        }
-//        return HTTPMediaType(
-//            type: type,
-//            subType: subType,
-//            parameters: parameters
-//        )
+    /// Parse a `MediaType` from directives.
+    init?(directives: [HTTPHeaders.Directive]) {
+        guard let value = directives.first, value.parameter == nil else {
+            /// not a valid header value
+            return nil
+        }
+
+        /// parse out type and subtype
+        let typeParts = value.value.split(separator: "/", maxSplits: 2)
+        guard typeParts.count == 2 else {
+            /// the type was not form `foo/bar`
+            return nil
+        }
+
+        self.type = String(typeParts[0]).trimmingCharacters(in: .whitespaces)
+        self.subType = String(typeParts[1]).trimmingCharacters(in: .whitespaces)
+
+        self.parameters = [:]
+        for directive in directives[1...] {
+            guard let parameter = directive.parameter else {
+                return nil
+            }
+            self.parameters[.init(directive.value)] = .init(parameter)
+        }
     }
     
     /// Creates a `MediaType` from a file extension, if possible.

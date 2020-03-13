@@ -12,8 +12,8 @@ extension HTTPHeaders {
             var forwarded: [Forwarded] = []
 
             // Add values from Forwarded header.
-            forwarded += self[canonicalForm: .forwarded].compactMap {
-                .parse($0)
+            forwarded += self.parseDirectives(name: .forwarded).compactMap {
+                Forwarded(directives: $0)
             }
 
             // Add values from deprecated headers.
@@ -64,29 +64,24 @@ extension HTTPHeaders {
             self.proto = proto
         }
 
-        static func parse<S>(_ data: S) -> Self?
-            where S: StringProtocol
-        {
-            #warning("TODO: fixme")
-            fatalError()
-//            var parser = ValueParser(string: data)
-//            var forwarded = Forwarded()
-//            while let (key, value) = parser.nextParameter() {
-//                let value = String(value)
-//                switch key.lowercased() {
-//                case "by":
-//                    forwarded.by = value
-//                case "for":
-//                    forwarded.for = value
-//                case "host":
-//                    forwarded.host = value
-//                case "proto":
-//                    forwarded.proto = value
-//                default:
-//                    return nil
-//                }
-//            }
-//            return forwarded
+        init?(directives: [Directive]) {
+            for directive in directives {
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                switch directive.value.lowercased() {
+                case "by":
+                    self.by = .init(parameter)
+                case "for":
+                    self.for = .init(parameter)
+                case "host":
+                    self.host = .init(parameter)
+                case "proto":
+                    self.proto = .init(parameter)
+                default:
+                    return nil
+                }
+            }
         }
 
         func serialize() -> String {

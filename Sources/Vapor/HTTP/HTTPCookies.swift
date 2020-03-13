@@ -1,13 +1,14 @@
 extension HTTPHeaders {
     /// Get and set `HTTPCookies` for an HTTP request
     /// This accesses the `"Cookie"` header.
-    public var cookie: HTTPCookies {
+    public var cookie: HTTPCookies? {
         get {
-            return self.first(name: .cookie)
-                .flatMap(HTTPCookies.parse) ?? [:]
+            self.parseDirectives(name: .cookie).first.flatMap {
+                HTTPCookies(directives: $0)
+            }
         }
         set {
-            if let cookieHeader = newValue.cookieHeader {
+            if let cookieHeader = newValue?.cookieHeader {
                 self.replaceOrAdd(name: .cookie, value: cookieHeader)
             } else {
                 self.remove(name: .cookie)
@@ -19,12 +20,68 @@ extension HTTPHeaders {
     /// This accesses the `"Set-Cookie"` header.
     public var setCookie: HTTPCookies {
         get {
-            return HTTPCookies.parse(setCookieHeaders: self[.setCookie]) ?? [:]
+            let setCookies: [HTTPSetCookie] = self.parseDirectives(name: .setCookie).compactMap {
+                HTTPSetCookie(directives: $0)
+            }
+            var cookies = HTTPCookies()
+            setCookies.forEach { cookie in
+                cookies[cookie.name] = cookie.value
+            }
+            return cookies
         }
         set {
             self.remove(name: .setCookie)
             for cookieHeader in newValue.setCookieHeaders {
                 self.add(name: .setCookie, value: cookieHeader)
+            }
+        }
+    }
+}
+
+struct HTTPSetCookie {
+    var name: String
+    var value: HTTPCookies.Value
+
+    init?(directives: [HTTPHeaders.Directive]) {
+        guard let name = directives.first, let value = name.parameter else {
+            return nil
+        }
+        self.name = .init(name.value)
+        self.value = .init(string: .init(value))
+
+        for directive in directives[1...] {
+            switch directive.value.lowercased() {
+            case "domain":
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                self.value.domain = .init(parameter)
+            case "path":
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                self.value.path = .init(parameter)
+            case "expires":
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                self.value.expires = Date(rfc1123: .init(parameter))
+            case "httponly":
+                self.value.isHTTPOnly = true
+            case "secure":
+                self.value.isSecure = true
+            case "max-age":
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                self.value.maxAge = Int(parameter) ?? 0
+            case "samesite":
+                guard let parameter = directive.parameter else {
+                    return nil
+                }
+                self.value.sameSite = HTTPCookies.SameSitePolicy(rawValue: .init(parameter))
+            default:
+                return nil
             }
         }
     }
@@ -48,57 +105,6 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         
         /// An expired `HTTPCookieValue`.
         public static let expired: Value = .init(string: "", expires: Date(timeIntervalSince1970: 0))
-        
-        /// Parses an individual `HTTPCookie` from a `String`.
-        ///
-        ///     let cookie = HTTPCookie.parse("sessionID=123; HTTPOnly")
-        ///
-        /// - parameters:
-        ///     - data: `LosslessDataConvertible` to parse the cookie from.
-        /// - returns: `HTTPCookie` or `nil` if the data is invalid.
-        public static func parse(_ data: String) -> (String, Value)? {
-            #warning("TODO: fix")
-            fatalError()
-//            var parser = HTTPHeaders.ValueParser(string: data)
-//            guard let (name, string) = parser.nextParameter() else {
-//                return nil
-//            }
-//
-//            /// Fetch params.
-//            var expires: Date?
-//            var maxAge: Int?
-//            var domain: String?
-//            var path: String?
-//            var secure = false
-//            var httpOnly = false
-//            var sameSite: SameSitePolicy?
-//
-//            while let (key, value) = parser.nextParameter() {
-//                let val = String(value)
-//                switch key.lowercased() {
-//                case "domain": domain = val
-//                case "path": path = val
-//                case "expires": expires = Date(rfc1123: val)
-//                case "httponly": httpOnly = true
-//                case "secure": secure = true
-//                case "max-age": maxAge = Int(val) ?? 0
-//                case "samesite": sameSite = SameSitePolicy(rawValue: val)
-//                default: break
-//                }
-//            }
-//
-//            let value = Value(
-//                string: .init(string),
-//                expires: expires,
-//                maxAge: maxAge,
-//                domain: domain,
-//                path: path,
-//                isSecure: secure,
-//                isHTTPOnly: httpOnly,
-//                sameSite: sameSite
-//            )
-//            return (.init(name), value)
-        }
         
         // MARK: Properties
         
@@ -219,42 +225,15 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     public init() {
         self.cookies = [:]
     }
-    
-    // MARK: Parse
-    
-    /// Parses a `Request` cookie
-    public static func parse(cookieHeader: String) -> HTTPCookies? {
-        var cookies: HTTPCookies = [:]
-        
-        // cookies are sent separated by semicolons
-        let tokens = cookieHeader.components(separatedBy: ";")
-        
-        for token in tokens {
-            // If a single deserialization fails, the cookies are malformed
-            guard let (name, value) = Value.parse(token) else {
+
+    init?(directives: [HTTPHeaders.Directive]) {
+        self.cookies = [:]
+        for directive in directives {
+            guard let value = directive.parameter else {
                 return nil
             }
-            
-            cookies[name] = value
+            self.cookies[.init(directive.value)] = .init(string: .init(value))
         }
-        
-        return cookies
-    }
-    
-    /// Parses a `Response` cookie
-    public static func parse(setCookieHeaders: [String]) -> HTTPCookies? {
-        var cookies: HTTPCookies = [:]
-        
-        for token in setCookieHeaders {
-            // If a single deserialization fails, the cookies are malformed
-            guard let (name, value) = Value.parse(token) else {
-                return nil
-            }
-            
-            cookies[name] = value
-        }
-        
-        return cookies
     }
     
     /// See `ExpressibleByDictionaryLiteral`.
@@ -269,7 +248,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     // MARK: Serialize
     
     /// Seriaizes the `Cookies` for a `Request`
-    public var cookieHeader: String? {
+    var cookieHeader: String? {
         guard !cookies.isEmpty else {
             return nil
         }
@@ -281,7 +260,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         return cookie
     }
 
-    public var setCookieHeaders: [String] {
+    var setCookieHeaders: [String] {
         return self.cookies.map { $0.value.serialize(name: $0.key) }
     }
     

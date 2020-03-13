@@ -17,6 +17,18 @@ extension HTTPHeaders {
         }
     }
 
+    func parseDirectives(name: Name) -> [[Directive]] {
+        let headers = self[name]
+        var values: [[Directive]] = []
+        for header in headers {
+            var parser = ValueParser(string: header)
+            while let directives = parser.nextDirectives() {
+                values.append(directives)
+            }
+        }
+        return values
+    }
+
     struct ValueParser {
         var current: Substring
 
@@ -26,7 +38,7 @@ extension HTTPHeaders {
             self.current = .init(string)
         }
 
-        mutating func nextValue() -> [Directive]? {
+        mutating func nextDirectives() -> [Directive]? {
             guard !self.current.isEmpty else {
                 return nil
             }

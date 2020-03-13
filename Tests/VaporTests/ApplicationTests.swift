@@ -812,7 +812,9 @@ final class ApplicationTests: XCTestCase {
             }
 
         var headers = HTTPHeaders()
-        headers.cookie["vapor-session"] = "asdf"
+        var cookies = HTTPCookies()
+        cookies["vapor-session"] = "asdf"
+        headers.cookie = cookies
         try app.testable().test(.GET, "/get", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertNotNil(res.headers[.setCookie])
@@ -906,7 +908,9 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(cookie?.string, "a")
 
         var headers = HTTPHeaders()
-        headers.cookie["vapor-session"] = cookie
+        var cookies = HTTPCookies()
+        cookies["vapor-session"] = cookie
+        headers.cookie = cookies
         try app.testable().test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
             XCTAssertEqual(MockKeyedCache.ops, [
@@ -1414,7 +1418,7 @@ final class ApplicationTests: XCTestCase {
     func testCookieQuotes() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
-        XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
+        XCTAssertEqual(headers.cookie?["foo"]?.string, "+cookie/value")
     }
 
     func testSimilarRoutingPath() throws {

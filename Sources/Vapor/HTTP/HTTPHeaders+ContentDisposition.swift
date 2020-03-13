@@ -4,8 +4,8 @@ extension HTTPHeaders {
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Disposition
     public var contentDisposition: ContentDisposition? {
         get {
-            self.first(name: .contentDisposition).flatMap {
-                .parse($0)
+            self.parseDirectives(name: .contentDisposition).first.flatMap {
+                ContentDisposition(directives: $0)
             }
         }
         set {
@@ -36,34 +36,27 @@ extension HTTPHeaders {
             self.filename = filename
         }
 
-        static func parse<S>(_ data: S) -> Self?
-            where S: StringProtocol
-        {
-            var parser = ValueParser(string: data)
-            guard let directives = parser.nextValue() else {
-                return nil
-            }
+        init?(directives: [Directive]) {
             guard let first = directives.first else {
                 return nil
             }
             guard first.parameter == nil else {
                 return nil
             }
-            var header = ContentDisposition(.init(string: .init(first.value)))
+            self.value = .init(string: .init(first.value))
             for directive in directives[1...] {
                 guard let parameter = directive.parameter else {
                     return nil
                 }
                 switch directive.value.lowercased() {
                 case "name":
-                    header.name = .init(parameter)
+                    self.name = .init(parameter)
                 case "filename":
-                    header.filename = .init(parameter)
+                    self.filename = .init(parameter)
                 default:
                     return nil
                 }
             }
-            return header
         }
 
         func serialize() -> String {
