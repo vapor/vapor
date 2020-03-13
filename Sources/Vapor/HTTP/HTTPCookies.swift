@@ -71,7 +71,8 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             var httpOnly = false
             var sameSite: SameSitePolicy?
 
-            while let (key, val) = parser.nextParameter() {
+            while let (key, value) = parser.nextParameter() {
+                let val = String(value)
                 switch key.lowercased() {
                 case "domain": domain = val
                 case "path": path = val
@@ -85,7 +86,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             }
             
             let value = Value(
-                string: string,
+                string: .init(string),
                 expires: expires,
                 maxAge: maxAge,
                 domain: domain,
@@ -94,7 +95,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
                 isHTTPOnly: httpOnly,
                 sameSite: sameSite
             )
-            return (name, value)
+            return (.init(name), value)
         }
         
         // MARK: Properties

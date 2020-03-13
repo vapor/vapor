@@ -70,6 +70,7 @@ extension HTTPHeaders {
             var parser = ValueParser(string: data)
             var forwarded = Forwarded()
             while let (key, value) = parser.nextParameter() {
+                let value = String(value)
                 switch key.lowercased() {
                 case "by":
                     forwarded.by = value

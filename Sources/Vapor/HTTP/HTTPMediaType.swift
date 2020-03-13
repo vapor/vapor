@@ -158,7 +158,7 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
 
         var parameters: [String: String] = [:]
         while let (key, value) = parser.nextParameter() {
-            parameters[key] = value
+            parameters[.init(key)] = .init(value)
         }
         return HTTPMediaType(
             type: type,

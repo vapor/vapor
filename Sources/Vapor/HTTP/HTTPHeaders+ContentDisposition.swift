@@ -43,13 +43,13 @@ extension HTTPHeaders {
             guard let value = parser.nextValue() else {
                 return nil
             }
-            var header = ContentDisposition(.init(string: value))
+            var header = ContentDisposition(.init(string: .init(value)))
             while let (key, value) = parser.nextParameter() {
                 switch key.lowercased() {
                 case "name":
-                    header.name = value
+                    header.name = .init(value)
                 case "filename":
-                    header.filename = value
+                    header.filename = .init(value)
                 default:
                     return nil
                 }

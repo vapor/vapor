@@ -205,8 +205,8 @@ public struct HTTPHeaderValue: Codable {
         }
         var parameters: [String: String] = [:]
         while let (key, value) = parser.nextParameter() {
-            parameters[key] = value
+            parameters[.init(key)] = .init(value)
         }
-        return .init(value, parameters: parameters)
+        return .init(.init(value), parameters: parameters)
     }
 }
