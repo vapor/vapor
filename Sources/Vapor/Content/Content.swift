@@ -67,6 +67,26 @@ extension Content {
         }
         return request.eventLoop.makeSucceededFuture(response)
     }
+
+    /// Creates a `Response` which includes an `ETag` HTTP header.
+    /// - Throws: If response encoding fails or there's no body.
+    /// - Returns: A `Response`.
+    public func eTagResponse() throws -> Response {
+        let response = Response(status: .ok)
+        try response.content.encode(self)
+
+        guard let data = response.body.string?.data(using: .utf8) else {
+            throw Abort(.internalServerError)
+        }
+
+        let eTag = Insecure.MD5.hash(data: data).reduce("") {
+          $0 + String(format: "%02hhx", $1)
+        }
+
+        response.headers.add(name: .eTag, value: "\"\(eTag)\"")
+
+        return response
+    }
 }
 
 // MARK: Default Conformances
