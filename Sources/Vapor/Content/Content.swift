@@ -67,6 +67,19 @@ extension Content {
         }
         return request.eventLoop.makeSucceededFuture(response)
     }
+
+    public func eTag() throws -> String? {
+        // Hardcode the JSON media type here. Regardless of what type the client
+        // asks for, the ETag always needs to be the same, which means we always
+        // have to encode with a single known type that doesn't change.
+        let data = try JSONEncoder().encode(self)
+
+        let eTag = Insecure.MD5.hash(data: data).reduce("") {
+          $0 + String(format: "%02hhx", $1)
+        }
+
+        return #""\#(eTag)""#
+    }
 }
 
 // MARK: Default Conformances
