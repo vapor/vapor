@@ -650,9 +650,8 @@ final class ApplicationTests: XCTestCase {
             ], as: .json)
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "email is not a valid email address")
-            XCTAssertContains(res.body.string, #"{"validationErrors":{"email":["email is not a valid email address"]}}"#)
-            XCTAssertEqual(res.body.string, #"{"error":true,"metadata":{"validationErrors":{"email":["email is not a valid email address"]}},"reason":"email is not a valid email address"}"#)
+            XCTAssertContains(res.body.string, #""reason":"email is not a valid email address""#)
+            XCTAssertContains(res.body.string, #""metadata":{"validationErrors":{"email":["email is not a valid email address"]}}"#)
         }
     }
 
