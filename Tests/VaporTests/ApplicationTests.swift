@@ -628,7 +628,7 @@ final class ApplicationTests: XCTestCase {
     func testValidationError() throws {
         struct User: Content, Validatable {
             static func validations(_ v: inout Validations) {
-                v.add("email", is: .email)
+                v.add("email", as: String.self, is: .email && .count(5...))
             }
 
             var name: String
@@ -650,8 +650,42 @@ final class ApplicationTests: XCTestCase {
             ], as: .json)
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, #""reason":"email is not a valid email address""#)
-            XCTAssertContains(res.body.string, #""metadata":{"validationErrors":{"email":["email is not a valid email address"]}}"#)
+            XCTAssertContains(res.body.string, #""reason":"email is not a valid email address and is less than minimum of 5 character(s)""#)
+            XCTAssertContains(res.body.string, #""metadata":{"validationErrors":{"email":"email is not a valid email address and is less than minimum of 5 character(s)"}}"#)
+        }
+    }
+    
+    func testNestedValidationError() throws {
+        struct Tag: Content {
+            var title: String
+        }
+
+        struct User: Content, Validatable {
+            static func validations(_ v: inout Validations) {
+                v.add("tag") { tag in
+                    tag.add("title", as: String.self, is: .count(5...))
+                }
+            }
+
+            var tag: Tag
+        }
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.post("users") { req -> User in
+            try User.validate(req)
+            return try req.content.decode(User.self)
+        }
+
+        try app.testable().test(.POST, "/users", beforeRequest: { req in
+            try req.content.encode(
+                User(tag: .init(title: "Foo")),
+                as: .json)
+        }) { res in
+            XCTAssertEqual(res.status, .badRequest)
+            XCTAssertContains(res.body.string, #""reason":"tag title is less than minimum of 5 character(s)""#)
+            XCTAssertContains(res.body.string, #""metadata":{"validationErrors":{"tag":{"title":"title is less than minimum of 5 character(s)"}}"#)
         }
     }
 

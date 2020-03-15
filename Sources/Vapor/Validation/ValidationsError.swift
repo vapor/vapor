@@ -38,13 +38,35 @@ extension ValidationsError: AbortError {
     }
     
     public var metadata: Metadata {
-        var validationErrors: [String: [String]] = [:]
+        return ["validationErrors" : self.failures.metadataValue]
+    }
+}
+
+extension Array where Element == ValidationResult {
+    internal var metadataValue: MetadataValue {
+        var validationErrors: [String: MetadataValue] = [:]
         
-        self.failures.forEach { failure in
-            let validationError = [failure.key.description: [failure.failureDescription ?? ""]]
-            validationErrors.merge(validationError) { $0 + $1 }
+        self.forEach { failure in
+            let key = "\(failure.key)"
+            let value: MetadataValue
+            
+            switch failure.result {
+            case let nestedFailure as ValidatorResults.Nested where nestedFailure.results is [ValidationResult]:
+                value = (nestedFailure.results as! [ValidationResult]).metadataValue
+            default:
+                value = .init(failure.failureDescription ?? "")
+            }
+            
+            validationErrors.merge([key: value]) {
+                if var arrayMetadata = $0.value as? [MetadataValue] {
+                    arrayMetadata.append($1)
+                    return .init(arrayMetadata)
+                } else {
+                    return .init([$0, $1])
+                }
+            }
         }
-   
-        return ["validationErrors" : .init(validationErrors)]
+        
+        return .init(validationErrors)
     }
 }
