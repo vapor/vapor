@@ -13,6 +13,8 @@ extension MetadataValue: Encodable {
         var container = encoder.singleValueContainer()
         
         switch value {
+        case let metadata as MetadataValue:
+            try container.encode(metadata)
         case is Void:
             try container.encodeNil()
         case let bool as Bool:
