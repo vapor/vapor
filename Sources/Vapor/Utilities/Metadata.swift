@@ -1,107 +1,59 @@
 public typealias Metadata = [String: MetadataValue]
 
-public enum MetadataValue {
-    case string(String)
-    case stringConvertible(CustomStringConvertible)
-    case dictionary(Metadata)
-    case array([Metadata.Value])
-}
-
-extension MetadataValue: Equatable {
-    public static func == (lhs: Metadata.Value, rhs: Metadata.Value) -> Bool {
-        switch (lhs, rhs) {
-        case (.string(let lhs), .string(let rhs)):
-            return lhs == rhs
-        case (.stringConvertible(let lhs), .stringConvertible(let rhs)):
-            return lhs.description == rhs.description
-        case (.array(let lhs), .array(let rhs)):
-            return lhs == rhs
-        case (.dictionary(let lhs), .dictionary(let rhs)):
-            return lhs == rhs
-        default:
-            return false
-        }
+public struct MetadataValue {
+    public var value: Any
+    
+    public init<T>(_ value: T?) {
+        self.value = value ?? ()
     }
 }
-
-extension MetadataValue: ExpressibleByStringLiteral {
-    public typealias StringLiteralType = String
-
-    public init(stringLiteral value: String) {
-        self = .string(value)
-    }
-}
-
-extension MetadataValue: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .dictionary(let dict):
-            return dict.mapValues { $0.description }.description
-        case .array(let list):
-            return list.map { $0.description }.description
-        case .string(let str):
-            return str
-        case .stringConvertible(let repr):
-            return repr.description
-        }
-    }
-}
-
-extension MetadataValue: ExpressibleByStringInterpolation {}
-
-extension MetadataValue: ExpressibleByDictionaryLiteral {
-    public typealias Key = String
-    public typealias Value = Metadata.Value
-
-    public init(dictionaryLiteral elements: (String, Metadata.Value)...) {
-        self = .dictionary(.init(uniqueKeysWithValues: elements))
-    }
-}
-
-extension MetadataValue: ExpressibleByArrayLiteral {
-    public typealias ArrayLiteralElement = Metadata.Value
-
-    public init(arrayLiteral elements: Metadata.Value...) {
-        self = .array(elements)
-    }
-}
-
+   
 extension MetadataValue: Encodable {
-    struct DictionaryCodingKeys: CodingKey {
-        var stringValue: String
-        
-        var intValue: Int?
-        
-        init?(intValue: Int) {
-            self.intValue = intValue
-            self.stringValue = "\(intValue)"
-        }
-        
-        init?(stringValue: String) {
-            self.stringValue = stringValue
-            self.intValue = nil
-        }
-    }
-
     public func encode(to encoder: Encoder) throws {
-        switch self {
-        case .string(let value):
-            var container = encoder.singleValueContainer()
-            try container.encode(value)
-        case .stringConvertible(let value):
-            var container = encoder.singleValueContainer()
-            try container.encode(value.description)
-        case .dictionary(let value):
-            var container = encoder.container(keyedBy: DictionaryCodingKeys.self)
-            try value.forEach { (key, value) in
-                let codingKey = DictionaryCodingKeys.init(stringValue: key)!
-                try container.encode(value, forKey: codingKey)
-            }
-        case .array(let value):
-            var container = encoder.unkeyedContainer()
-            try value.forEach { element in
-                try container.encode(element)
-            }
+        var container = encoder.singleValueContainer()
+        
+        switch value {
+        case is Void:
+            try container.encodeNil()
+        case let bool as Bool:
+            try container.encode(bool)
+        case let int as Int:
+            try container.encode(int)
+        case let int8 as Int8:
+            try container.encode(int8)
+        case let int16 as Int16:
+            try container.encode(int16)
+        case let int32 as Int32:
+            try container.encode(int32)
+        case let int64 as Int64:
+            try container.encode(int64)
+        case let uint as UInt:
+            try container.encode(uint)
+        case let uint8 as UInt8:
+            try container.encode(uint8)
+        case let uint16 as UInt16:
+            try container.encode(uint16)
+        case let uint32 as UInt32:
+            try container.encode(uint32)
+        case let uint64 as UInt64:
+            try container.encode(uint64)
+        case let float as Float:
+            try container.encode(float)
+        case let double as Double:
+            try container.encode(double)
+        case let string as String:
+            try container.encode(string)
+        case let date as Date:
+            try container.encode(date)
+        case let url as URL:
+            try container.encode(url)
+        case let array as [Any?]:
+            try container.encode(array.map { MetadataValue($0) })
+        case let dictionary as [String: Any?]:
+            try container.encode(dictionary.mapValues { MetadataValue($0) })
+        default:
+            let context = EncodingError.Context(codingPath: container.codingPath, debugDescription: "MetadataValue cannot be encoded")
+            throw EncodingError.invalidValue(value, context)
         }
     }
 }

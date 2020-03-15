@@ -44,7 +44,7 @@ extension ValidationsError: AbortError {
             let validationError = [failure.key.description: [failure.failureDescription ?? ""]]
             validationErrors.merge(validationError) { $0 + $1 }
         }
-        
-        return ["validationErrors" : "\(validationErrors)"]
+   
+        return ["validationErrors" : .init(validationErrors)]
     }
 }
