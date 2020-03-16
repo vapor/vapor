@@ -80,27 +80,6 @@ extension Content {
 
         return #""\#(eTag)""#
     }
-
-    /// Creates a `Response` which includes an `ETag` HTTP header.
-    ///
-    ///  The `withBody` parameter is here so that you can determine, based on client preference
-    ///  whether or not to include the response body when performing a `PATCH` call, for example.
-    ///  You want the `ETag` header to be included, but you may or may not want the body.
-    /// - Parameter withBody: Whether or not the body should be included.
-    /// - Returns: A `Response`
-    public func eTagResponse(withBody: Bool = true) throws -> Response {
-        let response = Response(status: withBody ? .ok : .noContent)
-
-        if withBody {
-            try response.content.encode(self)
-        }
-
-        if let eTag = try self.eTag(), !eTag.isEmpty {
-            response.headers.add(name: .eTag, value: eTag)
-        }
-
-        return response
-    }
 }
 
 // MARK: Default Conformances

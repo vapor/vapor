@@ -1477,33 +1477,6 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
         }
     }
-
-    func testResponseWithBodyAndETag() throws {
-        let response = try DTO().eTagResponse()
-
-        let eTag = try XCTUnwrap(response.headers.firstValue(name: .eTag))
-        XCTAssertNotNil(eTag.range(of: "^\"[a-fA-F0-9]+\"$", options: .regularExpression))
-        XCTAssertNotNil(response.body.string)
-        XCTAssertEqual(response.status, .ok)
-    }
-
-    func testResponseWithNoBodyIncludingETag() throws {
-        let response = try DTO().eTagResponse(withBody: false)
-        let eTag = try XCTUnwrap(response.headers.firstValue(name: .eTag))
-        XCTAssertNotNil(eTag.range(of: "^\"[a-fA-F0-9]+\"$", options: .regularExpression))
-        XCTAssertNil(response.body.string)
-        XCTAssertEqual(response.status, .noContent)
-    }
-
-    func testEtagFromContent() throws {
-        let content = DTO()
-        let eTag = try XCTUnwrap(content.eTag())
-        XCTAssertNotNil(eTag.range(of: "^\"[a-fA-F0-9]+\"$", options: .regularExpression))
-    }
-}
-
-private struct DTO: Content {
-    let data = "something"
 }
 
 extension Application.Responder {

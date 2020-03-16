@@ -135,6 +135,45 @@ public final class Response: CustomStringConvertible {
         self.body = body
         self.storage = .init()
     }
+
+    /// Creates a `Response` which includes an `ETag` HTTP header.
+    ///
+    ///  The `withBody` parameter is here so that you can determine, based on client preference,
+    ///  whether or not to include the response body when performing a `PATCH` call, for example.
+    ///  You want the `ETag` header to be included, but you may or may not want the body.
+    ///
+    /// - Parameters:
+    ///   - obj: The object which is (possibly) being encoded and used to calculate the ETag
+    ///   - includeBody: Whether or not the `obj` should be included in the body.
+    ///   - justCreated: Whether this is a newly created object or not. Determines 201 vs. 200 status
+    /// - Throws: If the encoding fails, or the ETag can't be generated.
+    /// - Returns: A `Response`
+    public static func withETag<T>(
+        obj: T,
+        includeBody: Bool = true,
+        justCreated: Bool = false
+    ) throws -> Response where T: Content {
+        let status: HTTPStatus
+        if justCreated {
+            status = .created
+        } else if includeBody {
+            status = .ok
+        } else {
+            status = .noContent
+        }
+
+        let response = Response(status: status)
+
+        if includeBody {
+            try response.content.encode(obj)
+        }
+
+        if let eTag = try obj.eTag(), !eTag.isEmpty {
+            response.headers.add(name: .eTag, value: eTag)
+        }
+
+        return response
+    }
 }
 
 
