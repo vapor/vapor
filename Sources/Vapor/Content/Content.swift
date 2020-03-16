@@ -68,22 +68,36 @@ extension Content {
         return request.eventLoop.makeSucceededFuture(response)
     }
 
-    /// Creates a `Response` which includes an `ETag` HTTP header.
-    /// - Throws: If response encoding fails or there's no body.
-    /// - Returns: A `Response`.
-    public func eTagResponse() throws -> Response {
-        let response = Response(status: .ok)
-        try response.content.encode(self)
-
-        guard let data = response.body.string?.data(using: .utf8) else {
-            throw Abort(.internalServerError)
-        }
+    public func eTag() throws -> String? {
+        // Hardcode the JSON media type here. Regardless of what type the client
+        // asks for, the ETag always needs to be the same, which means we always
+        // have to encode with a single known type that doesn't change.
+        let data = try JSONEncoder().encode(self)
 
         let eTag = Insecure.MD5.hash(data: data).reduce("") {
           $0 + String(format: "%02hhx", $1)
         }
 
-        response.headers.add(name: .eTag, value: "\"\(eTag)\"")
+        return #""\#(eTag)""#
+    }
+
+    /// Creates a `Response` which includes an `ETag` HTTP header.
+    ///
+    ///  The `withBody` parameter is here so that you can determine, based on client preference
+    ///  whether or not to include the response body when performing a `PATCH` call, for example.
+    ///  You want the `ETag` header to be included, but you may or may not want the body.
+    /// - Parameter withBody: Whether or not the body should be included.
+    /// - Returns: A `Response`
+    public func eTagResponse(withBody: Bool = true) throws -> Response {
+        let response = Response(status: withBody ? .ok : .noContent)
+
+        if withBody {
+            try response.content.encode(self)
+        }
+
+        if let eTag = try self.eTag(), !eTag.isEmpty {
+            response.headers.add(name: .eTag, value: eTag)
+        }
 
         return response
     }
