@@ -149,7 +149,7 @@ public final class Response: CustomStringConvertible {
     /// - Throws: If the encoding fails, or the ETag can't be generated.
     /// - Returns: A `Response`
     public static func withETag<T>(
-        obj: T,
+        _ obj: T,
         includeBody: Bool = true,
         justCreated: Bool = false
     ) throws -> Response where T: Content {

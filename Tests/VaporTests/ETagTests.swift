@@ -18,23 +18,22 @@ final class ETagTests: XCTestCase {
     }
 
     func testNewlyCreated() throws {
-        let response = try Response.withETag(obj: DTO(), justCreated: true)
+        let response = try Response.withETag(DTO(), justCreated: true)
         try validate(response, status: .created)
     }
 
     func testExisting() throws {
-        let response = try Response.withETag(obj: DTO())
+        let response = try Response.withETag(DTO())
         try validate(response, status: .ok)
     }
 
     func testNoBody() throws {
-        let response = try Response.withETag(obj: DTO(), includeBody: false)
+        let response = try Response.withETag(DTO(), includeBody: false)
         try validate(response, status: .noContent, nilBody: true)
     }
 
     func testEtagFromContent() throws {
-        let content = DTO()
-        let eTag = try XCTUnwrap(content.eTag())
+        let eTag = try XCTUnwrap(DTO().eTag())
         XCTAssertNotNil(eTag.range(of: Self.regex, options: .regularExpression))
     }
 }
