@@ -1,4 +1,4 @@
-/// Capable of being represented by a `BasicKey`.
+/// Capable of being represented by a `CodingKey`.
 public protocol CodingKeyRepresentable {
     /// Converts this type to a `CodingKey`.
     var codingKey: CodingKey { get }
@@ -23,7 +23,6 @@ extension Array where Element == CodingKey {
         return map { $0.stringValue }.joined(separator: ".")
     }
 }
-
 
 /// A basic `CodingKey` implementation.
 public enum BasicCodingKey: CodingKey {
@@ -54,5 +53,17 @@ public enum BasicCodingKey: CodingKey {
     /// See `CodingKey`.
     public init?(intValue: Int) {
         self = .index(intValue)
+    }
+
+    public init(_ codingKey: CodingKey) {
+        if let intValue = codingKey.intValue {
+            self = .index(intValue)
+        } else {
+            self = .key(codingKey.stringValue)
+        }
+    }
+
+    public init(_ codingKeyRepresentable: CodingKeyRepresentable) {
+        self.init(codingKeyRepresentable.codingKey)
     }
 }

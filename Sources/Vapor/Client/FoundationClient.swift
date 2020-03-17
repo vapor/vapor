@@ -1,13 +1,21 @@
-extension HTTPHeaders {
-    public init(foundation headers: [AnyHashable: Any]) {
-        self.init()
-        for (key, val) in headers {
-            self.add(name: key as! String, value: val as! String)
-        }
-    }
-}
+// TODO: uncomment once URLSession works on Linux
 
-///// `Client` wrapper around `Foundation.URLSession`.
+//#if os(Linux)
+//import FoundationNetworking
+//#else
+//import Foundation
+//#endif
+//
+//extension HTTPHeaders {
+//    public init(foundation headers: [AnyHashable: Any]) {
+//        self.init()
+//        for (key, val) in headers {
+//            self.add(name: key as! String, value: val as! String)
+//        }
+//    }
+//}
+//
+/////// `Client` wrapper around `Foundation.URLSession`.
 //public final class FoundationClient: Client {
 //    /// See `Client`.
 //    public var eventLoop: EventLoop
@@ -39,11 +47,15 @@ extension HTTPHeaders {
 //        }.resume()
 //        return promise.futureResult
 //    }
+//
+//    public func webSocket(_ request: ClientRequest, onUpgrade: @escaping (WebSocket) -> ()) -> EventLoopFuture<Void> {
+//        fatalError("FoundationClient does not yet supported WebSocket")
+//    }
 //}
 //
 //private extension URLRequest {
 //    init(client request: ClientRequest) {
-//        self.init(url: request.url)
+//        self.init(url: URL(string: request.url.string)!)
 //        self.httpMethod = request.method.string
 //        if var body = request.body {
 //            self.httpBody = body.readData(length: body.readableBytes)

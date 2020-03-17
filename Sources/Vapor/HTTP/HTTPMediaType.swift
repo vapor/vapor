@@ -183,6 +183,12 @@ public extension HTTPMediaType {
     static let urlEncodedForm = HTTPMediaType(type: "application", subType: "x-www-form-urlencoded", parameters: ["charset": "utf-8"])
     /// Multipart encoded form data.
     static let formData = HTTPMediaType(type: "multipart", subType: "form-data")
+    // Multipart encoded form data with boundary.
+    static func formData(boundary: String) -> HTTPMediaType {
+        .init(type: "multipart", subType: "form-data", parameters: [
+            "boundary": boundary
+        ])
+    }
     /// Mixed multipart encoded data.
     static let multipart = HTTPMediaType(type: "multipart", subType: "mixed")
     /// JSON media type.

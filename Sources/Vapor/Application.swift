@@ -1,131 +1,162 @@
-import NIO
+import Backtrace
+
+public protocol LockKey { }
 
 public final class Application {
-    public let environment: Environment
-    
+    public var environment: Environment
+    public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
-    
-    public var userInfo: [AnyHashable: Any]
-    
-    public let lock: NSLock
-    
-    private let configure: (inout Services) throws -> ()
-    
-    private let threadPool: NIOThreadPool
-    
-    private var didShutdown: Bool
-    
-    public var running: Running?
-    
+    public var storage: Storage
+    public private(set) var didShutdown: Bool
     public var logger: Logger
-    
-    public struct Running {
-        public var stop: () -> Void
-        public init(stop: @escaping () -> Void) {
-            self.stop = {
-                DispatchQueue.global().async {
-                    stop()
-                }
+    private var isBooted: Bool
+
+    public struct Lifecycle {
+        var handlers: [LifecycleHandler]
+        init() {
+            self.handlers = []
+        }
+
+        public mutating func use(_ handler: LifecycleHandler) {
+            self.handlers.append(handler)
+        }
+    }
+    public var lifecycle: Lifecycle
+
+    public final class Locks {
+        public let main: Lock
+        var storage: [ObjectIdentifier: Lock]
+
+        init() {
+            self.main = .init()
+            self.storage = [:]
+        }
+
+        public func lock<Key>(for key: Key.Type) -> Lock
+            where Key: LockKey
+        {
+            self.main.lock()
+            defer { self.main.unlock() }
+            if let existing = self.storage[ObjectIdentifier(Key.self)] {
+                return existing
+            } else {
+                let new = Lock()
+                self.storage[ObjectIdentifier(Key.self)] = new
+                return new
             }
         }
     }
-    
-    public init(
-        environment: Environment = .development,
-        configure: @escaping (inout Services) throws -> () = { _ in }
-    ) {
-        self.environment = environment
-        self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
-        self.userInfo = [:]
-        self.didShutdown = false
-        self.configure = configure
-        self.lock = NSLock()
-        self.threadPool = .init(numberOfThreads: 1)
-        self.threadPool.start()
-        self.logger = .init(label: "codes.vapor.application")
+    public var locks: Locks
+    public var sync: Lock {
+        self.locks.main
     }
     
-    public func makeServices() throws -> Services {
-        var s = Services.default()
-        try self.configure(&s)
-        s.register(Application.self) { c in
-            return self
-        }
-        s.register(NIOThreadPool.self) { c in
-            return self.threadPool
-        }
-        return s
-    }
-    
-    public func makeContainer() -> EventLoopFuture<Container> {
-        return self.makeContainer(on: self.eventLoopGroup.next())
-    }
-    
-    public func makeContainer(on eventLoop: EventLoop) -> EventLoopFuture<Container> {
-        do {
-            return try _makeContainer(on: eventLoop)
-        } catch {
-            return self.eventLoopGroup.next().makeFailedFuture(error)
-        }
-    }
-    
-    private func _makeContainer(on eventLoop: EventLoop) throws -> EventLoopFuture<Container> {
-        let s = try self.makeServices()
-        return Container.boot(environment: self.environment, services: s, on: eventLoop)
+    public enum EventLoopGroupProvider {
+        case shared(EventLoopGroup)
+        case createNew
     }
 
-    // MARK: Run
+    public init(
+        _ environment: Environment = .development,
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
+    ) {
+        Backtrace.install()
+        self.environment = environment
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
+        self.locks = .init()
+        self.didShutdown = false
+        self.logger = .init(label: "codes.vapor.application")
+        self.storage = .init(logger: self.logger)
+        self.lifecycle = .init()
+        self.isBooted = false
+        self.core.initialize()
+        self.views.initialize()
+        self.sessions.initialize()
+        self.sessions.use(.memory)
+        self.responder.initialize()
+        self.responder.use(.default)
+        self.commands.use(self.server.command, as: "serve", isDefault: true)
+        self.commands.use(RoutesCommand(), as: "routes")
+        // Load specific .env first since values are not overridden.
+        self.loadDotEnv(named: ".env.\(self.environment.name)")
+        self.loadDotEnv(named: ".env")
+    }
     
     public func run() throws {
-        self.logger = .init(label: "codes.vapor.application")
-        defer { self.shutdown() }
         do {
-            try self.runCommands()
+            try self.start()
+            try self.running?.onStop.wait()
         } catch {
             self.logger.report(error: error)
             throw error
         }
     }
     
-    public func runCommands() throws {
-        let eventLoop = self.eventLoopGroup.next()
-        try self.loadDotEnv(on: eventLoop).wait()
-        let c = try self.makeContainer(on: eventLoop).wait()
-        defer { c.shutdown() }
-        let command = try c.make(Commands.self).group()
-        let console = try c.make(Console.self)
-        var runInput = self.environment.commandInput
-        try console.run(command, input: &runInput)
+    public func start() throws {
+        try self.boot()
+        let command = self.commands.group()
+        var context = CommandContext(console: self.console, input: self.environment.commandInput)
+        context.application = self
+        try self.console.run(command, with: context)
+    }
+
+    public func boot() throws {
+        guard !self.isBooted else {
+            return
+        }
+        self.isBooted = true
+        try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
+        try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
-    
-    private func loadDotEnv(on eventLoop: EventLoop) -> EventLoopFuture<Void> {
-        return DotEnvFile.load(
-            path: ".env",
-            fileio: .init(threadPool: self.threadPool),
-            on: eventLoop
-        ).recover { error in
-            self.logger.debug("Could not load .env file: \(error)")
+    private func loadDotEnv(named name: String) {
+        do {
+            try DotEnvFile.load(
+                path: name,
+                fileio: .init(threadPool: self.threadPool),
+                on: self.eventLoopGroup.next()
+            ).wait()
+        } catch {
+            self.logger.debug("Could not load \(name) file: \(error)")
         }
     }
     
     public func shutdown() {
+        assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
-        do {
-            try self.eventLoopGroup.syncShutdownGracefully()
-        } catch {
-            self.logger.error("EventLoopGroup failed to shutdown: \(error)")
+
+        self.logger.trace("Shutting down providers")
+        self.lifecycle.handlers.forEach { $0.shutdown(self) }
+        self.lifecycle.handlers = []
+        
+        self.logger.trace("Clearing Application storage")
+        self.storage.shutdown()
+        self.storage.clear()
+
+        switch self.eventLoopGroupProvider {
+        case .shared:
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+        case .createNew:
+            self.logger.trace("Shutting down EventLoopGroup")
+            do {
+                try self.eventLoopGroup.syncShutdownGracefully()
+            } catch {
+                self.logger.error("Shutting down EventLoopGroup failed: \(error)")
+            }
         }
-        do {
-            try self.threadPool.syncShutdownGracefully()
-        } catch {
-            self.logger.error("ThreadPool failed to shutdown: \(error)")
-        }
+
         self.didShutdown = true
-        self.userInfo = [:]
+        self.logger.trace("Application shutdown complete")
     }
     
     deinit {
+        self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
             assertionFailure("Application.shutdown() was not called before Application deinitialized.")
         }

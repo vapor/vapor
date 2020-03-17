@@ -22,8 +22,11 @@ private final class RFC1123 {
     /// Creates a new RFC1123 helper
     private init() {
         let formatter = DateFormatter()
+        let enUSPosixLocale = Locale(identifier: "en_US_POSIX")
+        formatter.locale = enUSPosixLocale
         formatter.timeZone = TimeZone(secondsFromGMT: 0)
         formatter.dateFormat = "EEE, dd MMM yyyy HH:mm:ss z"
+        formatter.calendar = Calendar(identifier: .gregorian)
         self.formatter = formatter
     }
     

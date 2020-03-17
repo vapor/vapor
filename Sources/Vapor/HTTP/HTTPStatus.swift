@@ -8,3 +8,15 @@ extension HTTPStatus: ResponseEncodable {
         return request.eventLoop.makeSucceededFuture(response)
     }
 }
+
+extension HTTPStatus: Codable {
+    public init(from decoder: Decoder) throws {
+        let code = try decoder.singleValueContainer().decode(Int.self)
+        self = .init(statusCode: code)
+    }
+
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.code)
+    }
+}

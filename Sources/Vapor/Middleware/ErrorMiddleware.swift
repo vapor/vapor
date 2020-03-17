@@ -17,9 +17,6 @@ public final class ErrorMiddleware: Middleware {
     ///     - log: Log destination.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
-            // log the error
-            req.logger.report(error: error, verbose: !environment.isRelease)
-
             // variables to determine
             let status: HTTPResponseStatus
             let reason: String
@@ -45,7 +42,10 @@ public final class ErrorMiddleware: Middleware {
                 status = .internalServerError
                 headers = [:]
             }
-
+            
+            // Report the error to logger.
+            req.logger.report(error: error)
+            
             // create a Response with appropriate status
             let response = Response(status: status, headers: headers)
             

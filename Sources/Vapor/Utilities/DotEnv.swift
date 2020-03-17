@@ -86,7 +86,7 @@ public struct DotEnvFile {
     }
     
     /// Represents a `KEY=VALUE` pair in a dotenv file.
-    public struct Line: CustomStringConvertible {
+    public struct Line: CustomStringConvertible, Equatable {
         /// The key.
         public let key: String
         
@@ -122,9 +122,9 @@ public struct DotEnvFile {
     }
 }
 
-// MARK: Private
+// MARK: Parser
 
-private extension DotEnvFile {
+extension DotEnvFile {
     struct Parser {
         var source: ByteBuffer
         init(source: ByteBuffer) {
@@ -179,13 +179,15 @@ private extension DotEnvFile {
             guard let value = self.parseLineValue() else {
                 return nil
             }
-            self.pop() // \n
             return Line(key: key, value: value)
         }
         
         private mutating func parseLineValue() -> String? {
-            guard let valueLength = self.countDistance(to: .newLine) else {
-                return nil
+            let valueLength: Int
+            if let toNewLine = self.countDistance(to: .newLine) {
+                valueLength = toNewLine
+            } else {
+                valueLength = self.source.readableBytes
             }
             guard let value = self.source.readString(length: valueLength) else {
                 return nil
@@ -225,10 +227,15 @@ private extension DotEnvFile {
         
         private func countDistance(to byte: UInt8) -> Int? {
             var copy = self.source
+            var found = false
             scan: while let next = copy.readInteger(as: UInt8.self) {
                 if next == byte {
+                    found = true
                     break scan
                 }
+            }
+            guard found else {
+                return nil
             }
             let distance = copy.readerIndex - source.readerIndex
             guard distance != 0 else {

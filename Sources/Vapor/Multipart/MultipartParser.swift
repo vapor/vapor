@@ -15,24 +15,24 @@ public final class MultipartParser {
     public var onHeader: (String, String) -> ()
     public var onBody: (inout ByteBuffer) -> ()
     public var onPartComplete: () -> ()
-    
+
     private var callbacks: multipartparser_callbacks
     private var parser: multipartparser
-    
+
     private enum HeaderState {
         case ready
         case field(field: String)
         case value(field: String, value: String)
     }
-    
+
     private var headerState: HeaderState
-    
+
     /// Creates a new `MultipartParser`.
     public init(boundary: String) {
         self.onHeader = { _, _ in }
         self.onBody = { _ in }
         self.onPartComplete = { }
-        
+
         var parser = multipartparser()
         multipartparser_init(&parser, boundary)
         var callbacks = multipartparser_callbacks()
@@ -85,7 +85,7 @@ public final class MultipartParser {
             return 0
         }
     }
-    
+
     struct Context {
         static func from(_ pointer: UnsafeMutablePointer<multipartparser>?) -> Context? {
             guard let parser = pointer?.pointee else {
@@ -93,11 +93,11 @@ public final class MultipartParser {
             }
             return parser.data.assumingMemoryBound(to: MultipartParser.Context.self).pointee
         }
-        
+
         unowned let parser: MultipartParser
         let unsafeBuffer: UnsafeRawBufferPointer
         let buffer: ByteBuffer
-        
+
         func slice(at pointer: UnsafePointer<Int8>?, count: Int) -> ByteBuffer {
             guard let pointer = pointer else {
                 fatalError("no data pointer")
@@ -116,8 +116,11 @@ public final class MultipartParser {
             } else {
                 // the buffer is to somewhere else, like a statically allocated string
                 // let's create a new buffer
-                let bytes = UnsafeRawBufferPointer(start: UnsafeRawPointer(pointer), count: count)
-                var buffer = ByteBufferAllocator().buffer(capacity: 0)
+                let bytes = UnsafeRawBufferPointer(
+                    start: UnsafeRawPointer(pointer),
+                    count: count
+                )
+                var buffer = ByteBufferAllocator().buffer(capacity: bytes.count)
                 buffer.writeBytes(bytes)
                 return buffer
             }
@@ -125,11 +128,17 @@ public final class MultipartParser {
     }
     
     public func execute(_ string: String) throws {
-        var buffer = ByteBufferAllocator().buffer(capacity: string.utf8.count)
-        buffer.writeString(string)
+        try self.execute([UInt8](string.utf8))
+    }
+
+    public func execute<Data>(_ data: Data) throws
+        where Data: DataProtocol
+    {
+        var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+        buffer.writeBytes(data)
         return try self.execute(buffer)
     }
-    
+
     public func execute(_ buffer: ByteBuffer) throws {
         let result = buffer.withUnsafeReadableBytes { (unsafeBuffer: UnsafeRawBufferPointer) -> Int in
             var context = Context(parser: self, unsafeBuffer: unsafeBuffer, buffer: buffer)
@@ -139,12 +148,12 @@ public final class MultipartParser {
             }
         }
         guard result == buffer.readableBytes else {
-            throw Abort(.unprocessableEntity)
+            throw MultipartError.invalidFormat
         }
     }
-    
+
     // MARK: Private
-    
+
     private func handleHeaderField(_ new: String) {
         switch self.headerState {
         case .ready:
@@ -156,7 +165,7 @@ public final class MultipartParser {
             self.headerState = .field(field: new)
         }
     }
-    
+
     private func handleHeaderValue(_ new: String) {
         switch self.headerState {
         case .field(let name):
@@ -166,7 +175,7 @@ public final class MultipartParser {
         default: fatalError()
         }
     }
-    
+
     private func handleHeadersComplete() {
         switch self.headerState {
         case .value(let field, let value):
@@ -180,7 +189,7 @@ public final class MultipartParser {
     private func handleData(_ data: inout ByteBuffer) {
         self.onBody(&data)
     }
-    
+
     private func handlePartEnd() {
         self.onPartComplete()
     }

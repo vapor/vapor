@@ -1,59 +1,13 @@
 version: 2
-
 jobs:
-  macos:
-    macos:
-      xcode: "10.2.0"
-    steps:
-      - checkout
-      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@1.1
-      - run: swift build
-      - run: swift test
-  macos-release:
-    macos:
-      xcode: "10.2.0"
-    steps:
-      - checkout
-      - run: HOMEBREW_NO_AUTO_UPDATE=1 brew install openssl@1.1
-      - run: swift build -c release
-  bionic:
+  test:
     docker:
-      - image: swift:5.0-bionic
+      - image: ubuntu:18.04
     steps:
-      - checkout
-      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift build
-      - run: swift test
-  bionic-release:
-    docker:
-      - image: swift:5.0-bionic
-    steps:
-      - checkout
-      - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-      - run: swift build -c release
-  # xenial:
-  #   docker:
-  #     - image: swift:5.0-xenial
-  #   steps:
-  #     - checkout
-  #     - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-  #     - run: swift build
-  #     - run: swift test
-  # xenial-release:
-  #   docker:
-  #     - image: swift:5.0-xenial
-  #   steps:
-  #     - checkout
-  #     - run: apt-get update; apt-get install -y libssl-dev zlib1g-dev
-  #     - run: swift build -c release
-
+      - run: echo "Testing is done via GitHub actions"
 workflows:
   version: 2
-  tests:
+  test:
     jobs:
-      - macos
-      - macos-release
-      - bionic
-      - bionic-release
-      # - xenial
-      # - xenial-release
+      - test
+

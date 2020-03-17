@@ -1,61 +1,107 @@
-/// Represents application/x-www-form-urlencoded encoded data.
-enum URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable, CustomStringConvertible {
-    /// Stores a string, this is the root storage.
-    case string(String)
-
-    /// Stores a dictionary of self.
-    case dictionary([String: URLEncodedFormData])
-
-    /// Stores an array of self.
-    case array([URLEncodedFormData])
+/// Keeps track if the string was percent encoded or not.
+/// Prevents double encoding/double decoding
+enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
+    init(stringLiteral: String) {
+        self = .urlDecoded(stringLiteral)
+    }
     
-    /// `CustomStringConvertible` conformance.
-    var description: String {
+    case urlEncoded(String)
+    case urlDecoded(String)
+    
+    /// Returns the URL Encoded version
+    func asUrlEncoded() throws -> String {
         switch self {
-        case .string(let string): return string.debugDescription
-        case .array(let arr): return arr.description
-        case .dictionary(let dict): return dict.description
+        case .urlEncoded(let encoded):
+            return encoded
+        case .urlDecoded(let decoded):
+            return try decoded.urlEncoded()
         }
     }
-
-    /// Converts self to an `String` or returns `nil` if not convertible.
-    var string: String? {
+    
+    /// Returns the URL Decoded version
+    func asUrlDecoded() throws -> String {
         switch self {
-        case .string(let s): return s
-        default: return nil
+        case .urlEncoded(let encoded):
+            guard let decoded = encoded.removingPercentEncoding else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(encoded)"))
+            }
+            return decoded
+        case .urlDecoded(let decoded):
+            return decoded
         }
     }
-
-    /// Converts self to an `[URLEncodedFormData]` or returns `nil` if not convertible.
-    var array: [URLEncodedFormData]? {
-        switch self {
-        case .array(let arr): return arr
-        default: return nil
+    
+    /// Do comparison and hashing using the decoded version as there are multiple ways something can be encoded.
+    /// Certain characters that are not typically encoded could have been encoded making string comparisons between two encodings not work
+    static func == (lhs: URLQueryFragment, rhs: URLQueryFragment) -> Bool {
+        do {
+            return try lhs.asUrlDecoded() == rhs.asUrlDecoded()
+        } catch {
+            return false
         }
     }
-
-    /// Converts self to an `[String: URLEncodedFormData]` or returns `nil` if not convertible.
-    var dictionary: [String: URLEncodedFormData]? {
-        switch self {
-        case .dictionary(let dict): return dict
-        default: return nil
+    
+    func hash(into: inout Hasher) {
+        do {
+            try self.asUrlDecoded().hash(into: &into)
+        } catch {
+            Logger(label: "codes.vapor.url").report(error: error)
         }
     }
+}
 
-    // MARK: Literal
-
-    /// See `ExpressibleByArrayLiteral`.
-    init(arrayLiteral elements: URLEncodedFormData...) {
-        self = .array(elements)
+/// Represents application/x-www-form-urlencoded encoded data.
+internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
+    var values: [URLQueryFragment]
+    var children: [String: URLEncodedFormData]
+    
+    var hasOnlyValues: Bool {
+        return children.count == 0
+    }
+    
+    var allChildKeysAreSequentialIntegers: Bool {
+        for i in 0...children.count-1 {
+            if !children.keys.contains(String(i)) {
+                return false
+            }
+        }
+        return true
     }
 
-    /// See `ExpressibleByStringLiteral`.
-    init(stringLiteral value: String) {
-        self = .string(value)
+    init(values: [URLQueryFragment] = [], children: [String: URLEncodedFormData] = [:]) {
+        self.values = values
+        self.children = children
     }
-
-    /// See `ExpressibleByDictionaryLiteral`.
-    init(dictionaryLiteral elements: (String, URLEncodedFormData)...) {
-        self = .dictionary(.init(uniqueKeysWithValues: elements))
+    
+    init(stringLiteral: String) {
+        self.values = [.urlDecoded(stringLiteral)]
+        self.children = [:]
+    }
+    
+    init(arrayLiteral: String...) {
+        self.values = arrayLiteral.map({ (s: String) -> URLQueryFragment in
+            return .urlDecoded(s)
+        })
+        self.children = [:]
+    }
+    
+    init(dictionaryLiteral: (String, URLEncodedFormData)...) {
+        self.values = []
+        self.children = Dictionary(uniqueKeysWithValues: dictionaryLiteral)
+    }
+        
+    mutating func set(value: URLQueryFragment, forPath path: [String]) {
+        guard let firstElement = path.first else {
+            self.values.append(value)
+            return
+        }
+        var child: URLEncodedFormData
+        if let existingChild = self.children[firstElement] {
+            child = existingChild
+        } else {
+            child = []
+        }
+        child.set(value: value, forPath: Array(path[1...]))
+        self.children[firstElement] = child
     }
 }

@@ -2,7 +2,7 @@ public protocol SessionAuthenticator: Authenticator
     where Self.User: SessionAuthenticatable
 {
     /// Authenticate a model with the supplied ID.
-    func resolve(sessionID: User.SessionID) -> EventLoopFuture<User?>
+    func resolve(sessionID: User.SessionID, for request: Request) -> EventLoopFuture<User?>
 }
 
 extension SessionAuthenticator {
@@ -63,34 +63,40 @@ private final class SessionAuthenticationMiddleware<A>: Middleware
     }
 
     /// See Middleware.respond
-    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        // if the user has already been authenticated
+        // by a previous middleware, continue
+        if request.auth.has(A.User.self) {
+            return next.respond(to: request)
+        }
+        
         let future: EventLoopFuture<Void>
-        if let aID = req.session.authenticated(A.User.self) {
+        if let aID = request.session.authenticated(A.User.self) {
             // try to find user with id from session
-            future = self.authenticator.resolve(sessionID: aID).map { a in
+            future = self.authenticator.resolve(sessionID: aID, for: request).map { user in
                 // if the user was found, auth it
-                if let a = a {
-                    req.authenticate(a)
+                if let user = user {
+                    request.auth.login(user)
                 }
             }
         } else {
             // no need to authenticate
-            future = req.eventLoop.makeSucceededFuture(())
+            future = request.eventLoop.makeSucceededFuture(())
         }
 
         // map the auth future to a resopnse
         return future.flatMap { _ in
             // respond to the request
-            return next.respond(to: req).map { res in
-                if let a = req.authenticated(A.User.self) {
+            return next.respond(to: request).map { response in
+                if let user = request.auth.get(A.User.self) {
                     // if a user has been authed (or is still authed), store in the session
-                    req.session.authenticate(a)
-                } else if req.hasSession {
+                    request.session.authenticate(user)
+                } else if request.hasSession {
                     // if no user is authed, it's possible they've been unauthed.
                     // remove from session.
-                    req.session.unauthenticate(A.User.self)
+                    request.session.unauthenticate(A.User.self)
                 }
-                return res
+                return response
             }
         }
     }

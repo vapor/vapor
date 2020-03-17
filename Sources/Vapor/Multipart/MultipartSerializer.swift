@@ -4,13 +4,13 @@
 public final class MultipartSerializer {
     /// Creates a new `MultipartSerializer`.
     public init() { }
-    
+
     public func serialize(parts: [MultipartPart], boundary: String) throws -> String {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         try self.serialize(parts: parts, boundary: boundary, into: &buffer)
-        return buffer.readString(length: buffer.readableBytes)!
+        return String(decoding: buffer.readableBytesView, as: UTF8.self)
     }
-    
+
     /// Serializes the `MultipartForm` to data.
     ///
     ///     let data = try MultipartSerializer().serialize(parts: [part], boundary: "123")

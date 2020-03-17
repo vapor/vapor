@@ -1,0 +1,18 @@
+name: test
+on:
+- pull_request
+jobs:
+  vapor_xenial:
+    container: 
+      image: vapor/swift:5.2-xenial
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: swift test --enable-test-discovery --sanitize=thread
+  vapor_bionic:
+    container: 
+      image: vapor/swift:5.2-bionic
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v1
+    - run: swift test --enable-test-discovery --sanitize=thread

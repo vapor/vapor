@@ -23,14 +23,16 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     
     private let logger: Logger
 
-    var isWritable: Bool
+    var pendingWriteCount: Int
     var hasReadPending: Bool
+    var application: Application
     
-    init(maxBodySize: Int) {
+    init(application: Application, maxBodySize: Int) {
+        self.application = application
         self.maxBodySize = maxBodySize
         self.requestState = .ready
         self.logger = Logger(label: "codes.vapor.server")
-        self.isWritable = true
+        self.pendingWriteCount = 0
         self.hasReadPending = false
     }
     
@@ -43,11 +45,14 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             switch self.requestState {
             case .ready:
                 let request = Request(
+                    application: self.application,
                     method: head.method,
                     url: .init(string: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
-                    on: context.channel
+                    remoteAddress: context.channel.remoteAddress,
+                    logger: self.application.logger,
+                    on: context.channel.eventLoop
                 )
                 switch head.version.major {
                 case 2:
@@ -67,15 +72,11 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 let stream = Request.BodyStream(on: context.eventLoop)
                 request.bodyStorage = .stream(stream)
                 context.fireChannelRead(self.wrapInboundOut(request))
-                let done = stream.write(.buffer(previousBuffer)).flatMap {
-                    stream.write(.buffer(buffer))
-                }
-                self.updateReadability(done, context: context)
+                self.write(.buffer(previousBuffer), to: stream, context: context)
+                self.write(.buffer(buffer), to: stream, context: context)
                 self.requestState = .streamingBody(stream)
             case .streamingBody(let stream):
-                self.isWritable = false
-                let done = stream.write(.buffer(buffer))
-                self.updateReadability(done, context: context)
+                self.write(.buffer(buffer), to: stream, context: context)
             }
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Tail headers are not supported.")
@@ -87,28 +88,27 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 request.bodyStorage = .collected(buffer)
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .streamingBody(let stream):
-                let done = stream.write(.end)
-                self.updateReadability(done, context: context)
+                self.write(.end, to: stream, context: context)
             }
             self.requestState = .ready
         }
     }
 
     func read(context: ChannelHandlerContext) {
-        if self.isWritable {
+        if self.pendingWriteCount <= 0 {
             context.read()
         } else {
             self.hasReadPending = true
         }
     }
 
-    func updateReadability(_ future: EventLoopFuture<Void>, context: ChannelHandlerContext) {
-        self.isWritable = false
-        future.whenComplete { result in
-            self.isWritable = true
+    func write(_ part: BodyStreamResult, to stream: Request.BodyStream, context: ChannelHandlerContext) {
+        self.pendingWriteCount += 1
+        stream.write(part).whenComplete { result in
+            self.pendingWriteCount -= 1
             if self.hasReadPending {
                 self.hasReadPending = false
-                context.read()
+                self.read(context: context)
             }
             switch result {
             case .failure(let error):

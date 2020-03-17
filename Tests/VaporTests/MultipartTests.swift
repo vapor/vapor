@@ -1,5 +1,5 @@
-import Vapor
 import XCTest
+import Vapor
 
 class MultipartTests: XCTestCase {
     let named = """
@@ -7,7 +7,7 @@ class MultipartTests: XCTestCase {
     aijdisadi>SDASD<a|
 
     """
-    
+
     let multinamed = """
     test123
     aijdisadi>dwekqie4u219034u129e0wque90qjsd90asffs
@@ -16,7 +16,7 @@ class MultipartTests: XCTestCase {
     SDASD<a|
 
     """
-    
+
     func testBasics() throws {
         let data = """
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn\r\n\
@@ -34,16 +34,16 @@ class MultipartTests: XCTestCase {
         ------WebKitFormBoundaryPVOZifB9OqEwP2fn--\r\n
         """
         let parser = MultipartParser(boundary: "----WebKitFormBoundaryPVOZifB9OqEwP2fn")
-        
+
         var parts: [MultipartPart] = []
-        var headers: [String: String] = [:]
+        var headers: HTTPHeaders = [:]
         var body: String = ""
-        
+
         parser.onHeader = { (field, value) in
-            headers[field] = value
+            headers.replaceOrAdd(name: field, value: value)
         }
         parser.onBody = { new in
-            body += new.readString(length: new.readableBytes)!
+            body += new.string
         }
         parser.onPartComplete = {
             let part = MultipartPart(headers: headers, body: body)
@@ -51,12 +51,12 @@ class MultipartTests: XCTestCase {
             body = ""
             parts.append(part)
         }
-        
+
         try parser.execute(data)
         XCTAssertEqual(parts.count, 3)
-        XCTAssertEqual(parts.firstPart(named: "test")?.body.readableViewString, "eqw-dd-sa----123;1[234")
-        XCTAssertEqual(parts.firstPart(named: "named")?.body.readableViewString, named)
-        XCTAssertEqual(parts.firstPart(named: "multinamed[]")?.body.readableViewString, multinamed)
+        XCTAssertEqual(parts.firstPart(named: "test")?.body.string, "eqw-dd-sa----123;1[234")
+        XCTAssertEqual(parts.firstPart(named: "named")?.body.string, named)
+        XCTAssertEqual(parts.firstPart(named: "multinamed[]")?.body.string, multinamed)
 
         let serialized = try MultipartSerializer().serialize(parts: parts, boundary: "----WebKitFormBoundaryPVOZifB9OqEwP2fn")
         XCTAssertEqual(serialized, data)
@@ -80,14 +80,14 @@ class MultipartTests: XCTestCase {
         """
         let parser = MultipartParser(boundary: "----WebKitFormBoundaryPVOZifB9OqEwP2fn")
         var parts: [MultipartPart] = []
-        var headers: [String: String] = [:]
+        var headers: HTTPHeaders = [:]
         var body: String = ""
-        
+
         parser.onHeader = { (field, value) in
-            headers[field] = value
+            headers.replaceOrAdd(name: field, value: value)
         }
         parser.onBody = { new in
-            body += new.readString(length: new.readableBytes)!
+            body += new.string
         }
         parser.onPartComplete = {
             let part = MultipartPart(headers: headers, body: body)
@@ -97,7 +97,7 @@ class MultipartTests: XCTestCase {
         }
         try parser.execute(data)
         let file = parts.firstPart(named: "multinamed[]")?.body
-        XCTAssertEqual(file?.readableViewString, named)
+        XCTAssertEqual(file?.string, named)
         try XCTAssertEqual(MultipartSerializer().serialize(parts: parts, boundary: "----WebKitFormBoundaryPVOZifB9OqEwP2fn"), data)
     }
 
@@ -177,7 +177,7 @@ class MultipartTests: XCTestCase {
         XCTAssert(foo.files.contains("picture.jpg"))
         print(foo.files)
     }
-    
+
     func testFormDataDecoderW3Streaming() throws {
         /// Content-Type: multipart/form-data; boundary=12345
         let data = """
@@ -200,7 +200,7 @@ class MultipartTests: XCTestCase {
         --abcde--\r\n\
         --12345--\r\n
         """
-        
+
         let expected = [
             MultipartPart(
                 headers: ["Content-Disposition": "form-data; name=\"sometext\""],
@@ -211,24 +211,24 @@ class MultipartTests: XCTestCase {
                 body: "--abcde\r\nContent-Disposition: file; file=\"picture.jpg\"\r\n\r\ncontent of jpg...abcde\r\nContent-Disposition: file; file=\"test.py\"\r\n\r\ncontent of test.py file ....abcde--"
             )
         ]
-        
+
         struct Foo: Decodable {
             var sometext: String
             var files: String
         }
-        
+
         for i in 1..<data.count {
             let parser = MultipartParser(boundary: "12345")
 
             var parts: [MultipartPart] = []
-            var headers: [String: String] = [:]
+            var headers: HTTPHeaders = [:]
             var body: String = ""
-            
+
             parser.onHeader = { (field, value) in
-                headers[field] = value
+                headers.replaceOrAdd(name: field, value: value)
             }
             parser.onBody = { new in
-                body += new.readString(length: new.readableBytes)!
+                body += new.string
             }
             parser.onPartComplete = {
                 let part = MultipartPart(headers: headers, body: body)
@@ -240,7 +240,7 @@ class MultipartTests: XCTestCase {
             for chunk in data.chunked(by: i) {
                 try parser.execute(.init(chunk))
             }
-            
+
             XCTAssertEqual(parts, expected)
         }
     }
@@ -295,27 +295,6 @@ class MultipartTests: XCTestCase {
         XCTAssertEqual(foo.bool, true)
     }
 
-    func testFormDataDecoderFile() throws {
-        /// Content-Type: multipart/form-data; boundary=12345
-        let data = """
-        --hello\r\n\
-        Content-Disposition: form-data; name="file"; filename=foo.txt\r\n\
-        \r\n\
-        string\r\n\
-        --hello--\r\n
-        """
-
-        struct Foo: Decodable {
-            var file: File
-        }
-
-        let foo = try FormDataDecoder().decode(Foo.self, from: data, boundary: "hello")
-        XCTAssertEqual(foo.file.data.readableViewString, "string")
-        XCTAssertEqual(foo.file.filename, "foo.txt")
-        XCTAssertEqual(foo.file.contentType, HTTPMediaType.plainText)
-        XCTAssertEqual(foo.file.extension, "txt")
-    }
-
     func testDocBlocks() throws {
         do {
             /// Content-Type: multipart/form-data; boundary=123
@@ -327,14 +306,14 @@ class MultipartTests: XCTestCase {
             """
             let parser = MultipartParser(boundary: "123")
             var parts: [MultipartPart] = []
-            var headers: [String: String] = [:]
+            var headers: HTTPHeaders = [:]
             var body: String = ""
-            
+
             parser.onHeader = { (field, value) in
-                headers[field] = value
+                headers.replaceOrAdd(name: field, value: value)
             }
             parser.onBody = { new in
-                body += new.readString(length: new.readableBytes)!
+                body += new.string
             }
             parser.onPartComplete = {
                 let part = MultipartPart(headers: headers, body: body)
@@ -351,32 +330,6 @@ class MultipartTests: XCTestCase {
             XCTAssertEqual(data, "--123\r\n\r\nfoo\r\n--123--\r\n")
         }
     }
-
-    func testMultipleFile() throws {
-        struct UserFiles: Decodable {
-            var upload: [File]
-        }
-
-        /// Content-Type: multipart/form-data; boundary=123
-        let data = """
-        --123\r\n\
-        Content-Disposition: form-data; name="upload[]"; filename=foo1.txt\r\n\
-        \r\n\
-        upload1\r\n\
-        --123\r\n\
-        Content-Disposition: form-data; name="upload[]"; filename=foo2.txt\r\n\
-        \r\n\
-        upload2\r\n\
-        --123\r\n\
-        Content-Disposition: form-data; name="upload[]"; filename=foo3.txt\r\n\
-        \r\n\
-        upload3\r\n\
-        --123--\r\n
-        """
-
-        let files = try FormDataDecoder().decode(UserFiles.self, from: data, boundary: "123")
-        XCTAssertEqual(files.upload.count, 3)
-    }
 }
 
 // https://stackoverflow.com/a/54524110/1041105
@@ -392,8 +345,8 @@ private extension Collection {
     }
 }
 
-private extension ByteBuffer {
-    var readableViewString: String {
-        return self.getString(at: self.readerIndex, length: self.readableBytes) ?? "<nil>"
+extension ByteBuffer {
+    var string: String {
+        return String(decoding: self.readableBytesView, as: UTF8.self)
     }
 }

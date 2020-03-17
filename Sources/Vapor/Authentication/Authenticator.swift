@@ -12,7 +12,7 @@ public protocol RequestAuthenticator: Authenticator {
 // MARK: Basic
 
 public protocol BasicAuthenticator: RequestAuthenticator {
-    func authenticate(basic: BasicAuthorization) -> EventLoopFuture<User?>
+    func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<User?>
 }
 
 extension BasicAuthenticator {
@@ -20,14 +20,14 @@ extension BasicAuthenticator {
         guard let basicAuthorization = request.headers.basicAuthorization else {
             return request.eventLoop.makeSucceededFuture(nil)
         }
-        return self.authenticate(basic: basicAuthorization)
+        return self.authenticate(basic: basicAuthorization, for: request)
     }
 }
 
 // MARK: Bearer
 
 public protocol BearerAuthenticator: RequestAuthenticator {
-    func authenticate(bearer: BearerAuthorization) -> EventLoopFuture<User?>
+    func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<User?>
 }
 
 extension BearerAuthenticator {
@@ -35,41 +35,15 @@ extension BearerAuthenticator {
         guard let bearerAuthorization = request.headers.bearerAuthorization else {
             return request.eventLoop.makeSucceededFuture(nil)
         }
-        return self.authenticate(bearer: bearerAuthorization)
+        return self.authenticate(bearer: bearerAuthorization, for: request)
     }
-}
-
-// MARK: User Token
-
-public protocol UserTokenAuthenticator: RequestAuthenticator {
-    associatedtype TokenAuthenticator: RequestAuthenticator where
-        TokenAuthenticator.User: AuthenticationToken,
-        TokenAuthenticator.User.User == User
-
-    var tokenAuthenticator: TokenAuthenticator { get }
-    func authenticate(token: TokenAuthenticator.User) -> EventLoopFuture<User?>
-}
-
-extension UserTokenAuthenticator {
-    public func authenticate(request: Request) -> EventLoopFuture<User?> {
-        return self.tokenAuthenticator.authenticate(request: request).flatMap { token in
-            guard let token = token else {
-                return request.eventLoop.makeSucceededFuture(nil)
-            }
-            return self.authenticate(token: token)
-        }
-    }
-}
-
-public protocol AuthenticationToken {
-    associatedtype User
 }
 
 // MARK: Credentials
 
 public protocol CredentialsAuthenticator: RequestAuthenticator {
     associatedtype Credentials: Content
-    func authenticate(credentials: Credentials) -> EventLoopFuture<User?>
+    func authenticate(credentials: Credentials, for request: Request) -> EventLoopFuture<User?>
 }
 
 extension CredentialsAuthenticator {
@@ -81,7 +55,7 @@ extension CredentialsAuthenticator {
             request.logger.error("Could not decode credentials: \(error)")
             return request.eventLoop.makeSucceededFuture(nil)
         }
-        return self.authenticate(credentials: credentials)
+        return self.authenticate(credentials: credentials, for: request)
     }
 }
 
@@ -106,7 +80,7 @@ private final class RequestAuthenticationMiddleware<A>: Middleware
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue
-        if request.isAuthenticated(A.User.self) {
+        if request.auth.has(A.User.self) {
             return next.respond(to: request)
         }
 
@@ -114,7 +88,7 @@ private final class RequestAuthenticationMiddleware<A>: Middleware
         return self.authenticator.authenticate(request: request).flatMap { a in
             if let a = a {
                 // set authed on request
-                request.authenticate(a)
+                request.auth.login(a)
             }
             return next.respond(to: request)
         }

@@ -1,8 +1,6 @@
 /// Simple in-memory sessions implementation.
-public struct MemorySessions: Sessions {
+public struct MemorySessions: SessionDriver {
     public let storage: Storage
-    
-    public let eventLoop: EventLoop
     
     public final class Storage {
         public var sessions: [SessionID: SessionData]
@@ -13,33 +11,44 @@ public struct MemorySessions: Sessions {
         }
     }
 
-    /// Create a new `MemorySessions` with the supplied cookie factory.
-    public init(storage: Storage, on eventLoop: EventLoop) {
+    public init(storage: Storage) {
         self.storage = storage
-        self.eventLoop = eventLoop
     }
 
-    public func createSession(_ data: SessionData) -> EventLoopFuture<SessionID> {
+    public func createSession(
+        _ data: SessionData,
+        for request: Request
+    ) -> EventLoopFuture<SessionID> {
         let sessionID = self.generateID()
         self.storage.queue.sync {
             self.storage.sessions[sessionID] = data
         }
-        return self.eventLoop.makeSucceededFuture(sessionID)
+        return request.eventLoop.makeSucceededFuture(sessionID)
     }
     
-    public func readSession(_ sessionID: SessionID) -> EventLoopFuture<SessionData?> {
+    public func readSession(
+        _ sessionID: SessionID,
+        for request: Request
+    ) -> EventLoopFuture<SessionData?> {
         let session = self.storage.queue.sync { self.storage.sessions[sessionID] }
-        return self.eventLoop.makeSucceededFuture(session)
+        return request.eventLoop.makeSucceededFuture(session)
     }
     
-    public func updateSession(_ sessionID: SessionID, to data: SessionData) -> EventLoopFuture<SessionID> {
+    public func updateSession(
+        _ sessionID: SessionID,
+        to data: SessionData,
+        for request: Request
+    ) -> EventLoopFuture<SessionID> {
         self.storage.queue.sync { self.storage.sessions[sessionID] = data }
-        return self.eventLoop.makeSucceededFuture(sessionID)
+        return request.eventLoop.makeSucceededFuture(sessionID)
     }
     
-    public func deleteSession(_ sessionID: SessionID) -> EventLoopFuture<Void> {
+    public func deleteSession(
+        _ sessionID: SessionID,
+        for request: Request
+    ) -> EventLoopFuture<Void> {
         self.storage.queue.sync { self.storage.sessions[sessionID] = nil }
-        return self.eventLoop.makeSucceededFuture(())
+        return request.eventLoop.makeSucceededFuture(())
     }
     
     private func generateID() -> SessionID {

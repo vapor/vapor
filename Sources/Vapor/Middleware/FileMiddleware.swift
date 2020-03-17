@@ -9,13 +9,10 @@ public final class FileMiddleware: Middleware {
     /// The public directory.
     /// - note: Must end with a slash.
     private let publicDirectory: String
-    
-    private let fileio: FileIO
 
     /// Creates a new `FileMiddleware`.
-    public init(publicDirectory: String, fileio: FileIO) {
+    public init(publicDirectory: String) {
         self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
-        self.fileio = fileio
     }
 
     /// See `Middleware`.
@@ -30,11 +27,11 @@ public final class FileMiddleware: Middleware {
 
         // protect against relative paths
         guard !path.contains("../") else {
-            return self.fileio.eventLoop.makeFailedFuture(Abort(.forbidden))
+            return request.eventLoop.makeFailedFuture(Abort(.forbidden))
         }
 
         // create absolute file path
-        let filePath = publicDirectory + path
+        let filePath = self.publicDirectory + (path.removingPercentEncoding ?? path)
 
         // check if file exists and is not a directory
         var isDir: ObjCBool = false
@@ -43,7 +40,7 @@ public final class FileMiddleware: Middleware {
         }
 
         // stream the file
-        let res = self.fileio.streamFile(at: filePath, for: request)
-        return self.fileio.eventLoop.makeSucceededFuture(res)
+        let res = request.fileio.streamFile(at: filePath)
+        return request.eventLoop.makeSucceededFuture(res)
     }
 }

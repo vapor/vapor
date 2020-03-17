@@ -1,5 +1,5 @@
 public protocol ViewRenderer {
-    var eventLoop: EventLoop { get }
+    func `for`(_ request: Request) -> ViewRenderer
     func render<E>(_ name: String, _ context: E) -> EventLoopFuture<View>
         where E: Encodable
 }

@@ -1,5 +1,15 @@
 import NIO
 
+extension Request {
+    public var fileio: FileIO {
+        return .init(
+            io: self.application.fileio,
+            allocator: self.application.allocator,
+            request: self
+        )
+    }
+}
+
 // MARK: FileIO
 
 /// `FileIO` is a convenience wrapper around SwiftNIO's `NonBlockingFileIO`.
@@ -30,17 +40,17 @@ public struct FileIO {
 
     /// ByteBufferAllocator to use for generating buffers.
     private let allocator: ByteBufferAllocator
-
-    /// Event loop for async work.
-    public let eventLoop: EventLoop
+    
+    /// HTTP request context.
+    private let request: Request
 
     /// Creates a new `FileIO`.
     ///
     /// See `Request.fileio()` to create one.
-    internal init(io: NonBlockingFileIO, allocator: ByteBufferAllocator, on eventLoop: EventLoop) {
+    internal init(io: NonBlockingFileIO, allocator: ByteBufferAllocator, request: Request) {
         self.io = io
         self.allocator = allocator
-        self.eventLoop = eventLoop
+        self.request = request
     }
 
     /// Reads the contents of a file at the supplied path.
@@ -56,7 +66,7 @@ public struct FileIO {
         return self.readFile(at: file) { new in
             var new = new
             data.writeBuffer(&new)
-            return self.eventLoop.makeSucceededFuture(())
+            return self.request.eventLoop.makeSucceededFuture(())
         }.map { data }
     }
 
@@ -80,7 +90,7 @@ public struct FileIO {
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
             let fileSize = attributes[.size] as? NSNumber
         else {
-            return self.eventLoop.makeFailedFuture(Abort(.internalServerError))
+            return self.request.eventLoop.makeFailedFuture(Abort(.internalServerError))
         }
         return self.read(path: path, fileSize: fileSize.intValue, chunkSize: chunkSize, onRead: onRead)
     }
@@ -99,7 +109,7 @@ public struct FileIO {
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    public func streamFile(at path: String, for request: Request, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> Response {
+    public func streamFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> Response {
         // Get file attributes for this file.
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
@@ -151,10 +161,21 @@ public struct FileIO {
 
     /// Private read method. `onRead` closure uses ByteBuffer and expects future return.
     /// There may be use in publicizing this in the future for reads that must be async.
-    private func read(path: String, fileSize: Int, chunkSize: Int, onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>) -> EventLoopFuture<Void> {
+    private func read(
+        path: String,
+        fileSize: Int,
+        chunkSize: Int,
+        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+    ) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path)
-            let done = self.io.readChunked(fileHandle: fd, byteCount: fileSize, chunkSize: chunkSize, allocator: allocator, eventLoop: eventLoop) { chunk in
+            let done = self.io.readChunked(
+                fileHandle: fd,
+                byteCount: fileSize,
+                chunkSize: chunkSize,
+                allocator: allocator,
+                eventLoop: self.request.eventLoop
+            ) { chunk in
                 return onRead(chunk)
             }
             done.whenComplete { _ in
@@ -162,7 +183,7 @@ public struct FileIO {
             }
             return done
         } catch {
-            return eventLoop.makeFailedFuture(error)
+            return self.request.eventLoop.makeFailedFuture(error)
         }
     }
 }

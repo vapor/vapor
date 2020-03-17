@@ -1,10 +1,10 @@
 #!/bin/sh
 
 function help() {
-    echo "📖  Visit our docs for step-by-step instructions on installing Swift correctly."
+    echo "📖 Visit our docs for step-by-step instructions on installing Swift correctly."
     echo "http://docs.vapor.codes"
     echo ""
-    echo "👋  or Join our Discord and we'll help you get setup."
+    echo "👋 or Join our Discord and we'll help you get setup."
     echo "http://vapor.team"
 }
 
@@ -13,11 +13,9 @@ function check_vapor() {
 
     if [[ $SWIFTC == "" ]];
     then
-        echo "❌  Cannot find Swift."
+        echo "❌ Cannot find Swift."
         echo ""
-        echo "ℹ️  'which swift' is empty."
-        echo ""
-        help
+        echo "ℹ️ 'which swift' is empty."
         return 1;
     fi
 
@@ -25,89 +23,62 @@ function check_vapor() {
     if [[ $OS == "Darwin" ]]; # macOS
     then
         XCBVERSION=`xcodebuild -version`
-        if [[ $XCBVERSION == *"Xcode 8"* ]];
+        if  [[ $XCBVERSION == *"Xcode 9.3"* ]] || 
+            [[ $XCBVERSION == *"Xcode 9.4"* ]] || 
+            [[ $XCBVERSION == *"Xcode 9.5"* ]] || 
+            [[ $XCBVERSION == *"Xcode 10."* ]] || 
+            [[ $XCBVERSION == *"Xcode 11."* ]] || 
+            [[ $XCBVERSION == *"Xcode 12."* ]] || 
+            [[ $XCBVERSION == *"Xcode 13."* ]];
         then
-            echo "✅  Xcode 8 is compatible with Vapor 2."
-            echo "❌  Xcode 9.3 or later is required for Vapor 3."
-            echo ""
-        elif [[ $XCBVERSION == *"Xcode 9"* ]];
-        then
-            if [[ $XCBVERSION == *"Xcode 9.3"* ]];
-            then
-                echo "✅  Xcode 9.3 is compatible with Vapor 2."
-                echo "✅  Xcode 9.3 is compatible with Vapor 3."
-                echo ""
-            elif [[ $XCBVERSION == *"Xcode 9.4"* ]];
-            then
-                echo "✅  Xcode 9.4 is compatible with Vapor 2."
-                echo "✅  Xcode 9.4 is compatible with Vapor 3."
-                echo ""
-            else
-                echo "✅  Xcode 9 is compatible with Vapor 2."
-                echo "❌  Xcode 9.3 or later is required for Vapor 3."
-                echo ""
-            fi
-        elif [[ $XCBVERSION == *"Xcode 10"* ]];
-        then
-            echo "✅  Xcode 10 is compatible with Vapor 2."
-            echo "✅  Xcode 10 is compatible with Vapor 3."
-            echo ""
+            echo "✅ Xcode 9.3 or later is compatible with Vapor 3"
         else
-            echo "⚠️  We don't recognize your Command Line Tools version."
-            echo ""
-            echo "Open Xcode and make sure the correct SDK is selected:"
-            echo "👀  Xcode > Preferences > Locations > Command Line Tools"
-            echo ""
-            echo "Expected: Xcode 9 or 10 (Any Build Number)"
-            echo "Current: $XCBVERSION"
-            echo ""
-            help
-            return 1;
+            echo "❌ Xcode 9.3 or later is required for Vapor 3"
+        fi
+        if  [[ $XCBVERSION == *"Xcode 11."* ]] || 
+            [[ $XCBVERSION == *"Xcode 12."* ]] || 
+            [[ $XCBVERSION == *"Xcode 13."* ]];
+        then
+            echo "✅ Xcode 11.0 or later is compatible with Vapor 4"
+        else
+            echo "❌ Xcode 11.0 or later is required for Vapor 4"
         fi
     fi
 
     SWIFTV=`swift --version`
 
-    if [[ $SWIFTV == *"Swift version 3.1"* ]];
+    if  [[ $SWIFTV == *"Swift version 4.1"* ]] || 
+        [[ $SWIFTV == *"Swift version 4.2"* ]] || 
+        [[ $SWIFTV == *"Swift version 4.3"* ]] || 
+        [[ $SWIFTV == *"Swift version 4.4"* ]] || 
+        [[ $SWIFTV == *"Swift version 4.5"* ]] || 
+        [[ $SWIFTV == *"Swift version 5."* ]] || 
+        [[ $SWIFTV == *"Swift version 6."* ]] || 
+        [[ $SWIFTV == *"Swift version 7."* ]] || 
+        [[ $SWIFTV == *"Swift version 8."* ]];
     then
-        echo "✅  Swift 3.1 is compatible with Vapor 2."
-        echo "❌  Swift 4.1 or later is required for Vapor 3."
-        return 0;
-    elif [[ $SWIFTV == *"Swift version 4.0"* ]];
-    then
-        echo "✅  Swift 4.0 is compatible with Vapor 2."
-        echo "❌  Swift 4.1 or later is required for Vapor 3."
-        return 0;
-    elif [[ $SWIFTV == *"Swift version 4.1"* ]];
-    then
-        echo "✅  Swift 4.1 is compatible with Vapor 2."
-        echo "✅  Swift 4.1 is compatible with Vapor 3."
-        return 0;
-    elif [[ $SWIFTV == *"Swift version 4.2"* ]];
-    then
-        echo "✅  Swift 4.2 is compatible with Vapor 2."
-        echo "✅  Swift 4.2 is compatible with Vapor 3."
-        echo ""
-        return 0;
-    elif [[ $SWIFTV == *"Swift version 5."* ]];
-    then
-        echo "⚠️  Swift 5 support matrix hasn't been determined yet. Reach out to the developers on GitHub or Slack."
-        echo ""
-        help
-        return 1;
+        echo "✅ Swift 4.1 or later is compatible with Vapor 3"
     else
-        echo "❌  Swift 3.1 or later is required for Vapor 2."
-        echo "❌  Swift 4.1 or later is required for Vapor 3."
-        echo ""
-        echo "'swift --version' output:"
-        echo $SWIFTV
-        echo ""
-        echo "Output does not contain any of the expected versions."
-        echo "It's possible your version (especially newer Swift) may still work."
-        echo ""
-        help
-        return 1;
+        echo "❌ Swift 4.1 or later is required for Vapor 3"
+    fi
+
+    if  [[ $SWIFTV == *"Swift version 5.1"* ]] || 
+        [[ $SWIFTV == *"Swift version 5.2"* ]] || 
+        [[ $SWIFTV == *"Swift version 5.3"* ]] || 
+        [[ $SWIFTV == *"Swift version 5.4"* ]] || 
+        [[ $SWIFTV == *"Swift version 5.5"* ]] || 
+        [[ $SWIFTV == *"Swift version 6."* ]] || 
+        [[ $SWIFTV == *"Swift version 7."* ]] || 
+        [[ $SWIFTV == *"Swift version 8."* ]];
+    then
+        echo "✅ Swift 5.1 or later is compatible with Vapor 4"
+    else
+        echo "❌ Swift 5.1 or later is required for Vapor 4"
     fi
 }
 
 check_vapor;
+
+echo "";
+
+help;

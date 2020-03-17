@@ -27,9 +27,20 @@ public struct Abort: AbortError {
 
     /// See `AbortError`
     public var reason: String
+
+    /// The file throwing this error
+    public var file: String
     
-    public var description: String {
-        return "Abort \(self.status.code): \(self.reason)"
+    /// The function throwing this error
+    public var function: String
+    
+    /// The line where the error is thrown
+    public var line: Int
+    
+    /// Wrap this error's source location into a usable struct for
+    /// the `AbortError` protocol.
+    public var source: ErrorSource? {
+        ErrorSource(file: self.file, function: self.function, line: self.line)
     }
 
     /// Create a new `Abort`, capturing current source location info.
@@ -41,12 +52,14 @@ public struct Abort: AbortError {
         suggestedFixes: [String] = [],
         file: String = #file,
         function: String = #function,
-        line: UInt = #line,
-        column: UInt = #column
+        line: Int = #line
     ) {
-        self.identifier = status.code.description
+        self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
+        self.file = file
+        self.function = function
+        self.line = line
     }
 }
