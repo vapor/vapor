@@ -1,3 +1,5 @@
+import Crypto
+
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -74,9 +76,7 @@ extension Content {
         // have to encode with a single known type that doesn't change.
         let data = try JSONEncoder().encode(self)
 
-        let eTag = Insecure.MD5.hash(data: data).reduce("") {
-          $0 + String(format: "%02hhx", $1)
-        }
+        let eTag = Array(SHA256.hash(data: data)).hexEncodedString()
 
         return #""\#(eTag)""#
     }
