@@ -40,12 +40,27 @@ final class ETagTests: XCTestCase {
     func testIfNoneMatchHeaderMatches() throws {
         let dto = DTO()
         let eTag = try XCTUnwrap(dto.eTag())
-        let response = try Response.withETag(dto, ifNoneMatchHeaders: eTag)
+
+        var headers = HTTPHeaders()
+        headers.add(name: .ifNoneMatch, value: eTag)
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let request = Request(application: app, headers: headers, on: app.eventLoopGroup.next())
+        let response = try Response.withETag(dto, req: request)
         XCTAssertEqual(response.status, .notModified)
     }
 
     func testIfNoneMatchDoesNotMatch() throws {
-        let response = try Response.withETag(DTO(), ifNoneMatchHeaders: UUID().uuidString)
+        var headers = HTTPHeaders()
+        headers.add(name: .ifNoneMatch, value: UUID().uuidString)
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let request = Request(application: app, headers: headers, on: app.eventLoopGroup.next())
+        let response = try Response.withETag(DTO(), req: request)
         XCTAssertEqual(response.status, .ok)
     }
 
@@ -53,8 +68,15 @@ final class ETagTests: XCTestCase {
         let dto = DTO()
         let eTag = try XCTUnwrap(dto.eTag())
 
-        let headers = "abc, \(eTag), def"
-        let response = try Response.withETag(dto, ifNoneMatchHeaders: headers)
+        var headers = HTTPHeaders()
+        headers.add(name: .ifNoneMatch, value: "abc, \(eTag), def")
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let request = Request(application: app, headers: headers, on: app.eventLoopGroup.next())
+
+        let response = try Response.withETag(dto, req: request)
         XCTAssertEqual(response.status, .notModified)
     }
 }
