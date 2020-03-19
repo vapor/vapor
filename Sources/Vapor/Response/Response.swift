@@ -142,16 +142,21 @@ public final class Response: CustomStringConvertible {
     ///  whether or not to include the response body when performing a `PATCH` call, for example.
     ///  You want the `ETag` header to be included, but you may or may not want the body.
     ///
+    ///  If you want to support returning a status code of 304 (Not Modified) you can pass the value
+    ///  of the `.ifNoneMatch` header from the request in the `ifNotModifiedHeaders` parameter.
+    ///
     /// - Parameters:
     ///   - obj: The object which is (possibly) being encoded and used to calculate the ETag
     ///   - includeBody: Whether or not the `obj` should be included in the body.
     ///   - justCreated: Whether this is a newly created object or not. Determines 201 vs. 200 status
+    ///   - ifNotModifiedHeaders: The value of the HTTP `If-None-Match` header.
     /// - Throws: If the encoding fails, or the ETag can't be generated.
     /// - Returns: A `Response`
     public static func withETag<T>(
         _ obj: T,
         includeBody: Bool = true,
-        justCreated: Bool = false
+        justCreated: Bool = false,
+        ifNoneMatchHeaders: String? = nil
     ) throws -> Response where T: Content {
         let status: HTTPStatus
         if justCreated {
@@ -164,12 +169,28 @@ public final class Response: CustomStringConvertible {
 
         let response = Response(status: status)
 
-        if includeBody {
-            try response.content.encode(obj)
+        if let eTag = try obj.eTag(), !eTag.isEmpty {
+            if let ifNoneMatchHeaders = ifNoneMatchHeaders {
+                var cs = CharacterSet.whitespacesAndNewlines
+                cs.insert(",")
+
+                let comparisons = ifNoneMatchHeaders
+                    .components(separatedBy: cs)
+                    .filter { !$0.isEmpty }
+
+                for comparison in comparisons {
+                    if eTag == comparison {
+                        response.status = .notModified
+                        return response
+                    }
+                }
+            }
+
+            response.headers.add(name: .eTag, value: eTag)
         }
 
-        if let eTag = try obj.eTag(), !eTag.isEmpty {
-            response.headers.add(name: .eTag, value: eTag)
+        if includeBody {
+            try response.content.encode(obj)
         }
 
         return response

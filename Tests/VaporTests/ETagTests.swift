@@ -36,9 +36,30 @@ final class ETagTests: XCTestCase {
         let eTag = try XCTUnwrap(DTO().eTag())
         XCTAssertNotNil(eTag.range(of: Self.regex, options: .regularExpression))
     }
+
+    func testIfNoneMatchHeaderMatches() throws {
+        let dto = DTO()
+        let eTag = try XCTUnwrap(dto.eTag())
+        let response = try Response.withETag(dto, ifNoneMatchHeaders: eTag)
+        XCTAssertEqual(response.status, .notModified)
+    }
+
+    func testIfNoneMatchDoesNotMatch() throws {
+        let response = try Response.withETag(DTO(), ifNoneMatchHeaders: UUID().uuidString)
+        XCTAssertEqual(response.status, .ok)
+    }
+
+    func testIfNonMatchWithList() throws {
+        let dto = DTO()
+        let eTag = try XCTUnwrap(dto.eTag())
+
+        let headers = "abc, \(eTag), def"
+        let response = try Response.withETag(dto, ifNoneMatchHeaders: headers)
+        XCTAssertEqual(response.status, .notModified)
+    }
 }
 
 
 private struct DTO: Content {
-    let data = "something"
+    let data = UUID().uuidString
 }
