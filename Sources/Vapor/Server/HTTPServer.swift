@@ -335,7 +335,7 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         self.logger.error("Unhandled HTTP server error: \(error)")
-        context.close(promise: nil)
+        context.close(mode: .output, promise: nil)
     }
 }
 
