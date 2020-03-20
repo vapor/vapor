@@ -172,6 +172,10 @@ public func routes(_ app: Application) throws {
             .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
             .unwrap(or: Abort(.badRequest))
     }
+
+    app.on(.POST, "max-256", body: .collect(maxSize: 256)) { req in
+        req.body.data?.readableBytes ?? 0
+    }
 }
 
 struct TestError: AbortError {

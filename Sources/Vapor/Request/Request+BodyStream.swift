@@ -35,20 +35,33 @@ extension Request {
         func consume(max: Int?, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
             let promise = eventLoop.makePromise(of: ByteBuffer.self)
             var data = ByteBufferAllocator().buffer(capacity: 0)
+            var error: Error?
             self.read { chunk, next in
                 switch chunk {
                 case .buffer(var buffer):
-                    if let max = max, data.readableBytes + buffer.readableBytes >= max {
-                        promise.fail(Abort(.payloadTooLarge))
+                    if error != nil {
+                        // Don't append bytes if we are in error state.
+                    } else if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                        error = Abort(.payloadTooLarge)
                     } else {
                         data.writeBuffer(&buffer)
                     }
-                case .error(let error): promise.fail(error)
-                case .end: promise.succeed(data)
+                case .error(let error):
+                    promise.fail(error)
+                case .end:
+                    if let error = error {
+                        promise.fail(error)
+                    } else {
+                        promise.succeed(data)
+                    }
                 }
                 next?.succeed(())
             }
             return promise.futureResult
+        }
+
+        deinit {
+            assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
         }
     }
 }
