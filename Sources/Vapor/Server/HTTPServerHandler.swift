@@ -38,7 +38,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             let done = context.write(self.wrapOutboundOut(response))
             if !request.isKeepAlive {
                 done.whenComplete { _ in
-                    context.close(promise: nil)
+                    context.close(mode: .output, promise: nil)
                 }
             }
         }
