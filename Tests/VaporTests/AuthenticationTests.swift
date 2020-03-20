@@ -3,18 +3,20 @@ import XCTVapor
 final class AuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
+            static func authenticator() -> Authenticator {
+                TestAuthenticator()
+            }
+
             var name: String
         }
 
         struct TestAuthenticator: BearerAuthenticator {
-            typealias User = Test
-
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
-                guard bearer.token == "test" else {
-                    return request.eventLoop.makeSucceededFuture(nil)
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                if bearer.token == "test" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
                 }
-                let test = Test(name: "Vapor")
-                return request.eventLoop.makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -22,7 +24,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            TestAuthenticator().middleware(), Test.guardMiddleware()
+            Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
@@ -38,18 +40,22 @@ final class AuthenticationTests: XCTestCase {
 
     func testBasicAuthenticator() throws {
         struct Test: Authenticatable {
+            static func authenticator() -> Authenticator {
+                TestAuthenticator()
+            }
+
             var name: String
         }
 
         struct TestAuthenticator: BasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Test?> {
-                guard basic.username == "test" && basic.password == "secret" else {
-                    return request.eventLoop.makeSucceededFuture(nil)
+            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                if basic.username == "test" && basic.password == "secret" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
                 }
-                let test = Test(name: "Vapor")
-                return request.eventLoop.makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -57,7 +63,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            TestAuthenticator().middleware(), Test.guardMiddleware()
+            Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
@@ -73,6 +79,14 @@ final class AuthenticationTests: XCTestCase {
 
     func testSessionAuthentication() throws {
         struct Test: Authenticatable, SessionAuthenticatable {
+            static func bearerAuthenticator() -> Authenticator {
+                TestBearerAuthenticator()
+            }
+
+            static func sessionAuthenticator() -> Authenticator {
+                TestSessionAuthenticator()
+            }
+
             var sessionID: String? {
                 return self.name
             }
@@ -82,21 +96,22 @@ final class AuthenticationTests: XCTestCase {
         struct TestBearerAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
-                guard bearer.token == "test" else {
-                    return request.eventLoop.makeSucceededFuture(nil)
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                if bearer.token == "test" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
                 }
-                let test = Test(name: "Vapor")
-                return request.eventLoop.makeSucceededFuture(test)
+                return request.eventLoop.makeSucceededFuture(())
             }
         }
 
         struct TestSessionAuthenticator: SessionAuthenticator {
             typealias User = Test
 
-            func resolve(sessionID: String, for request: Request) -> EventLoopFuture<Test?> {
+            func authenticate(sessionID: String, for request: Request) -> EventLoopFuture<Void> {
                 let test = Test(name: sessionID)
-                return request.eventLoop.makeSucceededFuture(test)
+                request.auth.login(test)
+                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -105,8 +120,8 @@ final class AuthenticationTests: XCTestCase {
         
         app.routes.grouped([
             SessionsMiddleware(session: app.sessions.driver),
-            TestSessionAuthenticator().middleware(),
-            TestBearerAuthenticator().middleware(),
+            Test.sessionAuthenticator(),
+            Test.bearerAuthenticator(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
@@ -137,23 +152,29 @@ final class AuthenticationTests: XCTestCase {
 
     func testMiddlewareConfigExistential() {
         struct Test: Authenticatable {
+            static func authenticator() -> Authenticator {
+                TestAuthenticator()
+            }
             var name: String
         }
 
         struct TestAuthenticator: BearerAuthenticator {
             typealias User = Test
 
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Test?> {
-                return request.eventLoop.makeSucceededFuture(nil)
+            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                request.eventLoop.makeSucceededFuture(())
             }
         }
 
         var config = Middlewares()
-        config.use(TestAuthenticator().middleware())
+        config.use(Test.authenticator())
     }
 
     func testAsyncAuthenticator() throws {
         struct Test: Authenticatable {
+            static func authenticator(threadPool: NIOThreadPool) -> Authenticator {
+                TestAuthenticator(threadPool: threadPool)
+            }
             var name: String
         }
 
@@ -161,15 +182,17 @@ final class AuthenticationTests: XCTestCase {
             typealias User = Test
             let threadPool: NIOThreadPool
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Test?> {
-                let promise = request.eventLoop.makePromise(of: Test?.self)
+            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                let promise = request.eventLoop.makePromise(of: Void.self)
                 self.threadPool.submit { _ in
                     sleep(1)
-                    guard basic.username == "test" && basic.password == "secret" else {
-                        return promise.succeed(nil)
+                    request.eventLoop.execute {
+                        if basic.username == "test" && basic.password == "secret" {
+                            let test = Test(name: "Vapor")
+                            request.auth.login(test)
+                        }
+                        promise.succeed(())
                     }
-                    let test = Test(name: "Vapor")
-                    return promise.succeed(test)
                 }
                 return promise.futureResult
             }
@@ -179,7 +202,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            TestAuthenticator(threadPool: app.threadPool).middleware(),
+            Test.authenticator(threadPool: app.threadPool),
             Test.guardMiddleware()
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
