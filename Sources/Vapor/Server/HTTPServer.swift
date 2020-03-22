@@ -259,7 +259,7 @@ private final class HTTPServerConnection {
                         return channel.close(mode: .all)
                     }
                     return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
-                        return channel.pipeline.configureHTTP2SecureUpgrade(h2PipelineConfigurator: { pipeline in
+                        return channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
                             return channel.configureHTTP2Pipeline(
                                 mode: .server,
                                 inboundStreamStateInitializer: { (channel, streamID) in
@@ -271,8 +271,8 @@ private final class HTTPServerConnection {
                                     )
                                 }
                             ).map { _ in }
-                        }, http1PipelineConfigurator: { pipeline in
-                            return pipeline.addVaporHTTP1Handlers(
+                        }, http1ChannelConfigurator: { channel in
+                            return channel.pipeline.addVaporHTTP1Handlers(
                                 application: application!,
                                 responder: responder,
                                 configuration: configuration
