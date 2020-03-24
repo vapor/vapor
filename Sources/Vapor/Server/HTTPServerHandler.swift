@@ -19,7 +19,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             case .failure(let error):
                 self.errorCaught(context: context, error: error)
             case .success(let response):
-                let contentLength = response.headers.firstValue(name: .contentLength)
+                let contentLength = response.headers.first(name: .contentLength)
                 if request.method == .HEAD {
                     response.body = .init()
                 }
@@ -38,7 +38,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             let done = context.write(self.wrapOutboundOut(response))
             if !request.isKeepAlive {
                 done.whenComplete { _ in
-                    context.close(promise: nil)
+                    context.close(mode: .output, promise: nil)
                 }
             }
         }

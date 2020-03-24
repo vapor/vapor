@@ -1,4 +1,4 @@
-extension Collection where Element == UInt8 {
+extension Sequence where Element == UInt8 {
     public var hex: String {
         self.hexEncodedString()
     }
@@ -7,23 +7,31 @@ extension Collection where Element == UInt8 {
         return String(decoding: self.hexEncodedBytes(uppercase: uppercase), as: Unicode.UTF8.self)
     }
 
-    func hexEncodedBytes(uppercase: Bool = false) -> [UInt8] {
-        var bytes = [UInt8]()
-        bytes.reserveCapacity(count * 2)
+    public func hexEncodedBytes(uppercase: Bool = false) -> [UInt8] {
+        let table: [UInt8] = uppercase ? radix16table_uppercase : radix16table_lowercase
+        var result: [UInt8] = []
 
-        let table: [UInt8]
-        if uppercase {
-            table = radix16table_uppercase
-        } else {
-            table = radix16table_lowercase
+        result.reserveCapacity(self.underestimatedCount * 2) // best guess
+        return self.reduce(into: result) { output, byte in
+            output.append(table[numericCast(byte / 16)])
+            output.append(table[numericCast(byte % 16)])
         }
+    }
+}
 
-        for byte in self {
-            bytes.append(table[Int(byte / 16)])
-            bytes.append(table[Int(byte % 16)])
+extension Collection where Element == UInt8 {
+    public func hexEncodedBytes(uppercase: Bool = false) -> [UInt8] {
+        let table: [UInt8] = uppercase ? radix16table_uppercase : radix16table_lowercase
+        
+        return .init(unsafeUninitializedCapacity: self.count * 2) { buffer, outCount in
+            for byte in self {
+                let nibs = byte.quotientAndRemainder(dividingBy: 16)
+                
+                buffer[outCount + 0] = table[numericCast(nibs.quotient)]
+                buffer[outCount + 1] = table[numericCast(nibs.remainder)]
+                outCount += 2
+            }
         }
-
-        return bytes
     }
 }
 

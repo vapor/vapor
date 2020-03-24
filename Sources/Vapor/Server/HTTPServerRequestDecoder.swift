@@ -102,6 +102,16 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         }
     }
 
+    func errorCaught(context: ChannelHandlerContext, error: Error) {
+        switch self.requestState {
+        case .streamingBody(let stream):
+            stream.write(.error(error), promise: nil)
+        default:
+            break
+        }
+        context.fireErrorCaught(error)
+    }
+
     func write(_ part: BodyStreamResult, to stream: Request.BodyStream, context: ChannelHandlerContext) {
         self.pendingWriteCount += 1
         stream.write(part).whenComplete { result in

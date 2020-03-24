@@ -13,7 +13,7 @@ extension HTTPHeaders {
     /// Access or set the `Authorization: Bearer: ...` header.
     public var bearerAuthorization: BearerAuthorization? {
         get {
-            guard let string = self.firstValue(name: .authorization) else {
+            guard let string = self.first(name: .authorization) else {
                 return nil
             }
 

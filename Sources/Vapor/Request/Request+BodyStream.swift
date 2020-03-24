@@ -22,9 +22,12 @@ extension Request {
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-            if case .end = chunk {
+            switch chunk {
+            case .end, .error:
                 self.isClosed = true
+            case .buffer: break
             }
+            
             if let handler = handler {
                 handler(chunk, promise)
             } else {
@@ -49,6 +52,10 @@ extension Request {
                 next?.succeed(())
             }
             return promise.futureResult
+        }
+
+        deinit {
+            assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
         }
     }
 }

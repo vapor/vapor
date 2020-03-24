@@ -382,7 +382,7 @@ final class ApplicationTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
+            XCTAssertContains(res.body.string, "filename=droplet.png")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -555,7 +555,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.GET, "/file-stream") { res in
             let test = "the quick brown fox"
-            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
@@ -572,7 +572,7 @@ final class ApplicationTests: XCTestCase {
         headers.replaceOrAdd(name: .connection, value: "close")
         try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
             let test = "the quick brown fox"
-            XCTAssertNotNil(res.headers.firstValue(name: .eTag))
+            XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
         }
     }
@@ -797,7 +797,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.testable(method: .running).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.headers.firstValue(name: .contentLength), "2")
+            XCTAssertEqual(res.headers.first(name: .contentLength), "2")
             XCTAssertEqual(res.body.readableBytes, 0)
         }
     }
@@ -812,7 +812,9 @@ final class ApplicationTests: XCTestCase {
             }
 
         var headers = HTTPHeaders()
-        headers.cookie["vapor-session"] = "asdf"
+        var cookies = HTTPCookies()
+        cookies["vapor-session"] = "asdf"
+        headers.cookie = cookies
         try app.testable().test(.GET, "/get", headers: headers) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertNotNil(res.headers[.setCookie])
@@ -906,7 +908,9 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(cookie?.string, "a")
 
         var headers = HTTPHeaders()
-        headers.cookie["vapor-session"] = cookie
+        var cookies = HTTPCookies()
+        cookies["vapor-session"] = cookie
+        headers.cookie = cookies
         try app.testable().test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
             XCTAssertEqual(MockKeyedCache.ops, [
@@ -1158,7 +1162,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get("check") { (req: Request) -> String in
-            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
         
         try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
@@ -1173,7 +1177,7 @@ final class ApplicationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get("check") { (req: Request) -> String in
-            return "\(req.headers.firstValue(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.firstValue(name: .contentType) ?? "?")"
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
         }
         // Me and my sadistic sense of humor.
         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
@@ -1367,6 +1371,14 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
     }
     
+    func testHexEncodingSequence() throws {
+        let bytes: AnySequence<UInt8> = AnySequence([1, 42, 128, 240])
+
+        XCTAssertEqual(bytes.hex, "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
+        XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
+    }
+    
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -1414,7 +1426,7 @@ final class ApplicationTests: XCTestCase {
     func testCookieQuotes() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
-        XCTAssertEqual(headers.cookie["foo"]?.string, "+cookie/value")
+        XCTAssertEqual(headers.cookie?["foo"]?.string, "+cookie/value")
     }
 
     func testSimilarRoutingPath() throws {

@@ -29,7 +29,7 @@ extension HTTPHeaders {
     }
 
     public var lastModified: LastModified? {
-        get { self.firstValue(name: .lastModified).flatMap(LastModified.parse) }
+        get { self.first(name: .lastModified).flatMap(LastModified.parse) }
         set {
             if let new = newValue?.serialize() {
                 self.replaceOrAdd(name: .lastModified, value: new)
