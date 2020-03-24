@@ -10,6 +10,11 @@ extension HTTPHeaders {
                 return "\(self.value)"
             }
         }
+        
+        init(value: String, parameter: String? = nil) {
+            self.value = .init(value)
+            self.parameter = parameter.flatMap { .init($0) }
+        }
 
         init(value: Substring, parameter: Substring? = nil) {
             self.value = value
@@ -21,7 +26,7 @@ extension HTTPHeaders {
         let headers = self[name]
         var values: [[Directive]] = []
         for header in headers {
-            var parser = ValueParser(string: header)
+            var parser = DirectiveParser(string: header)
             while let directives = parser.nextDirectives() {
                 values.append(directives)
             }
@@ -29,10 +34,15 @@ extension HTTPHeaders {
         return values
     }
 
-    struct ValueParser {
+    mutating func serializeDirectives(_ directives: [[Directive]], name: Name) {
+        let serializer = DirectiveSerializer(directives: directives)
+        self.replaceOrAdd(name: name, value: serializer.serialize())
+    }
+
+    struct DirectiveParser {
         var current: Substring
 
-        public init<S>(string: S)
+        init<S>(string: S)
             where S: StringProtocol
         {
             self.current = .init(string)
@@ -149,6 +159,34 @@ extension HTTPHeaders {
                 }
             }
             return nextDoubleQuote
+        }
+    }
+
+    struct DirectiveSerializer {
+        let directives: [[Directive]]
+
+        init(directives: [[Directive]]) {
+            self.directives = directives
+        }
+
+        func serialize() -> String {
+            var main: [String] = []
+
+            for directives in self.directives {
+                var sub: [String] = []
+                for directive in directives {
+                    let string: String
+                    if let parameter = directive.parameter {
+                        string = "\(directive.value)=\(parameter)"
+                    } else {
+                        string = .init(directive.value)
+                    }
+                    sub.append(string)
+                }
+                main.append(sub.joined(separator: "; "))
+            }
+
+            return main.joined(separator: ", ")
         }
     }
 }

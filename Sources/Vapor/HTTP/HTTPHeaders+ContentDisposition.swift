@@ -10,7 +10,7 @@ extension HTTPHeaders {
         }
         set {
             if let header = newValue {
-                self.replaceOrAdd(name: .contentDisposition, value: header.serialize())
+                self.serializeDirectives([header.directives()], name: .contentDisposition)
             } else {
                 self.remove(name: .contentDisposition)
             }
@@ -59,19 +59,17 @@ extension HTTPHeaders {
             }
         }
 
-        func serialize() -> String {
-            var parameters: [(String, String)] = []
+        func directives() -> [Directive] {
+            var directives: [Directive] = [
+                .init(value: self.value.string)
+            ]
             if let name = self.name {
-                parameters.append(("name", name))
+                directives.append(.init(value: "name", parameter: name))
             }
             if let filename = self.filename {
-                parameters.append(("filename", filename))
+                directives.append(.init(value: "filename", parameter: filename))
             }
-            let serializer = ValueSerializer(
-                value: self.value.string,
-                parameters: parameters
-            )
-            return serializer.serialize()
+            return directives
         }
     }
 }

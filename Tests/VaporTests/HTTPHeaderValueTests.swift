@@ -3,31 +3,31 @@ import XCTest
 
 final class HTTPHeaderValueTests: XCTestCase {
     func testValue() throws {
-        var parser = HTTPHeaders.ValueParser(string: "foobar")
+        var parser = HTTPHeaders.DirectiveParser(string: "foobar")
         XCTAssertEqual(parser.nextDirectives(), [.init(value: "foobar")])
     }
 
     func testValue_whitespace() throws {
-        var parser = HTTPHeaders.ValueParser(string: " foobar  ")
+        var parser = HTTPHeaders.DirectiveParser(string: " foobar  ")
         XCTAssertEqual(parser.nextDirectives(), [.init(value: "foobar")])
     }
 
     func testValue_semicolon_quote() throws {
-        var parser = HTTPHeaders.ValueParser(string: #""foo;bar""#)
+        var parser = HTTPHeaders.DirectiveParser(string: #""foo;bar""#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "foo;bar")
         ])
     }
 
     func testValue_semicolon_quote_escape() throws {
-        var parser = HTTPHeaders.ValueParser(string: #""foo;\"bar""#)
+        var parser = HTTPHeaders.DirectiveParser(string: #""foo;\"bar""#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: #"foo;"bar"#)
         ])
     }
 
     func testValue_directives() throws {
-        var parser = HTTPHeaders.ValueParser(string: #"a; b=c, d"#)
+        var parser = HTTPHeaders.DirectiveParser(string: #"a; b=c, d"#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "a"),
             .init(value: "b", parameter: "c"),
@@ -38,7 +38,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_quote() throws {
-        var parser = HTTPHeaders.ValueParser(string: #""a;b"; c="d;e", f"#)
+        var parser = HTTPHeaders.DirectiveParser(string: #""a;b"; c="d;e", f"#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "a;b"),
             .init(value: "c", parameter: "d;e"),
@@ -49,7 +49,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_contentType() throws {
-        var parser = HTTPHeaders.ValueParser(string: "application/json; charset=utf8")
+        var parser = HTTPHeaders.DirectiveParser(string: "application/json; charset=utf8")
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "application/json"),
             .init(value: "charset", parameter: "utf8"),
@@ -57,7 +57,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_multiple() throws {
-        var parser = HTTPHeaders.ValueParser(string: "foo; bar=1; baz=2")
+        var parser = HTTPHeaders.DirectiveParser(string: "foo; bar=1; baz=2")
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -66,7 +66,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_multiple_quote() throws {
-        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2""#)
+        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2""#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -75,7 +75,7 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_multiple_quotedSemicolon() throws {
-        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;3""#)
+        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2;3""#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
@@ -84,12 +84,20 @@ final class HTTPHeaderValueTests: XCTestCase {
     }
 
     func testValue_directives_multiple_quotedSemicolonEqual() throws {
-        var parser = HTTPHeaders.ValueParser(string: #"foo; bar=1; baz="2;=3""#)
+        var parser = HTTPHeaders.DirectiveParser(string: #"foo; bar=1; baz="2;=3""#)
         XCTAssertEqual(parser.nextDirectives(), [
             .init(value: "foo"),
             .init(value: "bar", parameter: "1"),
             .init(value: "baz", parameter: "2;=3"),
         ])
+    }
+
+    func testValue_serialize() throws {
+        let serializer = HTTPHeaders.DirectiveSerializer.init(directives: [
+            [.init(value: "foo"), .init(value: "bar", parameter: "baz")],
+            [.init(value: "qux", parameter: "quuz")]
+        ])
+        XCTAssertEqual(serializer.serialize(), "foo; bar=baz, qux=quuz")
     }
 
     func testForwarded() throws {

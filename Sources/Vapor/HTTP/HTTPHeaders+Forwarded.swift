@@ -33,13 +33,10 @@ extension HTTPHeaders {
             return forwarded
         }
         set {
-            let value = newValue.map {
-                $0.serialize()
-            }.joined(separator: ", ")
-            self.replaceOrAdd(name: "Forwarded", value: value)
-            self.remove(name: "X-Forwarded-For")
-            self.remove(name: "X-Forwarded-Host")
-            self.remove(name: "X-Forwarded-Proto")
+            self.serializeDirectives(newValue.map { $0.directives() }, name: .forwarded)
+            self.remove(name: .xForwardedFor)
+            self.remove(name: .xForwardedHost)
+            self.remove(name: .xForwardedProto)
         }
     }
 
@@ -84,25 +81,21 @@ extension HTTPHeaders {
             }
         }
 
-        func serialize() -> String {
-            var parameters: [(String, String)] = []
+        func directives() -> [Directive] {
+            var directives: [Directive] = []
             if let by = self.by {
-                parameters.append(("by", by))
+                directives.append(.init(value: "by", parameter: by))
             }
             if let `for` = self.for {
-                parameters.append(("for", `for`))
+                directives.append(.init(value: "for", parameter: `for`))
             }
             if let host = self.host {
-                parameters.append(("host", host))
+                directives.append(.init(value: "host", parameter: host))
             }
             if let proto = self.proto {
-                parameters.append(("proto", proto))
+                directives.append(.init(value: "proto", parameter: proto))
             }
-            let serializer = ValueSerializer(
-                value: nil,
-                parameters: parameters
-            )
-            return serializer.serialize()
+            return directives
         }
     }
 }
