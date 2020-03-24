@@ -5,7 +5,6 @@ extension RequestAuthenticator {
     }
 }
 
-
 extension SessionAuthenticator {
     @available(*, deprecated, message: "Authenticator itself is now a middleware.")
     public func middleware() -> Middleware {
