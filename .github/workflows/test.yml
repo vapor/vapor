@@ -8,7 +8,7 @@ jobs:
       DEVELOPER_DIR: /Applications/Xcode_11.4_beta.app/Contents/Developer
     steps:
     - uses: actions/checkout@v2
-    - run: brew install pkg-config libressl
+    - run: brew install pkg-config
     - run: xcrun swift test --enable-test-discovery --sanitize=thread
   vapor_xenial:
     container: 
