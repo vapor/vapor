@@ -198,7 +198,7 @@ extension HTTPHeaders {
 
     /// Gets the value of the `Cache-Control` header, if present.
     public var cacheControl: CacheControl? {
-        get { self.firstValue(name: .cacheControl).flatMap(CacheControl.parse) }
+        get { self.first(name: .cacheControl).flatMap(CacheControl.parse) }
         set {
             if let new = newValue?.serialize() {
                 self.replaceOrAdd(name: .cacheControl, value: new)

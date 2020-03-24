@@ -107,7 +107,7 @@ public final class Request: CustomStringConvertible {
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.cookie
+            return self.headers.cookie ?? .init()
         }
         set {
             self.headers.cookie = newValue

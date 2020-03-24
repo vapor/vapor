@@ -188,21 +188,24 @@ struct TestError: AbortError {
         "This is a test."
     }
 
-    let file: String
-    let function: String
-    let line: Int
-
-    var source: ErrorSource? {
-        ErrorSource(file: self.file, function: self.function, line: self.line)
-    }
+    var source: ErrorSource?
+    var stackTrace: StackTrace?
 
     init(
         file: String = #file,
         function: String = #function,
-        line: Int = #line
+        line: UInt = #line,
+        column: UInt = #column,
+        range: Range<UInt>? = nil,
+        stackTrace: StackTrace = .capture()
     ) {
-        self.file = file
-        self.function = function
-        self.line = line
+        self.source = .init(
+            file: file,
+            function: function,
+            line: line,
+            column: column,
+            range: range
+        )
+        self.stackTrace = stackTrace
     }
 }
