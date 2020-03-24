@@ -17,7 +17,7 @@ extension HTTPHeaders {
     /// Access or set the `Authorization: Basic: ...` header.
     public var basicAuthorization: BasicAuthorization? {
         get {
-            guard let string = self.firstValue(name: .authorization) else {
+            guard let string = self.first(name: .authorization) else {
                 return nil
             }
 

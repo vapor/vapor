@@ -1,7 +1,11 @@
 extension HTTPHeaders {
     /// `MediaType` specified by this message's `"Content-Type"` header.
     public var contentType: HTTPMediaType? {
-        get { return self.firstValue(name: .contentType).flatMap(HTTPMediaType.parse) }
+        get {
+            self.parseDirectives(name: .contentType).first.flatMap {
+                HTTPMediaType(directives: $0)
+            }
+        }
         set {
             if let new = newValue?.serialize() {
                 self.replaceOrAdd(name: .contentType, value: new)
@@ -22,7 +26,9 @@ extension HTTPHeaders {
     ///     let pref = httpReq.accept.comparePreference(for: .json, to: .html)
     ///
     public var accept: [HTTPMediaTypePreference] {
-        return self.firstValue(name: .accept).flatMap([HTTPMediaTypePreference].parse) ?? []
+        self.parseDirectives(name: .accept).compactMap {
+            HTTPMediaTypePreference(directives: $0)
+        }
     }
 }
 

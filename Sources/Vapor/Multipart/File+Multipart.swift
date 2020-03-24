@@ -18,7 +18,9 @@ extension File: MultipartPartConvertible {
 
 extension MultipartPart {
     public var contentType: String? {
-        get { return self.headers.firstValue(name: .contentType) }
+        get {
+            self.headers.first(name: .contentType)
+        }
         set {
             if let value = newValue {
                 self.headers.replaceOrAdd(name: .contentType, value: value)
@@ -30,28 +32,24 @@ extension MultipartPart {
     
     public var filename: String? {
         get {
-            return self.contentDisposition?.parameters["filename"]
+            self.contentDisposition?.filename
         }
         set {
-            var disposition: HTTPHeaderValue
-            if let existing = self.contentDisposition {
-                disposition = existing
+            if var existing = self.contentDisposition {
+                existing.filename = newValue
+                self.contentDisposition = existing
             } else {
-                disposition = HTTPHeaderValue("form-data")
+                self.contentDisposition = .init(.formData, filename: newValue)
             }
-            disposition.parameters["filename"] = newValue
-            self.contentDisposition = disposition
         }
     }
     
-    public var contentDisposition: HTTPHeaderValue? {
-        get { self.headers.firstValue(name: .contentDisposition).flatMap { .parse($0) } }
+    public var contentDisposition: HTTPHeaders.ContentDisposition? {
+        get {
+            self.headers.contentDisposition
+        }
         set {
-            if let value = newValue {
-                self.headers.replaceOrAdd(name: .contentDisposition, value: value.serialize())
-            } else {
-                self.headers.remove(name: .contentDisposition)
-            }
+            self.headers.contentDisposition = newValue
         }
     }
 }

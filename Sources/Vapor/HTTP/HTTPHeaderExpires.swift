@@ -50,7 +50,7 @@ extension HTTPHeaders {
     /// ### Note ###
     /// `Expires` is legacy and you should switch to using `CacheControl` if possible.
     public var expires: Expires? {
-        get { self.firstValue(name: .expires).flatMap(Expires.parse) }
+        get { self.first(name: .expires).flatMap(Expires.parse) }
         set {
             if let new = newValue?.serialize() {
                 self.replaceOrAdd(name: .expires, value: new)

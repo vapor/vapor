@@ -5,36 +5,19 @@ public struct HTTPMediaTypePreference {
     
     /// Its associated preference.
     public var q: Double?
+
+    init?(directives: [HTTPHeaders.Directive]) {
+        guard let mediaType = HTTPMediaType(directives: directives) else {
+            return nil
+        }
+        self.mediaType = mediaType
+        self.q = directives.first(where: { $0.value == "q" }).flatMap {
+            $0.parameter.flatMap(Double.init)
+        }
+    }
 }
 
 extension Array where Element == HTTPMediaTypePreference {
-    /// Parses an array of `[MediaTypePreference]` from an accept header value
-    ///
-    /// - parameters:
-    ///     - data: The accept header value to parse.
-    public static func parse(_ data: String) -> [HTTPMediaTypePreference] {
-        return data.split(separator: ",").compactMap { token in
-            let parts = token.split(separator: ";", maxSplits: 1)
-            let value = String(parts[0]).trimmingCharacters(in: .whitespaces)
-            guard let mediaType = HTTPMediaType.parse(value) else {
-                return nil
-            }
-            switch parts.count {
-            case 1: return .init(mediaType: mediaType, q: nil)
-            case 2:
-                let qparts = parts[1].split(separator: "=", maxSplits: 1)
-                guard qparts.count == 2 else {
-                    return nil
-                }
-                guard let preference = Double(qparts[1]) else {
-                    return nil
-                }
-                return .init(mediaType: mediaType, q: preference)
-            default: return nil
-            }
-        }
-    }
-    
     /// Returns all `MediaType`s in this array of `MediaTypePreference`.
     ///
     ///     httpReq.accept.mediaTypes.contains(.html)

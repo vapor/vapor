@@ -127,7 +127,7 @@ public struct FileIO {
         headers.replaceOrAdd(name: .eTag, value: fileETag)
 
         // Check if file has been cached already and return NotModified response if the etags match
-        if fileETag == request.headers.firstValue(name: .ifNoneMatch) {
+        if fileETag == request.headers.first(name: .ifNoneMatch) {
             return Response(status: .notModified)
         }
 
