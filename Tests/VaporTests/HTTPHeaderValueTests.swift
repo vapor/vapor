@@ -155,4 +155,13 @@ final class HTTPHeaderValueTests: XCTestCase {
         XCTAssertEqual(headers.contentDisposition?.name, "fieldName")
         XCTAssertEqual(headers.contentDisposition?.filename, "filename.jpg")
     }
+
+    func testCookieDirectives() throws {
+        let cookies = HTTPCookies(directives: [
+            HTTPHeaders.Directive(value: "baz"),
+            HTTPHeaders.Directive(value: "bar", parameter: "foo"),
+        ])
+        XCTAssertEqual(cookies["bar"]?.string, "foo")
+        XCTAssertNil(cookies["baz"])
+    }
 }
