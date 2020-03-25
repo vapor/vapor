@@ -226,16 +226,17 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         self.cookies = [:]
     }
 
-    init?(directives: [HTTPHeaders.Directive]) {
-        self.cookies = [:]
+    init(directives: [HTTPHeaders.Directive]) {
+        var cookies: [String: Value] = [:]
         for directive in directives {
             guard let value = directive.parameter else {
-                return nil
+                continue
             }
-            self.cookies[.init(directive.value)] = .init(string: .init(value))
+            cookies[.init(directive.value)] = .init(string: .init(value))
         }
+        self.cookies = cookies
     }
-    
+
     /// See `ExpressibleByDictionaryLiteral`.
     public init(dictionaryLiteral elements: (String, Value)...) {
         var cookies: [String: Value] = [:]
