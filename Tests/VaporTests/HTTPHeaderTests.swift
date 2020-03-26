@@ -155,4 +155,13 @@ final class HTTPHeaderValueTests: XCTestCase {
         XCTAssertEqual(headers.contentDisposition?.name, "fieldName")
         XCTAssertEqual(headers.contentDisposition?.filename, "filename.jpg")
     }
+
+    func testCookie_parsing() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561")
+        ])
+        XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
+        XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")
+        XCTAssertEqual(headers.cookie?["_gid"]?.string, "GA1.1.500224287.1585154561")
+    }
 }
