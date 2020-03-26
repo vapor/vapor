@@ -37,6 +37,9 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable {
     ///     }
     ///
     static var defaultContentType: HTTPMediaType { get }
+
+    mutating func beforeEncode() throws
+    mutating func afterDecode() throws
 }
 
 /// MARK: Default Implementations
@@ -64,6 +67,9 @@ extension Content {
         }
         return request.eventLoop.makeSucceededFuture(response)
     }
+
+    public mutating func beforeEncode() throws { }
+    public mutating func afterDecode() throws { }
 }
 
 // MARK: Default Conformances
