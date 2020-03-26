@@ -5,9 +5,9 @@ extension HTTPHeaders {
 
         var description: String {
             if let parameter = self.parameter {
-                return "\(self.value)=\(parameter)"
+                return "Directive(value: \(self.value.debugDescription), parameter: \(parameter.debugDescription))"
             } else {
-                return "\(self.value)"
+                return "Directive(value: \(self.value.debugDescription))"
             }
         }
         
@@ -221,9 +221,12 @@ private extension Character {
     static var comma: Self {
         .init(",")
     }
+    static var underscore: Self {
+        .init("_")
+    }
 
     var isDirectiveKey: Bool {
-        self.isLetter || self == .dash
+        self.isLetter || self == .dash || self == .underscore
     }
 }
 
