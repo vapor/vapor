@@ -172,14 +172,24 @@ final class URLEncodedFormTests: XCTestCase {
                 return dateFormatter
             }
         }
-        
+        let factory = DateFormatterFactory()
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateFormat: .custom(DateFormatterFactory()))
+            configuration: .init(dateFormat: .custom({ (date, encoder) in
+                var container = encoder.singleValueContainer()
+                try container.encode(factory.currentValue.string(from: date))
+            }))
         ).encode(toEncode)
         XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
         
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateFormat: .custom(DateFormatterFactory()))
+            configuration: .init(dateFormat: .custom({ (decoder) -> Date in
+                let container = try decoder.singleValueContainer()
+                let string = try container.decode(String.self)
+                guard let date = factory.currentValue.date(from: string) else {
+                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
+                }
+                return date
+            }))
         ).decode(DateCoding.self, from: resultCustom)
         XCTAssertEqual(decodedCustom, toEncode)
     }

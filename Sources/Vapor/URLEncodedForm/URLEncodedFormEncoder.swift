@@ -37,8 +37,8 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             case timeIntervalSince1970
             /// ISO 8601 formatted date
             case iso8601
-            /// Use provided `ThreadSpecificDateFormatter`
-            case custom(ThreadSpecificDateFormatter)
+            /// Using custom callback
+            case custom((Date, Encoder) throws -> Void)
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
@@ -198,8 +198,8 @@ private class _Encoder: Encoder {
                     case .iso8601:
                         //Creating a new `ISO8601DateFormatter` everytime is probably not performant
                         try ISO8601DateFormatter.threadSpecific.string(from: date).encode(to: encoder)
-                    case .custom(let threadSpecificDateFormatter):
-                        try threadSpecificDateFormatter.currentValue.string(from: date).encode(to: encoder)
+                    case .custom(let callback):
+                        try callback(date, encoder)
                     }
                 } else {
                     try value.encode(to: encoder)
