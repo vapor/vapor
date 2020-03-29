@@ -30,14 +30,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         }
 
         /// Supported date formats
-        public enum DateFormat {            
+        public enum DateFormat {
             /// Seconds since 00:00:00 UTC on 1 January 2001
             case timeIntervalSinceReferenceDate
             /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
             /// ISO 8601 formatted date
             case iso8601
-            /// Use provided `ThreadSpecificVariable<DateFormatter>`. Should override `public var currentValue: Value?` to produce a new value
+            /// Use provided `ThreadSpecificDateFormatter`
             case custom(ThreadSpecificDateFormatter)
         }
         /// Specified array encoding.
