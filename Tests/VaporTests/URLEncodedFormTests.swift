@@ -137,7 +137,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decodedTimeIntervalSinceReferenceDate, toEncode)
 
         let resultForInternetDateTime = try URLEncodedFormEncoder(
-            configuration: .init(dateFormat: .internetDateTime)
+            configuration: .init(dateFormat: .iso8601)
         ).encode(toEncode)
         XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
 
@@ -147,7 +147,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decodedInternetDateTime, toEncode)
 
         XCTAssertThrowsError(try URLEncodedFormDecoder(
-            configuration: .init(dateFormat: .internetDateTime)
+            configuration: .init(dateFormat: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
     }
 

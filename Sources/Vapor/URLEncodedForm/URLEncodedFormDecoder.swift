@@ -20,7 +20,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
             /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
             /// ISO 8601 formatted date
-            case internetDateTime
+            case iso8601
         }
         let boolFlags: Bool
         let arraySeparators: [Character]
@@ -36,7 +36,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateFormat: DateFormat = .internetDateTime
+            dateFormat: DateFormat = .iso8601
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
@@ -192,7 +192,7 @@ private struct _Decoder: Decoder {
                         return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
                     case .timeIntervalSinceReferenceDate:
                         return Date(timeIntervalSinceReferenceDate: try TimeInterval(from: decoder)) as! T
-                    case .internetDateTime:
+                    case .iso8601:
                         if let date = ISO8601DateFormatter().date(from: try String(from: decoder)) {
                             return date as! T
                         } else {

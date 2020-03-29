@@ -34,7 +34,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
             /// ISO 8601 formatted date
-            case internetDateTime
+            case iso8601
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
@@ -46,7 +46,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
-            dateFormat: DateFormat = .internetDateTime
+            dateFormat: DateFormat = .iso8601
         ) {
             self.arrayEncoding = arrayEncoding
             self.dateFormat = dateFormat
@@ -191,7 +191,7 @@ private class _Encoder: Encoder {
                         try date.timeIntervalSince1970.encode(to: encoder)
                     case .timeIntervalSinceReferenceDate:
                         try date.timeIntervalSinceReferenceDate.encode(to: encoder)
-                    case .internetDateTime:
+                    case .iso8601:
                         try ISO8601DateFormatter().string(from: date).encode(to: encoder)
                     }
                 } else {
