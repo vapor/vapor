@@ -27,10 +27,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             case values
         }
 
+        /// Supported date formats
         public enum DateFormat {
+            /// Seconds since 00:00:00 UTC on 1 January 2001
             case timeIntervalSinceReferenceDate
+            /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
-            case internetDateTime //RFC 3339 of ISO8601
+            /// ISO 8601 formatted date
+            case internetDateTime
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding

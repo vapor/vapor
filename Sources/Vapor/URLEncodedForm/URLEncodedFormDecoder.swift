@@ -13,10 +13,14 @@
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
     public struct Configuration {
+        /// Supported date formats
         public enum DateFormat {
+            /// Seconds since 00:00:00 UTC on 1 January 2001
             case timeIntervalSinceReferenceDate
+            /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
-            case internetDateTime //RFC 3339 of ISO8601
+            /// ISO 8601 formatted date
+            case internetDateTime
         }
         let boolFlags: Bool
         let arraySeparators: [Character]
