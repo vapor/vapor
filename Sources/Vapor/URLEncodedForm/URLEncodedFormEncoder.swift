@@ -35,6 +35,8 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             case timeIntervalSince1970
             /// ISO 8601 formatted date
             case iso8601
+            /// Use provided `DateFormatter`
+            case custom(DateFormatter)
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
@@ -193,6 +195,8 @@ private class _Encoder: Encoder {
                         try date.timeIntervalSinceReferenceDate.encode(to: encoder)
                     case .iso8601:
                         try ISO8601DateFormatter().string(from: date).encode(to: encoder)
+                    case .custom(let dateFormatter):
+                        try dateFormatter.string(from: date).encode(to: encoder)
                     }
                 } else {
                     try value.encode(to: encoder)

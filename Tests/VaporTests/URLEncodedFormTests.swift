@@ -142,13 +142,28 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
-            configuration: .init(dateFormat: .internetDateTime)
+            configuration: .init(dateFormat: .iso8601)
         ).decode(DateCoding.self, from: resultForInternetDateTime)
         XCTAssertEqual(decodedInternetDateTime, toEncode)
 
         XCTAssertThrowsError(try URLEncodedFormDecoder(
             configuration: .init(dateFormat: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
+        
+        let dateFormatter = DateFormatter()
+        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+        dateFormatter.dateFormat = "'Date:' yyyy-MM-dd 'Time:' HH:mm:ss 'Timezone:' ZZZZZ"
+        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+        
+        let resultCustom = try URLEncodedFormEncoder(
+            configuration: .init(dateFormat: .custom(dateFormatter))
+        ).encode(toEncode)
+        XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
+        
+        let decodedCustom = try URLEncodedFormDecoder(
+            configuration: .init(dateFormat: .custom(dateFormatter))
+        ).decode(DateCoding.self, from: resultCustom)
+        XCTAssertEqual(decodedCustom, toEncode)
     }
 
     func testEncodedArrayValues() throws {

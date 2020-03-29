@@ -21,6 +21,8 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
             case timeIntervalSince1970
             /// ISO 8601 formatted date
             case iso8601
+            /// Use provided `DateFormatter`
+            case custom(DateFormatter)
         }
         let boolFlags: Bool
         let arraySeparators: [Character]
@@ -197,6 +199,12 @@ private struct _Decoder: Decoder {
                             return date as! T
                         } else {
                             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
+                        }
+                    case .custom(let dateFormatter):
+                        if let date = dateFormatter.date(from: try String(from: decoder)) {
+                            return date as! T
+                        } else {
+                            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Custom date formatter in use"))
                         }
                     }
                 } else {
