@@ -195,6 +195,7 @@ private struct _Decoder: Decoder {
                     case .timeIntervalSinceReferenceDate:
                         return Date(timeIntervalSinceReferenceDate: try TimeInterval(from: decoder)) as! T
                     case .iso8601:
+                        //Creating a new `ISO8601DateFormatter` everytime is probably not performant
                         if let date = ISO8601DateFormatter().date(from: try String(from: decoder)) {
                             return date as! T
                         } else {
