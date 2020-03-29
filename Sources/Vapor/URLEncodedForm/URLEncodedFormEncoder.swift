@@ -195,7 +195,7 @@ private class _Encoder: Encoder {
                         try date.timeIntervalSinceReferenceDate.encode(to: encoder)
                     case .iso8601:
                         //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                        try ISO8601DateFormatter().string(from: date).encode(to: encoder)
+                        try ISO8601DateFormatter.threadSpecific.string(from: date).encode(to: encoder)
                     case .custom(let dateFormatter):
                         try dateFormatter.string(from: date).encode(to: encoder)
                     }
