@@ -27,15 +27,25 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             case values
         }
 
+        public enum DateFormat {
+            case timeIntervalSinceReferenceDate
+            case timeIntervalSince1970
+            case internetDateTime //RFC 3339 of ISO8601
+        }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
+        public var dateFormat: DateFormat
 
         /// Creates a new `Configuration`.
         ///
         ///  - parameters:
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
-        public init(arrayEncoding: ArrayEncoding = .bracket) {
+        public init(
+            arrayEncoding: ArrayEncoding = .bracket,
+            dateFormat: DateFormat = .internetDateTime
+        ) {
             self.arrayEncoding = arrayEncoding
+            self.dateFormat = dateFormat
         }
     }
 
@@ -167,11 +177,22 @@ private class _Encoder: Encoder {
         func encode<T>(_ value: T, forKey key: Key) throws
             where T : Encodable
         {
-            if let convertible = value as? URLQueryFragmentConvertible {
+             if let convertible = value as? URLQueryFragmentConvertible {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
-                try value.encode(to: encoder)
+                if let date = value as? Date {
+                    switch configuration.dateFormat {
+                    case .timeIntervalSince1970:
+                        try date.timeIntervalSince1970.encode(to: encoder)
+                    case .timeIntervalSinceReferenceDate:
+                        try date.timeIntervalSinceReferenceDate.encode(to: encoder)
+                    case .internetDateTime:
+                        try ISO8601DateFormatter().string(from: date).encode(to: encoder)
+                    }
+                } else {
+                    try value.encode(to: encoder)
+                }
                 self.internalData.children[key.stringValue] = try encoder.getData()
             }
         }

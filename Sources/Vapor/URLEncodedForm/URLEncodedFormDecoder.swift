@@ -13,9 +13,14 @@
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
     public struct Configuration {
+        public enum DateFormat {
+            case timeIntervalSinceReferenceDate
+            case timeIntervalSince1970
+            case internetDateTime //RFC 3339 of ISO8601
+        }
         let boolFlags: Bool
         let arraySeparators: [Character]
-
+        let dateFormat: DateFormat
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -26,10 +31,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
         public init(
             boolFlags: Bool = true,
-            arraySeparators: [Character] = [",", "|"]
+            arraySeparators: [Character] = [",", "|"],
+            dateFormat: DateFormat = .internetDateTime
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
+            self.dateFormat = dateFormat
         }
     }
 
@@ -175,7 +182,22 @@ private struct _Decoder: Decoder {
                 }
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
-                return try T(from: decoder)
+                if type == Date.self {
+                    switch configuration.dateFormat {
+                    case .timeIntervalSince1970:
+                        return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
+                    case .timeIntervalSinceReferenceDate:
+                        return Date(timeIntervalSinceReferenceDate: try TimeInterval(from: decoder)) as! T
+                    case .internetDateTime:
+                        if let date = ISO8601DateFormatter().date(from: try String(from: decoder)) {
+                            return date as! T
+                        } else {
+                            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
+                        }
+                    }
+                } else {
+                    return try T(from: decoder)
+                }
             }
         }
         

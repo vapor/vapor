@@ -114,6 +114,43 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("isCool=true"))
     }
 
+    func testDateCoding() throws {
+        let toEncode = DateCoding(date: Date(timeIntervalSince1970: 0))
+        let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
+            configuration: .init(dateFormat: .timeIntervalSince1970)
+        ).encode(toEncode)
+        XCTAssertEqual("date=0.0", resultForTimeIntervalSince1970)
+        
+        let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
+            configuration: .init(dateFormat: .timeIntervalSince1970)
+        ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
+        XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
+        
+        let resultForTimeIntervalSinceReferenceDate = try URLEncodedFormEncoder(
+            configuration: .init(dateFormat: .timeIntervalSinceReferenceDate)
+        ).encode(toEncode)
+        XCTAssertEqual("date=-978307200.0", resultForTimeIntervalSinceReferenceDate)
+
+        let decodedTimeIntervalSinceReferenceDate = try URLEncodedFormDecoder(
+            configuration: .init(dateFormat: .timeIntervalSinceReferenceDate)
+        ).decode(DateCoding.self, from: resultForTimeIntervalSinceReferenceDate)
+        XCTAssertEqual(decodedTimeIntervalSinceReferenceDate, toEncode)
+
+        let resultForInternetDateTime = try URLEncodedFormEncoder(
+            configuration: .init(dateFormat: .internetDateTime)
+        ).encode(toEncode)
+        XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
+
+        let decodedInternetDateTime = try URLEncodedFormDecoder(
+            configuration: .init(dateFormat: .internetDateTime)
+        ).decode(DateCoding.self, from: resultForInternetDateTime)
+        XCTAssertEqual(decodedInternetDateTime, toEncode)
+
+        XCTAssertThrowsError(try URLEncodedFormDecoder(
+            configuration: .init(dateFormat: .internetDateTime)
+        ).decode(DateCoding.self, from: "date=bad-date"))
+    }
+
     func testEncodedArrayValues() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder(
@@ -468,4 +505,8 @@ private struct Users: Codable, Equatable {
 
 private enum Foo: String, Codable {
     case foo, bar, baz
+}
+
+struct DateCoding: Codable, Equatable {
+    let date: Date
 }
