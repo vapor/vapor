@@ -1,3 +1,5 @@
+import NIO
+
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
 ///     print(user) /// User
@@ -28,15 +30,15 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         }
 
         /// Supported date formats
-        public enum DateFormat {
+        public enum DateFormat {            
             /// Seconds since 00:00:00 UTC on 1 January 2001
             case timeIntervalSinceReferenceDate
             /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
             /// ISO 8601 formatted date
             case iso8601
-            /// Use provided `DateFormatter`
-            case custom(DateFormatter)
+            /// Use provided `ThreadSpecificVariable<DateFormatter>`. Should override `public var currentValue: Value?` to produce a new value
+            case custom(ThreadSpecificDateFormatter)
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
@@ -196,8 +198,8 @@ private class _Encoder: Encoder {
                     case .iso8601:
                         //Creating a new `ISO8601DateFormatter` everytime is probably not performant
                         try ISO8601DateFormatter.threadSpecific.string(from: date).encode(to: encoder)
-                    case .custom(let dateFormatter):
-                        try dateFormatter.string(from: date).encode(to: encoder)
+                    case .custom(let threadSpecificDateFormatter):
+                        try threadSpecificDateFormatter.currentValue.string(from: date).encode(to: encoder)
                     }
                 } else {
                     try value.encode(to: encoder)

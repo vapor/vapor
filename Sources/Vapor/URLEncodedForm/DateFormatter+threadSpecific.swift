@@ -22,3 +22,9 @@ extension ISO8601DateFormatter {
         }
     }
 }
+
+/// Should return a `DateFormatter` that is thread specific
+public protocol ThreadSpecificDateFormatter {
+    /// Returns a thread specific `DateFormatter`
+    var currentValue: DateFormatter { get }
+}

@@ -193,8 +193,8 @@ private struct _Decoder: Decoder {
                         } else {
                             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
                         }
-                    case .custom(let dateFormatter):
-                        if let date = dateFormatter.date(from: try String(from: decoder)) {
+                    case .custom(let threadSpecificDateFormatter):
+                        if let date = threadSpecificDateFormatter.currentValue.date(from: try String(from: decoder)) {
                             return date as! T
                         } else {
                             throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Custom date formatter in use"))

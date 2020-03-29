@@ -1,5 +1,6 @@
 @testable import Vapor
 import XCTest
+import NIO
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable
@@ -149,19 +150,36 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertThrowsError(try URLEncodedFormDecoder(
             configuration: .init(dateFormat: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
-        
-        let dateFormatter = DateFormatter()
-        dateFormatter.locale = Locale(identifier: "en_US_POSIX")
-        dateFormatter.dateFormat = "'Date:' yyyy-MM-dd 'Time:' HH:mm:ss 'Timezone:' ZZZZZ"
-        dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                
+        class DateFormatterFactory: ThreadSpecificDateFormatter {
+            private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
+            var currentValue: DateFormatter {
+                get {
+                    guard let dateFormatter = threadSpecificValue.currentValue else {
+                        let threadSpecificDateFormatter = self.newDateFormatter
+                        threadSpecificValue.currentValue = threadSpecificDateFormatter
+                        return threadSpecificDateFormatter
+                    }
+                    return dateFormatter
+                }
+            }
+            
+            private var newDateFormatter: DateFormatter {
+                let dateFormatter = DateFormatter()
+                dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+                dateFormatter.dateFormat = "'Date:' yyyy-MM-dd 'Time:' HH:mm:ss 'Timezone:' ZZZZZ"
+                dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                return dateFormatter
+            }
+        }
         
         let resultCustom = try URLEncodedFormEncoder(
-            configuration: .init(dateFormat: .custom(dateFormatter))
+            configuration: .init(dateFormat: .custom(DateFormatterFactory()))
         ).encode(toEncode)
         XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
         
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateFormat: .custom(dateFormatter))
+            configuration: .init(dateFormat: .custom(DateFormatterFactory()))
         ).decode(DateCoding.self, from: resultCustom)
         XCTAssertEqual(decodedCustom, toEncode)
     }
