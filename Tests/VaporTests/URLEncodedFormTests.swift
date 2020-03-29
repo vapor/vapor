@@ -151,7 +151,7 @@ final class URLEncodedFormTests: XCTestCase {
             configuration: .init(dateFormat: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
                 
-        class DateFormatterFactory: ThreadSpecificDateFormatter {
+        class DateFormatterFactory {
             private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
             var currentValue: DateFormatter {
                 get {
