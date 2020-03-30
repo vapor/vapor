@@ -13,21 +13,8 @@
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
     public struct Configuration {
-        /// Supported date formats
-        public enum DateFormat {
-            /// Seconds since 00:00:00 UTC on 1 January 2001
-            case timeIntervalSinceReferenceDate
-            /// Seconds since  00:00:00 UTC on 1 January 1970
-            case timeIntervalSince1970
-            /// ISO 8601 formatted date
-            case iso8601
-            /// Using custom callback
-            case custom((Decoder) throws -> Date)
-        }
-
         let boolFlags: Bool
         let arraySeparators: [Character]
-        let dateFormat: DateFormat
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -38,12 +25,10 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
         public init(
             boolFlags: Bool = true,
-            arraySeparators: [Character] = [",", "|"],
-            dateFormat: DateFormat = .timeIntervalSince1970
+            arraySeparators: [Character] = [",", "|"]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
-            self.dateFormat = dateFormat
         }
     }
 
@@ -190,21 +175,7 @@ private struct _Decoder: Decoder {
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
                 if type == Date.self {
-                    switch configuration.dateFormat {
-                    case .timeIntervalSince1970:
-                        return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
-                    case .timeIntervalSinceReferenceDate:
-                        return Date(timeIntervalSinceReferenceDate: try TimeInterval(from: decoder)) as! T
-                    case .iso8601:
-                        //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                        if let date = ISO8601DateFormatter.shared.date(from: try String(from: decoder)) {
-                            return date as! T
-                        } else {
-                            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
-                        }
-                    case .custom(let callback):
-                        return try callback(decoder) as! T
-                    }
+                  return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
                 } else {
                     return try T(from: decoder)
                 }

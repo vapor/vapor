@@ -28,32 +28,17 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             /// For example, `foo = [1,2,3]` would be serialized as `foo=1&foo=2&foo=3`.
             case values
         }
-
-        /// Supported date formats
-        public enum DateFormat {
-            /// Seconds since 00:00:00 UTC on 1 January 2001
-            case timeIntervalSinceReferenceDate
-            /// Seconds since  00:00:00 UTC on 1 January 1970
-            case timeIntervalSince1970
-            /// ISO 8601 formatted date
-            case iso8601
-            /// Using custom callback
-            case custom((Date, Encoder) throws -> Void)
-        }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
-        public var dateFormat: DateFormat
 
         /// Creates a new `Configuration`.
         ///
         ///  - parameters:
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
         public init(
-            arrayEncoding: ArrayEncoding = .bracket,
-            dateFormat: DateFormat = .timeIntervalSince1970
+            arrayEncoding: ArrayEncoding = .bracket
         ) {
             self.arrayEncoding = arrayEncoding
-            self.dateFormat = dateFormat
         }
     }
 
@@ -190,17 +175,7 @@ private class _Encoder: Encoder {
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
                 if let date = value as? Date {
-                    switch configuration.dateFormat {
-                    case .timeIntervalSince1970:
-                        try date.timeIntervalSince1970.encode(to: encoder)
-                    case .timeIntervalSinceReferenceDate:
-                        try date.timeIntervalSinceReferenceDate.encode(to: encoder)
-                    case .iso8601:
-                        //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                        try ISO8601DateFormatter.shared.string(from: date).encode(to: encoder)
-                    case .custom(let callback):
-                        try callback(date, encoder)
-                    }
+                  try date.timeIntervalSince1970.encode(to: encoder)
                 } else {
                     try value.encode(to: encoder)
                 }
