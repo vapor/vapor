@@ -39,7 +39,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateFormat: DateFormat = .iso8601
+            dateFormat: DateFormat = .timeIntervalSinceReferenceDate
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators

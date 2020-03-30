@@ -50,7 +50,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
-            dateFormat: DateFormat = .iso8601
+            dateFormat: DateFormat = .timeIntervalSinceReferenceDate
         ) {
             self.arrayEncoding = arrayEncoding
             self.dateFormat = dateFormat
