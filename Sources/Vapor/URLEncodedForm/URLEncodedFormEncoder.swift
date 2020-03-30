@@ -1,5 +1,3 @@
-import NIO
-
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
 ///     print(user) /// User
@@ -175,7 +173,7 @@ private class _Encoder: Encoder {
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
                 if let date = value as? Date {
-                  try date.timeIntervalSince1970.encode(to: encoder)
+                    try date.timeIntervalSince1970.encode(to: encoder)
                 } else {
                     try value.encode(to: encoder)
                 }
