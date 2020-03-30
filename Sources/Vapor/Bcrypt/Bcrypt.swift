@@ -217,6 +217,20 @@ extension BCryptDigest: PasswordVerifier {
             created: String(decoding: digest.copyBytes(), as: UTF8.self)
         )
     }
+    
+    public func `for`(_ request: Request) -> PasswordVerifier {
+        return BCryptDigest()
+    }
+}
+
+extension BCryptDigest: PasswordHasher {
+    public func hash(_ plaintext: String) throws -> String {
+        return try self.hash(plaintext)
+    }
+    
+    public func `for`(_ request: Request) -> PasswordHasher {
+        return BCryptDigest()
+    }
 }
 
 
