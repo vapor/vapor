@@ -26,6 +26,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             /// For example, `foo = [1,2,3]` would be serialized as `foo=1&foo=2&foo=3`.
             case values
         }
+
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
 
@@ -170,11 +171,7 @@ private class _Encoder: Encoder {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
-                if let date = value as? Date {
-                    try date.timeIntervalSince1970.encode(to: encoder)
-                } else {
-                    try value.encode(to: encoder)
-                }
+                try value.encode(to: encoder)
                 self.internalData.children[key.stringValue] = try encoder.getData()
             }
         }

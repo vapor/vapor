@@ -15,7 +15,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public struct Configuration {
         let boolFlags: Bool
         let arraySeparators: [Character]
-        
+
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -175,11 +175,7 @@ private struct _Decoder: Decoder {
                 }
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
-                if type == Date.self {
-                    return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
-                } else {
-                    return try T(from: decoder)
-                }
+                return try T(from: decoder)
             }
         }
         
