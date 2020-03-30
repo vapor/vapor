@@ -8,7 +8,7 @@ public protocol PasswordVerifier {
 }
 
 /// Simply compares the password to the hash.
-/// Don't use this in production.
+/// Don't use this in production - use BCrypt
 public struct PlaintextVerifier: PasswordVerifier {
     /// Create a new plaintext verifier.
     public init() {}

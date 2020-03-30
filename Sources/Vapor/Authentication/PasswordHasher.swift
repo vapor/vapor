@@ -6,7 +6,7 @@ public protocol PasswordHasher {
 }
 
 /// Simply returns the plaintext as the hash, useful for testing
-/// Don't use this in production
+/// Don't use this in production - use BCrypt
 extension PlaintextVerifier: PasswordHasher {
     public func hash(_ plaintext: String) throws -> String {
         return plaintext
