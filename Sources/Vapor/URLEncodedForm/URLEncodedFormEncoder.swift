@@ -33,9 +33,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///
         ///  - parameters:
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
-        public init(
-            arrayEncoding: ArrayEncoding = .bracket
-        ) {
+        public init(arrayEncoding: ArrayEncoding = .bracket) {
             self.arrayEncoding = arrayEncoding
         }
     }
@@ -168,7 +166,7 @@ private class _Encoder: Encoder {
         func encode<T>(_ value: T, forKey key: Key) throws
             where T : Encodable
         {
-             if let convertible = value as? URLQueryFragmentConvertible {
+            if let convertible = value as? URLQueryFragmentConvertible {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
