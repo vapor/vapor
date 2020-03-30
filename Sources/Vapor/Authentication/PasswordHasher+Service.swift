@@ -1,14 +1,14 @@
 extension Request {
-    var passwordHasher: PasswordHasher {
+    public var passwordHasher: PasswordHasher {
         self.application.passwordHashers.passwordHasher.for(self)
     }
 }
 
 extension Application {
     
-    struct PasswordHashers {
-        struct Provider {
-            static var bcrypt: Self {
+    public struct PasswordHashers {
+        public struct Provider {
+            public static var bcrypt: Self {
                 .init {
                     $0.passwordHashers.use { $0.passwordHashers.bcrypt }
                 }
@@ -16,7 +16,7 @@ extension Application {
 
             let run: (Application) -> ()
 
-            init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -36,22 +36,22 @@ extension Application {
             return .init()
         }
 
-        var passwordHasher: PasswordHasher {
+        public var passwordHasher: PasswordHasher {
             guard let makeHasher = self.storage.makeHasher else {
                 fatalError("No password hasher configured. Configure with app.passwordHashers.use(...)")
             }
             return makeHasher(self.application)
         }
 
-        func use(_ provider: Provider) {
+        public func use(_ provider: Provider) {
             provider.run(self.application)
         }
 
-        func use(_ makeHasher: @escaping (Application) -> (PasswordHasher)) {
+        public func use(_ makeHasher: @escaping (Application) -> (PasswordHasher)) {
             self.storage.makeHasher = makeHasher
         }
 
-        func initialize() {
+        public func initialize() {
             self.application.storage[Key.self] = .init()
             // Default to BCrypt
             self.use(.bcrypt)
@@ -65,7 +65,7 @@ extension Application {
         }
     }
 
-    var passwordHashers: PasswordHashers {
+    public var passwordHashers: PasswordHashers {
         .init(application: self)
     }
 }

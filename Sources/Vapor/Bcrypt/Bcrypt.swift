@@ -223,13 +223,13 @@ extension BCryptDigest: PasswordVerifier {
     }
 }
 
-extension BCryptDigest: PasswordHasher {
-    public func hash(_ plaintext: String) throws -> String {
-        return try self.hash(plaintext)
-    }
-    
+extension BCryptDigest: PasswordHasher {    
     public func `for`(_ request: Request) -> PasswordHasher {
         return BCryptDigest()
+    }
+    
+    public func hash(_ plaintext: String) throws -> String {
+        return try self.hash(plaintext, cost: 12)
     }
 }
 
