@@ -106,7 +106,6 @@ extension Decimal: URLQueryFragmentConvertible {
 
 extension Date: URLQueryFragmentConvertible {
     init?(urlQueryFragmentValue value: URLQueryFragment) {
-        
         guard let double = Double(urlQueryFragmentValue: value) else {
             return nil
         }
