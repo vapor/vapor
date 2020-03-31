@@ -99,13 +99,3 @@ extension Application {
         }
     }
 }
-
-//extension HTTPClient: Client {
-//    public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-//        self.send(request, eventLoop: .indifferent)
-//    }
-//    
-//    public func `for`(_ request: Vapor.Request) -> Client {
-//        return HTTPClient(eventLoopGroupProvider: .shared(request.eventLoop))
-//    }
-//}

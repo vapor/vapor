@@ -1495,13 +1495,6 @@ final class ApplicationTests: XCTestCase {
     }
 }
 
-//extension Application.Responder {
-//    /// Creates a `Client` from an `Application`'s  current`Responder`.
-//    var client: Client {
-//        ResponderClient(responder: self.current, application: self.application)
-//    }
-//}
-
 struct ResponderClient: Client {
     let responder: Responder
     let application: Application
