@@ -93,7 +93,7 @@ extension Application {
         
         private var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
-                fatalError("Clients not configured. Configure with app.client.initialize()")
+                fatalError("Clients not configured. Configure with app.clients.initialize()")
             }
             return storage
         }
