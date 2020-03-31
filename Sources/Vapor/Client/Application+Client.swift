@@ -1,11 +1,21 @@
 extension Application {
-    public var client: Client {
+    public var clients: Clients {
         .init(application: self)
     }
 
-    public struct Client {
-        public var eventLoopGroup: EventLoopGroup {
-            self.application.eventLoopGroup
+    public struct Clients {
+        public struct Provider {
+            public static var http: Self {
+                .init {
+                    $0.clients.use { $0.clients.http }
+                }
+            }
+
+            let run: (Application) -> ()
+
+            init(_ run: @escaping (Application) -> ()) {
+                self.run = run
+            }
         }
 
         struct ConfigurationKey: StorageKey {
@@ -23,9 +33,18 @@ extension Application {
                 self.application.storage[ConfigurationKey.self] = newValue
             }
         }
+        
+        final class Storage {
+            var makeClient: ((Application) -> Client)?
+            init() { }
+        }
 
         struct ClientKey: StorageKey, LockKey {
             typealias Value = HTTPClient
+        }
+        
+        struct Key: StorageKey {
+            typealias Value = Storage
         }
 
         public var http: HTTPClient {
@@ -48,17 +67,44 @@ extension Application {
                 return new
             }
         }
+        
+        public var client: Client {
+            guard let makeClient = self.storage.makeClient else {
+                fatalError("No client configured. Configure with app.clients.use(...)")
+            }
+            return makeClient(self.application)
+        }
+        
+        public func initialize() {
+            self.application.storage[Key.self] = .init()
+            self.use(.http)
+        }
+        
+        public func use(_ provider: Provider) {
+            provider.run(self.application)
+        }
+
+        public func use(_ makeClient: @escaping (Application) -> (Client)) {
+            self.storage.makeClient = makeClient
+        }
 
         let application: Application
+        
+        private var storage: Storage {
+            guard let storage = self.application.storage[Key.self] else {
+                fatalError("Clients not configured. Configure with app.client.initialize()")
+            }
+            return storage
+        }
     }
 }
 
-extension Application.Client: Client {
-    public func `for`(_ request: Request) -> Client {
-        RequestClient(http: self.http, req: request)
-    }
-
+extension HTTPClient: Client {
     public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.http.send(request, eventLoop: .indifferent)
+        self.send(request, eventLoop: .indifferent)
+    }
+    
+    public func `for`(_ request: Vapor.Request) -> Client {
+        return HTTPClient(eventLoopGroupProvider: .shared(request.eventLoop))
     }
 }
