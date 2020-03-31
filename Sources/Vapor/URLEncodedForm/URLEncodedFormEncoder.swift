@@ -29,7 +29,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
         /// Supported date formats
         public enum DateFormat {
-            /// Seconds since  00:00:00 UTC on 1 January 1970
+            /// Seconds since 1 January 1970 00:00:00 UTC
             case unixTimestamp
             /// ISO 8601 formatted date
             case iso8601
