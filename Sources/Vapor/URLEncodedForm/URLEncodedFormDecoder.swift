@@ -170,7 +170,30 @@ private struct _Decoder: Decoder {
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
-            if let convertible = T.self as? URLQueryFragmentConvertible.Type {
+            if T.self is Date.Type {
+                switch configuration.dateFormat {
+                case .timeIntervalSince1970:
+                    guard let value = child.values.last else {
+                        throw DecodingError.valueNotFound(T.self, at: self.codingPath + [key])
+                    }
+                    if let result = Date.init(urlQueryFragmentValue: value) {
+                        return result as! T
+                    } else {
+                        throw DecodingError.typeMismatch(T.self, at: self.codingPath + [key])
+                    }
+                case .iso8601:
+                    let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
+                    //Creating a new `ISO8601DateFormatter` everytime is probably not performant
+                    if let date = ISO8601DateFormatter.shared.date(from: try String(from: decoder)) {
+                        return date as! T
+                    } else {
+                        throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
+                    }
+                case .custom(let callback):
+                    let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
+                    return try callback(decoder) as! T
+                }
+            } else if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                 guard let value = child.values.last else {
                     if self.configuration.boolFlags {
                         //If no values found see if we are decoding a boolean
@@ -187,23 +210,7 @@ private struct _Decoder: Decoder {
                 }
             } else {
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
-                if type == Date.self {
-                    switch configuration.dateFormat {
-                    case .timeIntervalSince1970:
-                        return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
-                    case .iso8601:
-                        //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                        if let date = ISO8601DateFormatter.shared.date(from: try String(from: decoder)) {
-                            return date as! T
-                        } else {
-                            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
-                        }
-                    case .custom(let callback):
-                        return try callback(decoder) as! T
-                    }
-                } else {
-                    return try T(from: decoder)
-                }
+                return try T(from: decoder)
             }
         }
         

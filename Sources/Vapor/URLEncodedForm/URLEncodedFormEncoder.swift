@@ -183,23 +183,24 @@ private class _Encoder: Encoder {
         func encode<T>(_ value: T, forKey key: Key) throws
             where T : Encodable
         {
-             if let convertible = value as? URLQueryFragmentConvertible {
+            if let date = value as? Date {
+                switch configuration.dateFormat {
+                case .timeIntervalSince1970:
+                    internalData.children[key.stringValue] = URLEncodedFormData(values: [date.urlQueryFragmentValue])
+                case .iso8601:
+                    internalData.children[key.stringValue] = URLEncodedFormData(values: [
+                        ISO8601DateFormatter.shared.string(from: date).urlQueryFragmentValue
+                    ])
+                case .custom(let callback):
+                    let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
+                    try callback(date, encoder)
+                    self.internalData.children[key.stringValue] = try encoder.getData()
+                }
+            } else if let convertible = value as? URLQueryFragmentConvertible {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
-                if let date = value as? Date {
-                    switch configuration.dateFormat {
-                    case .timeIntervalSince1970:
-                        try date.timeIntervalSince1970.encode(to: encoder)
-                    case .iso8601:
-                        //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                        try ISO8601DateFormatter.shared.string(from: date).encode(to: encoder)
-                    case .custom(let callback):
-                        try callback(date, encoder)
-                    }
-                } else {
-                    try value.encode(to: encoder)
-                }
+                try value.encode(to: encoder)
                 self.internalData.children[key.stringValue] = try encoder.getData()
             }
         }
