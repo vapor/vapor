@@ -1,3 +1,5 @@
+import AsyncHTTPClient
+
 extension Application: XCTApplicationTester {
     public func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
          try self.testable().performTest(request: request)

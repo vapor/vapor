@@ -1,7 +1,5 @@
 @_exported import AsyncKit
 
-@_exported import class AsyncHTTPClient.HTTPClient
-
 @_exported import Crypto
 @_exported import RoutingKit
 @_exported import ConsoleKit

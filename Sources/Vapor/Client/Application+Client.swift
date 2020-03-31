@@ -1,6 +1,12 @@
+import AsyncHTTPClient
+
 extension Application {
     public var clients: Clients {
         .init(application: self)
+    }
+    
+    public var client: Client {
+        return self.clients.client
     }
 
     public struct Clients {
@@ -19,10 +25,10 @@ extension Application {
         }
 
         struct ConfigurationKey: StorageKey {
-            typealias Value = HTTPClient.Configuration
+            typealias Value = ClientConfiguration
         }
 
-        public var configuration: HTTPClient.Configuration {
+        public var configuration: ClientConfiguration {
             get {
                 self.application.storage[ConfigurationKey.self] ?? .init()
             }
@@ -60,7 +66,7 @@ extension Application {
                 }
                 let new = HTTPClient(
                     eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
-                    configuration: self.configuration
+                    configuration: self.configuration.asHTTPClientConfiguration()
                 )
                 let wrapped = AsyncHTTPClient(http: new, eventLoop: self.application.eventLoopGroup.next())
                 self.application.storage.set(ClientKey.self, to: wrapped) {
