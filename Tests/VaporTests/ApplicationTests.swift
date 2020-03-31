@@ -1250,6 +1250,26 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertEqual(res.status, .seeOther)
     }
+    
+    func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.clients.configuration.redirectConfiguration = .disallow
+
+        app.get("redirect") {
+            $0.redirect(to: "foo")
+        }
+
+        let server = try app.server.start(hostname: "localhost", port: 8080)
+        defer { server.shutdown() }
+
+        _ = try app.clients.client.get("http://localhost:8080/redirect").wait()
+        
+        app.clients.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
+        let res = try app.clients.client.get("http://localhost:8080/redirect").wait()
+        XCTAssertEqual(res.status, .seeOther)
+    }
 
     func testClientResponseCodable() throws {
         let app = Application(.testing)
