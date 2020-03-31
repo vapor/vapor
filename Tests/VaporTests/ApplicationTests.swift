@@ -1205,7 +1205,7 @@ final class ApplicationTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.clients.http) == WrappedHTTPClient.self)
+            XCTAssert(type(of: app.clients.http) == AsyncHTTPClient.self)
             finishLine.leave()
         }
 
@@ -1213,7 +1213,7 @@ final class ApplicationTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.clients.http) == WrappedHTTPClient.self)
+            XCTAssert(type(of: app.clients.http) == AsyncHTTPClient.self)
             finishLine.leave()
         }
 

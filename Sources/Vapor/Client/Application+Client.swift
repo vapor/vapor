@@ -40,14 +40,14 @@ extension Application {
         }
 
         struct ClientKey: StorageKey, LockKey {
-            typealias Value = WrappedHTTPClient
+            typealias Value = AsyncHTTPClient
         }
         
         struct Key: StorageKey {
             typealias Value = Storage
         }
 
-        public var http: WrappedHTTPClient {
+        public var http: AsyncHTTPClient {
             if let existing = self.application.storage[ClientKey.self] {
                 return existing
             } else {
@@ -61,7 +61,7 @@ extension Application {
                     eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
                     configuration: self.configuration
                 )
-                let wrapped = WrappedHTTPClient(http: new, eventLoop: self.application.eventLoopGroup.next())
+                let wrapped = AsyncHTTPClient(http: new, eventLoop: self.application.eventLoopGroup.next())
                 self.application.storage.set(ClientKey.self, to: wrapped) {
                     try $0.http.syncShutdown()
                 }
