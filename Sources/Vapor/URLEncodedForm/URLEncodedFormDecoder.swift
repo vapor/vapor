@@ -15,8 +15,6 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public struct Configuration {
         /// Supported date formats
         public enum DateFormat {
-            /// Seconds since 00:00:00 UTC on 1 January 2001
-            case timeIntervalSinceReferenceDate
             /// Seconds since  00:00:00 UTC on 1 January 1970
             case timeIntervalSince1970
             /// ISO 8601 formatted date
@@ -193,8 +191,6 @@ private struct _Decoder: Decoder {
                     switch configuration.dateFormat {
                     case .timeIntervalSince1970:
                         return Date(timeIntervalSince1970: try TimeInterval(from: decoder)) as! T
-                    case .timeIntervalSinceReferenceDate:
-                        return Date(timeIntervalSinceReferenceDate: try TimeInterval(from: decoder)) as! T
                     case .iso8601:
                         //Creating a new `ISO8601DateFormatter` everytime is probably not performant
                         if let date = ISO8601DateFormatter.shared.date(from: try String(from: decoder)) {

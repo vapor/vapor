@@ -127,16 +127,6 @@ final class URLEncodedFormTests: XCTestCase {
         ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
         XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
         
-        let resultForTimeIntervalSinceReferenceDate = try URLEncodedFormEncoder(
-            configuration: .init(dateFormat: .timeIntervalSinceReferenceDate)
-        ).encode(toEncode)
-        XCTAssertEqual("date=-978307200.0", resultForTimeIntervalSinceReferenceDate)
-
-        let decodedTimeIntervalSinceReferenceDate = try URLEncodedFormDecoder(
-            configuration: .init(dateFormat: .timeIntervalSinceReferenceDate)
-        ).decode(DateCoding.self, from: resultForTimeIntervalSinceReferenceDate)
-        XCTAssertEqual(decodedTimeIntervalSinceReferenceDate, toEncode)
-
         let resultForInternetDateTime = try URLEncodedFormEncoder(
             configuration: .init(dateFormat: .iso8601)
         ).encode(toEncode)
