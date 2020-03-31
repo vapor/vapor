@@ -3,6 +3,4 @@ public protocol PasswordVerifier {
     /// Verifies that the supplied password matches a given hash.
     func verify<Password, Digest>(_ password: Password, created digest: Digest) throws -> Bool
         where Password: DataProtocol, Digest: DataProtocol
-    func verify(_ password: String, created digest: String) throws -> Bool
-    func `for`(_ request: Request) -> PasswordVerifier
 }

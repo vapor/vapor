@@ -1,6 +1,6 @@
 /// Simply compares the password to the hash.
 /// Don't use this in production - use BCrypt
-public struct PlaintextVerifier: PasswordVerifier, PasswordHasher {
+public struct PlaintextVerifier: PasswordService, PasswordVerifier {
     /// Create a new plaintext verifier.
     public init() {}
 
@@ -18,42 +18,28 @@ public struct PlaintextVerifier: PasswordVerifier, PasswordHasher {
     public func hash(_ plaintext: String) throws -> String {
         return plaintext
     }
+    
+    public func hash<Plaintext>(_ plaintext: Plaintext) throws -> String where Plaintext : DataProtocol {
+        return String(decoding: plaintext, as: UTF8.self)
+    }
 }
 
 extension PlaintextVerifier {
-    public func `for`(_ request: Request) -> PasswordVerifier {
-        return PlaintextVerifier()
-    }
-    
-    public func `for`(_ request: Request) -> PasswordHasher {
+    public func `for`(_ request: Request) -> PasswordService {
         return PlaintextVerifier()
     }
 }
 
-extension Application.PasswordVerifiers {
+extension Application.Passwords {
     var plaintext: PlaintextVerifier {
         return .init()
     }
 }
 
-extension Application.PasswordHashers {
-    var plaintext: PlaintextVerifier {
-        return .init()
-    }
-}
-
-extension Application.PasswordVerifiers.Provider {
+extension Application.Passwords.Provider {
     public static var plaintext: Self {
         .init {
-            $0.passwordVerifiers.use { $0.passwordVerifiers.plaintext }
-        }
-    }
-}
-
-extension Application.PasswordHashers.Provider {
-    public static var plaintext: Self {
-        .init {
-            $0.passwordHashers.use { $0.passwordHashers.plaintext }
+            $0.passwords.use { $0.passwords.plaintext }
         }
     }
 }

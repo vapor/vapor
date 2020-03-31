@@ -46,10 +46,10 @@ final class BcryptTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
-        let hash = try app.passwordHashers.passwordHasher.hash("vapor")
+        let hash = try app.passwords.hash("vapor")
         XCTAssertTrue(try BCryptDigest().verify("vapor", created: hash))
         
-        let result = try app.passwordVerifiers.passwordVerifier.verify("vapor", created: hash)
+        let result = try app.passwords.verify("vapor", created: hash)
         XCTAssertTrue(result)
     }
     
@@ -57,13 +57,12 @@ final class BcryptTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
-        app.passwordVerifiers.use(.plaintext)
-        app.passwordHashers.use(.plaintext)
+        app.passwords.use(.plaintext)
         
-        let hash = try app.passwordHashers.passwordHasher.hash("vapor")
+        let hash = try app.passwords.hash("vapor")
         XCTAssertEqual(hash, "vapor")
         
-        let result = try app.passwordVerifiers.passwordVerifier.verify("vapor", created: hash)
+        let result = try app.passwords.verify("vapor", created: hash)
         XCTAssertTrue(result)
     }
 }

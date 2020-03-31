@@ -217,22 +217,17 @@ extension BCryptDigest: PasswordVerifier {
             created: String(decoding: digest.copyBytes(), as: UTF8.self)
         )
     }
-    
-    public func `for`(_ request: Request) -> PasswordVerifier {
-        return BCryptDigest()
-    }
 }
 
-extension BCryptDigest: PasswordHasher {    
-    public func `for`(_ request: Request) -> PasswordHasher {
-        return BCryptDigest()
+extension BCryptDigest: PasswordService {
+    public func `for`(_ request: Request) -> PasswordService {
+        BCryptDigest()
     }
     
-    public func hash(_ plaintext: String) throws -> String {
-        return try self.hash(plaintext, cost: 12)
+    public func hash<Plaintext>(_ plaintext: Plaintext) throws -> String where Plaintext : DataProtocol {
+        try self.hash(String(decoding: plaintext.copyBytes(), as: UTF8.self))
     }
 }
-
 
 public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
     case invalidCost
