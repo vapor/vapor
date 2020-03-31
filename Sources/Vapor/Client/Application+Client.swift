@@ -13,7 +13,7 @@ extension Application {
 
             let run: (Application) -> ()
 
-            init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -40,14 +40,14 @@ extension Application {
         }
 
         struct ClientKey: StorageKey, LockKey {
-            typealias Value = HTTPClient
+            typealias Value = WrappedHTTPClient
         }
         
         struct Key: StorageKey {
             typealias Value = Storage
         }
 
-        public var http: HTTPClient {
+        public var http: WrappedHTTPClient {
             if let existing = self.application.storage[ClientKey.self] {
                 return existing
             } else {
@@ -61,10 +61,11 @@ extension Application {
                     eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
                     configuration: self.configuration
                 )
-                self.application.storage.set(ClientKey.self, to: new) {
-                    try $0.syncShutdown()
+                let wrapped = WrappedHTTPClient(http: new, eventLoop: self.application.eventLoopGroup.next())
+                self.application.storage.set(ClientKey.self, to: wrapped) {
+                    try $0.http.syncShutdown()
                 }
-                return new
+                return wrapped
             }
         }
         
@@ -88,7 +89,7 @@ extension Application {
             self.storage.makeClient = makeClient
         }
 
-        let application: Application
+        public let application: Application
         
         private var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
@@ -99,12 +100,12 @@ extension Application {
     }
 }
 
-extension HTTPClient: Client {
-    public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.send(request, eventLoop: .indifferent)
-    }
-    
-    public func `for`(_ request: Vapor.Request) -> Client {
-        return HTTPClient(eventLoopGroupProvider: .shared(request.eventLoop))
-    }
-}
+//extension HTTPClient: Client {
+//    public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+//        self.send(request, eventLoop: .indifferent)
+//    }
+//    
+//    public func `for`(_ request: Vapor.Request) -> Client {
+//        return HTTPClient(eventLoopGroupProvider: .shared(request.eventLoop))
+//    }
+//}

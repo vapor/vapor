@@ -1099,34 +1099,33 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(res.body?.string, "bar")
     }
 
-//    func testBoilerplateClient() throws {
-//        let app = Application(.init(
-//            name: "xctest",
-//            arguments: ["vapor", "serve", "-b", "localhost:8080", "--log", "trace"]
-//        ))
-//        try LoggingSystem.bootstrap(from: &app.environment)
-//        defer { app.shutdown() }
-//
-//        app.get("foo") { req -> EventLoopFuture<String> in
-//            return req.client.get("https://httpbin.org/status/201").map { res in
-//                XCTAssertEqual(res.status.code, 201)
-//                req.application.running?.stop()
-//                return "bar"
-//            }.flatMapErrorThrowing {
-//                req.application.running?.stop()
-//                throw $0
-//            }
-//        }
-//
-//        try app.boot()
-//        try app.start()
-//
-//        let res = try app.clients.client.get("http://localhost:8080/foo").wait()
-//        XCTAssertEqual(res.body?.string, "bar")
-//
-//        try app.running?.onStop.wait()
-//    }
-    #warning("fix")
+    func testBoilerplateClient() throws {
+        let app = Application(.init(
+            name: "xctest",
+            arguments: ["vapor", "serve", "-b", "localhost:8080", "--log", "trace"]
+        ))
+        try LoggingSystem.bootstrap(from: &app.environment)
+        defer { app.shutdown() }
+
+        app.get("foo") { req -> EventLoopFuture<String> in
+            return req.client.get("https://httpbin.org/status/201").map { res in
+                XCTAssertEqual(res.status.code, 201)
+                req.application.running?.stop()
+                return "bar"
+            }.flatMapErrorThrowing {
+                req.application.running?.stop()
+                throw $0
+            }
+        }
+
+        try app.boot()
+        try app.start()
+
+        let res = try app.clients.client.get("http://localhost:8080/foo").wait()
+        XCTAssertEqual(res.body?.string, "bar")
+
+        try app.running?.onStop.wait()
+    }
 
     func testBoilerplate() throws {
         let app = Application(.testing)
@@ -1206,7 +1205,7 @@ final class ApplicationTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.clients.http) == HTTPClient.self)
+            XCTAssert(type(of: app.clients.http) == WrappedHTTPClient.self)
             finishLine.leave()
         }
 
@@ -1214,7 +1213,7 @@ final class ApplicationTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.clients.http) == HTTPClient.self)
+            XCTAssert(type(of: app.clients.http) == WrappedHTTPClient.self)
             finishLine.leave()
         }
 
@@ -1299,11 +1298,13 @@ final class ApplicationTests: XCTestCase {
             defer { current += 1 }
             return Test(number: current)
         }
+        
+        app.clients.use(.responder)
 
         let cache = EndpointCache<Test>(uri: "/number")
         do {
             let test = try cache.get(
-                using: app.responder.client,
+                using: app.clients.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1311,7 +1312,7 @@ final class ApplicationTests: XCTestCase {
         }
         do {
             let test = try cache.get(
-                using: app.responder.client,
+                using: app.clients.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1327,6 +1328,8 @@ final class ApplicationTests: XCTestCase {
         struct Test: Content {
             let number: Int
         }
+        
+        app.clients.use(.responder)
 
         app.get("number") { req -> Response in
             defer { current += 1 }
@@ -1339,7 +1342,7 @@ final class ApplicationTests: XCTestCase {
         let cache = EndpointCache<Test>(uri: "/number")
         do {
             let test = try cache.get(
-                using: app.responder.client,
+                using: app.clients.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1347,7 +1350,7 @@ final class ApplicationTests: XCTestCase {
         }
         do {
             let test = try cache.get(
-                using: app.responder.client,
+                using: app.clients.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1357,7 +1360,7 @@ final class ApplicationTests: XCTestCase {
         sleep(1)
         do {
             let test = try cache.get(
-                using: app.responder.client,
+                using: app.clients.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1492,19 +1495,19 @@ final class ApplicationTests: XCTestCase {
     }
 }
 
-extension Application.Responder {
-    /// Creates a `Client` from an `Application`'s  current`Responder`.
-    var client: Client {
-        ResponderClient(responder: self.current, application: self.application)
-    }
-}
+//extension Application.Responder {
+//    /// Creates a `Client` from an `Application`'s  current`Responder`.
+//    var client: Client {
+//        ResponderClient(responder: self.current, application: self.application)
+//    }
+//}
 
 struct ResponderClient: Client {
     let responder: Responder
     let application: Application
 
-    var eventLoopGroup: EventLoopGroup {
-        self.application.eventLoopGroup
+    var eventLoop: EventLoop {
+        self.application.eventLoopGroup.next()
     }
 
     func `for`(_ request: Request) -> Client {
@@ -1527,8 +1530,20 @@ struct ResponderClient: Client {
             ClientResponse(status: res.status, headers: res.headers, body: res.body.buffer)
         }
     }
+}
 
+extension Application.Clients.Provider {
+    static var responder: Self {
+        .init {
+            $0.clients.use { $0.clients.responder }
+        }
+    }
+}
 
+extension Application.Clients {
+    var responder: ResponderClient {
+        return ResponderClient(responder: self.application.responder, application: self.application)
+    }
 }
 
 private extension ByteBuffer {
