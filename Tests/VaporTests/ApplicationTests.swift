@@ -1077,7 +1077,7 @@ final class ApplicationTests: XCTestCase {
         }
         try app.start()
 
-        let res = try app.clients.client.get("http://127.0.0.1:8123/foo").wait()
+        let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
         XCTAssertEqual(res.body?.string, "bar")
     }
 
@@ -1091,7 +1091,7 @@ final class ApplicationTests: XCTestCase {
 
         try app.start()
 
-        let res = try app.clients.client.get("http://localhost:8080/hello").wait()
+        let res = try app.client.get("http://localhost:8080/hello").wait()
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
 
@@ -1200,7 +1200,7 @@ final class ApplicationTests: XCTestCase {
         let cache = EndpointCache<Test>(uri: "/number")
         do {
             let test = try cache.get(
-                using: app.clients.client,
+                using: app.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1208,7 +1208,7 @@ final class ApplicationTests: XCTestCase {
         }
         do {
             let test = try cache.get(
-                using: app.clients.client,
+                using: app.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1238,7 +1238,7 @@ final class ApplicationTests: XCTestCase {
         let cache = EndpointCache<Test>(uri: "/number")
         do {
             let test = try cache.get(
-                using: app.clients.client,
+                using: app.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1246,7 +1246,7 @@ final class ApplicationTests: XCTestCase {
         }
         do {
             let test = try cache.get(
-                using: app.clients.client,
+                using: app.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1256,7 +1256,7 @@ final class ApplicationTests: XCTestCase {
         sleep(1)
         do {
             let test = try cache.get(
-                using: app.clients.client,
+                using: app.client,
                 logger: app.logger,
                 on: app.eventLoopGroup.next()
             ).wait()
@@ -1297,7 +1297,7 @@ final class ApplicationTests: XCTestCase {
         defer { server.shutdown() }
 
         // Small payload should just barely get through.
-        let res = try app.clients.client.post("http://localhost:8080/gzip") { req in
+        let res = try app.client.post("http://localhost:8080/gzip") { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.body = smallBody
         }.wait()
@@ -1306,7 +1306,7 @@ final class ApplicationTests: XCTestCase {
         // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
         // protocol decoding errors are only ever logged and can't be directly caught.
         do {
-            _ = try app.clients.client.post("http://localhost:8080/gzip") { req in
+            _ = try app.client.post("http://localhost:8080/gzip") { req in
                 req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
                 req.body = bigBody
             }.wait()

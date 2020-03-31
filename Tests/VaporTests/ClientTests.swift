@@ -15,7 +15,7 @@ final class ClientTests: XCTestCase {
         let server = try app.server.start(hostname: "localhost", port: 8080)
         defer { server.shutdown() }
 
-        let res = try app.clients.client.get("http://localhost:8080/redirect").wait()
+        let res = try app.client.get("http://localhost:8080/redirect").wait()
 
         XCTAssertEqual(res.status, .seeOther)
     }
@@ -33,10 +33,10 @@ final class ClientTests: XCTestCase {
         let server = try app.server.start(hostname: "localhost", port: 8080)
         defer { server.shutdown() }
 
-        _ = try app.clients.client.get("http://localhost:8080/redirect").wait()
+        _ = try app.client.get("http://localhost:8080/redirect").wait()
         
         app.clients.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-        let res = try app.clients.client.get("http://localhost:8080/redirect").wait()
+        let res = try app.client.get("http://localhost:8080/redirect").wait()
         XCTAssertEqual(res.status, .seeOther)
     }
 
@@ -44,7 +44,7 @@ final class ClientTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let res = try app.clients.client.get("https://httpbin.org/json").wait()
+        let res = try app.client.get("https://httpbin.org/json").wait()
 
         let encoded = try JSONEncoder().encode(res)
         let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
@@ -57,7 +57,7 @@ final class ClientTests: XCTestCase {
         defer { app.shutdown() }
         try app.boot()
         
-        let res = try app.clients.client.post("http://httpbin.org/anything") { req in
+        let res = try app.client.post("http://httpbin.org/anything") { req in
             try req.content.encode(["hello": "world"])
         }.wait()
 
@@ -92,7 +92,7 @@ final class ClientTests: XCTestCase {
         try app.boot()
         try app.start()
 
-        let res = try app.clients.client.get("http://localhost:8080/foo").wait()
+        let res = try app.client.get("http://localhost:8080/foo").wait()
         XCTAssertEqual(res.body?.string, "bar")
 
         try app.running?.onStop.wait()

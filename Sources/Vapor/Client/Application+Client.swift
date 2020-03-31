@@ -2,6 +2,10 @@ extension Application {
     public var clients: Clients {
         .init(application: self)
     }
+    
+    public var client: Client {
+        clients.client
+    }
 
     public struct Clients {
         public struct Provider {
@@ -62,9 +66,9 @@ extension Application {
                     eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
                     configuration: self.configuration
                 )
-                let wrapped = AsyncHTTPClient(http: new, eventLoop: self.application.eventLoopGroup.next())
+                let wrapped = AsyncHTTPClient(driver: new, eventLoop: self.application.eventLoopGroup.next())
                 self.application.storage.set(ClientKey.self, to: wrapped) {
-                    try $0.http.syncShutdown()
+                    try $0.driver.syncShutdown()
                 }
                 return wrapped
             }
