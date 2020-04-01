@@ -4,15 +4,20 @@ public struct ClientRequest {
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
 
-    public init(method: HTTPMethod = .GET, url: URI = "/", headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+    public init(
+        method: HTTPMethod = .GET,
+        url: URI = "/",
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil
+    ) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
     }
+}
 
-    // MARK: Content
-
+extension ClientRequest {
     private struct _URLQueryContainer: URLQueryContainer {
         var url: URI
 

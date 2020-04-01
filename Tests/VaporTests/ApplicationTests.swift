@@ -1399,10 +1399,9 @@ struct ResponderClient: Client {
         self.application.eventLoopGroup.next()
     }
 
-    func `for`(_ request: Request) -> Client {
+    func delegating(to eventLoop: EventLoop) -> Client {
         self
     }
-
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
         self.responder.respond(to: .init(

@@ -1,6 +1,6 @@
 public protocol Client {
     var eventLoop: EventLoop { get }
-    func `for`(_ request: Request) -> Client
+    func delegating(to eventLoop: EventLoop) -> Client
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse>
 }
 

@@ -1,10 +1,15 @@
-extension Request {
-    public var view: ViewRenderer {
-        self.application.views.renderer.for(self)
-    }
-}
-
 extension Application {
+    public var views: Views {
+        .init(application: self)
+    }
+
+    public var view: ViewRenderer {
+        guard let makeRenderer = self.views.storage.makeRenderer else {
+            fatalError("No renderer configured. Configure with app.views.use(...)")
+        }
+        return makeRenderer(self)
+    }
+
     public struct Views {
         public struct Provider {
             public static var plaintext: Self {
@@ -40,13 +45,6 @@ extension Application {
             )
         }
 
-        public var renderer: ViewRenderer {
-            guard let makeRenderer = self.storage.makeRenderer else {
-                fatalError("No renderer configured. Configure with app.views.use(...)")
-            }
-            return makeRenderer(self.application)
-        }
-
         public func use(_ provider: Provider) {
             provider.run(self.application)
         }
@@ -60,15 +58,11 @@ extension Application {
             self.use(.plaintext)
         }
 
-        private var storage: Storage {
+        var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
                 fatalError("Views not configured. Configure with app.views.initialize()")
             }
             return storage
         }
-    }
-
-    public var views: Views {
-        .init(application: self)
     }
 }
