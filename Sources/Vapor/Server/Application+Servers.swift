@@ -4,13 +4,10 @@ extension Application {
     }
 
     public var server: Server {
-        if let existing = self.servers.current {
-            return existing
-        } else {
-            let new = self.servers.make()
-            self.servers.current = new
-            return new
+        guard let makeServer = self.servers.storage.makeServer else {
+            fatalError("No server configured. Configure with app.servers.use(...)")
         }
+        return makeServer(self)
     }
 
     public struct Servers {
@@ -28,7 +25,6 @@ extension Application {
 
         final class Storage {
             var makeServer: ((Application) -> Server)?
-            var current: Server?
             init() { }
         }
 
@@ -42,22 +38,6 @@ extension Application {
 
         public func use(_ provider: Provider) {
             provider.run(self.application)
-        }
-
-        func make() -> Server {
-            guard let makeServer = self.storage.makeServer else {
-                fatalError("No server configured. Configure with app.servers.use(...)")
-            }
-            return makeServer(self.application)
-        }
-
-        var current: Server? {
-            get {
-                self.storage.current
-            }
-            nonmutating set {
-                self.storage.current = newValue
-            }
         }
 
         public func use(_ makeServer: @escaping (Application) -> (Server)) {

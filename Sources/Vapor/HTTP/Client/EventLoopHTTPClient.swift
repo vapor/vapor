@@ -1,19 +1,15 @@
-extension Application.Clients.Provider {
-    public static var http: Self {
-        .init {
-            $0.clients.use {
-                DelegatingHTTPClient(
-                    eventLoop: $0.eventLoopGroup.next(),
-                    http: $0.http.client.shared
-                )
-            }
-        }
+extension HTTPClient {
+    func delegating(to eventLoop: EventLoop) -> Client {
+        EventLoopHTTPClient(
+            http: self,
+            eventLoop: eventLoop
+        )
     }
 }
 
-private struct DelegatingHTTPClient: Client {
-    let eventLoop: EventLoop
+private struct EventLoopHTTPClient: Client {
     let http: HTTPClient
+    let eventLoop: EventLoop
 
     func send(
         _ client: ClientRequest
@@ -42,6 +38,6 @@ private struct DelegatingHTTPClient: Client {
     }
 
     func delegating(to eventLoop: EventLoop) -> Client {
-        DelegatingHTTPClient(eventLoop: eventLoop, http: self.http)
+        EventLoopHTTPClient(http: self.http, eventLoop: eventLoop)
     }
 }

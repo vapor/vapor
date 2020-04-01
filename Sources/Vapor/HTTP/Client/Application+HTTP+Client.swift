@@ -1,3 +1,13 @@
+extension Application.Clients.Provider {
+    public static var http: Self {
+        .init {
+            $0.clients.use {
+                $0.http.client.shared.delegating(to: $0.eventLoopGroup.next())
+            }
+        }
+    }
+}
+
 extension Application.HTTP {
     public var client: Client {
         .init(application: self.application)
