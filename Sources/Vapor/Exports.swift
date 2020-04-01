@@ -1,6 +1,7 @@
 @_exported import AsyncKit
 
 @_exported import class AsyncHTTPClient.HTTPClient
+@_exported import struct AsyncHTTPClient.HTTPClientError
 
 @_exported import Crypto
 @_exported import RoutingKit

@@ -235,20 +235,6 @@ final class ApplicationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "foo")
         }
     }
-    
-    func testLiveServer() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.routes.get("ping") { req -> String in
-            return "123"
-        }
-        
-        try app.testable().test(.GET, "/ping") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "123")
-        }
-    }
 
     // https://github.com/vapor/vapor/issues/1537
     func testQueryStringRunning() throws {
@@ -384,32 +370,6 @@ final class ApplicationTests: XCTestCase {
             XCTAssertContains(res.body.string, "--\(boundary)")
             XCTAssertContains(res.body.string, "filename=droplet.png")
             XCTAssertContains(res.body.string, "name=\"image\"")
-        }
-    }
-
-    func testWebSocketClient() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.get("ws") { req -> EventLoopFuture<String> in
-            let promise = req.eventLoop.makePromise(of: String.self)
-            return WebSocket.connect(
-                to: "ws://echo.websocket.org/",
-                on: req.eventLoop
-            ) { ws in
-                ws.send("Hello, world!")
-                ws.onText { ws, text in
-                    promise.succeed(text)
-                    ws.close().cascadeFailure(to: promise)
-                }
-            }.flatMap {
-                return promise.futureResult
-            }
-        }
-
-        try app.testable().test(.GET, "/ws") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Hello, world!")
         }
     }
 
@@ -992,95 +952,6 @@ final class ApplicationTests: XCTestCase {
         try XCTAssertEqual(c.wait(), [1, 2])
     }
 
-    // https://github.com/vapor/vapor/issues/1997
-    func testWebSocket404() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        app.http.server.configuration.port = 8085
-        
-        app.webSocket("bar") { req, ws in
-            ws.close(promise: nil)
-        }
-
-        try app.start()
-
-        do {
-            try WebSocket.connect(
-                to: "ws://localhost:8085/foo",
-                on: app.eventLoopGroup.next()
-            ) { _ in  }.wait()
-            XCTFail("should have failed")
-        } catch {
-            // pass
-        }
-    }
-
-//    func testSingletonServiceShutdown() throws {
-//        final class Foo {
-//            var didShutdown = false
-//        }
-//        struct Bar { }
-//
-//        let app = Application(environment: .testing)
-//        app.register(singleton: Foo.self, boot: { c in
-//            return Foo()
-//        }, shutdown: { foo in
-//            foo.didShutdown = true
-//        })
-//        // test normal singleton method
-//        app.register(Bar.self) { c in
-//            return .init()
-//        }
-//
-//        let foo = app.make(Foo.self)
-//        XCTAssertEqual(foo.didShutdown, false)
-//        app.shutdown()
-//        XCTAssertEqual(foo.didShutdown, true)
-//    }
-
-    // https://github.com/vapor/vapor/issues/2009
-    func testWebSocketServer() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        app.webSocket("foo") { req, ws in
-            ws.send("foo")
-            ws.close(promise: nil)
-        }
-
-        try app.start()
-        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
-        WebSocket.connect(
-            to: "ws://localhost:8080/foo",
-            on: app.eventLoopGroup.next()
-        ) { ws in
-            // do nothing
-            ws.onText { ws, string in
-                promise.succeed(string)
-            }
-        }.cascadeFailure(to: promise)
-
-        try XCTAssertEqual(promise.futureResult.wait(), "foo")
-    }
-
-    func testPortOverride() throws {
-        let env = Environment(
-            name: "testing",
-            arguments: ["vapor", "serve", "--port", "8123"]
-        )
-        
-        let app = Application(env)
-        defer { app.shutdown() }
-        
-        app.get("foo") { req in
-            return "bar"
-        }
-        try app.start()
-
-        let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
-        XCTAssertEqual(res.body?.string, "bar")
-    }
-
     func testBoilerplate() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -1278,44 +1149,6 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(bytes.hexEncodedString(), "012a80f0")
         XCTAssertEqual(bytes.hexEncodedString(uppercase: true), "012A80F0")
     }
-    
-    func testConfigureHTTPDecompressionLimit() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
-        
-        let smallOrigString = "Hello, world!"
-        let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAA=")! // "Hello, world!"
-        let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
-
-        // Max out at the smaller payload (.size is of compressed data)
-        app.http.server.configuration.requestDecompression = .enabled(
-            limit: .size(smallBody.readableBytes)
-        )
-        app.post("gzip") { $0.body.string ?? "" }
-
-        try app.server.start()
-        defer { app.server.shutdown() }
-
-        // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:8080/gzip") { req in
-            req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-            req.body = smallBody
-        }.wait()
-        XCTAssertEqual(res.body?.string, smallOrigString)
-        
-        // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
-        // protocol decoding errors are only ever logged and can't be directly caught.
-        do {
-            _ = try app.client.post("http://localhost:8080/gzip") { req in
-                req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
-                req.body = bigBody
-            }.wait()
-        } catch let error as HTTPClientError {
-            XCTAssertEqual(error, HTTPClientError.remoteConnectionClosed)
-        } catch {
-            XCTFail("\(error)")
-        }
-    }
 
     func testBase32() throws {
         let data = Data([1, 2, 3, 4])
@@ -1438,13 +1271,6 @@ private extension ByteBuffer {
     init(string: String) {
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeString(string)
-        self = buffer
-    }
-    
-    init?(base64String: String) {
-        guard let decoded = Data(base64Encoded: base64String) else { return nil }
-        var buffer = ByteBufferAllocator().buffer(capacity: decoded.count)
-        buffer.writeBytes(decoded)
         self = buffer
     }
 }

@@ -111,7 +111,7 @@ final class ClientTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.http.client.current) == HTTPClient.self)
+            XCTAssert(type(of: app.http.client.shared) == HTTPClient.self)
             finishLine.leave()
         }
 
@@ -119,7 +119,7 @@ final class ClientTests: XCTestCase {
         Thread.async {
             startingPistol.leave()
             startingPistol.wait()
-            XCTAssert(type(of: app.http.client.current) == HTTPClient.self)
+            XCTAssert(type(of: app.http.client.shared) == HTTPClient.self)
             finishLine.leave()
         }
 

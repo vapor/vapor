@@ -4,7 +4,7 @@ extension Application.Clients.Provider {
             $0.clients.use {
                 DelegatingHTTPClient(
                     eventLoop: $0.eventLoopGroup.next(),
-                    http: $0.http.client.current
+                    http: $0.http.client.shared
                 )
             }
         }

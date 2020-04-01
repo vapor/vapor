@@ -6,7 +6,7 @@ extension Application.HTTP {
     public struct Client {
         let application: Application
 
-        public var current: HTTPClient {
+        public var shared: HTTPClient {
             if let existing = self.application.storage[Key.self] {
                 return existing
             } else {
@@ -33,7 +33,7 @@ extension Application.HTTP {
             }
             nonmutating set {
                 if self.application.storage.contains(Key.self) {
-                    self.application.logger.warning("Cannot modify client configuration after client has been used")
+                    self.application.logger.warning("Cannot modify client configuration after client has been used.")
                 } else {
                     self.application.storage[ConfigurationKey.self] = newValue
                 }
