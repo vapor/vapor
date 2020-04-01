@@ -1,7 +1,5 @@
 import Backtrace
 
-public protocol LockKey { }
-
 public final class Application {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
@@ -21,6 +19,7 @@ public final class Application {
             self.handlers.append(handler)
         }
     }
+
     public var lifecycle: Lifecycle
 
     public final class Locks {
@@ -46,7 +45,9 @@ public final class Application {
             }
         }
     }
+
     public var locks: Locks
+
     public var sync: Lock {
         self.locks.main
     }
@@ -167,3 +168,5 @@ public final class Application {
         }
     }
 }
+
+public protocol LockKey { }

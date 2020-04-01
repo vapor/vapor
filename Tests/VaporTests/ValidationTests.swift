@@ -245,7 +245,6 @@ class ValidationTests: XCTestCase {
     }
 
     func testCaseOf() {
-
         enum StringEnumType: String, CaseIterable {
             case case1, case2, case3 = "CASE3"
         }
@@ -268,7 +267,6 @@ class ValidationTests: XCTestCase {
         assert("CASE1", passes: .case(of: SingleCaseEnum.self))
         assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
         assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
-
     }
 }
 

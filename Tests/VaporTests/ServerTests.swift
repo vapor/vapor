@@ -88,6 +88,70 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(app.customServer.didStart, true)
         XCTAssertEqual(app.customServer.didShutdown, true)
     }
+
+    func testMultipleChunkBody() throws {
+       let app = Application(.testing)
+       defer { app.shutdown() }
+
+       let payload = [UInt8].random(count: 1 << 20)
+
+       app.post("payload") { req -> HTTPStatus in
+           guard let data = req.body.data else {
+               throw Abort(.internalServerError)
+           }
+           XCTAssertEqual(payload.count, data.readableBytes)
+           XCTAssertEqual([UInt8](data.readableBytesView), payload)
+           return .ok
+       }
+
+       var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
+       buffer.writeBytes(payload)
+       try app.testable(method: .running).test(.POST, "payload", body: buffer) { res in
+           XCTAssertEqual(res.status, .ok)
+       }
+   }
+
+   func testCollectedResponseBodyEnd() throws {
+       let app = Application(.testing)
+       defer { app.shutdown() }
+
+       app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
+           let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+           req.body.drain { result in
+               switch result {
+               case .buffer: break
+               case .error(let error):
+                   promise.fail(error)
+               case .end:
+                   promise.succeed(.ok)
+               }
+               return req.eventLoop.makeSucceededFuture(())
+           }
+           return promise.futureResult
+       }
+
+       try app.testable(method: .running).test(.POST, "drain", beforeRequest: { req in
+           try req.content.encode(["hello": "world"])
+       }, afterResponse: { res in
+           XCTAssertEqual(res.status, .ok)
+       })
+   }
+
+   // https://github.com/vapor/vapor/issues/1786
+   func testMissingBody() throws {
+       struct User: Content { }
+
+       let app = Application(.testing)
+       defer { app.shutdown() }
+
+       app.get("user") { req -> User in
+           return try req.content.decode(User.self)
+       }
+
+       try app.testable().test(.GET, "/user") { res in
+           XCTAssertEqual(res.status, .unsupportedMediaType)
+       }
+   }
 }
 
 extension Application.Servers.Provider {
