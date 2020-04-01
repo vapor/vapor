@@ -1,5 +1,5 @@
 public protocol Client {
-    var eventLoopGroup: EventLoopGroup { get }
+    var eventLoop: EventLoop { get }
     func `for`(_ request: Request) -> Client
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse>
 }
@@ -35,7 +35,7 @@ extension Client {
         do {
             try beforeSend(&request)
         } catch {
-            return self.eventLoopGroup.next().makeFailedFuture(error)
+            return self.eventLoop.makeFailedFuture(error)
         }
         return self.send(request)
     }
