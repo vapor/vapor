@@ -77,6 +77,7 @@ public final class Application {
         self.isBooted = false
         self.core.initialize()
         self.views.initialize()
+        self.passwords.initialize()
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.responder.initialize()

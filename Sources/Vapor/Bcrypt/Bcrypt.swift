@@ -219,6 +219,15 @@ extension BCryptDigest: PasswordVerifier {
     }
 }
 
+extension BCryptDigest: PasswordService {
+    public func `for`(_ request: Request) -> PasswordService {
+        BCryptDigest()
+    }
+    
+    public func hash(_ plaintext: String) throws -> String {
+        try self.hash(plaintext, cost: 12)
+    }
+}
 
 public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
     case invalidCost

@@ -41,6 +41,30 @@ final class BcryptTests: XCTestCase {
         let result = try Bcrypt.verify("vapor", created: "$2a$10$e.qg8zwKLHu3ur5rPF97ouzCJiJmZ93tiwNekDvTQfuhyu97QaUk.")
         XCTAssert(result, "verification failed")
     }
+    
+    func testBCryptService() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(test)
+        defer { app.shutdown() }
+        let hash = try app.passwords.hash("vapor")
+        XCTAssertTrue(try BCryptDigest().verify("vapor", created: hash))
+        
+        let result = try app.passwords.verify("vapor", created: hash)
+        XCTAssertTrue(result)
+    }
+    
+    func testPlaintextService() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(test)
+        defer { app.shutdown() }
+        app.passwords.use(.plaintext)
+        
+        let hash = try app.passwords.hash("vapor")
+        XCTAssertEqual(hash, "vapor")
+        
+        let result = try app.passwords.verify("vapor", created: hash)
+        XCTAssertTrue(result)
+    }
 }
 
 let tests: [(String, String)] = [
