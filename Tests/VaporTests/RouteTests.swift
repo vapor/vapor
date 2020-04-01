@@ -243,4 +243,13 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status, .notFound)
         }
     }
+
+    func testThrowingGroup() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        XCTAssertThrowsError(try app.routes.group("foo") { router in
+            throw Abort(.internalServerError, reason: "Test")
+        })
+    }
 }
