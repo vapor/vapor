@@ -28,7 +28,7 @@ public final class ServeCommand: Command {
 
     private var signalSources: [DispatchSourceSignal]
     private var didShutdown: Bool
-    private var server: Application.Server.Running?
+    private var server: Server?
     private var running: Application.Running?
 
     /// Create a new `ServeCommand`.
@@ -45,8 +45,9 @@ public final class ServeCommand: Command {
         let port = signature.port
             // 0.0.0.0:8080, :8080, parse port
             ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-        let server = try context.application.server.start(hostname: hostname, port: port)
-        self.server = server
+
+        try context.application.server.start(hostname: hostname, port: port)
+        self.server = context.application.server
 
         // allow the server to be stopped or waited for
         let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)

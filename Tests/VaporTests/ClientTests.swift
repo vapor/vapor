@@ -12,8 +12,8 @@ final class ClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        let server = try app.server.start(hostname: "localhost", port: 8080)
-        defer { server.shutdown() }
+        try app.server.start(hostname: "localhost", port: 8080)
+        defer { app.server.shutdown() }
 
         let res = try app.client.get("http://localhost:8080/redirect").wait()
 
@@ -30,8 +30,8 @@ final class ClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        let server = try app.server.start(hostname: "localhost", port: 8080)
-        defer { server.shutdown() }
+        try app.server.start(hostname: "localhost", port: 8080)
+        defer { app.server.shutdown() }
 
         _ = try app.client.get("http://localhost:8080/redirect").wait()
         

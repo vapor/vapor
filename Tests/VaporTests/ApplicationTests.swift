@@ -997,7 +997,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.server.configuration.port = 8085
+        app.http.server.configuration.port = 8085
         
         app.webSocket("bar") { req, ws in
             ws.close(promise: nil)
@@ -1288,13 +1288,13 @@ final class ApplicationTests: XCTestCase {
         let bigBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11HILU3OgBBJmenpqUUK5flFOSkKJRmJeQpJqWn5RamKAICcGhUqAAAA")! // "Hello, much much bigger world than before!"
 
         // Max out at the smaller payload (.size is of compressed data)
-        app.server.configuration.requestDecompression = .enabled(
+        app.http.server.configuration.requestDecompression = .enabled(
             limit: .size(smallBody.readableBytes)
         )
         app.post("gzip") { $0.body.string ?? "" }
 
-        let server = try app.server.start()
-        defer { server.shutdown() }
+        try app.server.start()
+        defer { app.server.shutdown() }
 
         // Small payload should just barely get through.
         let res = try app.client.post("http://localhost:8080/gzip") { req in

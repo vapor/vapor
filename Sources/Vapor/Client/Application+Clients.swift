@@ -28,9 +28,8 @@ extension Application {
             typealias Value = Storage
         }
 
-        public func initialize() {
+        func initialize() {
             self.application.storage[Key.self] = .init()
-            self.use(.http)
         }
         
         public func use(_ provider: Provider) {
@@ -45,7 +44,7 @@ extension Application {
         
         var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
-                fatalError("Clients not configured. Configure with app.clients.initialize()")
+                fatalError("Clients not initialized. Initialize with app.clients.initialize()")
             }
             return storage
         }
