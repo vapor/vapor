@@ -6,7 +6,7 @@ final class ClientTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.clients.configuration.redirectConfiguration = .disallow
+        app.clients.http.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
             $0.redirect(to: "foo")
@@ -24,7 +24,7 @@ final class ClientTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.clients.configuration.redirectConfiguration = .disallow
+        app.clients.http.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
             $0.redirect(to: "foo")
@@ -35,7 +35,7 @@ final class ClientTests: XCTestCase {
 
         _ = try app.client.get("http://localhost:8080/redirect").wait()
         
-        app.clients.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
+        app.clients.http.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
         let res = try app.client.get("http://localhost:8080/redirect").wait()
         XCTAssertEqual(res.status, .seeOther)
     }

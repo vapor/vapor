@@ -21,31 +21,10 @@ extension Application {
                 self.run = run
             }
         }
-
-        struct ConfigurationKey: StorageKey {
-            typealias Value = HTTPClient.Configuration
-        }
-
-        public var configuration: HTTPClient.Configuration {
-            get {
-                self.application.storage[ConfigurationKey.self] ?? .init()
-            }
-            nonmutating set {
-                if self.application.storage.contains(ClientKey.self) {
-                    self.application.logger.warning("Cannot modify client configuration after client has been used")
-                } else {
-                    self.application.storage[ConfigurationKey.self] = newValue
-                }
-            }
-        }
         
         final class Storage {
             var makeClient: ((Application) -> Client)?
             init() { }
-        }
-
-        struct ClientKey: StorageKey, LockKey {
-            typealias Value = AsyncHTTPClient
         }
         
         struct Key: StorageKey {
@@ -53,25 +32,7 @@ extension Application {
         }
 
         public var http: AsyncHTTPClient {
-            if let existing = self.application.storage[ClientKey.self] {
-                return existing
-            } else {
-                let lock = self.application.locks.lock(for: ClientKey.self)
-                lock.lock()
-                defer { lock.unlock() }
-                if let existing = self.application.storage[ClientKey.self] {
-                    return existing
-                }
-                let new = HTTPClient(
-                    eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
-                    configuration: self.configuration
-                )
-                let wrapped = AsyncHTTPClient(driver: new, eventLoop: self.application.eventLoopGroup.next())
-                self.application.storage.set(ClientKey.self, to: wrapped) {
-                    try $0.driver.syncShutdown()
-                }
-                return wrapped
-            }
+            return AsyncHTTPClient(eventLoop: self.application.eventLoopGroup.next(), application: self.application)
         }
         
         public var client: Client {
