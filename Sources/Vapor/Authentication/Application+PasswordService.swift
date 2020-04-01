@@ -70,8 +70,8 @@ extension Application {
     }
 }
 
-extension Application.Passwords: PasswordService {
-    public func hash<Plaintext>(_ plaintext: Plaintext) throws -> String where Plaintext : DataProtocol {
+extension Application.Passwords: PasswordService {    
+    public func hash(_ plaintext: String) throws -> String {
         try self.passwords.hash(plaintext)
     }
     

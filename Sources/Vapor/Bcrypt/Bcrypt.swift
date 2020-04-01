@@ -224,8 +224,8 @@ extension BCryptDigest: PasswordService {
         BCryptDigest()
     }
     
-    public func hash<Plaintext>(_ plaintext: Plaintext) throws -> String where Plaintext : DataProtocol {
-        try self.hash(String(decoding: plaintext.copyBytes(), as: UTF8.self))
+    public func hash(_ plaintext: String) throws -> String {
+        try self.hash(plaintext, cost: 12)
     }
 }
 
