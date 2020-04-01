@@ -208,24 +208,37 @@ public final class BCryptDigest {
     }
 }
 
+extension Application.Passwords.Provider {
+    public static var bcrypt: Self {
+        .init {
+            $0.passwords.use { _ in
+                BCryptDigest()
+            }
+        }
+    }
+}
+
 extension BCryptDigest: PasswordVerifier {
-    public func verify<Password, Digest>(_ password: Password, created digest: Digest) throws -> Bool
+    public func digest<Password>(
+        _ password: Password
+    ) throws -> [UInt8]
+        where Password: DataProtocol
+    {
+        let string = String(decoding: password, as: UTF8.self)
+        let digest = try self.hash(string)
+        return .init(digest.utf8)
+    }
+
+    public func verify<Password, Digest>(
+        _ password: Password,
+        created digest: Digest
+    ) throws -> Bool
         where Password: DataProtocol, Digest: DataProtocol
     {
         return try self.verify(
             String(decoding: password.copyBytes(), as: UTF8.self),
             created: String(decoding: digest.copyBytes(), as: UTF8.self)
         )
-    }
-}
-
-extension BCryptDigest: PasswordService {
-    public func `for`(_ request: Request) -> PasswordService {
-        BCryptDigest()
-    }
-    
-    public func hash(_ plaintext: String) throws -> String {
-        try self.hash(plaintext, cost: 12)
     }
 }
 

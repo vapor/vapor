@@ -1,9 +1,9 @@
 extension Request {
-    public var auth: Auth {
+    public var auth: Authentication {
         return .init(request: self)
     }
 
-    public struct Auth {
+    public struct Authentication {
         let request: Request
         init(request: Request) {
             self.request = request
@@ -11,25 +11,23 @@ extension Request {
     }
 }
 
-extension Request.Auth {
+extension Request.Authentication {
     // MARK: Authenticate
-
     /// Authenticates the supplied instance for this request.
     public func login<A>(_ instance: A)
         where A: Authenticatable
     {
-        self.request._authenticationCache[A.self] = instance
+        self.cache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
     public func logout<A>(_ type: A.Type = A.self)
         where A: Authenticatable
     {
-        self.request._authenticationCache[A.self] = nil
+        self.cache[A.self] = nil
     }
 
     // MARK: Verify
-
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
@@ -48,7 +46,7 @@ extension Request.Auth {
     public func get<A>(_ type: A.Type = A.self) -> A?
         where A: Authenticatable
     {
-        return self.request._authenticationCache[A.self]
+        return self.cache[A.self]
     }
 
     /// Returns true if the type has been authenticated.
@@ -57,16 +55,12 @@ extension Request.Auth {
     {
         return self.get(A.self) != nil
     }
-}
 
-// Internal auth cache
-
-extension Request {
     /// Stores authenticated objects. This should be created
     /// using the request container as a singleton. Authenticated
     /// objects can then be stored here by middleware and fetched
     /// later in route closures.
-    internal final class AuthenticationCache {
+    private final class Cache {
         /// The internal storage.
         private var storage: [ObjectIdentifier: Any]
 
@@ -84,17 +78,22 @@ extension Request {
         }
     }
 
-    private struct AuthenticationCacheKey: StorageKey {
-        typealias Value = AuthenticationCache
+    private struct CacheKey: StorageKey {
+        typealias Value = Cache
     }
 
-    internal var _authenticationCache: AuthenticationCache {
-        if let existing = self.storage[AuthenticationCacheKey.self] {
-            return existing
-        } else {
-            let new = AuthenticationCache()
-            self.storage[AuthenticationCacheKey.self] = new
-            return new
+    private var cache: Cache {
+        get {
+            if let existing = self.request.storage[CacheKey.self] {
+                return existing
+            } else {
+                let new = Cache()
+                self.request.storage[CacheKey.self] = new
+                return new
+            }
+        }
+        set {
+            self.request.storage[CacheKey.self] = newValue
         }
     }
 }
