@@ -131,7 +131,7 @@ final class ClientTests: XCTestCase {
         defer { app.shutdown() }
 
         app.clients.use(.custom)
-        try app.client.get("https://vapor.codes").wait()
+        _ = try app.client.get("https://vapor.codes").wait()
 
         XCTAssertEqual(app.customClient.requests.count, 1)
         XCTAssertEqual(app.customClient.requests.first?.url.host, "vapor.codes")
