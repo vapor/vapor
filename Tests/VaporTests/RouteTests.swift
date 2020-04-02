@@ -252,4 +252,20 @@ final class RouteTests: XCTestCase {
             throw Abort(.internalServerError, reason: "Test")
         })
     }
+
+    func testCollection() throws {
+        struct Foo: RouteCollection {
+            func boot(routes: RoutesBuilder) throws {
+                routes.get("foo") { _ in "bar" }
+            }
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        try app.register(collection: Foo())
+
+        try app.test(.GET, "foo") { res in
+            XCTAssertEqual(res.body.string, "bar")
+        }
+    }
 }
