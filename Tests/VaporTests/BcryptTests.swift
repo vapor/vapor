@@ -52,12 +52,23 @@ final class BcryptTests: XCTestCase {
         let result = try app.password.verify("vapor", created: hash)
         XCTAssertTrue(result)
         
-        let asyncHash = try app.password.async(on: app.threadPool
-            , hopTo: app.eventLoopGroup.next()).digest("vapor").wait()
+        let asyncHash = try app.password.asynchronized(on: app.threadPool, hopTo: app.eventLoopGroup.next()).digest("vapor").wait()
         XCTAssertTrue(try BCryptDigest().verify("vapor", created: asyncHash))
         
-        let asyncResult = try app.password.async(on: app.threadPool, hopTo: app.eventLoopGroup.next()).verify("vapor", created: asyncHash).wait()
-        XCTAssertTrue(asyncResult)
+        struct Verify: Content {
+            let digest: String
+        }
+        
+        app.post("test") { req -> EventLoopFuture<String> in
+            let verify = try req.content.decode(Verify.self)
+            return try req.password.async.verify("vapor", created: verify.digest).map { $0 ? "true" : "false" }
+        }
+        
+        try app.test(.POST, "test", beforeRequest: { req in
+            try req.content.encode(Verify(digest: asyncHash))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.body.string, "true")
+        })
     }
     
     func testPlaintextService() throws {
