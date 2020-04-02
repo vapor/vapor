@@ -213,6 +213,8 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
                     serialized += "=Lax"
                 case .strict:
                     serialized += "=Strict"
+                case .none:
+                    serialized += "=None"
                 }
             }
             

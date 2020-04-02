@@ -125,4 +125,59 @@ final class ClientTests: XCTestCase {
 
         finishLine.wait()
     }
+
+    func testCustomClient() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.clients.use(.custom)
+        try app.client.get("https://vapor.codes").wait()
+
+        XCTAssertEqual(app.customClient.requests.count, 1)
+        XCTAssertEqual(app.customClient.requests.first?.url.host, "vapor.codes")
+    }
+}
+
+private final class CustomClient: Client {
+    var eventLoop: EventLoop {
+        EmbeddedEventLoop()
+    }
+    var requests: [ClientRequest]
+
+    init() {
+        self.requests = []
+    }
+
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        self.requests.append(request)
+        return self.eventLoop.makeSucceededFuture(ClientResponse())
+    }
+
+    func delegating(to eventLoop: EventLoop) -> Client {
+        self
+    }
+}
+
+private extension Application {
+    struct CustomClientKey: StorageKey {
+        typealias Value = CustomClient
+    }
+
+    var customClient: CustomClient {
+        if let existing = self.storage[CustomClientKey.self] {
+            return existing
+        } else {
+            let new = CustomClient()
+            self.storage[CustomClientKey.self] = new
+            return new
+        }
+    }
+}
+
+private extension Application.Clients.Provider {
+    static var custom: Self {
+        .init {
+            $0.clients.use { $0.customClient }
+        }
+    }
 }
