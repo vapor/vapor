@@ -2,22 +2,13 @@
 
 👋 Welcome to the Vapor team! 
 
-## Linux
-
-You can use the included bash script to test your PR on macOS and Linux before submitting (you must have Docker installed).
-
-```sh
-Utilities/contributor_test.sh 
-```
-
 ## Testing
 
-Once in Xcode, select the `Vapor-Package` scheme and use `CMD+U` to run the tests.
+Once in Xcode, select the `vapor-Package` scheme and use `CMD+U` to run the tests.
 
-You can use the `Boilerplate...` and `Development` executables for testing out your code.
+You can use the `Development` executables for testing out your code.
 
-When adding new tests (please do 😁), don't forget to add the method name to the `allTests` array. 
-If you add a new `XCTestCase` subclass, make sure to add it to the `Tests/LinuxMain.swift` file.
+Don't forget to add tests for your new features.
 
 If you are fixing a single GitHub issue in particular, you can add a test named `testGH<issue number>` to ensure
 that your fix is working. This will also help prevent regression.
