@@ -158,7 +158,7 @@ final class ServerTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.http.server.configuration.port = 65536
+        app.http.server.configuration.port = .max
         XCTAssertThrowsError(try app.start())
     }
 }
