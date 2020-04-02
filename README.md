@@ -108,12 +108,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 <a 
     data-amt="10" 
     data-since="10/15/19" 
-    href="https://github.com/ksmandersen">
-    <img src="https://avatars3.githubusercontent.com/u/178181?s=120" width="60px">
-</a>
-<a 
-    data-amt="10" 
-    data-since="10/15/19" 
     href="https://github.com/twof">
     <img src="https://avatars3.githubusercontent.com/u/5561501?s=120" width="60px">
 </a>
@@ -182,12 +176,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="10/29/19" 
     href="https://github.com/Mordil">
     <img src="https://avatars3.githubusercontent.com/u/3506776?s=120" width="60px">
-</a>
-<a 
-    data-amt="5" 
-    data-since="11/09/19" 
-    href="https://github.com/danielinoa">
-    <img src="https://avatars3.githubusercontent.com/u/972877?s=120" width="60px">
 </a>
 <a 
     data-amt="5" 
