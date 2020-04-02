@@ -97,6 +97,8 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         case strict = "Strict"
         /// Relaxed mode.
         case lax = "Lax"
+        // Cookies marked SameSite=None should also be marked Secure.
+        case none = "None"
     }
     
     /// A single cookie (key/value pair).
