@@ -1,5 +1,5 @@
 extension Request {
-    public var password: PasswordVerifier {
-        self.application.password
+    public var password: AsyncPasswordVerifier {
+        self.application.password.async(on: application.threadPool, hopTo: eventLoop)
     }
 }
