@@ -1,3 +1,4 @@
+/// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
 public protocol SessionAuthenticator: Authenticator {
     associatedtype User: SessionAuthenticatable
 
@@ -6,7 +7,6 @@ public protocol SessionAuthenticator: Authenticator {
 }
 
 extension SessionAuthenticator {
-    /// See Middleware.respond
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // if the user has already been authenticated
         // by a previous middleware, continue
@@ -42,7 +42,7 @@ extension SessionAuthenticator {
 }
 
 /// Models conforming to this protocol can have their authentication
-/// status cached using `AuthenticationSessionsMiddleware`.
+/// status cached using `SessionAuthenticator`.
 public protocol SessionAuthenticatable: Authenticatable {
     /// Session identifier type.
     associatedtype SessionID: LosslessStringConvertible

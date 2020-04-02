@@ -1,5 +1,4 @@
 extension Environment {
-
     /// Reads a file content for a secret. The secret key represents the name of the environment variable that holds the path for the file containing the secret
     /// - Parameters:
     ///     - key: Environment name for the path to the file containing the secret

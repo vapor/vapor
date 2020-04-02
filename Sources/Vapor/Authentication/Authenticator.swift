@@ -1,8 +1,15 @@
 /// Capable of being authenticated.
 public protocol Authenticatable { }
 
+/// Helper for creating authentication middleware.
+///
+/// See `RequestAuthenticator` and `SessionAuthenticator` for more information.
 public protocol Authenticator: Middleware { }
 
+/// Help for creating authentication middleware based on `Request`.
+///
+/// `Authenticator`'s use the incoming request to check for authentication information.
+/// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
 public protocol RequestAuthenticator: Authenticator {
     func authenticate(request: Request) -> EventLoopFuture<Void>
 }
@@ -17,6 +24,7 @@ extension RequestAuthenticator {
 
 // MARK: Basic
 
+/// Helper for creating authentication middleware using the Basic authorization header.
 public protocol BasicAuthenticator: RequestAuthenticator {
     func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void>
 }
@@ -32,6 +40,7 @@ extension BasicAuthenticator {
 
 // MARK: Bearer
 
+/// Helper for creating authentication middleware using the Bearer authorization header.
 public protocol BearerAuthenticator: RequestAuthenticator {
     func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void>
 }
@@ -47,6 +56,7 @@ extension BearerAuthenticator {
 
 // MARK: Credentials
 
+/// Helper for creating authentication middleware using request body contents.
 public protocol CredentialsAuthenticator: RequestAuthenticator {
     associatedtype Credentials: Content
     func authenticate(credentials: Credentials, for request: Request) -> EventLoopFuture<Void>

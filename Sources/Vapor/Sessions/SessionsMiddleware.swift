@@ -23,7 +23,7 @@ public final class SessionsMiddleware: Middleware {
     ///
     /// - parameters:
     ///     - sessions: `Sessions` implementation to use for fetching and storing sessions.
-    ///     - config: `SessionsConfig` to use for naming and creating cookie values.
+    ///     - configuration: `SessionsConfiguration` to use for naming and creating cookie values.
     public init(
         session: SessionDriver,
         configuration: SessionsConfiguration = .default()

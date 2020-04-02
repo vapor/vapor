@@ -2,8 +2,9 @@
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
 ///     switch env {
-///     case .production: config.prefer(ProductionLogger.self, for: Logger.self)
-///     default: config.prefer(DebugLogger.self, for: Logger.self)
+///     case .production:
+///         app.http.server.configuration = ...
+///     default: break
 ///     }
 ///
 /// The `Environment` can also be used to retrieve variables from the Process's ENV.

@@ -1,5 +1,4 @@
-
-/// Starts serving the `Application`'s `Responder` over HTTP.
+/// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
 ///
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080

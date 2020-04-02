@@ -3,7 +3,6 @@ extension Logger {
     ///
     /// - parameters:
     ///     - error: `Error` to log.
-    ///     - request: Optional `Request` associated with this error.
     public func report(
         error: Error,
         file: String = #file,

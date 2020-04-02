@@ -1,8 +1,6 @@
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
-///     var contentConfig = ContentConfig()
-///     contentConfig.use(encoder: JSONEncoder(), for: .json)
-///     services.register(contentConfig)
+///     ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
 ///
 /// Each coder is registered to a specific `MediaType`. When _decoding_ content from HTTP messages,
 /// the `MediaType` will be specified by the message itself. When _encoding_ content from HTTP messages,
@@ -17,28 +15,13 @@
 public struct ContentConfiguration {
     public static var global: ContentConfiguration = .default()
     
-    /// Creates a `ContentConfig` containing all of Vapor's default coders.
-    ///
-    ///     var contentConfig = ContentConfig.default()
-    ///     // add or replace coders
-    ///     services.register(contentConfig)
-    ///
+    /// Creates a `ContentConfiguration` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
         
         // json
-        do {
-            let encoder = JSONEncoder()
-            let decoder = JSONDecoder()
-            if #available(macOS 10.12, *) {
-                encoder.dateEncodingStrategy = .iso8601
-                decoder.dateDecodingStrategy = .iso8601
-            } else {
-                // macOS SDK < 10.12 detected, no ISO-8601 JSON support
-            }
-            config.use(encoder: encoder, for: .json)
-            config.use(decoder: decoder, for: .json)
-        }
+        config.use(encoder: JSONEncoder.custom(dates: .iso8601), for: .json)
+        config.use(decoder: JSONDecoder.custom(dates: .iso8601), for: .json)
         
         // data
         config.use(encoder: PlaintextEncoder(), for: .plainText)

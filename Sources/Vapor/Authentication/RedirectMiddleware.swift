@@ -1,21 +1,19 @@
 extension Authenticatable {
     /// Basic middleware to redirect unauthenticated requests to the supplied path
+    ///
+    /// - parameters:
+    ///    - path: The path to redirect to if the request is not authenticated
     public static func redirectMiddleware(path: String) -> Middleware {
         return RedirectMiddleware<Self>(Self.self, path: path)
     }
 }
 
 
-/// Basic middleware to redirect unauthenticated requests to the supplied path
-private final class RedirectMiddleware<A>: Middleware where A: Authenticatable {
-    /// The path to redirect to
+private final class RedirectMiddleware<A>: Middleware
+    where A: Authenticatable
+{
     let path: String
 
-    /// Initialise the `RedirectMiddleware`
-    ///
-    /// - parameters:
-    ///    - authenticatableType: The type to check authentication against
-    ///    - path: The path to redirect to if the request is not authenticated
     init(_ authenticatableType: A.Type = A.self, path: String) {
         self.path = path
     }

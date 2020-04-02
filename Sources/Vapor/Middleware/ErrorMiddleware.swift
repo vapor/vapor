@@ -14,7 +14,6 @@ public final class ErrorMiddleware: Middleware {
     ///
     /// - parameters:
     ///     - environment: The environment to respect when presenting errors.
-    ///     - log: Log destination.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
             // variables to determine
