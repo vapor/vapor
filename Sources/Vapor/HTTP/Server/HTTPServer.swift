@@ -300,10 +300,12 @@ private final class HTTPServerConnection {
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
-        // .childChannelOption(ChannelOptions.allowRemoteHalfClosure, value: 1)
         
         return bootstrap.bind(host: configuration.hostname, port: configuration.port).map { channel in
             return .init(channel: channel, quiesce: quiesce)
+        }.flatMapErrorThrowing { error -> HTTPServerConnection in
+            quiesce.initiateShutdown(promise: nil)
+            throw error
         }
     }
     
@@ -313,16 +315,16 @@ private final class HTTPServerConnection {
     }
     
     func close() -> EventLoopFuture<Void> {
-        let promise = channel.eventLoop.makePromise(of: Void.self)
-        channel.eventLoop.scheduleTask(in: .seconds(10)) {
+        let promise = self.channel.eventLoop.makePromise(of: Void.self)
+        self.channel.eventLoop.scheduleTask(in: .seconds(10)) {
             promise.fail(Abort(.internalServerError, reason: "Server stop took too long."))
         }
-        quiesce.initiateShutdown(promise: promise)
+        self.quiesce.initiateShutdown(promise: promise)
         return promise.futureResult
     }
     
     var onClose: EventLoopFuture<Void> {
-        return channel.closeFuture
+        self.channel.closeFuture
     }
     
     deinit {
