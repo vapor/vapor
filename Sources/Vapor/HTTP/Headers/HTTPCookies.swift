@@ -18,10 +18,13 @@ extension HTTPHeaders {
 
     /// Get and set `HTTPCookies` for an HTTP response
     /// This accesses the `"Set-Cookie"` header.
-    public var setCookie: HTTPCookies {
+    public var setCookie: HTTPCookies? {
         get {
             let setCookies: [HTTPSetCookie] = self.parseDirectives(name: .setCookie).compactMap {
                 HTTPSetCookie(directives: $0)
+            }
+            guard !setCookies.isEmpty else {
+                return nil
             }
             var cookies = HTTPCookies()
             setCookies.forEach { cookie in
@@ -31,8 +34,10 @@ extension HTTPHeaders {
         }
         set {
             self.remove(name: .setCookie)
-            for cookieHeader in newValue.setCookieHeaders {
-                self.add(name: .setCookie, value: cookieHeader)
+            if let cookies = newValue {
+                for cookieHeader in cookies.setCookieHeaders {
+                    self.add(name: .setCookie, value: cookieHeader)
+                }
             }
         }
     }

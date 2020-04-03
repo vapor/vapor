@@ -17,7 +17,14 @@ internal struct DefaultResponder: Responder {
         self.notFoundRoute = Route(method: .GET, path: [], responder: notFoundResponder, requestType: Request.self, responseType: Response.self)
         let router = TrieRouter(Route.self)
         for route in routes.all {
-            route.responder = middleware.makeResponder(chainingTo: route.responder)
+            // Make a copy of the route to cache middleware chaining.
+            let copy = Route(
+                method: route.method,
+                path: route.path,
+                responder: middleware.makeResponder(chainingTo: route.responder),
+                requestType: route.requestType,
+                responseType: route.responseType
+            )
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -27,7 +34,7 @@ internal struct DefaultResponder: Responder {
                     return true
                 }
             }
-            router.register(route, at: [.constant(route.method.string)] + path)
+            router.register(copy, at: [.constant(route.method.string)] + path)
         }
         self.router = router
     }

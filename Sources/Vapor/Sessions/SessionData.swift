@@ -4,8 +4,8 @@ public struct SessionData: Codable {
     internal var storage: [String: String]
 
     /// Create a new, empty session data.
-    public init() {
-        self.storage = [:]
+    public init(_ data: [String: String] = [:]) {
+        self.storage = data
     }
 
     public init(from decoder: Decoder) throws {
