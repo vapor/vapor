@@ -3,7 +3,7 @@ public struct AsyncPasswordVerifier {
     private let threadPool: NIOThreadPool
     private let eventLoop: EventLoop
     
-    public init (verifier: PasswordVerifier, threadPool: NIOThreadPool, eventLoop: EventLoop) {
+    public init(verifier: PasswordVerifier, threadPool: NIOThreadPool, eventLoop: EventLoop) {
         self.verifier = verifier
         self.threadPool = threadPool
         self.eventLoop = eventLoop
@@ -33,7 +33,7 @@ public struct AsyncPasswordVerifier {
         self.threadPool.submit { _ in
             do {
                 return promise.succeed(try self.verifier.verify(password, created: digest))
-            } catch  {
+            } catch {
                 return promise.fail(error)
             }
         }

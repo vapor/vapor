@@ -13,19 +13,26 @@ extension Request {
         }
         
         public var async: AsyncPasswordVerifier {
-            self.application.password.asynchronized(on: application.threadPool, hopTo: eventLoop)
+            self.application.password.async(on: application.threadPool, hopTo: eventLoop)
         }
         
-        public var verifier: PasswordVerifier {
+        public var sync: PasswordVerifier {
             self.application.password
         }
         
-        public func verify<Password, Digest>(_ password: Password, created digest: Digest) throws -> Bool where Password : DataProtocol, Digest : DataProtocol {
-            try verifier.verify(password, created: digest)
+        public func verify<Password, Digest>(
+            _ password: Password,
+            created digest: Digest
+        ) throws -> Bool
+            where Password : DataProtocol, Digest : DataProtocol
+        {
+            try sync.verify(password, created: digest)
         }
         
-        public func digest<Password>(_ password: Password) throws -> [UInt8] where Password : DataProtocol {
-            try verifier.digest(password)
+        public func digest<Password>(_ password: Password) throws -> [UInt8]
+            where Password : DataProtocol
+        {
+            try sync.digest(password)
         }
     }
 }

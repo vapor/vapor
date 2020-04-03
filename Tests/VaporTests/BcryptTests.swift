@@ -42,7 +42,7 @@ final class BcryptTests: XCTestCase {
         XCTAssert(result, "verification failed")
     }
     
-    func testBCryptService() throws {
+    func testSyncBCryptService() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
@@ -51,9 +51,15 @@ final class BcryptTests: XCTestCase {
         
         let result = try app.password.verify("vapor", created: hash)
         XCTAssertTrue(result)
+    }
+    
+    func testAsyncBcryptService() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(test)
+        defer { app.shutdown() }
         
         let asyncHash = try app.password
-            .asynchronized(on: app.threadPool, hopTo: app.eventLoopGroup.next())
+            .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
             .digest("vapor")
             .wait()
         XCTAssertTrue(try BCryptDigest().verify("vapor", created: asyncHash))

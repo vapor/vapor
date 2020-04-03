@@ -21,7 +21,7 @@ extension PasswordVerifier {
         )
     }
     
-    public func asynchronized(on threadPool: NIOThreadPool, hopTo eventLoop: EventLoop) -> AsyncPasswordVerifier
+    public func async(on threadPool: NIOThreadPool, hopTo eventLoop: EventLoop) -> AsyncPasswordVerifier
      {
         AsyncPasswordVerifier(verifier: self, threadPool: threadPool, eventLoop: eventLoop)
     }
