@@ -41,60 +41,6 @@ final class BcryptTests: XCTestCase {
         let result = try Bcrypt.verify("vapor", created: "$2a$10$e.qg8zwKLHu3ur5rPF97ouzCJiJmZ93tiwNekDvTQfuhyu97QaUk.")
         XCTAssert(result, "verification failed")
     }
-    
-    func testSyncBCryptService() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
-        defer { app.shutdown() }
-        let hash = try app.password.digest("vapor")
-        XCTAssertTrue(try BCryptDigest().verify("vapor", created: hash))
-        
-        let result = try app.password.verify("vapor", created: hash)
-        XCTAssertTrue(result)
-    }
-    
-    func testAsyncBcryptService() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
-        defer { app.shutdown() }
-        
-        let asyncHash = try app.password
-            .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-            .digest("vapor")
-            .wait()
-        XCTAssertTrue(try BCryptDigest().verify("vapor", created: asyncHash))
-        
-        struct Verify: Content {
-            let digest: String
-        }
-        
-        app.post("test") { req -> EventLoopFuture<String> in
-            let verify = try req.content.decode(Verify.self)
-            return try req.password
-                .async
-                .verify("vapor", created: verify.digest)
-                .map { $0 ? "true" : "false" }
-        }
-        
-        try app.test(.POST, "test", beforeRequest: { req in
-            try req.content.encode(Verify(digest: asyncHash))
-        }, afterResponse: { res in
-            XCTAssertEqual(res.body.string, "true")
-        })
-    }
-    
-    func testPlaintextService() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
-        let app = Application(test)
-        defer { app.shutdown() }
-        app.passwords.use(.plaintext)
-        
-        let hash = try app.password.digest("vapor")
-        XCTAssertEqual(hash, "vapor")
-        
-        let result = try app.password.verify("vapor", created: hash)
-        XCTAssertTrue(result)
-    }
 }
 
 let tests: [(String, String)] = [
