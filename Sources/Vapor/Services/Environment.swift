@@ -1,4 +1,4 @@
-/// The environment the application is running in, i.e., production, dev, etc. All `Container`'s will have
+/// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
 ///     switch env {
@@ -6,7 +6,7 @@
 ///     default: config.prefer(DebugLogger.self, for: Logger.self)
 ///     }
 ///
-/// The `Environment` can also be used to retrieve variables from the Process's ENV.
+/// The `Environment` can also be used to retrieve variables from the Process' ENV.
 ///
 ///     print(Environment.get("DB_PASSWORD"))
 ///
