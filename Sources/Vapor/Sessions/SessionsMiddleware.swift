@@ -57,7 +57,7 @@ public final class SessionsMiddleware: Middleware {
 
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
-        if let session = request._sessionCache.session {
+        if let session = request._sessionCache.session, session.isValid {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let createOrUpdate: EventLoopFuture<SessionID>
@@ -76,7 +76,7 @@ public final class SessionsMiddleware: Middleware {
                 return response
             }
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
-            // The request had a session cookie, but now there is no session.
+            // The request had a session cookie, but now there is no valid session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
             return self.session.deleteSession(id, for: request).map {

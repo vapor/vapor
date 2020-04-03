@@ -35,13 +35,13 @@ final class SessionTests: XCTestCase {
 
         let cache = MockKeyedCache()
         app.sessions.use { _ in cache }
-        let sessions = app.routes.grouped(SessionsMiddleware(session: app.sessions.driver))
+        let sessions = app.routes.grouped(app.sessions.middleware)
         sessions.get("set") { req -> String in
             req.session.data["foo"] = "bar"
             return "set"
         }
         sessions.get("del") { req  -> String in
-            req.destroySession()
+            req.session.destroy()
             return "del"
         }
 

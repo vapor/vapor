@@ -29,11 +29,6 @@ extension Request {
         return self._sessionCache.session != nil
     }
 
-    /// Destroys the current session, if one exists.
-    public func destroySession() {
-        self._sessionCache.session = nil
-    }
-
     private struct SessionCacheKey: StorageKey {
         typealias Value = SessionCache
     }

@@ -21,8 +21,10 @@ extension Application {
         final class Storage {
             let memory: MemorySessions.Storage
             var makeDriver: ((Application) -> SessionDriver)?
+            var configuration: SessionsConfiguration
             init() {
                 self.memory = .init()
+                self.configuration = .default()
             }
         }
 
@@ -31,6 +33,22 @@ extension Application {
         }
 
         let application: Application
+
+        public var configuration: SessionsConfiguration {
+            get {
+                self.storage.configuration
+            }
+            nonmutating set {
+                self.storage.configuration = newValue
+            }
+        }
+
+        public var middleware: SessionsMiddleware {
+            .init(
+                session: self.driver,
+                configuration: self.configuration
+            )
+        }
 
         public var driver: SessionDriver {
             guard let makeDriver = self.storage.makeDriver else {
