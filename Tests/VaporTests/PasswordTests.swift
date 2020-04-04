@@ -58,6 +58,15 @@ final class PasswordTests: XCTestCase {
         try assertAsyncApplicationPasswordVerifies(.plaintext, on: app)
     }
     
+    func testAsyncUsesProvider() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(test)
+        defer { app.shutdown() }
+        app.passwords.use(.plaintext)
+        let hash = try app.password.async(on: app.threadPool, hopTo: app.eventLoopGroup.next()).digest("vapor").wait()
+        XCTAssertEqual(hash, "vapor")
+    }
+    
     private func assertAsyncApplicationPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         on app: Application,
