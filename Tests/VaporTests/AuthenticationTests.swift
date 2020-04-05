@@ -134,7 +134,7 @@ final class AuthenticationTests: XCTestCase {
         }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-            if let cookie = res.headers.setCookie["vapor-session"] {
+            if let cookie = res.headers.setCookie?["vapor-session"] {
                 sessionCookie = cookie
             } else {
                 XCTFail("No set cookie header")

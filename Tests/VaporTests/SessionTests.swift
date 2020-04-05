@@ -47,7 +47,7 @@ final class SessionTests: XCTestCase {
 
         try app.testable().test(.GET, "/set") { res in
             XCTAssertEqual(res.body.string, "set")
-            cookie = res.headers.setCookie["vapor-session"]
+            cookie = res.headers.setCookie?["vapor-session"]
             XCTAssertNotNil(cookie)
             XCTAssertEqual(MockKeyedCache.ops, [
                 #"create SessionData(storage: ["foo": "bar"])"#,
