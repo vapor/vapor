@@ -170,7 +170,7 @@ public final class Response: CustomStringConvertible {
         let response = Response(status: status)
 
         if let eTag = try obj.eTag(), !eTag.isEmpty {
-            if let req = req, let ifNoneMatchHeaders = req.headers.firstValue(name: .ifNoneMatch) {
+            if let req = req, let ifNoneMatchHeaders = req.headers.first(name: .ifNoneMatch) {
                 var cs = CharacterSet.whitespacesAndNewlines
                 cs.insert(",")
 

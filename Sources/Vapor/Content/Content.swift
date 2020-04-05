@@ -73,8 +73,13 @@ extension Content {
     public func eTag() throws -> String? {
         // Hardcode the JSON media type here. Regardless of what type the client
         // asks for, the ETag always needs to be the same, which means we always
-        // have to encode with a single known type that doesn't change.
-        let data = try JSONEncoder().encode(self)
+        // have to encode with a single known type that doesn't change.  Must also
+        // sort the keys or output form is random which would lead to different
+        // eTag for the same object
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .sortedKeys
+
+        let data = try encoder.encode(self)
 
         let eTag = Array(SHA256.hash(data: data)).hexEncodedString()
 
