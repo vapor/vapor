@@ -19,14 +19,20 @@ final class ApplicationTests: XCTestCase {
 
     func testLifecycleHandler() throws {
         final class Foo: LifecycleHandler {
+            var didRegisterFlag: Bool
             var willBootFlag: Bool
             var didBootFlag: Bool
             var shutdownFlag: Bool
 
             init() {
+                self.didRegisterFlag = false
                 self.willBootFlag = false
                 self.didBootFlag = false
                 self.shutdownFlag = false
+            }
+            
+            func didRegister(_ application: Application) {
+                self.didRegisterFlag = true
             }
 
             func willBoot(_ application: Application) throws {
@@ -45,20 +51,29 @@ final class ApplicationTests: XCTestCase {
         let app = Application(.testing)
 
         let foo = Foo()
+        
+        XCTAssertEqual(foo.didRegisterFlag, false)
+        XCTAssertEqual(foo.willBootFlag, false)
+        XCTAssertEqual(foo.didBootFlag, false)
+        XCTAssertEqual(foo.shutdownFlag, false)
+        
         app.lifecycle.use(foo)
 
+        XCTAssertEqual(foo.didRegisterFlag, true)
         XCTAssertEqual(foo.willBootFlag, false)
         XCTAssertEqual(foo.didBootFlag, false)
         XCTAssertEqual(foo.shutdownFlag, false)
 
         try app.boot()
 
+        XCTAssertEqual(foo.didRegisterFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
         XCTAssertEqual(foo.shutdownFlag, false)
 
         app.shutdown()
 
+        XCTAssertEqual(foo.didRegisterFlag, true)
         XCTAssertEqual(foo.willBootFlag, true)
         XCTAssertEqual(foo.didBootFlag, true)
         XCTAssertEqual(foo.shutdownFlag, true)

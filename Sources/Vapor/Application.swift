@@ -11,12 +11,17 @@ public final class Application {
 
     public struct Lifecycle {
         var handlers: [LifecycleHandler]
+        weak var application: Application?
+        
         init() {
             self.handlers = []
         }
 
         public mutating func use(_ handler: LifecycleHandler) {
             self.handlers.append(handler)
+            if let application = self.application {
+                handler.didRegister(application)
+            }
         }
     }
 
@@ -92,6 +97,7 @@ public final class Application {
         // Load specific .env first since values are not overridden.
         self.loadDotEnv(named: ".env.\(self.environment.name)")
         self.loadDotEnv(named: ".env")
+        self.lifecycle.application = self
     }
     
     public func run() throws {
