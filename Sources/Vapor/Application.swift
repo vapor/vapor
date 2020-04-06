@@ -11,7 +11,7 @@ public final class Application {
 
     public struct Lifecycle {
         var handlers: [LifecycleHandler]
-        weak var application: Application?
+        var application: Application?
         
         init() {
             self.handlers = []
@@ -146,6 +146,7 @@ public final class Application {
         self.logger.trace("Shutting down providers")
         self.lifecycle.handlers.forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
+        self.lifecycle.application = nil
         
         self.logger.trace("Clearing Application storage")
         self.storage.shutdown()
