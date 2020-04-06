@@ -19,6 +19,9 @@ extension Logger {
                 reason = debuggable.debuggableHelp(format: .long)
             }
             source = debuggable.source
+        case let abort as AbortError:
+            reason = abort.reason
+            source = nil
         case let localized as LocalizedError:
             reason = localized.localizedDescription
             source = nil
@@ -36,5 +39,52 @@ extension Logger {
             function: source?.function ?? function,
             line: numericCast(source?.line ?? line)
         )
+    }
+}
+
+struct MyError: DebuggableError {
+    enum Value {
+        case userNotLoggedIn
+        case invalidEmail(String)
+    }
+
+    var identifier: String {
+        switch self.value {
+        case .userNotLoggedIn:
+            return "userNotLoggedIn"
+        case .invalidEmail:
+            return "invalidEmail"
+        }
+    }
+
+    var reason: String {
+        switch self.value {
+        case .userNotLoggedIn:
+            return "User is not logged in."
+        case .invalidEmail(let email):
+            return "Email address is not valid: \(email)."
+        }
+    }
+
+    var value: Value
+    var source: ErrorSource?
+    var stackTrace: StackTrace?
+
+    init(
+        _ value: Value,
+        file: String = #file,
+        function: String = #function,
+        line: UInt = #line,
+        column: UInt = #column,
+        stackTrace: StackTrace? = .capture()
+    ) {
+        self.value = value
+        self.source = .init(
+            file: file,
+            function: function,
+            line: line,
+            column: column
+        )
+        self.stackTrace = stackTrace
     }
 }

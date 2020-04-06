@@ -48,7 +48,7 @@ public protocol SessionAuthenticatable: Authenticatable {
     associatedtype SessionID: LosslessStringConvertible
 
     /// Unique session identifier.
-    var sessionID: SessionID? { get }
+    var sessionID: SessionID { get }
 }
 
 private extension SessionAuthenticatable {
@@ -62,7 +62,7 @@ extension Session {
     public func authenticate<A>(_ a: A)
         where A: SessionAuthenticatable
     {
-        self.data["_" + A.sessionName + "Session"] = a.sessionID?.description
+        self.data["_" + A.sessionName + "Session"] = a.sessionID.description
     }
 
     /// Un-authenticates the model from the session.
@@ -77,7 +77,7 @@ extension Session {
     public func authenticated<A>(_ a: A.Type) -> A.SessionID?
         where A: SessionAuthenticatable
     {
-        return self.data["_" + A.sessionName + "Session"]
+        self.data["_" + A.sessionName + "Session"]
             .flatMap { A.SessionID.init($0) }
     }
 }

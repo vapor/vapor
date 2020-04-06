@@ -196,7 +196,7 @@ struct TestError: AbortError {
         line: UInt = #line,
         column: UInt = #column,
         range: Range<UInt>? = nil,
-        stackTrace: StackTrace = .capture()
+        stackTrace: StackTrace? = .capture()
     ) {
         self.source = .init(
             file: file,

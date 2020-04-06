@@ -1,6 +1,11 @@
 public struct StackTrace {
-    public static func capture() -> Self {
-        .init(raw: Thread.callStackSymbols)
+    public static var isCaptureEnabled: Bool = true
+
+    public static func capture() -> Self? {
+        guard Self.isCaptureEnabled else {
+            return nil
+        }
+        return .init(raw: Thread.callStackSymbols)
     }
 
     public var frames: [Frame] {

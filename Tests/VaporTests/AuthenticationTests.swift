@@ -87,15 +87,13 @@ final class AuthenticationTests: XCTestCase {
                 TestSessionAuthenticator()
             }
 
-            var sessionID: String? {
-                return self.name
+            var sessionID: String {
+                self.name
             }
             var name: String
         }
 
         struct TestBearerAuthenticator: BearerAuthenticator {
-            typealias User = Test
-
             func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
@@ -119,12 +117,12 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            SessionsMiddleware(session: app.sessions.driver),
+            app.sessions.middleware,
             Test.sessionAuthenticator(),
             Test.bearerAuthenticator(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            try req.auth.require(Test.self).name
         }
 
         var sessionCookie: HTTPCookies.Value?
@@ -134,7 +132,7 @@ final class AuthenticationTests: XCTestCase {
         }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-            if let cookie = res.headers.setCookie["vapor-session"] {
+            if let cookie = res.headers.setCookie?["vapor-session"] {
                 sessionCookie = cookie
             } else {
                 XCTFail("No set cookie header")

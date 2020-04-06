@@ -8,7 +8,10 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: DebuggableError {
+public protocol AbortError: Error {
+    /// The reason for this error.
+    var reason: String { get }
+
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
@@ -17,14 +20,16 @@ public protocol AbortError: DebuggableError {
 }
 
 extension AbortError {
-    /// See `DebuggableError`.
-    public var identifier: String {
-        self.status.code.description
-    }
-
     /// See `AbortError`.
     public var headers: HTTPHeaders {
         [:]
+    }
+}
+
+extension AbortError where Self: DebuggableError {
+    /// See `DebuggableError`.
+    public var identifier: String {
+        self.status.code.description
     }
 }
 
