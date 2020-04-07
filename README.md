@@ -189,6 +189,18 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     href="https://github.com/jordanebelanger">
     <img src="https://avatars3.githubusercontent.com/u/1856085?s=120" width="60px">
 </a>
+<a
+    data-amt="5" 
+    data-since="04/07/20" 
+    href="https://github.com/0xTim">
+    <img src="https://avatars1.githubusercontent.com/u/9938337?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/07/20" 
+    href="https://github.com/radude89">
+    <img src="https://avatars0.githubusercontent.com/u/2872139?s=120" width="60px">
+</a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
 <a href="https://opencollective.com/vapor/backer/1/website" target="_blank"><img src="https://opencollective.com/vapor/backer/1/avatar.svg"></a>
