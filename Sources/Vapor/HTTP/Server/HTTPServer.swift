@@ -182,15 +182,15 @@ public final class HTTPServer: Server {
     }
     
     public func start(hostname: String?, port: Int?) throws {
-        // print starting message
-        let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
-        let address = "\(scheme)://\(self.configuration.hostname):\(self.configuration.port)"
-        self.configuration.logger.notice("Server starting on \(address)")
-
         // determine which hostname / port to bind to
         var configuration = self.configuration
         configuration.hostname = hostname ?? configuration.hostname
         configuration.port = port ?? configuration.port
+
+        // print starting message
+        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
+        let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        self.configuration.logger.notice("Server starting on \(address)")
 
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
