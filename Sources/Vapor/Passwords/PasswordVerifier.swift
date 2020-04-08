@@ -20,4 +20,9 @@ extension PasswordVerifier {
             created: [UInt8](digest.utf8)
         )
     }
+    
+    public func async(on threadPool: NIOThreadPool, hopTo eventLoop: EventLoop) -> AsyncPasswordVerifier
+     {
+        AsyncPasswordVerifier(verifier: self, threadPool: threadPool, eventLoop: eventLoop)
+    }
 }
