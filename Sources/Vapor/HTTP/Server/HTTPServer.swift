@@ -26,9 +26,6 @@ public final class HTTPServer: Server {
         /// Listen backlog.
         public var backlog: Int
         
-        /// Requests containing bodies larger than this maximum will be rejected, closing the connection.
-        public var maxBodySize: Int
-        
         /// When `true`, can prevent errors re-binding to a socket after successive server restarts.
         public var reuseAddress: Bool
         
@@ -117,7 +114,6 @@ public final class HTTPServer: Server {
             hostname: String = "127.0.0.1",
             port: Int = 8080,
             backlog: Int = 256,
-            maxBodySize: Int = 1 << 14,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
             webSocketMaxFrameSize: Int = 1 << 14,
@@ -132,7 +128,6 @@ public final class HTTPServer: Server {
             self.hostname = hostname
             self.port = port
             self.backlog = backlog
-            self.maxBodySize = maxBodySize
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
             self.webSocketMaxFrameSize = webSocketMaxFrameSize
@@ -361,8 +356,7 @@ private extension ChannelPipeline {
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
-            application: application,
-            maxBodySize: configuration.maxBodySize
+            application: application
         )
         handlers.append(serverReqDecoder)
         
@@ -428,8 +422,7 @@ private extension ChannelPipeline {
         
         // add NIO -> HTTP request decoder
         let serverReqDecoder = HTTPServerRequestDecoder(
-            application: application,
-            maxBodySize: configuration.maxBodySize
+            application: application
         )
         handlers.append(serverReqDecoder)
         

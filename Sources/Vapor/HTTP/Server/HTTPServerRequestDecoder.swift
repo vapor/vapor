@@ -5,31 +5,22 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
     typealias OutboundIn = Never
-    
-    /// Tracks current HTTP server state
+
     enum RequestState {
-        /// Waiting for request headers
         case ready
         case awaitingBody(Request)
         case awaitingEnd(Request, ByteBuffer)
         case streamingBody(Request.BodyStream)
     }
-    
-    /// Current HTTP state.
-    var requestState: RequestState
-    
-    /// Maximum body size allowed per request.
-    private let maxBodySize: Int
-    
-    private let logger: Logger
 
+    var requestState: RequestState
+    private let logger: Logger
     var pendingWriteCount: Int
     var hasReadPending: Bool
     var application: Application
     
-    init(application: Application, maxBodySize: Int) {
+    init(application: Application) {
         self.application = application
-        self.maxBodySize = maxBodySize
         self.requestState = .ready
         self.logger = Logger(label: "codes.vapor.server")
         self.pendingWriteCount = 0

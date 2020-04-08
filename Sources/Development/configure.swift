@@ -18,6 +18,13 @@ public func configure(_ app: Application) throws {
         app.http.server.configuration.port = 8080
     }
 
+    app.servers.use(.http)
+    app.http.server.configuration.supportVersions = [.two]
+
+    app.http.server.configuration.hostname = "127.0.0.1"
+    try app.server.start()
+
+    try app.server.onShutdown.wait()
 
     // routes
     try routes(app)

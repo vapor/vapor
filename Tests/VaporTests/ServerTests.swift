@@ -190,6 +190,9 @@ extension Application {
 final class CustomServer: Server {
     var didStart: Bool
     var didShutdown: Bool
+    var onShutdown: EventLoopFuture<Void> {
+        fatalError()
+    }
 
     init() {
         self.didStart = false

@@ -72,7 +72,7 @@ public final class ServeCommand: Command {
     func shutdown() {
         self.didShutdown = true
         self.running?.stop()
-        if let server = server {
+        if let server = self.server {
             server.shutdown()
         }
         self.signalSources.forEach { $0.cancel() } // clear refs

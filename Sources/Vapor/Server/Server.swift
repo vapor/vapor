@@ -1,4 +1,5 @@
 public protocol Server {
+    var onShutdown: EventLoopFuture<Void> { get }
     func start(hostname: String?, port: Int?) throws
     func shutdown()
 }
