@@ -31,9 +31,6 @@ public final class HTTPServer: Server {
         
         /// When `true`, OS will attempt to minimize TCP packet delay.
         public var tcpNoDelay: Bool
-        
-        /// Number of webSocket maxFrameSize.
-        public var webSocketMaxFrameSize: Int
 
         /// Response compression configuration.
         public var responseCompression: CompressionConfiguration
@@ -116,7 +113,6 @@ public final class HTTPServer: Server {
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
-            webSocketMaxFrameSize: Int = 1 << 14,
             responseCompression: CompressionConfiguration = .disabled,
             requestDecompression: DecompressionConfiguration = .disabled,
             supportPipelining: Bool = false,
@@ -130,7 +126,6 @@ public final class HTTPServer: Server {
             self.backlog = backlog
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
-            self.webSocketMaxFrameSize = webSocketMaxFrameSize
             self.responseCompression = responseCompression
             self.requestDecompression = requestDecompression
             self.supportPipelining = supportPipelining
