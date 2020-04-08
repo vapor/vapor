@@ -95,7 +95,7 @@ final class ServerTests: XCTestCase {
 
         let payload = [UInt8].random(count: 1 << 20)
 
-        app.post("payload") { req -> HTTPStatus in
+        app.on(.POST, "payload", body: .collect(maxSize: nil)) { req -> HTTPStatus in
             guard let data = req.body.data else {
                 throw Abort(.internalServerError)
             }
