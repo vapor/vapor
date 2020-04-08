@@ -1,22 +1,25 @@
-extension Request {
+extension Application {
     public var password: Password {
-        .init(request: self)
+        .init(application: self)
     }
-    
+
     public struct Password: PasswordHasher {
-        let request: Request
-        
+        let application: Application
+
         public var async: AsyncPasswordHasher {
-            self.request.application.password.sync.async(
-                on: self.request.application.threadPool,
-                hopTo: self.request.eventLoop
+            self.sync.async(
+                on: self.application.threadPool,
+                hopTo: self.application.eventLoopGroup.next()
             )
         }
-        
+
         public var sync: PasswordHasher {
-            self.request.application.password.sync
+            guard let makeVerifier = self.application.passwords.storage.makeVerifier else {
+                fatalError("No password verifier configured. Configure with app.passwords.use(...)")
+            }
+            return makeVerifier(self.application)
         }
-        
+
         public func verify<Password, Digest>(
             _ password: Password,
             created digest: Digest
@@ -25,7 +28,7 @@ extension Request {
         {
             try self.sync.verify(password, created: digest)
         }
-        
+
         public func hash<Password>(_ password: Password) throws -> [UInt8]
             where Password: DataProtocol
         {

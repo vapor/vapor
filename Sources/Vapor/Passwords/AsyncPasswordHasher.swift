@@ -1,21 +1,34 @@
-public struct AsyncPasswordVerifier {
-    private let verifier: PasswordVerifier
+extension PasswordHasher {
+    public func async(
+        on threadPool: NIOThreadPool,
+        hopTo eventLoop: EventLoop
+    ) -> AsyncPasswordHasher {
+        .init(
+            hasher: self,
+            threadPool: threadPool,
+            eventLoop: eventLoop
+        )
+    }
+}
+
+public struct AsyncPasswordHasher {
+    private let hasher: PasswordHasher
     private let threadPool: NIOThreadPool
     private let eventLoop: EventLoop
     
-    public init(verifier: PasswordVerifier, threadPool: NIOThreadPool, eventLoop: EventLoop) {
-        self.verifier = verifier
+    public init(hasher: PasswordHasher, threadPool: NIOThreadPool, eventLoop: EventLoop) {
+        self.hasher = hasher
         self.threadPool = threadPool
         self.eventLoop = eventLoop
     }
     
-    public func digest<Password>(_ password: Password) throws -> EventLoopFuture<[UInt8]>
+    public func hash<Password>(_ password: Password) throws -> EventLoopFuture<[UInt8]>
         where Password: DataProtocol
     {
-        let promise = eventLoop.makePromise(of: [UInt8].self)
+        let promise = self.eventLoop.makePromise(of: [UInt8].self)
         self.threadPool.submit { _ in
             do {
-                return promise.succeed(try self.verifier.digest(password))
+                return promise.succeed(try self.hasher.hash(password))
             } catch  {
                 return promise.fail(error)
             }
@@ -32,7 +45,7 @@ public struct AsyncPasswordVerifier {
         let promise = eventLoop.makePromise(of: Bool.self)
         self.threadPool.submit { _ in
             do {
-                return promise.succeed(try self.verifier.verify(password, created: digest))
+                return promise.succeed(try self.hasher.verify(password, created: digest))
             } catch {
                 return promise.fail(error)
             }
@@ -40,8 +53,8 @@ public struct AsyncPasswordVerifier {
         return promise.futureResult
     }
     
-    public func digest(_ password: String) throws -> EventLoopFuture<String> {
-        try self.digest([UInt8](password.utf8)).map {
+    public func hash(_ password: String) throws -> EventLoopFuture<String> {
+        try self.hash([UInt8](password.utf8)).map {
             String(decoding: $0, as: UTF8.self)
         }
     }

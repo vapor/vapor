@@ -6,7 +6,7 @@ final class PasswordTests: XCTestCase {
         let app = Application(test)
         defer { app.shutdown() }
         
-        let hash = try app.password.digest("vapor")
+        let hash = try app.password.hash("vapor")
         XCTAssertTrue(try BCryptDigest().verify("vapor", created: hash))
         
         let result = try app.password.verify("vapor", created: hash)
@@ -19,7 +19,7 @@ final class PasswordTests: XCTestCase {
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
         
-        let hash = try app.password.digest("vapor")
+        let hash = try app.password.hash("vapor")
         XCTAssertEqual(hash, "vapor")
         
         let result = try app.password.verify("vapor", created: hash)
@@ -63,7 +63,19 @@ final class PasswordTests: XCTestCase {
         let app = Application(test)
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
-        let hash = try app.password.async(on: app.threadPool, hopTo: app.eventLoopGroup.next()).digest("vapor").wait()
+        let hash = try app.password.async(
+            on: app.threadPool,
+            hopTo: app.eventLoopGroup.next()
+        ).hash("vapor").wait()
+        XCTAssertEqual(hash, "vapor")
+    }
+
+    func testAsyncApplicationDefault() throws {
+        let test = Environment(name: "testing", arguments: ["vapor"])
+        let app = Application(test)
+        defer { app.shutdown() }
+        app.passwords.use(.plaintext)
+        let hash = try app.password.async.hash("vapor").wait()
         XCTAssertEqual(hash, "vapor")
     }
     
@@ -77,7 +89,7 @@ final class PasswordTests: XCTestCase {
         
         let asyncHash = try app.password
             .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
-            .digest("vapor")
+            .hash("vapor")
             .wait()
         
         let asyncVerifiy = try app.password
@@ -99,7 +111,7 @@ final class PasswordTests: XCTestCase {
         app.get("test") { req -> EventLoopFuture<String> in
             return try req.password
                 .async
-                .digest("vapor")
+                .hash("vapor")
                 .flatMap { digest -> EventLoopFuture<Bool> in
                     do {
                         return try req.password

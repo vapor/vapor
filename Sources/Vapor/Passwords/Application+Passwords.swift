@@ -3,13 +3,6 @@ extension Application {
         .init(application: self)
     }
 
-    public var password: PasswordVerifier {
-        guard let makeVerifier = self.passwords.storage.makeVerifier else {
-            fatalError("No password verifier configured. Configure with app.passwords.use(...)")
-        }
-        return makeVerifier(self)
-    }
-
     public struct Passwords {
         public struct Provider {
             let run: (Application) -> ()
@@ -17,11 +10,6 @@ extension Application {
             public init(_ run: @escaping (Application) -> ()) {
                 self.run = run
             }
-        }
-        
-        final class Storage {
-            var makeVerifier: ((Application) -> PasswordVerifier)?
-            init() { }
         }
 
         struct Key: StorageKey {
@@ -34,21 +22,25 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeVerifier: @escaping (Application) -> (PasswordVerifier)) {
+        public func use(
+            _ makeVerifier: @escaping (Application) -> (PasswordHasher)
+        ) {
             self.storage.makeVerifier = makeVerifier
         }
 
-        func initialize() {
-            self.application.storage[Key.self] = .init()
-            // Default to BCrypt
-            self.use(.bcrypt)
+        final class Storage {
+            var makeVerifier: ((Application) -> PasswordHasher)?
+            init() { }
         }
 
         var storage: Storage {
-            guard let storage = self.application.storage[Key.self] else {
-                fatalError("PasswordHashers not configured. Configure with app.passwordHashers.initialize()")
+            if let existing = self.application.storage[Key.self] {
+                return existing
+            } else {
+                let new = Storage()
+                self.application.storage[Key.self] = new
+                return new
             }
-            return storage
         }
     }
 }
