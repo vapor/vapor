@@ -22,7 +22,7 @@ public struct AsyncPasswordHasher {
         self.eventLoop = eventLoop
     }
     
-    public func hash<Password>(_ password: Password) throws -> EventLoopFuture<[UInt8]>
+    public func hash<Password>(_ password: Password) -> EventLoopFuture<[UInt8]>
         where Password: DataProtocol
     {
         let promise = self.eventLoop.makePromise(of: [UInt8].self)
@@ -39,7 +39,7 @@ public struct AsyncPasswordHasher {
     public func verify<Password, Digest>(
         _ password: Password,
         created digest: Digest
-    ) throws -> EventLoopFuture<Bool>
+    ) -> EventLoopFuture<Bool>
         where Password: DataProtocol, Digest: DataProtocol
     {
         let promise = eventLoop.makePromise(of: Bool.self)
@@ -53,14 +53,14 @@ public struct AsyncPasswordHasher {
         return promise.futureResult
     }
     
-    public func hash(_ password: String) throws -> EventLoopFuture<String> {
-        try self.hash([UInt8](password.utf8)).map {
+    public func hash(_ password: String) -> EventLoopFuture<String> {
+        self.hash([UInt8](password.utf8)).map {
             String(decoding: $0, as: UTF8.self)
         }
     }
 
-    public func verify(_ password: String, created digest: String) throws -> EventLoopFuture<Bool> {
-        try self.verify(
+    public func verify(_ password: String, created digest: String) -> EventLoopFuture<Bool> {
+        self.verify(
             [UInt8](password.utf8),
             created: [UInt8](digest.utf8)
         )
