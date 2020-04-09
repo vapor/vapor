@@ -109,18 +109,14 @@ final class PasswordTests: XCTestCase {
         app.passwords.use(provider)
         
         app.get("test") { req -> EventLoopFuture<String> in
-            return try req.password
+            return req.password
                 .async
                 .hash("vapor")
                 .flatMap { digest -> EventLoopFuture<Bool> in
-                    do {
-                        return try req.password
-                            .async
-                            .verify("vapor", created: digest)
-                    } catch {
-                        XCTFail("failed to verify digest", file: file, line: line)
-                        return req.eventLoop.makeFailedFuture(error)
-                    }
+                    return req.password
+                        .async
+                        .verify("vapor", created: digest)
+                   
             }
             .map { $0 ? "true" : "false" }
         }
