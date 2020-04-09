@@ -17,14 +17,7 @@ public func configure(_ app: Application) throws {
     default:
         app.http.server.configuration.port = 8080
     }
-
-
-    app.servers.use(.http)
-
-    try app.server.start()
-    app.server.shutdown()
-    try app.server.onShutdown.wait()
-
+    
     // routes
     try routes(app)
 }
