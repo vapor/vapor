@@ -35,7 +35,9 @@ extension Application.HTTP {
 
         public var configuration: HTTPServer.Configuration {
             get {
-                self.application.storage[ConfigurationKey.self] ?? .init()
+                self.application.storage[ConfigurationKey.self] ?? .init(
+                    logger: self.application.logger
+                )
             }
             nonmutating set {
                 if self.application.storage.contains(Key.self) {

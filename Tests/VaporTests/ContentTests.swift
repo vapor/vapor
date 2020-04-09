@@ -239,7 +239,7 @@ final class ContentTests: XCTestCase {
              return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
          }
 
-         try app.testable().test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+         try app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
              try req.content.encode(["foo": "bar"], as: .json)
          }) { res in
              XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
