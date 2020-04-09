@@ -1,10 +1,10 @@
 /// Configuration options for sessions.
 public struct SessionsConfiguration {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
-    public let cookieFactory: (SessionID) -> HTTPCookies.Value
+    public var cookieFactory: (SessionID) -> HTTPCookies.Value
 
     /// Name of HTTP cookie, used as a key for the cookie value.
-    public let cookieName: String
+    public var cookieName: String
 
     /// Create a new `SessionsConfig` with the supplied cookie factory.
     ///

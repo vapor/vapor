@@ -14,7 +14,6 @@ public final class ErrorMiddleware: Middleware {
     ///
     /// - parameters:
     ///     - environment: The environment to respect when presenting errors.
-    ///     - log: Log destination.
     public static func `default`(environment: Environment) -> ErrorMiddleware {
         return .init { req, error in
             // variables to determine
@@ -29,16 +28,12 @@ public final class ErrorMiddleware: Middleware {
                 reason = abort.reason
                 status = abort.status
                 headers = abort.headers
-            case let error as LocalizedError where !environment.isRelease:
-                // if not release mode, and error is debuggable, provide debug
-                // info directly to the developer
-                reason = error.localizedDescription
-                status = .internalServerError
-                headers = [:]
             default:
-                // not an abort error, and not debuggable or in dev mode
-                // just deliver a generic 500 to avoid exposing any sensitive error info
-                reason = "Something went wrong."
+                // if not release mode, and error is debuggable, provide debug info
+                // otherwise, deliver a generic 500 to avoid exposing any sensitive error info
+                reason = environment.isRelease
+                    ? "Something went wrong."
+                    : String(describing: error)
                 status = .internalServerError
                 headers = [:]
             }

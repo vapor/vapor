@@ -33,8 +33,9 @@ extension Application {
         }
 
         func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
-            let server = try app.server.start(hostname: "localhost", port: self.port)
-            defer { server.shutdown() }
+            try app.server.start(hostname: "localhost", port: self.port)
+            defer { app.server.shutdown() }
+            
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var path = request.url.path

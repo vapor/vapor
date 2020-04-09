@@ -2,22 +2,23 @@ import Metrics
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
-    private let router: TrieRouter<Route>
-    private let notFoundRoute: Route
+    private let router: TrieRouter<CachedRoute>
+    private let notFoundResponder: Responder
 
-    private let requestsCountLabel: String = "http_requests_total"
-    private let requestsTimerLabel: String = "http_request_duration_seconds"
-    private let requestsErrorsLabel: String = "http_request_errors_total"
+    private struct CachedRoute {
+        let route: Route
+        let responder: Responder
+    }
 
     /// Creates a new `ApplicationResponder`
     public init(routes: Routes, middleware: [Middleware] = []) {
-        // We create & store this at init time to not impact performance later on in the application.
-        // This `Route` is used to return a 404 response, instead of an error.
-        let notFoundResponder = middleware.makeResponder(chainingTo: BasicResponder(closure: { _ in throw Abort(.notFound) }))
-        self.notFoundRoute = Route(method: .GET, path: [], responder: notFoundResponder, requestType: Request.self, responseType: Response.self)
-        let router = TrieRouter(Route.self)
+        let router = TrieRouter(CachedRoute.self)
         for route in routes.all {
-            route.responder = middleware.makeResponder(chainingTo: route.responder)
+            // Make a copy of the route to cache middleware chaining.
+            let cached = CachedRoute(
+                route: route,
+                responder: middleware.makeResponder(chainingTo: route.responder)
+            )
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -27,63 +28,86 @@ internal struct DefaultResponder: Responder {
                     return true
                 }
             }
-            router.register(route, at: [.constant(route.method.string)] + path)
+            router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
+        self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
     }
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         request.logger.info("\(request.method) \(request.url.path)")
-        let start = DispatchTime.now().uptimeNanoseconds
-        let res = self.getRoute(for: request).responder.respond(to: request)
-        
-        res.whenComplete { result in
-            guard let route = request.route else { return }
-            switch result {
-            case .success(let res):
-                self.updateMetrics(for: request, on: route, label: self.requestsCountLabel, start: start, status: res.status.code)
-            case .failure(_):
-                self.updateMetrics(for: request, on: route, label: self.requestsErrorsLabel, start: start)
-            }
+        let startTime = DispatchTime.now().uptimeNanoseconds
+        let response: EventLoopFuture<Response>
+        let path: String
+        if let cachedRoute = self.getRoute(for: request) {
+            path = cachedRoute.route.description
+            request.route = cachedRoute.route
+            response = cachedRoute.responder.respond(to: request)
+        } else {
+            path = request.url.path
+            response = self.notFoundResponder.respond(to: request)
         }
-        
-        return res
+        response.whenComplete { result in
+            let status: HTTPStatus
+            switch result {
+            case .success(let response):
+                status = response.status
+            case .failure:
+                status = .internalServerError
+            }
+            self.updateMetrics(
+                for: request,
+                path: path,
+                startTime: startTime,
+                statusCode: status.code
+            )
+        }
+        return response
     }
     
     /// Gets a `Route` from the underlying `TrieRouter`.
-    private func getRoute(for request: Request) -> Route {
+    private func getRoute(for request: Request) -> CachedRoute? {
         let pathComponents = request.url.path
             .split(separator: "/")
             .map(String.init)
         
         let method = (request.method == .HEAD) ? .GET : request.method
-        
-        guard let route = self.router.route(
+        return self.router.route(
             path: [method.string] + pathComponents,
             parameters: &request.parameters
-        ) else {
-            return notFoundRoute
-        }
-        request.route = route
-        return route
+        )
     }
 
     /// Records the requests metrics.
-    private func updateMetrics(for request: Request, on route: Route, label: String, start: UInt64, status: UInt? = nil) {
-        var counterDimensions = [
+    private func updateMetrics(
+        for request: Request,
+        path: String,
+        startTime: UInt64,
+        statusCode: UInt
+    ) {
+        let counterDimensions = [
             ("method", request.method.string),
-            ("path", route.description)
+            ("path", path),
+            ("status", statusCode.description),
         ]
-        if let status = status {
-            counterDimensions.append(("status", "\(status)"))
+        Counter(label: "http_requests_total", dimensions: counterDimensions).increment()
+        if statusCode >= 500 {
+            Counter(label: "http_request_errors_total", dimensions: counterDimensions).increment()
         }
-        let timerDimensions = [
-            ("method", request.method.string),
-            ("path", route.description)
-        ]
-        Counter(label: label, dimensions: counterDimensions).increment()
-        let time = DispatchTime.now().uptimeNanoseconds - start
-        Timer(label: requestsTimerLabel, dimensions: timerDimensions, preferredDisplayUnit: .seconds).recordNanoseconds(time)
+        Timer(
+            label: "http_request_duration_seconds",
+            dimensions: [
+                ("method", request.method.string),
+                ("path", path)
+            ],
+            preferredDisplayUnit: .seconds
+        ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+    }
+}
+
+private struct NotFoundResponder: Responder {
+    func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.eventLoop.makeFailedFuture(Abort(.notFound))
     }
 }

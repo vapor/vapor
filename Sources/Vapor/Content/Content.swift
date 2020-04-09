@@ -42,9 +42,6 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable {
 /// MARK: Default Implementations
 
 extension Content {
-    /// Default implementation is `MediaType.json` for all types.
-    ///
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
@@ -72,14 +69,12 @@ extension Content {
 // MARK: Default Conformances
 
 extension String: Content {
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .plainText
     }
 }
 
 extension FixedWidthInteger where Self: Content {
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .plainText
     }
@@ -97,7 +92,6 @@ extension UInt32: Content { }
 extension UInt64: Content { }
 
 extension BinaryFloatingPoint where Self: Content {
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .plainText
     }
@@ -106,13 +100,11 @@ extension Double: Content { }
 extension Float: Content { }
 
 extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
 extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
-    /// See `Content`.
     public static var defaultContentType: HTTPMediaType {
         return .json
     }

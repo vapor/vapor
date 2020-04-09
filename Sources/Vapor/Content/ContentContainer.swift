@@ -17,7 +17,6 @@ extension ContentContainer {
 
     // MARK: Encode
 
-
     /// Serializes an `Encodable` object to this message using specific `HTTPMessageEncoder`.
     ///
     ///     try req.content.encode(user, using: JSONEncoder())

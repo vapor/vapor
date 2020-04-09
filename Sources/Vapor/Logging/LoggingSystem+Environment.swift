@@ -5,12 +5,19 @@ extension LoggingSystem {
             var level: Logger.Level?
             init() { }
         }
-        try LoggingSystem.bootstrap(
-            console: Terminal(),
-            level: LogSignature(from: &environment.commandInput).level
-                ?? Environment.process.LOG_LEVEL
-                ?? (environment == .production ? .notice: .info)
-        )
+
+        // Determine log level from environment.
+        let level = try LogSignature(from: &environment.commandInput).level
+            ?? Environment.process.LOG_LEVEL
+            ?? (environment == .production ? .notice: .info)
+
+        // Disable stack traces if log level > debug.
+        if level > .debug {
+            StackTrace.isCaptureEnabled = false
+        }
+
+        // Bootstrap logger to use Terminal.
+        return LoggingSystem.bootstrap(console: Terminal(), level: level)
     }
 }
 

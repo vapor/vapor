@@ -4,16 +4,14 @@ public struct SessionData: Codable {
     internal var storage: [String: String]
 
     /// Create a new, empty session data.
-    public init() {
-        self.storage = [:]
+    public init(_ data: [String: String] = [:]) {
+        self.storage = data
     }
 
-    /// See `Decodable`.
     public init(from decoder: Decoder) throws {
         self.storage = try .init(from: decoder)
     }
 
-    /// See `Encodable`.
     public func encode(to encoder: Encoder) throws {
         try self.storage.encode(to: encoder)
     }

@@ -44,7 +44,7 @@ public final class Response: CustomStringConvertible {
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.setCookie
+            return self.headers.setCookie ?? .init()
         }
         set {
             self.headers.setCookie = newValue

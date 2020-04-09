@@ -5,7 +5,6 @@ internal struct SingleValueDecoder: Decodable {
         self.decoder = decoder
     }
 
-    /// Gets a single decodable value at the supplied key path from the data.
     internal func get<D>(at keyPath: [CodingKey]) throws -> D
         where D: Decodable
     {

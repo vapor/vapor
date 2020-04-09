@@ -82,6 +82,12 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     <img src="https://avatars3.githubusercontent.com/u/48383?s=120" width="60px">
 </a>
 <a 
+    data-amt="25" 
+    data-since="3/11/20" 
+    href="https://github.com/hjuraev">
+    <img src="https://avatars3.githubusercontent.com/u/5513926?s=120" width="60px">
+</a>
+<a 
     data-amt="10" 
     data-since="10/14/19" 
     href="https://github.com/tkrajacic">
@@ -102,12 +108,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 <a 
     data-amt="10" 
     data-since="10/15/19" 
-    href="https://github.com/ksmandersen">
-    <img src="https://avatars3.githubusercontent.com/u/178181?s=120" width="60px">
-</a>
-<a 
-    data-amt="10" 
-    data-since="10/15/19" 
     href="https://github.com/twof">
     <img src="https://avatars3.githubusercontent.com/u/5561501?s=120" width="60px">
 </a>
@@ -116,6 +116,24 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="10/21/19" 
     href="https://github.com/mikkelu">
     <img src="https://avatars3.githubusercontent.com/u/17051694?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="2/28/20" 
+    href="https://github.com/timothymiko">
+    <img src="https://avatars3.githubusercontent.com/u/2555306?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="2/28/20" 
+    href="https://github.com/jstevison">
+    <img src="https://avatars3.githubusercontent.com/u/149974?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="4/1/20" 
+    href="https://github.com/jstorm31">
+    <img src="https://avatars3.githubusercontent.com/u/16023539?s=120" width="60px">
 </a>
 <a 
     data-amt="5" 
@@ -161,12 +179,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 </a>
 <a 
     data-amt="5" 
-    data-since="11/09/19" 
-    href="https://github.com/danielinoa">
-    <img src="https://avatars3.githubusercontent.com/u/972877?s=120" width="60px">
-</a>
-<a 
-    data-amt="5" 
     data-since="11/14/19" 
     href="https://github.com/patrykwas">
     <img src="https://avatars3.githubusercontent.com/u/39051168?s=120" width="60px">
@@ -188,6 +200,30 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="12/12/19" 
     href="https://github.com/jordanebelanger">
     <img src="https://avatars3.githubusercontent.com/u/1856085?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="12/21/19" 
+    href="https://github.com/StefanCosminR">
+    <img src="https://avatars3.githubusercontent.com/u/17311242?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="2/1/20" 
+    href="https://github.com/piers12">
+    <img src="https://avatars3.githubusercontent.com/u/37227905?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="2/26/20" 
+    href="https://github.com/iq3addLi">
+    <img src="https://avatars3.githubusercontent.com/u/16850104?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="3/20/20" 
+    href="https://github.com/lmcd">
+    <img src="https://avatars3.githubusercontent.com/u/363540?s=120" width="60px">
 </a>
 <a
     data-amt="5" 
