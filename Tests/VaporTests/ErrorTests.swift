@@ -96,7 +96,10 @@ final class ErrorTests: XCTestCase {
     }
 
     func testStackTrace() {
-        print(StackTrace.capture().description)
+        StackTrace.isCaptureEnabled = false
+        XCTAssertNil(StackTrace.capture())
+        StackTrace.isCaptureEnabled = true
+        print(StackTrace.capture()!.description)
     }
 }
 
@@ -213,7 +216,7 @@ private struct TestError: DebuggableError {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
-        stackTrace: StackTrace = .capture()
+        stackTrace: StackTrace? = .capture()
     ) {
         self.kind = kind
         self.reason = reason

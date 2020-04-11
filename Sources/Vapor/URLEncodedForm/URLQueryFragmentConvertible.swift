@@ -116,3 +116,16 @@ extension Date: URLQueryFragmentConvertible {
         return timeIntervalSince1970.urlQueryFragmentValue
     }
 }
+
+extension URL: URLQueryFragmentConvertible {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
+        guard let string = String(urlQueryFragmentValue: value) else {
+            return nil
+        }
+        self.init(string: string)
+    }
+
+    var urlQueryFragmentValue: URLQueryFragment {
+        self.absoluteString.urlQueryFragmentValue
+    }
+}

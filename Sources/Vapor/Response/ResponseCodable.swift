@@ -5,7 +5,7 @@ public protocol ResponseEncodable {
     /// Encodes an instance of `Self` to a `HTTPResponse`.
     ///
     /// - parameters:
-    ///     - req: The `HTTPRequest` associated with this `HTTPResponse`.
+    ///     - for: The `HTTPRequest` associated with this `HTTPResponse`.
     /// - returns: An `HTTPResponse`.
     func encodeResponse(for request: Request) -> EventLoopFuture<Response>
 }

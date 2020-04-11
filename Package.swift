@@ -15,16 +15,16 @@ let package = Package(
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.0.0"),
     
         // Sugary extensions for the SwiftNIO library
-        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0-rc.1"),
+        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0-rc.1"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0"),
 
         // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0-rc.1"),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0"),
 
         // 💥 Backtraces for Swift on Linux
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
@@ -48,7 +48,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0-rc.1"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
     ],
     targets: [
         // C helpers

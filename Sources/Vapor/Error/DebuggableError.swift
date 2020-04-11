@@ -64,48 +64,39 @@ extension DebuggableError {
 
 // MARK: Defaults
 extension DebuggableError {
-    /// See `Debuggable`
     public static var readableName: String {
         self.typeIdentifier
     }
 
-    /// See `Debuggable`
     public static var typeIdentifier: String {
         let type = "\(self)"
         return type.split(separator: ".").last.flatMap(String.init) ?? type
     }
 
-    /// See `Debuggable`
     public var possibleCauses: [String] {
         []
     }
 
-    /// See `Debuggable`
     public var suggestedFixes: [String] {
         []
     }
 
-    /// See `Debuggable`
     public var documentationLinks: [String] {
         []
     }
 
-    /// See `Debuggable`
     public var stackOverflowQuestions: [String] {
         []
     }
 
-    /// See `Debuggable`
     public var gitHubIssues: [String] {
         []
     }
 
-    /// See `Debuggable`
     public var source: ErrorSource? {
         nil
     }
 
-    /// See `Debuggable`
     public var stackTrace: StackTrace? {
         nil
     }

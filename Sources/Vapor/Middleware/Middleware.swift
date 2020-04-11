@@ -2,9 +2,6 @@
 /// mutating both incoming requests and outgoing responses. `Middleware` can choose
 /// to pass requests on to the next `Middleware` in a chain, or they can short circuit and
 /// return a custom `Response` if desired.
-///
-/// `MiddlewareConfig` is used to configure which `Middleware` are active for a given
-/// service-container and in which order they should be run.
 public protocol Middleware {
     /// Called with each `Request` that passes through this middleware.
     /// - parameters:

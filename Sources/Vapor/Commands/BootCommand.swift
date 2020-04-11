@@ -1,4 +1,4 @@
-/// Boots the `Application`'s providers then exits successfully.
+/// Boots the `Application` then exits successfully.
 ///
 ///     $ swift run Run boot
 ///     Done.

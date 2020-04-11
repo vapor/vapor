@@ -9,6 +9,7 @@ public final class CORSMiddleware: Middleware {
     /// - none: Disallows any origin.
     /// - originBased: Uses value of the origin header in the request.
     /// - all: Uses wildcard to allow any origin.
+    /// - whitelist: Uses a whitelist of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
     public enum AllowOriginSetting {
         /// Disallow any origin.
@@ -19,6 +20,9 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses wildcard to allow any origin.
         case all
+        
+        // Uses a whitelist of allowable origins.
+        case whitelist([String])
 
         /// Uses custom string provided as an associated value.
         case custom(String)
@@ -32,14 +36,17 @@ public final class CORSMiddleware: Middleware {
             case .none: return ""
             case .originBased: return req.headers[.origin].first ?? ""
             case .all: return "*"
-            case .custom(let string):
+            case .whitelist(let origins):
                 guard let origin = req.headers[.origin].first else {
-                    return string
+                    return ""
                 }
-                return string.contains(origin) ? origin : string
+                return origins.contains(origin) ? origin : ""
+            case .custom(let string):
+                return string
             }
         }
     }
+
 
     /// Configuration used for populating headers in response for CORS requests.
     public struct Configuration {

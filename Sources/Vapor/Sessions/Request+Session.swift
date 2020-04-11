@@ -2,8 +2,7 @@ extension Request {
     /// Returns the current `Session` or creates one.
     ///
     ///     router.get("session") { req -> String in
-    ///         let session = try req.session()
-    ///         session["name"] = "Vapor"
+    ///         req.session.data["name"] = "Vapor"
     ///         return "Session set"
     ///     }
     ///
@@ -28,11 +27,6 @@ extension Request {
     
     public var hasSession: Bool {
         return self._sessionCache.session != nil
-    }
-
-    /// Destroys the current session, if one exists.
-    public func destroySession() {
-        self._sessionCache.session = nil
     }
 
     private struct SessionCacheKey: StorageKey {

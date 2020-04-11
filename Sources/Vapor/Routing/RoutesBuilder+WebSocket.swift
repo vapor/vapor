@@ -1,6 +1,13 @@
-public enum WebSocketMaxFrameSize {
-    case `default`
-    case override(Int)
+public struct WebSocketMaxFrameSize: ExpressibleByIntegerLiteral {
+    let value: Int
+
+    public init(integerLiteral value: Int) {
+        self.value = value
+    }
+
+    public static var `default`: Self {
+        self.init(integerLiteral: 1 << 14)
+    }
 }
 
 extension RoutesBuilder {

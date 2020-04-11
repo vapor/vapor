@@ -12,20 +12,16 @@
 ///
 /// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
 public final class RoutesCommand: Command {
-    /// See `Command`.
     public struct Signature: CommandSignature {
         public init() { }
     }
 
-    /// See `Command`.
     public var help: String {
         return "Displays all registered routes."
     }
 
-    /// Create a new `RoutesCommand`.
     init() { }
 
-    /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
         let routes = context.application.routes
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
