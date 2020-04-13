@@ -32,6 +32,9 @@ public final class Response: CustomStringConvertible {
         didSet { self.headers.updateContentLength(self.body.count) }
     }
 
+    // If `true`, don't serialize the body.
+    var forHeadRequest: Bool
+
     internal enum Upgrader {
         case webSocket(maxFrameSize: WebSocketMaxFrameSize, onUpgrade: (WebSocket) -> ())
     }
@@ -134,6 +137,7 @@ public final class Response: CustomStringConvertible {
         self.headers = headers
         self.body = body
         self.storage = .init()
+        self.forHeadRequest = false
     }
 }
 

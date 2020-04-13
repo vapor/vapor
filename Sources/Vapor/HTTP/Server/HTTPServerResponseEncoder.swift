@@ -31,8 +31,9 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             headers: response.headers
         ))), promise: nil)
         
-        if response.status == .noContent {
-            // don't send bodies for 204 (no content) requests
+        if response.status == .noContent || response.forHeadRequest {
+            // don't send bodies for 204 (no content) responses
+            // or HEAD requests
             context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
         } else {
             switch response.body.storage {
