@@ -13,7 +13,7 @@ extension RoutesBuilder {
     ///     - path: Group path components separated by commas.
     /// - returns: Newly created `Router` wrapped in the path.
     public func grouped(_ path: PathComponent...) -> RoutesBuilder {
-        return HTTPRoutesGroup(root: self, path: path)
+        return HTTPRoutesGroup(root: self, path: path, defaultMaxBodySize: self.defaultMaxBodySize)
     }
     
     /// Creates a new `Router` that will automatically prepend the supplied path components.
@@ -29,7 +29,7 @@ extension RoutesBuilder {
     ///     - path: Group path components separated by commas.
     ///     - configure: Closure to configure the newly created `Router`.
     public func group(_ path: PathComponent..., configure: (RoutesBuilder) throws -> ()) rethrows {
-        try configure(HTTPRoutesGroup(root: self, path: path))
+        try configure(HTTPRoutesGroup(root: self, path: path, defaultMaxBodySize: self.defaultMaxBodySize))
     }
 }
 
@@ -40,11 +40,15 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     
     /// Additional components.
     let path: [PathComponent]
-    
+
+    /// The default max body size for requests in the group.
+    let defaultMaxBodySize: Int?
+
     /// Creates a new `PathGroup`.
-    init(root: RoutesBuilder, path: [PathComponent]) {
+    init(root: RoutesBuilder, path: [PathComponent] = [], defaultMaxBodySize: Int? = nil) {
         self.root = root
         self.path = path
+        self.defaultMaxBodySize = defaultMaxBodySize
     }
     
     /// See `HTTPRoutesBuilder`.
