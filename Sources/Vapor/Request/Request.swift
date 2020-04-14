@@ -29,7 +29,7 @@ public final class Request: CustomStringConvertible {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public internal(set) var route: Route?
+    public var route: Route?
 
     // MARK: Content
 
