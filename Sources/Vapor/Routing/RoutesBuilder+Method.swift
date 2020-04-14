@@ -126,7 +126,7 @@ extension RoutesBuilder {
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: PathComponent...,
-        body: HTTPBodyStreamStrategy = .collect,
+        body: HTTPBodyStreamStrategy? = nil,
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
@@ -140,21 +140,33 @@ extension RoutesBuilder {
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: [PathComponent],
-        body: HTTPBodyStreamStrategy = .collect,
+        body: HTTPBodyStreamStrategy? = nil,
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
+        let streamStrategy = body ?? .collect(maxSize: self.defaultMaxBodySize)
         let responder = BasicResponder { request in
-            if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(max: max).flatMapThrowing { _ in
+            switch streamStrategy {
+            case let .collect(maxSize):
+                let collected: EventLoopFuture<Void>
+
+                if let data = request.body.data {
+                    collected = request.eventLoop.tryFuture {
+                        if let max = maxSize, data.readableBytes <= max { throw Abort(.payloadTooLarge) }
+                    }
+                } else {
+                    collected = request.body.collect(max: maxSize).transform(to: ())
+                }
+
+                return collected.flatMapThrowing {
                     return try closure(request)
                 }.encodeResponse(for: request)
-            } else {
-                return try closure(request)
-                    .encodeResponse(for: request)
+            case .stream:
+                return try closure(request).encodeResponse(for: request)
             }
         }
+
         let route = Route(
             method: method,
             path: path,
