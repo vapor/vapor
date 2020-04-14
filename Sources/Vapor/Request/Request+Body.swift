@@ -42,7 +42,7 @@ extension Request {
                     return buffer
                 }
             case .collected(let buffer):
-                if let max = max, buffer.readableBytes <= max {
+                if let max = max, buffer.readableBytes > max {
                     return self.request.eventLoop.future(error: Abort(.payloadTooLarge))
                 }
                 

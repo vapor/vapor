@@ -153,7 +153,7 @@ extension RoutesBuilder {
 
                 if let data = request.body.data {
                     collected = request.eventLoop.tryFuture {
-                        if let max = maxSize, data.readableBytes <= max { throw Abort(.payloadTooLarge) }
+                        if let max = maxSize, data.readableBytes > max { throw Abort(.payloadTooLarge) }
                     }
                 } else {
                     collected = request.body.collect(max: maxSize).transform(to: ())
