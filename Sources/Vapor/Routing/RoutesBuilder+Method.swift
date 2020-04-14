@@ -2,11 +2,11 @@
 public enum HTTPBodyStreamStrategy {
     /// The HTTP request's body will be collected into memory before the route handler is
     /// called. The max size will determine how much data can be collected. The default is
-    /// `1 << 14`.
+    /// 1,000,000 bytes, or 1 megabyte.
     ///
     /// See `collect(maxSize:)` to set a lower max body size.
     public static var collect: HTTPBodyStreamStrategy {
-        return .collect(maxSize: 1 << 14)
+        return .collect(maxSize: 1_000_000)
     }
 
     /// The HTTP request's body will not be collected first before the route handler is called
