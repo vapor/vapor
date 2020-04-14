@@ -1,3 +1,4 @@
+@testable import Vapor
 import XCTVapor
 
 final class MiddlewareTests: XCTestCase {
@@ -28,5 +29,20 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
             XCTAssertEqual(res.body.string, "done")
         }
+    }
+
+    func testCorsPosition() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let cors = CORSMiddleware.init(configuration: .default())
+        app.middleware.use(cors)
+
+        let middlewares = app.middleware.resolve()
+
+        let errorMiddleware = try XCTUnwrap(middlewares.firstIndex(where: { $0 is ErrorMiddleware }))
+        let corsMiddleware = try XCTUnwrap(middlewares.firstIndex(where: { $0 is CORSMiddleware }))
+
+        XCTAssertLessThan(corsMiddleware, errorMiddleware)
     }
 }

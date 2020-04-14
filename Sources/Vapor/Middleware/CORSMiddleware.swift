@@ -97,14 +97,14 @@ public final class CORSMiddleware: Middleware {
             allowedHeaders: [HTTPHeaders.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
-            exposedHeaders: [String]? = nil
+            exposedHeaders: [HTTPHeaders.Name]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
-            self.allowedHeaders = allowedHeaders.map({ $0.description }).joined(separator: ", ")
+            self.allowedHeaders = allowedHeaders.map({ String(describing: $0) }).joined(separator: ", ")
             self.allowCredentials = allowCredentials
             self.cacheExpiration = cacheExpiration
-            self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
+            self.exposedHeaders = exposedHeaders?.map({ String(describing: $0) }).joined(separator: ", ")
         }
     }
 
