@@ -84,6 +84,23 @@ public final class Response: CustomStringConvertible {
             }
             return try decoder.decode(D.self, from: body, headers: self.response.headers)
         }
+
+        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+            var content = content
+            try content.beforeEncode()
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(content, to: &body, headers: &self.response.headers)
+            self.response.body = .init(buffer: body)
+        }
+
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+            guard let body = self.response.body.buffer else {
+                throw Abort(.unprocessableEntity)
+            }
+            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
+            try decoded.afterDecode()
+            return decoded
+        }
     }
 
     public var content: ContentContainer {

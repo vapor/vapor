@@ -19,6 +19,12 @@ public struct XCTHTTPRequest {
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             fatalError("Decoding from test request is not supported.")
         }
+
+        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+            var content = content
+            try content.beforeEncode()
+            try encoder.encode(content, to: &self.body, headers: &self.headers)
+        }
     }
 
     public var content: ContentContainer {
