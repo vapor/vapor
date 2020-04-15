@@ -38,7 +38,21 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable {
     ///
     static var defaultContentType: HTTPMediaType { get }
 
+    /// Called before this `Content` is encoded, generally for a `Response` object.
+    ///
+    /// You should use this method to perform any "sanitizing" which you need on the data.
+    /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
+    /// strings or replace empty arrays with `nil`. You can also use this method to abort
+    /// the encoding if something isn't valid. An empty array may indicate an error, for example.
     mutating func beforeEncode() throws
+
+
+    /// Called after this `Content` is decoded, generally from a `Request` object.
+    ///
+    /// You should use this method to perform any "sanitizing" which you need on the data.
+    /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
+    /// strings or replace empty arrays with `nil`. You can also use this method to abort
+    /// the decoding if something isn't valid. An empty string may indicate an error, for example.
     mutating func afterDecode() throws
 }
 
