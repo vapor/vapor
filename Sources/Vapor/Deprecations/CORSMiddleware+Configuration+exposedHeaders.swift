@@ -18,11 +18,10 @@ extension CORSMiddleware.Configuration {
         cacheExpiration: Int? = 600,
         exposedHeaders: [String]
     ) {
-        self.allowedOrigin = allowedOrigin
-        self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
-        self.allowedHeaders = allowedHeaders.map({ $0.description }).joined(separator: ", ")
-        self.allowCredentials = allowCredentials
-        self.cacheExpiration = cacheExpiration
-        self.exposedHeaders = exposedHeaders.joined(separator: ", ")
+        let exposed = exposedHeaders.map { HTTPHeaders.Name($0) }
+        self.init(
+            allowedOrigin: allowedOrigin, allowedMethods: allowedMethods, allowedHeaders: allowedHeaders,
+            allowCredentials: allowCredentials, cacheExpiration: cacheExpiration, exposedHeaders: exposed
+        )
     }
 }
