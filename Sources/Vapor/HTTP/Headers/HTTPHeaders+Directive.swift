@@ -226,7 +226,7 @@ private extension Character {
     }
 
     var isDirectiveKey: Bool {
-        self.isLetter || self == .dash || self == .underscore
+        self.isLetter || self.isNumber || self == .dash || self == .underscore
     }
 }
 
