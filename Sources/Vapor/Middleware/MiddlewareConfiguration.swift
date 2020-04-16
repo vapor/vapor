@@ -19,15 +19,6 @@ public struct Middlewares {
     ///            Otherwise, use the type-based method and register the `Middleware`
     ///            using factory method to `Services`.
     public mutating func use(_ middleware: Middleware) {
-        // CORS middleware must come before the ErrorMiddleware. While
-        // we could just always add cors first, that breaks people who want
-        // a specific order for other items.  So just find the ErrorMiddleare
-        // and add it before that
-        if let corsMiddleware = middleware as? CORSMiddleware,
-            let index = self.storage.firstIndex(where: { $0 is ErrorMiddleware }) {
-            self.storage.insert(corsMiddleware, at: index)
-        }
-
         self.storage.append(middleware)
     }
 

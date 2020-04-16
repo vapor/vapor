@@ -91,6 +91,23 @@ public final class CORSMiddleware: Middleware {
         ///   - allowCredentials: If cookies and other credentials will be sent in the response.
         ///   - cacheExpiration: Optionally sets expiration of the cached pre-flight request in seconds.
         ///   - exposedHeaders: Headers exposed in the response of pre-flight request.
+        @available(swift, obsoleted: 4.3, message: "Please use the initializer where exposedHeaders uses HTTPHeaders.Name")
+        public init(
+            allowedOrigin: AllowOriginSetting,
+            allowedMethods: [HTTPMethod],
+            allowedHeaders: [HTTPHeaders.Name],
+            allowCredentials: Bool = false,
+            cacheExpiration: Int? = 600,
+            exposedHeaders: [String]? = nil
+        ) {
+            self.allowedOrigin = allowedOrigin
+            self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
+            self.allowedHeaders = allowedHeaders.map({ $0.description }).joined(separator: ", ")
+            self.allowCredentials = allowCredentials
+            self.cacheExpiration = cacheExpiration
+            self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
+        }
+
         public init(
             allowedOrigin: AllowOriginSetting,
             allowedMethods: [HTTPMethod],
