@@ -173,7 +173,7 @@ private struct _Decoder: Decoder {
             var lastDecodingError: Error = DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date using the provided date formats"))
             for dateDecodingStrategy in configuration.dateDecodingStrategies {
                 do {
-                    return try decodeDate(forKey: key, as: dateFormat)
+                    return try decodeDate(forKey: key, as: dateDecodingStrategy)
                 } catch {
                     lastDecodingError = error
                 }
