@@ -195,7 +195,7 @@ private struct _Decoder: Decoder {
             case .iso8601:
                 let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
                 //Creating a new `ISO8601DateFormatter` everytime is probably not performant
-                if let date = ISO8601DateFormatter.shared.date(from: try String(from: decoder)) {
+                if let date = ISO8601DateFormatter.threadSpecific.date(from: try String(from: decoder)) {
                     return date
                 } else {
                     throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))

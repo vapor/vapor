@@ -1,16 +1,17 @@
-//
-//  File.swift
-//  
-//
-//  Created by Ravneet Singh on 3/29/20.
-//
-
 import NIO
 
-fileprivate let sharedISO8601DateFormatter = ISO8601DateFormatter()
+fileprivate final class ISO8601 {
+    fileprivate static let threadSpecific: ThreadSpecificVariable<ISO8601DateFormatter> = .init()
+}
 
 extension ISO8601DateFormatter {
-    static var shared: ISO8601DateFormatter {
-      sharedISO8601DateFormatter
+    static var threadSpecific: ISO8601DateFormatter {
+        if let existing = ISO8601.threadSpecific.currentValue {
+            return existing
+        } else {
+            let new = ISO8601DateFormatter()
+            ISO8601.threadSpecific.currentValue = new
+            return new
+        }
     }
 }

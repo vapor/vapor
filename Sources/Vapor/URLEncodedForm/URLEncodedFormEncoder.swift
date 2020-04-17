@@ -184,7 +184,7 @@ private class _Encoder: Encoder {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [date.urlQueryFragmentValue])
             case .iso8601:
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [
-                    ISO8601DateFormatter.shared.string(from: date).urlQueryFragmentValue
+                    ISO8601DateFormatter.threadSpecific.string(from: date).urlQueryFragmentValue
                 ])
             case .custom(let callback):
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
