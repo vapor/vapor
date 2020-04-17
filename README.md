@@ -64,17 +64,15 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://github.com/kylebrowning">
     <img src="https://user-images.githubusercontent.com/1342803/67107440-7ca5a980-f19a-11e9-8619-b029c96399f7.png" height="100px" alt="Kyle Browning">
 </a>
+<a href="https://github.com/MrLotU">
+    <img src="https://user-images.githubusercontent.com/1342803/79599312-426a8580-80b3-11ea-89b3-8b2722485e37.png" height="100px" alt="Jari">
+</a>
+
 
 
 ### 💚 Backers
 Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
 
-<a 
-    data-amt="25" 
-    data-since="10/15/19" 
-    href="https://github.com/MrLotU">
-    <img src="https://avatars3.githubusercontent.com/u/18392003?s=120" width="60px">
-</a>
 <a 
     data-amt="25" 
     data-since="10/20/19" 
