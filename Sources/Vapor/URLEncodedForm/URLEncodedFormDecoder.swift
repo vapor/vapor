@@ -35,7 +35,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         ///     - arraySeparators: Uses these characters to decode arrays. If set to `,`, `arr=v1,v2` would
         ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
         ///     - dateFormats: Date formats used to decode a date. Date formats are tried in the order provided.
-        ///                    Defaults to `[.timeIntervalSince1970, .iso8601]`
+        ///                    Defaults to `[.secondsSince1970, .iso8601]`
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],

@@ -44,7 +44,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///
         ///  - parameters:
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
-        ///     - dateFormat: Format to encode date format too. Defaults to `timeIntervalSince1970`
+        ///     - dateFormat: Format to encode date format too. Defaults to `secondsSince1970`
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
             dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970
