@@ -14,7 +14,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
     public struct Configuration {
         /// Supported date formats
-        public enum DateFormat {
+        public enum DateDecodingStrategy {
             /// Seconds since 1 January 1970 00:00:00 UTC
             case secondsSince1970
             /// ISO 8601 formatted date
@@ -25,7 +25,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 
         let boolFlags: Bool
         let arraySeparators: [Character]
-        let dateFormats: [DateFormat]
+        let dateDecodingStrategies: [DateDecodingStrategy]
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -39,11 +39,11 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateFormats: [DateFormat] = [.secondsSince1970, .iso8601]
+            dateDecodingStrategies: [DateDecodingStrategy] = [.secondsSince1970, .iso8601]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
-            self.dateFormats = dateFormats
+            self.dateDecodingStrategies = dateDecodingStrategies
         }
     }
 
@@ -171,7 +171,7 @@ private struct _Decoder: Decoder {
         
         private func decodeDate(forKey key: Key) throws -> Date {
             var lastDecodingError: Error = DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date using the provided date formats"))
-            for dateFormat in configuration.dateFormats {
+            for dateDecodingStrategy in configuration.dateDecodingStrategies {
                 do {
                     return try decodeDate(forKey: key, as: dateFormat)
                 } catch {
@@ -181,7 +181,7 @@ private struct _Decoder: Decoder {
             throw lastDecodingError
         }
         
-        private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateFormat) throws -> Date {
+        private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateDecodingStrategy) throws -> Date {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
             switch dateFormat {
