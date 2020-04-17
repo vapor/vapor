@@ -127,12 +127,12 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decodedDefault, toEncode)
 
         let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
-            configuration: .init(dateFormat: .unixTimestamp)
+            configuration: .init(dateFormat: .secondsSince1970)
         ).encode(toEncode)
         XCTAssertEqual("date=0.0", resultForTimeIntervalSince1970)
         
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
-            configuration: .init(dateFormats: [.unixTimestamp])
+            configuration: .init(dateFormats: [.secondsSince1970])
         ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
         XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
         

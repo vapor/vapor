@@ -30,7 +30,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         /// Supported date formats
         public enum DateFormat {
             /// Seconds since 1 January 1970 00:00:00 UTC
-            case unixTimestamp
+            case secondsSince1970
             /// ISO 8601 formatted date
             case iso8601
             /// Using custom callback
@@ -47,7 +47,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///     - dateFormat: Format to encode date format too. Defaults to `timeIntervalSince1970`
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
-            dateFormat: DateFormat = .unixTimestamp
+            dateFormat: DateFormat = .secondsSince1970
         ) {
             self.arrayEncoding = arrayEncoding
             self.dateFormat = dateFormat
@@ -180,7 +180,7 @@ private class _Encoder: Encoder {
         
         private func encodeDate(_ date: Date, forKey key: Key) throws {
             switch configuration.dateFormat {
-            case .unixTimestamp:
+            case .secondsSince1970:
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [date.urlQueryFragmentValue])
             case .iso8601:
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [

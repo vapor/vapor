@@ -16,7 +16,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         /// Supported date formats
         public enum DateFormat {
             /// Seconds since 1 January 1970 00:00:00 UTC
-            case unixTimestamp
+            case secondsSince1970
             /// ISO 8601 formatted date
             case iso8601
             /// Using custom callback
@@ -39,7 +39,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateFormats: [DateFormat] = [.unixTimestamp, .iso8601]
+            dateFormats: [DateFormat] = [.secondsSince1970, .iso8601]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
@@ -183,7 +183,7 @@ private struct _Decoder: Decoder {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
             switch dateFormat {
-            case .unixTimestamp:
+            case .secondsSince1970:
                 guard let value = child.values.last else {
                     throw DecodingError.valueNotFound(Date.self, at: self.codingPath + [key])
                 }
