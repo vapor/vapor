@@ -170,13 +170,15 @@ private struct _Decoder: Decoder {
         }
         
         private func decodeDate(forKey key: Key) throws -> Date {
+            var lastDecodingError: Error = DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date using the provided date formats"))
             for dateFormat in configuration.dateFormats {
                 do {
                     return try decodeDate(forKey: key, as: dateFormat)
                 } catch {
+                    lastDecodingError = error
                 }
             }
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date using the provided date formats"))
+            throw lastDecodingError
         }
         
         private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateFormat) throws -> Date {
