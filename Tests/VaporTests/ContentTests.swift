@@ -232,38 +232,79 @@ final class ContentTests: XCTestCase {
     }
 
     func testJSONPreservesHTTPHeaders() throws {
-         let app = Application(.testing)
-         defer { app.shutdown() }
+        let app = Application(.testing)
+        defer { app.shutdown() }
 
-         app.get("check") { (req: Request) -> String in
-             return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
-         }
+        app.get("check") { (req: Request) -> String in
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+        }
 
-         try app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
-             try req.content.encode(["foo": "bar"], as: .json)
-         }) { res in
-             XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
-         }
-     }
+        try app.test(.GET, "/check", headers: ["X-Test-Value": "PRESENT"], beforeRequest: { req in
+            try req.content.encode(["foo": "bar"], as: .json)
+        }) { res in
+            XCTAssertEqual(res.body.string, "PRESENT.application/json; charset=utf-8")
+        }
+    }
 
-     func testJSONAllowsContentTypeOverride() throws {
-         let app = Application(.testing)
-         defer { app.shutdown() }
+    func testJSONAllowsContentTypeOverride() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
 
-         app.get("check") { (req: Request) -> String in
-             return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
-         }
-         // Me and my sadistic sense of humor.
-         ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
+        app.get("check") { (req: Request) -> String in
+            return "\(req.headers.first(name: .init("X-Test-Value")) ?? "MISSING").\(req.headers.first(name: .contentType) ?? "?")"
+        }
+        // Me and my sadistic sense of humor.
+        ContentConfiguration.global.use(decoder: try! ContentConfiguration.global.requireDecoder(for: .json), for: .xml)
 
-         try app.testable().test(.GET, "/check", headers: [
-             "X-Test-Value": "PRESENT"
-         ], beforeRequest: { req in
-             try req.content.encode(["foo": "bar"], as: .json)
-             req.headers.contentType = .xml
-         }) { res in
-             XCTAssertEqual(res.body.string, "PRESENT.application/xml; charset=utf-8")
-         }
-     }
+        try app.testable().test(.GET, "/check", headers: [
+            "X-Test-Value": "PRESENT"
+            ], beforeRequest: { req in
+                try req.content.encode(["foo": "bar"], as: .json)
+                req.headers.contentType = .xml
+        }) { res in
+            XCTAssertEqual(res.body.string, "PRESENT.application/xml; charset=utf-8")
+        }
+    }
 
+    func testBeforeEncodeContent() throws {
+        let content = SampleContent()
+        XCTAssertEqual(content.name, "old name")
+
+        let response = Response(status: .ok)
+        try response.content.encode(content)
+
+        let body = try XCTUnwrap(response.body.string)
+        XCTAssertEqual(body, #"{"name":"new name"}"#)
+    }
+
+    func testAfterContentEncode() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"{"name": "before decode"}"#)
+
+        let request = Request(
+            application: app,
+            collectedBody: body,
+            on: EmbeddedEventLoop()
+        )
+
+        request.headers.contentType = .json
+
+        let content = try request.content.decode(SampleContent.self)
+        XCTAssertEqual(content.name, "new name after decode")
+    }
+}
+
+private struct SampleContent: Content {
+    var name = "old name"
+
+    mutating func beforeEncode() throws {
+        name = "new name"
+    }
+
+    mutating func afterDecode() throws {
+        name = "new name after decode"
+    }
 }

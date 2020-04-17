@@ -15,6 +15,13 @@ extension ContentContainer {
         return try self.decode(D.self, using: self.configuredDecoder())
     }
 
+    public func decode<C>(_ decodable: C.Type) throws -> C where C: Content {
+        var content = try self.decode(C.self, using: self.configuredDecoder())
+        try content.afterDecode()
+
+        return content
+    }
+
     // MARK: Encode
 
     /// Serializes an `Encodable` object to this message using specific `HTTPMessageEncoder`.
@@ -27,6 +34,8 @@ extension ContentContainer {
     public mutating func encode<C>(_ encodable: C) throws
         where C: Content
     {
+        var encodable = encodable
+        try encodable.beforeEncode()
         try self.encode(encodable, as: C.defaultContentType)
     }
 
@@ -44,7 +53,23 @@ extension ContentContainer {
     {
         try self.encode(encodable, using: self.configuredEncoder(for: contentType))
     }
-    
+
+    /// Serializes a `Content` object to this message using specific `HTTPMessageEncoder`.
+    ///
+    ///     try req.content.encode(user, using: JSONEncoder())
+    ///
+    /// - parameters:
+    ///     - content: Instance of generic `Content` to serialize to this HTTP message.
+    ///     - encoder: Specific `HTTPMessageEncoder` to use.
+    /// - throws: Errors during serialization.
+    public mutating func encode<C>(_ content: C, as contentType: HTTPMediaType) throws
+        where C: Content
+    {
+        var content = content
+        try content.beforeEncode()
+        try self.encode(content, using: self.configuredEncoder(for: contentType))
+    }
+
     // MARK: Single Value
     
     /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
