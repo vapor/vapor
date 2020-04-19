@@ -15,7 +15,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public struct Configuration {
         /// Supported date formats
         public enum DateDecodingStrategy {
-            /// Seconds since 1 January 1970 00:00:00 UTC
+            /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
             case secondsSince1970
             /// ISO 8601 formatted date
             case iso8601

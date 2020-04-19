@@ -117,6 +117,10 @@ final class URLEncodedFormTests: XCTestCase {
 
     func testDateCoding() throws {
         let toEncode = DateCoding(date: Date(timeIntervalSince1970: 0))
+
+        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=0.0")
+        XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
+
         let decodedDefaultFromISO8601 = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=1970-01-01T00:00:00Z")
         XCTAssertEqual(decodedDefaultFromISO8601, toEncode)
 
