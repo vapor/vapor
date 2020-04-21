@@ -118,11 +118,8 @@ final class URLEncodedFormTests: XCTestCase {
     func testDateCoding() throws {
         let toEncode = DateCoding(date: Date(timeIntervalSince1970: 0))
 
-        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=0.0")
+        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=0")
         XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
-
-        let decodedDefaultFromISO8601 = try URLEncodedFormDecoder().decode(DateCoding.self, from: "date=1970-01-01T00:00:00Z")
-        XCTAssertEqual(decodedDefaultFromISO8601, toEncode)
 
         let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
         XCTAssertEqual("date=0.0", resultForDefault)
@@ -136,7 +133,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual("date=0.0", resultForTimeIntervalSince1970)
         
         let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategies: [.secondsSince1970])
+            configuration: .init(dateDecodingStrategy: .secondsSince1970)
         ).decode(DateCoding.self, from: resultForTimeIntervalSince1970)
         XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
         
@@ -146,12 +143,12 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual("date=1970-01-01T00:00:00Z", resultForInternetDateTime)
 
         let decodedInternetDateTime = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategies: [.iso8601])
+            configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateCoding.self, from: resultForInternetDateTime)
         XCTAssertEqual(decodedInternetDateTime, toEncode)
 
         XCTAssertThrowsError(try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategies: [.iso8601])
+            configuration: .init(dateDecodingStrategy: .iso8601)
         ).decode(DateCoding.self, from: "date=bad-date"))
                 
         class DateFormatterFactory {
@@ -185,14 +182,14 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual("date=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z", resultCustom)
         
         let decodedCustom = try URLEncodedFormDecoder(
-            configuration: .init(dateDecodingStrategies: [.custom({ (decoder) -> Date in
+            configuration: .init(dateDecodingStrategy: .custom({ (decoder) -> Date in
                 let container = try decoder.singleValueContainer()
                 let string = try container.decode(String.self)
                 guard let date = factory.currentValue.date(from: string) else {
                     throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
                 }
                 return date
-            })])
+            }))
         ).decode(DateCoding.self, from: resultCustom)
         XCTAssertEqual(decodedCustom, toEncode)
     }

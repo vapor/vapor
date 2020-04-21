@@ -25,7 +25,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 
         let boolFlags: Bool
         let arraySeparators: [Character]
-        let dateDecodingStrategies: [DateDecodingStrategy]
+        let dateDecodingStrategy: DateDecodingStrategy
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -34,17 +34,15 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         ///                  true, it will always resolve for an optional `Bool`.
         ///     - arraySeparators: Uses these characters to decode arrays. If set to `,`, `arr=v1,v2` would
         ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
-        ///     - dateFormats: Date formats used to decode a date. Date formats are tried in the order provided.
-        ///                    Defaults to `[.secondsSince1970, .iso8601]`
+        ///     - dateDecodingStrategy: Date format used to decode a date. Date formats are tried in the order provided
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateDecodingStrategies: [DateDecodingStrategy] = [.secondsSince1970, .iso8601]
+            dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
         ) {
-            assert(dateDecodingStrategies.count > 0, "At least one date decoding strategy needs to be defined for `URLEncodedFormDecoder`. Use: ContentConfiguration.global.use(urlDecoder: URLEncodedFormDecoder(configuration: .init(dateDecodingStrategies: [.secondsSince1970])))")
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
-            self.dateDecodingStrategies = dateDecodingStrategies
+            self.dateDecodingStrategy = dateDecodingStrategy
         }
     }
 
@@ -171,16 +169,7 @@ private struct _Decoder: Decoder {
         }
         
         private func decodeDate(forKey key: Key) throws -> Date {
-            //This error will only be thrown if no `dateDecodingStrategies` have been defined. It will get overwritten by the decoders' error if it's thrown
-            var lastDecodingError: Error = DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "At least one date decoding strategy needs to be defined for `URLEncodedFormDecoder`. Use: ContentConfiguration.global.use(urlDecoder: URLEncodedFormDecoder(configuration: .init(dateDecodingStrategies: [.secondsSince1970])))"))
-            for dateDecodingStrategy in configuration.dateDecodingStrategies {
-                do {
-                    return try decodeDate(forKey: key, as: dateDecodingStrategy)
-                } catch {
-                    lastDecodingError = error
-                }
-            }
-            throw lastDecodingError
+            return try decodeDate(forKey: key, as: configuration.dateDecodingStrategy)
         }
         
         private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateDecodingStrategy) throws -> Date {
