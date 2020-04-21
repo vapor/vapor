@@ -4,9 +4,9 @@ extension Response {
         let callback: (BodyStreamWriter) -> ()
     }
 
-    /// Represents an `HTTPMessage`'s body.
+    /// Represents a `Response`'s body.
     ///
-    ///     let body = HTTPBody(string: "Hello, world!")
+    ///     let body = Response.Body(string: "Hello, world!")
     ///
     /// This can contain any data (streaming or static) and should match the message's `"Content-Type"` header.
     public struct Body: CustomStringConvertible, ExpressibleByStringLiteral {
@@ -22,7 +22,7 @@ extension Response {
             case stream(BodyStream)
         }
         
-        /// An empty `HTTPBody`.
+        /// An empty `Response.Body`.
         public static let empty: Body = .init()
         
         public var string: String? {
