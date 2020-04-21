@@ -101,6 +101,43 @@ final class ErrorTests: XCTestCase {
         StackTrace.isCaptureEnabled = true
         print(StackTrace.capture()!.description)
     }
+
+    func testAbortError() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("foo") { req -> String in
+            throw Abort(.internalServerError, reason: "Foo")
+        }
+
+        app.post("foo") { req -> Foo in
+            try req.content.decode(Foo.self)
+        }
+
+        struct AbortResponse: Content {
+            var reason: String
+        }
+
+        try app.test(.GET, "foo") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+            let abort = try res.content.decode(AbortResponse.self)
+            XCTAssertEqual(abort.reason, "Foo")
+        }.test(.POST, "foo", beforeRequest: { req in
+            try req.content.encode(Foo(bar: 42))
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .internalServerError)
+            let abort = try res.content.decode(AbortResponse.self)
+            XCTAssertEqual(abort.reason, "After decode")
+        })
+    }
+}
+
+private struct Foo: Content {
+    let bar: Int
+
+    func afterDecode() throws {
+        throw Abort(.internalServerError, reason: "After decode")
+    }
 }
 
 private enum MinimumError: String, DebuggableError {
