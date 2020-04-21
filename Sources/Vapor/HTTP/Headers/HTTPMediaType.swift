@@ -53,20 +53,12 @@ public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
         guard lhs.type != "*" && rhs.type != "*" else {
             return true
         }
-        
-        guard lhs.type != rhs.type else {
-            guard lhs.subType != "*" && rhs.subType != "*" else {
-                return true
-            }
-            
-            guard lhs.subType != rhs.subType else {
-                return true
-            }
-            
+
+        guard lhs.type.caseInsensitiveCompare(rhs.type) == .orderedSame else {
             return false
         }
-        
-        return false
+
+        return lhs.subType == "*" || rhs.subType == "*" || lhs.subType.caseInsensitiveCompare(rhs.subType) == .orderedSame
     }
     
     /// The `MediaType`'s discrete or composite type. Usually one of the following.

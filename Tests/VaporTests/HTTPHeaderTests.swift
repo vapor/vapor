@@ -175,4 +175,16 @@ final class HTTPHeaderValueTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=")
         XCTAssertEqual(headers.cookie?["oauth2_consent_csrf"]?.string, "MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg==")
     }
+
+    func testMediaTypeMainTypeCaseInsensitive() throws {
+        let lower = HTTPMediaType(type: "foo", subType: "")
+        let upper = HTTPMediaType(type: "FOO", subType: "")
+        XCTAssertEqual(lower, upper)
+    }
+
+    func testMediaTypeSubTypeCaseInsensitive() throws {
+        let lower = HTTPMediaType(type: "foo", subType: "bar")
+        let upper = HTTPMediaType(type: "foo", subType: "BAR")
+        XCTAssertEqual(lower, upper)
+    }
 }
