@@ -5,7 +5,7 @@ jobs:
   vapor_macos:
     runs-on: macos-latest
     env:
-      DEVELOPER_DIR: /Applications/Xcode_11.4_beta.app/Contents/Developer
+      DEVELOPER_DIR: /Applications/Xcode_11.4.1.app/Contents/Developer
     steps:
     - uses: actions/checkout@v2
     - run: xcrun swift test --enable-test-discovery --sanitize=thread
