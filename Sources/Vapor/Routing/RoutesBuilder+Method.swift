@@ -6,7 +6,7 @@ public enum HTTPBodyStreamStrategy {
     ///
     /// See `collect(maxSize:)` to set a lower max body size.
     public static var collect: HTTPBodyStreamStrategy {
-        return .collect(maxSize: 1_000_000)
+        return .collect(maxSize: nil)
     }
 
     /// The HTTP request's body will not be collected first before the route handler is called
@@ -18,7 +18,7 @@ public enum HTTPBodyStreamStrategy {
     ///
     /// If a `maxSize` is supplied, the request body size in bytes will be limited. Requests
     /// exceeding that size will result in an error.
-    case collect(maxSize: Int?)
+    case collect(maxSize: ByteCount?)
 }
 
 extension RoutesBuilder {
@@ -126,7 +126,7 @@ extension RoutesBuilder {
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: PathComponent...,
-        body: HTTPBodyStreamStrategy? = nil,
+        body: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
@@ -140,12 +140,12 @@ extension RoutesBuilder {
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: [PathComponent],
-        body: HTTPBodyStreamStrategy? = nil,
+        body: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
-        let streamStrategy = body ?? .collect(maxSize: self.defaultMaxBodySize)
+        let streamStrategy = body
         let responder = BasicResponder { request in
             switch streamStrategy {
             case let .collect(maxSize):
@@ -153,10 +153,10 @@ extension RoutesBuilder {
 
                 if let data = request.body.data {
                     collected = request.eventLoop.tryFuture {
-                        if let max = maxSize, data.readableBytes > max { throw Abort(.payloadTooLarge) }
+                        if let max = maxSize, data.readableBytes > max.value { throw Abort(.payloadTooLarge) }
                     }
                 } else {
-                    collected = request.body.collect(max: maxSize).transform(to: ())
+                    collected = request.body.collect(max: maxSize?.value).transform(to: ())
                 }
 
                 return collected.flatMapThrowing {

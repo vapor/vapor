@@ -273,11 +273,11 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        XCTAssertEqual(app.routes.defaultMaxBodySize, 1_000_000)
+        XCTAssertEqual(app.routes.defaultMaxBodySize, 1048576)
         app.routes.defaultMaxBodySize = 50
         XCTAssertEqual(app.routes.defaultMaxBodySize, 50)
 
-        let group = app.routes.group(maxSize: 1_000_000_000).grouped("uploads")
+        let group = app.routes.grouped(defaultMaxBodySize: 1_000_000_000).grouped("uploads")
         XCTAssertEqual(group.defaultMaxBodySize, 1_000_000_000)
 
         group.on(.POST, "small", body: .collect(maxSize: 1_000) , use: { request in return "small" })

@@ -7,7 +7,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible {
     }
 
     public init() {
-        self.defaultMaxBodySize = 1_000_000
+        self.defaultMaxBodySize = 1 << 20 //1MB
         self.all = []
     }
     

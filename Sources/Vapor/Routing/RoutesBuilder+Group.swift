@@ -41,7 +41,7 @@ extension RoutesBuilder {
     ///     - defaultMaxBodySize: The maximum number of bytes that a request body can contain in the new group
     ///     `nil` means there is no limit.
     /// - returns: A newly created `Router` with a new max body size.
-    public func group(maxSize defaultMaxBodySize: Int?) -> RoutesBuilder {
+    public func grouped(defaultMaxBodySize: Int?) -> RoutesBuilder {
         return HTTPRoutesGroup(root: self, defaultMaxBodySize: defaultMaxBodySize)
     }
 
@@ -57,7 +57,7 @@ extension RoutesBuilder {
     ///     - configure: Closure to configure the newly created `Router`.
     ///     - builder: The new builder with the new max body size.
     /// - returns: A newly created `Router` with a new max body size.
-    public func grouped(maxSize defaultMaxBodySize: Int?, configure: (_ builder: RoutesBuilder) throws -> ()) rethrows {
+    public func group(defaultMaxBodySize: Int?, configure: (_ builder: RoutesBuilder) throws -> ()) rethrows {
         try configure(HTTPRoutesGroup(root: self, defaultMaxBodySize: defaultMaxBodySize))
     }
 }

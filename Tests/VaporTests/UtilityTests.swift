@@ -21,4 +21,21 @@ final class UtilityTests: XCTestCase {
         XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
         XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
     }
+
+    func testByteCount() throws {
+        let twoKib: ByteCount = "2kib"
+        XCTAssertEqual(twoKib.value, 2_048)
+
+        let oneMb: ByteCount = "1mb"
+        XCTAssertEqual(oneMb.value, 1_048_576)
+
+        let oneGb: ByteCount = "1gb"
+        XCTAssertEqual(oneGb.value, 1_073_741_824)
+
+        let oneTb: ByteCount = "1tb"
+        XCTAssertEqual(oneTb.value, 1_099_511_627_776)
+
+        let intBytes: ByteCount = 1_000_000
+        XCTAssertEqual(intBytes.value, 1_000_000)
+    }
 }
