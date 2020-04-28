@@ -16,7 +16,7 @@ public enum HTTPBodyStreamStrategy {
     /// The HTTP request's body will be collected into memory before the route handler is
     /// called.
     ///
-    /// `maxSize` Limits the maximum amount of memory in bytes  that will be used to
+    /// `maxSize` Limits the maximum amount of memory in bytes that will be used to
     /// collect a streaming body. Streaming requests exceeding that size will result in an error.
     /// Passing `nil` results in the application's default max body size being used. This
     /// parameter does not affect non-streaming requests.
