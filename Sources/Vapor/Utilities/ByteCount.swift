@@ -45,9 +45,10 @@ extension ByteCount: ExpressibleByStringLiteral {
             "tb": 40
         ]
 
+        let cleanValue = value.lowercased().trimmingCharacters(in: .whitespaces).replacingOccurrences(of: " ", with: "")
         for suffix in validSuffixes {
-            guard value.hasSuffix(suffix.key) else { continue }
-            guard let stringIntValue = value.components(separatedBy: suffix.key).first else {
+            guard cleanValue.hasSuffix(suffix.key) else { continue }
+            guard let stringIntValue = cleanValue.components(separatedBy: suffix.key).first else {
                 fatalError("Invalid string format")
             }
 

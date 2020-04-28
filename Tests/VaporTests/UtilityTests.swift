@@ -23,6 +23,9 @@ final class UtilityTests: XCTestCase {
     }
 
     func testByteCount() throws {
+        let twoKbUpper: ByteCount = "2 KB"
+        XCTAssertEqual(twoKbUpper.value, 2_048)
+
         let twoKb: ByteCount = "2kb"
         XCTAssertEqual(twoKb.value, 2_048)
 
