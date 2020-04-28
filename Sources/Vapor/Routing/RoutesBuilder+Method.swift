@@ -18,6 +18,7 @@ public enum HTTPBodyStreamStrategy {
     ///
     /// If a `maxSize` is supplied, the request body size in bytes will be limited. Requests
     /// exceeding that size will result in an error.
+    /// Passing `nil` results in the application's default max body size being used. 
     case collect(maxSize: ByteCount?)
 }
 
@@ -145,28 +146,18 @@ extension RoutesBuilder {
     ) -> Route
         where Response: ResponseEncodable
     {
-        let streamStrategy = body
         let responder = BasicResponder { request in
-            switch streamStrategy {
-            case let .collect(maxSize):
-                let collected: EventLoopFuture<Void>
-
-                if let data = request.body.data {
-                    collected = request.eventLoop.tryFuture {
-                        if let max = maxSize, data.readableBytes > max.value { throw Abort(.payloadTooLarge) }
-                    }
-                } else {
-                    collected = request.body.collect(max: maxSize?.value).transform(to: ())
-                }
-
-                return collected.flatMapThrowing {
-                    return try closure(request)
+            if case .collect(let max) = body, request.body.data == nil {
+                return request.body.collect(
+                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
+                ).flatMapThrowing { _ in
+                    try closure(request)
                 }.encodeResponse(for: request)
-            case .stream:
-                return try closure(request).encodeResponse(for: request)
+            } else {
+                return try closure(request)
+                    .encodeResponse(for: request)
             }
         }
-
         let route = Route(
             method: method,
             path: path,

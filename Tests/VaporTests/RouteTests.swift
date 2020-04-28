@@ -273,54 +273,33 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        XCTAssertEqual(app.routes.defaultMaxBodySize, 1048576)
-        app.routes.defaultMaxBodySize = 50
-        XCTAssertEqual(app.routes.defaultMaxBodySize, 50)
+        XCTAssertEqual(app.routes.defaultMaxBodySize, 16384)
+        app.routes.defaultMaxBodySize = 1
+        XCTAssertEqual(app.routes.defaultMaxBodySize, 1)
 
-        let group = app.routes.grouped(defaultMaxBodySize: 1_000_000_000).grouped("uploads")
-        XCTAssertEqual(group.defaultMaxBodySize, 1_000_000_000)
+        app.on(.POST, "default") { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1kb", body: .collect(maxSize: "1kb")) { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1mb", body: .collect(maxSize: "1mb")) { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1gb", body: .collect(maxSize: "1gb")) { request in
+            HTTPStatus.ok
+        }
 
-        group.on(.POST, "small", body: .collect(maxSize: 1_000) , use: { request in return "small" })
-        group.on(.POST, "medium", body: .collect(maxSize: 1_000_000) , use: { request in return "medium" })
-        group.post("large", use: { request in return "large" })
-
-
-        var smallBuffer = ByteBufferAllocator().buffer(capacity: 1_001)
-        smallBuffer.writeBytes(Array(repeating: 48, count: 1_000))
-        try app.test(.POST, "/uploads/small", body: smallBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .ok)
-        })
-
-        smallBuffer.clear()
-        smallBuffer.writeBytes(Array(repeating: 48, count: 1_001))
-        try app.test(.POST, "/uploads/small", body: smallBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .payloadTooLarge)
-        })
-
-
-        var mediumBuffer = ByteBufferAllocator().buffer(capacity: 1_000_001)
-        mediumBuffer.writeBytes(Array(repeating: 48, count: 1_000_000))
-        try app.test(.POST, "/uploads/medium", body: mediumBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .ok)
-        })
-
-        mediumBuffer.clear()
-        mediumBuffer.writeBytes(Array(repeating: 48, count: 1_000_001))
-        try app.test(.POST, "/uploads/medium", body: mediumBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .payloadTooLarge)
-        })
-
-
-        var largeBuffer = ByteBufferAllocator().buffer(capacity: 1_000_000_001)
-        largeBuffer.writeBytes(Array(repeating: 48, count: 1_000_000_000))
-        try app.test(.POST, "/uploads/large", body: largeBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .ok)
-        })
-
-        largeBuffer.clear()
-        largeBuffer.writeBytes(Array(repeating: 48, count: 1_000_000_001))
-        try app.test(.POST, "/uploads/large", body: largeBuffer, afterResponse: { response in
-            XCTAssertEqual(response.status, .payloadTooLarge)
-        })
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeBytes(Array(repeating: 0, count: 500_000))
+        try app.testable(method: .running).test(.POST, "/default", body: buffer) { res in
+            XCTAssertEqual(res.status, .payloadTooLarge)
+        }.test(.POST, "/1kb", body: buffer) { res in
+            XCTAssertEqual(res.status, .payloadTooLarge)
+        }.test(.POST, "/1mb", body: buffer) { res in
+            XCTAssertEqual(res.status, .ok)
+        }.test(.POST, "/1gb", body: buffer) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
     }
 }

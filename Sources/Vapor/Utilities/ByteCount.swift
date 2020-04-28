@@ -1,10 +1,3 @@
-//
-//  ByteCount.swift
-//  
-//
-//  Created by Jimmy McDermott on 4/24/20.
-//
-
 import Foundation
 
 /// Represents a number of bytes:
@@ -15,16 +8,18 @@ import Foundation
 /// let bytes: ByteCount = 1_000_000
 /// print(bytes.value) // 1000000
 
-/// let bytes: ByteCount = "2kib"
+/// let bytes: ByteCount = "2kb"
 /// print(bytes.value) // 2048
-public struct ByteCount {
-
+public struct ByteCount: Equatable {
     /// The value in Bytes
     public let value: Int
+
+    public init(value: Int) {
+        self.value = value
+    }
 }
 
 extension ByteCount: ExpressibleByIntegerLiteral {
-
     /// Initializes the `ByteCount` with the raw byte count
     /// - Parameter value: The number of bytes
     public init(integerLiteral value: Int) {
@@ -33,9 +28,8 @@ extension ByteCount: ExpressibleByIntegerLiteral {
 }
 
 extension ByteCount: ExpressibleByStringLiteral {
-
     /// Initializes the `ByteCount` via a descriptive string. Available suffixes are:
-    /// `kib`, `mb`, `gb`, `tb`
+    /// `kb`, `mb`, `gb`, `tb`
     /// - Parameter value: The string value (`1mb`)
     public init(stringLiteral value: String) {
         // Short path if it's an int wrapped in a string
@@ -45,7 +39,7 @@ extension ByteCount: ExpressibleByStringLiteral {
         }
 
         let validSuffixes = [
-            "kib": 10,
+            "kb": 10,
             "mb": 20,
             "gb": 30,
             "tb": 40
