@@ -1,7 +1,7 @@
 /// Determines how an incoming HTTP request's body is collected. 
 public enum HTTPBodyStreamStrategy {
     /// The HTTP request's body will be collected into memory up to a maximum size
-    /// before the route handler is called The application's configured default max body
+    /// before the route handler is called. The application's configured default max body
     /// size will be used unless otherwise specified.
     ///
     /// See `collect(maxSize:)` to specify a custom max collection size.
