@@ -25,15 +25,9 @@ public struct AsyncPasswordHasher {
     public func hash<Password>(_ password: Password) -> EventLoopFuture<[UInt8]>
         where Password: DataProtocol
     {
-        let promise = self.eventLoop.makePromise(of: [UInt8].self)
-        self.threadPool.submit { _ in
-            do {
-                return promise.succeed(try self.hasher.hash(password))
-            } catch  {
-                return promise.fail(error)
-            }
+        return self.threadPool.runIfActive(eventLoop: self.eventLoop) {
+            try self.hasher.hash(password)
         }
-        return promise.futureResult
     }
     
     public func verify<Password, Digest>(
@@ -42,15 +36,9 @@ public struct AsyncPasswordHasher {
     ) -> EventLoopFuture<Bool>
         where Password: DataProtocol, Digest: DataProtocol
     {
-        let promise = eventLoop.makePromise(of: Bool.self)
-        self.threadPool.submit { _ in
-            do {
-                return promise.succeed(try self.hasher.verify(password, created: digest))
-            } catch {
-                return promise.fail(error)
-            }
+        return self.threadPool.runIfActive(eventLoop: self.eventLoop) {
+            try self.hasher.verify(password, created: digest)
         }
-        return promise.futureResult
     }
     
     public func hash(_ password: String) -> EventLoopFuture<String> {
