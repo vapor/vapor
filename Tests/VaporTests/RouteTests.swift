@@ -268,4 +268,38 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.body.string, "bar")
         }
     }
+
+    func testConfigurableMaxBodySize() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        XCTAssertEqual(app.routes.defaultMaxBodySize, 16384)
+        app.routes.defaultMaxBodySize = 1
+        XCTAssertEqual(app.routes.defaultMaxBodySize, 1)
+
+        app.on(.POST, "default") { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1kb", body: .collect(maxSize: "1kb")) { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1mb", body: .collect(maxSize: "1mb")) { request in
+            HTTPStatus.ok
+        }
+        app.on(.POST, "1gb", body: .collect(maxSize: "1gb")) { request in
+            HTTPStatus.ok
+        }
+
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeBytes(Array(repeating: 0, count: 500_000))
+        try app.testable(method: .running).test(.POST, "/default", body: buffer) { res in
+            XCTAssertEqual(res.status, .payloadTooLarge)
+        }.test(.POST, "/1kb", body: buffer) { res in
+            XCTAssertEqual(res.status, .payloadTooLarge)
+        }.test(.POST, "/1mb", body: buffer) { res in
+            XCTAssertEqual(res.status, .ok)
+        }.test(.POST, "/1gb", body: buffer) { res in
+            XCTAssertEqual(res.status, .ok)
+        }
+    }
 }

@@ -40,7 +40,7 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     
     /// Additional components.
     let path: [PathComponent]
-    
+
     /// Creates a new `PathGroup`.
     init(root: RoutesBuilder, path: [PathComponent]) {
         self.root = root
