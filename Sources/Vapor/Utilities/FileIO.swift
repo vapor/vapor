@@ -109,7 +109,8 @@ public struct FileIO {
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    public func streamFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize) -> Response {
+    public func streamFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
+                           mediaType: HTTPMediaType? = nil) -> Response {
         // Get file attributes for this file.
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
@@ -138,11 +139,10 @@ public struct FileIO {
         // Only set Content-Type if file not modified and returned above.
         if
             let fileExtension = path.components(separatedBy: ".").last,
-            let type = HTTPMediaType.fileExtension(fileExtension)
+            let type = mediaType ?? HTTPMediaType.fileExtension(fileExtension)
         {
             response.headers.contentType = type
         }
-
         response.body = .init(stream: { stream in
             self.read(path: path, fileSize: fileSize, chunkSize: chunkSize) { chunk in
                 return stream.write(.buffer(chunk))
