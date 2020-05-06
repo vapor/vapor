@@ -101,6 +101,32 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.isCool, false)
     }
 
+    func testDecodeIndexedArray() throws {
+        struct Test: Decodable {
+            let array: [String]
+        }
+
+        let data = """
+        array[0]=a&array[1]=b
+        """
+        let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
+        XCTAssertEqual(test.array[0], "a")
+        XCTAssertEqual(test.array[1], "b")
+    }
+
+    func testDecodeIndexedArray_dictionary() throws {
+        struct Test: Decodable {
+            let array: [Int: String]
+        }
+
+        let data = """
+        array[0]=a&array[1]=b
+        """
+        let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
+        XCTAssertEqual(test.array[0], "a")
+        XCTAssertEqual(test.array[1], "b")
+    }
+
     func testEncode() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder().encode(user)
