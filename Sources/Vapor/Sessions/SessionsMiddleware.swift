@@ -42,7 +42,13 @@ public final class SessionsMiddleware: Middleware {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
             return self.session.readSession(id, for: request).flatMap { data in
-                request._sessionCache.session = .init(id: id, data: data ?? .init())
+                if let data = data {
+                    // Session found, restore data and id.
+                    request._sessionCache.session = .init(id: id, data: data)
+                } else {
+                    // Session id not found, create new session.
+                    request._sessionCache.session = .init()
+                }
                 return next.respond(to: request).flatMap { res in
                     return self.addCookies(to: res, for: request)
                 }

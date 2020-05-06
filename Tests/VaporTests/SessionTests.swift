@@ -70,6 +70,58 @@ final class SessionTests: XCTestCase {
         }
     }
 
+    func testInvalidCookie() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        // Configure sessions.
+        app.sessions.use(.memory)
+        app.middleware.use(app.sessions.middleware)
+
+        // Adds data to the request session.
+        app.get("set") { req -> HTTPStatus in
+            req.session.data["foo"] = "bar"
+            return .ok
+        }
+
+        // Fetches data from the request session.
+        app.get("get") { req -> String in
+            guard let foo = req.session.data["foo"] else {
+                throw Abort(.badRequest)
+            }
+            return foo
+        }
+
+
+        // Test accessing session with no cookie.
+        try app.test(.GET, "get") { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+
+        // Test setting session with invalid cookie.
+        var newCookie: HTTPCookies.Value?
+        try app.test(.GET, "set", beforeRequest: { req in
+            req.headers.cookie = ["vapor-session": "foo"]
+        }, afterResponse: { res in
+            // We should get a new cookie back.
+            newCookie = res.headers.setCookie?["vapor-session"]
+            XCTAssertNotNil(newCookie)
+            // That is not the same as the invalid cookie we sent.
+            XCTAssertNotEqual(newCookie?.string, "foo")
+            XCTAssertEqual(res.status, .ok)
+        })
+
+        // Test accessing newly created session.
+        try app.test(.GET, "get", beforeRequest: { req in
+            // Pass cookie from previous request.
+            req.headers.cookie = ["vapor-session": newCookie!]
+        }, afterResponse: { res in
+            // Session access should be successful.
+            XCTAssertEqual(res.body.string, "bar")
+            XCTAssertEqual(res.status, .ok)
+        })
+    }
+
     func testCookieQuotes() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .cookie, value: #"foo= "+cookie/value" "#)
