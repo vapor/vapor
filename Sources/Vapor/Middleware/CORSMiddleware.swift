@@ -21,12 +21,17 @@ public final class CORSMiddleware: Middleware {
         /// Uses wildcard to allow any origin.
         case all
         
-        // Uses a whitelist of allowable origins.
+        /// Uses a whitelist of allowable origins.
         case whitelist([String])
 
         /// Uses custom string provided as an associated value.
         case custom(String)
 
+        /// Uses fully custom implementation.
+        ///
+        /// - Returns: Header string to be used in response for allowed origin.
+        case closure((Request) -> String)
+        
         /// Creates the header string depending on the case of self.
         ///
         /// - Parameter request: Request for which the allow origin header should be created.
@@ -43,6 +48,8 @@ public final class CORSMiddleware: Middleware {
                 return origins.contains(origin) ? origin : ""
             case .custom(let string):
                 return string
+            case .closure(let closure):
+                    return closure(req)
             }
         }
     }
