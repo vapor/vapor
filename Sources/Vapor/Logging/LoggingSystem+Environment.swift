@@ -1,5 +1,5 @@
 extension LoggingSystem {
-    public static func bootstrap(from environment: inout Environment) throws {
+    public static func bootstrap(from environment: inout Environment, factoryfactory: (Logger.Level) -> (String) -> LogHandler) throws {
         struct LogSignature: CommandSignature {
             @Option(name: "log", help: "Change log level")
             var level: Logger.Level?
@@ -16,8 +16,17 @@ extension LoggingSystem {
             StackTrace.isCaptureEnabled = false
         }
 
-        // Bootstrap logger to use Terminal.
-        return LoggingSystem.bootstrap(console: Terminal(), level: level)
+        // Bootstrap logger with a factory created by the factoryfactory.
+        return LoggingSystem.bootstrap(factoryfactory(level))
+    }
+
+    public static func bootstrap(from environment: inout Environment) throws {
+        try bootstrap(from: &environment, factoryfactory: { level in
+            let console = Terminal()
+            return { (label: String) in
+                return ConsoleLogger(label: label, console: console, level: level)
+            }
+        })
     }
 }
 
