@@ -29,18 +29,15 @@ public struct Environment: Equatable {
         struct EnvironmentSignature: CommandSignature {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
-            init() { }
         }
         var env: Environment
-        if let value = try EnvironmentSignature(from: &commandInput).environment {
-            switch value {
+        switch try EnvironmentSignature(from: &commandInput).environment ??
+               Environment.process.VAPOR_ENV
+        {
             case "prod", "production": env = .production
-            case "dev", "development": env = .development
+            case "dev", "development", .none: env = .development
             case "test", "testing": env = .testing
-            default: env = .init(name: value)
-            }
-        } else {
-            env = .development
+            case .some(let name): env = .init(name: name)
         }
         env.commandInput = commandInput
         return env
@@ -49,24 +46,16 @@ public struct Environment: Equatable {
     // MARK: Presets
 
     /// An environment for deploying your application to consumers.
-    public static var production: Environment {
-        return .init(name: "production")
-    }
+    public static var production: Environment { .init(name: "production") }
 
     /// An environment for developing your application.
-    public static var development: Environment {
-        return .init(name: "development", arguments: ["vapor"])
-    }
+    public static var development: Environment { .init(name: "development") }
 
     /// An environment for testing your application.
-    public static var testing: Environment {
-        return .init(name: "testing", arguments: ["vapor"])
-    }
+    public static var testing: Environment { .init(name: "testing") }
 
     /// Creates a custom environment.
-    public static func custom(name: String) -> Environment {
-        return .init(name: name, arguments: ["vapor"])
-    }
+    public static func custom(name: String) -> Environment { .init(name: name) }
 
     // MARK: Env
 
@@ -96,9 +85,7 @@ public struct Environment: Equatable {
     ///
     /// This usually means reducing logging, disabling debug information, and sometimes
     /// providing warnings about configuration states that are not suitable for production.
-    public var isRelease: Bool {
-        return !_isDebugAssertConfiguration()
-    }
+    public var isRelease: Bool { !_isDebugAssertConfiguration() }
 
     /// The command-line arguments for this `Environment`.
     public var arguments: [String]
