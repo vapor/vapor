@@ -1,6 +1,8 @@
 extension Environment {    
+
     /// The process information of an environment. Wraps `ProcessInto.processInfo`.
     @dynamicMemberLookup public struct Process {
+
         /// The process information of the environment.
         private let _info: ProcessInfo
         
@@ -19,6 +21,7 @@ extension Environment {
             get {
                 return self._info.environment[member].flatMap { T($0) }
             }
+
             nonmutating set (value) {
                 if let raw = value?.description {
                     setenv(member, raw, 1)
@@ -36,6 +39,7 @@ extension Environment {
             get {
                 return self._info.environment[member]
             }
+
             nonmutating set (value) {
                 if let raw = value {
                     setenv(member, raw, 1)
@@ -45,4 +49,5 @@ extension Environment {
             }
         }
     }
+
 }

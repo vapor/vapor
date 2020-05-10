@@ -30,6 +30,7 @@ public struct Environment: Equatable {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
         }
+
         var env: Environment
         switch try EnvironmentSignature(from: &commandInput).environment ??
                Environment.process.VAPOR_ENV
