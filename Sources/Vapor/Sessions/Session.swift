@@ -10,6 +10,9 @@ public final class Session {
 
     /// This session's data.
     public var data: SessionData
+    
+    /// Session's expiration date
+    var expiration: Date?
 
     /// `true` if this session is still valid.
     var isValid: Bool
@@ -17,14 +20,18 @@ public final class Session {
     /// Create a new `Session`.
     ///
     /// Normally you will use `Request.session()` to do this.
-    public init(id: SessionID? = nil, data: SessionData = .init()) {
+    public init(
+        id: SessionID? = nil,
+        data: SessionData = .init(),
+        expiration: Date? = nil) {
         self.id = id
         self.data = data
+        self.expiration = expiration
         self.isValid = true
     }
 
-    /// Invalidates the current session, removing persisted data from the session driver
-    /// and invalidating the cookie.
+    /// Flag the current session as invalid. Persisted data will be removed from the session
+    /// driver when `SessionsMiddleware` checks this flag at response time.
     public func destroy() {
         self.isValid = false
     }
