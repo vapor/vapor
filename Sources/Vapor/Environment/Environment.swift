@@ -89,6 +89,12 @@ public struct Environment: Equatable {
     ///
     /// This usually means reducing logging, disabling debug information, and sometimes
     /// providing warnings about configuration states that are not suitable for production.
+    ///
+    /// - Warning: This value is determined at compile time by configuration; it is not
+    ///   based on the actual environment name. This can lead to unxpected results, such
+    ///   as `Environment.production.isRelease == false`. This is done intentionally to
+    ///   allow scenarios, such as testing production environment behaviors while retaining
+    ///   availability of debug information.
     public var isRelease: Bool { !_isDebugAssertConfiguration() }
 
     /// The command-line arguments for this `Environment`.
