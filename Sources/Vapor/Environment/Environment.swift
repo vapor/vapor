@@ -1,3 +1,5 @@
+import ConsoleKit
+
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
 ///
@@ -24,11 +26,14 @@ public struct Environment: Equatable {
         return try Environment.detect(from: &commandInput)
     }
     
-    /// Detects the environment from `CommandInput`. Parses the `--env` flag.
+    /// Detects the environment from `CommandInput`. Parses the `--env` flag, with the
+    /// `VAPOR_ENV` environment variable as a fallback.
     /// - parameters:
     ///     - arguments: `CommandInput` to parse `--env` flag from.
     /// - returns: The detected environment, or default env.
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
+        self.sanitize(commandInput: &commandInput)
+        
         struct EnvironmentSignature: CommandSignature {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
@@ -47,6 +52,32 @@ public struct Environment: Equatable {
         return env
     }
     
+    /// Performs stripping of user defaults overrides where and when appropriate.
+    private static func sanitize(commandInput: inout CommandInput) {
+        #if Xcode
+        // Strip all leading arguments matching the pattern for assignment to the `NSArgumentsDomain`
+        // of `UserDefaults`. Matching this pattern means being prefixed by `-NS` or `-Apple` and being
+        // followed by a value argument. Since this is mainly just to get around Xcode's habit of
+        // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
+        // any that don't match the Apple patterns and assume the app knows what it's doing.
+        //
+        // Note that we also perform this behavior more forcefully when the `.testing` environment is
+        // constructed, even if it means
+        while (commandInput.arguments.first?.prefix(6) == "-Apple" || commandInput.arguments.first?.prefix(3) == "-NS"),
+              commandInput.arguments.count > 1 {
+            commandInput.arguments.removeFirst(2)
+        }
+        #endif
+    }
+    
+    /// Invokes `sanitize(commandInput:)` over a set of raw arguments and returns the
+    /// resulting arguments, including the executable path.
+    private static func sanitizeArguments(_ arguments: [String] = CommandLine.arguments) -> [String] {
+        var commandInput = CommandInput(arguments: arguments)
+        sanitize(commandInput: &commandInput)
+        return commandInput.executablePath + commandInput.arguments
+    }
+    
     // MARK: - Presets
 
     /// An environment for deploying your application to consumers.
@@ -56,7 +87,11 @@ public struct Environment: Equatable {
     public static var development: Environment { .init(name: "development") }
 
     /// An environment for testing your application.
-    public static var testing: Environment { .init(name: "testing") }
+    ///
+    /// Performs an explicit sanitization step because this preset is often used directly in unit tests, without the
+    /// benefit of the logic usually invoked through either form of `detect()`. This means that when `--env test` is
+    /// explicitly specified, the sanitize logic is run twice, but this should be harmless.
+    public static var testing: Environment { .init(name: "testing", arguments: sanitizeArguments()) }
 
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment { .init(name: name) }
