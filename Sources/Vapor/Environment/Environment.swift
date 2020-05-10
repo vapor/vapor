@@ -12,6 +12,9 @@
 ///     print(Environment.get("DB_PASSWORD"))
 ///
 public struct Environment: Equatable {
+    
+    // MARK: - Detection
+    
     /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
     /// - parameters:
     ///     - arguments: Command line arguments to detect environment from.
@@ -44,7 +47,7 @@ public struct Environment: Equatable {
         return env
     }
     
-    // MARK: Presets
+    // MARK: - Presets
 
     /// An environment for deploying your application to consumers.
     public static var production: Environment { .init(name: "production") }
@@ -58,18 +61,11 @@ public struct Environment: Equatable {
     /// Creates a custom environment.
     public static func custom(name: String) -> Environment { .init(name: name) }
 
-    // MARK: Env
+    // MARK: - Env
 
     /// Gets a key from the process environment
     public static func get(_ key: String) -> String? {
         return ProcessInfo.processInfo.environment[key]
-    }
-
-    // MARK: Equatable
-
-    /// See `Equatable`
-    public static func ==(lhs: Environment, rhs: Environment) -> Bool {
-        return lhs.name == rhs.name && lhs.isRelease == rhs.isRelease
     }
 
     /// The current process of the environment.
@@ -77,7 +73,14 @@ public struct Environment: Equatable {
         return Process()
     }
     
-    // MARK: Properties
+    // MARK: - Equatable
+
+    /// See `Equatable`
+    public static func ==(lhs: Environment, rhs: Environment) -> Bool {
+        return lhs.name == rhs.name
+    }
+
+    // MARK: - Properties
 
     /// The environment's unique name.
     public let name: String
@@ -97,7 +100,7 @@ public struct Environment: Equatable {
         set { arguments = newValue.executablePath + newValue.arguments }
     }
     
-    // MARK: Init
+    // MARK: - Init
 
     /// Create a new `Environment`.
     public init(name: String, arguments: [String] = CommandLine.arguments) {
