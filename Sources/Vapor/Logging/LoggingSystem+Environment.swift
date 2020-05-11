@@ -22,6 +22,6 @@ extension LoggingSystem {
 }
 
 extension Logger.Level: LosslessStringConvertible {
-    public init?(_ description: String) { self.init(rawValue: description) }
+    public init?(_ description: String) { self.init(rawValue: description.lowercased()) }
     public var description: String { self.rawValue }
 }

@@ -60,9 +60,6 @@ public struct Environment: Equatable {
         // followed by a value argument. Since this is mainly just to get around Xcode's habit of
         // passing a bunch of these when no other arguments are specified in a test scheme, we ignore
         // any that don't match the Apple patterns and assume the app knows what it's doing.
-        //
-        // Note that we also perform this behavior more forcefully when the `.testing` environment is
-        // constructed, even if it means
         while (commandInput.arguments.first?.prefix(6) == "-Apple" || commandInput.arguments.first?.prefix(3) == "-NS"),
               commandInput.arguments.count > 1 {
             commandInput.arguments.removeFirst(2)
