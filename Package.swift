@@ -4,7 +4,8 @@ import PackageDescription
 let package = Package(
     name: "vapor",
     platforms: [
-       .macOS(.v10_15)
+        .macOS(.v10_15),
+        .iOS(.v13)
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
@@ -79,7 +80,9 @@ let package = Package(
             .product(name: "NIOHTTP2", package: "swift-nio-http2"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOWebSocket", package: "swift-nio"),
+//            #if !canImport(CryptoKit)
             .product(name: "Crypto", package: "swift-crypto"),
+//            #endif
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
         ]),
