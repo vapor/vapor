@@ -80,9 +80,7 @@ let package = Package(
             .product(name: "NIOHTTP2", package: "swift-nio-http2"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOWebSocket", package: "swift-nio"),
-//            #if !canImport(CryptoKit)
             .product(name: "Crypto", package: "swift-crypto"),
-//            #endif
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
         ]),
