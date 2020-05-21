@@ -42,7 +42,7 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.get("") { req -> String in
-                return "root"
+            return "root"
         }
         app.routes.get("foo") { req -> String in
             return "foo"
@@ -54,6 +54,34 @@ final class RouteTests: XCTestCase {
         }.test(.GET, "/foo") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "foo")
+        }
+    }
+
+    func testRootGetExplicit() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("/") { req -> String in
+            return "root"
+        }
+
+        try app.testable().test(.GET, "/") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "root")
+        }
+    }
+
+    func testRootGetBlank() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get { req -> String in
+            return "root"
+        }
+
+        try app.testable().test(.GET, "/") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "root")
         }
     }
 

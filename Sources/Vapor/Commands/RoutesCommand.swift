@@ -34,7 +34,9 @@ public final class RoutesCommand: Command {
                 pathText += "/".consoleText(.info)
                 switch path {
                 case .constant(let string):
-                    pathText += string.consoleText()
+                    if string != "/" {
+                        pathText += string.consoleText()
+                    }
                 case .parameter(let name):
                     pathText += ":".consoleText(.info)
                     pathText += name.consoleText()

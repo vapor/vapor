@@ -19,11 +19,11 @@ internal struct DefaultResponder: Responder {
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
-            // remove any empty path components
+            // remove any empty or single slash path components
             let path = route.path.filter { component in
                 switch component {
                 case .constant(let string):
-                    return string != ""
+                    return string != "" && string != "/"
                 default:
                     return true
                 }
