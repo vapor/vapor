@@ -6,16 +6,31 @@ extension Authenticatable {
     public static func redirectMiddleware(path: String) -> Middleware {
         return RedirectMiddleware<Self>(Self.self, path: path)
     }
+    
+    /// Basic middleware to redirect unauthenticated requests to the supplied path
+    ///
+    /// - parameters:
+    ///    - pathClosure: The closure that returns the redirect path based on the given URI path
+    ///    - input: The original request path
+    public static func redirectMiddleware(pathClosure: @escaping (_ input: String) -> String) -> Middleware {
+        return RedirectMiddleware<Self>(Self.self, pathClosure: pathClosure)
+    }
 }
 
 
 private final class RedirectMiddleware<A>: Middleware
     where A: Authenticatable
 {
-    let path: String
+    let pathClosure: PathClosure
+    
+    typealias PathClosure = (String) -> String
 
     init(_ authenticatableType: A.Type = A.self, path: String) {
-        self.path = path
+        self.pathClosure = { _ in return path }
+    }
+    
+    init(_ authenticatableType: A.Type = A.self, pathClosure: @escaping PathClosure) {
+        self.pathClosure = pathClosure
     }
 
     /// See Middleware.respond
@@ -23,7 +38,10 @@ private final class RedirectMiddleware<A>: Middleware
         if req.auth.has(A.self) {
             return next.respond(to: req)
         }
-        let redirect = req.redirect(to: path)
+        
+        let redirectPath = pathClosure(req.url.path)
+        
+        let redirect = req.redirect(to: redirectPath)
         return req.eventLoop.makeSucceededFuture(redirect)
     }
 }
