@@ -11,18 +11,25 @@ extension Validator where T: Comparable {
         .range(min: range.lowerBound, max: range.upperBound)
     }
 
-    /// Validates that the data is less than the supplied upper bound using `PartialRangeThrough`.
+    /// Validates that the data is less than or equal to the supplied upper bound using `PartialRangeThrough`.
     public static func range(_ range: PartialRangeThrough<T>) -> Validator<T> {
         .range(min: nil, max: range.upperBound)
     }
 
-    /// Validates that the data is less than the supplied lower bound using `PartialRangeFrom`.
+    /// Validates that the data is greater than or equal the supplied lower bound using `PartialRangeFrom`.
     public static func range(_ range: PartialRangeFrom<T>) -> Validator<T> {
         .range(min: range.lowerBound, max: nil)
     }
     
     static func range(min: T?, max: T?) -> Validator<T> {
         .range(min: min, max: max, \.self)
+    }
+}
+
+extension Validator where T: Comparable & SignedInteger {
+    /// Validates that the data is less than the supplied upper bound using `PartialRangeUpTo`
+    public static func range(_ range: PartialRangeUpTo<T>) -> Validator<T> {
+        .range(min: nil, max: range.upperBound.advanced(by: -1))
     }
 }
 
