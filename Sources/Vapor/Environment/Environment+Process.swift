@@ -1,5 +1,4 @@
 extension Environment {    
-
     /// The process information of an environment. Wraps `ProcessInto.processInfo`.
     @dynamicMemberLookup public struct Process {
 

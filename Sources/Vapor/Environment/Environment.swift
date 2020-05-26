@@ -41,7 +41,7 @@ public struct Environment: Equatable {
 
         var env: Environment
         switch try EnvironmentSignature(from: &commandInput).environment ??
-               Environment.process.VAPOR_ENV
+            Environment.process.VAPOR_ENV
         {
             case "prod", "production": env = .production
             case "dev", "development", .none: env = .development
