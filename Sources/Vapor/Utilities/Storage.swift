@@ -36,10 +36,10 @@ public struct Storage {
 
     public subscript<Key>(
         _ key: Key.Type,
-        orSetDefault default: @autoclosure () -> Key.Value
+        orSetDefault fallback: @autoclosure () -> Key.Value
     ) -> Key.Value where Key: StorageKey {
         mutating get {
-            self.get(Key.self, orSetDefault: `default`())
+            self.get(Key.self, orSetDefault: fallback())
         }
     }
 
@@ -58,10 +58,10 @@ public struct Storage {
 
     public mutating func get<Key>(
         _ key: Key.Type, 
-        orSetDefault default: @autoclosure () -> Key.Value
+        orSetDefault fallback: @autoclosure () -> Key.Value
     ) -> Key.Value where Key: StorageKey {
         guard let value = self.get(key) else {
-            let value = `default`()
+            let value = fallback()
             self.set(key, to: value)
             return value
         }
