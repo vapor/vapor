@@ -53,7 +53,7 @@ extension Environment {
             .map { buffer -> String in
                 return buffer
                     .getString(at: buffer.readerIndex, length: buffer.readableBytes)!
-                       .trimmingCharacters(in: .whitespacesAndNewlines)
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
             }
             .recover { _ -> String? in
                 nil
