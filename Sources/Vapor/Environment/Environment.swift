@@ -14,7 +14,6 @@ import ConsoleKit
 ///     print(Environment.get("DB_PASSWORD"))
 ///
 public struct Environment: Equatable {
-    
     // MARK: - Detection
     
     /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
