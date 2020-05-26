@@ -2,11 +2,13 @@ name: Test Matrix
 
 on:
   pull_request:
-  push: { branches: [ master ] }
+  push:
+    branches:
+    - master
     
 jobs:
 
-  All-tests-linux:
+  Linux:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -22,8 +24,10 @@ jobs:
           - swiftlang/swift:nightly-master-bionic
           - swiftlang/swift:nightly-master-focal
         include:
-          - { image: 'swiftlang/swift:nightly-master-centos8', depscmd: 'dnf install -y zlib-devel' }
-          - { image: 'swiftlang/swift:nightly-master-amazonlinux2', depscmd: 'yum install -y zlib-devel' }
+          - image: swiftlang/swift:nightly-master-centos8
+            depscmd: dnf install -y zlib-devel
+          - image: swiftlang/swift:nightly-master-amazonlinux2
+            depscmd: yum install -y zlib-devel
     container: ${{ matrix.image }}
     steps:
       - name: Install dependencies if needed
@@ -33,7 +37,7 @@ jobs:
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
 
-  All-tests-macos:
+  macOS:
     runs-on: macos-latest
     steps:
       - name: Select latest available Xcode
