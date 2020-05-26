@@ -39,7 +39,7 @@ public struct Storage {
         orSetDefault default: @autoclosure () -> Key.Value
     ) -> Key.Value where Key: StorageKey {
         mutating get {
-            self.get(Key.self, orSetDefault: default)
+            self.get(Key.self, orSetDefault: `default`())
         }
     }
 
