@@ -27,14 +27,16 @@ public final class RoutesCommand: Command {
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
         let pathSeparator = "/".consoleText()
         context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
-            let pathText = pathSeparator + route.path.map {
-                switch $0 {
-                case .constant:
-                    return $0.description.consoleText()
-                default:
-                    return $0.description.consoleText(.info)
+            let pathText = route.path.isEmpty ? pathSeparator : route.path.map {
+                    switch $0 {
+                    case .constant:
+                        return $0.description.consoleText()
+                    default:
+                        return $0.description.consoleText(.info)
+                    }
                 }
-            }.joined(separator: pathSeparator)
+                .map { pathSeparator + $0 }
+                .reduce("".consoleText(), +)
             var column = [route.method.string.consoleText(), pathText]
             if includeDescription {
                 let desc = route.userInfo["description"]
@@ -44,17 +46,6 @@ public final class RoutesCommand: Command {
             }
             return column
         })
-    }
-}
-
-extension Collection where Element == ConsoleText {
-    func joined(separator: ConsoleText) -> ConsoleText {
-        guard let result: ConsoleText = self.first else {
-            return ""
-        }
-        return self.dropFirst().reduce(into: result) {
-            $0 += separator + $1
-        }
     }
 }
 
