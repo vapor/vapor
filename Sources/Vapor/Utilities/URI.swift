@@ -175,3 +175,66 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         return String(self.string[start..<end])
     }
 }
+
+
+extension URI {
+    /// Create a URI using a unix domain socket path.
+    /// - Parameters:
+    ///   - socketPath: The socket path the server is listening on.
+    ///   - path: The URI path to request from the server.
+    ///   - query: The URI path to request from the server.
+    ///   - fragment: The URI fragment to request from the server.
+    /// - Returns: A correctly formatted URI that encodes the socket path as the hostname.
+    public static func withSocketPath(
+        _ socketPath: String,
+        path: String = "/",
+        query: String? = nil,
+        fragment: String? = nil
+    ) -> URI {
+        return .init(
+            scheme: "http+unix",
+            host: socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+            path: path,
+            query: query,
+            fragment: fragment
+        )
+    }
+    
+    /// Create an HTTPS URI using a unix domain socket path.
+    /// - Parameters:
+    ///   - socketPath: The socket path the server is listening on.
+    ///   - path: The URI path to request from the server.
+    ///   - query: The URI path to request from the server.
+    ///   - fragment: The URI fragment to request from the server.
+    /// - Returns: A correctly formatted URI that encodes the socket path as the hostname.
+    public static func withSecureSocketPath(
+        _ socketPath: String,
+        path: String = "/",
+        query: String? = nil,
+        fragment: String? = nil
+    ) -> URI {
+        return .init(
+            scheme: "https+unix",
+            host: socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
+            path: path,
+            query: query,
+            fragment: fragment
+        )
+    }
+    
+    /// The socket URL that can be passed to an instance of HTTPClient.
+    public var socketURL: URL? {
+        guard
+            let originalURL = URL(string: self.string),
+            let scheme = originalURL.scheme,
+            scheme == "http+unix" || scheme == "https+unix",
+            let host = originalURL.host,
+            let baseURL = URL(string: "unix://\(host)")
+        else { return nil }
+        
+        // prepare a new URL with a base URL that contains the path to the socket file.
+        // FIXME: We likely won't need this anymore once https://github.com/swift-server/async-http-client/pull/228 is merged
+        return URL(string: originalURL.path, relativeTo: baseURL)
+    }
+}
+
