@@ -184,7 +184,13 @@ public final class HTTPServer: Server {
 
         // print starting message
         let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        let address: String
+        if let socketPath = configuration.unixDomainSocketPath {
+            address = "\(scheme)+unix: \(socketPath)"
+        } else {
+            address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        }
+        
         self.configuration.logger.notice("Server starting on \(address)")
 
         // start the actual HTTPServer
@@ -295,6 +301,15 @@ private final class HTTPServerConnection {
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
+        
+        if let socketPath = configuration.unixDomainSocketPath {
+            return bootstrap.bind(unixDomainSocketPath: socketPath).map { channel in
+                return .init(channel: channel, quiesce: quiesce, configuration: configuration)
+            }.flatMapErrorThrowing { error -> HTTPServerConnection in
+                quiesce.initiateShutdown(promise: nil)
+                throw error
+            }
+        }
         
         return bootstrap.bind(host: configuration.hostname, port: configuration.port).map { channel in
             return .init(channel: channel, quiesce: quiesce)
