@@ -380,6 +380,10 @@ final class CustomServer: Server {
     func start(hostname: String?, port: Int?) throws {
         self.didStart = true
     }
+    
+    func start(socketPath: String) throws {
+        self.didStart = true
+    }
 
     func shutdown() {
         self.didShutdown = true
