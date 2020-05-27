@@ -181,7 +181,23 @@ public final class HTTPServer: Server {
         var configuration = self.configuration
         configuration.hostname = hostname ?? configuration.hostname
         configuration.port = port ?? configuration.port
-
+        // clear out the unix domain socket path if a new hostname/port is provided so it won't be used
+        if hostname != nil || port != nil {
+            configuration.unixDomainSocketPath = nil
+        }
+        
+        try start(with: configuration)
+    }
+    
+    public func start(socketPath: String) throws {
+        // override the socket path to bind to
+        var configuration = self.configuration
+        configuration.unixDomainSocketPath = socketPath
+        
+        try start(with: configuration)
+    }
+    
+    private func start(with configuration: Configuration) throws {
         // print starting message
         let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
         let address: String
