@@ -20,6 +20,29 @@ final class ServerTests: XCTestCase {
         let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
         XCTAssertEqual(res.body?.string, "bar")
     }
+    
+    func testSocketPathOverride() throws {
+        let socketPath = "/tmp/vapor.test.socket"
+        
+        let env = Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", socketPath]
+        )
+
+        let app = Application(env)
+        defer { app.shutdown() }
+
+        app.get("foo") { req in
+            return "bar"
+        }
+        try app.start()
+
+        let res = try app.client.get(.withSocketPath(socketPath, path: "/foo")).wait()
+        XCTAssertEqual(res.body?.string, "bar")
+        
+        // no server should be bound to the port despite one being set on the configuration.
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8123/foo").wait())
+    }
 
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
