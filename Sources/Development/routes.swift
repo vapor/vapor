@@ -13,13 +13,13 @@ public func routes(_ app: Application) throws {
 
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+    app.on(.POST, "slow-stream", body: .stream) { req -> Future<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
         var total = 0
         req.body.drain { result in
             let promise = req.eventLoop.makePromise(of: Void.self)
-            
+
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
