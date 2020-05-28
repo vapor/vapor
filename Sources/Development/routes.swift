@@ -176,6 +176,36 @@ public func routes(_ app: Application) throws {
         print("in route")
         return .ok
     }
+
+    app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
+        return req.application.fileio.openFile(
+            path: "/Users/tanner/Desktop/foo.txt",
+            mode: .write,
+            flags: .allowFileCreation(),
+            eventLoop: req.eventLoop
+        ).flatMap { fileHandle in
+            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            req.body.drain { part in
+                switch part {
+                case .buffer(let buffer):
+                    return req.application.fileio.write(
+                        fileHandle: fileHandle,
+                        buffer: buffer,
+                        eventLoop: req.eventLoop
+                    )
+                case .error(let error):
+                    promise.fail(error)
+                    try! fileHandle.close()
+                    return req.eventLoop.makeSucceededFuture(())
+                case .end:
+                    promise.succeed(.ok)
+                    try! fileHandle.close()
+                    return req.eventLoop.makeSucceededFuture(())
+                }
+            }
+            return promise.futureResult
+        }
+    }
 }
 
 struct TestError: AbortError {

@@ -1,25 +1,49 @@
-name: test
+name: Test Matrix
+
 on:
-- pull_request
+  pull_request:
+  push:
+    branches:
+    - master
+    
 jobs:
-  vapor_macos:
+
+  Linux:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image:
+          - swift:5.2-xenial
+          - swift:5.2-bionic
+          - swiftlang/swift:nightly-5.2-xenial
+          - swiftlang/swift:nightly-5.2-bionic
+          - swiftlang/swift:nightly-5.3-xenial
+          - swiftlang/swift:nightly-5.3-bionic
+          - swiftlang/swift:nightly-master-xenial
+          - swiftlang/swift:nightly-master-bionic
+          - swiftlang/swift:nightly-master-focal
+        include:
+          - image: swiftlang/swift:nightly-master-centos8
+            depscmd: dnf install -y zlib-devel
+          - image: swiftlang/swift:nightly-master-amazonlinux2
+            depscmd: yum install -y zlib-devel
+    container: ${{ matrix.image }}
+    steps:
+      - name: Install dependencies if needed
+        run: ${{ matrix.depscmd }}
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
+
+  macOS:
     runs-on: macos-latest
-    env:
-      DEVELOPER_DIR: /Applications/Xcode_11.4.1.app/Contents/Developer
     steps:
-    - uses: actions/checkout@v2
-    - run: xcrun swift test --enable-test-discovery --sanitize=thread
-  vapor_xenial:
-    container: 
-      image: vapor/swift:5.2-xenial
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - run: swift test --enable-test-discovery --sanitize=thread
-  vapor_bionic:
-    container: 
-      image: vapor/swift:5.2-bionic
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - run: swift test --enable-test-discovery --sanitize=thread
+      - name: Select latest available Xcode
+        uses: maxim-lobanov/setup-xcode@1.0
+        with: { 'xcode-version': 'latest' }
+      - name: Check out code
+        uses: actions/checkout@v2
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
