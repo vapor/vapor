@@ -1,15 +1,6 @@
 extension LoggingSystem {
     public static func bootstrap(from environment: inout Environment, _ factory: (Logger.Level) -> (String) -> LogHandler) throws {
-        struct LogSignature: CommandSignature {
-            @Option(name: "log", help: "Change log level")
-            var level: Logger.Level?
-            init() { }
-        }
-
-        // Determine log level from environment.
-        let level = try LogSignature(from: &environment.commandInput).level
-            ?? Environment.process.LOG_LEVEL
-            ?? (environment == .production ? .notice: .info)
+        let level = try Logger.Level.detect(from: &environment)
 
         // Disable stack traces if log level > debug.
         if level > .debug {
@@ -33,4 +24,17 @@ extension LoggingSystem {
 extension Logger.Level: LosslessStringConvertible {
     public init?(_ description: String) { self.init(rawValue: description.lowercased()) }
     public var description: String { self.rawValue }
+
+    public static func detect(from environment: inout Environment) throws -> Logger.Level {
+        struct LogSignature: CommandSignature {
+            @Option(name: "log", help: "Change log level")
+            var level: Logger.Level?
+            init() { }
+        }
+
+        // Determine log level from environment.
+        return try LogSignature(from: &environment.commandInput).level
+            ?? Environment.process.LOG_LEVEL
+            ?? (environment == .production ? .notice: .info)
+    }
 }
