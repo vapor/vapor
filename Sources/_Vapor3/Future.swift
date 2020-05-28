@@ -4,6 +4,7 @@ import Vapor
 public typealias Future = EventLoopFuture
 
 extension EventLoopFuture {
+    @available(*, deprecated, renamed: "Value")
     public typealias Expectation = Value
 
     @available(*, deprecated, message: "The `to` parameter has been removed and this method can no longer throw.")
