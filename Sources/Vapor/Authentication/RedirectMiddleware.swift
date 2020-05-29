@@ -10,7 +10,7 @@ extension Authenticatable {
     /// Basic middleware to redirect unauthenticated requests to the supplied path
     ///
     /// - parameters:
-    ///    - pathClosure: The closure that returns the redirect path based on the given URI path
+    ///    - pathClosure: The closure that returns the redirect path based on the given `Request` object
     public static func redirectMiddleware(_ pathClosure: @escaping (Request) -> String) -> Middleware {
         return RedirectMiddleware<Self>(Self.self, pathClosure: pathClosure)
     }
