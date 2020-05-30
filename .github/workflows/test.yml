@@ -23,15 +23,10 @@ jobs:
           - swiftlang/swift:nightly-master-xenial
           - swiftlang/swift:nightly-master-bionic
           - swiftlang/swift:nightly-master-focal
-        include:
-          - image: swiftlang/swift:nightly-master-centos8
-            depscmd: dnf install -y zlib-devel
-          - image: swiftlang/swift:nightly-master-amazonlinux2
-            depscmd: yum install -y zlib-devel
+          - swiftlang/swift:nightly-master-centos8
+          - swiftlang/swift:nightly-master-amazonlinux2
     container: ${{ matrix.image }}
     steps:
-      - name: Install dependencies if needed
-        run: ${{ matrix.depscmd }}
       - name: Check out code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
