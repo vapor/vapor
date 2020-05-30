@@ -321,30 +321,27 @@ private final class HTTPServerConnection {
         
         // Check if a socket path has been configured, and use it if it has been.
         if let socketPath = configuration.unixDomainSocketPath {
-            return prepareSocketFile(
+            return prepareSocketFileForBinding(
                 for: configuration,
                 with: application.eventLoopGroup.next(),
                 in: application.threadPool
-            ).flatMap { _ in
-                return bootstrap.bind(unixDomainSocketPath: socketPath).map { channel in
-                    return .init(
-                        channel: channel,
-                        quiesce: quiesce,
-                        configuration: configuration
-                    )
-                }
+            ).flatMap {
+                return bootstrap.bind(unixDomainSocketPath: socketPath)
+            }.map { channel in
+                return .init(
+                    channel: channel,
+                    quiesce: quiesce,
+                    configuration: configuration
+                )
             }.flatMapErrorThrowing { error -> HTTPServerConnection in
                 quiesce.initiateShutdown(promise: nil)
                 
-                // Transform `bind(descriptor:ptr:bytes:): Address already in use (errno: 48)` to a form the user can test for
-                if let ioError = error as? IOError {
-                    switch ioError.errnoCode {
-                    case EADDRINUSE: throw UnixDomainSocketPathError.socketInUse(ioError)
-                    case ENOENT: throw UnixDomainSocketPathError.noSuchDirectory(ioError)
-                    default: break
-                    }
+                // Transform `bind(descriptor:ptr:bytes:): Address already in use (errno: 48)`/`No such file or directory (errno: 2)` into a form the user can test for
+                switch error as? IOError {
+                case .some(let io) where io.errnoCode == EADDRINUSE: throw UnixDomainSocketPathError.socketInUse(io)
+                case .some(let io) where io.errnoCode == ENOENT: throw UnixDomainSocketPathError.noSuchDirectory(io)
+                default: throw error
                 }
-                throw error
             }
         }
         
@@ -373,26 +370,12 @@ private final class HTTPServerConnection {
             promise.fail(Abort(.internalServerError, reason: "Server stop took too long."))
         }
         self.quiesce.initiateShutdown(promise: promise)
-        return promise.futureResult.flatMapAlways { [configuration, channel] result in
-            let threadPool = NIOThreadPool(numberOfThreads: 1)
-            threadPool.start()
-            
-            return prepareSocketFile(
-                for: configuration,
-                with: channel.eventLoop,
-                in: threadPool
-            ).flatMapAlways { result in
-                let promise = channel.eventLoop.makePromise(of: Void.self)
-                threadPool.shutdownGracefully { error in
-                    if let error = error {
-                        promise.fail(error)
-                    } else {
-                        promise.succeed(())
-                    }
-                }
-                return promise.futureResult.flatMapThrowing { try result }
-            }.flatMapThrowing { try result }
+        do { // remove the socket file if it exists. This is ok to block since we are shutting down, and are not in an event loop
+            try removeSocketFileIfPresent(for: configuration)
+        } catch {
+            promise.fail(error)
         }
+        return promise.futureResult
     }
     
     var onClose: EventLoopFuture<Void> {
@@ -410,52 +393,56 @@ private final class HTTPServerConnection {
 ///   - eventLoop: An event loop to report the future on.
 ///   - threadPool: A thread pool to use when performing IO.
 /// - Returns: A future representing the completion of the necessary checks.
-private func prepareSocketFile(for configuration: HTTPServer.Configuration, with eventLoop: EventLoop, in threadPool: NIOThreadPool) -> EventLoopFuture<Void> {
+private func prepareSocketFileForBinding(for configuration: HTTPServer.Configuration, with eventLoop: EventLoop, in threadPool: NIOThreadPool) -> EventLoopFuture<Void> {
+    return threadPool.runIfActive(eventLoop: eventLoop) {
+        try removeSocketFileIfPresent(for: configuration)
+    }
+}
+
+/// Check for and remove a unix domain socket file specified by the configuration if one exists. **This call is blocking.**
+/// - Parameters:
+///   - configuration: A configuration with a socket path and logger.
+/// - Returns: A future representing the completion of the necessary checks.
+/// - Throws: `UnixDomainSocketPathError` if the file exists and cannot be removed.
+private func removeSocketFileIfPresent(for configuration: HTTPServer.Configuration) throws {
     // If there is no socket path configured, don't do anything and report success. This will be called every-time on server shutdown.
     guard let socketPath = configuration.unixDomainSocketPath else {
-        return eventLoop.makeSucceededFuture(())
+        return
     }
     
-    return threadPool.runIfActive(eventLoop: eventLoop) {
-        var socketFileStat = stat()
-        let (statResults, statError) = socketPath.withCString { path in
-            (stat(path, &socketFileStat), errno)
-        }
+    var socketFileStat = stat()
+    let statResults = lstat(socketPath, &socketFileStat)
+    
+    // Since we only want to continue if there is a socket file, stop here if an error occurred with stat().
+    guard statResults == 0 else {
+        let statError = errno
         
-        // Since we only want to continue if there is a socket file, stop here if an error occurred with stat().
-        guard statResults == 0 else {
+        if statError == ENOENT {
             // If stat() failed because a file doesn't exist, then don't do anything and report success — the socket file won't need to be removed.
-            guard statError == ENOENT else {
-                // If stat reports another error, we likely can't remove the file either, which means NIO will fail when binding, so tell the user by logging it so they can take action.
-                configuration.logger.critical("Could not access an existing socket file located at \(socketPath): POSIX Error \(statError). Please remove this file in order to start the server.")
-                throw UnixDomainSocketPathError.inaccessible(IOError(errnoCode: statError, reason: "Could not access an existing socket file located at \(socketPath)"))
-            }
-            
-            // stat() reported that the file doesn't exist, indicating NIO can go ahead and create it when it binds, so don't do anything and report success.
             return
         }
         
-        let mode = socketFileStat.st_mode
-        
-        // We only want to remove a socket file if it is actually a socket file - the user may have mistyped something, and it would be unfortunate for them to lose anything important otherwise.
-        guard mode&S_IFSOCK == S_IFSOCK else {
-            // A different type of file was found, so tell the user by logging it so they can take action.
-            configuration.logger.notice("An item at \(socketPath) already exists, but it is not a socket file. The socket file must not already exist before binding the server to a unix domain socket path.")
-            throw UnixDomainSocketPathError.unsupportedFile(mode, "An item at \(socketPath) already exists, but it is not a socket file")
-        }
-        
-        // The file exists, and is a socket file, so try to unlink it.
-        let (unlinkResults, unlinkError) = socketPath.withCString { path in
-            (unlink(path), errno)
-        }
-
-        guard unlinkResults == 0 else {
-            // If an error occurs during unlink, NIO will fail when binding, so report the error.
-            throw UnixDomainSocketPathError.couldNotRemove(IOError(errnoCode: unlinkError, reason: "Could not remove an existing socket file located at \(socketPath)"))
-        }
-        
-        // unlink() reported success, so NIO should be able to bind to the path.
+        // If stat reports another error, we likely can't remove the file either, which means NIO will fail when binding, so tell the user by logging it so they can take action.
+        configuration.logger.critical("Could not access an existing socket file located at \(socketPath): POSIX Error \(statError). Please remove this file in order to start the server.")
+        throw UnixDomainSocketPathError.inaccessible(IOError(errnoCode: statError, reason: "Could not access an existing socket file located at \(socketPath)"))
     }
+    
+    let mode = socketFileStat.st_mode
+    
+    // We only want to remove a socket file if it is actually a socket file - the user may have mistyped something, and it would be unfortunate for them to lose anything important otherwise.
+    guard mode & S_IFSOCK == S_IFSOCK else {
+        // A different type of file was found, so tell the user by logging it so they can take action.
+        configuration.logger.notice("An item at \(socketPath) already exists, but it is not a socket file. The socket file must not already exist before binding the server to a unix domain socket path.")
+        throw UnixDomainSocketPathError.unsupportedFile(mode, "An item at \(socketPath) already exists, but it is not a socket file")
+    }
+    
+    // The file exists, and is a socket file, so try to unlink it.
+    guard unlink(socketPath) == 0 else {
+        // If an error occurs during unlink, NIO will fail when binding, so report the error.
+        throw UnixDomainSocketPathError.couldNotRemove(IOError(errnoCode: errno, reason: "Could not remove an existing socket file located at \(socketPath)"))
+    }
+    
+    // unlink() reported success, so NIO should be able to bind to the path now.
 }
 
 final class HTTPServerErrorHandler: ChannelInboundHandler {
