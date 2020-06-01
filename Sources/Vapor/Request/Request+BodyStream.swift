@@ -28,8 +28,14 @@ extension Request {
             case .buffer: break
             }
             
-            if let handler = handler {
+            if let handler = self.handler {
                 handler(chunk, promise)
+                // remove reference to handler
+                switch chunk {
+                case .end, .error:
+                    self.handler = nil
+                default: break
+                }
             } else {
                 self.buffer.append((chunk, promise))
             }
@@ -56,20 +62,6 @@ extension Request {
 
         deinit {
             assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
-        }
-    }
-}
-
-extension BodyStreamResult: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .buffer(let buffer):
-            let value = String(decoding: buffer.readableBytesView, as: UTF8.self)
-            return "buffer(\(value))"
-        case .error(let error):
-            return "error(\(error))"
-        case .end:
-            return "end"
         }
     }
 }
