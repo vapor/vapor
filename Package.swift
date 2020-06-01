@@ -88,6 +88,9 @@ let package = Package(
         .target(name: "Development", dependencies: [
             .target(name: "Vapor"),
         ]),
+        .target(name: "SR12424", dependencies: [
+            .target(name: "Vapor"),
+        ]),
 
         // Testing
         .target(name: "XCTVapor", dependencies: [
