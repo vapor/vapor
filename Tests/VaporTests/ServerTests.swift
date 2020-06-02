@@ -161,6 +161,46 @@ final class ServerTests: XCTestCase {
         app.http.server.configuration.port = .max
         XCTAssertThrowsError(try app.start())
     }
+
+    func testEarlyExitStreamingRequest() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<Int> in
+            guard req.headers.first(name: "test") != nil else {
+                return req.eventLoop.makeFailedFuture(Abort(.badRequest))
+            }
+
+            var count = 0
+            let promise = req.eventLoop.makePromise(of: Int.self)
+            req.body.drain { part in
+                switch part {
+                case .buffer(let buffer):
+                    count += buffer.readableBytes
+                case .error(let error):
+                    promise.fail(error)
+                case .end:
+                    promise.succeed(count)
+                }
+                return req.eventLoop.makeSucceededFuture(())
+            }
+            return promise.futureResult
+        }
+
+        var buffer = ByteBufferAllocator().buffer(capacity: 10_000_000)
+        buffer.writeString(String(repeating: "a", count: 10_000_000))
+
+        try app.testable(method: .running).test(.POST, "upload", beforeRequest: { req in
+            req.body = buffer
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }).test(.POST, "upload", beforeRequest: { req in
+            req.body = buffer
+            req.headers.replaceOrAdd(name: "test", value: "a")
+        }, afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+        })
+    }
 }
 
 extension Application.Servers.Provider {

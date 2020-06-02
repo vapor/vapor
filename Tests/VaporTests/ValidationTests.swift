@@ -166,12 +166,17 @@ class ValidationTests: XCTestCase {
 
     func testRange() {
         assert(4, passes: .range(-5...5))
+        assert(4, passes: .range(..<5))
+        assert(5, fails: .range(..<5), "is greater than maximum of 4")
+        assert(5, passes: .range(...10))
+        assert(11, fails: .range(...10), "is greater than maximum of 10")
         assert(4, fails: !.range(-5...5), "is between -5 and 5")
         assert(5, passes: .range(-5...5))
         assert(-5, passes: .range(-5...5))
         assert(6, fails: .range(-5...5), "is greater than maximum of 5")
         assert(-6, fails: .range(-5...5), "is less than minimum of -5")
         assert(.max, passes: .range(5...))
+        assert(4, fails: .range(5...), "is less than minimum of 5")
         assert(-5, passes: .range(-5..<6))
         assert(-4, passes: .range(-5..<6))
         assert(5, passes: .range(-5..<6))
@@ -192,6 +197,8 @@ class ValidationTests: XCTestCase {
     func testCountItems() {
         assert([1], passes: .count(1...6))
         assert([1], fails: !.count(1...6), "is between 1 and 6 item(s)")
+        assert([1], passes: .count(...1))
+        assert([1], fails: .count(..<1), "is greater than maximum of 0 item(s)")
         assert([1, 2, 3], passes: .count(1...6))
         assert([1, 2, 3, 4, 5, 6], passes: .count(1...6))
         assert([Int](), fails: .count(1...6), "is less than minimum of 1 item(s)")
