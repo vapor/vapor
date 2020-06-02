@@ -12,18 +12,35 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
-        
-        // query delegate for response
         self.responder.respond(to: request).whenComplete { response in
-            switch response {
-            case .failure(let error):
-                self.errorCaught(context: context, error: error)
-            case .success(let response):
-                if request.method == .HEAD {
-                    response.forHeadRequest = true
+            if case .stream(let stream) = request.bodyStorage, !stream.isClosed {
+                // If streaming request body has not been closed yet,
+                // drain it before sending the response.
+                stream.read { (result, promise) in
+                    switch result {
+                    case .buffer: break
+                    case .end:
+                        self.serialize(response, for: request, context: context)
+                    case .error(let error):
+                        self.serialize(.failure(error), for: request, context: context)
+                    }
+                    promise?.succeed(())
                 }
+            } else {
                 self.serialize(response, for: request, context: context)
             }
+        }
+    }
+
+    func serialize(_ response: Result<Response, Error>, for request: Request, context: ChannelHandlerContext) {
+        switch response {
+        case .failure(let error):
+            self.errorCaught(context: context, error: error)
+        case .success(let response):
+            if request.method == .HEAD {
+                response.forHeadRequest = true
+            }
+            self.serialize(response, for: request, context: context)
         }
     }
     

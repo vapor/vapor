@@ -224,9 +224,12 @@ private extension Character {
     static var underscore: Self {
         .init("_")
     }
+    static var period: Self {
+        .init(".")
+    }
 
     var isDirectiveKey: Bool {
-        self.isLetter || self.isNumber || self == .dash || self == .underscore
+        self.isLetter || self.isNumber || self == .dash || self == .underscore || self == .period
     }
 }
 
