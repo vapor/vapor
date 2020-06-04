@@ -505,7 +505,7 @@ final class URLEncodedFormTests: XCTestCase {
     func testPercentDecoding() throws {
         let data = "aaa%5B%5D=%2Bbbb%20+ccc&d[]=1&d[]=2"
         let form = try URLEncodedFormParser().parse(data)
-        XCTAssertEqual(form, ["aaa[]": "+bbb  ccc", "d": ["": ["1","2"]]])
+        XCTAssertEqual(form, ["aaa": ["": "+bbb  ccc"], "d": ["": ["1","2"]]])
     }
     
     func testNestedParsing() throws {
