@@ -129,9 +129,15 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 </a>
 <a 
     data-amt="10" 
-    data-since="4/1/20" 
-    href="https://github.com/jstorm31">
-    <img src="https://avatars3.githubusercontent.com/u/16023539?s=120" width="60px">
+    data-since="4/22/20" 
+    href="https://github.com/rminerick">
+    <img src="https://avatars3.githubusercontent.com/u/4505221?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="5/20/20" 
+    href="https://github.com/mcdappdev">
+    <img src="https://avatars3.githubusercontent.com/u/11842593?s=120" width="60px">
 </a>
 <a 
     data-amt="5" 
@@ -223,6 +229,12 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     href="https://github.com/lmcd">
     <img src="https://avatars3.githubusercontent.com/u/363540?s=120" width="60px">
 </a>
+<a 
+    data-amt="5" 
+    data-since="4/1/20" 
+    href="https://github.com/jstorm31">
+    <img src="https://avatars3.githubusercontent.com/u/16023539?s=120" width="60px">
+</a>
 <a
     data-amt="5" 
     data-since="04/07/20" 
@@ -253,6 +265,42 @@ Mattiav8">
     data-since="04/10/20" 
     href="https://github.com/segunabiodun">
     <img src="https://avatars0.githubusercontent.com/u/19616990?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/17/20" 
+    href="https://github.com/Joannis">
+    <img src="https://avatars0.githubusercontent.com/u/1951674?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/20/20" 
+    href="https://github.com/klaas">
+    <img src="https://avatars0.githubusercontent.com/u/320967?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/21/20" 
+    href="https://github.com/MaxDesiatov">
+    <img src="https://avatars0.githubusercontent.com/u/112310?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/24/20" 
+    href="https://github.com/SaltyCoco">
+    <img src="https://avatars0.githubusercontent.com/u/31451104?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="04/30/20" 
+    href="https://github.com/zachwick">
+    <img src="https://avatars0.githubusercontent.com/u/406510?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="05/17/20" 
+    href="https://github.com/mtsrodrigues">
+    <img src="https://avatars0.githubusercontent.com/u/20213807?s=120" width="60px">
 </a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
