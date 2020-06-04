@@ -36,7 +36,7 @@ public final class HTTPServer: Server {
         public var responseCompression: CompressionConfiguration
         
         /// Only  for macOS. If true the service is reachable over all interfaces.
-        public var runOnAllInterfaces: Bool
+        public var runOnAllInterfaces: Bool = false 
 
         /// Supported HTTP compression options.
         public struct CompressionConfiguration {
@@ -230,7 +230,7 @@ private final class HTTPServerConnection {
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
-            // macOS specific options to make socket available on all interfaces 
+            // macOS specific options to make socket available on all interfaces
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), 0x1104), value: configuration.runOnAllInterfaces ? SocketOptionValue(1) : SocketOptionValue(0))
             // Set handlers that are applied to the Server's channel
             .serverChannelInitializer { channel in
