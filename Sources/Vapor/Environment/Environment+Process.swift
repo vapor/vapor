@@ -17,12 +17,9 @@ extension Environment {
         ///     Environment.process.DATABASE_PORT // 3306
         public subscript<T>(dynamicMember member: String) -> T? where T: LosslessStringConvertible {
             get {
-                guard let raw = self._info.environment[member], let value = T(raw) else {
-                    return nil
-                }
-                
-                return value
+                return self._info.environment[member].flatMap { T($0) }
             }
+
             nonmutating set (value) {
                 if let raw = value?.description {
                     setenv(member, raw, 1)
@@ -38,12 +35,9 @@ extension Environment {
         ///     Environment.process.DATABASE_USER // "root"
         public subscript(dynamicMember member: String) -> String? {
             get {
-                guard let value = self._info.environment[member] else {
-                    return nil
-                }
-                
-                return value
+                return self._info.environment[member]
             }
+
             nonmutating set (value) {
                 if let raw = value {
                     setenv(member, raw, 1)
