@@ -34,26 +34,16 @@ public struct SessionData: Codable {
     public internal(set) var appStorageChanged: Bool
     public internal(set) var expiryChanged: Bool
     
-    
     /// Create a new, empty session data
-    public init(_ data: [String: String] = [:]) {
+    public init(_ data: Data = [:], app: Data = [:], expiration: Expiration = .distantFuture) {
         self.storage = data
-        self.userStorageChanged = false
-        self.appStorage = [:]
-        self.appStorageChanged = false
-        self.expiration = .distantFuture
-        self.expiryChanged = false
-    }
-    
-    internal init(user: [String: String] = [:], app: [String: String] = [:], expiration: Date) {
-        self.storage = user
         self.appStorage = app
         self.expiration = expiration
         self.userStorageChanged = false
         self.appStorageChanged = false
         self.expiryChanged = false
     }
-
+    
     public init(from decoder: Decoder) throws {
         self.storage = try .init(from: decoder)
         self.appStorage = try .init(from: decoder)
