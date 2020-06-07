@@ -77,12 +77,8 @@ public final class SessionsMiddleware: Middleware {
         else if interval < configuration.threshold || session.id == nil {
             session.data.expiration = Date(timeIntervalSinceNow: configuration.lifetime)
         }
- 
-//        print(Date())
-//        print(session.data.expiration)
-//        print("+=Exp \(Date().distance(to: session.data.expiration))")
 
-        // If the session is valid and nothing has updated, no need to set cookie
+        // If the session is valid and nothing has updated, respond now
         if session.isValid && !session.data.anyUpdated {
             return request.eventLoop.makeSucceededFuture(response)
         }
