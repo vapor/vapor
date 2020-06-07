@@ -12,6 +12,7 @@
 ///     services.register(middlewareConfig)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
+import Foundation
 
 public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
