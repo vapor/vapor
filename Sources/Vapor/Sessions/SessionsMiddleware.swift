@@ -12,7 +12,6 @@
 ///     services.register(middlewareConfig)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-import Foundation
 
 public final class SessionsMiddleware: Middleware {
     /// The cookie to work with
@@ -70,7 +69,7 @@ public final class SessionsMiddleware: Middleware {
             return request.eventLoop.makeSucceededFuture(response)
         }
         
-        let interval = Date().distance(to: session.data.expiration)
+        let interval = Date().timeIntervalSinceReferenceDate.distance(to: session.data.expiration.timeIntervalSinceReferenceDate)
         // If the session's expiration time is before this moment invalidate the session
         if interval < 0 {  session.isValid = false }
         // ... or set the cookie expiration if we're past the time to update

@@ -254,10 +254,10 @@ final class SessionTests: XCTestCase {
                                     actions[.destroy] = actions[.destroy]! + 1
                                 } else {
                                     actions[.updateAll] = actions[.updateAll]! + 1
-                                    // decrement internal update counter if session data was modified
-                                    if res.body.string.first! == "!" {
-                                        actions[.updateInternal] = actions[.updateInternal]! - 1
-                                    }
+                                }
+                                // decrement internal update counter if session data was modified
+                                if res.body.string.first! == "!" {
+                                    actions[.updateInternal] = actions[.updateInternal]! - 1
                                 }
                             }
                     }
