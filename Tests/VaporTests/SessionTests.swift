@@ -196,7 +196,8 @@ final class SessionTests: XCTestCase {
         }
         
         while Date() < start + Double(d) {
-            let progress = ((Double(d) - (Date().distance(to: start))) / Double(d)) - 1.0
+            let interval = Date().timeIntervalSinceReferenceDate.distance(to: start.timeIntervalSinceReferenceDate)
+            let progress = ((Double(d) - interval) / Double(d)) - 1.0
             // Start with 20% of clients, pace remaining 80% up to roughly 70% progress
             let clientMax = min(Int(Double(c) * (0.2 + ((1.0/0.7) * progress))), Int(c)-1)
             var clientMin = 0
