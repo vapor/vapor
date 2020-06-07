@@ -10,9 +10,6 @@ public final class Session {
 
     /// This session's data.
     public var data: SessionData
-    
-    /// Session's expiration date
-    var expiration: Date?
 
     /// `true` if this session is still valid.
     var isValid: Bool
@@ -22,11 +19,9 @@ public final class Session {
     /// Normally you will use `Request.session()` to do this.
     public init(
         id: SessionID? = nil,
-        data: SessionData = .init(),
-        expiration: Date? = nil) {
+        data: SessionData = .init()) {
         self.id = id
         self.data = data
-        self.expiration = expiration
         self.isValid = true
     }
 

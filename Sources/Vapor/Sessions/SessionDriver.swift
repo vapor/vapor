@@ -2,19 +2,17 @@
 public protocol SessionDriver {
     func createSession(
         _ data: SessionData,
-        expiring: Date,
         for request: Request
     ) -> EventLoopFuture<SessionID>
     
     func readSession(
         _ sessionID: SessionID,
         for request: Request
-    ) -> EventLoopFuture<(SessionData, Date)?>
+    ) -> EventLoopFuture<SessionData?>
     
     func updateSession(
         _ sessionID: SessionID,
-        to data: SessionData?,
-        expiring: Date?,
+        to data: SessionData,
         for request: Request
     ) -> EventLoopFuture<SessionID>
     
