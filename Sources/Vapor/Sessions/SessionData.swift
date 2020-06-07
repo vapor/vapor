@@ -3,8 +3,11 @@
 /// Direct user interaction to `SessionData` is limited to subscripting accessors which read/store only
 /// in `SessionData.storage`; any other fields are limited to internal access only
 public struct SessionData: Codable {
+    public typealias Data = [String: String]
+    public typealias Expiration = Date
+    
     /// Session codable object storage for user info
-    public internal(set) var storage: [String: String] {
+    public internal(set) var storage: Data {
         /// Unilaterally set update flag when a key/value is set
         didSet {
             self.userStorageChanged = true
@@ -12,7 +15,7 @@ public struct SessionData: Codable {
     }
     
     /// Session codable object storage for Vapor
-    public internal(set) var appStorage: [String: String] {
+    public internal(set) var appStorage: Data {
        /// Unilaterally set update flag when a key/value is set
        didSet {
            self.appStorageChanged = true
@@ -20,7 +23,7 @@ public struct SessionData: Codable {
     }
     
     /// Expiration time of the session
-    public internal(set) var expiration: Date {
+    public internal(set) var expiration: Expiration {
         didSet {
             self.expiryChanged = true
         }
