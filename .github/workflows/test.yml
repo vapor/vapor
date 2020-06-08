@@ -14,12 +14,19 @@ jobs:
       fail-fast: false
       matrix:
         image:
+          # 5.2 Stable
           - swift:5.2-xenial
           - swift:5.2-bionic
+          - swift:5.2-focal
+          - swift:5.2-centos8
+          - swift:5.2-amazonlinux2
+          # 5.2 Unstable
           - swiftlang/swift:nightly-5.2-xenial
           - swiftlang/swift:nightly-5.2-bionic
+          # 5.3 Unstable
           - swiftlang/swift:nightly-5.3-xenial
           - swiftlang/swift:nightly-5.3-bionic
+          # Master Unstable
           - swiftlang/swift:nightly-master-xenial
           - swiftlang/swift:nightly-master-bionic
           - swiftlang/swift:nightly-master-focal
