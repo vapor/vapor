@@ -1,9 +1,9 @@
-name: deploy-api-docs
+name: api-docs
 on: pull_request
 
 jobs:
   deploy:
-    name: api-docs.vapor.codes
+    name: deploy
     runs-on: ubuntu-latest
     steps:
     - name: Deploy api-docs
