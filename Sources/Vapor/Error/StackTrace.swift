@@ -1,3 +1,9 @@
+extension Optional where Wrapped == StackTrace {
+    public static func capture() -> Self {
+        StackTrace.capture()
+    }
+}
+
 public struct StackTrace {
     public static var isCaptureEnabled: Bool = true
 
@@ -43,8 +49,8 @@ public struct StackTrace {
     }
 
     public struct Frame {
-        var file: String
-        var function: String
+        public var file: String
+        public var function: String
     }
 
     let raw: [String]

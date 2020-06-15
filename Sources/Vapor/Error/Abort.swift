@@ -3,7 +3,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public struct Abort: AbortError {
+public struct Abort: AbortError, DebuggableError {
     /// Creates a redirecting `Abort` error.
     ///
     ///     throw Abort.redirect(to: "https://vapor.codes")"
@@ -28,9 +28,11 @@ public struct Abort: AbortError {
     /// See `AbortError`
     public var reason: String
 
-    /// Wrap this error's source location into a usable struct for
-    /// the `AbortError` protocol.
-    public var source: ErrorSource
+    /// Source location where this error was created.
+    public var source: ErrorSource?
+
+    /// Stack trace at point of error creation.
+    public var stackTrace: StackTrace?
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
@@ -43,7 +45,8 @@ public struct Abort: AbortError {
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
-        range: Range<UInt>? = nil
+        range: Range<UInt>? = nil,
+        stackTrace: StackTrace? = .capture()
     ) {
         self.identifier = identifier ?? status.code.description
         self.headers = headers
@@ -56,5 +59,6 @@ public struct Abort: AbortError {
             column: column,
             range: range
         )
+        self.stackTrace = stackTrace
     }
 }
