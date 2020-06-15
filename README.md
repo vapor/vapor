@@ -73,6 +73,12 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 ### 💚 Backers
 Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
 
+<a
+    data-amt="50" 
+    data-since="04/17/20" 
+    href="https://github.com/Joannis">
+    <img src="https://avatars0.githubusercontent.com/u/1951674?s=120" width="60px">
+</a>
 <a 
     data-amt="25" 
     data-since="10/20/19" 
@@ -148,12 +154,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 <a 
     data-amt="5" 
     data-since="10/17/19" 
-    href="https://github.com/tylermrolfe">
-    <img src="https://avatars3.githubusercontent.com/u/1797243?s=120" width="60px">
-</a>
-<a 
-    data-amt="5" 
-    data-since="10/17/19" 
     href="https://github.com/maartene">
     <img src="https://avatars3.githubusercontent.com/u/5150271?s=120" width="60px">
 </a>
@@ -174,12 +174,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="10/25/19" 
     href="https://github.com/ezfe">
     <img src="https://avatars3.githubusercontent.com/u/1449259?s=120" width="60px">
-</a>
-<a 
-    data-amt="5" 
-    data-since="10/29/19" 
-    href="https://github.com/Mordil">
-    <img src="https://avatars3.githubusercontent.com/u/3506776?s=120" width="60px">
 </a>
 <a 
     data-amt="5" 
@@ -229,12 +223,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     href="https://github.com/lmcd">
     <img src="https://avatars3.githubusercontent.com/u/363540?s=120" width="60px">
 </a>
-<a 
-    data-amt="5" 
-    data-since="4/1/20" 
-    href="https://github.com/jstorm31">
-    <img src="https://avatars3.githubusercontent.com/u/16023539?s=120" width="60px">
-</a>
 <a
     data-amt="5" 
     data-since="04/07/20" 
@@ -265,12 +253,6 @@ Mattiav8">
     data-since="04/10/20" 
     href="https://github.com/segunabiodun">
     <img src="https://avatars0.githubusercontent.com/u/19616990?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
-    data-since="04/17/20" 
-    href="https://github.com/Joannis">
-    <img src="https://avatars0.githubusercontent.com/u/1951674?s=120" width="60px">
 </a>
 <a
     data-amt="5" 
