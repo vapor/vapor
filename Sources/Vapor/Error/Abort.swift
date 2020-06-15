@@ -46,7 +46,7 @@ public struct Abort: AbortError, DebuggableError {
         line: UInt = #line,
         column: UInt = #column,
         range: Range<UInt>? = nil,
-        stackTrace: StackTrace? = .capture()
+        stackTrace: StackTrace? = .capture(skip: 1)
     ) {
         self.identifier = identifier ?? status.code.description
         self.headers = headers

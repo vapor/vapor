@@ -132,24 +132,23 @@ final class ErrorTests: XCTestCase {
     }
 
     func testAbortDebuggable() throws {
+        func foo() throws {
+            try bar()
+        }
+        func bar() throws {
+            try baz()
+        }
+        func baz() throws {
+            throw Abort(.internalServerError, reason: "Oops")
+        }
         do {
             try foo()
         } catch let error as DebuggableError {
-            XCTAssertContains(error.stackTrace?.frames[1].function, "baz")
-            XCTAssertContains(error.stackTrace?.frames[2].function, "bar")
-            XCTAssertContains(error.stackTrace?.frames[3].function, "foo")
+            XCTAssertContains(error.stackTrace?.frames[0].function, "baz")
+            XCTAssertContains(error.stackTrace?.frames[1].function, "bar")
+            XCTAssertContains(error.stackTrace?.frames[2].function, "foo")
         }
     }
-}
-
-func foo() throws {
-    try bar()
-}
-func bar() throws {
-    try baz()
-}
-func baz() throws {
-    throw Abort(.internalServerError, reason: "Oops")
 }
 
 func XCTAssertContains(
