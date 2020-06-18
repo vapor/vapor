@@ -1,14 +1,11 @@
-name: Test Matrix
-
+name: test
 on:
   pull_request:
   push:
     branches:
     - master
-    
 jobs:
-
-  Linux:
+  linux:
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -38,13 +35,13 @@ jobs:
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
-
   macOS:
     runs-on: macos-latest
     steps:
       - name: Select latest available Xcode
         uses: maxim-lobanov/setup-xcode@1.0
-        with: { 'xcode-version': 'latest' }
+        with:
+          xcode-version: latest
       - name: Check out code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
