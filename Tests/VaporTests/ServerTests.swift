@@ -218,6 +218,11 @@ final class ServerTests: XCTestCase {
 
         let context = Context()
 
+
+        app.on(.POST, "echo", body: .stream) { request in
+            "hello, world"
+        }
+
         app.on(.POST, "echo", body: .stream) { request -> Response in
             let r = Response(body: .init(stream: { writer in
                 request.body.drain { body in
