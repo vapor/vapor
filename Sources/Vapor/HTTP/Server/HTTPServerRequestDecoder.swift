@@ -30,6 +30,8 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
         self.logger.trace("Decoded HTTP part: \(part)")
+        self.logger.trace("Request state: \(self.requestState)")
+        self.logger.trace("Body stream state: \(self.bodyStreamState)")
         switch part {
         case .head(let head):
             switch self.requestState {
