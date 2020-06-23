@@ -414,19 +414,19 @@ private extension ChannelPipeline {
         case .disabled:
             break
         }
-        
-        // add NIO -> HTTP request decoder
-        let serverReqDecoder = HTTPServerRequestDecoder(
-            application: application
-        )
-        handlers.append(serverReqDecoder)
-        
+
         // add NIO -> HTTP response encoder
         let serverResEncoder = HTTPServerResponseEncoder(
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
         handlers.append(serverResEncoder)
+        
+        // add NIO -> HTTP request decoder
+        let serverReqDecoder = HTTPServerRequestDecoder(
+            application: application
+        )
+        handlers.append(serverReqDecoder)
         // add server request -> response delegate
         let handler = HTTPServerHandler(responder: responder)
 

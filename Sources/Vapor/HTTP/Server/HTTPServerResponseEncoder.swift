@@ -8,6 +8,8 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     /// Optional server header.
     private let serverHeader: String?
     private let dateCache: RFC1123DateCache
+
+    struct ResponseEndSentEvent { }
     
     init(serverHeader: String?, dateCache: RFC1123DateCache) {
         self.serverHeader = serverHeader
@@ -30,15 +32,18 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             status: response.status,
             headers: response.headers
         ))), promise: nil)
+
         
         if response.status == .noContent || response.forHeadRequest {
             // don't send bodies for 204 (no content) responses
             // or HEAD requests
             context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
+            context.fireUserInboundEventTriggered(ResponseEndSentEvent())
         } else {
             switch response.body.storage {
             case .none:
                 context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
+                context.fireUserInboundEventTriggered(ResponseEndSentEvent())
             case .buffer(let buffer):
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .string(let string):
@@ -70,6 +75,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             _ = context.write(wrapOutboundOut(.body(.byteBuffer(buffer))))
         }
         context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
+        context.fireUserInboundEventTriggered(ResponseEndSentEvent())
     }
 }
 
@@ -89,9 +95,11 @@ private struct ChannelResponseBodyStream: BodyStreamWriter {
         case .end:
             self.promise?.succeed(())
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
         case .error(let error):
             self.promise?.fail(error)
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
         }
     }
 }

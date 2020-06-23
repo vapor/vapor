@@ -7,6 +7,10 @@ extension Request {
 
         let eventLoop: EventLoop
 
+        var isBeingRead: Bool {
+            self.handler != nil
+        }
+
         init(on eventLoop: EventLoop) {
             self.eventLoop = eventLoop
             self.isClosed = false

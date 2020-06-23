@@ -1,7 +1,7 @@
 import NIO
 import NIOHTTP1
 
-final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
+final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
     typealias OutboundIn = Never
@@ -11,6 +11,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         case awaitingBody(Request)
         case awaitingEnd(Request, ByteBuffer)
         case streamingBody(Request.BodyStream)
+        case skipping
     }
 
     var requestState: RequestState
@@ -30,8 +31,6 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
         self.logger.trace("Decoded HTTP part: \(part)")
-        self.logger.trace("Request state: \(self.requestState)")
-        self.logger.trace("Body stream state: \(self.bodyStreamState)")
         switch part {
         case .head(let head):
             switch self.requestState {
@@ -81,6 +80,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     self.bodyStreamState.didReadBytes(buffer),
                     stream: stream
                 )
+            case .skipping: break
             }
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Tail headers are not supported.")
@@ -97,6 +97,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     self.bodyStreamState.didEnd(),
                     stream: stream
                 )
+            case .skipping: break
             }
             self.requestState = .ready
         }
@@ -162,6 +163,30 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         }
         if result.callRead {
             context.read()
+        }
+    }
+
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        if event is HTTPServerResponseEncoder.ResponseEndSentEvent {
+            switch self.requestState {
+            case .streamingBody(let bodyStream):
+                // Response ended during request stream.
+                if !bodyStream.isBeingRead {
+                    self.logger.trace("Response already sent, draining unhandled request stream.")
+                    bodyStream.read { _, promise in
+                        promise?.succeed(())
+                    }
+                }
+            case .awaitingEnd, .awaitingBody:
+                // Response ended before request started streaming.
+                self.logger.trace("Response already sent, skipping request body.")
+                self.requestState = .skipping
+            case .ready:
+                // Response ended after request had been read.
+                break
+            default:
+                fatalError("Unexpected request state: \(self.requestState)")
+            }
         }
     }
 }

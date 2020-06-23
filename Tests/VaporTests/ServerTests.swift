@@ -215,13 +215,7 @@ final class ServerTests: XCTestCase {
                 self.client = []
             }
         }
-
         let context = Context()
-
-
-        app.on(.POST, "echo", body: .stream) { request in
-            "hello, world"
-        }
 
         app.on(.POST, "echo", body: .stream) { request -> Response in
             let r = Response(body: .init(stream: { writer in
@@ -290,6 +284,39 @@ final class ServerTests: XCTestCase {
 
         XCTAssertEqual(context.server, ["foo", "bar", "baz"])
         XCTAssertEqual(context.client, ["foo", "bar", "baz"])
+    }
+
+    func testSkipStreaming() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.on(.POST, "echo", body: .stream) { request in
+            "hello, world"
+        }
+
+        let port = 1337
+        app.http.server.configuration.port = port
+        try app.start()
+
+        let request = try HTTPClient.Request(
+            url: "http://localhost:\(port)/echo",
+            method: .POST,
+            headers: [
+                "transfer-encoding": "chunked"
+            ],
+            body: .stream(length: nil, { stream in
+                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    stream.write(.byteBuffer(.init(string: "bar")))
+                }.flatMap {
+                    stream.write(.byteBuffer(.init(string: "baz")))
+                }
+            })
+        )
+
+        let a = try app.http.client.shared.execute(request: request).wait()
+        XCTAssertEqual(a.status, .ok)
+        let b = try app.http.client.shared.execute(request: request).wait()
+        XCTAssertEqual(b.status, .ok)
     }
 
     override class func setUp() {
