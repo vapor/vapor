@@ -42,7 +42,7 @@ extension Response.Body {
 public func XCTAssertContent<D>(
     _ type: D.Type,
     _ res: XCTHTTPResponse,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line,
     _ closure: (D) -> ()
 )
@@ -61,7 +61,7 @@ public func XCTAssertContent<D>(
     }
 }
 
-public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #file, line: UInt = #line) {
+public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #filePath, line: UInt = #line) {
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
         XCTAssert(haystack.contains(needle), "\(haystack) does not contain \(needle)", file: file, line: line)
@@ -74,7 +74,7 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
     }
 }
 
-public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #file, line: UInt = #line)
+public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #filePath, line: UInt = #line)
     where T: Codable & Equatable
 {
     guard let data = data else {
