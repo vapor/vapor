@@ -82,7 +82,7 @@ final class PasswordTests: XCTestCase {
     private func assertAsyncApplicationPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         on app: Application,
-        file: StaticString = #file,
+        file: StaticString = (#file),
         line: UInt = #line
     ) throws {
         app.passwords.use(provider)
@@ -103,7 +103,7 @@ final class PasswordTests: XCTestCase {
     private func assertAsyncRequestPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         on app: Application,
-        file: StaticString = #file,
+        file: StaticString = (#file),
         line: UInt = #line
     ) throws {
         app.passwords.use(provider)
