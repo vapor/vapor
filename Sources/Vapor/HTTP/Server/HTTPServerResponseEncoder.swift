@@ -83,13 +83,25 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     }
 }
 
-private struct ChannelResponseBodyStream: BodyStreamWriter {
+private final class ChannelResponseBodyStream: BodyStreamWriter {
     let context: ChannelHandlerContext
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
+    var isComplete: Bool
 
     var eventLoop: EventLoop {
         return self.context.eventLoop
+    }
+
+    init(
+        context: ChannelHandlerContext,
+        handler: HTTPServerResponseEncoder,
+        promise: EventLoopPromise<Void>?
+    ) {
+        self.context = context
+        self.handler = handler
+        self.promise = promise
+        self.isComplete = false
     }
     
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -97,13 +109,19 @@ private struct ChannelResponseBodyStream: BodyStreamWriter {
         case .buffer(let buffer):
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
         case .end:
+            self.isComplete = true
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.promise?.succeed(())
         case .error(let error):
+            self.isComplete = true
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.promise?.fail(error)
         }
+    }
+
+    deinit {
+        assert(self.isComplete, "Response body stream writer deinitialized before .end or .error was sent.")
     }
 }
