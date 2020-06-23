@@ -281,7 +281,7 @@ private func assert<T>(
     _ data: T,
     fails validator: Validator<T>,
     _ description: String,
-    file: StaticString = #filePath,
+    file: StaticString = (#file),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
@@ -292,7 +292,7 @@ private func assert<T>(
 private func assert<T>(
     _ data: T,
     passes validator: Validator<T>,
-    file: StaticString = #filePath,
+    file: StaticString = (#file),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
