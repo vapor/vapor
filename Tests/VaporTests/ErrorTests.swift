@@ -154,7 +154,7 @@ final class ErrorTests: XCTestCase {
 func XCTAssertContains(
     _ haystack: String?,
     _ needle: String,
-    file: StaticString = #file,
+    file: StaticString = (#file),
     line: UInt = #line
 ) {
     guard let haystack = haystack else {
