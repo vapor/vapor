@@ -336,7 +336,7 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     }
 }
 
-private extension ChannelPipeline {
+extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
         responder: Responder,

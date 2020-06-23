@@ -218,7 +218,7 @@ final class ServerTests: XCTestCase {
         let context = Context()
 
         app.on(.POST, "echo", body: .stream) { request -> Response in
-            let r = Response(body: .init(stream: { writer in
+            Response(body: .init(stream: { writer in
                 request.body.drain { body in
                     switch body {
                     case .buffer(let buffer):
@@ -227,14 +227,10 @@ final class ServerTests: XCTestCase {
                     case .error(let error):
                         return writer.write(.error(error))
                     case .end:
-                        writer.write(.buffer(ByteBuffer(string: "")), promise: nil)
                         return writer.write(.end)
                     }
                 }
-            }, count: 0))
-            #warning("TODO: fix hack")
-            r.headers.remove(name: "content-length")
-            return r
+            }))
         }
 
         let port = 1337
