@@ -36,9 +36,14 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         default:
             response.headers.add(name: .connection, value: request.isKeepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
-            if !request.isKeepAlive {
-                done.whenComplete { _ in
-                    context.close(mode: .output, promise: nil)
+            done.whenComplete { result in
+                switch result {
+                case .success:
+                    if !request.isKeepAlive {
+                        context.close(mode: .output, promise: nil)
+                    }
+                case .failure(let error):
+                    self.errorCaught(context: context, error: error)
                 }
             }
         }

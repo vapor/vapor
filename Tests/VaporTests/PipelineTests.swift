@@ -85,6 +85,30 @@ final class PipelineTests: XCTestCase {
         try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
     }
 
+    func testBadStreamLength() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.on(.POST, "echo", body: .stream) { request -> Response in
+            Response(body: .init(stream: { writer in
+                writer.write(.buffer(.init(string: "a")), promise: nil)
+                writer.write(.end, promise: nil)
+            }, count: 2))
+        }
+
+        let channel = EmbeddedChannel()
+        try channel.pipeline.addVaporHTTP1Handlers(
+            application: app,
+            responder: app.responder,
+            configuration: app.http.server.configuration
+        ).wait()
+
+        try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
+        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
+        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+    }
+
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
     }

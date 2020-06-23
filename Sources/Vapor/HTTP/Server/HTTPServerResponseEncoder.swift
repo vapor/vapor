@@ -66,7 +66,8 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                 let channelStream = ChannelResponseBodyStream(
                     context: context,
                     handler: self,
-                    promise: promise
+                    promise: promise,
+                    count: stream.count
                 )
                 stream.callback(channelStream)
             }
@@ -87,20 +88,30 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     let context: ChannelHandlerContext
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
+    let count: Int
+    var currentCount: Int
     var isComplete: Bool
 
     var eventLoop: EventLoop {
         return self.context.eventLoop
     }
 
+    enum Error: Swift.Error {
+        case tooManyBytes
+        case notEnoughBytes
+    }
+
     init(
         context: ChannelHandlerContext,
         handler: HTTPServerResponseEncoder,
-        promise: EventLoopPromise<Void>?
+        promise: EventLoopPromise<Void>?,
+        count: Int
     ) {
         self.context = context
         self.handler = handler
         self.promise = promise
+        self.count = count
+        self.currentCount = 0
         self.isComplete = false
     }
     
@@ -108,8 +119,21 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         switch result {
         case .buffer(let buffer):
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
+            self.currentCount += buffer.readableBytes
+            guard self.currentCount <= self.count else {
+                self.promise?.fail(Error.tooManyBytes)
+                promise?.fail(Error.notEnoughBytes)
+                return
+                // self.context.close(promise: nil)
+            }
         case .end:
             self.isComplete = true
+            guard self.currentCount == self.count else {
+                self.promise?.fail(Error.notEnoughBytes)
+                promise?.fail(Error.notEnoughBytes)
+                return
+                // self.context.close(promise: nil)
+            }
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.promise?.succeed(())
