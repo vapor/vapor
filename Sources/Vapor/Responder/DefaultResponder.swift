@@ -36,7 +36,7 @@ internal struct DefaultResponder: Responder {
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.logger.info("\(request.method) \(request.url.path)")
+        request.logger.info("\(request.method) \(request.url.path.removingPercentEncoding ?? request.url.path)")
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
         let path: String
