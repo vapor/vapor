@@ -90,7 +90,7 @@ public func routes(_ app: Application) throws {
         guard let running = req.application.running else {
             throw Abort(.internalServerError)
         }
-        _ = running.stop()
+        running.stop()
         return .ok
     }
 
