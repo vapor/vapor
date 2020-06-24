@@ -13,22 +13,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
         self.responder.respond(to: request).whenComplete { response in
-            if case .stream(let stream) = request.bodyStorage, !stream.isClosed {
-                // If streaming request body has not been closed yet,
-                // drain it before sending the response.
-                stream.read { (result, promise) in
-                    switch result {
-                    case .buffer: break
-                    case .end:
-                        self.serialize(response, for: request, context: context)
-                    case .error(let error):
-                        self.serialize(.failure(error), for: request, context: context)
-                    }
-                    promise?.succeed(())
-                }
-            } else {
-                self.serialize(response, for: request, context: context)
-            }
+            self.serialize(response, for: request, context: context)
         }
     }
 
@@ -51,9 +36,14 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         default:
             response.headers.add(name: .connection, value: request.isKeepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
-            if !request.isKeepAlive {
-                done.whenComplete { _ in
-                    context.close(mode: .output, promise: nil)
+            done.whenComplete { result in
+                switch result {
+                case .success:
+                    if !request.isKeepAlive {
+                        context.close(mode: .output, promise: nil)
+                    }
+                case .failure(let error):
+                    self.errorCaught(context: context, error: error)
                 }
             }
         }
