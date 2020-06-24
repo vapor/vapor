@@ -35,12 +35,18 @@ final class RouteTests: XCTestCase {
             return String(value)
         }
 
+        app.routes.get("missing") { req in
+            return try req.parameters.require("value")
+        }
+
         try app.testable().test(.GET, "/string/test") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "test")
         }.test(.GET, "/int/123") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "123")
+        }.test(.GET, "/missing") { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
 
