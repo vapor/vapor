@@ -162,9 +162,17 @@ public final class Response: CustomStringConvertible {
 extension HTTPHeaders {
     mutating func updateContentLength(_ contentLength: Int) {
         let count = contentLength.description
-        self.remove(name: .transferEncoding)
-        if count != self[.contentLength].first {
-            self.replaceOrAdd(name: .contentLength, value: count)
+        switch contentLength {
+        case -1:
+            self.remove(name: .contentLength)
+            if "chunked" != self.first(name: .transferEncoding) {
+                self.add(name: .transferEncoding, value: "chunked")
+            }
+        default:
+            self.remove(name: .transferEncoding)
+            if count != self.first(name: .contentLength) {
+                self.replaceOrAdd(name: .contentLength, value: count)
+            }
         }
     }
 }
