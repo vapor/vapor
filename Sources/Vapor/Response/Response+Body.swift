@@ -37,7 +37,7 @@ extension Response {
         }
         
         /// The size of the HTTP body's data.
-        /// `nil` is a stream.
+        /// `-1` is a chunked stream.
         public var count: Int {
             switch self.storage {
             case .data(let data): return data.count
@@ -146,6 +146,10 @@ extension Response {
         
         public init(stream: @escaping (BodyStreamWriter) -> (), count: Int) {
             self.storage = .stream(.init(count: count, callback: stream))
+        }
+
+        public init(stream: @escaping (BodyStreamWriter) -> ()) {
+            self.init(stream: stream, count: -1)
         }
         
         /// `ExpressibleByStringLiteral` conformance.
