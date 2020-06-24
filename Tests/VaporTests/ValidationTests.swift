@@ -16,6 +16,7 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
+            "favoritePet": null,
             "isAdmin": true
         }
         """
@@ -79,6 +80,53 @@ class ValidationTests: XCTestCase {
         XCTAssertThrowsError(try User.validate(json: invalidBool)) { error in
             XCTAssertEqual("\(error)",
                            "isAdmin is not a(n) Bool")
+        }
+
+        let validOptionalFavoritePet = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "gender": "male",
+            "email": "me@tanner.xyz",
+            "luckyNumber": 5,
+            "profilePictureURL": "https://foo.jpg",
+            "preferredColors": ["blue"],
+            "pet": {
+                "name": "Zizek",
+                "age": 3
+            },
+            "favoritePet": {
+                "name": "Zizek",
+                "age": 3
+            },
+            "isAdmin": true
+        }
+        """
+        XCTAssertNoThrow(try User.validate(json: validOptionalFavoritePet))
+
+        let invalidOptionalFavoritePet = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "gender": "male",
+            "email": "me@tanner.xyz",
+            "luckyNumber": 5,
+            "profilePictureURL": "https://foo.jpg",
+            "preferredColors": ["blue"],
+            "pet": {
+                "name": "Zizek",
+                "age": 3
+            },
+            "favoritePet": {
+                "name": "Zi!zek",
+                "age": 3
+            },
+            "isAdmin": true
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidOptionalFavoritePet)) { error in
+            XCTAssertEqual("\(error)",
+                           "favoritePet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
     }
     
@@ -281,7 +329,7 @@ private func assert<T>(
     _ data: T,
     fails validator: Validator<T>,
     _ description: String,
-    file: StaticString = #file,
+    file: StaticString = (#file),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
@@ -292,7 +340,7 @@ private func assert<T>(
 private func assert<T>(
     _ data: T,
     passes validator: Validator<T>,
-    file: StaticString = #file,
+    file: StaticString = (#file),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
@@ -310,6 +358,7 @@ private final class User: Validatable, Codable {
     var gender: Gender
     var email: String?
     var pet: Pet
+    var favoritePet: Pet?
     var luckyNumber: Int?
     var profilePictureURL: String?
     var preferredColors: [String]
@@ -354,6 +403,12 @@ private final class User: Validatable, Codable {
         v.add("preferredColors", as: [String].self, is: !.empty)
         // pet validations
         v.add("pet") { pet in
+            pet.add("name", as: String.self,
+                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+            pet.add("age", as: Int.self, is: .range(3...))
+        }
+        // optional favorite pet validations
+        v.add("favoritePet", required: false) { pet in
             pet.add("name", as: String.self,
                     is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
             pet.add("age", as: Int.self, is: .range(3...))

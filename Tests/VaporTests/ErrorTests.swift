@@ -130,6 +130,40 @@ final class ErrorTests: XCTestCase {
             XCTAssertEqual(abort.reason, "After decode")
         })
     }
+
+    func testAbortDebuggable() throws {
+        func foo() throws {
+            try bar()
+        }
+        func bar() throws {
+            try baz()
+        }
+        func baz() throws {
+            throw Abort(.internalServerError, reason: "Oops")
+        }
+        do {
+            try foo()
+        } catch let error as DebuggableError {
+            XCTAssertContains(error.stackTrace?.frames[0].function, "baz")
+            XCTAssertContains(error.stackTrace?.frames[1].function, "bar")
+            XCTAssertContains(error.stackTrace?.frames[2].function, "foo")
+        }
+    }
+}
+
+func XCTAssertContains(
+    _ haystack: String?,
+    _ needle: String,
+    file: StaticString = (#file),
+    line: UInt = #line
+) {
+    guard let haystack = haystack else {
+        XCTFail("\(needle) not found in: nil", file: file, line: line)
+        return
+    }
+    if !haystack.contains(needle) {
+        XCTFail("\(needle) not found in: \(haystack)", file: file, line: line)
+    }
 }
 
 private struct Foo: Content {
