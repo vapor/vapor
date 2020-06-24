@@ -28,20 +28,21 @@ The release will use the PR's title and body directly. It will also include a no
 
 ### Release title
 
-The release title should be concise description of the change using normal sentence capitalization. For example:
+The release title should be concise description. For example:
 
 - ✅ HTTP streaming improvements 
 - ✅ Add case-insensitive routing
 - ✅ Fix `routes` command symbol usage
 
-The release titles should not be too verbose. They should also use present tense.
+The release titles should use sentence capitialization and not be too verbose. They should also use present tense.
 
+- ❌ Fix `routes` Command Symbol Usage
 - ❌ Add new method on RouteBuilder called `caseInsensitive` which can be used to enable case-insensitive routing 
 - ❌ Fixed `routes` command symbol usage
 
 ### Release body
 
-The release body (or description) should contain more in-depth information about the change code examples if possible. 
+The release body (or description) should contain more in-depth information about the change and code examples if possible. 
 
 ✅
 
@@ -57,7 +58,7 @@ app.routes.caseInsensitive = true
 
 ---
 
-It should include a link to any associated PRs and issues. Issues that are fixed by this change should be prefixed with `fixes` so that they are closed automatically. The first line of the release body should be a concise description of the change. This can be followed by a more detailed explanation and code examples. 
+The release body should include links to any associated PRs and issues. Issues that are fixed by this change should be prefixed with `fixes` so that they are closed automatically. The first line of the release body should be a concise description of the change. This can be followed by a more detailed explanation and code examples. 
 
 Releases with a large number of changes can separated using bullets. Special comments or notes can be added using quote blocks `>`. 
 
