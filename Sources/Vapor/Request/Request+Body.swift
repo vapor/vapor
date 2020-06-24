@@ -30,7 +30,8 @@ extension Request {
             case .collected(let buffer):
                 _ = handler(.buffer(buffer))
                 _ = handler(.end)
-            case .none: break
+            case .none:
+                _ = handler(.end)
             }
         }
         

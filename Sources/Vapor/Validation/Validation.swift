@@ -29,9 +29,17 @@ public struct Validation {
         self.init { container in
             let result: ValidatorResult
             do {
-                let nested = try container.nestedContainer(keyedBy: ValidationKey.self, forKey: key)
-                let results = validations.validate(nested)
-                result = ValidatorResults.Nested(results: results.results)
+                if container.contains(key), !required, try container.decodeNil(forKey: key) {
+                    result = ValidatorResults.Skipped()
+                } else if container.contains(key) {
+                    let nested = try container.nestedContainer(keyedBy: ValidationKey.self, forKey: key)
+                    let results = validations.validate(nested)
+                    result = ValidatorResults.Nested(results: results.results)
+                } else if required {
+                    result = ValidatorResults.Missing()
+                } else {
+                    result = ValidatorResults.Skipped()
+                }
             } catch {
                 result = ValidatorResults.Codable(error: error)
             }
