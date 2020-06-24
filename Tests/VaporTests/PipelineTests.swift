@@ -97,13 +97,16 @@ final class PipelineTests: XCTestCase {
         }
 
         let channel = EmbeddedChannel()
+        try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
         try channel.pipeline.addVaporHTTP1Handlers(
             application: app,
             responder: app.responder,
             configuration: app.http.server.configuration
         ).wait()
 
+        XCTAssertEqual(channel.isActive, true)
         try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+        XCTAssertEqual(channel.isActive, false)
         try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)

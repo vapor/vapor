@@ -37,13 +37,13 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
         if response.status == .noContent || response.forHeadRequest {
             // don't send bodies for 204 (no content) responses
             // or HEAD requests
-            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
             context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
         } else {
             switch response.body.storage {
             case .none:
-                context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
                 context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+                context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
             case .buffer(let buffer):
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .string(let string):
@@ -67,7 +67,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     context: context,
                     handler: self,
                     promise: promise,
-                    count: stream.count
+                    count: stream.count == -1 ? nil : stream.count
                 )
                 stream.callback(channelStream)
             }
@@ -79,8 +79,8 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
         if buffer.readableBytes > 0 {
             context.write(wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
         }
-        context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
         context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+        context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
     }
 }
 
@@ -88,7 +88,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     let context: ChannelHandlerContext
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
-    let count: Int
+    let count: Int?
     var currentCount: Int
     var isComplete: Bool
 
@@ -105,7 +105,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         context: ChannelHandlerContext,
         handler: HTTPServerResponseEncoder,
         promise: EventLoopPromise<Void>?,
-        count: Int
+        count: Int?
     ) {
         self.context = context
         self.handler = handler
@@ -120,27 +120,23 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         case .buffer(let buffer):
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             self.currentCount += buffer.readableBytes
-            guard self.currentCount <= self.count else {
+            if let count = self.count, self.currentCount > count {
                 self.promise?.fail(Error.tooManyBytes)
                 promise?.fail(Error.notEnoughBytes)
-                return
-                // self.context.close(promise: nil)
             }
         case .end:
             self.isComplete = true
-            guard self.currentCount == self.count else {
+            if let count = self.count, self.currentCount != count {
                 self.promise?.fail(Error.notEnoughBytes)
                 promise?.fail(Error.notEnoughBytes)
-                return
-                // self.context.close(promise: nil)
             }
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.succeed(())
         case .error(let error):
             self.isComplete = true
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
         }
     }

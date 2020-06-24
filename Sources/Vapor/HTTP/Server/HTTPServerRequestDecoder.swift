@@ -130,6 +130,20 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
         context.fireErrorCaught(error)
     }
 
+    func channelInactive(context: ChannelHandlerContext) {
+        switch self.requestState {
+        case .streamingBody(let stream):
+            self.handleBodyStreamStateResult(
+                context: context,
+                self.bodyStreamState.didEnd(),
+                stream: stream
+            )
+        default:
+            break
+        }
+        context.fireChannelInactive()
+    }
+
     func handleBodyStreamStateResult(
         context: ChannelHandlerContext,
         _ result: HTTPBodyStreamState.Result,
@@ -146,13 +160,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                         self.bodyStreamState.didError(error),
                         stream: stream
                     )
-                case .success:
-                    self.handleBodyStreamStateResult(
-                        context: context,
-                        self.bodyStreamState.didWrite(),
-                        stream: stream
-                    )
+                case .success: break
                 }
+                self.handleBodyStreamStateResult(
+                    context: context,
+                    self.bodyStreamState.didWrite(),
+                    stream: stream
+                )
             }
         case .close(let maybeError):
             if let error = maybeError {
