@@ -104,7 +104,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = (#file),
+        file: StaticString = #file,
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
@@ -120,7 +120,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(error)", file: (file), line: line)
             throw error
         }
         return self

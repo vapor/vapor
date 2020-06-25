@@ -42,7 +42,7 @@ extension Response.Body {
 public func XCTAssertContent<D>(
     _ type: D.Type,
     _ res: XCTHTTPResponse,
-    file: StaticString = (#file),
+    file: StaticString = #file,
     line: UInt = #line,
     _ closure: (D) -> ()
 )
@@ -57,11 +57,12 @@ public func XCTAssertContent<D>(
         let content = try decoder.decode(D.self, from: res.body, headers: res.headers)
         closure(content)
     } catch {
-        XCTFail("could not decode body: \(error)", file: file, line: line)
+        XCTFail("could not decode body: \(error)", file: (file), line: line)
     }
 }
 
-public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = (#file), line: UInt = #line) {
+public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #file, line: UInt = #line) {
+    let file = (file)
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
         XCTAssert(haystack.contains(needle), "\(haystack) does not contain \(needle)", file: file, line: line)
@@ -74,7 +75,7 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
     }
 }
 
-public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = (#file), line: UInt = #line)
+public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #file, line: UInt = #line)
     where T: Codable & Equatable
 {
     guard let data = data else {

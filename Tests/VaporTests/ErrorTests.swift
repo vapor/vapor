@@ -154,9 +154,10 @@ final class ErrorTests: XCTestCase {
 func XCTAssertContains(
     _ haystack: String?,
     _ needle: String,
-    file: StaticString = (#file),
+    file: StaticString = #file,
     line: UInt = #line
 ) {
+    let file = (file)
     guard let haystack = haystack else {
         XCTFail("\(needle) not found in: nil", file: file, line: line)
         return
