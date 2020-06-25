@@ -1,5 +1,4 @@
-import XCTest
-import Vapor
+import XCTVapor
 
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {
@@ -154,7 +153,7 @@ final class ErrorTests: XCTestCase {
 func XCTAssertContains(
     _ haystack: String?,
     _ needle: String,
-    file: StaticString = (#file),
+    file: StaticString = fullFilePath(),
     line: UInt = #line
 ) {
     guard let haystack = haystack else {

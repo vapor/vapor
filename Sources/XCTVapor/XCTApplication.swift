@@ -104,7 +104,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = (#file),
+        file: StaticString = fullFilePath(),
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
@@ -126,3 +126,13 @@ extension XCTApplicationTester {
         return self
     }
 }
+
+#if compiler(>=5.3)
+public func fullFilePath(_ filePath: StaticString = #filePath) -> StaticString {
+    return filePath
+}
+#else
+public func fullFilePath(_ filePath: StaticString = #file) -> StaticString {
+    return filePath
+}
+#endif

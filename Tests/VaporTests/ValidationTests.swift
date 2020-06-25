@@ -1,5 +1,4 @@
-import Vapor
-import XCTest
+import XCTVapor
 
 class ValidationTests: XCTestCase {
     func testValidate() {
@@ -329,7 +328,7 @@ private func assert<T>(
     _ data: T,
     fails validator: Validator<T>,
     _ description: String,
-    file: StaticString = (#file),
+    file: StaticString = fullFilePath(),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
@@ -340,7 +339,7 @@ private func assert<T>(
 private func assert<T>(
     _ data: T,
     passes validator: Validator<T>,
-    file: StaticString = (#file),
+    file: StaticString = fullFilePath(),
     line: UInt = #line
 ) {
     let result = validator.validate(data)
