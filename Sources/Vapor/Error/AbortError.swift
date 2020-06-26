@@ -24,6 +24,11 @@ extension AbortError {
     public var headers: HTTPHeaders {
         [:]
     }
+
+    /// See `AbortError`.
+    public var reason: String {
+        self.status.reasonPhrase
+    }
 }
 
 extension AbortError where Self: DebuggableError {

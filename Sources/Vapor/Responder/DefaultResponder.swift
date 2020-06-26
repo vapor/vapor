@@ -111,6 +111,24 @@ internal struct DefaultResponder: Responder {
 
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(Abort(.notFound))
+        request.eventLoop.makeFailedFuture(RouteNotFound())
+    }
+}
+
+struct RouteNotFound: Error { }
+
+extension RouteNotFound: AbortError {
+    static var typeIdentifier: String {
+        "Abort"
+    }
+    
+    var status: HTTPResponseStatus {
+        .notFound
+    }
+}
+
+extension RouteNotFound: DebuggableError {
+    var logLevel: Logger.Level { 
+        .debug
     }
 }

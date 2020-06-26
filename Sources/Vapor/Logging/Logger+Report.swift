@@ -11,29 +11,35 @@ extension Logger {
     ) {
         let source: ErrorSource?
         let reason: String
+        let level: Logger.Level
         switch error {
         case let debuggable as DebuggableError:
-            if self.logLevel <= .debug {
-                reason = debuggable.debuggableHelp(format: .short)
-            } else {
+            if self.logLevel <= .trace {
                 reason = debuggable.debuggableHelp(format: .long)
+            } else {
+                reason = debuggable.debuggableHelp(format: .short)
             }
             source = debuggable.source
+            level = debuggable.logLevel
         case let abort as AbortError:
             reason = abort.reason
             source = nil
+            level = .error
         case let localized as LocalizedError:
             reason = localized.localizedDescription
             source = nil
+            level = .error
         case let convertible as CustomStringConvertible:
             reason = convertible.description
             source = nil
+            level = .error
         default:
             reason = "\(error)"
             source = nil
+            level = .error
         }
         self.log(
-            level: .error,
+            level: level,
             .init(stringLiteral: reason),
             file: source?.file ?? file,
             function: source?.function ?? function,
