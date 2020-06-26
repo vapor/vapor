@@ -4,24 +4,20 @@ import Vapor
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {
         print(FooError.noFoo.debugDescription)
-
         let expectedPrintable = """
-        Foo Error: You do not have a `foo`.
-        - id: FooError.noFoo
-
+        FooError.noFoo: You do not have a `foo`.
         Here are some possible causes:
         - You did not set the flongwaffle.
         - The session ended before a `Foo` could be made.
         - The universe conspires against us all.
         - Computers are hard.
-
         These suggestions could address the issue:
         - You really want to use a `Bar` here.
         - Take up the guitar and move to the beach.
-
         Vapor's documentation talks about this:
         - http://documentation.com/Foo
         - http://documentation.com/foo/noFoo
+
         """
         XCTAssertEqual(FooError.noFoo.debugDescription, expectedPrintable)
     }
@@ -64,8 +60,8 @@ final class ErrorTests: XCTestCase {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
         let expectation = """
-        MinimumError: Not enabled
-        - id: MinimumError.alpha
+        MinimumError.alpha: Not enabled
+        
         """
         XCTAssertEqual(description, expectation)
     }
