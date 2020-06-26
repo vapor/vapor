@@ -56,24 +56,22 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             }
         case .body(let buffer):
             switch self.requestState {
-            case .ready: assertionFailure("Unexpected state: \(self.requestState)")
+            case .ready, .awaitingEnd: 
+                assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
-                self.requestState = .awaitingEnd(request, buffer)
-            case .awaitingEnd(let request, let previousBuffer):
-                let stream = Request.BodyStream(on: context.eventLoop)
-                request.bodyStorage = .stream(stream)
-                context.fireChannelRead(self.wrapInboundOut(request))
-                self.handleBodyStreamStateResult(
-                    context: context,
-                    self.bodyStreamState.didReadBytes(previousBuffer),
-                    stream: stream
-                )
-                self.handleBodyStreamStateResult(
-                    context: context,
-                    self.bodyStreamState.didReadBytes(buffer),
-                    stream: stream
-                )
-                self.requestState = .streamingBody(stream)
+                if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
+                    self.requestState = .awaitingEnd(request, buffer)
+                } else {
+                    let stream = Request.BodyStream(on: context.eventLoop)
+                    request.bodyStorage = .stream(stream)
+                    context.fireChannelRead(self.wrapInboundOut(request))
+                    self.handleBodyStreamStateResult(
+                        context: context,
+                        self.bodyStreamState.didReadBytes(buffer),
+                        stream: stream
+                    )
+                    self.requestState = .streamingBody(stream)
+                }
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
                     context: context,
@@ -191,15 +189,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                         promise?.succeed(())
                     }
                 }
-            case .awaitingEnd, .awaitingBody:
+            case .awaitingBody, .awaitingEnd:
                 // Response ended before request started streaming.
                 self.logger.trace("Response already sent, skipping request body.")
                 self.requestState = .skipping
-            case .ready:
+            case .ready, .skipping:
                 // Response ended after request had been read.
                 break
-            default:
-                fatalError("Unexpected request state: \(self.requestState)")
             }
         }
     }
