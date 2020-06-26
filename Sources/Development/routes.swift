@@ -208,7 +208,7 @@ public func routes(_ app: Application) throws {
     }
 }
 
-struct TestError: AbortError {
+struct TestError: AbortError, DebuggableError {
     var status: HTTPResponseStatus {
         .internalServerError
     }
@@ -226,7 +226,7 @@ struct TestError: AbortError {
         line: UInt = #line,
         column: UInt = #column,
         range: Range<UInt>? = nil,
-        stackTrace: StackTrace? = .capture()
+        stackTrace: StackTrace? = .capture(skip: 1)
     ) {
         self.source = .init(
             file: file,
