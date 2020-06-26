@@ -1,4 +1,5 @@
 import Vapor
+import _Vapor3
 
 struct Creds: Content {
     var email: String
@@ -12,7 +13,7 @@ public func routes(_ app: Application) throws {
 
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+    app.on(.POST, "slow-stream", body: .stream) { req -> Future<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
         var total = 0
