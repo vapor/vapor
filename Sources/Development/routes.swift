@@ -6,7 +6,7 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
-    app.on(.GET, "ping", body: .stream) { req in
+    app.on(.POST, "ping") { req in
         return "123" as StaticString
     }
 

@@ -1,15 +1,14 @@
 extension Request {
     final class BodyStream: BodyStreamWriter {
-        typealias Handler = (BodyStreamResult, EventLoopPromise<Void>?) -> ()
-        private(set) var isClosed: Bool
-        private var handler: Handler?
-        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
-
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
             self.handler != nil
         }
+
+        private(set) var isClosed: Bool
+        private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
 
         init(on eventLoop: EventLoop) {
             self.eventLoop = eventLoop
@@ -17,7 +16,7 @@ extension Request {
             self.buffer = []
         }
 
-        func read(_ handler: @escaping Handler) {
+        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             self.handler = handler
             for (result, promise) in self.buffer {
                 handler(result, promise)
