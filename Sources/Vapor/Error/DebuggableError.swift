@@ -54,6 +54,10 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     /// - note: Defaults to an empty array.
     /// Provide a custom implementation to a list of pertinent issues.
     var gitHubIssues: [String] { get }
+
+    /// Which log level this error should report as. 
+    /// Defaults to `.error`.
+    var logLevel: Logger.Level { get }
 }
 
 extension DebuggableError {
@@ -99,6 +103,10 @@ extension DebuggableError {
 
     public var stackTrace: StackTrace? {
         nil
+    }
+
+    public var logLevel: Logger.Level { 
+        .error
     }
 }
 
@@ -154,32 +162,8 @@ extension DebuggableError {
         var print: [String] = []
 
         switch format {
-        case .long:
-            print.append("\(Self.readableName): \(self.reason)\n- id: \(self.fullIdentifier)")
-        case .short:
+        case .long, .short:
             print.append("\(self.fullIdentifier): \(self.reason)")
-        }
-
-        if let source = self.source {
-            switch format {
-            case .long:
-                var help: [String] = []
-                help.append("File: \(source.file)")
-                help.append("- func: \(source.function)")
-                help.append("- line: \(source.line)")
-                help.append("- column: \(source.column)")
-                if let range = source.range {
-                    help.append("- range: \(range)")
-                }
-                print.append(help.joined(separator: "\n"))
-            case .short:
-                var string = "[\(source.file):\(source.line):\(source.column)"
-                if let range = source.range {
-                    string += " (\(range))"
-                }
-                string += "]"
-                print.append(string)
-            }
         }
 
         switch format {
@@ -217,7 +201,7 @@ extension DebuggableError {
 
         switch format {
         case .long:
-            return print.joined(separator: "\n\n")
+            return print.joined(separator: "\n") + "\n"
         case .short:
             return print.joined(separator: " ")
         }
