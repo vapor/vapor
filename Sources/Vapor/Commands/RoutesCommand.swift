@@ -10,7 +10,7 @@
 /// A colon preceding a path component indicates a variable parameter. A colon with no text following
 /// is a parameter whose result will be discarded.
 ///
-/// An asterisk indicates a catch-all. Any path components after a catch-all will be discarded and ignored.
+/// The path will be displayed with the same syntax that is used to register a route.
 public final class RoutesCommand: Command {
     public struct Signature: CommandSignature {
         public init() { }
@@ -25,26 +25,17 @@ public final class RoutesCommand: Command {
     public func run(using context: CommandContext, signature: Signature) throws {
         let routes = context.application.routes
         let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
+        let pathSeparator = "/".consoleText()
         context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
-            var pathText: ConsoleText = ""
+            var column = [route.method.string.consoleText()]
             if route.path.isEmpty {
-                pathText += "/".consoleText(.info)
+                column.append(pathSeparator)
+            } else {
+                column.append(route.path
+                    .map { pathSeparator + $0.consoleText() }
+                    .reduce("".consoleText(), +)
+                )
             }
-            for path in route.path {
-                pathText += "/".consoleText(.info)
-                switch path {
-                case .constant(let string):
-                    pathText += string.consoleText()
-                case .parameter(let name):
-                    pathText += ":".consoleText(.info)
-                    pathText += name.consoleText()
-                case .anything:
-                    pathText += ":".consoleText(.info)
-                case .catchall:
-                    pathText += "*".consoleText(.info)
-                }
-            }
-            var column = [route.method.string.consoleText(), pathText]
             if includeDescription {
                 let desc = route.userInfo["description"]
                     .flatMap { $0 as? String }
@@ -53,6 +44,17 @@ public final class RoutesCommand: Command {
             }
             return column
         })
+    }
+}
+
+extension PathComponent {
+    func consoleText() -> ConsoleText {
+        switch self {
+        case .constant:
+            return description.consoleText()
+        default:
+            return description.consoleText(.info)
+        }
     }
 }
 

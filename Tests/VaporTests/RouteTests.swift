@@ -56,6 +56,25 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.body.string, "foo")
         }
     }
+    
+    func testInsensitiveRoutes() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.routes.caseInsenstive = true
+        
+        app.routes.get("foo") { req -> String in
+            return "foo"
+        }
+
+        try app.testable().test(.GET, "/foo") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foo")
+        }.test(.GET, "/FOO") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foo")
+        }
+    }
 
     func testAnyResponse() throws {
         let app = Application(.testing)

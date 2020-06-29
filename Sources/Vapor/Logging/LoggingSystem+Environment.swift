@@ -11,8 +11,8 @@ extension LoggingSystem {
             ?? Environment.process.LOG_LEVEL
             ?? (environment == .production ? .notice: .info)
 
-        // Disable stack traces if log level > debug.
-        if level > .debug {
+        // Disable stack traces if log level > trace.
+        if level > .trace {
             StackTrace.isCaptureEnabled = false
         }
 
