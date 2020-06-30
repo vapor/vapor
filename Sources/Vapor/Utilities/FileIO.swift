@@ -195,7 +195,7 @@ public struct FileIO {
     /// - returns: `Future` that will complete when the file write is finished.
     public func write(to path: String, buffer: ByteBuffer) -> EventLoopFuture<Void> {
         do {
-            let fd = try NIOFileHandle.init(path: path, mode: .write, flags: .allowFileCreation())
+            let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
             let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
             done.whenComplete { _ in
                 try? fd.close()
