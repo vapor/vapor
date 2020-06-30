@@ -186,4 +186,23 @@ public struct FileIO {
             return self.request.eventLoop.makeFailedFuture(error)
         }
     }
+    
+    /// Write the contents of buffer to a file at the supplied path.
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - buffer: The `ByteBuffer` to write.
+    /// - returns: `Future` that will complete when the file write is finished.
+    public func write(to path: String, buffer: ByteBuffer) -> EventLoopFuture<Void> {
+        do {
+            let fd = try NIOFileHandle.init(path: path, mode: .write, flags: .allowFileCreation())
+            let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
+            done.whenComplete { _ in
+                try? fd.close()
+            }
+            return done
+        } catch {
+            return self.request.eventLoop.makeFailedFuture(error)
+        }
+    }
 }

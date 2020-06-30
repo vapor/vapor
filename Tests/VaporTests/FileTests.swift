@@ -32,6 +32,25 @@ final class FileTests: XCTestCase {
             XCTAssertContains(res.body.string, test)
         }
     }
+    
+    func testFileWrite() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        
+        let data = "Hello".data(using: .utf8)!
+        let path = "/tmp/fileio_write.txt"
+        
+        try request.fileio.write(to: path, buffer: ByteBuffer(data: data)).wait()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        
+        let content = try request.fileio.collectFile(at: path).wait()
+        
+        let result = Data(content.readableBytesView)
+        
+        XCTAssertEqual(result, data)
+    }
 
     func testPercentDecodedFilePath() throws {
         let app = Application(.testing)
