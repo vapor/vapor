@@ -17,6 +17,10 @@ extension Validatable {
         try self.validations().validate(request).assert()
     }
     
+    public static func validate(_ uri: URI) throws {
+        try self.validations().validate(uri).assert()
+    }
+    
     public static func validate(json: String) throws {
         try self.validations().validate(json: json).assert()
     }

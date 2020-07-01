@@ -46,6 +46,14 @@ public struct Validations {
         return try self.validate(decoder.decoder)
     }
     
+    public func validate(_ uri: URI) throws -> ValidationsResult {
+        
+        let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
+        let decoder = try urlDecoder.decode(DecoderUnwrapper.self, from: uri)
+        return try self.validate(decoder.decoder)
+        
+    }
+    
     public func validate(json: String) throws -> ValidationsResult {
         let decoder = try JSONDecoder().decode(DecoderUnwrapper.self, from: Data(json.utf8))
         return try self.validate(decoder.decoder)
