@@ -20,7 +20,9 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let validUrl: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         XCTAssertNoThrow(try User.validate(json: valid))
+        XCTAssertNoThrow(try User.validate(validUrl))
         let invalidUser = """
         {
             "name": "Tan!ner",
@@ -37,7 +39,13 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         XCTAssertThrowsError(try User.validate(json: invalidUser)) { error in
+            XCTAssertEqual("\(error)",
+                           "name contains '!' (allowed: A-Z, a-z, 0-9)")
+            
+        }
+        XCTAssertThrowsError(try User.validate(invalidUserUrl)) { error in
             XCTAssertEqual("\(error)",
                            "name contains '!' (allowed: A-Z, a-z, 0-9)")
         }
@@ -57,9 +65,14 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let invalidPetURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zi!ek&pet[age]=3&isAdmin=true"
         XCTAssertThrowsError(try User.validate(json: invalidPet)) { error in
             XCTAssertEqual("\(error)",
                            "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        }
+        XCTAssertThrowsError(try User.validate(invalidPetURL)) { error in
+            XCTAssertEqual("\(error)",
+                       "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
         let invalidBool = """
         {
@@ -77,11 +90,15 @@ class ValidationTests: XCTestCase {
             "isAdmin": "true"
         }
         """
+        let invalidPetBool: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin='true'"
         XCTAssertThrowsError(try User.validate(json: invalidBool)) { error in
             XCTAssertEqual("\(error)",
                            "isAdmin is not a(n) Bool")
         }
-
+        XCTAssertThrowsError(try User.validate(invalidPetBool)) { error in
+            XCTAssertEqual("\(error)",
+                       "isAdmin is not a(n) Bool")
+        }
         let validOptionalFavoritePet = """
         {
             "name": "Tanner",
@@ -102,8 +119,9 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let validOptionalFavoritePetUrl: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&favoritePet[name]=Zizek&favoritePet[age]=3&&isAdmin=true"
         XCTAssertNoThrow(try User.validate(json: validOptionalFavoritePet))
-
+        XCTAssertNoThrow(try User.validate(validOptionalFavoritePetUrl))
         let invalidOptionalFavoritePet = """
         {
             "name": "Tanner",
@@ -124,7 +142,12 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let invalidOptionalFavoritePetUrl: URI = "https://tanner.xyz/model?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&favoritePet[name]=Zi!ek&favoritePet[age]=3&&isAdmin=true"
         XCTAssertThrowsError(try User.validate(json: invalidOptionalFavoritePet)) { error in
+            XCTAssertEqual("\(error)",
+                           "favoritePet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        }
+        XCTAssertThrowsError(try User.validate(invalidOptionalFavoritePetUrl)) { error in
             XCTAssertEqual("\(error)",
                            "favoritePet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
@@ -147,8 +170,23 @@ class ValidationTests: XCTestCase {
             "isAdmin": true
         }
         """
+        let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         do {
             try User.validate(json: invalidUser)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "name")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "contains '!' (allowed: A-Z, a-z, 0-9)")
+            let and = name.result as! ValidatorResults.And
+            let count = and.left as! ValidatorResults.Range<Int>
+            XCTAssertEqual(count.result, .greaterThanOrEqualToMin(5))
+            let character = and.right as! ValidatorResults.CharacterSet
+            XCTAssertEqual(character.invalidSlice, "!")
+        }
+        do {
+            try User.validate(invalidUserUrl)
         } catch let error as ValidationsError {
             XCTAssertEqual(error.failures.count, 1)
             let name = error.failures[0]
