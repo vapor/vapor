@@ -31,7 +31,7 @@ final class RouteTests: XCTestCase {
         }
 
         app.routes.get("int", ":value") { req -> String in
-            let value = try req.parameters.require("value", as: Int.self) ?? 0
+            let value = try req.parameters.require("value", as: Int.self)
             return String(value)
         }
 
@@ -45,6 +45,8 @@ final class RouteTests: XCTestCase {
         }.test(.GET, "/int/123") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "123")
+        }.test(.GET, "/int/not-int") { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
         }.test(.GET, "/missing") { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }

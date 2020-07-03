@@ -12,9 +12,13 @@ public extension Parameters {
     /// Grabs the named parameter from the parameter bag, casting it to
     /// a `LosslessStringConvertible` type.
     /// An `Abort(.unprocessableEntity)` error is thrown if the parameter does not exist.
-    func require<T>(_ name: String, as type: T.Type = T.self, or error: Error = Abort(.unprocessableEntity)) throws -> T?
+    func require<T>(_ name: String, as type: T.Type = T.self, or error: Error = Abort(.unprocessableEntity)) throws -> T
         where T: LosslessStringConvertible
     {
-        try T.init(require(name, or: error))
+        guard let value = try T.init(require(name, or: error)) else {
+            throw error
+        }
+
+        return value
     }
 }
