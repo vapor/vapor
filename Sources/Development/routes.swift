@@ -17,29 +17,20 @@ public func routes(_ app: Application) throws {
         let done = req.eventLoop.makePromise(of: String.self)
 
         var total = 0
-        req.body.drain { result in
-            let promise = req.eventLoop.makePromise(of: Void.self)
-
+        req.body.drain { result, resume in
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
                     total += buffer.readableBytes
-                    promise.succeed(())
+                    // succeed resume future that indicates bytes were handled
+                    // this should use very little memory
+                    resume?.succeed(())
                 }
             case .error(let error):
                 done.fail(error)
             case .end:
-                promise.succeed(())
                 done.succeed(total.description)
             }
-
-            // manually return pre-completed future
-            // this should balloon in memory
-            // return req.eventLoop.makeSucceededFuture(())
-            
-            // return real future that indicates bytes were handled
-            // this should use very little memory
-            return promise.futureResult
         }
 
         return done.futureResult
@@ -72,16 +63,16 @@ public func routes(_ app: Application) throws {
     
     app.on(.POST, "file", body: .stream) { req -> EventLoopFuture<String> in
         let promise = req.eventLoop.makePromise(of: String.self)
-        req.body.drain { result in
+        req.body.drain { result, resume in
             switch result {
             case .buffer(let buffer):
                 debugPrint(buffer)
+                resume?.succeed(())
             case .error(let error):
                 promise.fail(error)
             case .end:
                 promise.succeed("Done")
             }
-            return req.eventLoop.makeSucceededFuture(())
         }
         return promise.futureResult
     }
@@ -186,22 +177,31 @@ public func routes(_ app: Application) throws {
             eventLoop: req.eventLoop
         ).flatMap { fileHandle in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
-            req.body.drain { part in
-                switch part {
-                case .buffer(let buffer):
-                    return req.application.fileio.write(
-                        fileHandle: fileHandle,
-                        buffer: buffer,
-                        eventLoop: req.eventLoop
-                    )
-                case .error(let error):
+            req.body.drain { part, resume in
+                do {
+                    switch part {
+                    case .buffer(let buffer):
+                        req.application.fileio.write(
+                            fileHandle: fileHandle,
+                            buffer: buffer,
+                            eventLoop: req.eventLoop
+                        ).whenComplete { (result) in
+                            switch result {
+                            case .success:
+                                resume?.succeed(())
+                            case .failure(let error):
+                                promise.fail(error)
+                            }
+                        }
+                    case .error(let error):
+                        try fileHandle.close()
+                        promise.fail(error)
+                    case .end:
+                        try fileHandle.close()
+                        promise.succeed(.ok)
+                    }
+                } catch {
                     promise.fail(error)
-                    try! fileHandle.close()
-                    return req.eventLoop.makeSucceededFuture(())
-                case .end:
-                    promise.succeed(.ok)
-                    try! fileHandle.close()
-                    return req.eventLoop.makeSucceededFuture(())
                 }
             }
             return promise.futureResult

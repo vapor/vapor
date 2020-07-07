@@ -21,17 +21,17 @@ extension Request {
             }
         }
         
-        public func drain(_ handler: @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+        public func drain(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> Void) {
             switch self.request.bodyStorage {
             case .stream(let stream):
                 stream.read { (result, promise) in
-                    handler(result).cascade(to: promise)
+                    handler(result, promise)
                 }
             case .collected(let buffer):
-                _ = handler(.buffer(buffer))
-                _ = handler(.end)
+                _ = handler(.buffer(buffer), nil)
+                _ = handler(.end, nil)
             case .none:
-                _ = handler(.end)
+                _ = handler(.end, nil)
             }
         }
         
