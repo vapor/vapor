@@ -179,6 +179,11 @@ public func routes(_ app: Application) throws {
     }
 
     app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
+        enum BodyStreamWritingToDiskError: Error {
+            case streamFailure(Error)
+            case fileHandleClosedFailure(Error)
+            case multipleFailures([BodyStreamWritingToDiskError])
+        }
         return req.application.fileio.openFile(
             path: "/Users/tanner/Desktop/foo.txt",
             mode: .write,
@@ -194,13 +199,29 @@ public func routes(_ app: Application) throws {
                         buffer: buffer,
                         eventLoop: req.eventLoop
                     )
-                case .error(let error):
-                    promise.fail(error)
-                    try! fileHandle.close()
+                case .error(let drainError):
+                    var fileHandleError: Error?
+                    do {
+                        try fileHandle.close()
+                    } catch {
+                        fileHandleError = error
+                    }
+                    if let fileHandleError = fileHandleError {
+                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
+                            .fileHandleClosedFailure(fileHandleError),
+                            .streamFailure(drainError)
+                        ]))
+                    } else {
+                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
+                    }
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
+                    do {
+                        try fileHandle.close()
+                    } catch {
+                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
+                    }
                     promise.succeed(.ok)
-                    try! fileHandle.close()
                     return req.eventLoop.makeSucceededFuture(())
                 }
             }
