@@ -1,20 +1,13 @@
 /// Parses a URL Query `single=value&arr=1&arr=2&obj[key]=objValue` into
 internal struct URLEncodedFormParser {
-    let splitVariablesOn: Character
-    let splitKeyValueOn: Character
-    
-    /// Create a new form-urlencoded data parser.
-    init(splitVariablesOn: Character = "&", splitKeyValueOn: Character = "=") {
-        self.splitVariablesOn = splitVariablesOn
-        self.splitKeyValueOn = splitKeyValueOn
-    }
+    init() { }
     
     func parse(_ query: String) throws -> URLEncodedFormData {
         let plusDecodedQuery = query.replacingOccurrences(of: "+", with: "%20")
         var result: URLEncodedFormData = []
-        for pair in plusDecodedQuery.split(separator: splitVariablesOn) {
+        for pair in plusDecodedQuery.split(separator: "&") {
             let kv = pair.split(
-                separator: self.splitKeyValueOn,
+                separator: "=",
                 maxSplits: 1, // max 1, `foo=a=b` should be `"foo": "a=b"`
                 omittingEmptySubsequences: false
             )
