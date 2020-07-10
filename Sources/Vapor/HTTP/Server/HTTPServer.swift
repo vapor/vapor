@@ -248,7 +248,7 @@ private final class HTTPServerConnection {
                     let tlsHandler: NIOSSLServerHandler
                     do {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = try NIOSSLServerHandler(context: sslContext)
+                        tlsHandler = NIOSSLServerHandler(context: sslContext)
                     } catch {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
