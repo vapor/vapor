@@ -12,7 +12,10 @@ internal struct DefaultResponder: Responder {
 
     /// Creates a new `ApplicationResponder`
     public init(routes: Routes, middleware: [Middleware] = []) {
-        let router = TrieRouter(CachedRoute.self)
+        let options = routes.caseInsenstive ?
+            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
+        let router = TrieRouter(CachedRoute.self, options: options)
+        
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
@@ -36,7 +39,7 @@ internal struct DefaultResponder: Responder {
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.logger.info("\(request.method) \(request.url.path)")
+        request.logger.info("\(request.method) \(request.url.path.removingPercentEncoding ?? request.url.path)")
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
         let path: String
@@ -108,6 +111,24 @@ internal struct DefaultResponder: Responder {
 
 private struct NotFoundResponder: Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(Abort(.notFound))
+        request.eventLoop.makeFailedFuture(RouteNotFound())
+    }
+}
+
+struct RouteNotFound: Error { }
+
+extension RouteNotFound: AbortError {
+    static var typeIdentifier: String {
+        "Abort"
+    }
+    
+    var status: HTTPResponseStatus {
+        .notFound
+    }
+}
+
+extension RouteNotFound: DebuggableError {
+    var logLevel: Logger.Level { 
+        .debug
     }
 }

@@ -73,7 +73,7 @@ public final class Request: CustomStringConvertible {
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.request.body.data else {
-                self.request.logger.error("Decoding streaming bodies not supported")
+                self.request.logger.debug("Decoding streaming bodies not supported")
                 throw Abort(.unprocessableEntity)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
@@ -89,7 +89,7 @@ public final class Request: CustomStringConvertible {
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
-                self.request.logger.error("Decoding streaming bodies not supported")
+                self.request.logger.debug("Decoding streaming bodies not supported")
                 throw Abort(.unprocessableEntity)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
