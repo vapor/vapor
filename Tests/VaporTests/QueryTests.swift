@@ -141,7 +141,6 @@ final class QueryTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
-            debugPrint(req)
             let foo = try req.query.decode(User.self)
             XCTAssertEqual(foo.name, "Vapor")
             XCTAssertEqual(foo.age, 3)
@@ -249,5 +248,28 @@ final class QueryTests: XCTestCase {
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
+    }
+
+    // https://github.com/vapor/vapor/issues/2383
+    func testQueryKeyDecoding() throws {
+        struct Test: Codable, Equatable {
+            struct Page: Codable, Equatable {
+                var offset: Int
+                var limit: Int
+            }
+            let page: Page
+            struct Filter: Codable, Equatable {
+                var ids: [String]
+            }
+            let filter: Filter
+        }
+
+        let query = "page[offset]=0&page[limit]=50&filter[ids]=auth0,abc123"
+        let a = try URLEncodedFormDecoder().decode(Test.self, from: query)
+        XCTAssertEqual(a.page.offset, 0)
+        XCTAssertEqual(a.page.limit, 50)
+        XCTAssertEqual(a.filter.ids, ["auth0", "abc123"])
+        let b = try URLEncodedFormDecoder().decode(Test.self, from: query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+        XCTAssertEqual(a, b)
     }
 }

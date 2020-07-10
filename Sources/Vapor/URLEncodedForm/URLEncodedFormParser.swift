@@ -29,19 +29,18 @@ internal struct URLEncodedFormParser {
 
     func parseKey(key: Substring) throws -> [String] {
         guard let percentDecodedKey = key.removingPercentEncoding else {
-            throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: [], debugDescription: "Unable to remove percent encoding for \(key)"))
+            throw URLEncodedFormError.malformedKey(key: key)
         }
-        var path = [String]()
-        for var element in percentDecodedKey.split(separator: "[") {
-            if path.count > 0 { //First one is not wrapped with `[]`
-                guard element.last == "]" else {
-                    throw URLEncodedFormError.malformedKey(key: .init(key))
+        return try percentDecodedKey.split(separator: "[").enumerated().map { (i, part) in 
+            switch i {
+            case 0:
+                return String(part)
+            default:
+                guard part.last == "]" else {
+                    throw URLEncodedFormError.malformedKey(key: key)
                 }
-                element = element.prefix(element.count-1) //Remove the `]`
+                return String(part.dropLast())
             }
-            path.append(String(element))
         }
-        return path
     }
 }
-
