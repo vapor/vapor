@@ -55,7 +55,7 @@ final class QueryTests: XCTestCase {
         request.headers.contentType = .json
         request.url.path = "/"
         request.url.query = "emailsToSearch%5B%5D=xyz"
-        let parsed = try request.query.get([String].self, at: "emailsToSearch[]")
+        let parsed = try request.query.get([String].self, at: "emailsToSearch")
         XCTAssertEqual(parsed, ["xyz"])
     }
 
@@ -129,6 +129,44 @@ final class QueryTests: XCTestCase {
             var name: String
             var age: Int
             var luckyNumbers: [Int]
+            var pet: Pet
+        }
+
+        struct Pet: Content {
+            var name: String
+            var age: Int
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("urlencodedform") { req -> HTTPStatus in
+            let foo = try req.query.decode(User.self)
+            XCTAssertEqual(foo.name, "Vapor")
+            XCTAssertEqual(foo.age, 3)
+            XCTAssertEqual(foo.luckyNumbers, [5, 7])
+            XCTAssertEqual(foo.pet.name, "Fido")
+            XCTAssertEqual(foo.pet.age, 3)
+            return .ok
+        }
+
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
+        try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
+            XCTAssertEqual(res.status.code, 200)
+        }
+    }
+
+    func testURLPercentEncodedFormDecodeQuery() throws {
+        struct User: Content {
+            var name: String
+            var age: Int
+            var luckyNumbers: [Int]
+            var pet: Pet
+        }
+
+        struct Pet: Content {
+            var name: String
+            var age: Int
         }
 
         let app = Application(.testing)
@@ -140,10 +178,12 @@ final class QueryTests: XCTestCase {
             XCTAssertEqual(foo.name, "Vapor")
             XCTAssertEqual(foo.age, 3)
             XCTAssertEqual(foo.luckyNumbers, [5, 7])
+            XCTAssertEqual(foo.pet.name, "Fido")
+            XCTAssertEqual(foo.pet.age, 3)
             return .ok
         }
 
-        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7"
+        let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
             XCTAssertEqual(res.status.code, 200)
         }
@@ -208,5 +248,28 @@ final class QueryTests: XCTestCase {
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.query.encode(TestQueryStringContainer(name: "Vapor Test"))
         XCTAssertEqual(req.url.query, "name=Vapor%20Test")
+    }
+
+    // https://github.com/vapor/vapor/issues/2383
+    func testQueryKeyDecoding() throws {
+        struct Test: Codable, Equatable {
+            struct Page: Codable, Equatable {
+                var offset: Int
+                var limit: Int
+            }
+            let page: Page
+            struct Filter: Codable, Equatable {
+                var ids: [String]
+            }
+            let filter: Filter
+        }
+
+        let query = "page[offset]=0&page[limit]=50&filter[ids]=auth0,abc123"
+        let a = try URLEncodedFormDecoder().decode(Test.self, from: query)
+        XCTAssertEqual(a.page.offset, 0)
+        XCTAssertEqual(a.page.limit, 50)
+        XCTAssertEqual(a.filter.ids, ["auth0", "abc123"])
+        let b = try URLEncodedFormDecoder().decode(Test.self, from: query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
+        XCTAssertEqual(a, b)
     }
 }
