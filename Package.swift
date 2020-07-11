@@ -8,7 +8,8 @@ let package = Package(
     ],
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
-        .library(name: "XCTVapor", targets: ["XCTVapor"])
+        .library(name: "XCTVapor", targets: ["XCTVapor"]),
+        .library(name: "_Vapor3", targets: ["_Vapor3"]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -33,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.13.1"),
         
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
-        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.4.1"),
+        .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
         
         // HTTP/2 support for SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.11.0"),
@@ -83,10 +84,16 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
         ]),
+        // Vapor 3 API shim
+        .target(name: "_Vapor3", dependencies: [
+            .target(name: "Vapor"),
+            .product(name: "_NIO1APIShims", package: "swift-nio")
+        ]),
 
         // Development
         .target(name: "Development", dependencies: [
             .target(name: "Vapor"),
+            .target(name: "_Vapor3"),
         ]),
 
         // Testing
