@@ -5,7 +5,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible {
     public var defaultMaxBodySize: ByteCount
     /// Default routing behavior of `DefaultResponder` is case-sensitive; configure to `true` prior to
     /// Application start handle `Constant` `PathComponents` in a case-insensitive manner.
-    public var caseInsenstive: Bool
+    public var caseInsensitive: Bool
 
     public var description: String {
         return self.all.description
@@ -14,7 +14,7 @@ public final class Routes: RoutesBuilder, CustomStringConvertible {
     public init() {
         self.all = []
         self.defaultMaxBodySize = "16kb"
-        self.caseInsenstive = false
+        self.caseInsensitive = false
     }
 
     public func add(_ route: Route) {
