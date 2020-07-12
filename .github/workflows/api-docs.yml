@@ -13,7 +13,7 @@ jobs:
     - name: Deploy api-docs
       uses: appleboy/ssh-action@master
       with:
-        host: api.vapor.codes
+        host: vapor.codes
         username: vapor
         key: ${{ secrets.VAPOR_CODES_SSH_KEY }}
         script: |
