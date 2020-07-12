@@ -1,16 +1,20 @@
-name: api-docs
+name: deploy-api-docs
 on: pull_request
+# on:
+#   push:
+#     branches:
+#       - master
 
 jobs:
   deploy:
-    name: deploy
+    name: api.vapor.codes
     runs-on: ubuntu-latest
     steps:
     - name: Deploy api-docs
       uses: appleboy/ssh-action@master
       with:
-        host: ${{ secrets.DEPLOY_HOST }}
-        username: ${{ secrets.DEPLOY_USERNAME }}
-        key: ${{ secrets.DEPLOY_KEY }}
+        host: api.vapor.codes
+        username: vapor
+        key: ${{ secrets.VAPOR_CODES_SSH_KEY }}
         script: |
-          ./github-actions/api-docs.sh
+          ./github-actions/deploy-api-docs.sh
