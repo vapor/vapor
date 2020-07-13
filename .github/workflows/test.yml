@@ -5,6 +5,32 @@ on:
     branches:
     - master
 jobs:
+  providers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider:
+          - jwt
+          - fluent
+          - leaf
+          - queue
+          - apns
+    container: swift:5.2-focal
+    steps: 
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          path: vapor
+      - name: Check out code
+        uses: actions/checkout@v2
+        with:
+          repository: vapor/${{ matrix.provider }}
+          path: provider
+      - name: Swift to local Vapor
+        run: swift package --package-path provider edit vapor --path vapor
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
   linux:
     runs-on: ubuntu-latest
     strategy:
