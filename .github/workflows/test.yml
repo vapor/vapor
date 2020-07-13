@@ -18,17 +18,16 @@ jobs:
           - apns
     container: swift:5.2-focal
     steps: 
-      - name: Check out code
+      - name: Check out Vapor
         uses: actions/checkout@v2
         with:
           path: vapor
-      - name: Check out code
+      - name: Check out provider
         uses: actions/checkout@v2
         with:
           repository: vapor/${{ matrix.provider }}
-          path: provider
-      - name: Swift to local Vapor
-        run: swift package --package-path provider edit vapor --path vapor
+      - name: Use local Vapor
+        run: swift package edit vapor --path vapor
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
   linux:
