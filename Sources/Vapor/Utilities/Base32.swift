@@ -14,7 +14,7 @@ extension Data {
     /// Decodes base32 encoded `Data`.
     public init?(base32Encoded: Data) {
         let maxSize = (base32Encoded.count * 5 + 4) / 8
-        var result = UnsafeMutablePointer<UInt8>.allocate(capacity: maxSize)
+        let result = UnsafeMutablePointer<UInt8>.allocate(capacity: maxSize)
         defer {
             result.deinitialize(count: maxSize)
             result.deallocate()
@@ -37,7 +37,7 @@ extension Data {
     /// - returns: The base32 encoded data.
     public func base32EncodedData() -> Data {
         let maxSize = (count * 8 + 4) / 5
-        var result = UnsafeMutablePointer<UInt8>.allocate(capacity: maxSize)
+        let result = UnsafeMutablePointer<UInt8>.allocate(capacity: maxSize)
         defer {
             result.deinitialize(count: maxSize)
             result.deallocate()

@@ -120,7 +120,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(error)", file: (file), line: line)
             throw error
         }
         return self

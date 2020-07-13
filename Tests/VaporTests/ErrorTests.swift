@@ -4,24 +4,20 @@ import Vapor
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {
         print(FooError.noFoo.debugDescription)
-
         let expectedPrintable = """
-        Foo Error: You do not have a `foo`.
-        - id: FooError.noFoo
-
+        FooError.noFoo: You do not have a `foo`.
         Here are some possible causes:
         - You did not set the flongwaffle.
         - The session ended before a `Foo` could be made.
         - The universe conspires against us all.
         - Computers are hard.
-
         These suggestions could address the issue:
         - You really want to use a `Bar` here.
         - Take up the guitar and move to the beach.
-
         Vapor's documentation talks about this:
         - http://documentation.com/Foo
         - http://documentation.com/foo/noFoo
+
         """
         XCTAssertEqual(FooError.noFoo.debugDescription, expectedPrintable)
     }
@@ -64,8 +60,8 @@ final class ErrorTests: XCTestCase {
         let minimum = MinimumError.alpha
         let description = minimum.debugDescription
         let expectation = """
-        MinimumError: Not enabled
-        - id: MinimumError.alpha
+        MinimumError.alpha: Not enabled
+        
         """
         XCTAssertEqual(description, expectation)
     }
@@ -129,6 +125,41 @@ final class ErrorTests: XCTestCase {
             let abort = try res.content.decode(AbortResponse.self)
             XCTAssertEqual(abort.reason, "After decode")
         })
+    }
+
+    func testAbortDebuggable() throws {
+        func foo() throws {
+            try bar()
+        }
+        func bar() throws {
+            try baz()
+        }
+        func baz() throws {
+            throw Abort(.internalServerError, reason: "Oops")
+        }
+        do {
+            try foo()
+        } catch let error as DebuggableError {
+            XCTAssertContains(error.stackTrace?.frames[0].function, "baz")
+            XCTAssertContains(error.stackTrace?.frames[1].function, "bar")
+            XCTAssertContains(error.stackTrace?.frames[2].function, "foo")
+        }
+    }
+}
+
+func XCTAssertContains(
+    _ haystack: String?,
+    _ needle: String,
+    file: StaticString = #file,
+    line: UInt = #line
+) {
+    let file = (file)
+    guard let haystack = haystack else {
+        XCTFail("\(needle) not found in: nil", file: file, line: line)
+        return
+    }
+    if !haystack.contains(needle) {
+        XCTFail("\(needle) not found in: \(haystack)", file: file, line: line)
     }
 }
 
