@@ -1,4 +1,5 @@
 import Vapor
+import _Vapor3
 
 struct Creds: Content {
     var email: String
@@ -6,13 +7,13 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
-    app.on(.GET, "ping", body: .stream) { req in
+    app.on(.GET, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
 
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
-    app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
+    app.on(.POST, "slow-stream", body: .stream) { req -> Future<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
         var total = 0
@@ -208,7 +209,7 @@ public func routes(_ app: Application) throws {
     }
 }
 
-struct TestError: AbortError {
+struct TestError: AbortError, DebuggableError {
     var status: HTTPResponseStatus {
         .internalServerError
     }
@@ -226,7 +227,7 @@ struct TestError: AbortError {
         line: UInt = #line,
         column: UInt = #column,
         range: Range<UInt>? = nil,
-        stackTrace: StackTrace? = .capture()
+        stackTrace: StackTrace? = .capture(skip: 1)
     ) {
         self.source = .init(
             file: file,

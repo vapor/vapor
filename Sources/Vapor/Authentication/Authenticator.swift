@@ -68,7 +68,6 @@ extension CredentialsAuthenticator {
         do {
             credentials = try request.content.decode(Credentials.self)
         } catch {
-            request.logger.error("Could not decode credentials: \(error)")
             return request.eventLoop.makeSucceededFuture(())
         }
         return self.authenticate(credentials: credentials, for: request)

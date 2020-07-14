@@ -276,7 +276,7 @@ private final class HTTPServerConnection {
                     let tlsHandler: NIOSSLServerHandler
                     do {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = try NIOSSLServerHandler(context: sslContext)
+                        tlsHandler = NIOSSLServerHandler(context: sslContext)
                     } catch {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
@@ -454,7 +454,7 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     }
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        self.logger.error("Unhandled HTTP server error: \(error)")
+        self.logger.debug("Unhandled HTTP server error: \(error)")
         context.close(mode: .output, promise: nil)
     }
 }

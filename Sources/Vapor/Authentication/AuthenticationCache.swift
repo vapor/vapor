@@ -36,7 +36,6 @@ extension Request.Authentication {
         where A: Authenticatable
     {
         guard let a = self.get(A.self) else {
-            self.request.logger.error("\(A.self) has not been authorized")
             throw Abort(.unauthorized)
         }
         return a

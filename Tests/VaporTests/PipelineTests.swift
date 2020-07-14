@@ -29,9 +29,6 @@ final class PipelineTests: XCTestCase {
         ).wait()
 
         try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\ntransfer-encoding: chunked\r\n\r\n1\r\na\r\n"))
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
-
-        try channel.writeInbound(ByteBuffer(string: "1\r\nb\r\n"))
         let chunk = try channel.readOutbound(as: ByteBuffer.self)?.string
         XCTAssertContains(chunk, "HTTP/1.1 200 OK")
         XCTAssertContains(chunk, "connection: keep-alive")
@@ -39,6 +36,9 @@ final class PipelineTests: XCTestCase {
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "1\r\n")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "\r\n")
+        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+
+        try channel.writeInbound(ByteBuffer(string: "1\r\nb\r\n"))
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "1\r\n")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "b")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "\r\n")

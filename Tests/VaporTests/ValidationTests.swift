@@ -329,9 +329,10 @@ private func assert<T>(
     _ data: T,
     fails validator: Validator<T>,
     _ description: String,
-    file: StaticString = (#file),
+    file: StaticString = #file,
     line: UInt = #line
 ) {
+    let file = (file)
     let result = validator.validate(data)
     XCTAssert(result.isFailure, result.successDescription ?? "n/a", file: file, line: line)
     XCTAssertEqual(description, result.failureDescription ?? "n/a", file: file, line: line)
@@ -340,9 +341,10 @@ private func assert<T>(
 private func assert<T>(
     _ data: T,
     passes validator: Validator<T>,
-    file: StaticString = (#file),
+    file: StaticString = #file,
     line: UInt = #line
 ) {
+    let file = (file)
     let result = validator.validate(data)
     XCTAssert(!result.isFailure, result.failureDescription ?? "n/a", file: file, line: line)
 }
