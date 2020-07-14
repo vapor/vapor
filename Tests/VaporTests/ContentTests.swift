@@ -295,6 +295,24 @@ final class ContentTests: XCTestCase {
         let content = try request.content.decode(SampleContent.self)
         XCTAssertEqual(content.name, "new name after decode")
     }
+
+    func testQueryHooks() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(
+            application: app,
+            collectedBody: .init(string:""),
+            on: EmbeddedEventLoop()
+        )
+        request.url.query = "name=before+decode"
+        request.headers.contentType = .json
+
+        let query = try request.query.decode(SampleContent.self)
+        XCTAssertEqual(query.name, "new name after decode")
+        try request.query.encode(query)
+        XCTAssertEqual(request.url.query, "name=new%20name")
+    }
 }
 
 private struct SampleContent: Content {

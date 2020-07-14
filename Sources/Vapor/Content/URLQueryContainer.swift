@@ -12,6 +12,43 @@ public protocol URLQueryContainer {
 extension URLQueryContainer {
     // MARK: Content
 
+    /// Serializes a `Content` type to this HTTP request query string.
+    ///
+    ///     let flags: Flags ...
+    ///     try req.query.encode(flags)
+    ///
+    /// A `MediaType.urlEncodedForm` encoder will be used.
+    ///
+    /// - parameters:
+    ///     - content: `Content` type to encode to this HTTP message.
+    /// - throws: Any errors making the decoder for this media type or serializing the query string.
+    public mutating func encode<C>(_ content: C) throws 
+        where C: Content 
+    {
+        var content = content
+        try content.beforeEncode()
+        try self.encode(content, using: self.configuredEncoder())
+    }
+
+    /// Parses a `Content` type from this HTTP request query string.
+    ///
+    ///     let flags = try req.query.decode(Flags.self)
+    ///     print(flags) // Flags
+    ///
+    /// A `MediaType.urlEncodedForm` decoder will be used.
+    ///
+    /// - parameters:
+    ///     - content: `Content` type to decode from this HTTP message.
+    /// - returns: Instance of the `Decodable` type.
+    /// - throws: Any errors making the decoder for this media type or parsing the query string.
+    public func decode<C>(_ content: C.Type) throws -> C 
+        where C: Content
+    {
+        var content = try self.decode(C.self, using: self.configuredDecoder())
+        try content.afterDecode()
+        return content
+    }
+
     /// Serializes an `Encodable` type to this HTTP request query string.
     ///
     ///     let flags: Flags ...
