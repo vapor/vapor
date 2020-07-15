@@ -18,7 +18,7 @@ extension RoutesBuilder {
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
     ///
-    ///     let users = router.grouped("user")
+    ///     let users = router.grouped(["user"])
     ///     // Adding "user/auth/" route to router.
     ///     users.get("auth") { ... }
     ///     // adding "user/profile/" route to router
@@ -49,7 +49,7 @@ extension RoutesBuilder {
 
     /// Creates a new `Router` that will automatically prepend the supplied path components.
     ///
-    ///     router.group("user") { users in
+    ///     router.group(["user"]) { users in
     ///         // Adding "user/auth/" route to router.
     ///         users.get("auth") { ... }
     ///         // adding "user/profile/" route to router
