@@ -1,7 +1,7 @@
 @testable import Vapor
 import XCTest
 
-final class HTTPHeaderValueTests: XCTestCase {
+final class HTTPHeaderTests: XCTestCase {
     func testValue() throws {
         var parser = HTTPHeaders.DirectiveParser(string: "foobar")
         XCTAssertEqual(parser.nextDirectives(), [.init(value: "foobar")])
@@ -195,5 +195,16 @@ final class HTTPHeaderValueTests: XCTestCase {
         let lower = HTTPMediaType(type: "foo", subType: "bar")
         let upper = HTTPMediaType(type: "foo", subType: "BAR")
         XCTAssertEqual(lower, upper)
+    }
+
+    // https://github.com/vapor/vapor/issues/2439
+    func testContentDispositionQuotedFilename() throws {
+        var headers = HTTPHeaders()
+        headers.contentDisposition = .init(.formData, filename: "foo")
+        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=foo")
+        headers.contentDisposition = .init(.formData, filename: "foo bar")
+        XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo bar""#)
+        headers.contentDisposition = .init(.formData, filename: "foo\"bar")
+        XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo\"bar""#)
     }
 }
