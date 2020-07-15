@@ -348,7 +348,7 @@ class ValidationTests: XCTestCase {
                             // Each validator extends ValidatorResult with a nested type.
                             // For example, the .email validator's result type is:
                             //
-                            //      struct ValidatorResult.Email {
+                            //      struct ValidatorResults.Email {
                             //          let isValidEmail: Bool
                             //      }
                             //
