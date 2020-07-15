@@ -324,7 +324,7 @@ class ValidationTests: XCTestCase {
         assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
     }
 
-    func testCustomMiddleware() throws {
+    func testCustomResponseMiddleware() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -339,13 +339,13 @@ class ValidationTests: XCTestCase {
                 next.respond(to: request).flatMapErrorThrowing { error in
                     // Check to see if this is a validation error. 
                     if let validationError = error as? ValidationsError {
-                        // Convert each failed ValidatorResult to a String
+                        // Convert each failed ValidatorResults to a String
                         // for the sake of this example.
                         let errorMessages = validationError.failures.map { failure -> String in 
                             let reason: String
-                            // The failure result will be one of the ValidatorResult subtypes.
+                            // The failure result will be one of the ValidatorResults subtypes.
                             //
-                            // Each validator extends ValidatorResult with a nested type.
+                            // Each validator extends ValidatorResults with a nested type.
                             // For example, the .email validator's result type is:
                             //
                             //      struct ValidatorResults.Email {
