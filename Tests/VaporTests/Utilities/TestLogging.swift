@@ -1,12 +1,10 @@
 import Foundation
 import Logging
+import Vapor
 
 let isLoggingConfigured: Bool = {
-    LoggingSystem.bootstrap { label in
-        var handler = StreamLogHandler.standardOutput(label: label)
-        handler.logLevel = env("LOG_LEVEL").flatMap { Logger.Level(rawValue: $0) } ?? .debug
-        return handler
-    }
+    var env = Environment.testing
+    try! LoggingSystem.bootstrap(from: &env)
     return true
 }()
 

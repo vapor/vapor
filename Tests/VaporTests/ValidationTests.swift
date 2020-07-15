@@ -323,6 +323,61 @@ class ValidationTests: XCTestCase {
         assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
         assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
     }
+
+    func testCustomMiddleware() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        final class ValidationErrorMiddleware: Middleware {
+            struct ErrorResponse: Content {
+                var errors: [String]
+            }
+            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+                next.respond(to: request).flatMapErrorThrowing { error in
+                    if let validationError = error as? ValidationsError {
+                        let errorMessages = validationError.failures.map { failure -> String in 
+                            let reason: String
+                            switch failure.result {
+                            case is ValidatorResults.Missing:
+                                reason = "is required"
+                            case let error as ValidatorResults.TypeMismatch:
+                                reason = "is not \(error.type)"
+                            default:
+                                reason = "unknown"
+                            }
+                            return "\(failure.key) \(reason)"
+                        }
+                        let response = Response(status: .badRequest)
+                        try response.content.encode(ErrorResponse(errors: errorMessages))
+                        return response
+                    } else {
+                        throw error
+                    }
+                }
+            }
+        }
+        app.middleware.use(ValidationErrorMiddleware())
+
+        app.post("users") { req -> HTTPStatus in 
+            try User.validate(req)
+            return .ok
+        }
+
+        try app.test(.POST, "users", beforeRequest: { req in
+            try req.content.encode([
+                "name": "Vapor",
+                "age": "asdf"
+            ])
+        }, afterResponse: { res in 
+            XCTAssertEqual(res.status, .badRequest)
+            let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
+            XCTAssertEqual(content.errors.count, 11)
+        })
+    }
+
+    override class func setUp() {
+        XCTAssert(isLoggingConfigured)
+    }
 }
 
 private func assert<T>(
