@@ -200,28 +200,23 @@ public func routes(_ app: Application) throws {
                         eventLoop: req.eventLoop
                     )
                 case .error(let drainError):
-                    var fileHandleError: Error?
                     do {
                         try fileHandle.close()
+                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     } catch {
-                        fileHandleError = error
-                    }
-                    if let fileHandleError = fileHandleError {
                         promise.fail(BodyStreamWritingToDiskError.multipleFailures([
-                            .fileHandleClosedFailure(fileHandleError),
+                            .fileHandleClosedFailure(error),
                             .streamFailure(drainError)
                         ]))
-                    } else {
-                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     }
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
                     do {
                         try fileHandle.close()
+                        promise.succeed(.ok)
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
                     }
-                    promise.succeed(.ok)
                     return req.eventLoop.makeSucceededFuture(())
                 }
             }
