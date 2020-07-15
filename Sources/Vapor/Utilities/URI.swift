@@ -1,6 +1,6 @@
 import CURLParser
 
-public struct URI: ExpressibleByStringLiteral, CustomStringConvertible {
+public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     public var string: String
 
     public init(string: String = "/") {
