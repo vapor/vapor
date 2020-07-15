@@ -44,21 +44,27 @@ public func XCTAssertContent<D>(
     _ res: XCTHTTPResponse,
     file: StaticString = #file,
     line: UInt = #line,
-    _ closure: (D) -> ()
+    _ closure: (D) throws -> ()
 )
+    rethrows
     where D: Decodable
 {
     guard let contentType = res.headers.contentType else {
         XCTFail("response does not contain content type", file: file, line: line)
         return
     }
+
+    let content: D
+
     do {
         let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
-        let content = try decoder.decode(D.self, from: res.body, headers: res.headers)
-        closure(content)
+        content = try decoder.decode(D.self, from: res.body, headers: res.headers)
     } catch {
         XCTFail("could not decode body: \(error)", file: (file), line: line)
+        return
     }
+
+    try closure(content)
 }
 
 public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #file, line: UInt = #line) {

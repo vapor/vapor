@@ -46,7 +46,7 @@ The release body (or description) should contain more in-depth information about
 
 ✅
 
----
+````md
 
 Allows configuring case-insensitive routing (#2354, fixes #1928).
 
@@ -56,7 +56,7 @@ Allows configuring case-insensitive routing (#2354, fixes #1928).
 app.routes.caseInsensitive = true
 ```
 
----
+````
 
 The release body should include links to any associated PRs and issues. Issues that are fixed by this change should be prefixed with `fixes` so that they are closed automatically. The first line of the release body should be a concise description of the change. This can be followed by a more detailed explanation and code examples. 
 
@@ -64,7 +64,7 @@ Releases with a large number of changes can separated using bullets. Special com
 
 ✅
 
----
+```md
 
 Improves HTTP request and response streaming (#2404).
 
@@ -76,13 +76,13 @@ Improves HTTP request and response streaming (#2404).
 
 > Note: Previously streaming bodies required a count and would always set the `content-length` header. Now, setting a count of `-1` indicates a stream with indeterminate length. `-1` will be used if the stream count is omitted. This results in `transfer-encoding: chunked` being used automatically. 
 
----
+```
 
 Release bodies should be in present tense third person. They should mention only information relevant to release notes. Any additional information or questions can be included in PR comments.
 
 ❌
 
----
+```md
 
 I've implemented two fixes to HTTP request streaming. I'm wondering if I need to implement three?
 
@@ -90,7 +90,7 @@ Here's what I've done so far:
 
 ...
 
----
+```
 
 The following PR labels are supported by Vapor's release bot.
 

@@ -177,7 +177,11 @@ extension HTTPHeaders {
                 for directive in directives {
                     let string: String
                     if let parameter = directive.parameter {
-                        string = "\(directive.value)=\(parameter)"
+                        if self.shouldQuote(parameter) {
+                            string = "\(directive.value)=\"\(parameter.escapingDoubleQuotes())\""
+                        } else {
+                            string = "\(directive.value)=\(parameter)"
+                        }
                     } else {
                         string = .init(directive.value)
                     }
@@ -188,19 +192,30 @@ extension HTTPHeaders {
 
             return main.joined(separator: ", ")
         }
+
+        private func shouldQuote(_ parameter: Substring) -> Bool {
+            parameter.contains(where: { 
+                $0 == .space || $0 == .doubleQuote
+            })
+        }
     }
 }
 
 private extension Substring {
     /// Converts all `\"` to `"`.
     func unescapingDoubleQuotes() -> Substring {
-        return self.lazy.split(separator: "\\").reduce(into: "") { (result, part) in
+        self.lazy.split(separator: "\\").reduce(into: "") { (result, part) in
             if result.isEmpty || part.first == "\"" {
                 result += part
             } else {
                 result += "\\" + part
             }
         }
+    }
+
+    /// Converts all `"` to `\"`.
+    func escapingDoubleQuotes() -> String {
+        self.split(separator: "\"").joined(separator: "\\\"")
     }
 }
 
@@ -226,6 +241,9 @@ private extension Character {
     }
     static var period: Self {
         .init(".")
+    }
+    static var space: Self {
+        .init(" ")
     }
 
     var isDirectiveKey: Bool {
