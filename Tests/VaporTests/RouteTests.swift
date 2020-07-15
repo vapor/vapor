@@ -48,7 +48,7 @@ final class RouteTests: XCTestCase {
         }.test(.GET, "/int/not-int") { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
         }.test(.GET, "/missing") { res in
-            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertEqual(res.status, .internalServerError)
         }
     }
 
