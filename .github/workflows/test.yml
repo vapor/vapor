@@ -28,7 +28,7 @@ jobs:
           repository: vapor/${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
-        run: swift package edit vapor --path vapor
+        run: swift package edit vapor --path ../vapor
         working-directory: provider
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
