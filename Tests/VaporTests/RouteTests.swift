@@ -22,6 +22,36 @@ final class RouteTests: XCTestCase {
         }
     }
 
+    func testRequiredParameter() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("string", ":value") { req in
+            return try req.parameters.require("value")
+        }
+
+        app.routes.get("int", ":value") { req -> String in
+            let value = try req.parameters.require("value", as: Int.self)
+            return String(value)
+        }
+
+        app.routes.get("missing") { req in
+            return try req.parameters.require("value")
+        }
+
+        try app.testable().test(.GET, "/string/test") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "test")
+        }.test(.GET, "/int/123") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "123")
+        }.test(.GET, "/int/not-int") { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }.test(.GET, "/missing") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+        }
+    }
+
     func testJSON() throws {
         let app = Application(.testing)
         defer { app.shutdown() }

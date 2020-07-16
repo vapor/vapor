@@ -7,7 +7,7 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
-    app.on(.POST, "ping") { req in
+    app.on(.GET, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
@@ -179,6 +179,11 @@ public func routes(_ app: Application) throws {
     }
 
     app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
+        enum BodyStreamWritingToDiskError: Error {
+            case streamFailure(Error)
+            case fileHandleClosedFailure(Error)
+            case multipleFailures([BodyStreamWritingToDiskError])
+        }
         return req.application.fileio.openFile(
             path: "/Users/tanner/Desktop/foo.txt",
             mode: .write,
@@ -194,13 +199,24 @@ public func routes(_ app: Application) throws {
                         buffer: buffer,
                         eventLoop: req.eventLoop
                     )
-                case .error(let error):
-                    promise.fail(error)
-                    try! fileHandle.close()
+                case .error(let drainError):
+                    do {
+                        try fileHandle.close()
+                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
+                    } catch {
+                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
+                            .fileHandleClosedFailure(error),
+                            .streamFailure(drainError)
+                        ]))
+                    }
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
-                    promise.succeed(.ok)
-                    try! fileHandle.close()
+                    do {
+                        try fileHandle.close()
+                        promise.succeed(.ok)
+                    } catch {
+                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
+                    }
                     return req.eventLoop.makeSucceededFuture(())
                 }
             }

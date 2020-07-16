@@ -361,6 +361,86 @@ class ValidationTests: XCTestCase {
         assert("CASE1", fails: !.case(of: SingleCaseEnum.self), "is CASE1")
         assert("CASE2", fails: .case(of: SingleCaseEnum.self), "is not CASE1")
     }
+
+    func testCustomResponseMiddleware() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        // Converts validation errors to a custom response.
+        final class ValidationErrorMiddleware: Middleware {
+            // Defines the format of the custom error response.
+            struct ErrorResponse: Content {
+                var errors: [String]
+            }
+
+            func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+                next.respond(to: request).flatMapErrorThrowing { error in
+                    // Check to see if this is a validation error. 
+                    if let validationError = error as? ValidationsError {
+                        // Convert each failed ValidatorResults to a String
+                        // for the sake of this example.
+                        let errorMessages = validationError.failures.map { failure -> String in 
+                            let reason: String
+                            // The failure result will be one of the ValidatorResults subtypes.
+                            //
+                            // Each validator extends ValidatorResults with a nested type.
+                            // For example, the .email validator's result type is:
+                            //
+                            //      struct ValidatorResults.Email {
+                            //          let isValidEmail: Bool
+                            //      }
+                            //
+                            // You can handle as many or as few of these types as you want.
+                            // Vapor and third party packages may add additional types.
+                            // This switch is only handling two cases as an example.
+                            //
+                            // If you want to localize your validation failures, this is a
+                            // good place to do it.
+                            switch failure.result {
+                            case is ValidatorResults.Missing:
+                                reason = "is required"
+                            case let error as ValidatorResults.TypeMismatch:
+                                reason = "is not \(error.type)"
+                            default:
+                                reason = "unknown"
+                            }
+                            return "\(failure.key) \(reason)"
+                        }
+                        // Create the 400 response and encode the custom error content.
+                        let response = Response(status: .badRequest)
+                        try response.content.encode(ErrorResponse(errors: errorMessages))
+                        return response
+                    } else {
+                        // This isn't a validation error, rethrow it and let
+                        // ErrorMiddleware handle it.
+                        throw error
+                    }
+                }
+            }
+        }
+        app.middleware.use(ValidationErrorMiddleware())
+
+        app.post("users") { req -> HTTPStatus in 
+            try User.validate(req)
+            return .ok
+        }
+
+        // Test that the custom validation error middleware is working.
+        try app.test(.POST, "users", beforeRequest: { req in
+            try req.content.encode([
+                "name": "Vapor",
+                "age": "asdf"
+            ])
+        }, afterResponse: { res in 
+            XCTAssertEqual(res.status, .badRequest)
+            let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
+            XCTAssertEqual(content.errors.count, 11)
+        })
+    }
+
+    override class func setUp() {
+        XCTAssert(isLoggingConfigured)
+    }
 }
 
 private func assert<T>(

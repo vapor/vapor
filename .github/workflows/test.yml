@@ -5,6 +5,34 @@ on:
     branches:
     - master
 jobs:
+  providers:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider:
+          - jwt
+          - fluent
+          - leaf
+          - queues
+          - apns
+    container: swift:5.2-focal
+    steps: 
+      - name: Check out Vapor
+        uses: actions/checkout@v2
+        with:
+          path: vapor
+      - name: Check out provider
+        uses: actions/checkout@v2
+        with:
+          repository: vapor/${{ matrix.provider }}
+          path: provider
+      - name: Use local Vapor
+        run: swift package edit vapor --path vapor
+        working-directory: provider
+      - name: Run tests with Thread Sanitizer
+        run: swift test --enable-test-discovery --sanitize=thread
+        working-directory: provider
   linux:
     runs-on: ubuntu-latest
     strategy:
@@ -34,6 +62,7 @@ jobs:
       - name: Check out code
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
+        timeout-minutes: 10
         run: swift test --enable-test-discovery --sanitize=thread
   macOS:
     runs-on: macos-latest
