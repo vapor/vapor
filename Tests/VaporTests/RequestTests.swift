@@ -49,5 +49,14 @@ final class RequestTests: XCTestCase {
             XCTAssertEqual(uri.host, nil)
             XCTAssertEqual(uri.path, "")
         }
+        do {
+            let uri: URI = "/foo/bar/baz"
+            XCTAssertEqual(uri.path, "/foo/bar/baz")
+        }
+        do {
+            let foo = "foo"
+            let uri: URI = "/\(foo)/bar/baz"
+            XCTAssertEqual(uri.path, "/foo/bar/baz")
+        }
     }
 }
