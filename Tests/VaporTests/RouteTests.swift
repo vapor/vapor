@@ -150,7 +150,7 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.post("users") { req -> User in
-            try User.validate(req)
+            try User.validate(content: req)
             return try req.content.decode(User.self)
         }
 
