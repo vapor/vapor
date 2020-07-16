@@ -14,11 +14,11 @@ public struct ValidatorResults {
     }
 
     public struct Invalid {
-        let reason: String
+        public let reason: String
     }
 
     public struct TypeMismatch {
-        let type: Any.Type
+        public let type: Any.Type
     }
 }
 
