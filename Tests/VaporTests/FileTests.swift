@@ -42,7 +42,7 @@ final class FileTests: XCTestCase {
         let data = "Hello".data(using: .utf8)!
         let path = "/tmp/fileio_write.txt"
         
-        try request.fileio.write(to: path, buffer: ByteBuffer(data: data)).wait()
+        try request.fileio.writeFile(ByteBuffer(data: data), at: path).wait()
         defer { try? FileManager.default.removeItem(atPath: path) }
         
         let content = try request.fileio.collectFile(at: path).wait()
