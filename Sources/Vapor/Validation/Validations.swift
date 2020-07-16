@@ -34,7 +34,7 @@ public struct Validations {
         self.storage.append(validation)
     }
     
-    public func validate(_ request: Request) throws -> ValidationsResult {
+    public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableEntity)
         }
@@ -43,6 +43,12 @@ public struct Validations {
         }
         let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
         let decoder = try contentDecoder.decode(DecoderUnwrapper.self, from: body, headers: request.headers)
+        return try self.validate(decoder.decoder)
+    }
+    
+    public func validate(query: URI) throws -> ValidationsResult {
+        let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
+        let decoder = try urlDecoder.decode(DecoderUnwrapper.self, from: query)
         return try self.validate(decoder.decoder)
     }
     
