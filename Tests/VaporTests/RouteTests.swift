@@ -91,7 +91,7 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.routes.caseInsenstive = true
+        app.routes.caseInsensitive = true
         
         app.routes.get("foo") { req -> String in
             return "foo"
