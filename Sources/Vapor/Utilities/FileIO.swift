@@ -189,6 +189,9 @@ public struct FileIO {
     
     /// Write the contents of buffer to a file at the supplied path.
     ///
+    ///     let data = ByteBuffer(string: "ByteBuffer")
+    ///     try req.fileio.writeFile(data, at: "/path/to/file.txt").wait()
+    ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - buffer: The `ByteBuffer` to write.
