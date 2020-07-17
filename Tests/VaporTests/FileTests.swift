@@ -39,16 +39,13 @@ final class FileTests: XCTestCase {
         
         let request = Request(application: app, on: app.eventLoopGroup.next())
         
-        let data = "Hello".data(using: .utf8)!
+        let data = "Hello"
         let path = "/tmp/fileio_write.txt"
         
-        try request.fileio.writeFile(ByteBuffer(data: data), at: path).wait()
+        try request.fileio.writeFile(ByteBuffer(string: data), at: path).wait()
         defer { try? FileManager.default.removeItem(atPath: path) }
         
-        let content = try request.fileio.collectFile(at: path).wait()
-        
-        let result = Data(content.readableBytesView)
-        
+        let result = try String(contentsOfFile: path)
         XCTAssertEqual(result, data)
     }
 
