@@ -8,8 +8,9 @@ extension Application {
     public enum Method {
         case inMemory
         case running(port: Int)
+        case runningWith(hostname: String, port: Int)
         public static var running: Method {
-            return .running(port: 8080)
+            return .runningWith(hostname:"localhost", port: 8080)
         }
     }
 
@@ -20,27 +21,31 @@ extension Application {
             return try InMemory(app: self)
         case .running(let port):
             return try Live(app: self, port: port)
+        case let .runningWith(hostname, port):
+            return try Live(app: self, hostname: hostname, port: port)
         }
     }
     
     private struct Live: XCTApplicationTester {
         let app: Application
         let port: Int
+        let hostname: String
 
-        init(app: Application, port: Int) throws {
+        init(app: Application, hostname: String = "localhost", port: Int) throws {
             self.app = app
+            self.hostname = hostname
             self.port = port
         }
 
         func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
-            try app.server.start(hostname: "localhost", port: self.port)
+            try app.server.start(hostname: self.hostname, port: self.port)
             defer { app.server.shutdown() }
             
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var path = request.url.path
             path = path.hasPrefix("/") ? path : "/\(path)"
-            var url = "http://localhost:\(self.port)\(path)"
+            var url = "http://\(self.hostname):\(self.port)\(path)"
             if let query = request.url.query {
                 url += "?\(query)"
             }

@@ -1,6 +1,22 @@
 import XCTVapor
 
 final class RequestTests: XCTestCase {
+    
+    func testCustomHostAdress() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get("vapor", "is", "fun") {
+            return $0.remoteAddress?.hostname ?? "n/a"
+        }
+        
+        let ipV4Hostname = "127.0.0.1"
+        try app.testable(method: .runningWith(hostname: ipV4Hostname,
+                                              port: 8080)).test(.GET, "vapor/is/fun") { res in
+                                                XCTAssertContains(res.body.string, ipV4Hostname)
+        }
+    }
+    
     func testRequestRemoteAddress() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
