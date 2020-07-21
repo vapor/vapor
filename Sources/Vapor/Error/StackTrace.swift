@@ -84,7 +84,7 @@ public struct StackTrace {
     let rawFrames: [RawFrame]
 
     public func description(max: Int = 16) -> String {
-        return self.frames[...min(self.frames.count, max)].readable
+        return self.frames[..<min(self.frames.count, max)].readable
     }
 }
 
