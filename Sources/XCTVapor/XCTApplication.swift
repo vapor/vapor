@@ -7,11 +7,13 @@ extension Application: XCTApplicationTester {
 extension Application {
     public enum Method {
         case inMemory
-        case running(port: Int)
-        case runningWith(hostname: String, port: Int)
         public static var running: Method {
-            return .runningWith(hostname:"localhost", port: 8080)
+            return .running(hostname:"localhost", port: 8080)
         }
+        public static func running(port: Int) -> Self {
+            .running(hostname: "localhost", port: port)
+        }
+        case running(hostname: String, port: Int)
     }
 
     public func testable(method: Method = .inMemory) throws -> XCTApplicationTester {
@@ -19,9 +21,7 @@ extension Application {
         switch method {
         case .inMemory:
             return try InMemory(app: self)
-        case .running(let port):
-            return try Live(app: self, port: port)
-        case let .runningWith(hostname, port):
+        case let .running(hostname, port):
             return try Live(app: self, hostname: hostname, port: port)
         }
     }
