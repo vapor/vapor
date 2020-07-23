@@ -13,6 +13,52 @@ Don't forget to add tests for your new features.
 If you are fixing a single GitHub issue in particular, you can add a test named `testGH<issue number>` to ensure
 that your fix is working. This will also help prevent regression.
 
+## Style Guide
+
+When contributing code to Vapor, please try to follow existing style for consistency. 
+
+### Xcode Formatting
+
+Avoid using "Xcode style" indentation where possible. This can be difficult to recreate in other editors.
+
+❌
+```swift
+func foo(bar: String,
+         baz: Int) {
+    ...
+}
+```
+
+Use normal indentation instead.
+
+✅
+```swift
+func foo(
+    bar: String,
+    baz: Int
+) {
+    ...
+}
+```
+
+### Explicit self
+
+When accessing member properties and methods, use explicit `self`. 
+
+```swift
+struct Foo {
+    var bar: Int
+    func baz() {
+        // ❌
+        print(bar)
+        // ✅
+        print(self.bar)
+    }
+}
+```
+
+This makes it easier to tell whether a local variable is being used or not, especially when reading code without syntax highlighting.
+
 ## SemVer
 
 Vapor follows [SemVer](https://semver.org). This means that any changes to the source code that can cause
