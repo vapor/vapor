@@ -421,7 +421,7 @@ class ValidationTests: XCTestCase {
         app.middleware.use(ValidationErrorMiddleware())
 
         app.post("users") { req -> HTTPStatus in 
-            try User.validate(req)
+            try User.validate(content: req)
             return .ok
         }
 
