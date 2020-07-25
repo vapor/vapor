@@ -50,7 +50,7 @@ public func XCTAssertContent<D>(
     where D: Decodable
 {
     guard let contentType = res.headers.contentType else {
-        XCTFail("response does not contain content type", file: file, line: line)
+        XCTFail("response does not contain content type", file: (file), line: line)
         return
     }
 
@@ -85,14 +85,14 @@ public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString
     where T: Codable & Equatable
 {
     guard let data = data else {
-        XCTFail("nil does not equal \(test)", file: file, line: line)
+        XCTFail("nil does not equal \(test)", file: (file), line: line)
         return
     }
     do {
         let decoded = try JSONDecoder().decode(T.self, from: Data(data.utf8))
-        XCTAssertEqual(decoded, test, file: file, line: line)
+        XCTAssertEqual(decoded, test, file: (file), line: line)
     } catch {
-        XCTFail("could not decode \(T.self): \(error)", file: file, line: line)
+        XCTFail("could not decode \(T.self): \(error)", file: (file), line: line)
     }
 }
 

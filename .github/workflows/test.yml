@@ -52,11 +52,11 @@ jobs:
           - swiftlang/swift:nightly-5.3-xenial
           - swiftlang/swift:nightly-5.3-bionic
           # Master Unstable
-          - swiftlang/swift:nightly-master-xenial
-          - swiftlang/swift:nightly-master-bionic
-          - swiftlang/swift:nightly-master-focal
-          - swiftlang/swift:nightly-master-centos8
-          - swiftlang/swift:nightly-master-amazonlinux2
+          # - swiftlang/swift:nightly-master-xenial
+          # - swiftlang/swift:nightly-master-bionic
+          # - swiftlang/swift:nightly-master-focal
+          # - swiftlang/swift:nightly-master-centos8
+          # - swiftlang/swift:nightly-master-amazonlinux2
     container: ${{ matrix.image }}
     steps:
       - name: Check out code
