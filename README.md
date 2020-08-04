@@ -55,6 +55,9 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
 </a>
+<a href="https://gotranseo.com">
+    <img src="https://user-images.githubusercontent.com/1342803/89341627-92c02000-d66f-11ea-8b29-c278386fdb09.png" height="100px" alt="Transeo">
+</a>
 <a href="https://github.com/gwynne">
     <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
 </a>
@@ -90,6 +93,12 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="3/11/20" 
     href="https://github.com/hjuraev">
     <img src="https://avatars3.githubusercontent.com/u/5513926?s=120" width="60px">
+</a>
+<a 
+    data-amt="25" 
+    data-since="7/21/20" 
+    href="https://github.com/ultim8p">
+    <img src="https://avatars3.githubusercontent.com/u/4804985?s=120" width="60px">
 </a>
 <a 
     data-amt="10" 
@@ -283,6 +292,30 @@ Mattiav8">
     data-since="05/17/20" 
     href="https://github.com/mtsrodrigues">
     <img src="https://avatars0.githubusercontent.com/u/20213807?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/04/20" 
+    href="https://github.com/rausnitz">
+    <img src="https://avatars0.githubusercontent.com/u/6132143?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/07/20" 
+    href="https://github.com/PSchmiedmayer">
+    <img src="https://avatars0.githubusercontent.com/u/28656495?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/07/20" 
+    href="https://github.com/VFUC">
+    <img src="https://avatars0.githubusercontent.com/u/8863326?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/31/20" 
+    href="https://github.com/Mordil">
+    <img src="https://avatars0.githubusercontent.com/u/3506776?s=120" width="60px">
 </a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
