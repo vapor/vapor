@@ -56,7 +56,7 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
 </a>
 <a href="https://gotranseo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/89341627-92c02000-d66f-11ea-8b29-c278386fdb09.png" height="90px" alt="Transeo">
+    <img src="https://user-images.githubusercontent.com/1342803/89341627-92c02000-d66f-11ea-8b29-c278386fdb09.png" height="100px" alt="Transeo">
 </a>
 <a href="https://github.com/gwynne">
     <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
