@@ -92,6 +92,12 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     <img src="https://avatars3.githubusercontent.com/u/5513926?s=120" width="60px">
 </a>
 <a 
+    data-amt="25" 
+    data-since="7/21/20" 
+    href="https://github.com/ultim8p">
+    <img src="https://avatars3.githubusercontent.com/u/4804985?s=120" width="60px">
+</a>
+<a 
     data-amt="10" 
     data-since="10/14/19" 
     href="https://github.com/tkrajacic">
@@ -283,6 +289,30 @@ Mattiav8">
     data-since="05/17/20" 
     href="https://github.com/mtsrodrigues">
     <img src="https://avatars0.githubusercontent.com/u/20213807?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/04/20" 
+    href="https://github.com/rausnitz">
+    <img src="https://avatars0.githubusercontent.com/u/6132143?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/07/20" 
+    href="https://github.com/PSchmiedmayer">
+    <img src="https://avatars0.githubusercontent.com/u/28656495?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/07/20" 
+    href="https://github.com/VFUC">
+    <img src="https://avatars0.githubusercontent.com/u/8863326?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="07/31/20" 
+    href="https://github.com/Mordil">
+    <img src="https://avatars0.githubusercontent.com/u/3506776?s=120" width="60px">
 </a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>
