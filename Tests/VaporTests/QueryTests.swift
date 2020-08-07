@@ -272,4 +272,29 @@ final class QueryTests: XCTestCase {
         let b = try URLEncodedFormDecoder().decode(Test.self, from: query.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)
         XCTAssertEqual(a, b)
     }
+
+    func testOptionalGet() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/"),
+            on: app.eventLoopGroup.next()
+        )
+        do {
+            req.url = .init(path: "/foo?bar=baz")
+            let page = try req.query.get(Int?.self, at: "page")
+            XCTAssertEqual(page, nil)
+        }
+        do {
+            req.url = .init(path: "/foo?bar=baz&page=1")
+            let page = try req.query.get(Int?.self, at: "page")
+            XCTAssertEqual(page, 1)
+        }
+        do {
+            req.url = .init(path: "/foo?bar=baz&page=a")
+            XCTAssertThrowsError(try req.query.get(Int?.self, at: "page"))
+        }
+    }
 }

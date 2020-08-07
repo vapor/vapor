@@ -67,3 +67,25 @@ public enum BasicCodingKey: CodingKey {
         self.init(codingKeyRepresentable.codingKey)
     }
 }
+
+extension BasicCodingKey: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .index(let index):
+            return index.description
+        case .key(let key):
+            return key.description
+        }
+    }
+}
+
+extension BasicCodingKey: CustomDebugStringConvertible {
+    public var debugDescription: String {
+        switch self {
+        case .index(let index):
+            return index.description
+        case .key(let key):
+            return key.debugDescription
+        }
+    }
+}

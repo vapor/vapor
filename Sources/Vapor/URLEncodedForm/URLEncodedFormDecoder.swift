@@ -404,7 +404,7 @@ private struct _Decoder: Decoder {
         }
         
         func decodeNil() -> Bool {
-            return false
+            self.data.values.isEmpty
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
