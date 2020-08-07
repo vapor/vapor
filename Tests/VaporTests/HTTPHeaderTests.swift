@@ -207,4 +207,23 @@ final class HTTPHeaderTests: XCTestCase {
         headers.contentDisposition = .init(.formData, filename: "foo\"bar")
         XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo\"bar""#)
     }
+
+    func testAcceptEncoding() throws {
+        var headers = HTTPHeaders()
+        // Accept-Encoding: gzip
+        headers.acceptEncoding = [.init(.gzip)]
+        XCTAssertEqual(headers.first(name: .acceptEncoding), "gzip")
+        XCTAssertEqual(headers.acceptEncoding, [.init(.gzip)])
+
+        // Accept-Encoding: gzip, compress, br
+        headers.acceptEncoding = [.init(.gzip), .init(.compress), .init(.br)]
+        XCTAssertEqual(headers.first(name: .acceptEncoding), "gzip, compress, br")
+        XCTAssertEqual(headers.acceptEncoding, [.init(.gzip), .init(.compress), .init(.br)])
+
+        // Accept-Encoding: br;q=1.0, gzip;q=0.8, *;q=0.1
+        headers.acceptEncoding = [.init(.br, q: 1.0), .init(.gzip, q: 0.8), .init(.all, q: 0.1)]
+        print(headers)
+        XCTAssertEqual(headers.first(name: .acceptEncoding), "br; q=1.0, gzip; q=0.8, *; q=0.1")
+        XCTAssertEqual(headers.acceptEncoding, [.init(.br, q: 1.0), .init(.gzip, q: 0.8), .init(.all, q: 0.1)])
+    }
 }

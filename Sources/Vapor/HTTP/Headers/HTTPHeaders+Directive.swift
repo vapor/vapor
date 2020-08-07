@@ -61,11 +61,12 @@ extension HTTPHeaders {
 
         private mutating func nextDirective() -> Directive? {
             self.popWhitespace()
+
             guard !self.current.isEmpty else {
                 return nil
             }
 
-            if self.current.first == .comma {
+            guard self.current.first != .comma else {
                 self.pop()
                 return nil
             }
@@ -101,13 +102,26 @@ extension HTTPHeaders {
                 if self.current.first == .semicolon {
                     self.pop()
                 }
-            } else if let semicolon = self.current.firstIndex(of: .semicolon) {
-                value = self.pop(to: semicolon)
-                self.pop()
-            } else if let comma = self.current.firstIndex(of: .comma) {
-                value = self.pop(to: comma)
             } else {
-                value = self.pop(to: self.current.endIndex)
+                switch (self.current.firstIndex(of: .semicolon), self.current.firstIndex(of: .comma)) {
+                case (.some(let semicolon), .some(let comma)):
+                    // found both semicolon and comma, need first
+                    if semicolon < comma {
+                        value = self.pop(to: semicolon)
+                        self.pop()
+                    } else {
+                        // leave the comma
+                        value = self.pop(to: comma)
+                    }
+                case (.some(let semicolon), .none):
+                    value = self.pop(to: semicolon)
+                    self.pop()
+                case (.none, .some(let comma)):
+                    // leave the comma
+                    value = self.pop(to: comma)
+                case (.none, .none):
+                    value = self.pop(to: self.current.endIndex)
+                }
             }
             return value
         }
