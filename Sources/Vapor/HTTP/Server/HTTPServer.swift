@@ -17,14 +17,14 @@ public final class HTTPServer: Server {
     ///     services.register(serverConfig)
     ///
     public struct Configuration {
-        /// Socket path the server will bind to. If specified, the hostname and port will not be used to bind the server.
-        public var unixDomainSocketPath: String?
-        
         /// Host name the server will bind to.
         public var hostname: String
         
         /// Port the server will bind to.
         public var port: Int
+        
+        /// Socket path the server will bind to. If specified, the hostname and port will not be used to bind the server.
+        public var unixDomainSocketPath: String?
         
         /// Listen backlog.
         public var backlog: Int
@@ -111,9 +111,9 @@ public final class HTTPServer: Server {
         public var logger: Logger
 
         public init(
-            socketPath: String? = nil,
             hostname: String = "127.0.0.1",
             port: Int = 8080,
+            unixDomainSocketPath: String? = nil,
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
@@ -125,9 +125,9 @@ public final class HTTPServer: Server {
             serverName: String? = nil,
             logger: Logger? = nil
         ) {
-            self.unixDomainSocketPath = socketPath
             self.hostname = hostname
             self.port = port
+            self.unixDomainSocketPath = unixDomainSocketPath
             self.backlog = backlog
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay

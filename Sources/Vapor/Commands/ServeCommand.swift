@@ -13,7 +13,7 @@ public final class ServeCommand: Command {
         
         @Option(name: "bind", short: "b", help: "Convenience for setting hostname and port together.")
         var bind: String?
-        
+
         @Option(name: "unix-socket", short: nil, help: "Set the path for the unix domain socket file the server will bind to.")
         var socketPath: String?
 
@@ -47,9 +47,8 @@ public final class ServeCommand: Command {
         let port = signature.port
             // 0.0.0.0:8080, :8080, parse port
             ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-        let socketPath = signature.socketPath // /tmp/vapor.socket
-        
-        if let socketPath = socketPath, !socketPath.isEmpty {
+
+        if let socketPath = signature.socketPath {
             try context.application.server.start(socketPath: socketPath)
         } else {
             try context.application.server.start(hostname: hostname, port: port)
