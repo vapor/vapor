@@ -22,8 +22,8 @@ final class ServerTests: XCTestCase {
     }
     
     func testSocketPathOverride() throws {
-        let socketPath = "/tmp/vapor.test.socket"
-        
+        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+
         let env = Environment(
             name: "testing",
             arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", socketPath]
@@ -39,7 +39,7 @@ final class ServerTests: XCTestCase {
 
         let res = try app.client.get(.withSocketPath(socketPath, path: "/foo")).wait()
         XCTAssertEqual(res.body?.string, "bar")
-        
+
         // no server should be bound to the port despite one being set on the configuration.
         XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8123/foo").wait())
     }
@@ -337,79 +337,33 @@ final class ServerTests: XCTestCase {
         let b = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(b.status, .ok)
     }
-    
+
     func testStartWithValidSocketFile() throws {
-        let socketPath = "/tmp/valid.vapor.socket"
-        
+        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+
         let app = Application(.testing)
         app.http.server.configuration.unixDomainSocketPath = socketPath
         defer {
             app.shutdown()
-            XCTAssertFalse(FileManager().fileExists(atPath: socketPath), "Socket file was not removed: \(socketPath)")
         }
-        
+
         XCTAssertNoThrow(try app.start())
     }
-    
-    func testStartWithExistingSocketFile() throws {
-        let socketPath = "/tmp/existing.vapor.socket"
-        
-        let app1 = Application(.testing)
-        app1.http.server.configuration.unixDomainSocketPath = socketPath
-        defer {
-            app1.shutdown()
-            XCTAssertFalse(FileManager().fileExists(atPath: socketPath), "Socket file was not removed: \(socketPath)")
-        }
-        
-        XCTAssertNoThrow(try app1.start())
-        
-        let app2 = Application(.testing)
-        app2.http.server.configuration.unixDomainSocketPath = socketPath
-        defer {
-            app2.shutdown()
-            XCTAssertFalse(FileManager().fileExists(atPath: socketPath), "Socket file was not removed: \(socketPath)")
-        }
-        
-        // app2 should succeed in unlinking and claiming the existing socket file
-        XCTAssertNoThrow(try app2.start())
-    }
-    
+
     func testStartWithUnsupportedSocketFile() throws {
         let app = Application(.testing)
         app.http.server.configuration.unixDomainSocketPath = "/tmp"
         defer { app.shutdown() }
-        
-        XCTAssertThrowsError(try app.start()) { (error) in
-            XCTAssertNotNil(error as? UnixDomainSocketPathError)
-            guard let socketError = error as? UnixDomainSocketPathError else {
-                XCTFail("\(error) is not a UnixDomainSocketPathError")
-                return
-            }
-            
-            guard case UnixDomainSocketPathError.unsupportedFile = socketError else {
-                XCTFail("\(socketError) is not .unsupportedFile")
-                return
-            }
-        }
+
+        XCTAssertThrowsError(try app.start())
     }
-    
+
     func testStartWithInvalidSocketFilePath() throws {
         let app = Application(.testing)
         app.http.server.configuration.unixDomainSocketPath = "/tmp/nonexistent/vapor.socket"
         defer { app.shutdown() }
-        
-        XCTAssertThrowsError(try app.start()) { (error) in
-            XCTAssertNotNil(error as? UnixDomainSocketPathError)
-            guard let socketError = error as? UnixDomainSocketPathError else {
-                XCTFail("\(error) is not a UnixDomainSocketPathError")
-                return
-            }
-            
-            guard case UnixDomainSocketPathError.noSuchDirectory = socketError else {
-                XCTFail("\(socketError) is not .noSuchDirectory")
-                return
-            }
-        }
+
+        XCTAssertThrowsError(try app.start())
     }
 
     func testQuiesceKeepAliveConnections() throws {
