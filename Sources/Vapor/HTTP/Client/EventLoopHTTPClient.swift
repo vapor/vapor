@@ -16,7 +16,7 @@ private struct EventLoopHTTPClient: Client {
     ) -> EventLoopFuture<ClientResponse> {
         do {
             let request = try HTTPClient.Request(
-                url: client.url.socketURL ?? URL(string: client.url.string)!,
+                url: URL(string: client.url.string)!,
                 method: client.method,
                 headers: client.headers,
                 body: client.body.map { .byteBuffer($0) }

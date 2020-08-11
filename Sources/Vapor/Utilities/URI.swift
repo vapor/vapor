@@ -221,20 +221,5 @@ extension URI {
             fragment: fragment
         )
     }
-    
-    /// The socket URL that can be passed to an instance of HTTPClient.
-    public var socketURL: URL? {
-        guard
-            let originalURL = URL(string: self.string),
-            let scheme = originalURL.scheme,
-            scheme == "http+unix" || scheme == "https+unix",
-            let host = originalURL.host,
-            let baseURL = URL(string: "unix://\(host)")
-        else { return nil }
-        
-        // prepare a new URL with a base URL that contains the path to the socket file.
-        // FIXME: We likely won't need this anymore once https://github.com/swift-server/async-http-client/pull/228 is merged
-        return URL(string: originalURL.path, relativeTo: baseURL)
-    }
 }
 
