@@ -26,7 +26,7 @@ final class ServerTests: XCTestCase {
 
         let env = Environment(
             name: "testing",
-            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", socketPath]
+            arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
 
         let app = Application(env)
@@ -41,7 +41,76 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(res.body?.string, "bar")
 
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8123/foo").wait())
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+    }
+    
+    func testIncopmpatibleStartupOptions() throws {
+        func checkForError(_ app: Application) {
+            XCTAssertThrowsError(try app.start()) { error in
+                XCTAssertNotNil(error as? ServeCommandError)
+                guard let serveError = error as? ServeCommandError else {
+                    XCTFail("\(error) is not a ServeCommandError")
+                    return
+                }
+                
+                XCTAssertEqual(ServeCommandError.incompatibleFlags, serveError)
+            }
+            app.shutdown()
+        }
+        
+        var app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
     }
 
     func testConfigureHTTPDecompressionLimit() throws {

@@ -41,6 +41,13 @@ public final class ServeCommand: Command {
 
     /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
+        switch (signature.hostname, signature.port, signature.bind, signature.socketPath) {
+        case (.none, .none, .none, .some): break // unix socket
+        case (.none, .none, .some, .none): break // bind ("hostname:port")
+        case (_,     _,     .none, .none): break // hostname / port
+        default: throw ServeCommandError.incompatibleFlags
+        }
+        
         let hostname = signature.hostname
             // 0.0.0.0:8080, 0.0.0.0, parse hostname
             ?? signature.bind?.split(separator: ":").first.flatMap(String.init)
@@ -89,4 +96,10 @@ public final class ServeCommand: Command {
     deinit {
         assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
     }
+}
+
+/// Errors that may be thrown when serving a server
+public enum ServeCommandError: Error {
+    /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
+    case incompatibleFlags
 }
