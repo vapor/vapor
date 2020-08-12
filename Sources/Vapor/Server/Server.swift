@@ -7,6 +7,7 @@ public protocol Server {
     ///   - address: The address to start the server with.
     func start(address: BindAddress) throws
     
+    @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     func start(hostname: String?, port: Int?) throws
     
     func shutdown()
@@ -30,9 +31,11 @@ extension Server {
     }
     
     /// Start the server with the specified hostname and port, if provided. If left blank, the server will be started with its default configuration.
+    /// - Deprecated: Please use `start(address: .hostname(hostname, port: port))` instead.
     /// - Parameters:
     ///   - hostname: The hostname to start the server with, or nil if the default one should be used.
     ///   - port: The port to start the server with, or nil if the default one should be used.
+    @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     public func start(hostname: String?, port: Int?) throws {
         try self.start(address: .hostname(hostname, port: port))
     }

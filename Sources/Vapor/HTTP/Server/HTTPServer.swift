@@ -176,6 +176,7 @@ public final class HTTPServer: Server {
         self.didShutdown = false
     }
     
+    @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     public func start(hostname: String?, port: Int?) throws {
         try start(address: .hostname(hostname, port: port))
     }
