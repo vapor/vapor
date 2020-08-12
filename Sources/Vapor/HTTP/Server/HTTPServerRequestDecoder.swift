@@ -64,13 +64,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop)
                     request.bodyStorage = .stream(stream)
+                    self.requestState = .streamingBody(stream)
                     context.fireChannelRead(self.wrapInboundOut(request))
                     self.handleBodyStreamStateResult(
                         context: context,
                         self.bodyStreamState.didReadBytes(buffer),
                         stream: stream
                     )
-                    self.requestState = .streamingBody(stream)
                 }
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
@@ -196,6 +196,23 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             case .ready, .skipping:
                 // Response ended after request had been read.
                 break
+            }
+        }
+    }
+}
+
+extension HTTPPart: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .head(let head):
+            return "head: \(head)"
+        case .body(let body):
+            return "body: \(body)"
+        case .end(let headers):
+            if let headers = headers {
+                return "end: \(headers)"
+            } else {
+                return "end"
             }
         }
     }
