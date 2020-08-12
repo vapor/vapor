@@ -56,9 +56,9 @@ public final class ServeCommand: Command {
             ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
 
         if let socketPath = signature.socketPath {
-            try context.application.server.start(socketPath: socketPath)
+            try context.application.server.start(address: .unixDomainSocket(path: socketPath))
         } else {
-            try context.application.server.start(hostname: hostname, port: port)
+            try context.application.server.start(address: .hostname(hostname, port: port))
         }
         self.server = context.application.server
 

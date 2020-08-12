@@ -177,22 +177,25 @@ public final class HTTPServer: Server {
     }
     
     public func start(hostname: String?, port: Int?) throws {
-        // determine which hostname / port to bind to
-        var configuration = self.configuration
-        configuration.hostname = hostname ?? configuration.hostname
-        configuration.port = port ?? configuration.port
-        // clear out the unix domain socket path if a new hostname/port is provided so it won't be used
-        if hostname != nil || port != nil {
-            configuration.unixDomainSocketPath = nil
-        }
-        
-        try start(with: configuration)
+        try start(address: .hostname(hostname, port: port))
     }
     
-    public func start(socketPath: String) throws {
-        // override the socket path to bind to
+    public func start(address: BindAddress) throws {
         var configuration = self.configuration
-        configuration.unixDomainSocketPath = socketPath
+        
+        switch address {
+        case .hostname(let hostname, let port):
+            // determine which hostname / port to bind to
+            configuration.hostname = hostname ?? configuration.hostname
+            configuration.port = port ?? configuration.port
+            // clear out the unix domain socket path if a new hostname/port is provided so it won't be used
+            if hostname != nil || port != nil {
+                configuration.unixDomainSocketPath = nil
+            }
+        case .unixDomainSocket(let socketPath):
+            // override the socket path to bind to
+            configuration.unixDomainSocketPath = socketPath
+        }
         
         try start(with: configuration)
     }

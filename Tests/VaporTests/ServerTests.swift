@@ -496,12 +496,8 @@ final class CustomServer: Server {
         self.didStart = false
         self.didShutdown = false
     }
-
-    func start(hostname: String?, port: Int?) throws {
-        self.didStart = true
-    }
     
-    func start(socketPath: String) throws {
+    func start(address: BindAddress) throws {
         self.didStart = true
     }
 
