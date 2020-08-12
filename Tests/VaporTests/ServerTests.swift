@@ -269,7 +269,7 @@ final class ServerTests: XCTestCase {
             }
 
             func didFinishRequest(task: HTTPClient.Task<HTTPClient.Response>) throws -> HTTPClient.Response {
-                .init(host: "", status: .ok, headers: [:], body: nil)
+                .init(host: "", status: .ok, version: .init(major: 1, minor: 1), headers: [:], body: nil)
             }
         }
         let response = ResponseDelegate(context: context)
