@@ -181,40 +181,20 @@ extension URI {
     /// Create a URI using a unix domain socket path.
     /// - Parameters:
     ///   - socketPath: The socket path the server is listening on.
+    ///   - scheme: The scheme to use to connect with. Will use HTTP by default, but HTTPS is also currently supported.
     ///   - path: The URI path to request from the server.
     ///   - query: The URI path to request from the server.
     ///   - fragment: The URI fragment to request from the server.
     /// - Returns: A correctly formatted URI that encodes the socket path as the hostname.
-    public static func withSocketPath(
+    public static func unixDomainSocketPath(
         _ socketPath: String,
+        scheme: String = "http",
         path: String = "/",
         query: String? = nil,
         fragment: String? = nil
     ) -> URI {
         return .init(
-            scheme: "http+unix",
-            host: socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-            path: path,
-            query: query,
-            fragment: fragment
-        )
-    }
-    
-    /// Create an HTTPS URI using a unix domain socket path.
-    /// - Parameters:
-    ///   - socketPath: The socket path the server is listening on.
-    ///   - path: The URI path to request from the server.
-    ///   - query: The URI path to request from the server.
-    ///   - fragment: The URI fragment to request from the server.
-    /// - Returns: A correctly formatted URI that encodes the socket path as the hostname.
-    public static func withSecureSocketPath(
-        _ socketPath: String,
-        path: String = "/",
-        query: String? = nil,
-        fragment: String? = nil
-    ) -> URI {
-        return .init(
-            scheme: "https+unix",
+            scheme: "\(scheme)+unix",
             host: socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
             path: path,
             query: query,
