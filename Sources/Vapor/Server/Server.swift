@@ -1,12 +1,17 @@
-// TODO: Remove these deprecated methods for the next major release.
+// TODO: Remove these deprecated methods along with ServerStartError in the major release.
 public protocol Server {
     var onShutdown: EventLoopFuture<Void> { get }
     
     /// Start the server with the specified address.
     /// - Parameters:
     ///   - address: The address to start the server with.
-    func start(address: BindAddress) throws
+    func start(address: BindAddress?) throws
     
+    /// Start the server with the specified hostname and port, if provided. If left blank, the server will be started with its default configuration.
+    /// - Deprecated: Please use `start(address: .hostname(hostname, port: port))` instead.
+    /// - Parameters:
+    ///   - hostname: The hostname to start the server with, or nil if the default one should be used.
+    ///   - port: The port to start the server with, or nil if the default one should be used.
     @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
     func start(hostname: String?, port: Int?) throws
     
@@ -25,9 +30,17 @@ extension Server {
         try self.start(address: .hostname(nil, port: nil))
     }
     
-    /// A default implementation that throws an unimplemented assertion.
-    public func start(address: BindAddress) throws {
-        preconditionFailure("\(self) does not support being started on: \(address)")
+    /// A default implementation that throws `ServerStartError.unsupportedAddress` for `.unixDomainSocket(path:)` if `start(address:)` is not implemented by the conforming type, or calls the deprecated `.start(hostname:port:)` method for other cases.
+    @available(*, deprecated, message: "The Server receiving this message does not support all address types, and must be updated.")
+    public func start(address: BindAddress?) throws {
+        switch address {
+        case .none:
+            try self.start(hostname: nil, port: nil)
+        case .hostname(let hostname, let port):
+            try self.start(hostname: hostname, port: port)
+        case .unixDomainSocket:
+            throw ServerStartError.unsupportedAddress(message: "Starting with unix domain socket path not supported, \(Self.self) must implement start(address:).")
+        }
     }
     
     /// Start the server with the specified hostname and port, if provided. If left blank, the server will be started with its default configuration.
@@ -40,3 +53,10 @@ extension Server {
         try self.start(address: .hostname(hostname, port: port))
     }
 }
+
+/// Errors that may be thrown when starting a server
+public enum ServerStartError: Error {
+    /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
+    case unsupportedAddress(message: String)
+}
+

@@ -176,15 +176,13 @@ public final class HTTPServer: Server {
         self.didShutdown = false
     }
     
-    @available(*, deprecated, renamed: "start(address:)", message: "Please use `start(address: .hostname(hostname, port: port))` instead")
-    public func start(hostname: String?, port: Int?) throws {
-        try start(address: .hostname(hostname, port: port))
-    }
-    
-    public func start(address: BindAddress) throws {
+    public func start(address: BindAddress?) throws {
         var configuration = self.configuration
         
         switch address {
+        case .none:
+            // use the configuration as is
+            break
         case .hostname(let hostname, let port):
             // determine which hostname / port to bind to
             configuration.hostname = hostname ?? configuration.hostname
@@ -198,7 +196,7 @@ public final class HTTPServer: Server {
             configuration.unixDomainSocketPath = socketPath
         }
         
-        try start(with: configuration)
+        try self.start(with: configuration)
     }
     
     private func start(with configuration: Configuration) throws {

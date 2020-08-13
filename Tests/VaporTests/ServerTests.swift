@@ -112,6 +112,120 @@ final class ServerTests: XCTestCase {
         ))
         checkForError(app)
     }
+    
+    @available(*, deprecated)
+    func testDeprecatedServerStartMethods() throws {
+        /// TODO: This test may be removed in the next major version
+        class OldServer: Server {
+            var onShutdown: EventLoopFuture<Void> {
+                preconditionFailure("We should never get here.")
+            }
+            func shutdown() { }
+            
+            var hostname:String? = ""
+            var port:Int? = 0
+            // only implements the old requirement
+            func start(hostname: String?, port: Int?) throws {
+                self.hostname = hostname
+                self.port = port
+            }
+        }
+        
+        // Ensure we always start with something other than what we expect when calling start
+        var oldServer = OldServer()
+        XCTAssertNotNil(oldServer.hostname)
+        XCTAssertNotNil(oldServer.port)
+        
+        // start() should set the hostname and port to nil
+        oldServer = OldServer()
+        try oldServer.start()
+        XCTAssertNil(oldServer.hostname)
+        XCTAssertNil(oldServer.port)
+        
+        // start(hostname: ..., port: ...) should set the hostname and port appropriately
+        oldServer = OldServer()
+        try oldServer.start(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(oldServer.hostname, "1.2.3.4")
+        XCTAssertEqual(oldServer.port, 123)
+        
+        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
+        oldServer = OldServer()
+        try oldServer.start(address: .hostname("localhost", port: 8080))
+        XCTAssertEqual(oldServer.hostname, "localhost")
+        XCTAssertEqual(oldServer.port, 8080)
+        
+        // start(address: .unixDomainSocket(path: ...)) should throw
+        oldServer = OldServer()
+        XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path"))) { error in
+            switch error {
+            case ServerStartError.unsupportedAddress(_): break
+            default: XCTFail("\(error) is not a ServerStartError.unsupportedAddress")
+            }
+        }
+        
+        class NewServer: Server {
+            var onShutdown: EventLoopFuture<Void> {
+                preconditionFailure("We should never get here.")
+            }
+            func shutdown() { }
+            
+            var hostname: String? = ""
+            var port: Int? = 0
+            var socketPath: String? = ""
+            
+            func start(address: BindAddress?) throws {
+                switch address {
+                case .none:
+                    self.hostname = nil
+                    self.port = nil
+                    self.socketPath = nil
+                case .hostname(let hostname, let port):
+                    self.hostname = hostname
+                    self.port = port
+                    self.socketPath = nil
+                case .unixDomainSocket(let path):
+                    self.hostname = nil
+                    self.port = nil
+                    self.socketPath = path
+                }
+            }
+        }
+        
+        // Ensure we always start with something other than what we expect when calling start
+        var newServer = NewServer()
+        XCTAssertNotNil(newServer.hostname)
+        XCTAssertNotNil(newServer.port)
+        XCTAssertNotNil(newServer.socketPath)
+
+        // start() should set the hostname and port to nil
+        newServer = NewServer()
+        try newServer.start()
+        XCTAssertNil(newServer.hostname)
+        XCTAssertNil(newServer.port)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(hostname: ..., port: ...) should set the hostname and port appropriately
+        newServer = NewServer()
+        try newServer.start(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(newServer.hostname, "1.2.3.4")
+        XCTAssertEqual(newServer.port, 123)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
+        newServer = NewServer()
+        try newServer.start(address: .hostname("localhost", port: 8080))
+        XCTAssertEqual(newServer.hostname, "localhost")
+        XCTAssertEqual(newServer.port, 8080)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(address: .unixDomainSocket(path: ...)) should throw
+        newServer = NewServer()
+        try newServer.start(address: .unixDomainSocket(path: "/path"))
+        XCTAssertNil(newServer.hostname)
+        XCTAssertNil(newServer.port)
+        XCTAssertEqual(newServer.socketPath, "/path")
+        
+    }
 
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
@@ -497,7 +611,11 @@ final class CustomServer: Server {
         self.didShutdown = false
     }
     
-    func start(address: BindAddress) throws {
+    func start(hostname: String?, port: Int?) throws {
+        try self.start(address: .hostname(hostname, port: port))
+    }
+    
+    func start(address: BindAddress?) throws {
         self.didStart = true
     }
 
