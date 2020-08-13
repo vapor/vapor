@@ -42,24 +42,24 @@ public final class ServeCommand: Command {
     /// See `Command`.
     public func run(using context: CommandContext, signature: Signature) throws {
         switch (signature.hostname, signature.port, signature.bind, signature.socketPath) {
-        case (.none, .none, .none, .some): break // unix socket
-        case (.none, .none, .some, .none): break // bind ("hostname:port")
-        case (_,     _,     .none, .none): break // hostname / port
+        case (.none, .none, .none, .none): // use defaults
+            try context.application.server.start(address: nil)
+            
+        case (.none, .none, .none, .some(let socketPath)): // unix socket
+            try context.application.server.start(address: .unixDomainSocket(path: socketPath))
+            
+        case (.none, .none, .some(let address), .none): // bind ("hostname:port")
+            let hostname = address.split(separator: ":").first.flatMap(String.init)
+            let port = address.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
+            
+            try context.application.server.start(address: .hostname(hostname, port: port))
+            
+        case (let hostname, let port, .none, .none): // hostname / port
+            try context.application.server.start(address: .hostname(hostname, port: port))
+            
         default: throw ServeCommandError.incompatibleFlags
         }
         
-        let hostname = signature.hostname
-            // 0.0.0.0:8080, 0.0.0.0, parse hostname
-            ?? signature.bind?.split(separator: ":").first.flatMap(String.init)
-        let port = signature.port
-            // 0.0.0.0:8080, :8080, parse port
-            ?? signature.bind?.split(separator: ":").last.flatMap(String.init).flatMap(Int.init)
-
-        if let socketPath = signature.socketPath {
-            try context.application.server.start(address: .unixDomainSocket(path: socketPath))
-        } else {
-            try context.application.server.start(address: .hostname(hostname, port: port))
-        }
         self.server = context.application.server
 
         // allow the server to be stopped or waited for

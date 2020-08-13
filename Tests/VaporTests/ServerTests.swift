@@ -44,7 +44,7 @@ final class ServerTests: XCTestCase {
         XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
     }
     
-    func testIncopmpatibleStartupOptions() throws {
+    func testIncompatibleStartupOptions() throws {
         func checkForError(_ app: Application) {
             XCTAssertThrowsError(try app.start()) { error in
                 XCTAssertNotNil(error as? ServeCommandError)
