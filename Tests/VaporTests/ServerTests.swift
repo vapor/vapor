@@ -525,7 +525,7 @@ final class ServerTests: XCTestCase {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
 
         let app = Application(.testing)
-        app.http.server.configuration.unixDomainSocketPath = socketPath
+        app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
         defer {
             app.shutdown()
         }
@@ -535,7 +535,7 @@ final class ServerTests: XCTestCase {
 
     func testStartWithUnsupportedSocketFile() throws {
         let app = Application(.testing)
-        app.http.server.configuration.unixDomainSocketPath = "/tmp"
+        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
         defer { app.shutdown() }
 
         XCTAssertThrowsError(try app.start())
@@ -543,10 +543,73 @@ final class ServerTests: XCTestCase {
 
     func testStartWithInvalidSocketFilePath() throws {
         let app = Application(.testing)
-        app.http.server.configuration.unixDomainSocketPath = "/tmp/nonexistent/vapor.socket"
+        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
         defer { app.shutdown() }
 
         XCTAssertThrowsError(try app.start())
+    }
+    
+    func testAddressConfigurations() throws {
+        var configuration = HTTPServer.Configuration()
+        XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
+        
+        configuration = HTTPServer.Configuration(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: nil))
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        
+        configuration = HTTPServer.Configuration(address: .hostname(nil, port: 123))
+        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname(nil, port: nil))
+        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        
+        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        
+        // Test mutating a config that was originally a socket path
+        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        configuration.hostname = "1.2.3.4"
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
+        
+        configuration.address = .unixDomainSocket(path: "/path")
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        configuration.port = 123
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, 123)
+        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
+        
+        configuration.hostname = "1.2.3.4"
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        
+        configuration.address = .hostname(nil, port: nil)
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
     }
 
     func testQuiesceKeepAliveConnections() throws {

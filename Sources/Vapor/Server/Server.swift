@@ -18,7 +18,7 @@ public protocol Server {
     func shutdown()
 }
 
-public enum BindAddress {
+public enum BindAddress: Equatable {
     case hostname(_ hostname: String?, port: Int?)
     case unixDomainSocket(path: String)
 }
@@ -27,7 +27,7 @@ extension Server {
     /// Start the server with its default configuration, listening over a regular TCP socket.
     /// - Throws: An error if the server could not be started.
     public func start() throws {
-        try self.start(address: .hostname(nil, port: nil))
+        try self.start(address: nil)
     }
     
     /// A default implementation that throws `ServerStartError.unsupportedAddress` for `.unixDomainSocket(path:)` if `start(address:)` is not implemented by the conforming type, or calls the deprecated `.start(hostname:port:)` method for other cases.

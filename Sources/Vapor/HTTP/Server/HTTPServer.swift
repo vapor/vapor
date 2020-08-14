@@ -17,14 +17,51 @@ public final class HTTPServer: Server {
     ///     services.register(serverConfig)
     ///
     public struct Configuration {
+        public static let defaultHostname = "127.0.0.1"
+        public static let defaultPort = 8080
+        
+        /// Address the server will bind to.
+        public var address: BindAddress
+        
         /// Host name the server will bind to.
-        public var hostname: String
+        public var hostname: String {
+            get {
+                switch address {
+                case .hostname(let hostname, _):
+                    return hostname ?? Self.defaultHostname
+                default:
+                    return Self.defaultHostname
+                }
+            }
+            set {
+                switch address {
+                case .hostname(_, let port):
+                    address = .hostname(newValue, port: port)
+                default:
+                    address = .hostname(newValue, port: nil)
+                }
+            }
+        }
         
         /// Port the server will bind to.
-        public var port: Int
-        
-        /// Socket path the server will bind to. If specified, the hostname and port will not be used to bind the server.
-        public var unixDomainSocketPath: String?
+        public var port: Int {
+           get {
+               switch address {
+               case .hostname(_, let port):
+                   return port ?? Self.defaultPort
+               default:
+                   return Self.defaultPort
+               }
+           }
+           set {
+               switch address {
+               case .hostname(let hostname, _):
+                   address = .hostname(hostname, port: newValue)
+               default:
+                   address = .hostname(nil, port: newValue)
+               }
+           }
+       }
         
         /// Listen backlog.
         public var backlog: Int
@@ -111,9 +148,8 @@ public final class HTTPServer: Server {
         public var logger: Logger
 
         public init(
-            hostname: String = "127.0.0.1",
-            port: Int = 8080,
-            unixDomainSocketPath: String? = nil,
+            hostname: String = Self.defaultHostname,
+            port: Int = Self.defaultPort,
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
@@ -125,9 +161,35 @@ public final class HTTPServer: Server {
             serverName: String? = nil,
             logger: Logger? = nil
         ) {
-            self.hostname = hostname
-            self.port = port
-            self.unixDomainSocketPath = unixDomainSocketPath
+            self.init(
+                address: .hostname(hostname, port: port),
+                backlog: backlog,
+                reuseAddress: reuseAddress,
+                tcpNoDelay: tcpNoDelay,
+                responseCompression: responseCompression,
+                requestDecompression: requestDecompression,
+                supportPipelining: supportPipelining,
+                supportVersions: supportVersions,
+                tlsConfiguration: tlsConfiguration,
+                serverName: serverName,
+                logger: logger
+            )
+        }
+        
+        public init(
+            address: BindAddress,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            responseCompression: CompressionConfiguration = .disabled,
+            requestDecompression: DecompressionConfiguration = .disabled,
+            supportPipelining: Bool = false,
+            supportVersions: Set<HTTPVersionMajor>? = nil,
+            tlsConfiguration: TLSConfiguration? = nil,
+            serverName: String? = nil,
+            logger: Logger? = nil
+        ) {
+            self.address = address
             self.backlog = backlog
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
@@ -180,36 +242,25 @@ public final class HTTPServer: Server {
         var configuration = self.configuration
         
         switch address {
-        case .none:
-            // use the configuration as is
+        case .none: // use the configuration as is
             break
-        case .hostname(let hostname, let port):
-            // determine which hostname / port to bind to
-            configuration.hostname = hostname ?? configuration.hostname
-            configuration.port = port ?? configuration.port
-            // clear out the unix domain socket path if a new hostname/port is provided so it won't be used
-            if hostname != nil || port != nil {
-                configuration.unixDomainSocketPath = nil
-            }
-        case .unixDomainSocket(let socketPath):
-            // override the socket path to bind to
-            configuration.unixDomainSocketPath = socketPath
+        case .hostname(let hostname, let port): // override the hostname, port, neither, or both
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket: // override the socket path
+            configuration.address = address!
         }
         
-        try self.start(with: configuration)
-    }
-    
-    private func start(with configuration: Configuration) throws {
         // print starting message
         let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let address: String
-        if let socketPath = configuration.unixDomainSocketPath {
-            address = "\(scheme)+unix: \(socketPath)"
-        } else {
-            address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
+        let addressDescription: String
+        switch configuration.address {
+        case .hostname(let hostname, let port):
+            addressDescription = "\(scheme)://\(hostname!):\(port!)" // will never be nil because we set them above to non-optional values
+        case .unixDomainSocket(let socketPath):
+            addressDescription = "\(scheme)+unix: \(socketPath)"
         }
         
-        self.configuration.logger.notice("Server starting on \(address)")
+        self.configuration.logger.notice("Server starting on \(addressDescription)")
 
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
@@ -319,18 +370,15 @@ private final class HTTPServerConnection {
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
         
-        // Check if a socket path has been configured, and use it if it has been.
-        if let socketPath = configuration.unixDomainSocketPath {
-            return bootstrap.bind(unixDomainSocketPath: socketPath).map { channel in
-                return .init(channel: channel,quiesce: quiesce)
-            }.flatMapErrorThrowing { error -> HTTPServerConnection in
-                quiesce.initiateShutdown(promise: nil)
-                throw error
-            }
+        let channel: EventLoopFuture<Channel>
+        switch configuration.address {
+        case .hostname:
+            channel = bootstrap.bind(host: configuration.hostname, port: configuration.port)
+        case .unixDomainSocket(let socketPath):
+            channel = bootstrap.bind(unixDomainSocketPath: socketPath)
         }
         
-        // Fallback to binding the server to a host name and port.
-        return bootstrap.bind(host: configuration.hostname, port: configuration.port).map { channel in
+        return channel.map { channel in
             return .init(channel: channel, quiesce: quiesce)
         }.flatMapErrorThrowing { error -> HTTPServerConnection in
             quiesce.initiateShutdown(promise: nil)
