@@ -254,20 +254,19 @@ private final class HTTPServerConnection {
                         return channel.close(mode: .all)
                     }
                     return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
-                        return channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
-                            return channel.configureHTTP2Pipeline(
+                        channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
+                            channel.configureHTTP2Pipeline(
                                 mode: .server,
-                                inboundStreamStateInitializer: { (channel, streamID) in
-                                    return channel.pipeline.addVaporHTTP2Handlers(
+                                inboundStreamInitializer: { channel in
+                                    channel.pipeline.addVaporHTTP2Handlers(
                                         application: application!,
                                         responder: responder,
-                                        configuration: configuration,
-                                        streamID: streamID
+                                        configuration: configuration
                                     )
                                 }
                             ).map { _ in }
                         }, http1ChannelConfigurator: { channel in
-                            return channel.pipeline.addVaporHTTP1Handlers(
+                            channel.pipeline.addVaporHTTP1Handlers(
                                 application: application!,
                                 responder: responder,
                                 configuration: configuration
@@ -340,13 +339,12 @@ extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
         responder: Responder,
-        configuration: HTTPServer.Configuration,
-        streamID: HTTP2StreamID
+        configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [ChannelHandler] = []
         
-        let http2 = HTTP2ToHTTP1ServerCodec(streamID: streamID)
+        let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
         // add NIO -> HTTP request decoder
@@ -363,7 +361,7 @@ extension ChannelPipeline {
         handlers.append(serverResEncoder)
         
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, logger: application.logger)
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
@@ -428,7 +426,7 @@ extension ChannelPipeline {
         )
         handlers.append(serverReqDecoder)
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, logger: application.logger)
 
         // add HTTP upgrade handler
         let upgrader = HTTPServerUpgradeHandler(
