@@ -277,7 +277,7 @@ final class ServerTests: XCTestCase {
             request: request,
             delegate: response
         ).wait()
-
+        
         XCTAssertEqual(context.server, ["foo", "bar", "baz"])
         XCTAssertEqual(context.client, ["foo", "bar", "baz"])
     }
@@ -313,6 +313,27 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(a.status, .ok)
         let b = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(b.status, .ok)
+    }
+
+    func testQuiesceKeepAliveConnections() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("hello") { req in
+            "world"
+        }
+
+        let port = 1337
+        app.http.server.configuration.port = port
+        try app.start()
+
+        let request = try HTTPClient.Request(
+            url: "http://localhost:\(port)/hello",
+            method: .GET,
+            headers: ["connection": "keep-alive"]
+        )
+        let a = try app.http.client.shared.execute(request: request).wait()
+        XCTAssertEqual(a.headers.connection, .keepAlive)
     }
 
     override class func setUp() {

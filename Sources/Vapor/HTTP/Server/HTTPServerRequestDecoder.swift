@@ -17,13 +17,14 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     var requestState: RequestState
     var bodyStreamState: HTTPBodyStreamState
 
-    private let logger: Logger
+    var logger: Logger {
+        self.application.logger
+    }
     var application: Application
     
     init(application: Application) {
         self.application = application
         self.requestState = .ready
-        self.logger = Logger(label: "codes.vapor.server")
         self.bodyStreamState = .init()
     }
     
@@ -179,7 +180,8 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     }
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
-        if event is HTTPServerResponseEncoder.ResponseEndSentEvent {
+        switch event {
+        case is HTTPServerResponseEncoder.ResponseEndSentEvent:
             switch self.requestState {
             case .streamingBody(let bodyStream):
                 // Response ended during request stream.
@@ -197,6 +199,17 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                 // Response ended after request had been read.
                 break
             }
+        case is ChannelShouldQuiesceEvent:
+            switch self.requestState {
+            case .ready:
+                self.logger.trace("Closing keep-alive HTTP connection since server is going away")
+                context.channel.close(mode: .all, promise: nil)
+            default:
+                self.logger.debug("A request is currently in-flight")
+                context.fireUserInboundEventTriggered(event)
+            }
+        default:
+            self.logger.trace("Unhandled user event: \(event)")
         }
     }
 }
