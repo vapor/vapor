@@ -25,12 +25,6 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
         if let server = self.serverHeader {
             response.headers.add(name: "server", value: server)
         }
-
-        if response.status.class == .informational || response.status == .noContent {
-            // remove disallowed headers
-            response.headers.remove(name: .contentEncoding)
-            response.headers.remove(name: .transferEncoding)
-        }
         
         // begin serializing
         context.write(wrapOutboundOut(.head(.init(
