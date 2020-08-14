@@ -23,7 +23,7 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         if let scheme = scheme {
             string += scheme + "://"
         }
-        if let host = host {
+        if let host = host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
             string += host
         }
         if let port = port {
@@ -175,31 +175,3 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         return String(self.string[start..<end])
     }
 }
-
-
-extension URI {
-    /// Create a URI using a unix domain socket path.
-    /// - Parameters:
-    ///   - socketPath: The socket path the server is listening on.
-    ///   - scheme: The scheme to use to connect with. Will use HTTP by default, but HTTPS is also currently supported.
-    ///   - path: The URI path to request from the server.
-    ///   - query: The URI path to request from the server.
-    ///   - fragment: The URI fragment to request from the server.
-    /// - Returns: A correctly formatted URI that encodes the socket path as the hostname.
-    public static func unixDomainSocketPath(
-        _ socketPath: String,
-        scheme: String = "http",
-        path: String = "/",
-        query: String? = nil,
-        fragment: String? = nil
-    ) -> URI {
-        return .init(
-            scheme: "\(scheme)+unix",
-            host: socketPath.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),
-            path: path,
-            query: query,
-            fragment: fragment
-        )
-    }
-}
-
