@@ -37,7 +37,7 @@ final class ServerTests: XCTestCase {
         }
         try app.start()
 
-        let res = try app.client.get(.init(scheme: "http+unix", host: socketPath, path: "/foo")).wait()
+        let res = try app.client.get(.init(scheme: .httpUDS, host: socketPath, path: "/foo")).wait()
         XCTAssertEqual(res.body?.string, "bar")
 
         // no server should be bound to the port despite one being set on the configuration.
