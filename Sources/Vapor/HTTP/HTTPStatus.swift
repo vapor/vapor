@@ -31,7 +31,7 @@ extension HTTPStatus {
 
     /// Returns the status code's class (i.e., 1xx, 2xx, etc).
     /// See `HTTPStatus.Class` for more information.
-    public var `class`: Class {
+    public var `class`: Class? {
         switch self.code {
         case 100..<200:
             return .informational
@@ -41,8 +41,10 @@ extension HTTPStatus {
             return .redirection
         case 400..<500:
             return .clientError
-        default:
+        case 500..<600:
             return .serverError
+        default:
+            return nil
         }
     }
 }

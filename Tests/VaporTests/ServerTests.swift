@@ -357,6 +357,15 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(a.headers.connection, .keepAlive)
     }
 
+    func testHTTPStatusClasses() throws {
+        XCTAssertEqual(HTTPStatus.switchingProtocols.class, .informational)
+        XCTAssertEqual(HTTPStatus.created.class, .successful)
+        XCTAssertEqual(HTTPStatus.movedPermanently.class, .redirection)
+        XCTAssertEqual(HTTPStatus.badRequest.class, .clientError)
+        XCTAssertEqual(HTTPStatus.internalServerError.class, .serverError)
+        XCTAssertNil(HTTPStatus.custom(code: 42, reasonPhrase: "Meaning of life").class)
+    }
+
     override class func setUp() {
         XCTAssertTrue(isLoggingConfigured)
     }
