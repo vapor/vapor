@@ -22,7 +22,7 @@ public struct Validations {
         let validation = Validation(key: key, result: result)
         self.storage.append(validation)
     }
-    
+
     public mutating func add(
         _ key: ValidationKey,
         required: Bool = true,
@@ -35,12 +35,12 @@ public struct Validations {
     }
     
     public mutating func add(
-        forEach key: ValidationKey,
+        each key: ValidationKey,
         required: Bool = true,
-        _ nested: (inout Validations) -> ()
+        _ nested: (Int, inout Validations) -> ()
     ) {
         var validations = Validations()
-        nested(&validations)
+        nested(0, &validations)
         let validation = Validation(key: key, required: required, forEachNested: validations)
         self.storage.append(validation)
     }
