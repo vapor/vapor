@@ -20,6 +20,12 @@ public final class ServeCommand: Command {
         public init() { }
     }
 
+    /// Errors that may be thrown when serving a server
+    public enum Error: Swift.Error {
+        /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
+        case incompatibleFlags
+    }
+
     /// See `Command`.
     public let signature = Signature()
 
@@ -57,7 +63,7 @@ public final class ServeCommand: Command {
         case (let hostname, let port, .none, .none): // hostname / port
             try context.application.server.start(address: .hostname(hostname, port: port))
             
-        default: throw ServeCommandError.incompatibleFlags
+        default: throw Error.incompatibleFlags
         }
         
         self.server = context.application.server
@@ -96,10 +102,4 @@ public final class ServeCommand: Command {
     deinit {
         assert(self.didShutdown, "ServeCommand did not shutdown before deinit")
     }
-}
-
-/// Errors that may be thrown when serving a server
-public enum ServeCommandError: Error {
-    /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
-    case incompatibleFlags
 }

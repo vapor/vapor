@@ -55,7 +55,7 @@ extension Server {
 }
 
 /// Errors that may be thrown when starting a server
-public enum ServerStartError: Error {
+internal enum ServerStartError: Error {
     /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
     case unsupportedAddress(message: String)
 }

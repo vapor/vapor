@@ -47,13 +47,13 @@ final class ServerTests: XCTestCase {
     func testIncompatibleStartupOptions() throws {
         func checkForError(_ app: Application) {
             XCTAssertThrowsError(try app.start()) { error in
-                XCTAssertNotNil(error as? ServeCommandError)
-                guard let serveError = error as? ServeCommandError else {
+                XCTAssertNotNil(error as? ServeCommand.Error)
+                guard let serveError = error as? ServeCommand.Error else {
                     XCTFail("\(error) is not a ServeCommandError")
                     return
                 }
                 
-                XCTAssertEqual(ServeCommandError.incompatibleFlags, serveError)
+                XCTAssertEqual(ServeCommand.Error.incompatibleFlags, serveError)
             }
             app.shutdown()
         }
@@ -156,12 +156,7 @@ final class ServerTests: XCTestCase {
         
         // start(address: .unixDomainSocket(path: ...)) should throw
         oldServer = OldServer()
-        XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path"))) { error in
-            switch error {
-            case ServerStartError.unsupportedAddress(_): break
-            default: XCTFail("\(error) is not a ServerStartError.unsupportedAddress")
-            }
-        }
+        XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path")))
         
         class NewServer: Server {
             var onShutdown: EventLoopFuture<Void> {
