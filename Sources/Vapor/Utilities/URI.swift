@@ -2,48 +2,35 @@ import CURLParser
 
 public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     /// A URI's scheme.
-    public enum Scheme: ExpressibleByStringInterpolation {
+    public struct Scheme: ExpressibleByStringInterpolation {
         /// HTTP
-        case http
+        public static let http: Self = "http"
         
         /// HTTPS
-        case https
+        public static let https: Self = "https"
         
         /// HTTP over Unix Domain Socket Paths. The socket path should be encoded as the host in the URI, making sure to encode any special characters:
         /// ```
         /// host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
         /// ```
-        /// Do note that URI's initializer will encode the host in this way.
-        case httpUDS
+        /// Do note that URI's initializer will encode the host in this way if you use `init(scheme:host:port:path:query:fragment:)`.
+        public static let httpUnixDomainSocket: Self = "http+unix"
         
         /// HTTPS over Unix Domain Socket Paths. The socket path should be encoded as the host in the URI, making sure to encode any special characters:
         /// ```
         /// host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
         /// ```
-        /// Do note that URI's initializer will encode the host in this way.
-        case httpsUDS
+        /// Do note that URI's initializer will encode the host in this way if you use `init(scheme:host:port:path:query:fragment:)`.
+        public static let httpsUnixDomainSocket: Self = "https+unix"
         
-        /// A custom scheme.
-        case custom(_ scheme: String)
+        public let value: String?
         
         public init(stringLiteral value: String) {
-            switch value.lowercased() {
-            case "http": self = .http
-            case "https": self = .https
-            case "http+unix": self = .httpUDS
-            case "https+unix": self = .httpsUDS
-            default: self = .custom(value)
-            }
+            self.value = value
         }
         
-        var scheme: String {
-            switch self {
-            case .http: return "http"
-            case .https: return "https"
-            case .httpUDS: return "http+unix"
-            case .httpsUDS: return "https+unix"
-            case .custom(let scheme): return scheme
-            }
+        public init(_ value: String? = nil) {
+            self.value = value
         }
     }
     
@@ -58,7 +45,7 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     }
 
     public init(
-        scheme: String? = nil,
+        scheme: String?,
         host: String? = nil,
         port: Int? = nil,
         path: String,
@@ -66,7 +53,7 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         fragment: String? = nil
     ) {
         self.init(
-            scheme: scheme != nil ? .custom(scheme!) : nil,
+            scheme: Scheme(scheme),
             host: host,
             port: port,
             path: path,
@@ -76,7 +63,7 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     }
     
     public init(
-        scheme: Scheme?,
+        scheme: Scheme = Scheme(),
         host: String? = nil,
         port: Int? = nil,
         path: String,
@@ -84,7 +71,7 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         fragment: String? = nil
     ) {
         var string = ""
-        if let scheme = scheme?.scheme {
+        if let scheme = scheme.value {
             string += scheme + "://"
         }
         if let host = host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
