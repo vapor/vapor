@@ -25,7 +25,7 @@ public struct Validation {
         }
     }
     
-    init(key: ValidationKey, required: Bool, nested validations: Validations) {
+    init(nested key: ValidationKey, required: Bool, keyed validations: Validations) {
         self.init { container in
             let result: ValidatorResult
             do {
@@ -47,18 +47,23 @@ public struct Validation {
         }
     }
     
-    init(key: ValidationKey, required: Bool, forEachNested validations: Validations) {
+    init(nested key: ValidationKey, required: Bool, unkeyed factory: @escaping (Int, inout Validations) -> ()) {
         self.init { container in
             let result: ValidatorResult
             do {
-                var results: [[ValidatorResult]] = []
+                var results: [Int: [ValidatorResult]] = [:]
                 var array = try container.nestedUnkeyedContainer(forKey: key)
                 while !array.isAtEnd {
+                    var validations = Validations()
+                    let index = array.currentIndex
+                    factory(index, &validations)
+
                     let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
                     let result = validations.validate(nested)
-                    results.append(result.results)
+
+                    results[index] = result.results
                 }
-                result = ValidatorResults.NestedCollection(results: results)
+                result = ValidatorResults.NestedEach(results: results)
             } catch {
                 result = ValidatorResults.Codable(error: error)
             }

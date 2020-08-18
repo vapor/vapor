@@ -3,8 +3,8 @@ public struct ValidatorResults {
         public let results: [ValidatorResult]
     }
 
-    public struct NestedCollection {
-        public let results: [[ValidatorResult]]
+    public struct NestedEach {
+        public let results: [Int: [ValidatorResult]]
     }
     
     public struct Skipped { }
@@ -44,25 +44,33 @@ extension ValidatorResults.Nested: ValidatorResult {
     }
 }
 
-extension ValidatorResults.NestedCollection: ValidatorResult {
+extension ValidatorResults.NestedEach: ValidatorResult {
     public var isFailure: Bool {
-        !self.results.flatMap { $0 }
+        !self.results.values.flatMap { $0 }
             .filter { $0.isFailure }.isEmpty
     }
     
     public var successDescription: String? {
-        self.results.enumerated().flatMap { nested in
-            nested.element.filter { !$0.isFailure }
-                .compactMap { $0.successDescription }
-                .map { "Index \(nested.offset) \($0)" }
+        self.results.compactMap { (index, results) -> String? in
+            let successes = results.filter { !$0.isFailure }
+            guard !successes.isEmpty else {
+                return nil
+            }
+            let description = successes.compactMap { $0.successDescription }
+                .joined(separator: " and ")
+            return "at index \(index) \(description)"
         }.joined(separator: " and ")
     }
     
     public var failureDescription: String? {
-        self.results.enumerated().flatMap { nested in
-            nested.element.filter { $0.isFailure }
-                .compactMap { $0.failureDescription }
-                .map { "Index \(nested.offset) \($0)" }
+        self.results.compactMap { (index, results) -> String? in
+            let failures = results.filter { $0.isFailure }
+            guard !failures.isEmpty else {
+                return nil
+            }
+            let description = failures.compactMap { $0.failureDescription }
+                .joined(separator: " and ")
+            return "at index \(index) \(description)"
         }.joined(separator: " and ")
     }
 }

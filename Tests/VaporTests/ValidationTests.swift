@@ -225,9 +225,66 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
-            XCTAssert("\(error)".contains("Index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)"))
-            XCTAssert("\(error)".contains("Index 1 title is less than minimum of 5 character(s)"))
-            XCTAssertEqual("\(error)", "hobbies Index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and Index 1 title is less than minimum of 5 character(s)")
+            XCTAssertEqual("\(error)", "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
+        }
+    }
+
+    func testValidateNestedEachIndex() throws {
+        struct User: Validatable {
+            var name: String
+            var age: Int
+            var hobbies: [Hobby]
+
+            struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                v.add("age", as: Int.self, is: .range(18...))
+                v.add(each: "hobbies") { i, hobby in
+                    // don't validate first item
+                    if i != 0 {
+                        hobby.add("title", as: String.self, is: .characterSet(.alphanumerics + .whitespaces))
+                    }
+                }
+                v.add("hobbies", as: [Hobby].self, is: !.empty)
+            }
+        }
+
+        XCTAssertNoThrow(try User.validate(json: """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "€"
+                },
+                {
+                    "title": "hello"
+                }
+            ]
+        }
+        """))
+
+        XCTAssertThrowsError(try User.validate(json: """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "hello"
+                },
+                {
+                    "title": "€"
+                }
+            ]
+        }
+        """)) { error in
+            XCTAssertEqual("\(error)", "hobbies at index 1 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
     }
     

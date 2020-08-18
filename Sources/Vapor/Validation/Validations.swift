@@ -30,18 +30,16 @@ public struct Validations {
     ) {
         var validations = Validations()
         nested(&validations)
-        let validation = Validation(key: key, required: required, nested: validations)
+        let validation = Validation(nested: key, required: required, keyed: validations)
         self.storage.append(validation)
     }
     
     public mutating func add(
         each key: ValidationKey,
         required: Bool = true,
-        _ nested: (Int, inout Validations) -> ()
+        _ handler: @escaping (Int, inout Validations) -> ()
     ) {
-        var validations = Validations()
-        nested(0, &validations)
-        let validation = Validation(key: key, required: required, forEachNested: validations)
+        let validation = Validation(nested: key, required: required, unkeyed: handler)
         self.storage.append(validation)
     }
     
