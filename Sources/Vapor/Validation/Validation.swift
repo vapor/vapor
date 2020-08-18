@@ -47,6 +47,25 @@ public struct Validation {
         }
     }
     
+    init(key: ValidationKey, required: Bool, forEachNested validations: Validations) {
+        self.init { container in
+            let result: ValidatorResult
+            do {
+                var results: [[ValidatorResult]] = []
+                var array = try container.nestedUnkeyedContainer(forKey: key)
+                while !array.isAtEnd {
+                    let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
+                    let result = validations.validate(nested)
+                    results.append(result.results)
+                }
+                result = ValidatorResults.NestedCollection(results: results)
+            } catch {
+                result = ValidatorResults.Codable(error: error)
+            }
+            return .init(key: key, result: result)
+        }
+    }
+    
     init(key: ValidationKey, result: ValidatorResult) {
         self.init { decoder in
             .init(key: key, result: result)

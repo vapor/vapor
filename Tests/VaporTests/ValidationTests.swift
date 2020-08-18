@@ -16,6 +16,14 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
             "favoritePet": null,
             "isAdmin": true
         }
@@ -36,7 +44,15 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
-            "isAdmin": true
+            "isAdmin": true,
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
         }
         """
         let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
@@ -62,7 +78,15 @@ class ValidationTests: XCTestCase {
                 "name": "Zi!zek",
                 "age": 3
             },
-            "isAdmin": true
+            "isAdmin": true,
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
         }
         """
         let invalidPetURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zi!ek&pet[age]=3&isAdmin=true"
@@ -87,7 +111,15 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
-            "isAdmin": "true"
+            "isAdmin": "true",
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
         }
         """
         let invalidPetBool: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin='true'"
@@ -99,7 +131,7 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual("\(error)",
                        "isAdmin is not a(n) Bool")
         }
-        let validOptionalFavoritePet = """
+        let invalidNestedArray = """
         {
             "name": "Tanner",
             "age": 24,
@@ -112,6 +144,21 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
+            "isAdmin": true,
+            "hobbies": [
+                {
+                    "title": "Football€"
+                },
+                {
+                    "title": "Co"
+                }
+            ]
+        }
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
+            XCTAssert("\(error)".contains("Index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)"))
+            XCTAssert("\(error)".contains("Index 1 title is less than minimum of 5 character(s)"))
+            XCTAssertEqual("\(error)", "hobbies Index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and Index 1 title is less than minimum of 5 character(s)")
+        let validOptionalFavoritePet = """
             "favoritePet": {
                 "name": "Zizek",
                 "age": 3
@@ -167,7 +214,15 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
-            "isAdmin": true
+            "isAdmin": true,
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
         }
         """
         let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
@@ -483,6 +538,7 @@ private final class User: Validatable, Codable {
     var profilePictureURL: String?
     var preferredColors: [String]
     var isAdmin: Bool
+    var hobbies: [Hobby]
     
     struct Pet: Codable {
         var name: String
@@ -492,8 +548,15 @@ private final class User: Validatable, Codable {
             self.age = age
         }
     }
+    
+    struct Hobby: Codable {
+        var title: String
+        init(title: String) {
+            self.title = title
+        }
+    }
 
-    init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
+    init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool, hobbies: [Hobby]) {
         self.id = id
         self.name = name
         self.age = age
@@ -501,6 +564,7 @@ private final class User: Validatable, Codable {
         self.pet = pet
         self.preferredColors = preferredColors
         self.isAdmin = isAdmin
+        self.hobbies = hobbies
     }
 
     static func validations(_ v: inout Validations) {
@@ -523,8 +587,10 @@ private final class User: Validatable, Codable {
         v.add("preferredColors", as: [String].self, is: !.empty)
         // pet validations
         v.add("pet") { pet in
-            pet.add("name", as: String.self,
-                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+            pet.add("name",
+                as: String.self,
+                is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)
+            )
             pet.add("age", as: Int.self, is: .range(3...))
         }
         // optional favorite pet validations
@@ -534,5 +600,13 @@ private final class User: Validatable, Codable {
             pet.add("age", as: Int.self, is: .range(3...))
         }
         v.add("isAdmin", as: Bool.self)
+        // validate arrays of hobbies
+        v.add(forEach: "hobbies") { hobby in
+            hobby.add("title",
+                as: String.self,
+                is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)
+            )
+        }
+        v.add("hobbies", as: [Hobby].self, is: !.empty)
     }
 }

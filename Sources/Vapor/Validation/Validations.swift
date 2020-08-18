@@ -34,6 +34,17 @@ public struct Validations {
         self.storage.append(validation)
     }
     
+    public mutating func add(
+        forEach key: ValidationKey,
+        required: Bool = true,
+        _ nested: (inout Validations) -> ()
+    ) {
+        var validations = Validations()
+        nested(&validations)
+        let validation = Validation(key: key, required: required, forEachNested: validations)
+        self.storage.append(validation)
+    }
+    
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
             throw Abort(.unprocessableEntity)
