@@ -51,17 +51,16 @@ public struct Validation {
         self.init { container in
             let result: ValidatorResult
             do {
-                var results: [Int: [ValidatorResult]] = [:]
+                var results: [[ValidatorResult]] = []
                 var array = try container.nestedUnkeyedContainer(forKey: key)
+                var i = 0
                 while !array.isAtEnd {
+                    defer { i += 1 }
                     var validations = Validations()
-                    let index = array.currentIndex
-                    factory(index, &validations)
-
+                    factory(i, &validations)
                     let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
                     let result = validations.validate(nested)
-
-                    results[index] = result.results
+                    results.append(result.results)
                 }
                 result = ValidatorResults.NestedEach(results: results)
             } catch {

@@ -4,7 +4,7 @@ public struct ValidatorResults {
     }
 
     public struct NestedEach {
-        public let results: [Int: [ValidatorResult]]
+        public let results: [[ValidatorResult]]
     }
     
     public struct Skipped { }
@@ -46,12 +46,12 @@ extension ValidatorResults.Nested: ValidatorResult {
 
 extension ValidatorResults.NestedEach: ValidatorResult {
     public var isFailure: Bool {
-        !self.results.values.flatMap { $0 }
+        !self.results.flatMap { $0 }
             .filter { $0.isFailure }.isEmpty
     }
     
     public var successDescription: String? {
-        self.results.compactMap { (index, results) -> String? in
+        self.results.enumerated().compactMap { (index, results) -> String? in
             let successes = results.filter { !$0.isFailure }
             guard !successes.isEmpty else {
                 return nil
@@ -63,7 +63,7 @@ extension ValidatorResults.NestedEach: ValidatorResult {
     }
     
     public var failureDescription: String? {
-        self.results.compactMap { (index, results) -> String? in
+        self.results.enumerated().compactMap { (index, results) -> String? in
             let failures = results.filter { $0.isFailure }
             guard !failures.isEmpty else {
                 return nil
