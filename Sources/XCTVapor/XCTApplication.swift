@@ -7,10 +7,13 @@ extension Application: XCTApplicationTester {
 extension Application {
     public enum Method {
         case inMemory
-        case running(port: Int)
         public static var running: Method {
-            return .running(port: 8080)
+            return .running(hostname:"localhost", port: 8080)
         }
+        public static func running(port: Int) -> Self {
+            .running(hostname: "localhost", port: port)
+        }
+        case running(hostname: String, port: Int)
     }
 
     public func testable(method: Method = .inMemory) throws -> XCTApplicationTester {
@@ -18,28 +21,31 @@ extension Application {
         switch method {
         case .inMemory:
             return try InMemory(app: self)
-        case .running(let port):
-            return try Live(app: self, port: port)
+        case let .running(hostname, port):
+            return try Live(app: self, hostname: hostname, port: port)
         }
     }
     
     private struct Live: XCTApplicationTester {
         let app: Application
         let port: Int
+        let hostname: String
 
-        init(app: Application, port: Int) throws {
+        init(app: Application, hostname: String = "localhost", port: Int) throws {
             self.app = app
+            self.hostname = hostname
             self.port = port
         }
 
         func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
-            let server = try app.server.start(hostname: "localhost", port: self.port)
-            defer { server.shutdown() }
+            try app.server.start(hostname: self.hostname, port: self.port)
+            defer { app.server.shutdown() }
+            
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
             defer { try! client.syncShutdown() }
             var path = request.url.path
             path = path.hasPrefix("/") ? path : "/\(path)"
-            var url = "http://localhost:\(self.port)\(path)"
+            var url = "http://\(self.hostname):\(self.port)\(path)"
             if let query = request.url.query {
                 url += "?\(query)"
             }
@@ -119,7 +125,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: file, line: line)
+            XCTFail("\(error)", file: (file), line: line)
             throw error
         }
         return self

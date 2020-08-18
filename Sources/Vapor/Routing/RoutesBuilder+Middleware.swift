@@ -24,8 +24,8 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) -> ()) {
-        return self.group(middleware, configure: configure)
+    public func group(_ middleware: Middleware..., configure: (RoutesBuilder) throws -> ()) rethrows {
+        return try self.group(middleware, configure: configure)
     }
 
     /// Creates a new `Router` wrapped in the supplied array of `Middleware`.
@@ -54,8 +54,8 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
-    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) -> ()) {
-        configure(MiddlewareGroup(root: self, middleware: middleware))
+    public func group(_ middleware: [Middleware], configure: (RoutesBuilder) throws -> ()) rethrows {
+        try configure(MiddlewareGroup(root: self, middleware: middleware))
     }
 }
 

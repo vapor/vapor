@@ -1,7 +1,5 @@
 import Backtrace
 
-public protocol LockKey { }
-
 public final class Application {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
@@ -21,6 +19,7 @@ public final class Application {
             self.handlers.append(handler)
         }
     }
+
     public var lifecycle: Lifecycle
 
     public final class Locks {
@@ -46,7 +45,9 @@ public final class Application {
             }
         }
     }
+
     public var locks: Locks
+
     public var sync: Lock {
         self.locks.main
     }
@@ -77,11 +78,16 @@ public final class Application {
         self.isBooted = false
         self.core.initialize()
         self.views.initialize()
+        self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
         self.responder.initialize()
         self.responder.use(.default)
-        self.commands.use(self.server.command, as: "serve", isDefault: true)
+        self.servers.initialize()
+        self.servers.use(.http)
+        self.clients.initialize()
+        self.clients.use(.http)
+        self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
         // Load specific .env first since values are not overridden.
         self.loadDotEnv(named: ".env.\(self.environment.name)")
@@ -162,3 +168,5 @@ public final class Application {
         }
     }
 }
+
+public protocol LockKey { }

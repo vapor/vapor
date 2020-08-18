@@ -11,12 +11,22 @@ public final class Session {
     /// This session's data.
     public var data: SessionData
 
+    /// `true` if this session is still valid.
+    var isValid: Bool
+
     /// Create a new `Session`.
     ///
     /// Normally you will use `Request.session()` to do this.
     public init(id: SessionID? = nil, data: SessionData = .init()) {
         self.id = id
         self.data = data
+        self.isValid = true
+    }
+
+    /// Invalidates the current session, removing persisted data from the session driver
+    /// and invalidating the cookie.
+    public func destroy() {
+        self.isValid = false
     }
 }
 

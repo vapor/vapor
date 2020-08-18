@@ -103,3 +103,29 @@ extension Decimal: URLQueryFragmentConvertible {
         return .urlDecoded(self.description)
     }
 }
+
+extension Date: URLQueryFragmentConvertible {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
+        guard let double = Double(urlQueryFragmentValue: value) else {
+            return nil
+        }
+        self = Date(timeIntervalSince1970: double)
+    }
+    
+    var urlQueryFragmentValue: URLQueryFragment {
+        return timeIntervalSince1970.urlQueryFragmentValue
+    }
+}
+
+extension URL: URLQueryFragmentConvertible {
+    init?(urlQueryFragmentValue value: URLQueryFragment) {
+        guard let string = String(urlQueryFragmentValue: value) else {
+            return nil
+        }
+        self.init(string: string)
+    }
+
+    var urlQueryFragmentValue: URLQueryFragment {
+        self.absoluteString.urlQueryFragmentValue
+    }
+}

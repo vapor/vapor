@@ -1,8 +1,20 @@
 extension Authenticatable {
-    /// Creates a new `GuardAuthenticationMiddleware` for self.
+    /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
+    /// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform
+    /// authentication will _not_ throw errors if they fail to authenticate the user (except in
+    /// some exceptional cases like malformed data). This allows the middlewares to be composed
+    /// together to create chains of authentication for multiple user types.
+    ///
+    /// Use this middleware to protect routes that might not otherwise attempt to access the
+    /// authenticated user (which always requires prior authentication).
+    ///
+    /// Use `Authenticatable.guardAuthMiddleware(...)` to create an instance.
+    ///
+    /// Use this middleware in conjunction with other middleware such as `BearerAuthenticator`
+    /// and `BasicAuthenticator` to do the actual authentication.
     ///
     /// - parameters:
-    ///     - error: `Error` to throw if the type is not authed.
+    ///     - throwing: `Error` to throw if the type is not authed.
     public static func guardMiddleware(
         throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
     ) -> Middleware {
@@ -11,19 +23,7 @@ extension Authenticatable {
 }
 
 
-/// This middleware ensures that an `Authenticatable` type `A` has been authenticated
-/// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform
-/// authentication will _not_ throw errors if they fail to authenticate the user (except in
-/// some exceptional cases like malformed data). This allows the middlewares to be composed
-/// together to create chains of authentication for multiple user types.
-///
-/// Use this middleware to protect routes that might not otherwise attempt to access the
-/// authenticated user (which always requires prior authentication).
-///
-/// Use `Authenticatable.guardAuthMiddleware(...)` to create an instance.
-///
-/// Use this middleware in conjunction with other middleware such as `BearerAuthenticationMiddleware`
-/// and `BasicAuthenticationMiddleware` to do the actual authentication.
+
 private final class GuardAuthenticationMiddleware<A>: Middleware
     where A: Authenticatable
 {

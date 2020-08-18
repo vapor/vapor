@@ -1,5 +1,4 @@
 extension FormDataDecoder: ContentDecoder {
-    /// `ContentDecoder` conformance.
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
         where D: Decodable
     {

@@ -164,8 +164,8 @@ public final class BCryptDigest {
 
     /// Encodes the provided plaintext using OpenBSD's custom base-64 encoding (Radix-64)
     ///
-    /// - parameters
-    ///     - dataConvertible: Data to be base64 encoded.
+    /// - parameters:
+    ///     - data: Data to be base64 encoded.
     /// - returns: Base 64 encoded plaintext
     private func base64Encode(_ data: [UInt8]) -> String {
         let encodedBytes = UnsafeMutablePointer<Int8>.allocate(capacity: 25)
@@ -207,18 +207,6 @@ public final class BCryptDigest {
         }
     }
 }
-
-extension BCryptDigest: PasswordVerifier {
-    public func verify<Password, Digest>(_ password: Password, created digest: Digest) throws -> Bool
-        where Password: DataProtocol, Digest: DataProtocol
-    {
-        return try self.verify(
-            String(decoding: password.copyBytes(), as: UTF8.self),
-            created: String(decoding: digest.copyBytes(), as: UTF8.self)
-        )
-    }
-}
-
 
 public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
     case invalidCost

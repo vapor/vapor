@@ -32,8 +32,11 @@ public final class Response: CustomStringConvertible {
         didSet { self.headers.updateContentLength(self.body.count) }
     }
 
+    // If `true`, don't serialize the body.
+    var forHeadRequest: Bool
+
     internal enum Upgrader {
-        case webSocket(onUpgrade: (WebSocket) -> ())
+        case webSocket(maxFrameSize: WebSocketMaxFrameSize, onUpgrade: (WebSocket) -> ())
     }
     
     internal var upgrader: Upgrader?
@@ -44,7 +47,7 @@ public final class Response: CustomStringConvertible {
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.setCookie
+            return self.headers.setCookie ?? .init()
         }
         set {
             self.headers.setCookie = newValue
@@ -80,6 +83,23 @@ public final class Response: CustomStringConvertible {
                 throw Abort(.unprocessableEntity)
             }
             return try decoder.decode(D.self, from: body, headers: self.response.headers)
+        }
+
+        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+            var content = content
+            try content.beforeEncode()
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(content, to: &body, headers: &self.response.headers)
+            self.response.body = .init(buffer: body)
+        }
+
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+            guard let body = self.response.body.buffer else {
+                throw Abort(.unprocessableEntity)
+            }
+            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
+            try decoded.afterDecode()
+            return decoded
         }
     }
 
@@ -134,6 +154,7 @@ public final class Response: CustomStringConvertible {
         self.headers = headers
         self.body = body
         self.storage = .init()
+        self.forHeadRequest = false
     }
 }
 
@@ -141,9 +162,17 @@ public final class Response: CustomStringConvertible {
 extension HTTPHeaders {
     mutating func updateContentLength(_ contentLength: Int) {
         let count = contentLength.description
-        self.remove(name: .transferEncoding)
-        if count != self[.contentLength].first {
-            self.replaceOrAdd(name: .contentLength, value: count)
+        switch contentLength {
+        case -1:
+            self.remove(name: .contentLength)
+            if "chunked" != self.first(name: .transferEncoding) {
+                self.add(name: .transferEncoding, value: "chunked")
+            }
+        default:
+            self.remove(name: .transferEncoding)
+            if count != self.first(name: .contentLength) {
+                self.replaceOrAdd(name: .contentLength, value: count)
+            }
         }
     }
 }

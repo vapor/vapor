@@ -59,11 +59,11 @@ public struct FileIO {
     ///     print(data) // file data
     ///
     /// - parameters:
-    ///     - file: Path to file on the disk.
+    ///     - path: Path to file on the disk.
     /// - returns: `Future` containing the file data.
-    public func collectFile(at file: String) -> EventLoopFuture<ByteBuffer> {
+    public func collectFile(at path: String) -> EventLoopFuture<ByteBuffer> {
         var data = self.allocator.buffer(capacity: 0)
-        return self.readFile(at: file) { new in
+        return self.readFile(at: path) { new in
             var new = new
             data.writeBuffer(&new)
             return self.request.eventLoop.makeSucceededFuture(())
@@ -77,7 +77,7 @@ public struct FileIO {
     ///     }.wait()
     ///
     /// - parameters:
-    ///     - file: Path to file on the disk.
+    ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
@@ -105,7 +105,7 @@ public struct FileIO {
     ///     }
     ///
     /// - parameters:
-    ///     - file: Path to file on the disk.
+    ///     - path: Path to file on the disk.
     ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
@@ -127,7 +127,7 @@ public struct FileIO {
         headers.replaceOrAdd(name: .eTag, value: fileETag)
 
         // Check if file has been cached already and return NotModified response if the etags match
-        if fileETag == request.headers.firstValue(name: .ifNoneMatch) {
+        if fileETag == request.headers.first(name: .ifNoneMatch) {
             return Response(status: .notModified)
         }
 
@@ -178,6 +178,28 @@ public struct FileIO {
             ) { chunk in
                 return onRead(chunk)
             }
+            done.whenComplete { _ in
+                try? fd.close()
+            }
+            return done
+        } catch {
+            return self.request.eventLoop.makeFailedFuture(error)
+        }
+    }
+    
+    /// Write the contents of buffer to a file at the supplied path.
+    ///
+    ///     let data = ByteBuffer(string: "ByteBuffer")
+    ///     try req.fileio.writeFile(data, at: "/path/to/file.txt").wait()
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - buffer: The `ByteBuffer` to write.
+    /// - returns: `Future` that will complete when the file write is finished.
+    public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
+        do {
+            let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+            let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
             done.whenComplete { _ in
                 try? fd.close()
             }

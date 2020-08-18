@@ -13,9 +13,19 @@
 public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
     public struct Configuration {
+        /// Supported date formats
+        public enum DateDecodingStrategy {
+            /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
+            case secondsSince1970
+            /// ISO 8601 formatted date
+            case iso8601
+            /// Using custom callback
+            case custom((Decoder) throws -> Date)
+        }
+
         let boolFlags: Bool
         let arraySeparators: [Character]
-
+        let dateDecodingStrategy: DateDecodingStrategy
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -24,12 +34,15 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         ///                  true, it will always resolve for an optional `Bool`.
         ///     - arraySeparators: Uses these characters to decode arrays. If set to `,`, `arr=v1,v2` would
         ///                        populate a key named `arr` of type `Array` to be decoded as `["v1", "v2"]`
+        ///     - dateDecodingStrategy: Date format used to decode a date. Date formats are tried in the order provided
         public init(
             boolFlags: Bool = true,
-            arraySeparators: [Character] = [",", "|"]
+            arraySeparators: [Character] = [",", "|"],
+            dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
+            self.dateDecodingStrategy = dateDecodingStrategy
         }
     }
 
@@ -155,7 +168,41 @@ private struct _Decoder: Decoder {
             return self.data.children[key.stringValue] == nil
         }
         
+        private func decodeDate(forKey key: Key) throws -> Date {
+            return try decodeDate(forKey: key, as: configuration.dateDecodingStrategy)
+        }
+        
+        private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateDecodingStrategy) throws -> Date {
+            //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
+            let child = self.data.children[key.stringValue] ?? []
+            switch dateFormat {
+            case .secondsSince1970:
+                guard let value = child.values.last else {
+                    throw DecodingError.valueNotFound(Date.self, at: self.codingPath + [key])
+                }
+                if let result = Date.init(urlQueryFragmentValue: value) {
+                    return result
+                } else {
+                    throw DecodingError.typeMismatch(Date.self, at: self.codingPath + [key])
+                }
+            case .iso8601:
+                let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
+                if let date = ISO8601DateFormatter.threadSpecific.date(from: try String(from: decoder)) {
+                    return date
+                } else {
+                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
+                }
+            case .custom(let callback):
+                let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
+                return try callback(decoder)
+            }
+        }
+        
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
+            //Check if we received a date. We need the decode with the appropriate format
+            guard !(T.self is Date.Type) else {
+                return try decodeDate(forKey: key) as! T
+            }
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
@@ -357,7 +404,7 @@ private struct _Decoder: Decoder {
         }
         
         func decodeNil() -> Bool {
-            return false
+            self.data.values.isEmpty
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {

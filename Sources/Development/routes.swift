@@ -1,4 +1,5 @@
 import Vapor
+import _Vapor3
 
 struct Creds: Content {
     var email: String
@@ -6,7 +7,7 @@ struct Creds: Content {
 }
 
 public func routes(_ app: Application) throws {
-    app.on(.GET, "ping", body: .stream) { req in
+    app.on(.GET, "ping") { req -> StaticString in
         return "123" as StaticString
     }
 
@@ -89,7 +90,7 @@ public func routes(_ app: Application) throws {
         guard let running = req.application.running else {
             throw Abort(.internalServerError)
         }
-        _ = running.stop()
+        running.stop()
         return .ok
     }
 
@@ -120,17 +121,16 @@ public func routes(_ app: Application) throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(SessionsMiddleware(session: app.sessions.driver))
-    sessions.get("get") { req -> String in
-        return req.session.data["name"] ?? "n/a"
+        .grouped(app.sessions.middleware)
+    sessions.get("set", ":value") { req -> HTTPStatus in
+        req.session.data["name"] = req.parameters.get("value")
+        return .ok
     }
-    sessions.get("set", ":value") { req -> String in
-        let name = req.parameters.get("value")!
-        req.session.data["name"] = name
-        return name
+    sessions.get("get") { req -> String in
+        req.session.data["name"] ?? "n/a"
     }
     sessions.get("del") { req -> String in
-        req.destroySession()
+        req.session.destroy()
         return "done"
     }
 
@@ -172,9 +172,60 @@ public func routes(_ app: Application) throws {
             .secret(key: "PASSWORD_SECRET", fileIO: req.application.fileio, on: req.eventLoop)
             .unwrap(or: Abort(.badRequest))
     }
+
+    app.on(.POST, "max-256", body: .collect(maxSize: 256)) { req -> HTTPStatus in
+        print("in route")
+        return .ok
+    }
+
+    app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<HTTPStatus> in
+        enum BodyStreamWritingToDiskError: Error {
+            case streamFailure(Error)
+            case fileHandleClosedFailure(Error)
+            case multipleFailures([BodyStreamWritingToDiskError])
+        }
+        return req.application.fileio.openFile(
+            path: "/Users/tanner/Desktop/foo.txt",
+            mode: .write,
+            flags: .allowFileCreation(),
+            eventLoop: req.eventLoop
+        ).flatMap { fileHandle in
+            let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            req.body.drain { part in
+                switch part {
+                case .buffer(let buffer):
+                    return req.application.fileio.write(
+                        fileHandle: fileHandle,
+                        buffer: buffer,
+                        eventLoop: req.eventLoop
+                    )
+                case .error(let drainError):
+                    do {
+                        try fileHandle.close()
+                        promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
+                    } catch {
+                        promise.fail(BodyStreamWritingToDiskError.multipleFailures([
+                            .fileHandleClosedFailure(error),
+                            .streamFailure(drainError)
+                        ]))
+                    }
+                    return req.eventLoop.makeSucceededFuture(())
+                case .end:
+                    do {
+                        try fileHandle.close()
+                        promise.succeed(.ok)
+                    } catch {
+                        promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
+                    }
+                    return req.eventLoop.makeSucceededFuture(())
+                }
+            }
+            return promise.futureResult
+        }
+    }
 }
 
-struct TestError: AbortError {
+struct TestError: AbortError, DebuggableError {
     var status: HTTPResponseStatus {
         .internalServerError
     }
@@ -183,21 +234,24 @@ struct TestError: AbortError {
         "This is a test."
     }
 
-    let file: String
-    let function: String
-    let line: Int
-
-    var source: ErrorSource? {
-        ErrorSource(file: self.file, function: self.function, line: self.line)
-    }
+    var source: ErrorSource?
+    var stackTrace: StackTrace?
 
     init(
         file: String = #file,
         function: String = #function,
-        line: Int = #line
+        line: UInt = #line,
+        column: UInt = #column,
+        range: Range<UInt>? = nil,
+        stackTrace: StackTrace? = .capture(skip: 1)
     ) {
-        self.file = file
-        self.function = function
-        self.line = line
+        self.source = .init(
+            file: file,
+            function: function,
+            line: line,
+            column: column,
+            range: range
+        )
+        self.stackTrace = stackTrace
     }
 }

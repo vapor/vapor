@@ -1,11 +1,14 @@
 extension Request {
     final class BodyStream: BodyStreamWriter {
-        typealias Handler = (BodyStreamResult, EventLoopPromise<Void>?) -> ()
-        private(set) var isClosed: Bool
-        private var handler: Handler?
-        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
-
         let eventLoop: EventLoop
+
+        var isBeingRead: Bool {
+            self.handler != nil
+        }
+
+        private(set) var isClosed: Bool
+        private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
 
         init(on eventLoop: EventLoop) {
             self.eventLoop = eventLoop
@@ -13,7 +16,7 @@ extension Request {
             self.buffer = []
         }
 
-        func read(_ handler: @escaping Handler) {
+        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             self.handler = handler
             for (result, promise) in self.buffer {
                 handler(result, promise)
@@ -22,11 +25,20 @@ extension Request {
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-            if case .end = chunk {
+            switch chunk {
+            case .end, .error:
                 self.isClosed = true
+            case .buffer: break
             }
-            if let handler = handler {
+            
+            if let handler = self.handler {
                 handler(chunk, promise)
+                // remove reference to handler
+                switch chunk {
+                case .end, .error:
+                    self.handler = nil
+                default: break
+                }
             } else {
                 self.buffer.append((chunk, promise))
             }
@@ -50,19 +62,9 @@ extension Request {
             }
             return promise.futureResult
         }
-    }
-}
 
-extension BodyStreamResult: CustomStringConvertible {
-    public var description: String {
-        switch self {
-        case .buffer(let buffer):
-            let value = String(decoding: buffer.readableBytesView, as: UTF8.self)
-            return "buffer(\(value))"
-        case .error(let error):
-            return "error(\(error))"
-        case .end:
-            return "end"
+        deinit {
+            assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
         }
     }
 }

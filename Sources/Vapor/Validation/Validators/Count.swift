@@ -4,12 +4,17 @@ extension Validator where T: Collection {
         .count(min: range.lowerBound, max: range.upperBound)
     }
 
-    /// Validates that the data's count is less than the supplied upper bound using `PartialRangeThrough`.
+    /// Validates that the data's count is less than or equal the supplied upper bound using `PartialRangeThrough`.
     public static func count(_ range: PartialRangeThrough<Int>) -> Validator<T> {
         .count(min: nil, max: range.upperBound)
     }
+    
+    /// Validates that the data's count is less than the supplied upper bound using `PartialRangeUpTo`.
+    public static func count(_ range: PartialRangeUpTo<Int>) -> Validator {
+        .count(min: nil, max: range.upperBound.advanced(by: -1))
+    }
 
-    /// Validates that the data's count is less than the supplied lower bound using `PartialRangeFrom`.
+    /// Validates that the data's count is greater than or equal to the supplied lower bound using `PartialRangeFrom`.
     public static func count(_ range: PartialRangeFrom<Int>) -> Validator<T> {
         .count(min: range.lowerBound, max: nil)
     }

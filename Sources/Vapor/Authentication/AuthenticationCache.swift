@@ -1,9 +1,12 @@
 extension Request {
-    public var auth: Auth {
+    /// Helper for accessing authenticated objects.
+    /// See `Authenticator` for more information.
+    public var auth: Authentication {
         return .init(request: self)
     }
 
-    public struct Auth {
+    /// Request helper for storing and fetching authenticated objects.
+    public struct Authentication {
         let request: Request
         init(request: Request) {
             self.request = request
@@ -11,71 +14,55 @@ extension Request {
     }
 }
 
-extension Request.Auth {
-    // MARK: Authenticate
-
+extension Request.Authentication {
     /// Authenticates the supplied instance for this request.
     public func login<A>(_ instance: A)
         where A: Authenticatable
     {
-        self.request._authenticationCache[A.self] = instance
+        self.cache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
     public func logout<A>(_ type: A.Type = A.self)
         where A: Authenticatable
     {
-        self.request._authenticationCache[A.self] = nil
+        self.cache[A.self] = nil
     }
-
-    // MARK: Verify
 
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
-    public func require<A>(_ type: A.Type = A.self) throws -> A
+    @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A
         where A: Authenticatable
     {
         guard let a = self.get(A.self) else {
-            self.request.logger.error("\(A.self) has not been authorized")
             throw Abort(.unauthorized)
         }
         return a
     }
 
     /// Returns the authenticated instance of the supplied type.
-    /// note: nil if no type has been authed.
+    /// - note: `nil` if no type has been authed.
     public func get<A>(_ type: A.Type = A.self) -> A?
         where A: Authenticatable
     {
-        return self.request._authenticationCache[A.self]
+        return self.cache[A.self]
     }
 
-    /// Returns true if the type has been authenticated.
+    /// Returns `true` if the type has been authenticated.
     public func has<A>(_ type: A.Type = A.self) -> Bool
         where A: Authenticatable
     {
         return self.get(A.self) != nil
     }
-}
 
-// Internal auth cache
-
-extension Request {
-    /// Stores authenticated objects. This should be created
-    /// using the request container as a singleton. Authenticated
-    /// objects can then be stored here by middleware and fetched
-    /// later in route closures.
-    internal final class AuthenticationCache {
-        /// The internal storage.
+    private final class Cache {
         private var storage: [ObjectIdentifier: Any]
 
-        /// Create a new authentication cache.
         init() {
             self.storage = [:]
         }
 
-        /// Access the cache using types.
         internal subscript<A>(_ type: A.Type) -> A?
             where A: Authenticatable
             {
@@ -84,17 +71,22 @@ extension Request {
         }
     }
 
-    private struct AuthenticationCacheKey: StorageKey {
-        typealias Value = AuthenticationCache
+    private struct CacheKey: StorageKey {
+        typealias Value = Cache
     }
 
-    internal var _authenticationCache: AuthenticationCache {
-        if let existing = self.storage[AuthenticationCacheKey.self] {
-            return existing
-        } else {
-            let new = AuthenticationCache()
-            self.storage[AuthenticationCacheKey.self] = new
-            return new
+    private var cache: Cache {
+        get {
+            if let existing = self.request.storage[CacheKey.self] {
+                return existing
+            } else {
+                let new = Cache()
+                self.request.storage[CacheKey.self] = new
+                return new
+            }
+        }
+        set {
+            self.request.storage[CacheKey.self] = newValue
         }
     }
 }

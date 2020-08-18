@@ -4,15 +4,20 @@ public struct ClientRequest {
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
 
-    public init(method: HTTPMethod = .GET, url: URI = "/", headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+    public init(
+        method: HTTPMethod = .GET,
+        url: URI = "/",
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil
+    ) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
     }
+}
 
-    // MARK: Content
-
+extension ClientRequest {
     private struct _URLQueryContainer: URLQueryContainer {
         var url: URI
 
@@ -57,6 +62,23 @@ public struct ClientRequest {
                 throw Abort(.lengthRequired)
             }
             return try decoder.decode(D.self, from: body, headers: self.headers)
+        }
+
+        mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+            var content = content
+            try content.beforeEncode()
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(content, to: &body, headers: &self.headers)
+            self.body = body
+        }
+
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+            guard let body = self.body else {
+                throw Abort(.lengthRequired)
+            }
+            var decoded = try decoder.decode(C.self, from: body, headers: self.headers)
+            try decoded.afterDecode()
+            return decoded
         }
     }
 

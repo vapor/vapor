@@ -29,7 +29,7 @@ public final class Request: CustomStringConvertible {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public internal(set) var route: Route?
+    public var route: Route?
 
     // MARK: Content
 
@@ -73,10 +73,28 @@ public final class Request: CustomStringConvertible {
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.request.body.data else {
-                self.request.logger.error("Decoding streaming bodies not supported")
+                self.request.logger.debug("Decoding streaming bodies not supported")
                 throw Abort(.unprocessableEntity)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
+        }
+
+        func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
+            var content = content
+            try content.beforeEncode()
+            var body = ByteBufferAllocator().buffer(capacity: 0)
+            try encoder.encode(content, to: &body, headers: &self.request.headers)
+            self.request.bodyStorage = .collected(body)
+        }
+
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+            guard let body = self.request.body.data else {
+                self.request.logger.debug("Decoding streaming bodies not supported")
+                throw Abort(.unprocessableEntity)
+            }
+            var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
+            try decoded.afterDecode()
+            return decoded
         }
     }
 
@@ -107,7 +125,7 @@ public final class Request: CustomStringConvertible {
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.cookie
+            return self.headers.cookie ?? .init()
         }
         set {
             self.headers.cookie = newValue

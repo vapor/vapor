@@ -27,15 +27,30 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
             case values
         }
 
+        /// Supported date formats
+        public enum DateEncodingStrategy {
+            /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
+            case secondsSince1970
+            /// ISO 8601 formatted date
+            case iso8601
+            /// Using custom callback
+            case custom((Date, Encoder) throws -> Void)
+        }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
+        public var dateEncodingStrategy: DateEncodingStrategy
 
         /// Creates a new `Configuration`.
         ///
         ///  - parameters:
         ///     - arrayEncoding: Specified array encoding. Defaults to `.bracket`.
-        public init(arrayEncoding: ArrayEncoding = .bracket) {
+        ///     - dateFormat: Format to encode date format too. Defaults to `secondsSince1970`
+        public init(
+            arrayEncoding: ArrayEncoding = .bracket,
+            dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970
+        ) {
             self.arrayEncoding = arrayEncoding
+            self.dateEncodingStrategy = dateEncodingStrategy
         }
     }
 
@@ -163,11 +178,28 @@ private class _Encoder: Encoder {
             // skip
         }
         
+        private func encodeDate(_ date: Date, forKey key: Key) throws {
+            switch configuration.dateEncodingStrategy {
+            case .secondsSince1970:
+                internalData.children[key.stringValue] = URLEncodedFormData(values: [date.urlQueryFragmentValue])
+            case .iso8601:
+                internalData.children[key.stringValue] = URLEncodedFormData(values: [
+                    ISO8601DateFormatter.threadSpecific.string(from: date).urlQueryFragmentValue
+                ])
+            case .custom(let callback):
+                let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
+                try callback(date, encoder)
+                self.internalData.children[key.stringValue] = try encoder.getData()
+            }
+        }
+        
         /// See `KeyedEncodingContainerProtocol`
         func encode<T>(_ value: T, forKey key: Key) throws
             where T : Encodable
         {
-            if let convertible = value as? URLQueryFragmentConvertible {
+            if let date = value as? Date {
+                try encodeDate(date, forKey: key)
+            } else if let convertible = value as? URLQueryFragmentConvertible {
                 internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)

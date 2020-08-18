@@ -20,6 +20,12 @@ extension XCTHTTPResponse {
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             try decoder.decode(D.self, from: self.body, headers: self.headers)
         }
+
+        func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
+            var decoded = try decoder.decode(C.self, from: self.body, headers: self.headers)
+            try decoded.afterDecode()
+            return decoded
+        }
     }
 
     public var content: ContentContainer {
@@ -38,24 +44,31 @@ public func XCTAssertContent<D>(
     _ res: XCTHTTPResponse,
     file: StaticString = #file,
     line: UInt = #line,
-    _ closure: (D) -> ()
+    _ closure: (D) throws -> ()
 )
+    rethrows
     where D: Decodable
 {
     guard let contentType = res.headers.contentType else {
-        XCTFail("response does not contain content type", file: file, line: line)
+        XCTFail("response does not contain content type", file: (file), line: line)
         return
     }
+
+    let content: D
+
     do {
         let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
-        let content = try decoder.decode(D.self, from: res.body, headers: res.headers)
-        closure(content)
+        content = try decoder.decode(D.self, from: res.body, headers: res.headers)
     } catch {
-        XCTFail("could not decode body: \(error)", file: file, line: line)
+        XCTFail("could not decode body: \(error)", file: (file), line: line)
+        return
     }
+
+    try closure(content)
 }
 
 public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #file, line: UInt = #line) {
+    let file = (file)
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
         XCTAssert(haystack.contains(needle), "\(haystack) does not contain \(needle)", file: file, line: line)
@@ -72,14 +85,14 @@ public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString
     where T: Codable & Equatable
 {
     guard let data = data else {
-        XCTFail("nil does not equal \(test)", file: file, line: line)
+        XCTFail("nil does not equal \(test)", file: (file), line: line)
         return
     }
     do {
         let decoded = try JSONDecoder().decode(T.self, from: Data(data.utf8))
-        XCTAssertEqual(decoded, test, file: file, line: line)
+        XCTAssertEqual(decoded, test, file: (file), line: line)
     } catch {
-        XCTFail("could not decode \(T.self): \(error)", file: file, line: line)
+        XCTFail("could not decode \(T.self): \(error)", file: (file), line: line)
     }
 }
 

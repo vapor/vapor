@@ -1,10 +1,10 @@
 /// Determines how an incoming HTTP request's body is collected. 
 public enum HTTPBodyStreamStrategy {
-    /// The HTTP request's body will be collected into memory before the route handler is
-    /// called. The HTTP server's max body size will determine how much data can be
-    /// collected.
+    /// The HTTP request's body will be collected into memory up to a maximum size
+    /// before the route handler is called. The application's configured default max body
+    /// size will be used unless otherwise specified.
     ///
-    /// See `collect(maxSize:)` to set a lower max body size.
+    /// See `collect(maxSize:)` to specify a custom max collection size.
     public static var collect: HTTPBodyStreamStrategy {
         return .collect(maxSize: nil)
     }
@@ -16,11 +16,11 @@ public enum HTTPBodyStreamStrategy {
     /// The HTTP request's body will be collected into memory before the route handler is
     /// called.
     ///
-    /// If a `maxSize` is supplied, the request body size in bytes will be limited. Requests
-    /// exceeding that size will result in an error. If no `maxSize` is supplied, the HTTP
-    /// server may still enforce a max body size limit. Note that the HTTP server's max body
-    /// size limit will take precedent over the value supplied here.
-    case collect(maxSize: Int?)
+    /// `maxSize` Limits the maximum amount of memory in bytes that will be used to
+    /// collect a streaming body. Streaming requests exceeding that size will result in an error.
+    /// Passing `nil` results in the application's default max body size being used. This
+    /// parameter does not affect non-streaming requests.
+    case collect(maxSize: ByteCount?)
 }
 
 extension RoutesBuilder {
@@ -149,8 +149,10 @@ extension RoutesBuilder {
     {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(max: max).flatMapThrowing { _ in
-                    return try closure(request)
+                return request.body.collect(
+                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
+                ).flatMapThrowing { _ in
+                    try closure(request)
                 }.encodeResponse(for: request)
             } else {
                 return try closure(request)

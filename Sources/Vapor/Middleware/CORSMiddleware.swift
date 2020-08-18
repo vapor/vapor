@@ -9,6 +9,7 @@ public final class CORSMiddleware: Middleware {
     /// - none: Disallows any origin.
     /// - originBased: Uses value of the origin header in the request.
     /// - all: Uses wildcard to allow any origin.
+    /// - any: A list of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
     public enum AllowOriginSetting {
         /// Disallow any origin.
@@ -19,6 +20,9 @@ public final class CORSMiddleware: Middleware {
 
         /// Uses wildcard to allow any origin.
         case all
+        
+        /// A list of allowable origins.
+        case any([String])
 
         /// Uses custom string provided as an associated value.
         case custom(String)
@@ -32,14 +36,17 @@ public final class CORSMiddleware: Middleware {
             case .none: return ""
             case .originBased: return req.headers[.origin].first ?? ""
             case .all: return "*"
-            case .custom(let string):
+            case .any(let origins):
                 guard let origin = req.headers[.origin].first else {
-                    return string
+                    return ""
                 }
-                return string.contains(origin) ? origin : string
+                return origins.contains(origin) ? origin : ""
+            case .custom(let string):
+                return string
             }
         }
     }
+
 
     /// Configuration used for populating headers in response for CORS requests.
     public struct Configuration {
@@ -90,14 +97,14 @@ public final class CORSMiddleware: Middleware {
             allowedHeaders: [HTTPHeaders.Name],
             allowCredentials: Bool = false,
             cacheExpiration: Int? = 600,
-            exposedHeaders: [String]? = nil
+            exposedHeaders: [HTTPHeaders.Name]? = nil
         ) {
             self.allowedOrigin = allowedOrigin
             self.allowedMethods = allowedMethods.map({ "\($0)" }).joined(separator: ", ")
-            self.allowedHeaders = allowedHeaders.map({ $0.description }).joined(separator: ", ")
+            self.allowedHeaders = allowedHeaders.map({ String(describing: $0) }).joined(separator: ", ")
             self.allowCredentials = allowCredentials
             self.cacheExpiration = cacheExpiration
-            self.exposedHeaders = exposedHeaders?.joined(separator: ", ")
+            self.exposedHeaders = exposedHeaders?.map({ String(describing: $0) }).joined(separator: ", ")
         }
     }
 

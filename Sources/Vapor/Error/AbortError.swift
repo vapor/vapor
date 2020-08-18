@@ -8,47 +8,33 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public protocol AbortError: LocalizedError, CustomStringConvertible {
+public protocol AbortError: Error {
+    /// The reason for this error.
+    var reason: String { get }
+
     /// The HTTP status code this error will return.
     var status: HTTPResponseStatus { get }
 
     /// Optional `HTTPHeaders` to add to the error response.
     var headers: HTTPHeaders { get }
-
-    /// The human-readable (and hopefully understandable) reason for this error.
-    var reason: String { get }
-    
-    var source: ErrorSource? { get }
-}
-
-public struct ErrorSource {
-    public let file: String
-    public let function: String
-    public let line: Int
-    
-    public init(file: String = #file, function: String = #function, line: Int = #line) {
-        self.file = file
-        self.line = line
-        self.function = function
-    }
 }
 
 extension AbortError {
     /// See `AbortError`.
     public var headers: HTTPHeaders {
-        return [:]
+        [:]
     }
 
-    public var description: String {
-        return "\(Self.self) \(self.status.code): \(self.reason)"
+    /// See `AbortError`.
+    public var reason: String {
+        self.status.reasonPhrase
     }
+}
 
-    public var errorDescription: String? {
-        return self.description
-    }
-    
-    public var source: ErrorSource? {
-        return nil
+extension AbortError where Self: DebuggableError {
+    /// See `DebuggableError`.
+    public var identifier: String {
+        self.status.code.description
     }
 }
 

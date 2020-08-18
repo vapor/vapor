@@ -3,7 +3,7 @@
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public struct Abort: AbortError {
+public struct Abort: AbortError, DebuggableError {
     /// Creates a redirecting `Abort` error.
     ///
     ///     throw Abort.redirect(to: "https://vapor.codes")"
@@ -28,20 +28,11 @@ public struct Abort: AbortError {
     /// See `AbortError`
     public var reason: String
 
-    /// The file throwing this error
-    public var file: String
-    
-    /// The function throwing this error
-    public var function: String
-    
-    /// The line where the error is thrown
-    public var line: Int
-    
-    /// Wrap this error's source location into a usable struct for
-    /// the `AbortError` protocol.
-    public var source: ErrorSource? {
-        ErrorSource(file: self.file, function: self.function, line: self.line)
-    }
+    /// Source location where this error was created.
+    public var source: ErrorSource?
+
+    /// Stack trace at point of error creation.
+    public var stackTrace: StackTrace?
 
     /// Create a new `Abort`, capturing current source location info.
     public init(
@@ -52,14 +43,22 @@ public struct Abort: AbortError {
         suggestedFixes: [String] = [],
         file: String = #file,
         function: String = #function,
-        line: Int = #line
+        line: UInt = #line,
+        column: UInt = #column,
+        range: Range<UInt>? = nil,
+        stackTrace: StackTrace? = .capture(skip: 1)
     ) {
         self.identifier = identifier ?? status.code.description
         self.headers = headers
         self.status = status
         self.reason = reason ?? status.reasonPhrase
-        self.file = file
-        self.function = function
-        self.line = line
+        self.source = ErrorSource(
+            file: file,
+            function: function,
+            line: line,
+            column: column,
+            range: range
+        )
+        self.stackTrace = stackTrace
     }
 }

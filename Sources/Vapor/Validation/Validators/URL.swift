@@ -21,7 +21,7 @@ extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether a string is a valid URL.
     public struct URL {
         /// The input is a valid URL.
-        let isValidURL: Bool
+        public let isValidURL: Bool
     }
 }
 
