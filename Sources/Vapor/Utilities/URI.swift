@@ -1,6 +1,39 @@
 import CURLParser
 
 public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
+    /// A URI's scheme.
+    public struct Scheme: ExpressibleByStringInterpolation {
+        /// HTTP
+        public static let http: Self = "http"
+        
+        /// HTTPS
+        public static let https: Self = "https"
+        
+        /// HTTP over Unix Domain Socket Paths. The socket path should be encoded as the host in the URI, making sure to encode any special characters:
+        /// ```
+        /// host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
+        /// ```
+        /// Do note that URI's initializer will encode the host in this way if you use `init(scheme:host:port:path:query:fragment:)`.
+        public static let httpUnixDomainSocket: Self = "http+unix"
+        
+        /// HTTPS over Unix Domain Socket Paths. The socket path should be encoded as the host in the URI, making sure to encode any special characters:
+        /// ```
+        /// host.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed)
+        /// ```
+        /// Do note that URI's initializer will encode the host in this way if you use `init(scheme:host:port:path:query:fragment:)`.
+        public static let httpsUnixDomainSocket: Self = "https+unix"
+        
+        public let value: String?
+        
+        public init(stringLiteral value: String) {
+            self.value = value
+        }
+        
+        public init(_ value: String? = nil) {
+            self.value = value
+        }
+    }
+    
     public var string: String
 
     public init(string: String = "/") {
@@ -12,7 +45,25 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     }
 
     public init(
-        scheme: String? = nil,
+        scheme: String?,
+        host: String? = nil,
+        port: Int? = nil,
+        path: String,
+        query: String? = nil,
+        fragment: String? = nil
+    ) {
+        self.init(
+            scheme: Scheme(scheme),
+            host: host,
+            port: port,
+            path: path,
+            query: query,
+            fragment: fragment
+        )
+    }
+    
+    public init(
+        scheme: Scheme = Scheme(),
         host: String? = nil,
         port: Int? = nil,
         path: String,
@@ -20,10 +71,10 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
         fragment: String? = nil
     ) {
         var string = ""
-        if let scheme = scheme {
+        if let scheme = scheme.value {
             string += scheme + "://"
         }
-        if let host = host {
+        if let host = host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed) {
             string += host
         }
         if let port = port {

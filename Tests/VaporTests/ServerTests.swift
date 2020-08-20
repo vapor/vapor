@@ -20,6 +20,207 @@ final class ServerTests: XCTestCase {
         let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
         XCTAssertEqual(res.body?.string, "bar")
     }
+    
+    func testSocketPathOverride() throws {
+        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+
+        let env = Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--unix-socket", socketPath]
+        )
+
+        let app = Application(env)
+        defer { app.shutdown() }
+
+        app.get("foo") { req in
+            return "bar"
+        }
+        try app.start()
+
+        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")).wait()
+        XCTAssertEqual(res.body?.string, "bar")
+
+        // no server should be bound to the port despite one being set on the configuration.
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+    }
+    
+    func testIncompatibleStartupOptions() throws {
+        func checkForError(_ app: Application) {
+            XCTAssertThrowsError(try app.start()) { error in
+                XCTAssertNotNil(error as? ServeCommand.Error)
+                guard let serveError = error as? ServeCommand.Error else {
+                    XCTFail("\(error) is not a ServeCommandError")
+                    return
+                }
+                
+                XCTAssertEqual(ServeCommand.Error.incompatibleFlags, serveError)
+            }
+            app.shutdown()
+        }
+        
+        var app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+        
+        app = Application(Environment(
+            name: "testing",
+            arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
+        ))
+        checkForError(app)
+    }
+    
+    @available(*, deprecated)
+    func testDeprecatedServerStartMethods() throws {
+        /// TODO: This test may be removed in the next major version
+        class OldServer: Server {
+            var onShutdown: EventLoopFuture<Void> {
+                preconditionFailure("We should never get here.")
+            }
+            func shutdown() { }
+            
+            var hostname:String? = ""
+            var port:Int? = 0
+            // only implements the old requirement
+            func start(hostname: String?, port: Int?) throws {
+                self.hostname = hostname
+                self.port = port
+            }
+        }
+        
+        // Ensure we always start with something other than what we expect when calling start
+        var oldServer = OldServer()
+        XCTAssertNotNil(oldServer.hostname)
+        XCTAssertNotNil(oldServer.port)
+        
+        // start() should set the hostname and port to nil
+        oldServer = OldServer()
+        try oldServer.start()
+        XCTAssertNil(oldServer.hostname)
+        XCTAssertNil(oldServer.port)
+        
+        // start(hostname: ..., port: ...) should set the hostname and port appropriately
+        oldServer = OldServer()
+        try oldServer.start(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(oldServer.hostname, "1.2.3.4")
+        XCTAssertEqual(oldServer.port, 123)
+        
+        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
+        oldServer = OldServer()
+        try oldServer.start(address: .hostname("localhost", port: 8080))
+        XCTAssertEqual(oldServer.hostname, "localhost")
+        XCTAssertEqual(oldServer.port, 8080)
+        
+        // start(address: .unixDomainSocket(path: ...)) should throw
+        oldServer = OldServer()
+        XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path")))
+        
+        class NewServer: Server {
+            var onShutdown: EventLoopFuture<Void> {
+                preconditionFailure("We should never get here.")
+            }
+            func shutdown() { }
+            
+            var hostname: String? = ""
+            var port: Int? = 0
+            var socketPath: String? = ""
+            
+            func start(address: BindAddress?) throws {
+                switch address {
+                case .none:
+                    self.hostname = nil
+                    self.port = nil
+                    self.socketPath = nil
+                case .hostname(let hostname, let port):
+                    self.hostname = hostname
+                    self.port = port
+                    self.socketPath = nil
+                case .unixDomainSocket(let path):
+                    self.hostname = nil
+                    self.port = nil
+                    self.socketPath = path
+                }
+            }
+        }
+        
+        // Ensure we always start with something other than what we expect when calling start
+        var newServer = NewServer()
+        XCTAssertNotNil(newServer.hostname)
+        XCTAssertNotNil(newServer.port)
+        XCTAssertNotNil(newServer.socketPath)
+
+        // start() should set the hostname and port to nil
+        newServer = NewServer()
+        try newServer.start()
+        XCTAssertNil(newServer.hostname)
+        XCTAssertNil(newServer.port)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(hostname: ..., port: ...) should set the hostname and port appropriately
+        newServer = NewServer()
+        try newServer.start(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(newServer.hostname, "1.2.3.4")
+        XCTAssertEqual(newServer.port, 123)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
+        newServer = NewServer()
+        try newServer.start(address: .hostname("localhost", port: 8080))
+        XCTAssertEqual(newServer.hostname, "localhost")
+        XCTAssertEqual(newServer.port, 8080)
+        XCTAssertNil(newServer.socketPath)
+
+        // start(address: .unixDomainSocket(path: ...)) should throw
+        newServer = NewServer()
+        try newServer.start(address: .unixDomainSocket(path: "/path"))
+        XCTAssertNil(newServer.hostname)
+        XCTAssertNil(newServer.port)
+        XCTAssertEqual(newServer.socketPath, "/path")
+        
+    }
 
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
@@ -315,6 +516,97 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(b.status, .ok)
     }
 
+    func testStartWithValidSocketFile() throws {
+        let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
+
+        let app = Application(.testing)
+        app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
+        defer {
+            app.shutdown()
+        }
+
+        XCTAssertNoThrow(try app.start())
+    }
+
+    func testStartWithUnsupportedSocketFile() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
+        defer { app.shutdown() }
+
+        XCTAssertThrowsError(try app.start())
+    }
+
+    func testStartWithInvalidSocketFilePath() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
+        defer { app.shutdown() }
+
+        XCTAssertThrowsError(try app.start())
+    }
+    
+    func testAddressConfigurations() throws {
+        var configuration = HTTPServer.Configuration()
+        XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
+        
+        configuration = HTTPServer.Configuration(hostname: "1.2.3.4", port: 123)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname("1.2.3.4", port: nil))
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        
+        configuration = HTTPServer.Configuration(address: .hostname(nil, port: 123))
+        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, 123)
+        
+        configuration = HTTPServer.Configuration(address: .hostname(nil, port: nil))
+        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        
+        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        
+        // Test mutating a config that was originally a socket path
+        configuration = HTTPServer.Configuration(address: .unixDomainSocket(path: "/path"))
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        configuration.hostname = "1.2.3.4"
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: nil))
+        
+        configuration.address = .unixDomainSocket(path: "/path")
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .unixDomainSocket(path: "/path"))
+        
+        configuration.port = 123
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, 123)
+        XCTAssertEqual(configuration.address, .hostname(nil, port: 123))
+        
+        configuration.hostname = "1.2.3.4"
+        XCTAssertEqual(configuration.hostname, "1.2.3.4")
+        XCTAssertEqual(configuration.port, 123)
+        XCTAssertEqual(configuration.address, .hostname("1.2.3.4", port: 123))
+        
+        configuration.address = .hostname(nil, port: nil)
+        XCTAssertEqual(configuration.hostname, HTTPServer.Configuration.defaultHostname)
+        XCTAssertEqual(configuration.port, HTTPServer.Configuration.defaultPort)
+        XCTAssertEqual(configuration.address, .hostname(nil, port: nil))
+    }
+
     func testQuiesceKeepAliveConnections() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -376,8 +668,12 @@ final class CustomServer: Server {
         self.didStart = false
         self.didShutdown = false
     }
-
+    
     func start(hostname: String?, port: Int?) throws {
+        try self.start(address: .hostname(hostname, port: port))
+    }
+    
+    func start(address: BindAddress?) throws {
         self.didStart = true
     }
 
