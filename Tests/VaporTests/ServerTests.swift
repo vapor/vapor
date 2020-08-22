@@ -543,6 +543,30 @@ final class ServerTests: XCTestCase {
 
         XCTAssertThrowsError(try app.start())
     }
+
+    func testStartWithDefaultHostnameConfiguration() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.address = .hostname(nil, port: nil)
+        defer { app.shutdown() }
+
+        XCTAssertNoThrow(try app.start())
+    }
+
+    func testStartWithDefaultHostname() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.address = .hostname(nil, port: 8008)
+        defer { app.shutdown() }
+
+        XCTAssertNoThrow(try app.start())
+    }
+
+    func testStartWithDefaultPort() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
+        defer { app.shutdown() }
+        
+        XCTAssertNoThrow(try app.start())
+    }
     
     func testAddressConfigurations() throws {
         var configuration = HTTPServer.Configuration()
