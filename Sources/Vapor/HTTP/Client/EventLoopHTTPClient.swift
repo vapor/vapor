@@ -11,7 +11,7 @@ extension HTTPClient {
 private struct EventLoopHTTPClient: Client {
     let http: HTTPClient
     let eventLoop: EventLoop
-    let logger: Logger
+    let logger: Logger?
 
     func send(
         _ client: ClientRequest
@@ -41,6 +41,10 @@ private struct EventLoopHTTPClient: Client {
     }
 
     func delegating(to eventLoop: EventLoop) -> Client {
+        EventLoopHTTPClient(http: self.http, eventLoop: eventLoop, logger: nil)
+    }
+
+    func delegating(to eventLoop: EventLoop, logger: Logger?) -> Client {
         EventLoopHTTPClient(http: self.http, eventLoop: eventLoop, logger: logger)
     }
 }
