@@ -44,7 +44,7 @@ private struct EventLoopHTTPClient: Client {
         EventLoopHTTPClient(http: self.http, eventLoop: eventLoop, logger: nil)
     }
 
-    func delegating(to eventLoop: EventLoop, logger: Logger?) -> Client {
+    func delegating(to eventLoop: EventLoop, logger: Logger) -> Client {
         EventLoopHTTPClient(http: self.http, eventLoop: eventLoop, logger: logger)
     }
 }
