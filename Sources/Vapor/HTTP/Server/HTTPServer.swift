@@ -20,7 +20,7 @@ public final class HTTPServer: Server {
         public static let defaultHostname = "127.0.0.1"
         public static let defaultPort = 8080
         
-        /// Address the server will bind to.
+        /// Address the server will bind to. Configuring an address using a hostname with a nil host or port will use the default hostname or port respectively.
         public var address: BindAddress
         
         /// Host name the server will bind to.
@@ -255,7 +255,7 @@ public final class HTTPServer: Server {
         let addressDescription: String
         switch configuration.address {
         case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname!):\(port!)" // will never be nil because we set them above to non-optional values
+            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
         case .unixDomainSocket(let socketPath):
             addressDescription = "\(scheme)+unix: \(socketPath)"
         }
