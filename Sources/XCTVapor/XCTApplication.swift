@@ -111,6 +111,28 @@ extension XCTApplicationTester {
         body: ByteBuffer? = nil,
         file: StaticString = #file,
         line: UInt = #line,
+        afterResponse: (XCTHTTPResponse) throws -> ()
+    ) throws -> XCTApplicationTester {
+        try self.test(
+            method,
+            path,
+            headers: headers,
+            body: body,
+            file: file,
+            line: line,
+            afterResponse: afterResponse
+        )
+    }
+
+
+    @discardableResult
+    public func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
     ) throws -> XCTApplicationTester {
