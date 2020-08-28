@@ -11,9 +11,9 @@ final class LoggingTests: XCTestCase {
             return "done"
         }
 
-        try app.testable().test(.GET, "trace") { res in
+        try app.testable().test(.GET, "trace", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "done")
-        }
+        })
     }
 }

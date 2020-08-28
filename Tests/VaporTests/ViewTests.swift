@@ -11,10 +11,10 @@ final class ViewTests: XCTestCase {
             return View(data: data)
         }
 
-        try app.testable().test(.GET, "/view") { res in
+        try app.testable().test(.GET, "/view", afterResponse: { res in
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .html)
             XCTAssertEqual(res.body.string, "<h1>hello</h1>")
-        }
+        })
     }
 }

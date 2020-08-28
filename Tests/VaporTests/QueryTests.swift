@@ -118,10 +118,10 @@ final class QueryTests: XCTestCase {
             return "hi"
         }
 
-        try app.testable().test(.GET, "/todos?a=b") { res in
+        try app.testable().test(.GET, "/todos?a=b", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "hi")
-        }
+        })
     }
 
     func testURLEncodedFormDecodeQuery() throws {
@@ -151,9 +151,9 @@ final class QueryTests: XCTestCase {
         }
 
         let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3"
-        try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
+        try app.testable().test(.GET, "/urlencodedform?\(data)", afterResponse: { res in
             XCTAssertEqual(res.status.code, 200)
-        }
+        })
     }
 
     func testURLPercentEncodedFormDecodeQuery() throws {
@@ -184,9 +184,9 @@ final class QueryTests: XCTestCase {
         }
 
         let data = "name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7&pet[name]=Fido&pet[age]=3".addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        try app.testable().test(.GET, "/urlencodedform?\(data)") { res in
+        try app.testable().test(.GET, "/urlencodedform?\(data)", afterResponse: { res in
             XCTAssertEqual(res.status.code, 200)
-        }
+        })
     }
 
     func testCustomEncode() throws {
@@ -201,13 +201,13 @@ final class QueryTests: XCTestCase {
             return res
         }
 
-        try app.testable().test(.GET, "/custom-encode") { res in
+        try app.testable().test(.GET, "/custom-encode", afterResponse: { res in
             XCTAssertEqual(res.body.string, """
             {
               "hello" : "world"
             }
             """)
-        }
+        })
     }
 
     // https://github.com/vapor/vapor/issues/1609
@@ -231,10 +231,10 @@ final class QueryTests: XCTestCase {
         headers.replaceOrAdd(name: .contentLength, value: body.readableBytes.description)
         headers.contentType = .json
 
-        try app.testable().test(.POST, "/decode-fail", headers: headers, body: body) { res in
+        try app.testable().test(.POST, "/decode-fail", headers: headers, body: body, afterResponse: { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "missing")
-        }
+        })
     }
 
     // https://github.com/vapor/vapor/issues/1687

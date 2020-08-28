@@ -9,11 +9,11 @@ final class FileTests: XCTestCase {
             return req.fileio.streamFile(at: #file)
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running).test(.GET, "/file-stream", afterResponse: { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
-        }
+        })
     }
 
     func testStreamFileConnectionClose() throws {
@@ -26,11 +26,11 @@ final class FileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .connection, value: "close")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers, afterResponse: { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
-        }
+        })
     }
     
     func testFileWrite() throws {
@@ -56,9 +56,9 @@ final class FileTests: XCTestCase {
         let path = #file.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
-        try app.test(.GET, "/Utilities/foo%20bar.html") { res in
+        try app.test(.GET, "/Utilities/foo%20bar.html", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
-        }
+        })
     }
 }

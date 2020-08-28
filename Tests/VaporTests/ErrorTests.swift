@@ -114,11 +114,11 @@ final class ErrorTests: XCTestCase {
             var reason: String
         }
 
-        try app.test(.GET, "foo") { res in
+        try app.test(.GET, "foo", afterResponse: { res in
             XCTAssertEqual(res.status, .internalServerError)
             let abort = try res.content.decode(AbortResponse.self)
             XCTAssertEqual(abort.reason, "Foo")
-        }.test(.POST, "foo", beforeRequest: { req in
+        }).test(.POST, "foo", beforeRequest: { req in
             try req.content.encode(Foo(bar: 42))
         }, afterResponse: { res in
             XCTAssertEqual(res.status, .internalServerError)

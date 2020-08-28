@@ -9,10 +9,10 @@ final class ServiceTests: XCTestCase {
             req.readOnly.foos()
         }
 
-        try app.test(.GET, "test") { res in
+        try app.test(.GET, "test", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             try XCTAssertEqual(res.content.decode([String].self), ["foo"])
-        }
+        })
     }
 
     func testWritable() throws {

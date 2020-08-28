@@ -11,9 +11,9 @@ final class RequestTests: XCTestCase {
         }
         
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun", afterResponse: { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
-        }
+        })
     }
     
     func testRequestRemoteAddress() throws {
@@ -24,9 +24,9 @@ final class RequestTests: XCTestCase {
             $0.remoteAddress?.description ?? "n/a"
         }
         
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running).test(.GET, "remote", afterResponse: { res in
             XCTAssertContains(res.body.string, "IP")
-        }
+        })
     }
 
     func testURI() throws {

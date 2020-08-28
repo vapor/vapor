@@ -74,9 +74,9 @@ final class ApplicationTests: XCTestCase {
             throw Foo()
         }
 
-        try app.testable().test(.GET, "/error") { res in
+        try app.testable().test(.GET, "/error", afterResponse: { res in
             XCTAssertEqual(res.status, .internalServerError)
-        }
+        })
     }
 
     func testAsyncKitExport() throws {

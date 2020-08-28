@@ -268,10 +268,10 @@ final class ServerTests: XCTestCase {
             return "123"
         }
 
-        try app.testable().test(.GET, "/ping") { res in
+        try app.testable().test(.GET, "/ping", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "123")
-        }
+        })
     }
 
     func testCustomServer() throws {
@@ -308,9 +308,9 @@ final class ServerTests: XCTestCase {
 
         var buffer = ByteBufferAllocator().buffer(capacity: payload.count)
         buffer.writeBytes(payload)
-        try app.testable(method: .running).test(.POST, "payload", body: buffer) { res in
+        try app.testable(method: .running).test(.POST, "payload", body: buffer, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
-        }
+        })
     }
 
     func testCollectedResponseBodyEnd() throws {
@@ -350,9 +350,9 @@ final class ServerTests: XCTestCase {
             return try req.content.decode(User.self)
         }
 
-        try app.testable().test(.GET, "/user") { res in
+        try app.testable().test(.GET, "/user", afterResponse: { res in
             XCTAssertEqual(res.status, .unsupportedMediaType)
-        }
+        })
     }
 
     // https://github.com/vapor/vapor/issues/2245

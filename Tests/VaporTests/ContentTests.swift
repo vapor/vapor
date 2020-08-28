@@ -73,10 +73,10 @@ final class ContentTests: XCTestCase {
             return foo.name
         }
 
-        try app.testable().test(.GET, "/decode_error") { res in
+        try app.testable().test(.GET, "/decode_error", afterResponse: { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
-        }
+        })
     }
 
     func testContentContainer() throws {
@@ -98,10 +98,10 @@ final class ContentTests: XCTestCase {
             return res
         }
 
-        try app.testable().test(.GET, "/encode") { res in
+        try app.testable().test(.GET, "/encode", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "hi")
-        }
+        })
     }
 
     func testMultipartDecode() throws {
@@ -144,10 +144,10 @@ final class ContentTests: XCTestCase {
 
         try app.testable().test(.GET, "/multipart", headers: [
             "Content-Type": "multipart/form-data; boundary=123"
-        ], body: .init(string: data)) { res in
+        ], body: .init(string: data), afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqualJSON(res.body.string, expected)
-        }
+        })
     }
 
     func testMultipartEncode() throws {
@@ -168,14 +168,14 @@ final class ContentTests: XCTestCase {
                 image: File(data: "<contents of image>", filename: "droplet.png")
             )
         }
-        try app.testable().test(.GET, "/multipart") { res in
+        try app.testable().test(.GET, "/multipart", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
             XCTAssertContains(res.body.string, "filename=droplet.png")
             XCTAssertContains(res.body.string, "name=\"image\"")
-        }
+        })
     }
 
     func testURLEncodedFormDecode() throws {
@@ -201,9 +201,9 @@ final class ContentTests: XCTestCase {
         var body = ByteBufferAllocator().buffer(capacity: 0)
         body.writeString("name=Vapor&age=3&luckyNumbers[]=5&luckyNumbers[]=7")
 
-        try app.testable().test(.GET, "/urlencodedform", headers: headers, body: body) { res in
+        try app.testable().test(.GET, "/urlencodedform", headers: headers, body: body, afterResponse: { res in
             XCTAssertEqual(res.status.code, 200)
-        }
+        })
     }
 
     func testURLEncodedFormEncode() throws {
@@ -220,7 +220,7 @@ final class ContentTests: XCTestCase {
         app.get("urlencodedform") { req -> User in
             return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
-        try app.testable().test(.GET, "/urlencodedform") { res in
+        try app.testable().test(.GET, "/urlencodedform", afterResponse: { res in
             debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
@@ -228,7 +228,7 @@ final class ContentTests: XCTestCase {
             XCTAssertContains(res.body.string, "luckyNumbers[]=7")
             XCTAssertContains(res.body.string, "age=3")
             XCTAssertContains(res.body.string, "name=Vapor")
-        }
+        })
     }
 
     func testJSONPreservesHTTPHeaders() throws {

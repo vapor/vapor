@@ -11,15 +11,15 @@ final class RouteTests: XCTestCase {
         app.routes.get("hello", ":a", ":b") { req in
             return [req.parameters.get("a") ?? "", req.parameters.get("b") ?? ""]
         }
-        try app.testable().test(.GET, "/hello/vapor") { res in
+        try app.testable().test(.GET, "/hello/vapor", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "vapor")
-        }.test(.POST, "/hello/vapor") { res in
+        }).test(.POST, "/hello/vapor", afterResponse: { res in
             XCTAssertEqual(res.status, .notFound)
-        }.test(.GET, "/hello/vapor/development") { res in
+        }).test(.GET, "/hello/vapor/development", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, #"["vapor","development"]"#)
-        }
+        })
     }
 
     func testRequiredParameter() throws {
@@ -39,17 +39,17 @@ final class RouteTests: XCTestCase {
             return try req.parameters.require("value")
         }
 
-        try app.testable().test(.GET, "/string/test") { res in
+        try app.testable().test(.GET, "/string/test", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "test")
-        }.test(.GET, "/int/123") { res in
+        }).test(.GET, "/int/123", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "123")
-        }.test(.GET, "/int/not-int") { res in
+        }).test(.GET, "/int/not-int", afterResponse: { res in
             XCTAssertEqual(res.status, .unprocessableEntity)
-        }.test(.GET, "/missing") { res in
+        }).test(.GET, "/missing", afterResponse: { res in
             XCTAssertEqual(res.status, .internalServerError)
-        }
+        })
     }
 
     func testJSON() throws {
@@ -61,10 +61,10 @@ final class RouteTests: XCTestCase {
             return ["foo": "bar"]
         }
 
-        try app.testable().test(.GET, "/json") { res in
+        try app.testable().test(.GET, "/json", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, #"{"foo":"bar"}"#)
-        }
+        })
     }
 
     func testRootGet() throws {
@@ -78,13 +78,13 @@ final class RouteTests: XCTestCase {
             return "foo"
         }
 
-        try app.testable().test(.GET, "/") { res in
+        try app.testable().test(.GET, "/", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "root")
-        }.test(.GET, "/foo") { res in
+        }).test(.GET, "/foo", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "foo")
-        }
+        })
     }
     
     func testInsensitiveRoutes() throws {
@@ -97,13 +97,13 @@ final class RouteTests: XCTestCase {
             return "foo"
         }
 
-        try app.testable().test(.GET, "/foo") { res in
+        try app.testable().test(.GET, "/foo", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "foo")
-        }.test(.GET, "/FOO") { res in
+        }).test(.GET, "/FOO", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "foo")
-        }
+        })
     }
 
     func testAnyResponse() throws {
@@ -157,13 +157,13 @@ final class RouteTests: XCTestCase {
             }
         }
 
-        try app.testable().test(.GET, "/foo?number=true") { res in
+        try app.testable().test(.GET, "/foo?number=true", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "42")
-        }.test(.GET, "/foo?number=false") { res in
+        }).test(.GET, "/foo?number=false", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "string")
-        }
+        })
     }
 
     func testValidationError() throws {
@@ -229,11 +229,11 @@ final class RouteTests: XCTestCase {
             return "hi"
         }
 
-        try app.testable(method: .running).test(.HEAD, "/hello") { res in
+        try app.testable(method: .running).test(.HEAD, "/hello", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.first(name: .contentLength), "2")
             XCTAssertEqual(res.body.readableBytes, 0)
-        }
+        })
     }
 
     func testInvalidCookie() throws {
@@ -249,11 +249,11 @@ final class RouteTests: XCTestCase {
         var cookies = HTTPCookies()
         cookies["vapor-session"] = "asdf"
         headers.cookie = cookies
-        try app.testable().test(.GET, "/get", headers: headers) { res in
+        try app.testable().test(.GET, "/get", headers: headers, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertNotNil(res.headers[.setCookie])
             XCTAssertEqual(res.body.string, "n/a")
-        }
+        })
     }
 
     // https://github.com/vapor/vapor/issues/1787
@@ -265,10 +265,10 @@ final class RouteTests: XCTestCase {
             throw Abort(.noContent)
         }
 
-        try app.testable(method: .running).test(.GET, "/no-content") { res in
+        try app.testable(method: .running).test(.GET, "/no-content", afterResponse: { res in
             XCTAssertEqual(res.status.code, 204)
             XCTAssertEqual(res.body.readableBytes, 0)
-        }
+        })
     }
 
     func testSimilarRoutingPath() throws {
@@ -282,15 +282,15 @@ final class RouteTests: XCTestCase {
             "b"
         }
 
-        try app.testable(method: .running).test(.GET, "/api/addresses/") { res in
+        try app.testable(method: .running).test(.GET, "/api/addresses/", afterResponse: { res in
             XCTAssertEqual(res.body.string, "a")
-        }.test(.GET, "/api/addresses/search/test") { res in
+        }).test(.GET, "/api/addresses/search/test", afterResponse: { res in
             XCTAssertEqual(res.body.string, "b")
-        }.test(.GET, "/api/addresses/search/") { res in
+        }).test(.GET, "/api/addresses/search/", afterResponse: { res in
             XCTAssertEqual(res.status, .notFound)
-        }.test(.GET, "/api/addresses/search") { res in
+        }).test(.GET, "/api/addresses/search", afterResponse: { res in
             XCTAssertEqual(res.status, .notFound)
-        }
+        })
     }
 
     func testThrowingGroup() throws {
@@ -313,9 +313,9 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
         try app.register(collection: Foo())
 
-        try app.test(.GET, "foo") { res in
+        try app.test(.GET, "foo", afterResponse: { res in
             XCTAssertEqual(res.body.string, "bar")
-        }
+        })
     }
 
     func testConfigurableMaxBodySize() throws {
@@ -341,14 +341,14 @@ final class RouteTests: XCTestCase {
 
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeBytes(Array(repeating: 0, count: 500_000))
-        try app.testable(method: .running).test(.POST, "/default", body: buffer) { res in
+        try app.testable(method: .running).test(.POST, "/default", body: buffer, afterResponse: { res in
             XCTAssertEqual(res.status, .payloadTooLarge)
-        }.test(.POST, "/1kb", body: buffer) { res in
+        }).test(.POST, "/1kb", body: buffer, afterResponse: { res in
             XCTAssertEqual(res.status, .payloadTooLarge)
-        }.test(.POST, "/1mb", body: buffer) { res in
+        }).test(.POST, "/1mb", body: buffer, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
-        }.test(.POST, "/1gb", body: buffer) { res in
+        }).test(.POST, "/1gb", body: buffer, afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
-        }
+        })
     }
 }

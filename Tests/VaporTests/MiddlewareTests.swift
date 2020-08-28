@@ -23,10 +23,10 @@ final class MiddlewareTests: XCTestCase {
             return "done"
         }
 
-        try app.testable().test(.GET, "/order") { res in
+        try app.testable().test(.GET, "/order", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(OrderMiddleware.order, ["a", "b", "c"])
             XCTAssertEqual(res.body.string, "done")
-        }
+        })
     }
 }

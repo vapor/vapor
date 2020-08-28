@@ -29,13 +29,13 @@ final class AuthenticationTests: XCTestCase {
             return try req.auth.require(Test.self).name
         }
 
-        try app.testable().test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test", afterResponse: { res in
             XCTAssertEqual(res.status, .unauthorized)
-        }
-        .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+        })
+        .test(.GET, "/test", headers: ["Authorization": "Bearer test"], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-        }
+        })
     }
 
     func testBasicAuthenticator() throws {
@@ -69,12 +69,12 @@ final class AuthenticationTests: XCTestCase {
         }
         
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test", afterResponse: { res in
             XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }).test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-        }
+        })
     }
     
     func testBasicAuthenticatorWithRedirect() throws {
@@ -112,13 +112,13 @@ final class AuthenticationTests: XCTestCase {
         }
         
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test", afterResponse: { res in
             XCTAssertEqual(res.status, .seeOther)
             XCTAssertEqual(res.headers["Location"].first, "/redirect?orig=/test")
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }).test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-        }
+        })
     }
 
     func testSessionAuthentication() throws {
@@ -170,10 +170,10 @@ final class AuthenticationTests: XCTestCase {
         }
 
         var sessionCookie: HTTPCookies.Value?
-        try app.testable().test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test", afterResponse: { res in
             XCTAssertEqual(res.status, .unauthorized)
             XCTAssertNil(res.headers.first(name: .setCookie))
-        }.test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+        }).test(.GET, "/test", headers: ["Authorization": "Bearer test"], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
             if let cookie = res.headers.setCookie?["vapor-session"] {
@@ -181,12 +181,12 @@ final class AuthenticationTests: XCTestCase {
             } else {
                 XCTFail("No set cookie header")
             }
-        }
-        .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")]) { res in
+        })
+        .test(.GET, "/test", headers: ["Cookie": sessionCookie!.serialize(name: "vapor-session")], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
             XCTAssertNotNil(res.headers.first(name: .setCookie))
-        }
+        })
     }
 
     func testMiddlewareConfigExistential() {
@@ -248,11 +248,11 @@ final class AuthenticationTests: XCTestCase {
         }
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
+        try app.testable().test(.GET, "/test", afterResponse: { res in
             XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+        }).test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"], afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
-        }
+        })
     }
 }

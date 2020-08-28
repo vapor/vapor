@@ -22,10 +22,10 @@ final class WebSocketTests: XCTestCase {
             }
         }
 
-        try app.testable().test(.GET, "/ws") { res in
+        try app.testable().test(.GET, "/ws", afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Hello, world!")
-        }
+        })
     }
 
 

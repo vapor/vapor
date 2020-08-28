@@ -45,7 +45,7 @@ final class SessionTests: XCTestCase {
             return "del"
         }
 
-        try app.testable().test(.GET, "/set") { res in
+        try app.testable().test(.GET, "/set", afterResponse: { res in
             XCTAssertEqual(res.body.string, "set")
             cookie = res.headers.setCookie?["vapor-session"]
             XCTAssertNotNil(cookie)
@@ -53,7 +53,7 @@ final class SessionTests: XCTestCase {
                 #"create SessionData(storage: ["foo": "bar"])"#,
             ])
             MockKeyedCache.ops = []
-        }
+        })
 
         XCTAssertEqual(cookie?.string, "a")
 
@@ -61,13 +61,13 @@ final class SessionTests: XCTestCase {
         var cookies = HTTPCookies()
         cookies["vapor-session"] = cookie
         headers.cookie = cookies
-        try app.testable().test(.GET, "/del", headers: headers) { res in
+        try app.testable().test(.GET, "/del", headers: headers, afterResponse: { res in
             XCTAssertEqual(res.body.string, "del")
             XCTAssertEqual(MockKeyedCache.ops, [
                 #"read SessionID(string: "a")"#,
                 #"delete SessionID(string: "a")"#
             ])
-        }
+        })
     }
 
     func testInvalidCookie() throws {
@@ -94,9 +94,9 @@ final class SessionTests: XCTestCase {
 
 
         // Test accessing session with no cookie.
-        try app.test(.GET, "get") { res in
+        try app.test(.GET, "get", afterResponse: { res in
             XCTAssertEqual(res.status, .badRequest)
-        }
+        })
 
         // Test setting session with invalid cookie.
         var newCookie: HTTPCookies.Value?
