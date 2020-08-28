@@ -3,7 +3,7 @@ import Logging
 import Vapor
 
 let isLoggingConfigured: Bool = {
-    var env = Environment.testing
+    var env = try! Environment.detect(default: .testing)
     try! LoggingSystem.bootstrap(from: &env)
     return true
 }()

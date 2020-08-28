@@ -111,7 +111,7 @@ final class QueryTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1537
     func testQueryStringRunning() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("todos") { req in
@@ -137,7 +137,7 @@ final class QueryTests: XCTestCase {
             var age: Int
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
@@ -169,7 +169,7 @@ final class QueryTests: XCTestCase {
             var age: Int
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
@@ -190,7 +190,7 @@ final class QueryTests: XCTestCase {
     }
 
     func testCustomEncode() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("custom-encode") { req -> Response in
@@ -217,7 +217,7 @@ final class QueryTests: XCTestCase {
             var missing: String
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.post("decode-fail") { req -> String in

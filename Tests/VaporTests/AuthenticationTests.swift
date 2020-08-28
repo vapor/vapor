@@ -20,7 +20,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.routes.grouped([
@@ -59,7 +59,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.grouped([
@@ -98,7 +98,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         let redirectMiddleware = Test.redirectMiddleware { req -> String in
@@ -157,7 +157,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.routes.grouped([
@@ -237,7 +237,7 @@ final class AuthenticationTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.grouped([

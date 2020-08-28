@@ -71,7 +71,7 @@ final class SessionTests: XCTestCase {
     }
 
     func testInvalidCookie() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         // Configure sessions.

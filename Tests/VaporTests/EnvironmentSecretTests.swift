@@ -7,7 +7,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/non-existing-secret"
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let eventLoop = app.eventLoopGroup.next()
@@ -19,7 +19,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let eventLoop = app.eventLoopGroup.next()
@@ -33,7 +33,7 @@ final class EnvironmentSecretTests: XCTestCase {
 
         let key = "MY_ENVIRONMENT_SECRET"
         setenv(key, path, 1)
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer {
             app.shutdown()
             unsetenv(key)
@@ -46,7 +46,7 @@ final class EnvironmentSecretTests: XCTestCase {
 
     func testLoadingSecretFromEnvKeyWhichDoesNotExist() throws {
         let key = "MY_NON_EXISTING_ENVIRONMENT_SECRET"
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let eventLoop = app.eventLoopGroup.next()

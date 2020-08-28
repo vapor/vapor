@@ -363,7 +363,7 @@ class ValidationTests: XCTestCase {
     }
 
     func testCustomResponseMiddleware() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         // Converts validation errors to a custom response.

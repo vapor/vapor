@@ -223,7 +223,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testConfigureHTTPDecompressionLimit() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let smallOrigString = "Hello, world!"
@@ -261,7 +261,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testLiveServer() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("ping") { req -> String in
@@ -275,7 +275,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testCustomServer() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.servers.use(.custom)
@@ -292,7 +292,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testMultipleChunkBody() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let payload = [UInt8].random(count: 1 << 20)
@@ -314,7 +314,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testCollectedResponseBodyEnd() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.post("drain") { req -> EventLoopFuture<HTTPStatus> in
@@ -343,7 +343,7 @@ final class ServerTests: XCTestCase {
     func testMissingBody() throws {
         struct User: Content { }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("user") { req -> User in
@@ -357,7 +357,7 @@ final class ServerTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2245
     func testTooLargePort() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.http.server.configuration.port = .max
@@ -365,7 +365,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testEarlyExitStreamingRequest() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.on(.POST, "upload", body: .stream) { req -> EventLoopFuture<Int> in
@@ -405,7 +405,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testEchoServer() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         final class Context {
@@ -484,7 +484,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testSkipStreaming() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.on(.POST, "echo", body: .stream) { request in
@@ -519,7 +519,7 @@ final class ServerTests: XCTestCase {
     func testStartWithValidSocketFile() throws {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .unixDomainSocket(path: socketPath)
         defer {
             app.shutdown()
@@ -529,7 +529,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testStartWithUnsupportedSocketFile() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .unixDomainSocket(path: "/tmp")
         defer { app.shutdown() }
 
@@ -537,7 +537,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testStartWithInvalidSocketFilePath() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .unixDomainSocket(path: "/tmp/nonexistent/vapor.socket")
         defer { app.shutdown() }
 
@@ -545,7 +545,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testStartWithDefaultHostnameConfiguration() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .hostname(nil, port: nil)
         defer { app.shutdown() }
 
@@ -553,7 +553,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testStartWithDefaultHostname() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .hostname(nil, port: 8008)
         defer { app.shutdown() }
 
@@ -561,7 +561,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testStartWithDefaultPort() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
         defer { app.shutdown() }
         
@@ -632,7 +632,7 @@ final class ServerTests: XCTestCase {
     }
 
     func testQuiesceKeepAliveConnections() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("hello") { req in

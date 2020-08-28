@@ -99,7 +99,7 @@ final class ErrorTests: XCTestCase {
     }
 
     func testAbortError() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("foo") { req -> String in

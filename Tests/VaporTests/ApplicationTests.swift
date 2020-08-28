@@ -5,7 +5,7 @@ import AsyncHTTPClient
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         try app.start()
@@ -42,7 +42,7 @@ final class ApplicationTests: XCTestCase {
             }
         }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
 
         let foo = Foo()
         app.lifecycle.use(foo)
@@ -67,7 +67,7 @@ final class ApplicationTests: XCTestCase {
     func testSwiftError() throws {
         struct Foo: Error { }
         
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.get("error") { req -> String in
@@ -93,7 +93,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testBoilerplate() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("hello") { req in

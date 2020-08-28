@@ -3,7 +3,7 @@ import XCTest
 
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("ws") { req -> EventLoopFuture<String> in
@@ -31,7 +31,7 @@ final class WebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1997
     func testWebSocket404() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.http.server.configuration.port = 8085
@@ -55,7 +55,7 @@ final class WebSocketTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/2009
     func testWebSocketServer() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         app.webSocket("foo") { req, ws in
             ws.send("foo")
@@ -78,7 +78,7 @@ final class WebSocketTests: XCTestCase {
     }
 
     func testLifecycleShutdown() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         app.http.server.configuration.port = 1337
 
         final class WebSocketManager: LifecycleHandler {

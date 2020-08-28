@@ -2,7 +2,7 @@ import XCTVapor
 
 final class LoggingTests: XCTestCase {
     func testChangeRequestLogLevel() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("trace") { req -> String in

@@ -14,7 +14,7 @@ final class MiddlewareTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.grouped(

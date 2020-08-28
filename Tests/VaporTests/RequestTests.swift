@@ -3,7 +3,7 @@ import XCTVapor
 final class RequestTests: XCTestCase {
     
     func testCustomHostAdress() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.get("vapor", "is", "fun") {
@@ -17,7 +17,7 @@ final class RequestTests: XCTestCase {
     }
     
     func testRequestRemoteAddress() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.get("remote") {

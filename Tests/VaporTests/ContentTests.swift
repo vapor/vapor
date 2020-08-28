@@ -61,7 +61,7 @@ final class ContentTests: XCTestCase {
         {"name":"hi","bar":"asdf"}
         """
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("decode_error") { req -> String in
@@ -87,7 +87,7 @@ final class ContentTests: XCTestCase {
             var message: String = "hi"
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("encode") { req -> Response in
@@ -133,7 +133,7 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("multipart") { req -> User in
@@ -158,7 +158,7 @@ final class ContentTests: XCTestCase {
             var image: File
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("multipart") { req -> User in
@@ -185,7 +185,7 @@ final class ContentTests: XCTestCase {
             var luckyNumbers: [Int]
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
@@ -214,7 +214,7 @@ final class ContentTests: XCTestCase {
             var luckyNumbers: [Int]
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> User in
@@ -232,7 +232,7 @@ final class ContentTests: XCTestCase {
     }
 
     func testJSONPreservesHTTPHeaders() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("check") { (req: Request) -> String in
@@ -247,7 +247,7 @@ final class ContentTests: XCTestCase {
     }
 
     func testJSONAllowsContentTypeOverride() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("check") { (req: Request) -> String in

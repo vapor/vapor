@@ -2,7 +2,7 @@ import Vapor
 
 public func configure(_ app: Application) throws {
     app.http.server.configuration.hostname = "127.0.0.1"
-    switch app.environment {
+    switch app.environment.name {
     case .tls:
         app.http.server.configuration.port = 8443
         try app.http.server.configuration.tlsConfiguration = .forServer(
@@ -44,8 +44,8 @@ final class MemoryCache {
     }
 }
 
-extension Environment {
-    static var tls: Environment {
-        return .custom(name: "tls")
+extension Environment.Name {
+    static var tls: Self {
+        .init(string: "tls")
     }
 }

@@ -3,7 +3,7 @@ import XCTest
 
 final class PipelineTests: XCTestCase {
     func testEchoHandlers() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.on(.POST, "echo", body: .stream) { request -> Response in
@@ -56,7 +56,7 @@ final class PipelineTests: XCTestCase {
     }
 
     func testEOFFraming() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.on(.POST, "echo", body: .stream) { request -> Response in
@@ -86,7 +86,7 @@ final class PipelineTests: XCTestCase {
     }
 
     func testBadStreamLength() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.on(.POST, "echo", body: .stream) { request -> Response in

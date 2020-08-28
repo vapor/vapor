@@ -35,6 +35,6 @@ extension Logger.Level: LosslessStringConvertible {
         // Determine log level from environment.
         return try LogSignature(from: &environment.commandInput).level
             ?? Environment.process.LOG_LEVEL
-            ?? (environment == .production ? .notice: .info)
+            ?? (environment.name == .production ? .notice: .info)
     }
 }

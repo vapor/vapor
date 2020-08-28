@@ -3,7 +3,7 @@ import XCTest
 
 final class ClientTests: XCTestCase {
     func testClientConfigurationChange() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.http.client.configuration.redirectConfiguration = .disallow
@@ -21,7 +21,7 @@ final class ClientTests: XCTestCase {
     }
     
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.http.client.configuration.redirectConfiguration = .disallow
@@ -41,7 +41,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testClientResponseCodable() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let res = try app.client.get("https://httpbin.org/json").wait()
@@ -71,7 +71,7 @@ final class ClientTests: XCTestCase {
     }
     
     func testBoilerplateClient() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("foo") { req -> EventLoopFuture<String> in
@@ -95,7 +95,7 @@ final class ClientTests: XCTestCase {
     }
     
     func testApplicationClientThreadSafety() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let startingPistol = DispatchGroup()
@@ -123,7 +123,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testCustomClient() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.clients.use(.custom)

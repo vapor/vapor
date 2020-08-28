@@ -2,7 +2,7 @@ import XCTVapor
 
 final class ServiceTests: XCTestCase {
     func testReadOnly() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("test") { req in
@@ -16,7 +16,7 @@ final class ServiceTests: XCTestCase {
     }
 
     func testWritable() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.writable = .init(apiKey: "foo")
@@ -24,7 +24,7 @@ final class ServiceTests: XCTestCase {
     }
 
     func testLifecycle() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.lifecycle.use(Hello())
@@ -33,7 +33,7 @@ final class ServiceTests: XCTestCase {
     }
 
     func testLocks() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.sync.withLock {

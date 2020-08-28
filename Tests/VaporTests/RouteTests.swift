@@ -2,7 +2,7 @@ import XCTVapor
 
 final class RouteTests: XCTestCase {
     func testParameter() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("hello", ":a") { req in
@@ -23,7 +23,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testRequiredParameter() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("string", ":value") { req in
@@ -53,7 +53,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testJSON() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("json") { req -> [String: String] in
@@ -68,7 +68,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testRootGet() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("") { req -> String in
@@ -88,7 +88,7 @@ final class RouteTests: XCTestCase {
     }
     
     func testInsensitiveRoutes() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         app.routes.caseInsensitive = true
@@ -107,7 +107,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testAnyResponse() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("foo") { req -> AnyResponse in
@@ -146,7 +146,7 @@ final class RouteTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.routes.get("foo") { req -> IntOrString in
@@ -176,7 +176,7 @@ final class RouteTests: XCTestCase {
             var email: String
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.post("users") { req -> User in
@@ -200,7 +200,7 @@ final class RouteTests: XCTestCase {
             var name: String
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.post("users") { req -> EventLoopFuture<Response> in
@@ -221,7 +221,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testHeadRequest() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("hello") { req -> String in
@@ -237,7 +237,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testInvalidCookie() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.grouped(SessionsMiddleware(session: app.sessions.driver))
@@ -258,7 +258,7 @@ final class RouteTests: XCTestCase {
 
     // https://github.com/vapor/vapor/issues/1787
     func testGH1787() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("no-content") { req -> String in
@@ -272,7 +272,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testSimilarRoutingPath() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("api","addresses") { req in
@@ -294,7 +294,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testThrowingGroup() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         XCTAssertThrowsError(try app.routes.group("foo") { router in
@@ -309,7 +309,7 @@ final class RouteTests: XCTestCase {
             }
         }
 
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         try app.register(collection: Foo())
 
@@ -319,7 +319,7 @@ final class RouteTests: XCTestCase {
     }
 
     func testConfigurableMaxBodySize() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         XCTAssertEqual(app.routes.defaultMaxBodySize, 16384)

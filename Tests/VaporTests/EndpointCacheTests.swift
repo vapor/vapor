@@ -2,7 +2,7 @@ import XCTVapor
 
 final class EndpointCacheTests: XCTestCase {
     func testEndpointCacheNoCache() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         var current = 0
@@ -37,7 +37,7 @@ final class EndpointCacheTests: XCTestCase {
     }
 
     func testEndpointCacheMaxAge() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         var current = 0

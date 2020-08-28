@@ -2,7 +2,7 @@ import XCTVapor
 
 final class FileTests: XCTestCase {
     func testStreamFile() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
@@ -17,7 +17,7 @@ final class FileTests: XCTestCase {
     }
 
     func testStreamFileConnectionClose() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
@@ -34,7 +34,7 @@ final class FileTests: XCTestCase {
     }
     
     func testFileWrite() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
         
         let request = Request(application: app, on: app.eventLoopGroup.next())
@@ -50,7 +50,7 @@ final class FileTests: XCTestCase {
     }
 
     func testPercentDecodedFilePath() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         let path = #file.split(separator: "/").dropLast().joined(separator: "/")

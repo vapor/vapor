@@ -2,7 +2,7 @@ import XCTVapor
 
 final class ViewTests: XCTestCase {
     func testViewResponse() throws {
-        let app = Application(.testing)
+        let app = Application(.detect(default: .testing))
         defer { app.shutdown() }
 
         app.get("view") { req -> View in
