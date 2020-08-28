@@ -153,7 +153,7 @@ public struct Environment: Equatable {
     // MARK: - Init
 
     /// Create a new `Environment`.
-    public init(name: Name, arguments: [String]) {
+    public init(name: Name, arguments: [String] = ["vapor"]) {
         self.name = name
         self.arguments = arguments
     }

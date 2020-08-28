@@ -58,7 +58,7 @@ public final class Application {
     }
 
     public init(
-        _ environment: Environment = .init(name: .development, arguments: ["vapor"]),
+        _ environment: Environment = .init(name: .development),
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
         Backtrace.install()

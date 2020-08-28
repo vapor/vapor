@@ -2,7 +2,7 @@ import XCTVapor
 
 final class PasswordTests: XCTestCase {
     func testSyncBCryptService() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         
@@ -14,7 +14,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testSyncPlaintextService() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
@@ -27,7 +27,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testAsyncBCryptRequestPassword() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         
@@ -35,7 +35,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testAsyncPlaintextRequestPassword() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         
@@ -43,7 +43,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testAsyncBCryptApplicationPassword() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         
@@ -51,7 +51,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testAsyncPlaintextApplicationPassword() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         
@@ -59,7 +59,7 @@ final class PasswordTests: XCTestCase {
     }
     
     func testAsyncUsesProvider() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
@@ -71,7 +71,7 @@ final class PasswordTests: XCTestCase {
     }
 
     func testAsyncApplicationDefault() throws {
-        let test = Environment(name: "testing", arguments: ["vapor"])
+        let test = Environment(name: .testing, arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
         app.passwords.use(.plaintext)

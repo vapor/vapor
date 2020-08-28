@@ -5,7 +5,7 @@ import protocol AsyncHTTPClient.HTTPClientResponseDelegate
 final class ServerTests: XCTestCase {
     func testPortOverride() throws {
         let env = Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--port", "8123"]
         )
 
@@ -25,7 +25,7 @@ final class ServerTests: XCTestCase {
         let socketPath = "/tmp/\(UUID().uuidString).vapor.socket"
 
         let env = Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--unix-socket", socketPath]
         )
 
@@ -59,55 +59,55 @@ final class ServerTests: XCTestCase {
         }
         
         var app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--port", "8123", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--hostname", "localhost", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
         
         app = Application(Environment(
-            name: "testing",
+            name: .testing,
             arguments: ["vapor", "serve", "--bind", "localhost:8123", "--hostname", "1.2.3.4", "--port", "8081", "--unix-socket", "/path/to/socket"]
         ))
         checkForError(app)
