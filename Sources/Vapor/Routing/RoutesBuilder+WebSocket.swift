@@ -15,20 +15,23 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
+        shouldUpgrade: ((Request) -> EventLoopFuture<HTTPHeaders?>)? = nil,
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
-        return self.webSocket(path, maxFrameSize: maxFrameSize, onUpgrade: onUpgrade)
+        return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
 
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
+        shouldUpgrade: ((Request) -> EventLoopFuture<HTTPHeaders?>)? = nil,
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
-            res.upgrader = .webSocket(maxFrameSize: maxFrameSize, onUpgrade: { ws in
+            let shouldUpgradeWrapped = shouldUpgrade.map { shouldUpgrade in { shouldUpgrade(request) } }
+            res.upgrader = .webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgradeWrapped, onUpgrade: { ws in
                 onUpgrade(request, ws)
             })
             return res
