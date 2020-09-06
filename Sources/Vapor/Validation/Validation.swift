@@ -13,7 +13,11 @@ public struct Validation {
                     result = ValidatorResults.Skipped()
                 }
             } catch DecodingError.valueNotFound {
-                result = ValidatorResults.NotFound()
+                if required {
+                    result = ValidatorResults.NotFound()
+                } else {
+                    result = ValidatorResults.Skipped()
+                }
            } catch DecodingError.typeMismatch(let type, _) {
                 result = ValidatorResults.TypeMismatch(type: type)
             } catch DecodingError.dataCorrupted(let context) {
