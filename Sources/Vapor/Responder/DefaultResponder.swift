@@ -31,6 +31,27 @@ internal struct DefaultResponder: Responder {
                     return true
                 }
             }
+            
+            // If the route isn't explicitly a HEAD route,
+            // and it's made up solely of .constant components,
+            // register a HEAD route with the same path
+            if route.method != .HEAD &&
+                route.path.allSatisfy({ component in
+                    if case .constant(_) = component { return true }
+                    return false
+            }) {
+                let headRoute = Route(
+                    method: .HEAD,
+                    path: cached.route.path,
+                    responder: middleware.makeResponder(chainingTo: HeadResponder()),
+                    requestType: cached.route.requestType,
+                    responseType: cached.route.responseType)
+                
+                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
+                
+                router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
+            }
+            
             router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
@@ -75,7 +96,17 @@ internal struct DefaultResponder: Responder {
             .split(separator: "/")
             .map(String.init)
         
+        // If it's a HEAD request and a HEAD route exists, return that route...
+        if request.method == .HEAD, let route = self.router.route(
+            path: [HTTPMethod.HEAD.string] + pathComponents,
+            parameters: &request.parameters
+        ) {
+            return route
+        }
+
+        // ...otherwise forward HEAD requests to GET route
         let method = (request.method == .HEAD) ? .GET : request.method
+        
         return self.router.route(
             path: [method.string] + pathComponents,
             parameters: &request.parameters
@@ -106,6 +137,12 @@ internal struct DefaultResponder: Responder {
             ],
             preferredDisplayUnit: .seconds
         ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+    }
+}
+
+private struct HeadResponder: Responder {
+    func respond(to request: Request) -> EventLoopFuture<Response> {
+        request.eventLoop.makeSucceededFuture(.init(status: .ok))
     }
 }
 
