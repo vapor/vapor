@@ -120,6 +120,7 @@ extension XCTApplicationTester {
             body: body,
             file: file,
             line: line,
+            beforeRequest: { _ in },
             afterResponse: afterResponse
         )
     }
