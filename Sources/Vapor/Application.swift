@@ -89,9 +89,7 @@ public final class Application {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        // Load specific .env first since values are not overridden.
-        self.loadDotEnv(named: ".env.\(self.environment.name)")
-        self.loadDotEnv(named: ".env")
+        DotEnvFile.load(environment: environment, eventLoopGroupProvider, logger: self.logger)
     }
     
     public func run() throws {
@@ -119,18 +117,6 @@ public final class Application {
         self.isBooted = true
         try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
         try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
-    }
-    
-    private func loadDotEnv(named name: String) {
-        do {
-            try DotEnvFile.load(
-                path: name,
-                fileio: .init(threadPool: self.threadPool),
-                on: self.eventLoopGroup.next()
-            ).wait()
-        } catch {
-            self.logger.debug("Could not load \(name) file: \(error)")
-        }
     }
     
     public func shutdown() {

@@ -25,6 +25,67 @@ import Darwin
 /// Single-quoted strings are parsed literally. Double-quoted strings may contain escaped newlines
 /// that will be converted to actual newlines.
 public struct DotEnvFile {
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let environment: Environment
+    ///     let elgp: EventLoopGroupProvider
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(environment: .development, elgp, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - environment: Absolute or relative path of the dotenv file.
+    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        environment: Environment = .development,
+        _ eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) {
+        let eventLoopGroup: EventLoopGroup
+        
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            eventLoopGroup = group
+        case .createNew:
+            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
+        defer {
+            switch eventLoopGroupProvider {
+            case .shared:
+                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+            case .createNew:
+                logger.trace("Shutting down EventLoopGroup")
+                do {
+                    try eventLoopGroup.syncShutdownGracefully()
+                } catch {
+                    logger.error("Shutting down EventLoopGroup failed: \(error)")
+                }
+            }
+        }
+        
+        let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
+        defer {
+            do {
+                try threadPool.syncShutdownGracefully()
+            } catch {
+                logger.error("Shutting down theadPool failed: \(error)")
+            }
+        }
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+    
+        // Load specific .env first since values are not overridden.
+        let fileNames = [".env.\(environment.name)", ".env"]
+        _ = fileNames.map { name in
+            do {
+                try load(path: name, fileio: fileIO, on: eventLoopGroup.next()).wait()
+            } catch {
+                logger.debug("Could not load \(name) file: \(error)")
+            }
+        }
+    }
+    
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
     ///     let fileio: NonBlockingFileIO
