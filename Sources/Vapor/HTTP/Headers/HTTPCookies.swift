@@ -84,7 +84,7 @@ struct HTTPSetCookie {
                 guard let parameter = directive.parameter else {
                     return nil
                 }
-                self.value.sameSite = HTTPCookies.SameSitePolicy(rawValue: .init(parameter)) ?? .lax
+                self.value.sameSite = HTTPCookies.SameSitePolicy(rawValue: .init(parameter))
             default:
                 return nil
             }
@@ -139,7 +139,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         /// A cookie which can only be sent in requests originating from the same origin as the target domain.
         ///
         /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
-        public var sameSite: SameSitePolicy
+        public var sameSite: SameSitePolicy?
         
         // MARK: Init
         
@@ -153,7 +153,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - maxAge: The maximum cookie age in seconds. Defaults to `nil`.
         ///     - domain: The affected domain at which the cookie is active. Defaults to `nil`.
         ///     - path: The path at which the cookie is active. Defaults to `"/"`.
-        ///     - isSecure: Limits the cookie to secure connections. Defaults to `false`.
+        ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overriden with `true`. Defaults to `false`.
         ///     - isHTTPOnly: Does not expose the cookie over non-HTTP channels. Defaults to `false`.
         ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `lax`.
         public init(
@@ -164,18 +164,18 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             path: String? = "/",
             isSecure: Bool = false,
             isHTTPOnly: Bool = false,
-            sameSite: SameSitePolicy? = nil
+            sameSite: SameSitePolicy? = .lax
         ) {
-            let sameSitePolicy = sameSite ?? .lax
-            
             self.string = string
             self.expires = expires
             self.maxAge = maxAge
             self.domain = domain
             self.path = path
-            self.isSecure = isSecure || sameSitePolicy == .none //samesite none requires secure attribute to be set
+            //samesite none requires secure attribute to be set
+            let forceSecure = sameSite == SameSitePolicy.none
+            self.isSecure = isSecure || forceSecure
             self.isHTTPOnly = isHTTPOnly
-            self.sameSite = sameSitePolicy
+            self.sameSite = sameSite
         }
         
         /// See `ExpressibleByStringLiteral`.
@@ -213,14 +213,16 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
                 serialized += "; HttpOnly"
             }
             
-            serialized += "; SameSite"
-            switch sameSite {
-            case .lax:
-                serialized += "=Lax"
-            case .strict:
-                serialized += "=Strict"
-            case .none:
-                serialized += "=None"
+            if let sameSite = self.sameSite {
+                serialized += "; SameSite"
+                switch sameSite {
+                case .lax:
+                    serialized += "=Lax"
+                case .strict:
+                    serialized += "=Strict"
+                case .none:
+                    serialized += "=None"
+                }
             }
             
             return serialized
