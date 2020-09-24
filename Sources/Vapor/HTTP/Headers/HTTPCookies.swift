@@ -171,7 +171,8 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             self.maxAge = maxAge
             self.domain = domain
             self.path = path
-            //samesite none requires secure attribute to be set
+            // SameSite=None requires Secure attribute to be set
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
             let forceSecure = sameSite == SameSitePolicy.none
             self.isSecure = isSecure || forceSecure
             self.isHTTPOnly = isHTTPOnly
