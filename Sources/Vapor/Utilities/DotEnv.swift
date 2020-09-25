@@ -38,8 +38,8 @@ public struct DotEnvFile {
     ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
     ///     - logger: Optionally provide an existing logger.
     public static func load(
-        environment: Environment = .development,
-        _ eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        for environment: Environment = .development,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let eventLoopGroup: EventLoopGroup
