@@ -140,7 +140,7 @@ public struct HOTP<H: HashFunction>: OTP {
     ///   - counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
     public static func generate(key: SymmetricKey, digits: OTPDigits = .six, counter: UInt64) -> String {
-        precondition(H.self == CryptoKit.Insecure.SHA1.self || H.self == CryptoKit.SHA256.self || H.self == CryptoKit.SHA512.self, "Cannot create HOTP with hash function \(H.self), only SHA-1, SHA-256 and SHA-512 are supported")
+        precondition(H.self == Crypto.Insecure.SHA1.self || H.self == Crypto.SHA256.self || H.self == Crypto.SHA512.self, "Cannot create HOTP with hash function \(H.self), only SHA-1, SHA-256 and SHA-512 are supported")
         return Self.init(key: key, digits: digits).generate(counter: counter)
     }
 }
@@ -232,7 +232,7 @@ public struct TOTP<H: HashFunction>: OTP {
     ///   - time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
     public static func generate(key: SymmetricKey, digits: OTPDigits = .six, interval: Int = 30, time: Date) -> String {
-        precondition(H.self == CryptoKit.Insecure.SHA1.self || H.self == CryptoKit.SHA256.self || H.self == CryptoKit.SHA512.self, "Cannot create HOTP with hash function \(H.self), only SHA-1, SHA-256 and SHA-512 are supported")
+        precondition(H.self == Crypto.Insecure.SHA1.self || H.self == Crypto.SHA256.self || H.self == Crypto.SHA512.self, "Cannot create HOTP with hash function \(H.self), only SHA-1, SHA-256 and SHA-512 are supported")
         return Self.init(key: key, digits: digits, interval: interval).generate(time: time)
     }
 }
