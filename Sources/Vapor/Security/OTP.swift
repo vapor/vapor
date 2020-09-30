@@ -1,4 +1,4 @@
-import CryptoKit
+import Crypto
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int {
