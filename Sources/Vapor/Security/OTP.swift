@@ -177,7 +177,7 @@ public struct HOTP: OTP {
     ///   - digits: The number of digits to produce.
     ///   - counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
-    public static func generate(key: SymmetricKey, digits: OTPDigits = .six, counter: UInt64, digest: OTPDigest) -> String {
+    public static func generate(key: SymmetricKey, digits: OTPDigits = .six, digest: OTPDigest, counter: UInt64) -> String {
         return Self.init(key: key, digits: digits, digest: digest).generate(counter: counter)
     }
 }
