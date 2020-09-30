@@ -65,10 +65,6 @@ internal extension OTP {
             let offset = $0 >= 0 ? counter &+ UInt64($0) : counter &- UInt64(-$0)
             return generateOTP(counter: offset)
         }
-//
-//        return (-range ... range).map { UInt64($0) * size }.map { generateOTP(counter: counter + $0) }
-//        let range = (counter &- (UInt64(range) * size)) ... (counter &+ (UInt64(range) * size))
-//        return range.map { generateOTP(counter:$0) }
     }
 }
 
