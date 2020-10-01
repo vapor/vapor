@@ -33,7 +33,7 @@ public struct SessionsConfiguration {
                 path: "/",
                 isSecure: false,
                 isHTTPOnly: false,
-                sameSite: nil
+                sameSite: .lax
             )
         }
     }
