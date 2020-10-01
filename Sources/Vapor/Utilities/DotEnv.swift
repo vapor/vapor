@@ -30,15 +30,37 @@ public struct DotEnvFile {
     ///     let environment: Environment
     ///     let elgp: EventLoopGroupProvider
     ///     let logger: Logger
-    ///     try DotEnvFile.load(environment: .development, elgp, logger: logger)
+    ///     try DotEnvFile.load(for: .development, on: elgp, logger: logger)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
-    ///     - environment: Absolute or relative path of the dotenv file.
+    ///     - environment: current environment, selects which .env file to use.
     ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         for environment: Environment = .development,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) {
+        // Load specific .env first since values are not overridden.
+        DotEnvFile.load(path: ".env.\(environment.name)")
+        DotEnvFile.load(path: ".env")
+    }
+    
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let path: String
+    ///     let elgp: EventLoopGroupProvider
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(path: path, on: elgp, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
@@ -75,14 +97,10 @@ public struct DotEnvFile {
         }
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
     
-        // Load specific .env first since values are not overridden.
-        let fileNames = [".env.\(environment.name)", ".env"]
-        _ = fileNames.map { name in
-            do {
-                try load(path: name, fileio: fileIO, on: eventLoopGroup.next()).wait()
-            } catch {
-                logger.debug("Could not load \(name) file: \(error)")
-            }
+        do {
+            try load(path: path, fileio: fileIO, on: eventLoopGroup.next()).wait()
+        } catch {
+            logger.debug("Could not load \(path) file: \(error)")
         }
     }
     
