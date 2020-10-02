@@ -10,17 +10,17 @@ final class OTPTests: XCTestCase {
         
         // SHA-1 test
         key = SymmetricKey(data: "12345678901234567890".data(using: .ascii)!)
-        let sha1OTP = TOTP.SHA1(key: key, digits: .eight, interval: 30).generate(time: time)
+        let sha1OTP = TOTP(key: key, digest: .sha1, digits: .eight, interval: 30).generate(time: time)
         XCTAssertEqual(sha1OTP, "94287082")
         
         // SHA-256 test
         key = SymmetricKey(data: "12345678901234567890123456789012".data(using: .ascii)!)
-        let sha256OTP = TOTP.SHA256(key: key, digits: .eight, interval: 30).generate(time: time)
+        let sha256OTP = TOTP(key: key, digest: .sha256, digits: .eight, interval: 30).generate(time: time)
         XCTAssertEqual(sha256OTP, "46119246")
         
         // SHA-512 test
         key = SymmetricKey(data: "1234567890123456789012345678901234567890123456789012345678901234".data(using: .ascii)!)
-        let sha512OTP = TOTP.SHA512(key: key, digits: .eight, interval: 30).generate(time: time)
+        let sha512OTP = TOTP(key: key, digest: .sha512, digits: .eight, interval: 30).generate(time: time)
         XCTAssertEqual(sha512OTP, "90693936")
         
     }
@@ -29,7 +29,7 @@ final class OTPTests: XCTestCase {
     /// https://github.com/vapor/open-crypto/blob/38487c8eb13d689d0ed6b3808a9a9bc00cd621f6/Tests/CryptoTests/OTPTests.swift
     func testTOTPRange() {
         let key = SymmetricKey(size: .bits128)
-        let codes = TOTP.SHA1(key: key).generate(time: Date(), range: 1)
+        let codes = TOTP(key: key, digest: .sha1).generate(time: Date(), range: 1)
         XCTAssertEqual(codes.count, 3)
     }
     
@@ -55,19 +55,14 @@ final class OTPTests: XCTestCase {
         let key = SymmetricKey(data: "12345678901234567890".data(using: .ascii)!)
         
         for test in tests {
-            let hotp = HOTP.SHA1(key: key).generate(counter: test.counter)
+            let hotp = HOTP(key: key, digest: .sha1).generate(counter: test.counter)
             XCTAssertEqual(hotp, test.otp)
         }
     }
     
     func testHOTPRange() {
         let key = SymmetricKey(size: .bits128)
-        let codes = HOTP.SHA1(key: key).generate(counter: 10, range: 1)
+        let codes = HOTP(key: key, digest: .sha1).generate(counter: 10, range: 1)
         XCTAssertEqual(codes.count, 3)
     }
-    
-    static var allTests = [
-        ("testTOTPBasic", testTOTPBasic),
-        ("testHOTPBasic", testHOTPBasic)
-    ]
 }

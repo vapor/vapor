@@ -43,7 +43,7 @@ internal extension OTP {
     /// - Parameter counter: The counter to generate the OTP for.
     /// - Returns: The generated OTP as `String`.
     func generate<H: HashFunction>(_ h: H, counter: UInt64) -> String {
-        let hmac = Data(HMAC<H>.authenticationCode(for: counter.bigEndian.data, using: key))
+        let hmac = Data(HMAC<H>.authenticationCode(for: counter.bigEndian.data, using: self.key))
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
         // Get 4 bytes of the HMAC using the offset
@@ -52,10 +52,10 @@ internal extension OTP {
         var number = data.withUnsafeBytes { $0.load(as: UInt32.self ) }.bigEndian
         // Remove most significant bit
         number &= 0x7fffffff
-        number = number % digits.pow
+        number = number % self.digits.pow
         
         let strNum = String(number)
-        if strNum.count == digits.rawValue { return strNum }
+        if strNum.count == self.digits.rawValue { return strNum }
         return String(repeatElement("0", count: digits.rawValue - strNum.count)) + strNum
     }
     
@@ -119,38 +119,12 @@ public struct HOTP: OTP {
     /// Initialize the HOTP object.
     /// - Parameters:
     ///   - key: The key.
+    ///   - digest: The digest to use.
     ///   - digits: The number of digits to generate.
-    fileprivate init(key: SymmetricKey, digits: OTPDigits, digest: OTPDigest) {
+    public init(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six) {
         self.key = key
         self.digits = digits
         self.digest = digest
-    }
-    
-    /// SHA-1 digest based HOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    /// - Returns: The HOTP object.
-    public static func SHA1(key: SymmetricKey, digits: OTPDigits = .six) -> Self {
-        HOTP(key: key, digits: digits, digest: .sha1)
-    }
-    
-    /// SHA-256 digest based HOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    /// - Returns: The HOTP object.
-    public static func SHA256(key: SymmetricKey, digits: OTPDigits = .six) -> Self {
-        HOTP(key: key, digits: digits, digest: .sha256)
-    }
-    
-    /// SHA-512 digest based HOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    /// - Returns: The HOTP object.
-    public static func SHA512(key: SymmetricKey, digits: OTPDigits = .six) -> Self {
-        HOTP(key: key, digits: digits, digest: .sha512)
     }
     
     /// Generate the HOTP based on the counter.
@@ -174,11 +148,12 @@ public struct HOTP: OTP {
     /// Compute the HOTP for the key and the counter.
     /// - Parameters:
     ///   - key: The key.
+    ///   - digest: The digest to use.
     ///   - digits: The number of digits to produce.
     ///   - counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
-    public static func generate(key: SymmetricKey, digits: OTPDigits = .six, digest: OTPDigest, counter: UInt64) -> String {
-        return Self.init(key: key, digits: digits, digest: digest).generate(counter: counter)
+    public static func generate(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, counter: UInt64) -> String {
+        return Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
     }
 }
 
@@ -200,9 +175,10 @@ public struct TOTP: OTP {
     /// Initialize the TOTP object.
     /// - Parameters:
     ///   - key: The key.
+    ///   - digest: The digest to use.
     ///   - digits: The number of digits to generate.
     ///   - interval: The interval in seconds to generate the TOTP for.
-    fileprivate init(key: SymmetricKey, digits: OTPDigits = .six, digest: OTPDigest, interval: Int = 30) {
+    public init(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, interval: Int = 30) {
         precondition(interval > 0, "Cannot generate TOTP for invalid interval \(interval). Interval must be greater that 0")
         self.key = key
         self.digits = digits
@@ -210,42 +186,12 @@ public struct TOTP: OTP {
         self.interval = interval
     }
     
-    /// SHA-1 digest based TOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    ///   - interval: The interval in seconds to generate the TOTP for.
-    /// - Returns: The TOTP object.
-    public static func SHA1(key: SymmetricKey, digits: OTPDigits = .six, interval: Int = 30) -> Self {
-        TOTP(key: key, digits: digits, digest: .sha1, interval: interval)
-    }
-    
-    /// SHA-256 digest based TOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    ///   - interval: The interval in seconds to generate the TOTP for.
-    /// - Returns: The TOTP object.
-    public static func SHA256(key: SymmetricKey, digits: OTPDigits = .six, interval: Int = 30) -> Self {
-        TOTP(key: key, digits: digits, digest: .sha256, interval: interval)
-    }
-    
-    /// SHA-512 digest based TOTP.
-    /// - Parameters:
-    ///   - key: The key.
-    ///   - digits: The number of digits to generate.
-    ///   - interval: The interval in seconds to generate the TOTP for.
-    /// - Returns: The TOTP object.
-    public static func SHA512(key: SymmetricKey, digits: OTPDigits = .six, interval: Int = 30) -> Self {
-        TOTP(key: key, digits: digits, digest: .sha512, interval: interval)
-    }
-    
     /// Generate the TOTP based on a time.
     /// - Parameter time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
     public func generate(time: Date) -> String {
         let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
-        let counter = Int(floor(Double(secondsPast1970) / Double(interval)))
+        let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
         return _generate(counter: UInt64(counter))
     }
     
@@ -259,19 +205,20 @@ public struct TOTP: OTP {
     /// - Returns: All the generated OTP's in an array.
     public func generate(time: Date, range: Int) -> [String] {
         let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
-        let counter = Int(floor(Double(secondsPast1970) / Double(interval)))
-        return _generate(counter: UInt64(counter), range: range, size: interval)
+        let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
+        return _generate(counter: UInt64(counter), range: range, size: self.interval)
     }
     
     /// Compute the TOTP for the key, time interval and time.
     /// - Parameters:
     ///   - key: The key.
+    ///   - digest: The digest to use.
     ///   - digits: The number of digits to generate.
     ///   - interval: The interval in seconds to generate the TOTP for.
     ///   - time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
-    public static func generate(key: SymmetricKey, digits: OTPDigits = .six, digest: OTPDigest, interval: Int = 30, time: Date) -> String {
-        return Self.init(key: key, digits: digits, digest: digest, interval: interval).generate(time: time)
+    public static func generate(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, interval: Int = 30, time: Date) -> String {
+        return Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
     }
 }
 
