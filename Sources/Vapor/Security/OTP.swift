@@ -42,7 +42,10 @@ internal extension OTP {
     /// Generate the OTP based on a counter.
     /// - Parameter counter: The counter to generate the OTP for.
     /// - Returns: The generated OTP as `String`.
-    func generate<H: HashFunction>(_ h: H, counter: UInt64) -> String {
+    func generate<H: HashFunction>(
+        _ h: H,
+        counter: UInt64
+    ) -> String {
         let hmac = Data(HMAC<H>.authenticationCode(for: counter.bigEndian.data, using: self.key))
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
@@ -67,7 +70,11 @@ internal extension OTP {
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
     ///   - size: The size of the offset. This is particularly useful for TOTP's, as it allows to specify the interval as size.
     /// - Returns: All the generated OTP's in an array.
-    func generateOTPs<H: HashFunction>(_ h: H, counter: UInt64, range: Int, size: Int = 1) -> [String] {
+    func generateOTPs<H: HashFunction>(
+        _ h: H, counter: UInt64,
+        range: Int,
+        size: Int = 1
+    ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
         
         return (-range ... range).map { $0 * size }.map {
@@ -79,7 +86,9 @@ internal extension OTP {
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
-    func _generate(counter: UInt64) -> String {
+    func _generate(
+        counter: UInt64
+    ) -> String {
         switch self.digest {
         case .sha1: return generate(Insecure.SHA1(), counter: counter)
         case .sha256: return generate(SHA256(), counter: counter)
@@ -95,7 +104,11 @@ internal extension OTP {
     ///   - size: The size of the offset. This is particularly useful for TOTP's, as it allows to specify the interval as size.
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
     /// - Returns: All the generated OTP's in an array.
-    func _generate(counter: UInt64, range: Int, size: Int = 1) -> [String] {
+    func _generate(
+        counter: UInt64,
+        range: Int,
+        size: Int = 1
+    ) -> [String] {
         switch self.digest {
         case .sha1: return generateOTPs(Insecure.SHA1(), counter: counter, range: range, size: size)
         case .sha256: return generateOTPs(SHA256(), counter: counter, range: range, size: size)
@@ -121,7 +134,11 @@ public struct HOTP: OTP {
     ///   - key: The key.
     ///   - digest: The digest to use.
     ///   - digits: The number of digits to generate.
-    public init(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six) {
+    public init(
+        key: SymmetricKey,
+        digest: OTPDigest,
+        digits: OTPDigits = .six
+    ) {
         self.key = key
         self.digits = digits
         self.digest = digest
@@ -130,7 +147,9 @@ public struct HOTP: OTP {
     /// Generate the HOTP based on the counter.
     /// - Parameter counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
-    public func generate(counter: UInt64) -> String {
+    public func generate(
+        counter: UInt64
+    ) -> String {
         _generate(counter: counter)
     }
     
@@ -141,7 +160,10 @@ public struct HOTP: OTP {
     ///   - range: The number of codes to generate in both the forward and backward direction. This number must be bigger than 0.
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
     /// - Returns: All the generated OTP's in an array.
-    public func generate(counter: UInt64, range: Int) -> [String] {
+    public func generate(
+        counter: UInt64,
+        range: Int
+    ) -> [String] {
         _generate(counter: counter, range: range)
     }
     
@@ -152,7 +174,12 @@ public struct HOTP: OTP {
     ///   - digits: The number of digits to produce.
     ///   - counter: The counter to generate the HOTP for.
     /// - Returns: The generated HOTP as `String`.
-    public static func generate(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, counter: UInt64) -> String {
+    public static func generate(
+        key: SymmetricKey,
+        digest: OTPDigest,
+        digits: OTPDigits = .six,
+        counter: UInt64
+    ) -> String {
         return Self.init(key: key, digest: digest, digits: digits).generate(counter: counter)
     }
 }
@@ -178,7 +205,12 @@ public struct TOTP: OTP {
     ///   - digest: The digest to use.
     ///   - digits: The number of digits to generate.
     ///   - interval: The interval in seconds to generate the TOTP for.
-    public init(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, interval: Int = 30) {
+    public init(
+        key: SymmetricKey,
+        digest: OTPDigest,
+        digits: OTPDigits = .six,
+        interval: Int = 30
+    ) {
         precondition(interval > 0, "Cannot generate TOTP for invalid interval \(interval). Interval must be greater that 0")
         self.key = key
         self.digits = digits
@@ -189,7 +221,9 @@ public struct TOTP: OTP {
     /// Generate the TOTP based on a time.
     /// - Parameter time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
-    public func generate(time: Date) -> String {
+    public func generate(
+        time: Date
+    ) -> String {
         let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
         let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
         return _generate(counter: UInt64(counter))
@@ -203,7 +237,10 @@ public struct TOTP: OTP {
     ///   - range: The number of codes to generate in both the forward and backward direction. This number must be bigger than 0.
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
     /// - Returns: All the generated OTP's in an array.
-    public func generate(time: Date, range: Int) -> [String] {
+    public func generate(
+        time: Date,
+        range: Int
+    ) -> [String] {
         let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
         let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
         return _generate(counter: UInt64(counter), range: range, size: self.interval)
@@ -217,7 +254,13 @@ public struct TOTP: OTP {
     ///   - interval: The interval in seconds to generate the TOTP for.
     ///   - time: The time to generate the TOTP for.
     /// - Returns: The generated TOTP as `String`.
-    public static func generate(key: SymmetricKey, digest: OTPDigest, digits: OTPDigits = .six, interval: Int = 30, time: Date) -> String {
+    public static func generate(
+        key: SymmetricKey,
+        digest: OTPDigest,
+        digits: OTPDigits = .six,
+        interval: Int = 30,
+        time: Date
+    ) -> String {
         return Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
     }
 }
