@@ -15,7 +15,9 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: ((Request) -> EventLoopFuture<HTTPHeaders?>)? = nil,
+        shouldUpgrade: @escaping ((Request) -> EventLoopFuture<HTTPHeaders?>) = {
+            $0.eventLoop.makeSucceededFuture([:])
+        },
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
@@ -25,13 +27,16 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: ((Request) -> EventLoopFuture<HTTPHeaders?>)? = nil,
+        shouldUpgrade: @escaping ((Request) -> EventLoopFuture<HTTPHeaders?>) = {
+            $0.eventLoop.makeSucceededFuture([:])
+        },
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
-            let shouldUpgradeWrapped = shouldUpgrade.map { shouldUpgrade in { shouldUpgrade(request) } }
-            res.upgrader = .webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgradeWrapped, onUpgrade: { ws in
+            res.upgrader = .webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: {
+                shouldUpgrade(request)                
+            }, onUpgrade: { ws in
                 onUpgrade(request, ws)
             })
             return res
