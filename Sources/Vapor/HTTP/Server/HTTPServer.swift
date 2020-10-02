@@ -147,6 +147,9 @@ public final class HTTPServer: Server {
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
 
+        /// A time limit to complete a graceful shutdown
+        public var shutdownTimeout: TimeAmount
+
         public init(
             hostname: String = Self.defaultHostname,
             port: Int = Self.defaultPort,
@@ -159,7 +162,8 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            logger: Logger? = nil
+            logger: Logger? = nil,
+            shutdownTimeout: TimeAmount = .seconds(10)
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -172,7 +176,8 @@ public final class HTTPServer: Server {
                 supportVersions: supportVersions,
                 tlsConfiguration: tlsConfiguration,
                 serverName: serverName,
-                logger: logger
+                logger: logger,
+                shutdownTimeout: shutdownTimeout
             )
         }
         
@@ -187,7 +192,8 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
-            logger: Logger? = nil
+            logger: Logger? = nil,
+            shutdownTimeout: TimeAmount = .seconds(10)
         ) {
             self.address = address
             self.backlog = backlog
@@ -204,6 +210,7 @@ public final class HTTPServer: Server {
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
+            self.shutdownTimeout = shutdownTimeout
         }
     }
     
@@ -279,7 +286,7 @@ public final class HTTPServer: Server {
         }
         self.configuration.logger.debug("Requesting HTTP server shutdown")
         do {
-            try connection.close().wait()
+            try connection.close(timeout: self.configuration.shutdownTimeout).wait()
         } catch {
             self.configuration.logger.error("Could not stop HTTP server: \(error)")
         }
@@ -391,9 +398,9 @@ private final class HTTPServerConnection {
         self.quiesce = quiesce
     }
     
-    func close() -> EventLoopFuture<Void> {
+    func close(timeout: TimeAmount) -> EventLoopFuture<Void> {
         let promise = self.channel.eventLoop.makePromise(of: Void.self)
-        self.channel.eventLoop.scheduleTask(in: .seconds(10)) {
+        self.channel.eventLoop.scheduleTask(in: timeout) {
             promise.fail(Abort(.internalServerError, reason: "Server stop took too long."))
         }
         self.quiesce.initiateShutdown(promise: promise)
