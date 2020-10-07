@@ -2,7 +2,78 @@ import Vapor
 import XCTest
 
 class ValidationTests: XCTestCase {
-    func testValidate() {
+    func testValidate() throws {
+        struct User: Validatable, Codable {
+            enum Gender: String, CaseIterable, Codable {
+                case male, female, other
+            }
+
+            var id: Int?
+            var name: String
+            var age: Int
+            var gender: Gender
+            var email: String?
+            var pet: Pet
+            var favoritePet: Pet?
+            var luckyNumber: Int?
+            var profilePictureURL: String?
+            var preferredColors: [String]
+            var isAdmin: Bool
+
+            struct Pet: Codable {
+                var name: String
+                var age: Int
+                init(name: String, age: Int) {
+                    self.name = name
+                    self.age = age
+                }
+            }
+
+            init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
+                self.id = id
+                self.name = name
+                self.age = age
+                self.gender = gender
+                self.pet = pet
+                self.preferredColors = preferredColors
+                self.isAdmin = isAdmin
+            }
+
+            static func validations(_ v: inout Validations) {
+                // validate name is at least 5 characters and alphanumeric
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                // validate age is 18 or older
+                v.add("age", as: Int.self, is: .range(18...))
+                // validate gender is of type Gender
+                v.add("gender", as: String.self, is: .case(of: Gender.self))
+                // validate the email is valid and is not nil
+                v.add("email", as: String?.self, is: !.nil && .email)
+                v.add("email", as: String?.self, is: .email && !.nil) // test other way
+                // validate the email is valid or is nil
+                v.add("email", as: String?.self, is: .nil || .email)
+                v.add("email", as: String?.self, is: .email || .nil) // test other way
+                // validate that the lucky number is nil or is 5 or 7
+                v.add("luckyNumber", as: Int?.self, is: .nil || .in(5, 7))
+                // validate that the profile picture is nil or a valid URL
+                v.add("profilePictureURL", as: String?.self, is: .url || .nil)
+                v.add("preferredColors", as: [String].self, is: !.empty)
+                // pet validations
+                v.add("pet") { pet in
+                    pet.add("name", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+                    pet.add("age", as: Int.self, is: .range(3...))
+                }
+                // optional favorite pet validations
+                v.add("favoritePet", required: false) { pet in
+                    pet.add(
+                        "name", as: String.self,
+                        is: .count(5...) && .characterSet(.alphanumerics + .whitespaces)
+                    )
+                    pet.add("age", as: Int.self, is: .range(3...))
+                }
+                v.add("isAdmin", as: Bool.self)
+            }
+        }
+
         let valid = """
         {
             "name": "Tanner",
@@ -16,13 +87,23 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ],
             "favoritePet": null,
             "isAdmin": true
         }
         """
-        let validUrl: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         XCTAssertNoThrow(try User.validate(json: valid))
-        XCTAssertNoThrow(try User.validate(query: validUrl))
+
+        let validURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
+        XCTAssertNoThrow(try User.validate(query: validURL))
+
         let invalidUser = """
         {
             "name": "Tan!ner",
@@ -36,157 +117,193 @@ class ValidationTests: XCTestCase {
                 "name": "Zizek",
                 "age": 3
             },
-            "isAdmin": true
+            "isAdmin": true,
+            "hobbies": [
+                {
+                    "title": "Football"
+                },
+                {
+                    "title": "Computer science"
+                }
+            ]
         }
         """
-        let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         XCTAssertThrowsError(try User.validate(json: invalidUser)) { error in
-            XCTAssertEqual("\(error)",
-                           "name contains '!' (allowed: A-Z, a-z, 0-9)")
-            
+            XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
         }
-        XCTAssertThrowsError(try User.validate(query: invalidUserUrl)) { error in
-            XCTAssertEqual("\(error)",
-                           "name contains '!' (allowed: A-Z, a-z, 0-9)")
+
+        let invalidUserURL: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
+        XCTAssertThrowsError(try User.validate(query: invalidUserURL)) { error in
+            XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
         }
-        let invalidPet = """
+    }
+
+    func testValidateNested() throws {
+        struct User: Validatable, Codable {
+            var name: String
+            var age: Int
+            var pet: Pet
+
+            struct Pet: Codable {
+                var name: String
+                var age: Int
+                init(name: String, age: Int) {
+                    self.name = name
+                    self.age = age
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                // validate name is at least 5 characters and alphanumeric
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                // validate age is 18 or older
+                v.add("age", as: Int.self, is: .range(18...))
+                // pet validations
+                v.add("pet") { pet in
+                    pet.add("name", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+                    pet.add("age", as: Int.self, is: .range(3...))
+                }
+            }
+        }
+
+        let invalidPetJSON = """
         {
             "name": "Tanner",
             "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
             "pet": {
                 "name": "Zi!zek",
                 "age": 3
-            },
-            "isAdmin": true
+            }
         }
         """
-        let invalidPetURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zi!ek&pet[age]=3&isAdmin=true"
-        XCTAssertThrowsError(try User.validate(json: invalidPet)) { error in
-            XCTAssertEqual("\(error)",
-                           "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        XCTAssertThrowsError(try User.validate(json: invalidPetJSON)) { error in
+            XCTAssertEqual("\(error)", "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
+        let invalidPetURL: URI = "https://tanner.xyz/user?name=Tanner&age=24&pet[name]=Zi!ek&pet[age]=3"
         XCTAssertThrowsError(try User.validate(query: invalidPetURL)) { error in
-            XCTAssertEqual("\(error)",
-                       "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+            XCTAssertEqual("\(error)", "pet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
-        let invalidBool = """
+    }
+
+    func testValidateNestedEach() throws {
+        struct User: Validatable {
+            var name: String
+            var age: Int
+            var hobbies: [Hobby]
+
+            struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                v.add("age", as: Int.self, is: .range(18...))
+                v.add(each: "hobbies") { i, hobby in
+                    hobby.add("title", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+                }
+                v.add("hobbies", as: [Hobby].self, is: !.empty)
+            }
+        }
+
+        let invalidNestedArray = """
         {
             "name": "Tanner",
             "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "isAdmin": "true"
+            "hobbies": [
+                {
+                    "title": "Football€"
+                },
+                {
+                    "title": "Co"
+                }
+            ]
         }
         """
-        let invalidPetBool: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin='true'"
-        XCTAssertThrowsError(try User.validate(json: invalidBool)) { error in
-            XCTAssertEqual("\(error)",
-                           "isAdmin is not a(n) Bool")
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
+            XCTAssertEqual("\(error)", "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
         }
-        XCTAssertThrowsError(try User.validate(query: invalidPetBool)) { error in
-            XCTAssertEqual("\(error)",
-                       "isAdmin is not a(n) Bool")
+    }
+
+    func testValidateNestedEachIndex() throws {
+        struct User: Validatable {
+            var name: String
+            var age: Int
+            var hobbies: [Hobby]
+
+            struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                v.add("age", as: Int.self, is: .range(18...))
+                v.add(each: "hobbies") { i, hobby in
+                    // don't validate first item
+                    if i != 0 {
+                        hobby.add("title", as: String.self, is: .characterSet(.alphanumerics + .whitespaces))
+                    }
+                }
+                v.add("hobbies", as: [Hobby].self, is: !.empty)
+            }
         }
-        let validOptionalFavoritePet = """
+
+        XCTAssertNoThrow(try User.validate(json: """
         {
             "name": "Tanner",
             "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "favoritePet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "isAdmin": true
+            "hobbies": [
+                {
+                    "title": "€"
+                },
+                {
+                    "title": "hello"
+                }
+            ]
         }
-        """
-        let validOptionalFavoritePetUrl: URI = "https://tanner.xyz/user?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&favoritePet[name]=Zizek&favoritePet[age]=3&&isAdmin=true"
-        XCTAssertNoThrow(try User.validate(json: validOptionalFavoritePet))
-        XCTAssertNoThrow(try User.validate(query: validOptionalFavoritePetUrl))
-        let invalidOptionalFavoritePet = """
+        """))
+
+        XCTAssertThrowsError(try User.validate(json: """
         {
             "name": "Tanner",
             "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "favoritePet": {
-                "name": "Zi!zek",
-                "age": 3
-            },
-            "isAdmin": true
+            "hobbies": [
+                {
+                    "title": "hello"
+                },
+                {
+                    "title": "€"
+                }
+            ]
         }
-        """
-        let invalidOptionalFavoritePetUrl: URI = "https://tanner.xyz/model?name=Tanner&age=24&gender=male&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&favoritePet[name]=Zi!ek&favoritePet[age]=3&&isAdmin=true"
-        XCTAssertThrowsError(try User.validate(json: invalidOptionalFavoritePet)) { error in
-            XCTAssertEqual("\(error)",
-                           "favoritePet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
-        }
-        XCTAssertThrowsError(try User.validate(query: invalidOptionalFavoritePetUrl)) { error in
-            XCTAssertEqual("\(error)",
-                           "favoritePet name contains '!' (allowed: whitespace, A-Z, a-z, 0-9)")
+        """)) { error in
+            XCTAssertEqual("\(error)", "hobbies at index 1 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9)")
         }
     }
     
     func testCatchError() throws {
+        struct User: Validatable, Codable {
+            var name: String
+            var age: Int
+            static func validations(_ v: inout Validations) {
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                v.add("age", as: Int.self, is: .range(18...))
+            }
+        }
+
         let invalidUser = """
         {
             "name": "Tan!ner",
-            "age": 24,
-            "gender": "male",
-            "email": "me@tanner.xyz",
-            "luckyNumber": 5,
-            "profilePictureURL": "https://foo.jpg",
-            "preferredColors": ["blue"],
-            "pet": {
-                "name": "Zizek",
-                "age": 3
-            },
-            "isAdmin": true
+            "age": 24
         }
         """
-        let invalidUserUrl: URI = "https://tanner.xyz/user?name=Tan!ner&age=24&gender=other&email=me@tanner.xyz&luckyNumber=5&profilePictureURL=https://foo.jpg&preferredColors=[blue]&pet[name]=Zizek&pet[age]=3&isAdmin=true"
         do {
             try User.validate(json: invalidUser)
-        } catch let error as ValidationsError {
-            XCTAssertEqual(error.failures.count, 1)
-            let name = error.failures[0]
-            XCTAssertEqual(name.key.stringValue, "name")
-            XCTAssertEqual(name.result.isFailure, true)
-            XCTAssertEqual(name.result.failureDescription, "contains '!' (allowed: A-Z, a-z, 0-9)")
-            let and = name.result as! ValidatorResults.And
-            let count = and.left as! ValidatorResults.Range<Int>
-            XCTAssertEqual(count.result, .greaterThanOrEqualToMin(5))
-            let character = and.right as! ValidatorResults.CharacterSet
-            XCTAssertEqual(character.invalidSlice, "!")
-        }
-        do {
-            try User.validate(query: invalidUserUrl)
         } catch let error as ValidationsError {
             XCTAssertEqual(error.failures.count, 1)
             let name = error.failures[0]
@@ -202,26 +319,17 @@ class ValidationTests: XCTestCase {
     }
     
     func testNotReadability() {
-        assert("vapor!🤠",
-               fails: .ascii && .alphanumeric,
-               "contains '🤠' (allowed: ASCII) and contains '!' (allowed: A-Z, a-z, 0-9)")
-        assert("vapor",
-               fails: !(.ascii && .alphanumeric),
-               "contains only ASCII and contains only A-Z, a-z, 0-9")
+        assert("vapor!🤠", fails: .ascii && .alphanumeric, "contains '🤠' (allowed: ASCII) and contains '!' (allowed: A-Z, a-z, 0-9)")
+        assert("vapor", fails: !(.ascii && .alphanumeric), "contains only ASCII and contains only A-Z, a-z, 0-9")
     }
 
     func testASCII() {
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-               passes: .ascii)
-        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
-               fails: !.ascii,
-               "contains only ASCII")
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .ascii)
+        assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", fails: !.ascii, "contains only ASCII")
         assert("\n\r\t", passes: .ascii)
         assert("\n\r\t\u{129}", fails: .ascii, "contains 'ĩ' (allowed: ASCII)")
         assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
-        assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",
-               fails: .ascii,
-               "contains '🤠' (allowed: ASCII)")
+        assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
     }
 
     func testAlphanumeric() {
@@ -363,6 +471,20 @@ class ValidationTests: XCTestCase {
     }
 
     func testCustomResponseMiddleware() throws {
+        // Test item
+        struct User: Validatable {
+            let name: String
+            let age: Int
+
+            static func validations(_ v: inout Validations) {
+                // validate name is at least 5 characters and alphanumeric
+                v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
+                // validate age is 18 or older
+                v.add("age", as: Int.self, is: .range(18...))
+            }
+        }
+
+        // Setup
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -434,7 +556,7 @@ class ValidationTests: XCTestCase {
         }, afterResponse: { res in 
             XCTAssertEqual(res.status, .badRequest)
             let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
-            XCTAssertEqual(content.errors.count, 11)
+            XCTAssertEqual(content.errors.count, 1)
         })
     }
 
@@ -465,74 +587,4 @@ private func assert<T>(
     let file = (file)
     let result = validator.validate(data)
     XCTAssert(!result.isFailure, result.failureDescription ?? "n/a", file: file, line: line)
-}
-
-private final class User: Validatable, Codable {
-    enum Gender: String, CaseIterable, Codable {
-        case male, female, other
-    }
-    
-    var id: Int?
-    var name: String
-    var age: Int
-    var gender: Gender
-    var email: String?
-    var pet: Pet
-    var favoritePet: Pet?
-    var luckyNumber: Int?
-    var profilePictureURL: String?
-    var preferredColors: [String]
-    var isAdmin: Bool
-    
-    struct Pet: Codable {
-        var name: String
-        var age: Int
-        init(name: String, age: Int) {
-            self.name = name
-            self.age = age
-        }
-    }
-
-    init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
-        self.id = id
-        self.name = name
-        self.age = age
-        self.gender = gender
-        self.pet = pet
-        self.preferredColors = preferredColors
-        self.isAdmin = isAdmin
-    }
-
-    static func validations(_ v: inout Validations) {
-        // validate name is at least 5 characters and alphanumeric
-        v.add("name", as: String.self, is: .count(5...) && .alphanumeric)
-        // validate age is 18 or older
-        v.add("age", as: Int.self, is: .range(18...))
-        // validate gender is of type Gender
-        v.add("gender", as: String.self, is: .case(of: Gender.self))
-        // validate the email is valid and is not nil
-        v.add("email", as: String?.self, is: !.nil && .email)
-        v.add("email", as: String?.self, is: .email && !.nil) // test other way
-        // validate the email is valid or is nil
-        v.add("email", as: String?.self, is: .nil || .email)
-        v.add("email", as: String?.self, is: .email || .nil) // test other way
-        // validate that the lucky number is nil or is 5 or 7
-        v.add("luckyNumber", as: Int?.self, is: .nil || .in(5, 7))
-        // validate that the profile picture is nil or a valid URL
-        v.add("profilePictureURL", as: String?.self, is: .url || .nil)
-        v.add("preferredColors", as: [String].self, is: !.empty)
-        // pet validations
-        v.add("pet") { pet in
-            pet.add("name", as: String.self,
-                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
-            pet.add("age", as: Int.self, is: .range(3...))
-        }
-        // optional favorite pet validations
-        v.add("favoritePet", required: false) { pet in
-            pet.add("name", as: String.self,
-                    is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
-            pet.add("age", as: Int.self, is: .range(3...))
-        }
-        v.add("isAdmin", as: Bool.self)
-    }
 }
