@@ -73,5 +73,60 @@ final class RequestTests: XCTestCase {
             let uri: URI = "/\(foo)/bar/baz"
             XCTAssertEqual(uri.path, "/foo/bar/baz")
         }
+        do {
+            let uri = URI(scheme: "foo", host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
+        }
+        do {
+            let bar = "bar"
+            let uri = URI(scheme: "foo\(bar)", host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "foobar://host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: "foo", host: "host", port: 1, path: "/test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
+        }
+        do {
+            let scheme = "foo"
+            let uri = URI(scheme: scheme, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
+        }
+        do {
+            let scheme: String? = "foo"
+            let uri = URI(scheme: scheme, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "foo://host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: .http, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "http://host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: nil, host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: URI.Scheme(), host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(host: "host", port: 1, path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "host:1/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test", query: "query", fragment: "fragment")
+            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test?query#fragment")
+        }
+        do {
+            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test", fragment: "fragment")
+            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test#fragment")
+        }
+        do {
+            let uri = URI(scheme: .httpUnixDomainSocket, host: "/path", path: "test")
+            XCTAssertEqual(uri.string, "http+unix://%2Fpath/test")
+        }
+        do {
+            let uri = URI()
+            XCTAssertEqual(uri.string, "/")
+        }
     }
 }

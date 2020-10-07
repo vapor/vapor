@@ -61,8 +61,8 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://github.com/gwynne">
     <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
 </a>
-<a href="https://github.com/autimatisering">
-    <img src="https://user-images.githubusercontent.com/1342803/71133923-8ad36e80-21b9-11ea-836c-efa05b36a661.png" height="100px" alt="Autimatisering">
+<a href="https://github.com/Joannis">
+    <img src="https://user-images.githubusercontent.com/1342803/95220234-3ccd3d00-07c4-11eb-99be-0f5af0b099e8.png" height="100px" alt="Joannis Orlandos">
 </a>
 <a href="https://github.com/kylebrowning">
     <img src="https://user-images.githubusercontent.com/1342803/67107440-7ca5a980-f19a-11e9-8619-b029c96399f7.png" height="100px" alt="Kyle Browning">

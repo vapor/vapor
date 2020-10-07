@@ -38,7 +38,7 @@ extension Application {
         }
 
         func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
-            try app.server.start(hostname: self.hostname, port: self.port)
+            try app.server.start(address: .hostname(self.hostname, port: self.port))
             defer { app.server.shutdown() }
             
             let client = HTTPClient(eventLoopGroupProvider: .createNew)
@@ -103,6 +103,29 @@ public protocol XCTApplicationTester {
 }
 
 extension XCTApplicationTester {
+    @discardableResult
+    public func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        afterResponse: (XCTHTTPResponse) throws -> ()
+    ) throws -> XCTApplicationTester {
+        try self.test(
+            method,
+            path,
+            headers: headers,
+            body: body,
+            file: file,
+            line: line,
+            beforeRequest: { _ in },
+            afterResponse: afterResponse
+        )
+    }
+
+
     @discardableResult
     public func test(
         _ method: HTTPMethod,
