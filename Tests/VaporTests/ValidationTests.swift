@@ -38,7 +38,6 @@ class ValidationTests: XCTestCase {
                 self.pet = pet
                 self.preferredColors = preferredColors
                 self.isAdmin = isAdmin
-                //                self.hobbies = hobbies
             }
 
             static func validations(_ v: inout Validations) {
