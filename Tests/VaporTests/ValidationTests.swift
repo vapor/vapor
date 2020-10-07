@@ -29,7 +29,6 @@ class ValidationTests: XCTestCase {
                 }
             }
 
-
             init(id: Int? = nil, name: String, age: Int, gender: Gender, pet: Pet, preferredColors: [String] = [], isAdmin: Bool) {
                 self.id = id
                 self.name = name
