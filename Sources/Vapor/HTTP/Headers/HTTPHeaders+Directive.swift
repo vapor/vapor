@@ -245,9 +245,12 @@ private extension Character {
     static var space: Self {
         .init(" ")
     }
+    static var percent: Self {
+        .init("%")
+    }
 
     var isDirectiveKey: Bool {
-        self.isLetter || self.isNumber || self == .dash || self == .underscore || self == .period
+        self.isLetter || self.isNumber || self == .dash || self == .underscore || self == .period || self == .percent
     }
 }
 
