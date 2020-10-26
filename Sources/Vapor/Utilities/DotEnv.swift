@@ -43,8 +43,8 @@ public struct DotEnvFile {
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)")
-        DotEnvFile.load(path: ".env")
+        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, logger: logger)
+        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, logger: logger)
     }
     
     /// Reads the dotenv files relevant to the environment and loads them into the process.
