@@ -43,10 +43,10 @@ public struct DotEnvFile {
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)")
-        DotEnvFile.load(path: ".env")
+        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, logger: logger)
+        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, logger: logger)
     }
-    
+
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let path: String
@@ -65,7 +65,7 @@ public struct DotEnvFile {
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let eventLoopGroup: EventLoopGroup
-        
+
         switch eventLoopGroupProvider {
         case .shared(let group):
             eventLoopGroup = group
@@ -85,7 +85,7 @@ public struct DotEnvFile {
                 }
             }
         }
-        
+
         let threadPool = NIOThreadPool(numberOfThreads: 1)
         threadPool.start()
         defer {
@@ -96,14 +96,14 @@ public struct DotEnvFile {
             }
         }
         let fileIO = NonBlockingFileIO(threadPool: threadPool)
-    
+
         do {
             try load(path: path, fileio: fileIO, on: eventLoopGroup.next()).wait()
         } catch {
             logger.debug("Could not load \(path) file: \(error)")
         }
     }
-    
+
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
     ///     let fileio: NonBlockingFileIO
@@ -128,7 +128,7 @@ public struct DotEnvFile {
         return self.read(path: path, fileio: fileio, on: eventLoop)
             .map { $0.load(overwrite: overwrite) }
     }
-    
+
     /// Reads a dotenv file from the supplied path.
     ///
     ///     let fileio: NonBlockingFileIO
@@ -163,29 +163,29 @@ public struct DotEnvFile {
             return .init(lines: parser.parse())
         }
     }
-    
+
     /// Represents a `KEY=VALUE` pair in a dotenv file.
     public struct Line: CustomStringConvertible, Equatable {
         /// The key.
         public let key: String
-        
+
         /// The value.
         public let value: String
-        
+
         /// `CustomStringConvertible` conformance.
         public var description: String {
             return "\(self.key)=\(self.value)"
         }
     }
-    
+
     /// All `KEY=VALUE` pairs found in the file.
     public let lines: [Line]
-    
+
     /// Creates a new DotEnvFile
     init(lines: [Line]) {
         self.lines = lines
     }
-    
+
     /// Loads this file's `KEY=VALUE` pairs into the current process.
     ///
     ///     let file: DotEnvFile
@@ -209,7 +209,7 @@ extension DotEnvFile {
         init(source: ByteBuffer) {
             self.source = source
         }
-        
+
         mutating func parse() -> [Line] {
             var lines: [Line] = []
             while let next = self.parseNext() {
@@ -217,7 +217,7 @@ extension DotEnvFile {
             }
             return lines
         }
-        
+
         private mutating func parseNext() -> Line? {
             self.skipSpaces()
             guard let peek = self.peek() else {
@@ -239,14 +239,14 @@ extension DotEnvFile {
                 return self.parseLine()
             }
         }
-        
+
         private mutating func skipComment() {
             guard let commentLength = self.countDistance(to: .newLine) else {
                 return
             }
             self.source.moveReaderIndex(forwardBy: commentLength + 1) // include newline
         }
-        
+
         private mutating func parseLine() -> Line? {
             guard let keyLength = self.countDistance(to: .equal) else {
                 return nil
@@ -260,7 +260,7 @@ extension DotEnvFile {
             }
             return Line(key: key, value: value)
         }
-        
+
         private mutating func parseLineValue() -> String? {
             let valueLength: Int
             if let toNewLine = self.countDistance(to: .newLine) {
@@ -286,7 +286,7 @@ extension DotEnvFile {
             default: return value
             }
         }
-        
+
         private mutating func skipSpaces() {
             scan: while let next = self.peek() {
                 switch next {
@@ -295,15 +295,15 @@ extension DotEnvFile {
                 }
             }
         }
-        
+
         private func peek() -> UInt8? {
             return self.source.getInteger(at: self.source.readerIndex)
         }
-        
+
         private mutating func pop() {
             self.source.moveReaderIndex(forwardBy: 1)
         }
-        
+
         private func countDistance(to byte: UInt8) -> Int? {
             var copy = self.source
             var found = false
@@ -329,15 +329,15 @@ private extension UInt8 {
     static var newLine: UInt8 {
         return 0xA
     }
-    
+
     static var space: UInt8 {
         return 0x20
     }
-    
+
     static var octothorpe: UInt8 {
         return 0x23
     }
-    
+
     static var equal: UInt8 {
         return 0x3D
     }
