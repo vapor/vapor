@@ -42,9 +42,43 @@ public struct DotEnvFile {
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
+        let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
+        defer {
+            do {
+                try threadPool.syncShutdownGracefully()
+            } catch {
+                logger.error("Shutting down threadPool failed: \(error)")
+            }
+        }
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+
+        self.load(for: environment, on: eventLoopGroupProvider, fileio: fileio, logger: logger)
+    }
+
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let environment: Environment
+    ///     let elgp: EventLoopGroupProvider
+    ///     let fileio: FileIO
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(for: .development, on: elgp, fileio: fileio, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - environment: current environment, selects which .env file to use.
+    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        for environment: Environment = .development,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        fileio: NonBlockingFileIO,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) {
         // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, logger: logger)
-        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, logger: logger)
+        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, fileio: fileio, logger: logger)
+        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, fileio: fileio, logger: logger)
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
@@ -62,6 +96,40 @@ public struct DotEnvFile {
     public static func load(
         path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) {
+        let threadPool = NIOThreadPool(numberOfThreads: 1)
+        threadPool.start()
+        defer {
+            do {
+                try threadPool.syncShutdownGracefully()
+            } catch {
+                logger.error("Shutting down threadPool failed: \(error)")
+            }
+        }
+        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+
+        self.load(path: path, on: eventLoopGroupProvider, fileio: fileio, logger: logger)
+    }
+
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let path: String
+    ///     let elgp: EventLoopGroupProvider
+    ///     let fileio: FileIO
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(path: path, on: elgp, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        path: String,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let eventLoopGroup: EventLoopGroup
@@ -85,17 +153,6 @@ public struct DotEnvFile {
                 }
             }
         }
-
-        let threadPool = NIOThreadPool(numberOfThreads: 1)
-        threadPool.start()
-        defer {
-            do {
-                try threadPool.syncShutdownGracefully()
-            } catch {
-                logger.error("Shutting down theadPool failed: \(error)")
-            }
-        }
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
         do {
             try load(path: path, fileio: fileIO, on: eventLoopGroup.next()).wait()
