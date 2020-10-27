@@ -76,9 +76,31 @@ public struct DotEnvFile {
         fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
+        let eventLoopGroup: EventLoopGroup
+
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            eventLoopGroup = group
+        case .createNew:
+            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
+        defer {
+            switch eventLoopGroupProvider {
+            case .shared:
+                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
+            case .createNew:
+                logger.trace("Shutting down EventLoopGroup")
+                do {
+                    try eventLoopGroup.syncShutdownGracefully()
+                } catch {
+                    logger.error("Shutting down EventLoopGroup failed: \(error)")
+                }
+            }
+        }
+
         // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, fileio: fileio, logger: logger)
-        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, fileio: fileio, logger: logger)
+        DotEnvFile.load(path: ".env.\(environment.name)", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
+        DotEnvFile.load(path: ".env", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
     }
 
     /// Reads the dotenv files relevant to the environment and loads them into the process.
