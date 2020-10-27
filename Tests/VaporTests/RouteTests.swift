@@ -360,7 +360,7 @@ final class RouteTests: XCTestCase {
         let testMarkerHeaderValue = "addedInShouldUpgrade"
         
         app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
-            return req.eventLoop.future([testMarkerHeaderKey:testMarkerHeaderValue])
+            return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
         }, onUpgrade: { _, _ in })
         
         try app.testable(method: .running).test(.GET, "customshouldupgrade", beforeRequest: { req in
