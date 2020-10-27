@@ -29,39 +29,20 @@ public struct DotEnvFile {
     ///
     ///     let environment: Environment
     ///     let elgp: EventLoopGroupProvider
+    ///     let fileio: NonBlockingFileIO
     ///     let logger: Logger
-    ///     try DotEnvFile.load(for: .development, on: elgp, logger: logger)
+    ///     try DotEnvFile.load(for: .development, on: elgp, fileio: fileio, logger: logger)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
     ///     - environment: current environment, selects which .env file to use.
     ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         for environment: Environment = .development,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
-        logger: Logger = Logger(label: "dot-env-loggger")
-    ) {
-        // Load specific .env first since values are not overridden.
-        DotEnvFile.load(path: ".env.\(environment.name)", on: eventLoopGroupProvider, logger: logger)
-        DotEnvFile.load(path: ".env", on: eventLoopGroupProvider, logger: logger)
-    }
-
-    /// Reads the dotenv files relevant to the environment and loads them into the process.
-    ///
-    ///     let path: String
-    ///     let elgp: EventLoopGroupProvider
-    ///     let logger: Logger
-    ///     try DotEnvFile.load(path: path, on: elgp, logger: logger)
-    ///     print(Environment.process.FOO) // BAR
-    ///
-    /// - parameters:
-    ///     - path: Absolute or relative path of the dotenv file.
-    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
-    ///     - logger: Optionally provide an existing logger.
-    public static func load(
-        path: String,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let eventLoopGroup: EventLoopGroup
@@ -75,7 +56,7 @@ public struct DotEnvFile {
         defer {
             switch eventLoopGroupProvider {
             case .shared:
-                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
             case .createNew:
                 logger.trace("Shutting down EventLoopGroup")
                 do {
@@ -86,19 +67,55 @@ public struct DotEnvFile {
             }
         }
 
-        let threadPool = NIOThreadPool(numberOfThreads: 1)
-        threadPool.start()
+        // Load specific .env first since values are not overridden.
+        DotEnvFile.load(path: ".env.\(environment.name)", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
+        DotEnvFile.load(path: ".env", on: .shared(eventLoopGroup), fileio: fileio, logger: logger)
+    }
+
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let path: String
+    ///     let elgp: EventLoopGroupProvider
+    ///     let fileio: NonBlockingFileIO
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(path: path, on: elgp, fileio: filio, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        path: String,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        fileio: NonBlockingFileIO,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) {
+        let eventLoopGroup: EventLoopGroup
+
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            eventLoopGroup = group
+        case .createNew:
+            eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
         defer {
-            do {
-                try threadPool.syncShutdownGracefully()
-            } catch {
-                logger.error("Shutting down theadPool failed: \(error)")
+            switch eventLoopGroupProvider {
+            case .shared:
+                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
+            case .createNew:
+                logger.trace("Shutting down EventLoopGroup")
+                do {
+                    try eventLoopGroup.syncShutdownGracefully()
+                } catch {
+                    logger.error("Shutting down EventLoopGroup failed: \(error)")
+                }
             }
         }
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
 
         do {
-            try load(path: path, fileio: fileIO, on: eventLoopGroup.next()).wait()
+            try load(path: path, fileio: fileio, on: eventLoopGroup.next()).wait()
         } catch {
             logger.debug("Could not load \(path) file: \(error)")
         }

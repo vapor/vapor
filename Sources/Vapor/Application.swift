@@ -89,7 +89,7 @@ public final class Application {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: eventLoopGroupProvider, logger: self.logger)
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
     public func run() throws {
@@ -133,7 +133,7 @@ public final class Application {
 
         switch self.eventLoopGroupProvider {
         case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
         case .createNew:
             self.logger.trace("Shutting down EventLoopGroup")
             do {
