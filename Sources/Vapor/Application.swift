@@ -89,7 +89,7 @@ public final class Application {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: eventLoopGroupProvider, logger: self.logger)
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: fileio, logger: self.logger)
     }
     
     public func run() throws {
