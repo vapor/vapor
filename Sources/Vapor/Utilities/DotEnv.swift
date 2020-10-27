@@ -60,7 +60,7 @@ public struct DotEnvFile {
     ///
     ///     let environment: Environment
     ///     let elgp: EventLoopGroupProvider
-    ///     let fileio: FileIO
+    ///     let fileio: NonBlockingFileIO
     ///     let logger: Logger
     ///     try DotEnvFile.load(for: .development, on: elgp, fileio: fileio, logger: logger)
     ///     print(Environment.process.FOO) // BAR
@@ -116,9 +116,9 @@ public struct DotEnvFile {
     ///
     ///     let path: String
     ///     let elgp: EventLoopGroupProvider
-    ///     let fileio: FileIO
+    ///     let fileio: NonBlockingFileIO
     ///     let logger: Logger
-    ///     try DotEnvFile.load(path: path, on: elgp, logger: logger)
+    ///     try DotEnvFile.load(path: path, on: elgp, fileio: filio, logger: logger)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// - parameters:
