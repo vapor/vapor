@@ -51,7 +51,7 @@ public struct DotEnvFile {
                 logger.error("Shutting down threadPool failed: \(error)")
             }
         }
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let fileio = NonBlockingFileIO(threadPool: threadPool)
 
         self.load(for: environment, on: eventLoopGroupProvider, fileio: fileio, logger: logger)
     }
@@ -107,7 +107,7 @@ public struct DotEnvFile {
                 logger.error("Shutting down threadPool failed: \(error)")
             }
         }
-        let fileIO = NonBlockingFileIO(threadPool: threadPool)
+        let fileio = NonBlockingFileIO(threadPool: threadPool)
 
         self.load(path: path, on: eventLoopGroupProvider, fileio: fileio, logger: logger)
     }
@@ -155,7 +155,7 @@ public struct DotEnvFile {
         }
 
         do {
-            try load(path: path, fileio: fileIO, on: eventLoopGroup.next()).wait()
+            try load(path: path, fileio: fileio, on: eventLoopGroup.next()).wait()
         } catch {
             logger.debug("Could not load \(path) file: \(error)")
         }
