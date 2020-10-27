@@ -133,7 +133,7 @@ public final class Application {
 
         switch self.eventLoopGroupProvider {
         case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
         case .createNew:
             self.logger.trace("Shutting down EventLoopGroup")
             do {

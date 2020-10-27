@@ -75,7 +75,7 @@ public struct DotEnvFile {
         defer {
             switch eventLoopGroupProvider {
             case .shared:
-                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+                logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
             case .createNew:
                 logger.trace("Shutting down EventLoopGroup")
                 do {
