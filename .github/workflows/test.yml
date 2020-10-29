@@ -13,14 +13,14 @@ jobs:
           envblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/pr-environments.json | jq -cMj)"
           actblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/setup-xcode-action.txt)"
           echo "::set-output name=environments::$(envblob)"
-          echo "::set-output name=xcode_action::$(actblob)"
+          printf '::set-output name=xcode_action::{"act":"%s"}\n' "${actblob}"
     
   test-providers:
     needs: getcidata
     strategy:
       fail-fast: false
       matrix:
-        env: ${{ fromJson(needs.getcidata.outputs.environments) }}
+        env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
         provider:
           - vapor/jwt
           - vapor/fluent
@@ -32,7 +32,7 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1.2.1
+        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action).act }}
         with: { 'xcode-version': ${{ matrix.env.toolchain }} }
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
@@ -52,13 +52,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: ${{ fromJson(needs.getcidata.outputs.environments) }}
+        env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
     runs-on: ${{ matrix.env.os }}
     container: ${{ matrix.env.image }}
-    steps:
     steps: 
       - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1.2.1
+        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action).act }}
         with: { 'xcode-version': ${{ matrix.env.toolchain }} }
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
