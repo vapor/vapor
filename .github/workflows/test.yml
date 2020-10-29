@@ -20,14 +20,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: ${{ fromJSON(needs.getcidata.outputs.environments)[0] }}
+        env:
+          - { os: 'ubuntu-latest', image: 'swift:5.2-focal', toolchain: '' }
+          - { os: 'ubuntu-latest', image: 'swift:5.3-focal', toolchain: '' }
+          - { os: 'macos-latest', image: '', toolchain: 'latest-stable' }
+          - { os: 'macos-latest', image: '', toolchain: 'latest' }
         provider:
           - vapor/jwt
           - vapor/fluent
           - vapor/leaf
           - vapor/queues
           - vapor/apns
-          #- vapor/redis
     runs-on: ${{ matrix.env.os }}
     container: ${{ matrix.env.image }}
     steps: 
