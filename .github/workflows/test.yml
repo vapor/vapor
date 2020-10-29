@@ -20,11 +20,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env:
-          - { os: 'ubuntu-latest', image: 'swift:5.2-focal', toolchain: '' }
-          - { os: 'ubuntu-latest', image: 'swift:5.3-focal', toolchain: '' }
-          - { os: 'macos-latest', image: '', toolchain: 'latest-stable' }
-          - { os: 'macos-latest', image: '', toolchain: 'latest' }
+        env: ${{ fromJSON(needs.getcidata.outputs.environments)[0] }}
         provider:
           - vapor/jwt
           - vapor/fluent
@@ -35,19 +31,15 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1.2
-        with:
-          xcode-version: ${{ matrix.env.toolchain }}
+        uses: maxim-lobanov/setup-xcode@v1.2.1
+        with: { 'xcode-version': ${{ matrix.env.toolchain }} }
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
         uses: actions/checkout@v2
-        with: 
-          path: vapor
+        with: { path: 'vapor' }
       - name: Check out provider
         uses: actions/checkout@v2
-        with: 
-          repository: ${{ matrix.provider }}
-          path: provider
+        with: { repository: ${{ matrix.provider }}, path: 'provider' }
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
