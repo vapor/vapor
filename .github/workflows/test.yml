@@ -32,7 +32,7 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action).act }}
+        uses: 'maxim-lobanov/setup-xcode@v1.2.1'
         with: { 'xcode-version': ${{ matrix.env.toolchain }} }
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
@@ -57,7 +57,7 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action).act }}
+        uses: 'maxim-lobanov/setup-xcode@v1.2.1'
         with: { 'xcode-version': ${{ matrix.env.toolchain }} }
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
