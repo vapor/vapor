@@ -31,7 +31,7 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action) }}
+        uses: maxim-lobanov/setup-xcode@v1.2.1
         with:
           xcode-version: ${{ matrix.env.toolchain }}
         if: ${{ matrix.env.toolchain != '' }}
@@ -60,7 +60,7 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action) }}
+        uses: maxim-lobanov/setup-xcode@v1.2.1
         with:
           xcode-version: ${{ matrix.env.toolchain }}
         if: ${{ matrix.env.toolchain != '' }}
