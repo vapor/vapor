@@ -6,14 +6,11 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       environments: ${{ steps.output.outputs.environments }}
-      xcode_action: ${{ steps.output.outputs.xcode_action }}
     steps:
       - id: output
         run: |
           envblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/pr-environments.json | jq -cMj '.')"
-          actblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/setup-xcode-action.txt)"
           echo "::set-output name=environments::${envblob}"
-          echo "::set-output name=xcode_action::${actblob}"
     
   test-providers:
     needs: getcidata
