@@ -35,15 +35,19 @@ jobs:
     container: ${{ matrix.env.image }}
     steps: 
       - name: Select toolchain
-        uses: ${{ fromJSON(needs.getcidata.outputs.xcode_action).act }}
-        with: { 'xcode-version': ${{ matrix.env.toolchain }} }
+        uses: maxim-lobanov/setup-xcode@v1
+        with:
+          xcode-version: ${{ matrix.env.toolchain }}
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
         uses: actions/checkout@v2
-        with: { path: 'vapor' }
+        with: 
+          path: vapor
       - name: Check out provider
         uses: actions/checkout@v2
-        with: { repository: ${{ matrix.provider }}, path: 'provider' }
+        with: 
+          repository: ${{ matrix.provider }}
+          path: provider
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
