@@ -384,6 +384,10 @@ private struct _Decoder: Decoder {
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+            //Check if we received a date. We need the decode with the appropriate format
+            guard !(T.self is Date.Type) else {
+                return try configuration.decodeDate(from: data, codingPath: codingPath, forKey: nil) as! T
+            }
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
               guard let value = data.values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
