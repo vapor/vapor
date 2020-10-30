@@ -363,7 +363,9 @@ private class _Encoder: Encoder {
         
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
-            if let convertible = value as? URLQueryFragmentConvertible {
+            if let date = value as? Date {
+                self.data = try configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
+            } else if let convertible = value as? URLQueryFragmentConvertible {
                 self.data.values.append(convertible.urlQueryFragmentValue)
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath, configuration: self.configuration)
