@@ -220,6 +220,21 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decodedCustom, toEncode)
     }
 
+    func testOptionalDateEncodingAndDecoding_GH2518() throws {
+        let optionalDate: Date? = Date(timeIntervalSince1970: 0)
+        let dateString = "1970-01-01T00:00:00Z"
+
+        let resultForDecodedOptionalDate = try URLEncodedFormDecoder(
+            configuration: .init(dateDecodingStrategy: .iso8601)
+        ).decode(Date?.self, from: dateString)
+        XCTAssertEqual(optionalDate, resultForDecodedOptionalDate)
+
+        let resultForEncodedOptionalDate = try URLEncodedFormEncoder(
+            configuration: .init(dateEncodingStrategy: .iso8601)
+        ).encode(optionalDate)
+        XCTAssertEqual(dateString, resultForEncodedOptionalDate)
+    }
+
     func testEncodedArrayValues() throws {
         let user = User(name: "Tanner", age: 23, pets: ["Zizek", "Foo"], dict: ["a": 1, "b": 2], foos: [.baz], nums: [3.14], isCool: true)
         let result = try URLEncodedFormEncoder(
