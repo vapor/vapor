@@ -220,7 +220,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(decodedCustom, toEncode)
     }
 
-    func testGH2518() throws {
+    func testOptionalDateEncodingAndDecoding_GH2518() throws {
         let optionalDate: Date? = Date(timeIntervalSince1970: 0)
         let dateString = "1970-01-01T00:00:00Z"
 
