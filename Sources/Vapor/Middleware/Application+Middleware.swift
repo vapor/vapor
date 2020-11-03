@@ -5,6 +5,7 @@ extension Application {
                 return existing
             } else {
                 var new = Middlewares()
+                new.use(RouteLoggingMiddleware(logLevel: .info))
                 new.use(ErrorMiddleware.default(environment: self.environment))
                 self.storage[MiddlewaresKey.self] = new
                 return new
