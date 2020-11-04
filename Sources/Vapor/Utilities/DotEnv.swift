@@ -258,10 +258,13 @@ extension DotEnvFile {
         }
 
         private mutating func skipComment() {
-            guard let commentLength = self.countDistance(to: .newLine) else {
-                return
+            let commentLength: Int
+            if let toNewLine = self.countDistance(to: .newLine) {
+                commentLength = toNewLine + 1 // include newline
+            } else {
+                commentLength = self.source.readableBytes
             }
-            self.source.moveReaderIndex(forwardBy: commentLength + 1) // include newline
+            self.source.moveReaderIndex(forwardBy: commentLength)
         }
 
         private mutating func parseLine() -> Line? {
