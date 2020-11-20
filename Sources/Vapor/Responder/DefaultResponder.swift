@@ -39,7 +39,6 @@ internal struct DefaultResponder: Responder {
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.logger.info("\(request.method) \(request.url.path.removingPercentEncoding ?? request.url.path)")
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
         let path: String
@@ -51,7 +50,7 @@ internal struct DefaultResponder: Responder {
             path = request.url.path
             response = self.notFoundResponder.respond(to: request)
         }
-        response.whenComplete { result in
+        return response.always { result in
             let status: HTTPStatus
             switch result {
             case .success(let response):
@@ -66,7 +65,6 @@ internal struct DefaultResponder: Responder {
                 statusCode: status.code
             )
         }
-        return response
     }
     
     /// Gets a `Route` from the underlying `TrieRouter`.
