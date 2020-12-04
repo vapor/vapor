@@ -1,4 +1,6 @@
 import Metrics
+import Tracing
+import TracingOpenTelemetrySupport
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
@@ -40,6 +42,8 @@ internal struct DefaultResponder: Responder {
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         let startTime = DispatchTime.now().uptimeNanoseconds
+        let span = InstrumentationSystem.tracer.startSpan("Responder.respond", baggage: request.context.baggage, ofKind: .server)
+        self.initiateTracing(for: request, span: span)
         let response: EventLoopFuture<Response>
         let path: String
         if let cachedRoute = self.getRoute(for: request) {
@@ -52,17 +56,30 @@ internal struct DefaultResponder: Responder {
         }
         return response.always { result in
             let status: HTTPStatus
+            let err: Error?
+            let contentLength: String?
             switch result {
             case .success(let response):
                 status = response.status
-            case .failure:
+                err = nil
+                contentLength = response.headers.first(name: .contentLength)
+            case .failure(let error):
                 status = .internalServerError
+                err = error
+                contentLength = nil
             }
             self.updateMetrics(
                 for: request,
                 path: path,
                 startTime: startTime,
                 statusCode: status.code
+            )
+            self.updateTracing(
+                for: request,
+                span: span,
+                status: status,
+                error: err,
+                contentLength: contentLength
             )
         }
     }
@@ -78,6 +95,36 @@ internal struct DefaultResponder: Responder {
             path: [method.string] + pathComponents,
             parameters: &request.parameters
         )
+    }
+    
+    private func initiateTracing(
+        for request: Request,
+        span: Span
+    ) {
+        span.attributes.http.method = request.method.rawValue
+        span.attributes.http.flavor = "\(request.version.major).\(request.version.minor)"
+        span.attributes.http.host = request.headers.first(name: .host)
+        span.attributes.http.target = request.url.path
+        span.attributes.http.scheme = request.url.scheme
+        span.attributes.http.userAgent = request.headers.first(name: .userAgent)
+        if let remoteAddress = request.remoteAddress {
+            span.attributes.net.peerIP = remoteAddress.ipAddress
+        }
+    }
+    
+    private func updateTracing(
+        for request: Request,
+        span: Span,
+        status: HTTPStatus,
+        error: Error?,
+        contentLength: String?
+    ) {
+        defer { span.end() }
+        let status = (error as? AbortError)?.status ?? status
+        span.attributes.http.statusCode = Int(status.code)
+        span.attributes.http.statusText = status.reasonPhrase
+        if let l = contentLength { span.attributes.http.responseContentLength = Int(l) }
+        if let e = error { span.recordError(e) }
     }
 
     /// Records the requests metrics.

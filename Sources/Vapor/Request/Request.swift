@@ -1,3 +1,4 @@
+import Tracing
 import NIO
 
 public final class Request: CustomStringConvertible {
@@ -107,7 +108,16 @@ public final class Request: CustomStringConvertible {
         }
     }
     
-    public var logger: Logger
+    public var context: LoggingContext
+    
+    public var logger: Logger {
+        get {
+            return context.logger
+        }
+        set {
+            context.logger = newValue
+        }
+    }
     
     public var body: Body {
         return Body(self)
@@ -201,7 +211,22 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.storage = .init()
         self.isKeepAlive = true
-        self.logger = logger
+        self.context = DefaultLoggingContext.topLevel(logger: logger)
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        
+        InstrumentationSystem.instrument.extract(self.headers, into: &self.context.baggage, using: HTTPHeadersExtractor())
+    }
+}
+
+
+struct HTTPHeadersExtractor: Extractor {
+    func extract(key: String, from headers: HTTPHeaders) -> String? {
+        return headers.first(name: key)
+    }
+}
+
+struct HTTPHeadersInjector: Injector {
+    func inject(_ value: String, forKey key: String, into headers: inout HTTPHeaders) {
+        headers.add(name: key, value: value)
     }
 }
