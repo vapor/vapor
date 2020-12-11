@@ -185,6 +185,27 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
         XCTAssertEqual(headers.cookie?["cookie.two"]?.string, "2")
     }
+    
+    func testCookie_percentParsing() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "cookie_one=1;cookie%40cookieCom=2;cookie_3=three")
+        ])
+        
+        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
+        XCTAssertEqual(headers.cookie?["cookie%40cookieCom"]?.string, "2")
+        XCTAssertEqual(headers.cookie?["cookie_3"]?.string, "three")
+    }
+    
+    func testCookie_invalidCookie() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3")
+        ])
+        
+        XCTAssertEqual(headers.cookie?.all.count, 2)
+        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
+        XCTAssertNil(headers.cookie?["cookie\ntwo"])
+        XCTAssertEqual(headers.cookie?["cookie_three"]?.string, "3")
+    }
 
     func testMediaTypeMainTypeCaseInsensitive() throws {
         let lower = HTTPMediaType(type: "foo", subType: "")
