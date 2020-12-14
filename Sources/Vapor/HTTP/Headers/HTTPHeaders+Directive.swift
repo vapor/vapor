@@ -230,23 +230,11 @@ private extension Character {
     static var equals: Self {
         .init("=")
     }
-    static var dash: Self {
-        .init("-")
-    }
     static var comma: Self {
         .init(",")
     }
-    static var underscore: Self {
-        .init("_")
-    }
-    static var period: Self {
-        .init(".")
-    }
     static var space: Self {
         .init(" ")
-    }
-    static var percent: Self {
-        .init("%")
     }
     
     /// The characters defined in RFC2616.
