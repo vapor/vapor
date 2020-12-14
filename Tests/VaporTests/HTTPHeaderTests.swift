@@ -192,6 +192,7 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.cookie?.all.count, 2)
         XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
         XCTAssertNil(headers.cookie?["cookie\ntwo"])
+        XCTAssertEqual(headers.cookie?["cookie_three"]?.string, "3")
         XCTAssertNil(headers.cookie?["cookie_④"])
         XCTAssertNil(headers.cookie?["cookie_fivé"])
     }
