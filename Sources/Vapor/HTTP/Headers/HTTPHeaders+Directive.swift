@@ -135,7 +135,7 @@ extension HTTPHeaders {
                 let character = self.current[index]
                 if character == .equals {
                     return index
-                } else if !character.isDirectiveKey {
+                } else if !character.isTokenCharacter {
                     return nil
                 }
             }
@@ -248,9 +248,35 @@ private extension Character {
     static var percent: Self {
         .init("%")
     }
-
-    var isDirectiveKey: Bool {
-        self.isLetter || self.isNumber || self == .dash || self == .underscore || self == .period || self == .percent
+    
+    /// The characters defined in RFC2616.
+    ///
+    /// Description from [RFC2616](]https://tools.ietf.org/html/rfc2616):
+    ///
+    /// separators     = "(" | ")" | "<" | ">" | "@"
+    ///                | "," | ";" | ":" | "\" | <">
+    ///                | "/" | "[" | "]" | "?" | "="
+    ///                | "{" | "}" | SP | HT
+    static var separators: [Self] {
+        ["(", ")", "<", ">", "@", ",", ":", ";", "\\", "\"", "/", "[", "]", "?", "=", "{", "}", " ", "\t"]
+    }
+    
+    /// Check if this is valid character for token.
+    ///
+    /// Description from [RFC2616](]https://tools.ietf.org/html/rfc2616):
+    ///
+    /// token          = 1*<any CHAR except CTLs or separators>
+    /// CHAR           = <any US-ASCII character (octets 0 - 127)>
+    /// CTL            = <any US-ASCII control character
+    ///                  (octets 0 - 31) and DEL (127)>
+    var isTokenCharacter: Bool {
+        guard let asciiValue = self.asciiValue else {
+            return false
+        }
+        guard asciiValue > 31 && asciiValue != 127 else {
+            return false
+        }
+        return !Self.separators.contains(self)
     }
 }
 
