@@ -16,3 +16,4 @@ jobs:
         username: vapor
         key: ${{ secrets.VAPOR_CODES_SSH_KEY }}
         script: ./github-actions/deploy-api-docs.sh
+        command_timeout: 20m 
