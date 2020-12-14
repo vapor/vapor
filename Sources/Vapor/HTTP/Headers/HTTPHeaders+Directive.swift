@@ -239,7 +239,7 @@ private extension Character {
     
     /// The characters defined in RFC2616.
     ///
-    /// Description from [RFC2616](]https://tools.ietf.org/html/rfc2616):
+    /// Description from [RFC2616](https://tools.ietf.org/html/rfc2616):
     ///
     /// separators     = "(" | ")" | "<" | ">" | "@"
     ///                | "," | ";" | ":" | "\" | <">
