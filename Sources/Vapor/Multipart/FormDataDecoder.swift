@@ -74,10 +74,10 @@ private final class FormDataDecoderContext {
             part = p
         case 2:
             let name = codingPath[0].stringValue + "[]"
-            guard let offset = codingPath[1].intValue else {
-                throw MultipartError.nesting
+            guard let p = parts.allParts(named: name)[safe: offset] else {
+              throw MultipartError.missingPart("\(codingPath[1].stringValue)")
             }
-            part = parts.allParts(named: name)[offset]
+            part = p
         default:
             throw MultipartError.nesting
         }
