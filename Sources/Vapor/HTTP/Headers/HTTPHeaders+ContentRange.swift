@@ -153,19 +153,19 @@ extension HTTPHeaders.Range {
         public static func from<T>(requestStr: T) -> HTTPHeaders.Range.Value? where T: StringProtocol {
             let ranges = requestStr.split(separator: "-", omittingEmptySubsequences: false)
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            guard ranges.count <= 2 else { return nil }
-            let start = Int(ranges[0])
-            let end = Int(ranges.count > 1 ? ranges[1] : "")
-            if start == nil && end == nil {
+            let count = ranges.count
+            guard count <= 2 else { return nil }
+    
+            switch (count > 0 ? Int(ranges[0]) : nil, count > 1 ? Int(ranges[1]) : nil) {
+            case (nil, nil):
                 return nil
+            case let (.some(start), nil):
+                return .start(value: start)
+            case let (nil, .some(tail)):
+                return .tail(value: tail)
+            case let (.some(start), .some(end)):
+                return .within(start: start, end: end)
             }
-            if start != nil && end == nil {
-                return .start(value: start!)
-            }
-            if start == nil && end != nil {
-                return .tail(value: end!)
-            }
-            return .within(start: start!, end: end!)
         }
         
         ///Serializes `HTTPHeaders.Range.Value` to a string for use within the HTTP `Range` header.
