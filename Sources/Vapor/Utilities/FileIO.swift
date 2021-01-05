@@ -225,5 +225,4 @@ extension HTTPHeaders.Range.Value {
                 return (offset: numericCast(start), byteCount: end + 1)
         }
     }
-    
 }
