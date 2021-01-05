@@ -180,7 +180,6 @@ extension HTTPHeaders.Range {
             }
         }
     }
-    
 }
 
 extension HTTPHeaders.ContentRange {
