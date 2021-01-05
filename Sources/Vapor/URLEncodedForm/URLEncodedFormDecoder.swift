@@ -169,33 +169,9 @@ private struct _Decoder: Decoder {
         }
         
         private func decodeDate(forKey key: Key) throws -> Date {
-            return try decodeDate(forKey: key, as: configuration.dateDecodingStrategy)
-        }
-        
-        private func decodeDate(forKey key: Key, as dateFormat: URLEncodedFormDecoder.Configuration.DateDecodingStrategy) throws -> Date {
             //If we are trying to decode a required array, we might not have decoded a child, but we should still try to decode an empty array
             let child = self.data.children[key.stringValue] ?? []
-            switch dateFormat {
-            case .secondsSince1970:
-                guard let value = child.values.last else {
-                    throw DecodingError.valueNotFound(Date.self, at: self.codingPath + [key])
-                }
-                if let result = Date.init(urlQueryFragmentValue: value) {
-                    return result
-                } else {
-                    throw DecodingError.typeMismatch(Date.self, at: self.codingPath + [key])
-                }
-            case .iso8601:
-                let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
-                if let date = ISO8601DateFormatter.threadSpecific.date(from: try String(from: decoder)) {
-                    return date
-                } else {
-                    throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: self.codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
-                }
-            case .custom(let callback):
-                let decoder = _Decoder(data: child, codingPath: self.codingPath + [key], configuration: configuration)
-                return try callback(decoder)
-            }
+            return try configuration.decodeDate(from: child, codingPath: self.codingPath, forKey: key)
         }
         
         func decode<T>(_ type: T.Type, forKey key: Key) throws -> T where T: Decodable {
@@ -404,10 +380,14 @@ private struct _Decoder: Decoder {
         }
         
         func decodeNil() -> Bool {
-            return false
+            self.data.values.isEmpty
         }
         
         func decode<T>(_ type: T.Type) throws -> T where T: Decodable {
+            // Check if we received a date. We need the decode with the appropriate format.
+            guard !(T.self is Date.Type) else {
+                return try configuration.decodeDate(from: data, codingPath: codingPath, forKey: nil) as! T
+            }
             if let convertible = T.self as? URLQueryFragmentConvertible.Type {
               guard let value = data.values.last else {
                     throw DecodingError.valueNotFound(T.self, at: self.codingPath)
@@ -421,6 +401,33 @@ private struct _Decoder: Decoder {
                 let decoder = _Decoder(data: data, codingPath: self.codingPath, configuration: configuration)
                 return try T(from: decoder)
             }
+        }
+    }
+}
+
+private extension URLEncodedFormDecoder.Configuration {
+    func decodeDate(from data: URLEncodedFormData, codingPath: [CodingKey], forKey key: CodingKey?) throws -> Date {
+        let newCodingPath = codingPath + (key.map { [$0] } ?? [])
+        switch dateDecodingStrategy {
+        case .secondsSince1970:
+            guard let value = data.values.last else {
+                throw DecodingError.valueNotFound(Date.self, at: newCodingPath)
+            }
+            if let result = Date.init(urlQueryFragmentValue: value) {
+                return result
+            } else {
+                throw DecodingError.typeMismatch(Date.self, at: newCodingPath)
+            }
+        case .iso8601:
+            let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
+            if let date = ISO8601DateFormatter.threadSpecific.date(from: try String(from: decoder)) {
+                return date
+            } else {
+                throw DecodingError.dataCorrupted(DecodingError.Context(codingPath: codingPath, debugDescription: "Unable to decode date. Expecting ISO8601 formatted date"))
+            }
+        case .custom(let callback):
+            let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
+            return try callback(decoder)
         }
     }
 }

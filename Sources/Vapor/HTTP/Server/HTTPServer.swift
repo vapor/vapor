@@ -17,11 +17,51 @@ public final class HTTPServer: Server {
     ///     services.register(serverConfig)
     ///
     public struct Configuration {
+        public static let defaultHostname = "127.0.0.1"
+        public static let defaultPort = 8080
+        
+        /// Address the server will bind to. Configuring an address using a hostname with a nil host or port will use the default hostname or port respectively.
+        public var address: BindAddress
+        
         /// Host name the server will bind to.
-        public var hostname: String
+        public var hostname: String {
+            get {
+                switch address {
+                case .hostname(let hostname, _):
+                    return hostname ?? Self.defaultHostname
+                default:
+                    return Self.defaultHostname
+                }
+            }
+            set {
+                switch address {
+                case .hostname(_, let port):
+                    address = .hostname(newValue, port: port)
+                default:
+                    address = .hostname(newValue, port: nil)
+                }
+            }
+        }
         
         /// Port the server will bind to.
-        public var port: Int
+        public var port: Int {
+           get {
+               switch address {
+               case .hostname(_, let port):
+                   return port ?? Self.defaultPort
+               default:
+                   return Self.defaultPort
+               }
+           }
+           set {
+               switch address {
+               case .hostname(let hostname, _):
+                   address = .hostname(hostname, port: newValue)
+               default:
+                   address = .hostname(nil, port: newValue)
+               }
+           }
+       }
         
         /// Listen backlog.
         public var backlog: Int
@@ -108,8 +148,8 @@ public final class HTTPServer: Server {
         public var logger: Logger
 
         public init(
-            hostname: String = "127.0.0.1",
-            port: Int = 8080,
+            hostname: String = Self.defaultHostname,
+            port: Int = Self.defaultPort,
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
@@ -121,8 +161,35 @@ public final class HTTPServer: Server {
             serverName: String? = nil,
             logger: Logger? = nil
         ) {
-            self.hostname = hostname
-            self.port = port
+            self.init(
+                address: .hostname(hostname, port: port),
+                backlog: backlog,
+                reuseAddress: reuseAddress,
+                tcpNoDelay: tcpNoDelay,
+                responseCompression: responseCompression,
+                requestDecompression: requestDecompression,
+                supportPipelining: supportPipelining,
+                supportVersions: supportVersions,
+                tlsConfiguration: tlsConfiguration,
+                serverName: serverName,
+                logger: logger
+            )
+        }
+        
+        public init(
+            address: BindAddress,
+            backlog: Int = 256,
+            reuseAddress: Bool = true,
+            tcpNoDelay: Bool = true,
+            responseCompression: CompressionConfiguration = .disabled,
+            requestDecompression: DecompressionConfiguration = .disabled,
+            supportPipelining: Bool = false,
+            supportVersions: Set<HTTPVersionMajor>? = nil,
+            tlsConfiguration: TLSConfiguration? = nil,
+            serverName: String? = nil,
+            logger: Logger? = nil
+        ) {
+            self.address = address
             self.backlog = backlog
             self.reuseAddress = reuseAddress
             self.tcpNoDelay = tcpNoDelay
@@ -171,16 +238,29 @@ public final class HTTPServer: Server {
         self.didShutdown = false
     }
     
-    public func start(hostname: String?, port: Int?) throws {
-        // determine which hostname / port to bind to
+    public func start(address: BindAddress?) throws {
         var configuration = self.configuration
-        configuration.hostname = hostname ?? configuration.hostname
-        configuration.port = port ?? configuration.port
-
+        
+        switch address {
+        case .none: // use the configuration as is
+            break
+        case .hostname(let hostname, let port): // override the hostname, port, neither, or both
+            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+        case .unixDomainSocket: // override the socket path
+            configuration.address = address!
+        }
+        
         // print starting message
         let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let address = "\(scheme)://\(configuration.hostname):\(configuration.port)"
-        self.configuration.logger.notice("Server starting on \(address)")
+        let addressDescription: String
+        switch configuration.address {
+        case .hostname(let hostname, let port):
+            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
+        case .unixDomainSocket(let socketPath):
+            addressDescription = "\(scheme)+unix: \(socketPath)"
+        }
+        
+        self.configuration.logger.notice("Server starting on \(addressDescription)")
 
         // start the actual HTTPServer
         self.connection = try HTTPServerConnection.start(
@@ -254,20 +334,19 @@ private final class HTTPServerConnection {
                         return channel.close(mode: .all)
                     }
                     return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
-                        return channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
-                            return channel.configureHTTP2Pipeline(
+                        channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
+                            channel.configureHTTP2Pipeline(
                                 mode: .server,
-                                inboundStreamStateInitializer: { (channel, streamID) in
-                                    return channel.pipeline.addVaporHTTP2Handlers(
+                                inboundStreamInitializer: { channel in
+                                    channel.pipeline.addVaporHTTP2Handlers(
                                         application: application!,
                                         responder: responder,
-                                        configuration: configuration,
-                                        streamID: streamID
+                                        configuration: configuration
                                     )
                                 }
                             ).map { _ in }
                         }, http1ChannelConfigurator: { channel in
-                            return channel.pipeline.addVaporHTTP1Handlers(
+                            channel.pipeline.addVaporHTTP1Handlers(
                                 application: application!,
                                 responder: responder,
                                 configuration: configuration
@@ -291,7 +370,15 @@ private final class HTTPServerConnection {
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
         
-        return bootstrap.bind(host: configuration.hostname, port: configuration.port).map { channel in
+        let channel: EventLoopFuture<Channel>
+        switch configuration.address {
+        case .hostname:
+            channel = bootstrap.bind(host: configuration.hostname, port: configuration.port)
+        case .unixDomainSocket(let socketPath):
+            channel = bootstrap.bind(unixDomainSocketPath: socketPath)
+        }
+        
+        return channel.map { channel in
             return .init(channel: channel, quiesce: quiesce)
         }.flatMapErrorThrowing { error -> HTTPServerConnection in
             quiesce.initiateShutdown(promise: nil)
@@ -340,13 +427,12 @@ extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
         responder: Responder,
-        configuration: HTTPServer.Configuration,
-        streamID: HTTP2StreamID
+        configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [ChannelHandler] = []
         
-        let http2 = HTTP2ToHTTP1ServerCodec(streamID: streamID)
+        let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
         // add NIO -> HTTP request decoder
@@ -363,7 +449,7 @@ extension ChannelPipeline {
         handlers.append(serverResEncoder)
         
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, logger: application.logger)
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
@@ -428,7 +514,7 @@ extension ChannelPipeline {
         )
         handlers.append(serverReqDecoder)
         // add server request -> response delegate
-        let handler = HTTPServerHandler(responder: responder)
+        let handler = HTTPServerHandler(responder: responder, logger: application.logger)
 
         // add HTTP upgrade handler
         let upgrader = HTTPServerUpgradeHandler(

@@ -32,7 +32,7 @@ extension Request.Authentication {
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
-    public func require<A>(_ type: A.Type = A.self) throws -> A
+    @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A
         where A: Authenticatable
     {
         guard let a = self.get(A.self) else {

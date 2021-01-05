@@ -2,6 +2,10 @@ public struct ValidatorResults {
     public struct Nested {
         public let results: [ValidatorResult]
     }
+
+    public struct NestedEach {
+        public let results: [[ValidatorResult]]
+    }
     
     public struct Skipped { }
 
@@ -14,11 +18,11 @@ public struct ValidatorResults {
     }
 
     public struct Invalid {
-        let reason: String
+        public let reason: String
     }
 
     public struct TypeMismatch {
-        let type: Any.Type
+        public let type: Any.Type
     }
 }
 
@@ -37,6 +41,37 @@ extension ValidatorResults.Nested: ValidatorResult {
         self.results.filter { $0.isFailure }
             .compactMap { $0.failureDescription }
             .joined(separator: " and ")
+    }
+}
+
+extension ValidatorResults.NestedEach: ValidatorResult {
+    public var isFailure: Bool {
+        !self.results.flatMap { $0 }
+            .filter { $0.isFailure }.isEmpty
+    }
+    
+    public var successDescription: String? {
+        self.results.enumerated().compactMap { (index, results) -> String? in
+            let successes = results.filter { !$0.isFailure }
+            guard !successes.isEmpty else {
+                return nil
+            }
+            let description = successes.compactMap { $0.successDescription }
+                .joined(separator: " and ")
+            return "at index \(index) \(description)"
+        }.joined(separator: " and ")
+    }
+    
+    public var failureDescription: String? {
+        self.results.enumerated().compactMap { (index, results) -> String? in
+            let failures = results.filter { $0.isFailure }
+            guard !failures.isEmpty else {
+                return nil
+            }
+            let description = failures.compactMap { $0.failureDescription }
+                .joined(separator: " and ")
+            return "at index \(index) \(description)"
+        }.joined(separator: " and ")
     }
 }
 

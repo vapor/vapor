@@ -13,6 +13,52 @@ Don't forget to add tests for your new features.
 If you are fixing a single GitHub issue in particular, you can add a test named `testGH<issue number>` to ensure
 that your fix is working. This will also help prevent regression.
 
+## Style Guide
+
+When contributing code to Vapor, please try to follow existing style for consistency. 
+
+### Xcode Formatting
+
+Avoid using "Xcode style" indentation where possible. This can be difficult to recreate in other editors.
+
+❌
+```swift
+func foo(bar: String,
+         baz: Int) {
+    ...
+}
+```
+
+Use normal indentation instead.
+
+✅
+```swift
+func foo(
+    bar: String,
+    baz: Int
+) {
+    ...
+}
+```
+
+### Explicit self
+
+When accessing member properties and methods, use explicit `self`. 
+
+```swift
+struct Foo {
+    var bar: Int
+    func baz() {
+        // ❌
+        print(bar)
+        // ✅
+        print(self.bar)
+    }
+}
+```
+
+This makes it easier to tell whether a local variable is being used or not, especially when reading code without syntax highlighting.
+
 ## SemVer
 
 Vapor follows [SemVer](https://semver.org). This means that any changes to the source code that can cause
@@ -46,7 +92,7 @@ The release body (or description) should contain more in-depth information about
 
 ✅
 
----
+````md
 
 Allows configuring case-insensitive routing (#2354, fixes #1928).
 
@@ -56,7 +102,7 @@ Allows configuring case-insensitive routing (#2354, fixes #1928).
 app.routes.caseInsensitive = true
 ```
 
----
+````
 
 The release body should include links to any associated PRs and issues. Issues that are fixed by this change should be prefixed with `fixes` so that they are closed automatically. The first line of the release body should be a concise description of the change. This can be followed by a more detailed explanation and code examples. 
 
@@ -64,7 +110,7 @@ Releases with a large number of changes can separated using bullets. Special com
 
 ✅
 
----
+```md
 
 Improves HTTP request and response streaming (#2404).
 
@@ -76,13 +122,13 @@ Improves HTTP request and response streaming (#2404).
 
 > Note: Previously streaming bodies required a count and would always set the `content-length` header. Now, setting a count of `-1` indicates a stream with indeterminate length. `-1` will be used if the stream count is omitted. This results in `transfer-encoding: chunked` being used automatically. 
 
----
+```
 
 Release bodies should be in present tense third person. They should mention only information relevant to release notes. Any additional information or questions can be included in PR comments.
 
 ❌
 
----
+```md
 
 I've implemented two fixes to HTTP request streaming. I'm wondering if I need to implement three?
 
@@ -90,7 +136,7 @@ Here's what I've done so far:
 
 ...
 
----
+```
 
 The following PR labels are supported by Vapor's release bot.
 

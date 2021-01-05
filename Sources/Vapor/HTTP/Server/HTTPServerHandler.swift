@@ -5,9 +5,13 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias OutboundOut = Response
     
     let responder: Responder
+    let logger: Logger
+    var isShuttingDown: Bool
     
-    init(responder: Responder) {
+    init(responder: Responder, logger: Logger) {
         self.responder = responder
+        self.logger = logger
+        self.isShuttingDown = false
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -34,18 +38,32 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         case 2:
             context.write(self.wrapOutboundOut(response), promise: nil)
         default:
-            response.headers.add(name: .connection, value: request.isKeepAlive ? "keep-alive" : "close")
+            let keepAlive = !self.isShuttingDown && request.isKeepAlive
+            if self.isShuttingDown {
+                self.logger.debug("In-flight request has completed")
+            }
+            response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
             done.whenComplete { result in
                 switch result {
                 case .success:
-                    if !request.isKeepAlive {
+                    if !keepAlive {
                         context.close(mode: .output, promise: nil)
                     }
                 case .failure(let error):
                     self.errorCaught(context: context, error: error)
                 }
             }
+        }
+    }
+
+    func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
+        switch event {
+        case is ChannelShouldQuiesceEvent:
+            self.logger.trace("HTTP handler will no longer respect keep-alive")
+            self.isShuttingDown = true
+        default:
+            self.logger.trace("Unhandled user event: \(event)")
         }
     }
 }

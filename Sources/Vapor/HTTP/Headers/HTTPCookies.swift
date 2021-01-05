@@ -3,7 +3,7 @@ extension HTTPHeaders {
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.flatMap {
+            self.parseDirectives(name: .cookie).first.map {
                 HTTPCookies(directives: $0)
             }
         }
@@ -153,9 +153,9 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - maxAge: The maximum cookie age in seconds. Defaults to `nil`.
         ///     - domain: The affected domain at which the cookie is active. Defaults to `nil`.
         ///     - path: The path at which the cookie is active. Defaults to `"/"`.
-        ///     - isSecure: Limits the cookie to secure connections. Defaults to `false`.
+        ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overriden with `true`. Defaults to `false`.
         ///     - isHTTPOnly: Does not expose the cookie over non-HTTP channels. Defaults to `false`.
-        ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `nil`.
+        ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `lax`.
         public init(
             string: String,
             expires: Date? = nil,
@@ -164,14 +164,17 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
             path: String? = "/",
             isSecure: Bool = false,
             isHTTPOnly: Bool = false,
-            sameSite: SameSitePolicy? = nil
+            sameSite: SameSitePolicy? = .lax
         ) {
             self.string = string
             self.expires = expires
             self.maxAge = maxAge
             self.domain = domain
             self.path = path
-            self.isSecure = isSecure
+            // SameSite=None requires Secure attribute to be set
+            // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+            let forceSecure = sameSite == SameSitePolicy.none
+            self.isSecure = isSecure || forceSecure
             self.isHTTPOnly = isHTTPOnly
             self.sameSite = sameSite
         }
@@ -235,14 +238,12 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         self.cookies = [:]
     }
 
-    init?(directives: [HTTPHeaders.Directive]) {
-        self.cookies = [:]
-        for directive in directives {
-            guard let value = directive.parameter else {
-                return nil
+    init(directives: [HTTPHeaders.Directive]) {
+        self.cookies = directives.reduce(into: [:], { (cookies, directive) in
+            if let value = directive.parameter {
+                cookies[.init(directive.value)] = .init(string: .init(value))
             }
-            self.cookies[.init(directive.value)] = .init(string: .init(value))
-        }
+        })
     }
     
     /// See `ExpressibleByDictionaryLiteral`.

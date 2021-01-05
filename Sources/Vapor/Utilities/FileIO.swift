@@ -214,6 +214,28 @@ public struct FileIO {
             return self.request.eventLoop.makeFailedFuture(error)
         }
     }
+    
+    /// Write the contents of buffer to a file at the supplied path.
+    ///
+    ///     let data = ByteBuffer(string: "ByteBuffer")
+    ///     try req.fileio.writeFile(data, at: "/path/to/file.txt").wait()
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - buffer: The `ByteBuffer` to write.
+    /// - returns: `Future` that will complete when the file write is finished.
+    public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
+        do {
+            let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+            let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
+            done.whenComplete { _ in
+                try? fd.close()
+            }
+            return done
+        } catch {
+            return self.request.eventLoop.makeFailedFuture(error)
+        }
+    }
 }
 
 extension HTTPHeaders.Range.Value {

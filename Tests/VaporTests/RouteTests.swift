@@ -22,6 +22,36 @@ final class RouteTests: XCTestCase {
         }
     }
 
+    func testRequiredParameter() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("string", ":value") { req in
+            return try req.parameters.require("value")
+        }
+
+        app.routes.get("int", ":value") { req -> String in
+            let value = try req.parameters.require("value", as: Int.self)
+            return String(value)
+        }
+
+        app.routes.get("missing") { req in
+            return try req.parameters.require("value")
+        }
+
+        try app.testable().test(.GET, "/string/test") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "test")
+        }.test(.GET, "/int/123") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "123")
+        }.test(.GET, "/int/not-int") { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }.test(.GET, "/missing") { res in
+            XCTAssertEqual(res.status, .internalServerError)
+        }
+    }
+
     func testJSON() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -61,7 +91,7 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.routes.caseInsenstive = true
+        app.routes.caseInsensitive = true
         
         app.routes.get("foo") { req -> String in
             return "foo"
@@ -150,7 +180,7 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.post("users") { req -> User in
-            try User.validate(req)
+            try User.validate(content: req)
             return try req.content.decode(User.self)
         }
 
@@ -319,6 +349,27 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }.test(.POST, "/1gb", body: buffer) { res in
             XCTAssertEqual(res.status, .ok)
+        }
+    }
+    
+    func testWebsocketUpgrade() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let testMarkerHeaderKey = "TestMarker"
+        let testMarkerHeaderValue = "addedInShouldUpgrade"
+        
+        app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+            return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
+        }, onUpgrade: { _, _ in })
+        
+        try app.testable(method: .running).test(.GET, "customshouldupgrade", beforeRequest: { req in
+            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
+            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
+            req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
+            req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
+        }) { res in
+            XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
         }
     }
 }

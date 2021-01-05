@@ -32,6 +32,22 @@ final class FileTests: XCTestCase {
             XCTAssertContains(res.body.string, test)
         }
     }
+    
+    func testFileWrite() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        
+        let data = "Hello"
+        let path = "/tmp/fileio_write.txt"
+        
+        try request.fileio.writeFile(ByteBuffer(string: data), at: path).wait()
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        
+        let result = try String(contentsOfFile: path)
+        XCTAssertEqual(result, data)
+    }
 
     func testPercentDecodedFilePath() throws {
         let app = Application(.testing)
@@ -43,6 +59,21 @@ final class FileTests: XCTestCase {
         try app.test(.GET, "/Utilities/foo%20bar.html") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "<h1>Hello</h1>\n")
+        }
+    }
+
+    func testPercentDecodedRelativePath() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+        try app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
+            XCTAssertEqual(res.status, .forbidden)
+        }.test(.GET, "Utilities/foo.txt") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "bar\n")
         }
     }
 }

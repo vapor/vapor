@@ -17,13 +17,14 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     var requestState: RequestState
     var bodyStreamState: HTTPBodyStreamState
 
-    private let logger: Logger
+    var logger: Logger {
+        self.application.logger
+    }
     var application: Application
     
     init(application: Application) {
         self.application = application
         self.requestState = .ready
-        self.logger = Logger(label: "codes.vapor.server")
         self.bodyStreamState = .init()
     }
     
@@ -64,13 +65,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop)
                     request.bodyStorage = .stream(stream)
+                    self.requestState = .streamingBody(stream)
                     context.fireChannelRead(self.wrapInboundOut(request))
                     self.handleBodyStreamStateResult(
                         context: context,
                         self.bodyStreamState.didReadBytes(buffer),
                         stream: stream
                     )
-                    self.requestState = .streamingBody(stream)
                 }
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
@@ -179,7 +180,8 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
     }
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
-        if event is HTTPServerResponseEncoder.ResponseEndSentEvent {
+        switch event {
+        case is HTTPServerResponseEncoder.ResponseEndSentEvent:
             switch self.requestState {
             case .streamingBody(let bodyStream):
                 // Response ended during request stream.
@@ -196,6 +198,34 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             case .ready, .skipping:
                 // Response ended after request had been read.
                 break
+            }
+        case is ChannelShouldQuiesceEvent:
+            switch self.requestState {
+            case .ready:
+                self.logger.trace("Closing keep-alive HTTP connection since server is going away")
+                context.channel.close(mode: .all, promise: nil)
+            default:
+                self.logger.debug("A request is currently in-flight")
+                context.fireUserInboundEventTriggered(event)
+            }
+        default:
+            self.logger.trace("Unhandled user event: \(event)")
+        }
+    }
+}
+
+extension HTTPPart: CustomStringConvertible {
+    public var description: String {
+        switch self {
+        case .head(let head):
+            return "head: \(head)"
+        case .body(let body):
+            return "body: \(body)"
+        case .end(let headers):
+            if let headers = headers {
+                return "end: \(headers)"
+            } else {
+                return "end"
             }
         }
     }

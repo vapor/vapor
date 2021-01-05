@@ -1,22 +1,30 @@
 name: test
-on:
-  pull_request:
-  push:
-    branches:
-    - master
+on: { pull_request: {} }
+
 jobs:
-  providers:
+  getcidata:
     runs-on: ubuntu-latest
+    outputs:
+      environments: ${{ steps.output.outputs.environments }}
+    steps:
+      - id: output
+        run: |
+          envblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/pr-environments.json | jq -cMj '.')"
+          echo "::set-output name=environments::${envblob}"
+    
+  test-providers:
+    needs: getcidata
     strategy:
       fail-fast: false
       matrix:
         provider:
-          - jwt
-          - fluent
-          - leaf
-          - queues
-          - apns
-    container: swift:5.2-focal
+          - vapor/jwt
+          - vapor/fluent
+          - vapor/leaf
+          - vapor/queues
+          - vapor/apns
+    runs-on: ubuntu-latest
+    container: swift:5.3-focal
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v2
@@ -24,53 +32,31 @@ jobs:
           path: vapor
       - name: Check out provider
         uses: actions/checkout@v2
-        with:
-          repository: vapor/${{ matrix.provider }}
+        with: 
+          repository: ${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
-        run: swift package edit vapor --path vapor
-        working-directory: provider
+        run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
         run: swift test --enable-test-discovery --sanitize=thread
         working-directory: provider
-  linux:
-    runs-on: ubuntu-latest
+        
+  test-vapor:
+    needs: getcidata
     strategy:
       fail-fast: false
       matrix:
-        image:
-          # 5.2 Stable
-          - swift:5.2-xenial
-          - swift:5.2-bionic
-          - swift:5.2-focal
-          - swift:5.2-centos8
-          - swift:5.2-amazonlinux2
-          # 5.2 Unstable
-          - swiftlang/swift:nightly-5.2-xenial
-          - swiftlang/swift:nightly-5.2-bionic
-          # 5.3 Unstable
-          - swiftlang/swift:nightly-5.3-xenial
-          - swiftlang/swift:nightly-5.3-bionic
-          # Master Unstable
-          - swiftlang/swift:nightly-master-xenial
-          - swiftlang/swift:nightly-master-bionic
-          - swiftlang/swift:nightly-master-focal
-          - swiftlang/swift:nightly-master-centos8
-          - swiftlang/swift:nightly-master-amazonlinux2
-    container: ${{ matrix.image }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-      - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
-  macOS:
-    runs-on: macos-latest
-    steps:
-      - name: Select latest available Xcode
-        uses: maxim-lobanov/setup-xcode@1.0
+        env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
+    runs-on: ${{ matrix.env.os }}
+    container: ${{ matrix.env.image }}
+    steps: 
+      - name: Select toolchain
+        uses: maxim-lobanov/setup-xcode@v1.2.1
         with:
-          xcode-version: latest
-      - name: Check out code
+          xcode-version: ${{ matrix.env.toolchain }}
+        if: ${{ matrix.env.toolchain != '' }}
+      - name: Check out Vapor
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
+        timeout-minutes: 20
         run: swift test --enable-test-discovery --sanitize=thread

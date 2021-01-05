@@ -1,93 +1,7 @@
 @testable import Vapor
 import XCTest
 
-final class HTTPHeaderValueTests: XCTestCase {
-    
-    func testRangeDirectiveSerialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
-        var headers = HTTPHeaders()
-        headers.range = range
-        XCTAssertEqual(range, headers.range)
-    }
-    
-    func testContentRangeDirectiveSerialization() throws {
-        let anyRange = HTTPHeaders.ContentRange(
-            unit: .bytes,
-            range: .any(size: 1000)
-        )
-        let rangeOfUnknownLimit = HTTPHeaders.ContentRange(
-            unit: .bytes,
-            range: .within(start: 0, end: 1000)
-        )
-        let rangeWithLimit = HTTPHeaders.ContentRange(
-            unit: .bytes,
-            range: .withinWithLimit(start: 0, end: 1000, limit: 1001)
-        )
-        var headers = HTTPHeaders()
-        headers.contentRange = anyRange
-        XCTAssertEqual(headers.contentRange, anyRange)
-        headers.contentRange = rangeOfUnknownLimit
-        XCTAssertEqual(headers.contentRange, rangeOfUnknownLimit)
-        headers.contentRange = rangeWithLimit
-        XCTAssertEqual(headers.contentRange, rangeWithLimit)
-    }
-    
-    func testRangeSerialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
-        XCTAssertEqual(range.serialize(), "bytes=200-1000, 2000-6576, 19000-, -500")
-    }
-    
-    func testRangeDeserialization() throws {
-        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
-            .within(start: 200, end: 1000),
-            .within(start: 2000, end: 6576),
-            .start(value: 19000),
-            .tail(value: 500)
-        ])
-        let directives = [HTTPHeaders.Directive(value: "bytes", parameter: "200-1000"),
-                          HTTPHeaders.Directive(value: "2000-6576"),
-                          HTTPHeaders.Directive(value: "19000-"),
-                          HTTPHeaders.Directive(value: "-500"),]
-        XCTAssertEqual(HTTPHeaders.Range(directives: directives), range)
-    }
-    
-    func testContentRangeSerialization() throws {
-        let anyRange = HTTPHeaders.ContentRange(unit: .bytes, range: .any(size: 1000))
-        let rangeOfUnknownLimit = HTTPHeaders.ContentRange(unit: .bytes, range: .within(start: 0, end: 1000))
-        let rangeWithLimit = HTTPHeaders.ContentRange(
-            unit: .bytes,
-            range: .withinWithLimit(start: 0, end: 1000, limit: 1001)
-        )
-        XCTAssertEqual(anyRange.serialize(), "bytes */1000")
-        XCTAssertEqual(rangeOfUnknownLimit.serialize(), "bytes 0-1000/*")
-        XCTAssertEqual(rangeWithLimit.serialize(), "bytes 0-1000/1001")
-    }
-    
-    func testContentRangeDeserialization() throws {
-        XCTAssertEqual(
-            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes */1000")),
-            HTTPHeaders.ContentRange(unit: .bytes, range: .any(size: 1000))
-        )
-        XCTAssertEqual(
-            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes 0-1000/*")),
-            HTTPHeaders.ContentRange(unit: .bytes, range: .within(start: 0, end: 1000))
-        )
-        XCTAssertEqual(
-            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes 0-1000/1001")),
-            HTTPHeaders.ContentRange(unit: .bytes, range: .withinWithLimit(start: 0, end: 1000, limit: 1001))
-        )
-    }
-    
+final class HTTPHeaderTests: XCTestCase {
     func testValue() throws {
         var parser = HTTPHeaders.DirectiveParser(string: "foobar")
         XCTAssertEqual(parser.nextDirectives(), [.init(value: "foobar")])
@@ -247,6 +161,7 @@ final class HTTPHeaderValueTests: XCTestCase {
             ("cookie", "vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561")
         ])
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
+        XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")
         XCTAssertEqual(headers.cookie?["_gid"]?.string, "GA1.1.500224287.1585154561")
     }
@@ -270,6 +185,27 @@ final class HTTPHeaderValueTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
         XCTAssertEqual(headers.cookie?["cookie.two"]?.string, "2")
     }
+    
+    func testCookie_percentParsing() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "cookie_one=1;cookie%40cookieCom=2;cookie_3=three")
+        ])
+        
+        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
+        XCTAssertEqual(headers.cookie?["cookie%40cookieCom"]?.string, "2")
+        XCTAssertEqual(headers.cookie?["cookie_3"]?.string, "three")
+    }
+    
+    func testCookie_invalidCookie() throws {
+        let headers = HTTPHeaders([
+            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3")
+        ])
+        
+        XCTAssertEqual(headers.cookie?.all.count, 2)
+        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
+        XCTAssertNil(headers.cookie?["cookie\ntwo"])
+        XCTAssertEqual(headers.cookie?["cookie_three"]?.string, "3")
+    }
 
     func testMediaTypeMainTypeCaseInsensitive() throws {
         let lower = HTTPMediaType(type: "foo", subType: "")
@@ -281,5 +217,101 @@ final class HTTPHeaderValueTests: XCTestCase {
         let lower = HTTPMediaType(type: "foo", subType: "bar")
         let upper = HTTPMediaType(type: "foo", subType: "BAR")
         XCTAssertEqual(lower, upper)
+    }
+
+    // https://github.com/vapor/vapor/issues/2439
+    func testContentDispositionQuotedFilename() throws {
+        var headers = HTTPHeaders()
+        headers.contentDisposition = .init(.formData, filename: "foo")
+        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=foo")
+        headers.contentDisposition = .init(.formData, filename: "foo bar")
+        XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo bar""#)
+        headers.contentDisposition = .init(.formData, filename: "foo\"bar")
+        XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo\"bar""#)
+    }
+      
+    func testRangeDirectiveSerialization() throws {
+        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+            .within(start: 200, end: 1000),
+            .within(start: 2000, end: 6576),
+            .start(value: 19000),
+            .tail(value: 500)
+        ])
+        var headers = HTTPHeaders()
+        headers.range = range
+        XCTAssertEqual(range, headers.range)
+    }
+    
+    func testContentRangeDirectiveSerialization() throws {
+        let anyRange = HTTPHeaders.ContentRange(
+            unit: .bytes,
+            range: .any(size: 1000)
+        )
+        let rangeOfUnknownLimit = HTTPHeaders.ContentRange(
+            unit: .bytes,
+            range: .within(start: 0, end: 1000)
+        )
+        let rangeWithLimit = HTTPHeaders.ContentRange(
+            unit: .bytes,
+            range: .withinWithLimit(start: 0, end: 1000, limit: 1001)
+        )
+        var headers = HTTPHeaders()
+        headers.contentRange = anyRange
+        XCTAssertEqual(headers.contentRange, anyRange)
+        headers.contentRange = rangeOfUnknownLimit
+        XCTAssertEqual(headers.contentRange, rangeOfUnknownLimit)
+        headers.contentRange = rangeWithLimit
+        XCTAssertEqual(headers.contentRange, rangeWithLimit)
+    }
+    
+    func testRangeSerialization() throws {
+        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+            .within(start: 200, end: 1000),
+            .within(start: 2000, end: 6576),
+            .start(value: 19000),
+            .tail(value: 500)
+        ])
+        XCTAssertEqual(range.serialize(), "bytes=200-1000, 2000-6576, 19000-, -500")
+    }
+    
+    func testRangeDeserialization() throws {
+        let range = HTTPHeaders.Range(unit: .bytes, ranges: [
+            .within(start: 200, end: 1000),
+            .within(start: 2000, end: 6576),
+            .start(value: 19000),
+            .tail(value: 500)
+        ])
+        let directives = [HTTPHeaders.Directive(value: "bytes", parameter: "200-1000"),
+                          HTTPHeaders.Directive(value: "2000-6576"),
+                          HTTPHeaders.Directive(value: "19000-"),
+                          HTTPHeaders.Directive(value: "-500"),]
+        XCTAssertEqual(HTTPHeaders.Range(directives: directives), range)
+    }
+    
+    func testContentRangeSerialization() throws {
+        let anyRange = HTTPHeaders.ContentRange(unit: .bytes, range: .any(size: 1000))
+        let rangeOfUnknownLimit = HTTPHeaders.ContentRange(unit: .bytes, range: .within(start: 0, end: 1000))
+        let rangeWithLimit = HTTPHeaders.ContentRange(
+            unit: .bytes,
+            range: .withinWithLimit(start: 0, end: 1000, limit: 1001)
+        )
+        XCTAssertEqual(anyRange.serialize(), "bytes */1000")
+        XCTAssertEqual(rangeOfUnknownLimit.serialize(), "bytes 0-1000/*")
+        XCTAssertEqual(rangeWithLimit.serialize(), "bytes 0-1000/1001")
+    }
+    
+    func testContentRangeDeserialization() throws {
+        XCTAssertEqual(
+            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes */1000")),
+            HTTPHeaders.ContentRange(unit: .bytes, range: .any(size: 1000))
+        )
+        XCTAssertEqual(
+            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes 0-1000/*")),
+            HTTPHeaders.ContentRange(unit: .bytes, range: .within(start: 0, end: 1000))
+        )
+        XCTAssertEqual(
+            HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes 0-1000/1001")),
+            HTTPHeaders.ContentRange(unit: .bytes, range: .withinWithLimit(start: 0, end: 1000, limit: 1001))
+        )
     }
 }
