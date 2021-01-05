@@ -97,17 +97,16 @@ extension HTTPHeaders {
     /// See https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Content-Range
     public var contentRange: ContentRange? {
         get {
-            let directives = parseDirectives(name: .contentRange).flatMap { $0 }
-            return HTTPHeaders.ContentRange(directives: directives)
+            return HTTPHeaders.ContentRange(directives: self.parseDirectives(name: .contentRange).flatMap { $0 })
         }
         set {
-            if contains(name: .contentRange) {
-                remove(name: .contentRange)
+            if self.contains(name: .contentRange) {
+                self.remove(name: .contentRange)
             }
-            if newValue == nil {
+            guard let newValue == newValue else {
                 return
             }
-            add(name: .contentRange, value: newValue!.serialize())
+            self.add(name: .contentRange, value: newValue.serialize())
         }
     }
     
