@@ -118,13 +118,13 @@ extension HTTPHeaders {
             return HTTPHeaders.Range(directives: self.parseDirectives(name: .range).flatMap { $0 })
         }
         set {
-            if contains(name: .range) {
-                remove(name: .range)
+            if self.contains(name: .range) {
+                self.remove(name: .range)
             }
-            if newValue == nil {
+            guard let newValue == newValue else {
                 return
             }
-            add(name: .range, value: newValue!.serialize())
+            self.add(name: .range, value: newValue.serialize())
         }
     }
 }
