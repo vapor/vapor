@@ -203,10 +203,9 @@ extension HTTPHeaders.ContentRange {
         public static func from<T>(responseStr: T) -> HTTPHeaders.ContentRange.Value? where T : StringProtocol {
             let ranges = responseStr.split(separator: "-", omittingEmptySubsequences: false)
                 .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            guard ranges.count <= 2 else {
-                return nil
-            }
-            if ranges.count == 1 {
+
+            switch ranges.count {
+            case 1:
                 let anyRangeOfSize = ranges[0].split(separator: "/", omittingEmptySubsequences: false)
                 guard anyRangeOfSize.count == 2,
                     anyRangeOfSize[0] == "*",
@@ -214,21 +213,23 @@ extension HTTPHeaders.ContentRange {
                         return nil
                 }
                 return .any(size: size)
+            case 2:
+                guard let start = Int(ranges[0]) else {
+                    return nil
+                }
+                let limits = ranges[1].split(separator: "/", omittingEmptySubsequences: false)
+                guard limits.count == 2, let end = Int(limits[0]) else {
+                    return nil
+                }
+                if limits[1] == "*" {
+                    return .within(start: start, end: end)
+                }
+                guard let limit = Int(limits[1]) else {
+                    return nil
+                }
+                return .withinWithLimit(start: start, end: end, limit: limit)
+            default: return nil
             }
-            guard let start = Int(ranges[0]) else {
-                return nil
-            }
-            let limits = ranges[1].split(separator: "/", omittingEmptySubsequences: false)
-            guard limits.count == 2, let end = Int(limits[0]) else {
-                return nil
-            }
-            if limits[1] == "*" {
-                return .within(start: start, end: end)
-            }
-            guard let limit = Int(limits[1]) else {
-                return nil
-            }
-            return .withinWithLimit(start: start, end: end, limit: limit)
         }
         
         ///Serializes `HTTPHeaders.Range.Value` to a string for use within the HTTP `Content-Range` header.
