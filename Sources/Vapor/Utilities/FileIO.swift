@@ -159,9 +159,14 @@ public struct FileIO {
         if let contentRange = contentRange {
             response.status = .partialContent
             response.headers.add(name: .accept, value: contentRange.unit.serialize())
-            let range = contentRange.ranges[0].asResponseContentRange(limit: fileSize)
-            response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
-            (offset, byteCount) = contentRange.ranges[0].asByteBufferBounds(withMaxSize: fileSize)
+            if let firstRange = contentRange.ranges.first {
+                let range = firstRange.asResponseContentRange(limit: fileSize)
+                response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
+                (offset, byteCount) = firstRange.asByteBufferBounds(withMaxSize: fileSize)
+            } else {
+                offset = 0
+                byteCount = fileSize
+            }
         } else {
             offset = 0
             byteCount = fileSize
