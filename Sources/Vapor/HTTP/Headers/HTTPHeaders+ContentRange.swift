@@ -103,7 +103,7 @@ extension HTTPHeaders {
             if self.contains(name: .contentRange) {
                 self.remove(name: .contentRange)
             }
-            guard let newValue == newValue else {
+            guard let newValue = newValue else {
                 return
             }
             self.add(name: .contentRange, value: newValue.serialize())
@@ -121,7 +121,7 @@ extension HTTPHeaders {
             if self.contains(name: .range) {
                 self.remove(name: .range)
             }
-            guard let newValue == newValue else {
+            guard let newValue = newValue else {
                 return
             }
             self.add(name: .range, value: newValue.serialize())

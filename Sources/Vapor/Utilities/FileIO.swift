@@ -129,11 +129,16 @@ public struct FileIO {
         else {
             return Response(status: .internalServerError)
         }
-        let contentRange = request.headers.range.map { range in
-            guard range.unit == .bytes, range.ranges.count == 1 else {
-                return nil
+
+        let contentRange: HTTPHeaders.Range?
+        if let rangeFromHeaders = request.headers.range {
+            if rangeFromHeaders.unit == .bytes && rangeFromHeaders.ranges.count == 1 {
+                contentRange = rangeFromHeaders
+            } else {
+                contentRange = nil
             }
-            return range
+        } else {
+            contentRange = nil
         }
         // Create empty headers array.
         var headers: HTTPHeaders = [:]
