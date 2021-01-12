@@ -44,7 +44,7 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 
 ### 💛 Sponsors
 
-Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/vapor).
 
 <a href="http://nodesagency.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
@@ -71,7 +71,7 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 
 
 ### 💚 Backers
-Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a backer](https://github.com/sponsors/vapor).
 
 <a
     data-amt="50" 
