@@ -53,7 +53,7 @@ extension Application {
 
         var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
-                fatalError("Sessions not configured. Configure with app.sessions.initialize()")
+                fatalError("Responder not configured. Configure with app.responder.initialize()")
             }
             return storage
         }
