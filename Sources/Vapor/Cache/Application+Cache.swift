@@ -33,7 +33,7 @@ extension Application {
             typealias Value = Storage
         }
 
-        let application: Application
+        public let application: Application
 
         public func use(_ provider: Provider) {
             provider.run(self.application)
