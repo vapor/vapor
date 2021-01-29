@@ -68,16 +68,14 @@ internal extension OTP {
     ///   - counter: The 'main' counter.
     ///   - range: The number of codes to generate in both the forward and backward direction. This number must be bigger than 0.
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
-    ///   - size: The size of the offset. This is particularly useful for TOTP's, as it allows to specify the interval as size.
     /// - Returns: All the generated OTP's in an array.
     func generateOTPs<H: HashFunction>(
         _ h: H, counter: UInt64,
-        range: Int,
-        size: Int = 1
+        range: Int
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
         
-        return (-range ... range).map { $0 * size }.map {
+        return (-range ... range).map {
             let offset = $0 >= 0 ? counter &+ UInt64($0) : counter &- UInt64(-$0)
             return generate(h, counter: offset)
         }
@@ -101,18 +99,16 @@ internal extension OTP {
     /// - Parameters:
     ///   - counter: The 'main' counter.
     ///   - range: The number of codes to generate in both the forward and backward direction. This number must be bigger than 0.
-    ///   - size: The size of the offset. This is particularly useful for TOTP's, as it allows to specify the interval as size.
     ///   For example, if `range` is `2`, a total of `5` codes will be returned: The main code, the two codes prior to the main code and the two codes after the main code.
     /// - Returns: All the generated OTP's in an array.
     func _generate(
         counter: UInt64,
-        range: Int,
-        size: Int = 1
+        range: Int
     ) -> [String] {
         switch self.digest {
-        case .sha1: return generateOTPs(Insecure.SHA1(), counter: counter, range: range, size: size)
-        case .sha256: return generateOTPs(SHA256(), counter: counter, range: range, size: size)
-        case .sha512: return generateOTPs(SHA512(), counter: counter, range: range, size: size)
+        case .sha1: return generateOTPs(Insecure.SHA1(), counter: counter, range: range)
+        case .sha256: return generateOTPs(SHA256(), counter: counter, range: range)
+        case .sha512: return generateOTPs(SHA512(), counter: counter, range: range)
         }
     }
 }
@@ -243,7 +239,7 @@ public struct TOTP: OTP {
     ) -> [String] {
         let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
         let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
-        return _generate(counter: UInt64(counter), range: range, size: self.interval)
+        return _generate(counter: UInt64(counter), range: range)
     }
     
     /// Compute the TOTP for the key, time interval and time.
