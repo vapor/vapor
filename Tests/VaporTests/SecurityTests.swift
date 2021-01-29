@@ -27,10 +27,26 @@ final class OTPTests: XCTestCase {
     
     /// Basic TOTP test using the range, copied from Vapor 3.
     /// https://github.com/vapor/open-crypto/blob/38487c8eb13d689d0ed6b3808a9a9bc00cd621f6/Tests/CryptoTests/OTPTests.swift
+    ///
+    /// Test amended due to https://github.com/vapor/vapor/pull/2561
     func testTOTPRange() {
-        let key = SymmetricKey(size: .bits128)
-        let codes = TOTP(key: key, digest: .sha1).generate(time: Date(), range: 1)
+        let time = Date(timeIntervalSince1970: 60)
+        let preTime = Date(timeIntervalSince1970: 30)
+        let postTime = Date(timeIntervalSince1970: 90)
+        
+        let key = SymmetricKey(data: "12345678901234567890".data(using: .ascii)!)
+        let totp = TOTP(key: key, digest: .sha1, digits: .eight, interval: 30)
+        let codes = totp.generate(time: time, range: 1)
         XCTAssertEqual(codes.count, 3)
+        
+        let cur = totp.generate(time: time)
+        let pre = totp.generate(time: preTime)
+        let post = totp.generate(time: postTime)
+        
+        XCTAssert(cur != pre && cur != post && pre != post)
+        XCTAssert(codes.contains(totp.generate(time: time)))
+        XCTAssert(codes.contains(totp.generate(time: preTime)))
+        XCTAssert(codes.contains(totp.generate(time: postTime)))
     }
     
     /// A HOTP test vector.
