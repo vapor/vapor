@@ -43,7 +43,7 @@ final class OTPTests: XCTestCase {
         let pre = totp.generate(time: preTime)
         let post = totp.generate(time: postTime)
         
-        XCTAssert(cur != pre && cur != post && pre != post)
+        XCTAssert(Set([cur, pre, post]).count == 3)
         XCTAssert(codes.contains(totp.generate(time: time)))
         XCTAssert(codes.contains(totp.generate(time: preTime)))
         XCTAssert(codes.contains(totp.generate(time: postTime)))

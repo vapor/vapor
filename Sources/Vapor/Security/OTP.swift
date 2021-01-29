@@ -103,8 +103,7 @@ internal extension OTP {
     /// - Returns: All the generated OTP's in an array.
     func _generate(
         counter: UInt64,
-        range: Int,
-        size: Int = 1
+        range: Int
     ) -> [String] {
         switch self.digest {
         case .sha1: return generateOTPs(Insecure.SHA1(), counter: counter, range: range)
