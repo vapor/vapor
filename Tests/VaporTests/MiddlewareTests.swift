@@ -29,4 +29,44 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(res.body.string, "done")
         }
     }
+
+    func testCORSMiddlewareVariedByRequestOrigin() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.grouped(
+            CORSMiddleware(configuration: .init(allowedOrigin: .originBased, allowedMethods: [.GET], allowedHeaders: [.origin]))
+        ).get("order") { req -> String in
+            return "done"
+        }
+
+        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+            XCTAssertEqual(res.headers[.vary], ["origin"])
+            XCTAssertEqual(res.headers[.accessControlAllowOrigin], ["foo"])
+            XCTAssertEqual(res.headers[.accessControlAllowHeaders], ["origin"])
+            print(res.headers)
+        }
+    }
+
+    func testCORSMiddlewareNoVariationByRequstOriginAllowed() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.grouped(
+            CORSMiddleware(configuration: .init(allowedOrigin: .none, allowedMethods: [.GET], allowedHeaders: []))
+        ).get("order") { req -> String in
+            return "done"
+        }
+
+        try app.testable().test(.GET, "/order", headers: ["Origin": "foo"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "done")
+            XCTAssertEqual(res.headers[.vary], [])
+            XCTAssertEqual(res.headers[.accessControlAllowOrigin], [""])
+            XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
+            print(res.headers)
+        }
+    }
 }

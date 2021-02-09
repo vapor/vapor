@@ -2,7 +2,7 @@ extension Application.Clients.Provider {
     public static var http: Self {
         .init {
             $0.clients.use {
-                $0.http.client.shared.delegating(to: $0.eventLoopGroup.next())
+                $0.http.client.shared.delegating(to: $0.eventLoopGroup.next(), logger: $0.logger)
             }
         }
     }
@@ -28,7 +28,8 @@ extension Application.HTTP {
                 }
                 let new = HTTPClient(
                     eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
-                    configuration: self.configuration
+                    configuration: self.configuration,
+                    backgroundActivityLogger: self.application.logger
                 )
                 self.application.storage.set(Key.self, to: new) {
                     try $0.syncShutdown()
