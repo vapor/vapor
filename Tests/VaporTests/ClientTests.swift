@@ -85,6 +85,7 @@ final class ClientTests: XCTestCase {
             }
         }
 
+        app.environment.arguments = ["serve"]
         try app.boot()
         try app.start()
 
