@@ -40,6 +40,8 @@ final class WebSocketTests: XCTestCase {
             ws.close(promise: nil)
         }
 
+        app.environment.arguments = ["serve"]
+
         try app.start()
 
         do {
@@ -61,6 +63,7 @@ final class WebSocketTests: XCTestCase {
             ws.send("foo")
             ws.close(promise: nil)
         }
+        app.environment.arguments = ["serve"]
 
         try app.start()
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
@@ -128,6 +131,8 @@ final class WebSocketTests: XCTestCase {
             webSockets.track(ws)
             ws.send("hello")
         }
+
+        app.environment.arguments = ["serve"]
 
         try app.start()
 

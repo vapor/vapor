@@ -8,6 +8,7 @@ final class ApplicationTests: XCTestCase {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
         defer { app.shutdown() }
+        app.environment.arguments = ["serve"]
         try app.start()
         guard let running = app.running else {
             XCTFail("app started without setting 'running'")
@@ -100,6 +101,7 @@ final class ApplicationTests: XCTestCase {
             "Hello, world!"
         }
 
+        app.environment.arguments = ["serve"]
         try app.start()
 
         let res = try app.client.get("http://localhost:8080/hello").wait()
