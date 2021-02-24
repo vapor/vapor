@@ -107,4 +107,33 @@ final class ApplicationTests: XCTestCase {
         let res = try app.client.get("http://localhost:8080/hello").wait()
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
+
+    func testAutomaticPortPickingWorks() {
+        let app = Application(.testing)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+
+        app.get("hello") { req in
+            "Hello, world!"
+        }
+
+        XCTAssertNil(app.http.server.shared.localAddress)
+
+        XCTAssertNoThrow(try app.start())
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        XCTAssertEqual("127.0.0.1", ip)
+        XCTAssertGreaterThan(port, 0)
+
+        XCTAssertEqual("Hello, world!",
+                       try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
+    }
 }
