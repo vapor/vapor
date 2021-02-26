@@ -83,9 +83,11 @@ internal struct DefaultResponder: Responder {
         statusCode: UInt
     ) {
         let pathForMetrics: String
+        let methodForMetrics: String
         if let route = request.route {
             // We don't use route.description here to avoid duplicating the method in the path
             pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
+            methodForMetrics = request.method.string
         } else {
             // If the route is undefined (i.e. a 404 and not something like /users/:userID
             // We rewrite the path and the method to undefined to avoid DOSing the
@@ -93,12 +95,7 @@ internal struct DefaultResponder: Responder {
             // could spam the service with unlimited requests and exhaust the system
             // with unlimited timers/counters
             pathForMetrics = "vapor_route_undefined"
-        }
-        let methodForMetrics: String
-        if request.route == nil {
             methodForMetrics = "undefined"
-        } else {
-            methodForMetrics = request.method.string
         }
         let dimensions = [
             ("method", methodForMetrics),
