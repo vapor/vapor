@@ -154,7 +154,7 @@ final class ErrorTests: XCTestCase {
             throw MultipartError.missingFilename
         }
 
-        app.post("mulitpartNesting") { req -> String in
+        app.get("mulitpartNesting") { req -> String in
             throw MultipartError.nesting
         }
 
@@ -163,7 +163,7 @@ final class ErrorTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         })
 
-        XCTAssertNoThrow(try app.test(.GET, "multipartNesting") { res in
+        XCTAssertNoThrow(try app.test(.GET, "mulitpartNesting") { res in
             XCTAssertEqual(res.status, .notImplemented)
         })
     }
