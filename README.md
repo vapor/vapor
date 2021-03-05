@@ -44,10 +44,10 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 
 ### 💛 Sponsors
 
-Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/vapor).
 
-<a href="http://nodesagency.com">
-    <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
+<a href="https://monstar-lab.com">
+    <img src="https://user-images.githubusercontent.com/1049951/110122158-89429600-7dbf-11eb-98c8-9f65dad29001.png" height="100px" alt="Monstarlab">
 </a>
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
@@ -71,7 +71,7 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 
 
 ### 💚 Backers
-Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a backer](https://github.com/sponsors/vapor).
 
 <a
     data-amt="50" 

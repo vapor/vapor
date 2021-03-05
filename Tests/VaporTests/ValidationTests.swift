@@ -331,10 +331,24 @@ class ValidationTests: XCTestCase {
         assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
         assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
     }
+    
+    func testCollectionASCII() {
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .ascii)
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], fails: !.ascii, "contains only ASCII")
+        assert(["\n\r\t"], passes: .ascii)
+        assert(["\n\r\t", "\u{129}"], fails: .ascii, "string at index 1 contains 'ĩ' (allowed: ASCII)")
+        assert([" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"], passes: .ascii)
+        assert(["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii, "string at index 0 contains '🤠' (allowed: ASCII)")
+    }
 
     func testAlphanumeric() {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
+    }
+    
+    func testCollectionAlphanumeric() {
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .alphanumeric)
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric, "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
     func testEmpty() {

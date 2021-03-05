@@ -77,6 +77,7 @@ public final class Application {
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
+        self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()

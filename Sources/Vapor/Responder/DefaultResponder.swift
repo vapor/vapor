@@ -41,13 +41,10 @@ internal struct DefaultResponder: Responder {
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
-        let path: String
         if let cachedRoute = self.getRoute(for: request) {
-            path = cachedRoute.route.description
             request.route = cachedRoute.route
             response = cachedRoute.responder.respond(to: request)
         } else {
-            path = request.url.path
             response = self.notFoundResponder.respond(to: request)
         }
         return response.always { result in
@@ -60,7 +57,6 @@ internal struct DefaultResponder: Responder {
             }
             self.updateMetrics(
                 for: request,
-                path: path,
                 startTime: startTime,
                 statusCode: status.code
             )
@@ -83,25 +79,36 @@ internal struct DefaultResponder: Responder {
     /// Records the requests metrics.
     private func updateMetrics(
         for request: Request,
-        path: String,
         startTime: UInt64,
         statusCode: UInt
     ) {
-        let counterDimensions = [
-            ("method", request.method.string),
-            ("path", path),
+        let pathForMetrics: String
+        let methodForMetrics: String
+        if let route = request.route {
+            // We don't use route.description here to avoid duplicating the method in the path
+            pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
+            methodForMetrics = request.method.string
+        } else {
+            // If the route is undefined (i.e. a 404 and not something like /users/:userID
+            // We rewrite the path and the method to undefined to avoid DOSing the
+            // application and any downstream metrics systems. Otherwise an attacker
+            // could spam the service with unlimited requests and exhaust the system
+            // with unlimited timers/counters
+            pathForMetrics = "vapor_route_undefined"
+            methodForMetrics = "undefined"
+        }
+        let dimensions = [
+            ("method", methodForMetrics),
+            ("path", pathForMetrics),
             ("status", statusCode.description),
         ]
-        Counter(label: "http_requests_total", dimensions: counterDimensions).increment()
+        Counter(label: "http_requests_total", dimensions: dimensions).increment()
         if statusCode >= 500 {
-            Counter(label: "http_request_errors_total", dimensions: counterDimensions).increment()
+            Counter(label: "http_request_errors_total", dimensions: dimensions).increment()
         }
         Timer(
             label: "http_request_duration_seconds",
-            dimensions: [
-                ("method", request.method.string),
-                ("path", path)
-            ],
+            dimensions: dimensions,
             preferredDisplayUnit: .seconds
         ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
     }

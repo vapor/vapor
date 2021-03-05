@@ -1,8 +1,9 @@
 extension HTTPClient {
-    func delegating(to eventLoop: EventLoop) -> Client {
+    func delegating(to eventLoop: EventLoop, logger: Logger) -> Client {
         EventLoopHTTPClient(
             http: self,
-            eventLoop: eventLoop
+            eventLoop: eventLoop,
+            logger: logger
         )
     }
 }
@@ -10,6 +11,7 @@ extension HTTPClient {
 private struct EventLoopHTTPClient: Client {
     let http: HTTPClient
     let eventLoop: EventLoop
+    var logger: Logger?
 
     func send(
         _ client: ClientRequest
@@ -23,7 +25,8 @@ private struct EventLoopHTTPClient: Client {
             )
             return self.http.execute(
                 request: request,
-                eventLoop: .delegate(on: self.eventLoop)
+                eventLoop: .delegate(on: self.eventLoop),
+                logger: logger
             ).map { response in
                 let client = ClientResponse(
                     status: response.status,
@@ -38,6 +41,10 @@ private struct EventLoopHTTPClient: Client {
     }
 
     func delegating(to eventLoop: EventLoop) -> Client {
-        EventLoopHTTPClient(http: self.http, eventLoop: eventLoop)
+        EventLoopHTTPClient(http: self.http, eventLoop: eventLoop, logger: self.logger)
+    }
+
+    func logging(to logger: Logger) -> Client {
+        return EventLoopHTTPClient(http: self.http, eventLoop: self.eventLoop, logger: logger)
     }
 }
