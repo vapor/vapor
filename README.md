@@ -47,7 +47,7 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/vapor).
 
 <a href="https://monstar-lab.com">
-    <img src="https://user-images.githubusercontent.com/1049951/110104335-512f5900-7da7-11eb-9669-4d2e9f4b142e.png" height="100px" alt="Monstarlab">
+    <img src="https://user-images.githubusercontent.com/1049951/110121486-bb072d00-7dbe-11eb-9a08-9e2d90a6c2c1.png" height="100px" alt="Monstarlab">
 </a>
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
