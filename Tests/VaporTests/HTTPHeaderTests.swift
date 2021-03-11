@@ -158,12 +158,19 @@ final class HTTPHeaderTests: XCTestCase {
 
     func testCookie_parsing() throws {
         let headers = HTTPHeaders([
-            ("cookie", "vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561")
+            (
+                "cookie",
+                """
+                vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561; !#$%&'*+-.^_`~=symbols
+                """
+            )
         ])
+        print(headers.cookie!.all.keys)
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
         XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")
         XCTAssertEqual(headers.cookie?["_gid"]?.string, "GA1.1.500224287.1585154561")
+        XCTAssertEqual(headers.cookie?["!#$%&'*+-.^_`~"]?.string, "symbols")
     }
 
     // https://github.com/vapor/vapor/issues/2316
@@ -176,35 +183,18 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=")
         XCTAssertEqual(headers.cookie?["oauth2_consent_csrf"]?.string, "MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg==")
     }
-
-    func testCookie_dotParsing() throws {
-        let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie.two=2")
-        ])
-
-        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
-        XCTAssertEqual(headers.cookie?["cookie.two"]?.string, "2")
-    }
-    
-    func testCookie_percentParsing() throws {
-        let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie%40cookieCom=2;cookie_3=three")
-        ])
-        
-        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
-        XCTAssertEqual(headers.cookie?["cookie%40cookieCom"]?.string, "2")
-        XCTAssertEqual(headers.cookie?["cookie_3"]?.string, "three")
-    }
     
     func testCookie_invalidCookie() throws {
         let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3")
+            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3;cookie_④=4;cookie_fivé=5")
         ])
         
         XCTAssertEqual(headers.cookie?.all.count, 2)
         XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
         XCTAssertNil(headers.cookie?["cookie\ntwo"])
         XCTAssertEqual(headers.cookie?["cookie_three"]?.string, "3")
+        XCTAssertNil(headers.cookie?["cookie_④"])
+        XCTAssertNil(headers.cookie?["cookie_fivé"])
     }
 
     func testMediaTypeMainTypeCaseInsensitive() throws {
