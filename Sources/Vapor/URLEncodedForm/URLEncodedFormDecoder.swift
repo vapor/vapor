@@ -290,9 +290,11 @@ private struct _Decoder: Decoder {
                 for explodeArraysOn in configuration.arraySeparators {
                     var explodedValues: [URLQueryFragment] = []
                     for value in values {
-                        explodedValues = try explodedValues + value.asUrlEncoded().split(separator: explodeArraysOn).map({ (ss: Substring) -> URLQueryFragment in
-                            return .urlEncoded(String(ss))
-                        })
+                        let splitted = try value.asUrlEncoded()
+                            .split(separator: explodeArraysOn, omittingEmptySubsequences: false)
+                        explodedValues = explodedValues + splitted.map { (ss: Substring) in
+                            URLQueryFragment.urlEncoded(String(ss))
+                        }
                     }
                     values = explodedValues
                 }
