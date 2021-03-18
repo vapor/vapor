@@ -286,19 +286,15 @@ private struct _Decoder: Decoder {
                 if let valuesInBracket = data.children[""] {
                     values = values + valuesInBracket.values
                 }
+                
                 // parse out any character separated array values
-                for explodeArraysOn in configuration.arraySeparators {
-                    var explodedValues: [URLQueryFragment] = []
-                    for value in values {
-                        let splitted = try value.asUrlEncoded()
-                            .split(separator: explodeArraysOn, omittingEmptySubsequences: false)
-                        explodedValues = explodedValues + splitted.map { (ss: Substring) in
-                            URLQueryFragment.urlEncoded(String(ss))
-                        }
+                self.values = try values.flatMap { value in
+                    try value.asUrlEncoded().split(omittingEmptySubsequences: false) {
+                        configuration.arraySeparators.contains($0)
+                    }.map { (ss: Substring) in
+                        URLQueryFragment.urlEncoded(String(ss))
                     }
-                    values = explodedValues
                 }
-                self.values = values
             }
         }
         
