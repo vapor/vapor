@@ -30,6 +30,11 @@ open class XCTVaporTests: XCTestCase {
         }
 
         if self.app == nil {
+            // this was the behavior of this class pre 4.41.5
+            // keeping for compatibility however it will crash if
+            // the function throws. Provided the user assigns to
+            // XCTVapor.app in the class setUp or setUpWithError everything will work
+            // as we intend.
             self.app = try! _app()
         }
     }
