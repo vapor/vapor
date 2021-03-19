@@ -25,15 +25,12 @@ open class XCTVaporTests: XCTestCase {
 
         super.setUp()
 
-        if self.app == nil, let _app = XCTVapor.app {
-            // this was the behavior of this class pre 4.41.5
-            // keeping for compatability however it will crash obv if
-            // the function throws. Provided the user assigns to
-            // XCTVapor.app in the class setUp everything will work
-            // as we intend.
-            self.app = try! _app()
-        } else {
+        guard let _app = XCTVapor.app else {
             fatalError("implement static app generator")
+        }
+
+        if self.app == nil {
+            self.app = try! _app()
         }
     }
 
