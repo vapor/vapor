@@ -289,11 +289,12 @@ private struct _Decoder: Decoder {
                 
                 // parse out any character separated array values
                 self.values = try values.flatMap { value in
-                    try value.asUrlEncoded().split(omittingEmptySubsequences: false) {
-                        configuration.arraySeparators.contains($0)
-                    }.map { (ss: Substring) in
-                        URLQueryFragment.urlEncoded(String(ss))
-                    }
+                    try value.asUrlEncoded()
+                        .split(omittingEmptySubsequences: false,
+                               whereSeparator: configuration.arraySeparators.contains)
+                        .map { (ss: Substring) in
+                            URLQueryFragment.urlEncoded(String(ss))
+                        }
                 }
             }
         }
