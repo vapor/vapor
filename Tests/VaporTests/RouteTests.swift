@@ -351,4 +351,25 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
         }
     }
+    
+    func testWebsocketUpgrade() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let testMarkerHeaderKey = "TestMarker"
+        let testMarkerHeaderValue = "addedInShouldUpgrade"
+        
+        app.routes.webSocket("customshouldupgrade", shouldUpgrade: { req in
+            return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
+        }, onUpgrade: { _, _ in })
+        
+        try app.testable(method: .running).test(.GET, "customshouldupgrade", beforeRequest: { req in
+            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
+            req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
+            req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
+            req.headers.replaceOrAdd(name: .upgrade, value: "websocket")
+        }) { res in
+            XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
+        }
+    }
 }
