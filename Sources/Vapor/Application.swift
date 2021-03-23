@@ -125,7 +125,7 @@ public final class Application {
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.forEach { $0.shutdown(self) }
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
