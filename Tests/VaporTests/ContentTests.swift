@@ -295,6 +295,25 @@ final class ContentTests: XCTestCase {
         let content = try request.content.decode(SampleContent.self)
         XCTAssertEqual(content.name, "new name after decode")
     }
+    
+    func testSupportsJsonApi() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
+
+        let request = Request(
+            application: app,
+            collectedBody: body,
+            on: EmbeddedEventLoop()
+        )
+
+        request.headers.contentType = .jsonAPI
+
+        let content = try request.content.decode(JsonApiContent.self)
+        XCTAssertEqual(content.data, ["entity0", "entity1"])
+    }
 
     func testQueryHooks() throws {
         let app = Application()
@@ -350,4 +369,11 @@ private struct SampleContent: Content {
     mutating func afterDecode() throws {
         name = "new name after decode"
     }
+}
+
+private struct JsonApiContent: Content {
+    struct Meta: Codable {}
+    
+    var data: [String]
+    var meta = Meta()
 }

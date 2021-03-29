@@ -23,6 +23,10 @@ public struct ContentConfiguration {
         config.use(encoder: JSONEncoder.custom(dates: .iso8601), for: .json)
         config.use(decoder: JSONDecoder.custom(dates: .iso8601), for: .json)
         
+        // json api
+        config.use(encoder: JSONEncoder.custom(dates: .iso8601), for: .jsonAPI)
+        config.use(decoder: JSONDecoder.custom(dates: .iso8601), for: .jsonAPI)
+        
         // data
         config.use(encoder: PlaintextEncoder(), for: .plainText)
         config.use(encoder: PlaintextEncoder(.html), for: .html)
