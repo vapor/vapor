@@ -1,3 +1,5 @@
+import NIO
+
 extension Request {
     final class BodyStream: BodyStreamWriter {
         let eventLoop: EventLoop
@@ -9,11 +11,13 @@ extension Request {
         private(set) var isClosed: Bool
         private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
         private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
+        private let allocator: ByteBufferAllocator
 
-        init(on eventLoop: EventLoop) {
+        init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
             self.isClosed = false
             self.buffer = []
+            self.allocator = byteBufferAllocator
         }
 
         func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
@@ -46,7 +50,7 @@ extension Request {
 
         func consume(max: Int?, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
             let promise = eventLoop.makePromise(of: ByteBuffer.self)
-            var data = ByteBufferAllocator().buffer(capacity: 0)
+            var data = self.allocator.buffer(capacity: 0)
             self.read { chunk, next in
                 switch chunk {
                 case .buffer(var buffer):
