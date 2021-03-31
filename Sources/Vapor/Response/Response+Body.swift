@@ -67,20 +67,16 @@ extension Response {
             switch self.storage {
             case .buffer(let buffer): return buffer
             case .data(let data):
-                var buffer = self.byteBufferAllocator.buffer(capacity: data.count)
-                buffer.writeBytes(data)
+                let buffer = self.byteBufferAllocator.buffer(bytes: data)
                 return buffer
             case .dispatchData(let dispatchData):
-                var buffer = self.byteBufferAllocator.buffer(capacity: dispatchData.count)
-                buffer.writeDispatchData(dispatchData)
+                let buffer = self.byteBufferAllocator.buffer(dispatchData: dispatchData)
                 return buffer
             case .staticString(let staticString):
-                var buffer = self.byteBufferAllocator.buffer(capacity: staticString.utf8CodeUnitCount)
-                buffer.writeStaticString(staticString)
+                let buffer = self.byteBufferAllocator.buffer(staticString: staticString)
                 return buffer
             case .string(let string):
-                var buffer = self.byteBufferAllocator.buffer(capacity: string.count)
-                buffer.writeString(string)
+                let buffer = self.byteBufferAllocator.buffer(string: string)
                 return buffer
             case .none: return nil
             case .stream: return nil

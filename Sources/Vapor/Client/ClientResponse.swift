@@ -113,9 +113,7 @@ extension ClientResponse: Codable {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
         }
         self.byteBufferAllocator = ByteBufferAllocator()
-        var body = self.byteBufferAllocator.buffer(capacity: 0)
-        body.writeBytes(bodyData)
-        self.body = body
+        self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
     }
 
     public func encode(to encoder: Encoder) throws {
