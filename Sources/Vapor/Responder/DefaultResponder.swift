@@ -120,7 +120,13 @@ private struct NotFoundResponder: Responder {
     }
 }
 
-struct RouteNotFound: Error { }
+struct RouteNotFound: Error {
+    let stackTrace: StackTrace?
+
+    init() {
+        self.stackTrace = StackTrace.capture(skip: 1)
+    }
+}
 
 extension RouteNotFound: AbortError {
     static var typeIdentifier: String {
