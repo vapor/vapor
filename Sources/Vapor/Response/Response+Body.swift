@@ -113,43 +113,43 @@ extension Response {
         
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
         public init(byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.storage = .none
             self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .none
         }
         
         /// Create a new body wrapping `Data`.
         public init(data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            storage = .data(data)
             self.byteBufferAllocator = byteBufferAllocator
+            storage = .data(data)
         }
         
         /// Create a new body wrapping `DispatchData`.
         public init(dispatchData: DispatchData, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            storage = .dispatchData(dispatchData)
             self.byteBufferAllocator = byteBufferAllocator
+            storage = .dispatchData(dispatchData)
         }
         
         /// Create a new body from the UTF8 representation of a `StaticString`.
         public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            storage = .staticString(staticString)
             self.byteBufferAllocator = byteBufferAllocator
+            storage = .staticString(staticString)
         }
         
         /// Create a new body from the UTF8 representation of a `String`.
         public init(string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.storage = .string(string)
             self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .string(string)
         }
         
         /// Create a new body from a Swift NIO `ByteBuffer`.
         public init(buffer: ByteBuffer, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.storage = .buffer(buffer)
             self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .buffer(buffer)
         }
         
         public init(stream: @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
-            self.storage = .stream(.init(count: count, callback: stream))
             self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .stream(.init(count: count, callback: stream))
         }
 
         public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
@@ -158,14 +158,14 @@ extension Response {
         
         /// `ExpressibleByStringLiteral` conformance.
         public init(stringLiteral value: String) {
-            self.storage = .string(value)
             self.byteBufferAllocator = ByteBufferAllocator()
+            self.storage = .string(value)
         }
         
         /// Internal init.
         internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
-            self.storage = storage
             self.byteBufferAllocator = byteBufferAllocator
+            self.storage = storage
         }
     }
 }
