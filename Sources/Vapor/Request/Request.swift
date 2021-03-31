@@ -162,6 +162,8 @@ public final class Request: CustomStringConvertible {
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage
+
+    public var byteBufferAllocator: ByteBufferAllocator
     
     public convenience init(
         application: Application,
@@ -172,6 +174,7 @@ public final class Request: CustomStringConvertible {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
         self.init(
@@ -183,6 +186,7 @@ public final class Request: CustomStringConvertible {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             logger: logger,
+            byteBufferAllocator: byteBufferAllocator,
             on: eventLoop
         )
         if let body = collectedBody {
@@ -199,6 +203,7 @@ public final class Request: CustomStringConvertible {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
         self.application = application
@@ -218,5 +223,6 @@ public final class Request: CustomStringConvertible {
         self.isKeepAlive = true
         self.logger = logger
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self.byteBufferAllocator = byteBufferAllocator
     }
 }
