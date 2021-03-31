@@ -75,7 +75,7 @@ public final class Response: CustomStringConvertible {
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
             var body = self.response.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.byteBufferAllocator)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -90,7 +90,7 @@ public final class Response: CustomStringConvertible {
             try content.beforeEncode()
             var body = self.response.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.byteBufferAllocator)
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {

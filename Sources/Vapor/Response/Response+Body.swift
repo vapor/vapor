@@ -67,19 +67,19 @@ extension Response {
             switch self.storage {
             case .buffer(let buffer): return buffer
             case .data(let data):
-                var buffer = ByteBufferAllocator().buffer(capacity: data.count)
+                var buffer = self.byteBufferAllocator.buffer(capacity: data.count)
                 buffer.writeBytes(data)
                 return buffer
             case .dispatchData(let dispatchData):
-                var buffer = ByteBufferAllocator().buffer(capacity: dispatchData.count)
+                var buffer = self.byteBufferAllocator.buffer(capacity: dispatchData.count)
                 buffer.writeDispatchData(dispatchData)
                 return buffer
             case .staticString(let staticString):
-                var buffer = ByteBufferAllocator().buffer(capacity: staticString.utf8CodeUnitCount)
+                var buffer = self.byteBufferAllocator.buffer(capacity: staticString.utf8CodeUnitCount)
                 buffer.writeStaticString(staticString)
                 return buffer
             case .string(let string):
-                var buffer = ByteBufferAllocator().buffer(capacity: string.count)
+                var buffer = self.byteBufferAllocator.buffer(capacity: string.count)
                 buffer.writeString(string)
                 return buffer
             case .none: return nil
@@ -90,7 +90,7 @@ extension Response {
         public func collect(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer?> {
             switch self.storage {
             case .stream(let stream):
-                let collector = ResponseBodyCollector(eventLoop: eventLoop)
+                let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
                 return collector.promise.futureResult
                     .map { $0 }
@@ -113,53 +113,63 @@ extension Response {
         }
         
         internal var storage: Storage
+        internal let byteBufferAllocator: ByteBufferAllocator
         
         /// Creates an empty body. Useful for `GET` requests where HTTP bodies are forbidden.
-        public init() {
+        public init(byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.storage = .none
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
         /// Create a new body wrapping `Data`.
-        public init(data: Data) {
+        public init(data: Data, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             storage = .data(data)
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
         /// Create a new body wrapping `DispatchData`.
-        public init(dispatchData: DispatchData) {
+        public init(dispatchData: DispatchData, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             storage = .dispatchData(dispatchData)
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
         /// Create a new body from the UTF8 representation of a `StaticString`.
-        public init(staticString: StaticString) {
+        public init(staticString: StaticString, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             storage = .staticString(staticString)
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
         /// Create a new body from the UTF8 representation of a `String`.
-        public init(string: String) {
+        public init(string: String, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.storage = .string(string)
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
         /// Create a new body from a Swift NIO `ByteBuffer`.
-        public init(buffer: ByteBuffer) {
+        public init(buffer: ByteBuffer, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.storage = .buffer(buffer)
+            self.byteBufferAllocator = byteBufferAllocator
         }
         
-        public init(stream: @escaping (BodyStreamWriter) -> (), count: Int) {
+        public init(stream: @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.storage = .stream(.init(count: count, callback: stream))
+            self.byteBufferAllocator = byteBufferAllocator
         }
 
-        public init(stream: @escaping (BodyStreamWriter) -> ()) {
-            self.init(stream: stream, count: -1)
+        public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+            self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
         /// `ExpressibleByStringLiteral` conformance.
         public init(stringLiteral value: String) {
             self.storage = .string(value)
+            self.byteBufferAllocator = ByteBufferAllocator()
         }
         
         /// Internal init.
-        internal init(storage: Storage) {
+        internal init(storage: Storage, byteBufferAllocator: ByteBufferAllocator) {
             self.storage = storage
+            self.byteBufferAllocator = byteBufferAllocator
         }
     }
 }
@@ -169,8 +179,8 @@ private final class ResponseBodyCollector: BodyStreamWriter {
     var eventLoop: EventLoop
     var promise: EventLoopPromise<ByteBuffer>
 
-    init(eventLoop: EventLoop) {
-        self.buffer = ByteBufferAllocator().buffer(capacity: 0)
+    init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
+        self.buffer = byteBufferAllocator.buffer(capacity: 0)
         self.eventLoop = eventLoop
         self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
     }

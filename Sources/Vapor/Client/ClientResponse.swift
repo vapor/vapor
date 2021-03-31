@@ -83,7 +83,7 @@ extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         let body: Response.Body
         if let buffer = self.body {
-            body = .init(buffer: buffer)
+            body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
         } else {
             body = .empty
         }
