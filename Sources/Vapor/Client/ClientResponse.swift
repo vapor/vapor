@@ -6,7 +6,7 @@ public struct ClientResponse {
     public var body: ByteBuffer?
     private var byteBufferAllocator: ByteBufferAllocator
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator) {
+    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
         self.status = status
         self.headers = headers
         self.body = body
