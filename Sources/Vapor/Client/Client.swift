@@ -1,5 +1,6 @@
 public protocol Client {
     var eventLoop: EventLoop { get }
+    var byteBufferAllocator: ByteBufferAllocator { get }
     func delegating(to eventLoop: EventLoop) -> Client
     func logging(to logger: Logger) -> Client
     func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client
@@ -13,6 +14,10 @@ extension Client {
 
     public func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
         return self
+    }
+
+    public var byteBufferAllocator: ByteBufferAllocator {
+        return ByteBufferAllocator()
     }
 }
 
@@ -55,7 +60,7 @@ extension Client {
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }
     ) -> EventLoopFuture<ClientResponse> {
-        var request = ClientRequest(method: method, url: url, headers: headers, body: nil)
+        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator)
         do {
             try beforeSend(&request)
         } catch {

@@ -3,17 +3,20 @@ public struct ClientRequest {
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
+    private let byteBufferAllocator: ByteBufferAllocator
 
     public init(
         method: HTTPMethod = .GET,
         url: URI = "/",
         headers: HTTPHeaders = [:],
-        body: ByteBuffer? = nil
+        body: ByteBuffer? = nil,
+        byteBufferAllocator: ByteBufferAllocator
     ) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
+        self.byteBufferAllocator = byteBufferAllocator
     }
 }
 
@@ -46,13 +49,14 @@ extension ClientRequest {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
         var headers: HTTPHeaders
+        let byteBufferAllocator: ByteBufferAllocator
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
@@ -67,7 +71,7 @@ extension ClientRequest {
         mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.headers)
             self.body = body
         }
@@ -84,7 +88,7 @@ extension ClientRequest {
 
     public var content: ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers)
+            return _ContentContainer(body: self.body, headers: self.headers, byteBufferAllocator: self.byteBufferAllocator)
         }
         set {
             let container = (newValue as! _ContentContainer)
