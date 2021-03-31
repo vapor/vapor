@@ -4,7 +4,7 @@ public struct ClientResponse {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
-    private var byteBufferAllocator:  ByteBufferAllocator
+    private var byteBufferAllocator: ByteBufferAllocator
 
     public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator) {
         self.status = status
@@ -112,7 +112,8 @@ extension ClientResponse: Codable {
         guard let s = bodyString, let bodyData = Data(base64Encoded: s) else {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
         }
-        var body = ByteBufferAllocator().buffer(capacity: 0)
+        self.byteBufferAllocator = ByteBufferAllocator()
+        var body = self.byteBufferAllocator.buffer(capacity: 0)
         body.writeBytes(bodyData)
         self.body = body
     }
@@ -130,4 +131,8 @@ extension ClientResponse: Codable {
     }
 }
 
-extension ClientResponse: Equatable { }
+extension ClientResponse: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body
+    }
+}
