@@ -4,7 +4,7 @@ public struct ClientResponse {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
-    private var byteBufferAllocator: ByteBufferAllocator
+    private let byteBufferAllocator: ByteBufferAllocator
 
     public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
         self.status = status
@@ -18,7 +18,7 @@ extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
         var headers: HTTPHeaders
-        var allocator: ByteBufferAllocator
+        let allocator: ByteBufferAllocator
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
