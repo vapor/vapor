@@ -128,7 +128,7 @@ public struct FileIO {
             let modifiedAt = attributes[.modificationDate] as? Date,
             let fileSize = (attributes[.size] as? NSNumber)?.intValue
         else {
-            return Response(status: .internalServerError)
+            return Response(status: .internalServerError, byteBufferAllocator: self.allocator)
         }
 
         let contentRange: HTTPHeaders.Range?
@@ -150,11 +150,11 @@ public struct FileIO {
 
         // Check if file has been cached already and return NotModified response if the etags match
         if fileETag == request.headers.first(name: .ifNoneMatch) {
-            return Response(status: .notModified)
+            return Response(status: .notModified, byteBufferAllocator: self.allocator)
         }
 
         // Create the HTTP response.
-        let response = Response(status: .ok, headers: headers)
+        let response = Response(status: .ok, headers: headers, byteBufferAllocator: self.allocator)
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {

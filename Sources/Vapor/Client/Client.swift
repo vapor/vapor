@@ -2,11 +2,16 @@ public protocol Client {
     var eventLoop: EventLoop { get }
     func delegating(to eventLoop: EventLoop) -> Client
     func logging(to logger: Logger) -> Client
+    func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse>
 }
 
 extension Client {
     public func logging(to logger: Logger) -> Client {
+        return self
+    }
+
+    public func allocating(to byteBufferAllocator: ByteBufferAllocator) -> Client {
         return self
     }
 }

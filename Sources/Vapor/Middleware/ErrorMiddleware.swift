@@ -42,7 +42,7 @@ public final class ErrorMiddleware: Middleware {
             req.logger.report(error: error)
             
             // create a Response with appropriate status
-            let response = Response(status: status, headers: headers)
+            let response = Response(status: status, headers: headers, byteBufferAllocator: req.byteBufferAllocator)
             
             // attempt to serialize the error to json
             do {

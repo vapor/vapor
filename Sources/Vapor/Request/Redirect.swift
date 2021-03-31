@@ -8,7 +8,7 @@ extension Request {
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
     public func redirect(to location: String, type: RedirectType = .normal) -> Response {
-        let response = Response()
+        let response = Response(byteBufferAllocator: self.byteBufferAllocator)
         response.status = type.status
         response.headers.replaceOrAdd(name: .location, value: location)
         return response

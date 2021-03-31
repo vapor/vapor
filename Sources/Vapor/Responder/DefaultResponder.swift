@@ -147,7 +147,7 @@ internal struct DefaultResponder: Responder {
 
 private struct HeadResponder: Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(.init(status: .ok))
+        request.eventLoop.makeSucceededFuture(.init(status: .ok, byteBufferAllocator: request.byteBufferAllocator))
     }
 }
 

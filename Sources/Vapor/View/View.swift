@@ -6,7 +6,7 @@ public struct View: ResponseEncodable {
     }
 
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let response = Response()
+        let response = Response(byteBufferAllocator: request.byteBufferAllocator)
         response.headers.contentType = .html
         response.body = .init(buffer: self.data)
         return request.eventLoop.makeSucceededFuture(response)
