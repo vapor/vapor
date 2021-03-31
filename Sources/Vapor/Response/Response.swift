@@ -133,7 +133,7 @@ public final class Response: CustomStringConvertible {
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
         body: Body = .empty,
-        byteBufferAllocator: ByteBufferAllocator
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.init(
             status: status,
@@ -152,7 +152,7 @@ public final class Response: CustomStringConvertible {
         version: HTTPVersion,
         headersNoUpdate headers: HTTPHeaders,
         body: Body,
-        byteBufferAllocator: ByteBufferAllocator
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.status = status
         self.version = version
