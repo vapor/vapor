@@ -2,7 +2,7 @@ import Metrics
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
-    private let router: TrieRouter<CachedRoute>
+    private let router: AnyRouter<CachedRoute>
     private let notFoundResponder: Responder
 
     private struct CachedRoute {
@@ -11,10 +11,8 @@ internal struct DefaultResponder: Responder {
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = []) {
-        let options = routes.caseInsensitive ?
-            Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
-        let router = TrieRouter(CachedRoute.self, options: options)
+    internal init(routes: Routes, routerFactory: RouterFactory, middleware: [Middleware] = []) {
+        let router = routerFactory.buildRouter(forOutputType: CachedRoute.self)
         
         for route in routes.all {
             // Make a copy of the route to cache middleware chaining.
