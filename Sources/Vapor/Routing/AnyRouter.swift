@@ -1,5 +1,5 @@
 /// Type-erased `Router`
-public final class AnyRouter<Output>: Router {
+public struct AnyRouter<Output>: Router {
     private let box: _AnyRouterBase<Output>
     
     public init<Router>(_ base: Router) where Router: RoutingKit.Router, Router.Output == Output {
