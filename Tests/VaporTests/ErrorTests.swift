@@ -145,6 +145,28 @@ final class ErrorTests: XCTestCase {
             XCTAssertContains(error.stackTrace?.frames[2].function, "foo")
         }
     }
+
+    func testMultipartErrorReturnsBadRequest() {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("multipart") { req -> String in
+            throw MultipartError.missingFilename
+        }
+
+        app.get("mulitpartNesting") { req -> String in
+            throw MultipartError.nesting
+        }
+
+
+        XCTAssertNoThrow(try app.test(.GET, "multipart") { res in
+            XCTAssertEqual(res.status, .badRequest)
+        })
+
+        XCTAssertNoThrow(try app.test(.GET, "mulitpartNesting") { res in
+            XCTAssertEqual(res.status, .notImplemented)
+        })
+    }
 }
 
 func XCTAssertContains(

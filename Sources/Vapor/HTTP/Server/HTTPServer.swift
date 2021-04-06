@@ -293,6 +293,10 @@ public final class HTTPServer: Server {
         self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown = true
     }
+
+    public var localAddress: SocketAddress? {
+        return self.connection?.channel.localAddress
+    }
     
     deinit {
         assert(!self.didStart || self.didShutdown, "HTTPServer did not shutdown before deinitializing")

@@ -1,9 +1,6 @@
 <a href="https://discord.gg/vapor">
-    <img 
-	 src="https://user-images.githubusercontent.com/1342803/75634175-4876d680-5bd9-11ea-90d6-12c7b6a9ee3f.png" 
-	 height="176" 
-	 alt="Vapor" 
-    >
+	
+![Vapor](https://user-images.githubusercontent.com/1342803/75634175-4876d680-5bd9-11ea-90d6-12c7b6a9ee3f.png)
 </a>
 
 <p align="center">
@@ -47,10 +44,10 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 
 ### 💛 Sponsors
 
-Support Vapor's development by [becoming a sponsor](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/vapor).
 
-<a href="http://nodesagency.com">
-    <img src="https://user-images.githubusercontent.com/1342803/66773716-a787b900-ee8d-11e9-83c2-54b3d8fce528.png" height="100px" alt="Nodes">
+<a href="https://monstar-lab.com">
+    <img src="https://user-images.githubusercontent.com/1049951/110122158-89429600-7dbf-11eb-98c8-9f65dad29001.png" height="100px" alt="Monstarlab">
 </a>
 <a href="https://www.skelpo.com">
     <img src="https://user-images.githubusercontent.com/1342803/66773734-b2dae480-ee8d-11e9-81ca-2f20f4b0f55e.png" height="100px" alt="Skelpo">
@@ -61,8 +58,8 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://github.com/gwynne">
     <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
 </a>
-<a href="https://github.com/autimatisering">
-    <img src="https://user-images.githubusercontent.com/1342803/71133923-8ad36e80-21b9-11ea-836c-efa05b36a661.png" height="100px" alt="Autimatisering">
+<a href="https://github.com/Joannis">
+    <img src="https://user-images.githubusercontent.com/1342803/95220234-3ccd3d00-07c4-11eb-99be-0f5af0b099e8.png" height="100px" alt="Joannis Orlandos">
 </a>
 <a href="https://github.com/kylebrowning">
     <img src="https://user-images.githubusercontent.com/1342803/67107440-7ca5a980-f19a-11e9-8619-b029c96399f7.png" height="100px" alt="Kyle Browning">
@@ -70,17 +67,26 @@ Support Vapor's development by [becoming a sponsor](https://github.com/users/tan
 <a href="https://github.com/MrLotU">
     <img src="https://user-images.githubusercontent.com/1342803/79599312-426a8580-80b3-11ea-89b3-8b2722485e37.png" height="100px" alt="Jari">
 </a>
+<a href="http://omrd.com">
+    <img src="https://user-images.githubusercontent.com/9938337/112326871-d1f9ba80-8cac-11eb-88b2-b2ca23a80c03.png" height="100px" alt="omrd">
+</a>
 
 
 
 ### 💚 Backers
-Support Vapor's development by [becoming a backer](https://github.com/users/tanner0101/sponsorship).
+Support Vapor's development by [becoming a backer](https://github.com/sponsors/vapor).
 
 <a
     data-amt="50" 
     data-since="04/17/20" 
     href="https://github.com/Joannis">
     <img src="https://avatars0.githubusercontent.com/u/1951674?s=120" width="60px">
+</a>
+<a 
+    data-amt="50" 
+    data-since="10/09/20" 
+    href="https://github.com/raphaelcruzeiro">
+    <img src="https://avatars.githubusercontent.com/u/425640?s=120" width="60px">
 </a>
 <a 
     data-amt="25" 
@@ -99,6 +105,24 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
     data-since="7/21/20" 
     href="https://github.com/ultim8p">
     <img src="https://avatars3.githubusercontent.com/u/4804985?s=120" width="60px">
+</a>
+<a 
+    data-amt="25" 
+    data-since="01/15/21" 
+    href="https://github.com/saschasalles">
+    <img src="https://avatars.githubusercontent.com/u/43401678?s=120" width="60px">
+</a>
+<a 
+    data-amt="25" 
+    data-since="03/20/21" 
+    href="https://github.com/hitman-gdg">
+    <img src="https://avatars.githubusercontent.com/u/60353431?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="10/14/19" 
+    href="https://github.com/tkrajacic">
+    <img src="https://avatars3.githubusercontent.com/u/873717?s=120" width="60px">
 </a>
 <a 
     data-amt="10" 
@@ -132,27 +156,63 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 </a>
 <a 
     data-amt="10" 
-    data-since="2/28/20" 
-    href="https://github.com/timothymiko">
-    <img src="https://avatars3.githubusercontent.com/u/2555306?s=120" width="60px">
-</a>
-<a 
-    data-amt="10" 
-    data-since="2/28/20" 
-    href="https://github.com/jstevison">
-    <img src="https://avatars3.githubusercontent.com/u/149974?s=120" width="60px">
-</a>
-<a 
-    data-amt="10" 
-    data-since="4/22/20" 
-    href="https://github.com/rminerick">
-    <img src="https://avatars3.githubusercontent.com/u/4505221?s=120" width="60px">
+    data-since="5/20/20" 
+    href="https://github.com/jdmcd">
+    <img src="https://avatars3.githubusercontent.com/u/11842593?s=120" width="60px">
 </a>
 <a 
     data-amt="10" 
     data-since="5/20/20" 
-    href="https://github.com/mcdappdev">
-    <img src="https://avatars3.githubusercontent.com/u/11842593?s=120" width="60px">
+    href="https://github.com/marcosgriselli">
+    <img src="https://avatars.githubusercontent.com/u/14804033?s=120" width="60px">
+</a>
+<a 
+    data-amt="10" 
+    data-since="8/5/20" 
+    href="https://github.com/tarag">
+    <img src="https://avatars3.githubusercontent.com/u/11686092?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="10/1/20" 
+    href="https://github.com/GalenRhodes">
+    <img src="https://avatars0.githubusercontent.com/u/16696128?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="10/09/20" 
+    href="https://github.com/ArchieGoodwin">
+    <img src="https://avatars.githubusercontent.com/u/3480566?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="10/23/20" 
+    href="https://github.com/deanbrindley87">
+    <img src="https://avatars.githubusercontent.com/u/7825097?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="07/07/20" 
+    href="https://github.com/PSchmiedmayer">
+    <img src="https://avatars0.githubusercontent.com/u/28656495?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="10/31/20" 
+    href="https://github.com/masterofinsanity">
+    <img src="https://avatars.githubusercontent.com/u/31490164?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="02/09/21" 
+    href="https://github.com/BAChapin">
+    <img src="https://avatars.githubusercontent.com/u/22135180?s=120" width="60px">
+</a>
+<a
+    data-amt="10" 
+    data-since="03/16/21" 
+    href="https://github.com/viaaurelia">
+    <img src="https://avatars.githubusercontent.com/u/80760182?s=120" width="60px">
 </a>
 <a 
     data-amt="5" 
@@ -186,12 +246,6 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 </a>
 <a 
     data-amt="5" 
-    data-since="11/14/19" 
-    href="https://github.com/patrykwas">
-    <img src="https://avatars3.githubusercontent.com/u/39051168?s=120" width="60px">
-</a>
-<a 
-    data-amt="5" 
     data-since="11/17/19" 
     href="https://github.com/MaherKSantina">
     <img src="https://avatars3.githubusercontent.com/u/24646608?s=120" width="60px">
@@ -204,27 +258,9 @@ Support Vapor's development by [becoming a backer](https://github.com/users/tann
 </a>
 <a
     data-amt="5" 
-    data-since="12/12/19" 
-    href="https://github.com/jordanebelanger">
-    <img src="https://avatars3.githubusercontent.com/u/1856085?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
     data-since="12/21/19" 
     href="https://github.com/StefanCosminR">
     <img src="https://avatars3.githubusercontent.com/u/17311242?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
-    data-since="2/1/20" 
-    href="https://github.com/piers12">
-    <img src="https://avatars3.githubusercontent.com/u/37227905?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
-    data-since="2/26/20" 
-    href="https://github.com/iq3addLi">
-    <img src="https://avatars3.githubusercontent.com/u/16850104?s=120" width="60px">
 </a>
 <a
     data-amt="5" 
@@ -259,12 +295,6 @@ Mattiav8">
 </a>
 <a
     data-amt="5" 
-    data-since="04/10/20" 
-    href="https://github.com/segunabiodun">
-    <img src="https://avatars0.githubusercontent.com/u/19616990?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
     data-since="04/20/20" 
     href="https://github.com/klaas">
     <img src="https://avatars0.githubusercontent.com/u/320967?s=120" width="60px">
@@ -289,21 +319,15 @@ Mattiav8">
 </a>
 <a
     data-amt="5" 
-    data-since="05/17/20" 
-    href="https://github.com/mtsrodrigues">
-    <img src="https://avatars0.githubusercontent.com/u/20213807?s=120" width="60px">
+    data-since="06/22/20" 
+    href="https://github.com/rafaellevy">
+    <img src="https://avatars.githubusercontent.com/u/20618652?s=120" width="60px">
 </a>
 <a
     data-amt="5" 
     data-since="07/04/20" 
     href="https://github.com/rausnitz">
     <img src="https://avatars0.githubusercontent.com/u/6132143?s=120" width="60px">
-</a>
-<a
-    data-amt="5" 
-    data-since="07/07/20" 
-    href="https://github.com/PSchmiedmayer">
-    <img src="https://avatars0.githubusercontent.com/u/28656495?s=120" width="60px">
 </a>
 <a
     data-amt="5" 
@@ -316,6 +340,102 @@ Mattiav8">
     data-since="07/31/20" 
     href="https://github.com/Mordil">
     <img src="https://avatars0.githubusercontent.com/u/3506776?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="9/25/20" 
+    href="https://github.com/0xLeif">
+    <img src="https://avatars0.githubusercontent.com/u/8268288?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/09/20" 
+    href="https://github.com/tanner0101">
+    <img src="https://avatars.githubusercontent.com/u/1342803?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/31/20" 
+    href="https://github.com/tmm">
+    <img src="https://avatars0.githubusercontent.com/u/6759464?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/09/20" 
+    href="https://github.com/jessetipton">
+    <img src="https://avatars.githubusercontent.com/u/2132778?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/09/20" 
+    href="https://github.com/g-Off">
+    <img src="https://avatars.githubusercontent.com/u/59969?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/13/20" 
+    href="https://github.com/finestructure">
+    <img src="https://avatars.githubusercontent.com/u/65520?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="10/28/20" 
+    href="https://github.com/avario">
+    <img src="https://avatars.githubusercontent.com/u/2192944?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="12/21/20" 
+    href="https://github.com/doozMen">
+    <img src="https://avatars.githubusercontent.com/u/686038?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="03/20/21" 
+    href="https://github.com/piers12">
+    <img src="https://avatars3.githubusercontent.com/u/37227905?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="12/08/21" 
+    href="https://github.com/Andrewangeta">
+    <img src="https://avatars.githubusercontent.com/u/12012815?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="12/09/21" 
+    href="https://github.com/addli">
+    <img src="https://avatars.githubusercontent.com/u/16063852?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="02/06/21" 
+    href="https://github.com/nuno-vieira">
+    <img src="https://avatars.githubusercontent.com/u/12814114?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="02/10/21" 
+    href="https://github.com/bitwit">
+    <img src="https://avatars.githubusercontent.com/u/707507?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="03/14/21" 
+    href="https://github.com/bostshakur">
+    <img src="https://avatars.githubusercontent.com/u/63927113?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="03/11/21" 
+    href="https://github.com/shgew">
+    <img src="https://avatars.githubusercontent.com/u/5584672?s=120" width="60px">
+</a>
+<a
+    data-amt="5" 
+    data-since="03/12/21" 
+    href="https://github.com/milanpollock">
+    <img src="https://avatars.githubusercontent.com/u/29420046?s=120" width="60px">
 </a>
 
 <a href="https://opencollective.com/vapor/backer/0/website" target="_blank"><img src="https://opencollective.com/vapor/backer/0/avatar.svg"></a>

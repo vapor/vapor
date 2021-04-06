@@ -436,6 +436,7 @@ final class ServerTests: XCTestCase {
 
         let port = 1337
         app.http.server.configuration.port = port
+        app.environment.arguments = ["serve"]
         try app.start()
 
         let request = try HTTPClient.Request(
@@ -493,6 +494,7 @@ final class ServerTests: XCTestCase {
 
         let port = 1337
         app.http.server.configuration.port = port
+        app.environment.arguments = ["serve"]
         try app.start()
 
         let request = try HTTPClient.Request(
@@ -524,7 +526,7 @@ final class ServerTests: XCTestCase {
         defer {
             app.shutdown()
         }
-
+        app.environment.arguments = ["serve"]
         XCTAssertNoThrow(try app.start())
     }
 
@@ -548,6 +550,7 @@ final class ServerTests: XCTestCase {
         let app = Application(.testing)
         app.http.server.configuration.address = .hostname(nil, port: nil)
         defer { app.shutdown() }
+        app.environment.arguments = ["serve"]
 
         XCTAssertNoThrow(try app.start())
     }
@@ -556,6 +559,7 @@ final class ServerTests: XCTestCase {
         let app = Application(.testing)
         app.http.server.configuration.address = .hostname(nil, port: 8008)
         defer { app.shutdown() }
+        app.environment.arguments = ["serve"]
 
         XCTAssertNoThrow(try app.start())
     }
@@ -564,6 +568,7 @@ final class ServerTests: XCTestCase {
         let app = Application(.testing)
         app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
         defer { app.shutdown() }
+        app.environment.arguments = ["serve"]
         
         XCTAssertNoThrow(try app.start())
     }
@@ -641,6 +646,7 @@ final class ServerTests: XCTestCase {
 
         let port = 1337
         app.http.server.configuration.port = port
+        app.environment.arguments = ["serve"]
         try app.start()
 
         let request = try HTTPClient.Request(

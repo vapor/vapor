@@ -3,7 +3,7 @@ extension HTTPHeaders {
     /// This accesses the `"Cookie"` header.
     public var cookie: HTTPCookies? {
         get {
-            self.parseDirectives(name: .cookie).first.flatMap {
+            self.parseDirectives(name: .cookie).first.map {
                 HTTPCookies(directives: $0)
             }
         }
@@ -238,14 +238,12 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         self.cookies = [:]
     }
 
-    init?(directives: [HTTPHeaders.Directive]) {
-        self.cookies = [:]
-        for directive in directives {
-            guard let value = directive.parameter else {
-                return nil
+    init(directives: [HTTPHeaders.Directive]) {
+        self.cookies = directives.reduce(into: [:], { (cookies, directive) in
+            if let value = directive.parameter {
+                cookies[.init(directive.value)] = .init(string: .init(value))
             }
-            self.cookies[.init(directive.value)] = .init(string: .init(value))
-        }
+        })
     }
     
     /// See `ExpressibleByDictionaryLiteral`.

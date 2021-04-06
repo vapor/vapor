@@ -77,6 +77,7 @@ public final class Application {
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
+        self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
@@ -89,7 +90,7 @@ public final class Application {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: eventLoopGroupProvider, logger: self.logger)
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
     public func run() throws {
@@ -124,7 +125,7 @@ public final class Application {
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.forEach { $0.shutdown(self) }
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
@@ -133,7 +134,7 @@ public final class Application {
 
         switch self.eventLoopGroupProvider {
         case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
         case .createNew:
             self.logger.trace("Shutting down EventLoopGroup")
             do {
