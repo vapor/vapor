@@ -128,11 +128,7 @@ struct RouteNotFound: Error {
     }
 }
 
-extension RouteNotFound: AbortError {
-    static var typeIdentifier: String {
-        "Abort"
-    }
-    
+extension RouteNotFound: AbortError {    
     var status: HTTPResponseStatus {
         .notFound
     }
