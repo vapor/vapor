@@ -24,20 +24,25 @@ extension Logger {
         case let abort as AbortError:
             reason = abort.reason
             source = nil
-            level = .error
+            
+            if (500...599).contains(abort.status.code) {
+                level = .error
+            } else {
+                level = .warning
+            }
         case let localized as LocalizedError:
             reason = localized.localizedDescription
             source = nil
-            level = .error
+            level = .warning
         case let convertible as CustomStringConvertible:
             reason = convertible.description
             source = nil
-            level = .error
+            level = .warning
         default:
             reason = "\(error)"
             source = nil
-            level = .error
-        }
+            level = .warning
+        
         self.log(
             level: level,
             .init(stringLiteral: reason),
