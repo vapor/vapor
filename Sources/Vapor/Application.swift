@@ -140,7 +140,7 @@ public final class Application {
             do {
                 try self.eventLoopGroup.syncShutdownGracefully()
             } catch {
-                self.logger.error("Shutting down EventLoopGroup failed: \(error)")
+                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
             }
         }
 

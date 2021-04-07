@@ -23,7 +23,7 @@ extension DotEnvFile {
             do {
                 try threadPool.syncShutdownGracefully()
             } catch {
-                logger.error("Shutting down threadPool failed: \(error)")
+                logger.warning("Shutting down threadPool failed: \(error)")
             }
         }
         let fileio = NonBlockingFileIO(threadPool: threadPool)
@@ -55,7 +55,7 @@ extension DotEnvFile {
             do {
                 try threadPool.syncShutdownGracefully()
             } catch {
-                logger.error("Shutting down threadPool failed: \(error)")
+                logger.warning("Shutting down threadPool failed: \(error)")
             }
         }
         let fileio = NonBlockingFileIO(threadPool: threadPool)
