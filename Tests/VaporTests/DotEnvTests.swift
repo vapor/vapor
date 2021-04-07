@@ -43,4 +43,14 @@ final class DotEnvTests: XCTestCase {
             .init(key: "BAR", value: "baz"),
         ])
     }
+    func testCommentWithNoTrailingNewline() throws {
+        let env = "FOO=bar\n#BAR=baz"
+        var buffer = ByteBufferAllocator().buffer(capacity: 0)
+        buffer.writeString(env)
+        var parser = DotEnvFile.Parser(source: buffer)
+        let lines = parser.parse()
+        XCTAssertEqual(lines, [
+            .init(key: "FOO", value: "bar")
+        ])
+    }
 }

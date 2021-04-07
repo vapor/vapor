@@ -77,6 +77,7 @@ public final class Application {
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
+        self.caches.initialize()
         self.views.initialize()
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
@@ -89,9 +90,7 @@ public final class Application {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        // Load specific .env first since values are not overridden.
-        self.loadDotEnv(named: ".env.\(self.environment.name)")
-        self.loadDotEnv(named: ".env")
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
     public func run() throws {
@@ -121,24 +120,12 @@ public final class Application {
         try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
-    private func loadDotEnv(named name: String) {
-        do {
-            try DotEnvFile.load(
-                path: name,
-                fileio: .init(threadPool: self.threadPool),
-                on: self.eventLoopGroup.next()
-            ).wait()
-        } catch {
-            self.logger.debug("Could not load \(name) file: \(error)")
-        }
-    }
-    
     public func shutdown() {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.forEach { $0.shutdown(self) }
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
@@ -147,7 +134,7 @@ public final class Application {
 
         switch self.eventLoopGroupProvider {
         case .shared:
-            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup")
+            self.logger.trace("Running on shared EventLoopGroup. Not shutting down EventLoopGroup.")
         case .createNew:
             self.logger.trace("Shutting down EventLoopGroup")
             do {

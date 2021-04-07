@@ -135,7 +135,8 @@ public final class CORSMiddleware: Middleware {
         
         return response.map { response in
             // Modify response headers based on CORS settings
-            response.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: self.configuration.allowedOrigin.header(forRequest: request))
+            let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
+            response.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
             response.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
             response.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
             
@@ -149,6 +150,10 @@ public final class CORSMiddleware: Middleware {
             
             if self.configuration.allowCredentials {
                 response.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
+            }
+
+            if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
+                response.headers.add(name: .vary, value: "origin")
             }
             
             return response
