@@ -42,6 +42,7 @@ extension Logger {
             reason = "\(error)"
             source = nil
             level = .warning
+        }
         
         self.log(
             level: level,
@@ -50,52 +51,5 @@ extension Logger {
             function: source?.function ?? function,
             line: numericCast(source?.line ?? line)
         )
-    }
-}
-
-struct MyError: DebuggableError {
-    enum Value {
-        case userNotLoggedIn
-        case invalidEmail(String)
-    }
-
-    var identifier: String {
-        switch self.value {
-        case .userNotLoggedIn:
-            return "userNotLoggedIn"
-        case .invalidEmail:
-            return "invalidEmail"
-        }
-    }
-
-    var reason: String {
-        switch self.value {
-        case .userNotLoggedIn:
-            return "User is not logged in."
-        case .invalidEmail(let email):
-            return "Email address is not valid: \(email)."
-        }
-    }
-
-    var value: Value
-    var source: ErrorSource?
-    var stackTrace: StackTrace?
-
-    init(
-        _ value: Value,
-        file: String = #file,
-        function: String = #function,
-        line: UInt = #line,
-        column: UInt = #column,
-        stackTrace: StackTrace? = .capture()
-    ) {
-        self.value = value
-        self.source = .init(
-            file: file,
-            function: function,
-            line: line,
-            column: column
-        )
-        self.stackTrace = stackTrace
     }
 }
