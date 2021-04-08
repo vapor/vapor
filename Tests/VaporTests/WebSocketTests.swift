@@ -80,6 +80,35 @@ final class WebSocketTests: XCTestCase {
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
+    func testManualUpgradeToWebSocket() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.http.server.configuration.port = 8080
+
+        app.get("foo") { req in
+            return req.webSocket { req, ws in
+                ws.send("foo")
+                ws.close(promise: nil)
+            }
+        }
+
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+        WebSocket.connect(
+            to: "ws://localhost:8080/foo",
+            on: app.eventLoopGroup.next()
+        ) { ws in
+            ws.onText { ws, string in
+                promise.succeed(string)
+            }
+        }.cascadeFailure(to: promise)
+
+        try XCTAssertEqual(promise.futureResult.wait(), "foo")
+    }
+
     func testLifecycleShutdown() throws {
         let app = Application(.testing)
         app.http.server.configuration.port = 1337
