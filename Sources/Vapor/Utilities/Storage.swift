@@ -8,7 +8,7 @@ public struct Storage {
             do {
                 try self.onShutdown?(self.value)
             } catch {
-                logger.error("Could not shutdown \(T.self): \(error)")
+                logger.warning("Could not shutdown \(T.self): \(error)")
             }
         }
     }

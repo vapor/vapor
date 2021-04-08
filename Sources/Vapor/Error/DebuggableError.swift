@@ -106,7 +106,7 @@ extension DebuggableError {
     }
 
     public var logLevel: Logger.Level { 
-        .error
+        .warning
     }
 }
 

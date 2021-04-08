@@ -62,7 +62,7 @@ public struct DotEnvFile {
                 do {
                     try eventLoopGroup.syncShutdownGracefully()
                 } catch {
-                    logger.error("Shutting down EventLoopGroup failed: \(error)")
+                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
                 }
             }
         }
@@ -109,7 +109,7 @@ public struct DotEnvFile {
                 do {
                     try eventLoopGroup.syncShutdownGracefully()
                 } catch {
-                    logger.error("Shutting down EventLoopGroup failed: \(error)")
+                    logger.warning("Shutting down EventLoopGroup failed: \(error)")
                 }
             }
         }
