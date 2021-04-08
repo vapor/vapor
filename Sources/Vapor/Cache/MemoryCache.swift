@@ -67,15 +67,15 @@ private final class MemoryCacheStorage {
         return box.value
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?)
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
         where T: Encodable
     {
         self.lock.lock()
         defer { self.lock.unlock() }
         if let value = value {
             var box = CacheEntryBox(value)
-            if let expiresIn = expiresIn {
-                box.expiresAt = Date().addingTimeInterval(TimeInterval(expiresIn.seconds))
+            if let expirationTime = expirationTime {
+                box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
             }
             self.storage[key] = box
         } else {
@@ -105,10 +105,10 @@ private struct MemoryCache: Cache {
         self.set(key, to: value, expiresIn: nil)
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
         where T : Encodable
     {
-        self.storage.set(key, to: value, expiresIn: expiresIn)
+        self.storage.set(key, to: value, expiresIn: expirationTime)
         return self.eventLoop.makeSucceededFuture(())
     }
     

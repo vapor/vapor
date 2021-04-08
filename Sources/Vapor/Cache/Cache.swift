@@ -9,7 +9,7 @@ public protocol Cache {
         where T: Encodable
     
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
-    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
         where T: Encodable
     
     /// Creates a request-specific cache instance.
@@ -18,7 +18,7 @@ public protocol Cache {
 
 extension Cache {
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
-    public func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+    public func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
         where T: Encodable
     {
         return self.set(key, to: value)
