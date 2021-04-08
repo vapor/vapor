@@ -34,6 +34,16 @@ private struct MemoryCacheKey: LockKey, StorageKey {
 }
 
 private final class MemoryCacheStorage {
+    struct CacheEntryBox<T> {
+        var expiresAt: Date?
+        var value: T
+        
+        init(_ value: T) {
+            self.expiresAt = nil
+            self.value = value
+        }
+    }
+    
     private var storage: [String: Any]
     private var lock: Lock
     
@@ -47,16 +57,27 @@ private final class MemoryCacheStorage {
     {
         self.lock.lock()
         defer { self.lock.unlock() }
-        return self.storage[key] as? T
+        
+        guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
+        if let expiresAt = box.expiresAt, expiresAt < Date() {
+            self.storage.removeValue(forKey: key)
+            return nil
+        }
+        
+        return box.value
     }
     
-    func set<T>(_ key: String, to value: T?)
+    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?)
         where T: Encodable
     {
         self.lock.lock()
         defer { self.lock.unlock() }
         if let value = value {
-            self.storage[key] = value
+            var box = CacheEntryBox(value)
+            if let expiresIn = expiresIn {
+                box.expiresAt = Date().addingTimeInterval(TimeInterval(expiresIn.seconds))
+            }
+            self.storage[key] = box
         } else {
             self.storage.removeValue(forKey: key)
         }
@@ -79,10 +100,15 @@ private struct MemoryCache: Cache {
     }
     
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
-        where T: Encodable
-    
+        where T : Encodable
     {
-        self.storage.set(key, to: value)
+        self.set(key, to: value, expiresIn: nil)
+    }
+    
+    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+        where T : Encodable
+    {
+        self.storage.set(key, to: value, expiresIn: expiresIn)
         return self.eventLoop.makeSucceededFuture(())
     }
     

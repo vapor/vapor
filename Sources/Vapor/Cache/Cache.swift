@@ -8,11 +8,22 @@ public protocol Cache {
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
         where T: Encodable
     
+    /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
+    func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+        where T: Encodable
+    
     /// Creates a request-specific cache instance.
     func `for`(_ request: Request) -> Self
 }
 
 extension Cache {
+    /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
+    public func set<T>(_ key: String, to value: T?, expiresIn: CacheExpirationTime?) -> EventLoopFuture<Void>
+        where T: Encodable
+    {
+        return self.set(key, to: value)
+    }
+    
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     public func get<T>(_ key: String) -> EventLoopFuture<T?>
         where T: Decodable
