@@ -24,12 +24,7 @@ extension Logger {
         case let abort as AbortError:
             reason = abort.reason
             source = nil
-            
-            if (500...599).contains(abort.status.code) {
-                level = .error
-            } else {
-                level = .warning
-            }
+            level = .warning
         case let localized as LocalizedError:
             reason = localized.localizedDescription
             source = nil
