@@ -101,11 +101,11 @@ extension HTTPHeaders {
                 if self.current.first == .semicolon {
                     self.pop()
                 }
+            } else if let comma = self.current.firstIndex(of: .comma) {
+                value = self.pop(to: comma)
             } else if let semicolon = self.current.firstIndex(of: .semicolon) {
                 value = self.pop(to: semicolon)
                 self.pop()
-            } else if let comma = self.current.firstIndex(of: .comma) {
-                value = self.pop(to: comma)
             } else {
                 value = self.pop(to: self.current.endIndex)
             }

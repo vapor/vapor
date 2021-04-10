@@ -43,9 +43,9 @@ extension Array where Element == HTTPMediaTypePreference {
             if aq == bq {
                 return .orderedSame
             } else if aq > bq {
-                return .orderedAscending
-            } else {
                 return .orderedDescending
+            } else {
+                return .orderedAscending
             }
         case (.none, .some):
             // there is not a value for a, no way it can be preferred
