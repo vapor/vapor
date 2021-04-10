@@ -121,6 +121,7 @@ final class HTTPHeaderTests: XCTestCase {
         do {
             headers.replaceOrAdd(name: .accept, value: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
             XCTAssertEqual(headers.accept.mediaTypes.count, 4)
+            XCTAssertTrue(headers.accept.comparePreference(for: .html, to: .xml) == .orderedDescending)
         }
     }
 
