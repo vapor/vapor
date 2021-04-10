@@ -108,6 +108,22 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.forwarded.first?.by, "203.0.113.43")
     }
 
+    func testAcceptType() throws {
+        var headers = HTTPHeaders()
+
+        // Simple accept type
+        do {
+            headers.replaceOrAdd(name: .accept, value: "text/html")
+            XCTAssertEqual(headers.accept.mediaTypes.count, 1)
+        }
+
+        // Complex accept type (used e.g. from safari browser)
+        do {
+            headers.replaceOrAdd(name: .accept, value: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            XCTAssertEqual(headers.accept.mediaTypes.count, 4)
+        }
+    }
+
     func testForwarded_quote() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: #"For="[2001:db8:cafe::17]:4711""#)
