@@ -27,7 +27,7 @@ extension HTTPHeaders {
     ///
     public var accept: [HTTPMediaTypePreference] {
         self.parseDirectives(name: .accept).compactMap {
-            HTTPMediaTypePreference(directives: $0)
+            return HTTPMediaTypePreference(directives: $0)
         }
     }
 }

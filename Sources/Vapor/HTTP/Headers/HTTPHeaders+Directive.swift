@@ -101,11 +101,11 @@ extension HTTPHeaders {
                 if self.current.first == .semicolon {
                     self.pop()
                 }
-            } else if let comma = self.current.firstIndex(of: .comma) {
-                value = self.pop(to: comma)
-            } else if let semicolon = self.current.firstIndex(of: .semicolon) {
-                value = self.pop(to: semicolon)
-                self.pop()
+            } else if let separatorMatch = self.firstIndex(matchingAnyOf: .comma, .semicolon) {
+                value = self.pop(to: separatorMatch.index)
+                if separatorMatch.matchedCharacter == .semicolon {
+                    self.pop()
+                }
             } else {
                 value = self.pop(to: self.current.endIndex)
             }
@@ -138,6 +138,19 @@ extension HTTPHeaders {
                 } else if !character.isTokenCharacter {
                     return nil
                 }
+            }
+            return nil
+        }
+
+        /// Returns the first index matching any of the passed in Characters, nil if no match
+        private func firstIndex(matchingAnyOf characters: Character...) -> (index: Substring.Index, matchedCharacter: Character)? {
+            guard characters.isEmpty == false else { return nil }
+
+            for index in self.current.indices {
+                let character = self.current[index]
+                guard let matchedCharacter = characters.first(where: { $0 == character }) else { continue }
+
+                return (index, matchedCharacter)
             }
             return nil
         }
