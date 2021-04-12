@@ -115,6 +115,7 @@ final class HTTPHeaderTests: XCTestCase {
         do {
             headers.replaceOrAdd(name: .accept, value: "text/html")
             XCTAssertEqual(headers.accept.mediaTypes.count, 1)
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.html))
         }
 
         // Complex accept type (used e.g. from safari browser)
