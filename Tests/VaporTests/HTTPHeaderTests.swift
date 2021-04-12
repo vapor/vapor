@@ -120,12 +120,15 @@ final class HTTPHeaderTests: XCTestCase {
 
         // Complex accept type (used e.g. from safari browser)
         do {
-            headers.replaceOrAdd(name: .accept, value: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8")
+            headers.replaceOrAdd(name: .accept, value: "text/html,application/xhtml+xml,application/xml;q=0.9,image/png;q=0.8")
             XCTAssertEqual(headers.accept.mediaTypes.count, 4)
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.html))
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.xml))
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.png))
             XCTAssertTrue(headers.accept.comparePreference(for: .html, to: .xml) == .orderedDescending)
             XCTAssertEqual(headers.accept.first(where: { $0.mediaType == .xml })?.q, 0.9)
-            XCTAssertEqual(headers.accept.last?.q, 0.8)
-            XCTAssertTrue(headers.accept.comparePreference(for: .xml, to: .bzip2) == .orderedDescending)
+            XCTAssertEqual(headers.accept.first(where: { $0.mediaType == .png })?.q, 0.8)
+            XCTAssertTrue(headers.accept.comparePreference(for: .xml, to: .png) == .orderedDescending)
         }
     }
 
