@@ -100,13 +100,13 @@ private struct MemoryCache: Cache {
     }
     
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
-        where T : Encodable
+        where T: Encodable
     {
         self.set(key, to: value, expiresIn: nil)
     }
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
-        where T : Encodable
+        where T: Encodable
     {
         self.storage.set(key, to: value, expiresIn: expirationTime)
         return self.eventLoop.makeSucceededFuture(())

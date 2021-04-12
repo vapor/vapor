@@ -13,7 +13,7 @@ final class CacheTests: XCTestCase {
         try app.cache.set("foo2", to: "bar2", expiresIn: .seconds(1)).wait()
         try XCTAssertEqual(app.cache.get("foo2").wait(), "bar2")
         sleep(1)
-        try XCTAssertEqual(app.cache.get("foo2", as: String.self).wait(), nil)
+        try XCTAssertNil(app.cache.get("foo2", as: String.self).wait())
     }
     
     func testCustomCache() throws {
