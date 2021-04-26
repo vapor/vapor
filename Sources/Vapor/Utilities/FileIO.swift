@@ -119,7 +119,8 @@ public struct FileIO {
     public func streamFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
-        mediaType: HTTPMediaType? = nil
+        mediaType: HTTPMediaType? = nil,
+        onCompleted: @escaping (Result<Void, Error>) -> () = { _ in }
     ) -> Response {
         // Get file attributes for this file.
         guard
@@ -189,6 +190,7 @@ public struct FileIO {
                 case .success:
                     stream.write(.end, promise: nil)
                 }
+                onCompleted(result)
             }
         }, count: byteCount)
         
