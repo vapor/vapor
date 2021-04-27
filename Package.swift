@@ -85,6 +85,7 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
+            .product(name: "_NIOConcurrency", package: "swift-nio"),
         ]),
         // Vapor 3 API shim
         .target(name: "_Vapor3", dependencies: [
