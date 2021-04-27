@@ -8,7 +8,7 @@
 ///         }
 ///     }
 ///
-public protocol Extendable: class {
+public protocol Extendable: AnyObject {
     /// Arbitrary property storage. See `Extend` and `Extendable`.
     var extend: Extend { get set }
 }
