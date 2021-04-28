@@ -224,7 +224,7 @@ public func routes(_ app: Application) throws {
         }
     }
 
-    let asyncRoutes = app.grouped("async")
+    let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware())
     asyncRoutes.get("client") { req async throws -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
