@@ -273,3 +273,10 @@ struct TestError: AbortError, DebuggableError {
         self.stackTrace = stackTrace
     }
 }
+
+struct TestAsyncMiddleware: AsyncMiddleware {
+    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+        request.logger.debug("In async middleware")
+        return try await next.respond(to: request)
+    }
+}
