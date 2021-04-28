@@ -42,19 +42,21 @@ jobs:
         working-directory: provider
         
   test-vapor:
-    needs: getcidata
-    strategy:
-      fail-fast: false
-      matrix:
-        env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
-    runs-on: ${{ matrix.env.os }}
-    container: ${{ matrix.env.image }}
+    # needs: getcidata
+    # strategy:
+    #   fail-fast: false
+    #   matrix:
+    #     env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
+    # runs-on: ${{ matrix.env.os }}
+    # container: ${{ matrix.env.image }}
+    runs-on: ubuntu-latest
+    container: swiftlang/swift:nightly-5.4-focal
     steps: 
-      - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1.2.1
-        with:
-          xcode-version: ${{ matrix.env.toolchain }}
-        if: ${{ matrix.env.toolchain != '' }}
+      # - name: Select toolchain
+      #   uses: maxim-lobanov/setup-xcode@v1.2.1
+      #   with:
+      #     xcode-version: ${{ matrix.env.toolchain }}
+      #   if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
