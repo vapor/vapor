@@ -230,7 +230,7 @@ public func routes(_ app: Application) throws {
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }
-        return String(decoding: body.readableBytesView, as: UTF8.self)
+        return String(buffer: body)
     }
 
     func asyncRouteTester(_ req: Request) async throws -> String {
@@ -238,7 +238,7 @@ public func routes(_ app: Application) throws {
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }
-        return String(decoding: body.readableBytesView, as: UTF8.self)
+        return String(buffer: body)
     }
     asyncRoutes.get("client2", use: asyncRouteTester)
 }
