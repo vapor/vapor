@@ -223,6 +223,24 @@ public func routes(_ app: Application) throws {
             return promise.futureResult
         }
     }
+
+    let asyncRoutes = app.grouped("async")
+    asyncRoutes.get("client") { req async -> String in
+        let response = try await req.client.get("https://www.google.com")
+        guard let body = response.body else {
+            throw Abort(.internalServerError)
+        }
+        return String(decoding: body.readableBytesView, as: UTF8.self)
+    }
+
+    func asyncRouteTester(_ req: Request) async throws -> String {
+        let response = try await req.client.get("https://www.google.com")
+        guard let body = response.body else {
+            throw Abort(.internalServerError)
+        }
+        return String(decoding: body.readableBytesView, as: UTF8.self)
+    }
+    asyncRoutes.get("client2", use: asyncRouteTester)
 }
 
 struct TestError: AbortError, DebuggableError {

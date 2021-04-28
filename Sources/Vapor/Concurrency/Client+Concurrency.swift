@@ -4,7 +4,6 @@ import _NIOConcurrency
 @available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
 extension Client {
     public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
-
         return try await self.send(.GET, headers: headers, to: url, beforeSend: beforeSend).get()
     }
 
