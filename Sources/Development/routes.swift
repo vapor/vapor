@@ -225,7 +225,7 @@ public func routes(_ app: Application) throws {
     }
 
     let asyncRoutes = app.grouped("async")
-    asyncRoutes.get("client") { req async -> String in
+    asyncRoutes.get("client") { req async throws -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
