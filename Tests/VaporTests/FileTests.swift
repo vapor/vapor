@@ -6,7 +6,13 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file)
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch { 
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
         }
 
         try app.testable(method: .running).test(.GET, "/file-stream") { res in
@@ -30,6 +36,30 @@ final class FileTests: XCTestCase {
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
+        }
+    }
+
+    func testStreamFileNull() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req -> Response in
+            var tmpPath: String
+            repeat {
+                tmpPath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
+            } while (FileManager.default.fileExists(atPath: tmpPath))
+
+            return req.fileio.streamFile(at: tmpPath) { result in
+                do {
+                    try result.get()
+                    XCTFail("File Stream should have failed")
+                } catch { 
+                }
+            }
+        }
+
+        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+            XCTAssertTrue(res.body.string.isEmpty)
         }
     }
     
