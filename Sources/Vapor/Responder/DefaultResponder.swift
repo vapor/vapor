@@ -35,7 +35,7 @@ internal struct DefaultResponder: Responder {
             // If the route isn't explicitly a HEAD route,
             // and it's made up solely of .constant components,
             // register a HEAD route with the same path
-            if route.method != .HEAD &&
+            if route.method == .GET &&
                 route.path.allSatisfy({ component in
                     if case .constant(_) = component { return true }
                     return false
