@@ -306,7 +306,7 @@ final class ContentTests: XCTestCase {
         try response.content.encode([content1, content2])
 
         let body = try XCTUnwrap(response.body.string)
-        XCTAssertEqual(body, #"[{"name":"new name"},{"name": "new name"}]"#)
+        XCTAssertEqual(body, #"[{"name":"new name"},{"name":"new name"}]"#)
     }
 
     func testAfterDecodeContentWithArray() throws {
@@ -392,14 +392,14 @@ final class ContentTests: XCTestCase {
     }
 }
 
-private struct SampleContent: Content {
+private final class SampleContent: Content {
     var name = "old name"
 
-    mutating func beforeEncode() throws {
+    func beforeEncode() throws {
         name = "new name"
     }
 
-    mutating func afterDecode() throws {
+    func afterDecode() throws {
         name = "new name after decode"
     }
 }

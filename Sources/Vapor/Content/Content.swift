@@ -123,6 +123,18 @@ extension Array: Content, ResponseEncodable, RequestDecodable where Element: Con
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
+
+    public mutating func beforeEncode() throws {
+        for var element in self {
+            try element.beforeEncode()
+        }
+    }
+
+    public mutating func afterDecode() throws {
+        for var element in self {
+            try element.afterDecode()
+        }
+    }
 }
 extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
