@@ -392,14 +392,14 @@ final class ContentTests: XCTestCase {
     }
 }
 
-private final class SampleContent: Content {
+private struct SampleContent: Content {
     var name = "old name"
 
-    func beforeEncode() throws {
+    mutating func beforeEncode() throws {
         name = "new name"
     }
 
-    func afterDecode() throws {
+    mutating func afterDecode() throws {
         name = "new name after decode"
     }
 }
