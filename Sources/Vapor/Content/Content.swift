@@ -126,19 +126,13 @@ extension Array: Content, ResponseEncodable, RequestDecodable where Element: Con
 
     public mutating func beforeEncode() throws {
         for index in 0..<self.count {
-            var element = self[index]
-            try element.beforeEncode()
-            self.remove(at: index)
-            self.insert(element, at: index)
+            try self[index].beforeEncode()
         }
     }
 
     public mutating func afterDecode() throws {
         for index in 0..<self.count {
-            var element = self[index]
-            try element.afterDecode()
-            self.remove(at: index)
-            self.insert(element, at: index)
+            try self[index].afterDecode()
         }
     }
 }
