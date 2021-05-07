@@ -295,6 +295,39 @@ final class ContentTests: XCTestCase {
         let content = try request.content.decode(SampleContent.self)
         XCTAssertEqual(content.name, "new name after decode")
     }
+
+    func testBeforeEncodeContentWithArray() throws {
+        let content1 = SampleContent()
+        let content2 = SampleContent()
+        XCTAssertEqual(content1.name, "old name")
+        XCTAssertEqual(content2.name, "old name")
+
+        let response = Response(status: .ok)
+        try response.content.encode([content1, content2])
+
+        let body = try XCTUnwrap(response.body.string)
+        XCTAssertEqual(body, #"[{"name":"new name"},{"name": "new name"}]"#)
+    }
+
+    func testAfterDecodeContentWithArray() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"[{"name": "before decode"}, {"name": "before decode"}]"#)
+
+        let request = Request(
+            application: app,
+            collectedBody: body,
+            on: EmbeddedEventLoop()
+        )
+
+        request.headers.contentType = .json
+
+        let content = try request.content.decode([SampleContent].self)
+        XCTAssertEqual(content[0].name, "new name after decode")
+        XCTAssertEqual(content[1].name, "new name after decode")
+    }
     
     func testSupportsJsonApi() throws {
         let app = Application()
