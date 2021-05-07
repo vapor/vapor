@@ -44,6 +44,14 @@ public func routes(_ app: Application) throws {
 
         return done.futureResult
     }
+
+    app.get("test", "head") { req -> String in
+        return "OK!"
+    }
+
+    app.post("test", "head") { req -> String in
+        return "OK!"
+    }
     
     app.post("login") { req -> String in
         let creds = try req.content.decode(Creds.self)
