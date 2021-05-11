@@ -404,6 +404,34 @@ private struct SampleContent: Content {
     }
 }
 
+extension Array where Element: Content {
+    mutating func beforeEncode() throws {
+        for index in 0..<self.count {
+            try self[index].beforeEncode()
+        }
+    }
+
+    mutating func afterDecode() throws {
+        for index in 0..<self.count {
+            try self[index].afterDecode()
+        }
+    }
+}
+
+extension Array where Element == SampleContent {
+    mutating func beforeEncode() throws {
+        for index in 0..<self.count {
+            try self[index].beforeEncode()
+        }
+    }
+
+    mutating func afterDecode() throws {
+        for index in 0..<self.count {
+            try self[index].afterDecode()
+        }
+    }
+}
+
 private struct JsonApiContent: Content {
     struct Meta: Codable {}
     

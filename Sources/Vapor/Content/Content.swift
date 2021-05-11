@@ -82,7 +82,9 @@ extension Content {
         return request.eventLoop.makeSucceededFuture(response)
     }
 
+    @_disfavoredOverload
     public mutating func beforeEncode() throws { }
+    @_disfavoredOverload
     public mutating func afterDecode() throws { }
 }
 
@@ -124,17 +126,17 @@ extension Array: Content, ResponseEncodable, RequestDecodable where Element: Con
         return .json
     }
 
-    public mutating func beforeEncode() throws {
-        for index in 0..<self.count {
-            try self[index].beforeEncode()
-        }
-    }
-
-    public mutating func afterDecode() throws {
-        for index in 0..<self.count {
-            try self[index].afterDecode()
-        }
-    }
+//    public mutating func beforeEncode() throws {
+//        for index in 0..<self.count {
+//            try self[index].beforeEncode()
+//        }
+//    }
+//
+//    public mutating func afterDecode() throws {
+//        for index in 0..<self.count {
+//            try self[index].afterDecode()
+//        }
+//    }
 }
 extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
