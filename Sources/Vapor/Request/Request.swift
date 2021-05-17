@@ -1,5 +1,5 @@
-import NIO
 import NIOHTTP1
+import Baggage fc85c400 (Start span in DefaultResponder)
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
@@ -130,11 +130,14 @@ public final class Request: CustomStringConvertible {
             // ignore since Request is a reference type
         }
     }
-    
-    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
-    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger
-    
+
+    private var _logger: Logger
+    public var baggage: Baggage {
+        willSet {
+            self._logger.updateMetadata(previous: self.baggage, latest: newValue)
+        }
+    }
+
     public var body: Body {
         return Body(self)
     }
@@ -242,8 +245,21 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.storage = .init()
         self.isKeepAlive = true
-        self.logger = logger
-        self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self._logger = logger
+        self._logger[metadataKey: "request-id"] = .string(UUID().uuidString)
         self.byteBufferAllocator = byteBufferAllocator
+        self.baggage = .topLevel
+    }
+}
+
+extension Request: LoggingContext {
+    public var logger: Logger {
+        get {
+            return self._logger
+        }
+        set {
+            self._logger = newValue
+            self._logger.updateMetadata(previous: .topLevel, latest: self.baggage)
+        }
     }
 }
