@@ -1,5 +1,6 @@
 import NIO
 
+/// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
     public let application: Application
 
