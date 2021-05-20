@@ -1,5 +1,6 @@
 import Backtrace
 
+/// Core type representing a Vapor application.
 public final class Application {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
