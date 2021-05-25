@@ -1,4 +1,5 @@
 import NIO
+import Baggage
 
 extension HTTPClient {
     func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator) -> Client {
@@ -18,7 +19,8 @@ private struct EventLoopHTTPClient: Client {
     var byteBufferAllocator: ByteBufferAllocator
 
     func send(
-        _ client: ClientRequest
+        _ client: ClientRequest,
+        context: LoggingContext
     ) -> EventLoopFuture<ClientResponse> {
         let urlString = client.url.string
         guard let url = URL(string: urlString) else {
@@ -35,7 +37,7 @@ private struct EventLoopHTTPClient: Client {
             return self.http.execute(
                 request: request,
                 eventLoop: .delegate(on: self.eventLoop),
-                logger: logger
+                context: context
             ).map { response in
                 let client = ClientResponse(
                     status: response.status,

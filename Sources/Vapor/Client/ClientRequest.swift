@@ -1,13 +1,17 @@
+import Baggage
+
 public struct ClientRequest {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
     private let byteBufferAllocator: ByteBufferAllocator
+    public var context: LoggingContext
 
     public init(
         method: HTTPMethod = .GET,
         url: URI = "/",
+        context: LoggingContext,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
@@ -17,6 +21,7 @@ public struct ClientRequest {
         self.headers = headers
         self.body = body
         self.byteBufferAllocator = byteBufferAllocator
+        self.context = context
     }
 }
 
