@@ -37,6 +37,7 @@ extension HTTPHeaders {
 
     private func getSeparatorCharacters(for headerName: Name) -> [Character] {
         switch headerName {
+        // Headers with dates can't have comma as a separator
         case .setCookie, .setCookie2, .ifModifiedSince, .date:
             return [.semicolon]
         default: return [.comma, .semicolon]
