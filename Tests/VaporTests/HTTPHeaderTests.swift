@@ -132,6 +132,20 @@ final class HTTPHeaderTests: XCTestCase {
         }
     }
 
+    func testComplexCookieParsing() throws {
+        var headers = HTTPHeaders()
+        do {
+            headers.add(name: .setCookie, value: "SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None")
+            headers.add(name: .setCookie, value: "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None")
+            XCTAssertEqual(headers.setCookie?.all.count, 2)
+            let siwaState = try XCTUnwrap(headers.setCookie?["SIWA_STATE"])
+            XCTAssertEqual(siwaState.sameSite, HTTPCookies.SameSitePolicy.none)
+
+            let vaporSession = try XCTUnwrap(headers.setCookie?["vapor-session"])
+            XCTAssertEqual(vaporSession.sameSite, HTTPCookies.SameSitePolicy.none)
+        }
+    }
+
     func testForwarded_quote() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: #"For="[2001:db8:cafe::17]:4711""#)
