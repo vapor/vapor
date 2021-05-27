@@ -37,8 +37,6 @@ extension HTTPHeaders {
 
     private func getSeparatorCharacters(for headerName: Name) -> [Character] {
         switch headerName {
-        case .accept, .acceptLanguage, .acceptEncoding, .forwarded, .range:
-            return [.comma, .semicolon]
         case .setCookie, .setCookie2, .ifModifiedSince, .date:
             return [.semicolon]
         default: return [.comma, .semicolon]
