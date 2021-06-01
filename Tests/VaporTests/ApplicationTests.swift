@@ -2,6 +2,7 @@ import Vapor
 import XCTVapor
 import AsyncHTTPClient
 import XCTest
+import Baggage
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -111,8 +112,9 @@ final class ApplicationTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try app.start()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        let res = try app.client.get("http://localhost:8080/hello").wait()
+        let res = try app.client.get("http://localhost:8080/hello", context: context).wait()
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
 
@@ -142,8 +144,10 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual("127.0.0.1", ip)
         XCTAssertGreaterThan(port, 0)
 
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
+
         XCTAssertEqual("Hello, world!",
-                       try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
+                       try app.client.get("http://localhost:\(port)/hello", context: context).wait().body?.string)
     }
 
     func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
