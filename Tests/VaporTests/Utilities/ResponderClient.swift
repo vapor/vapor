@@ -1,4 +1,5 @@
 import Vapor
+import Baggage
 
 struct ResponderClient: Client {
     let responder: Responder
@@ -12,7 +13,7 @@ struct ResponderClient: Client {
         self
     }
 
-    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+    func send(_ request: ClientRequest, context: LoggingContext) -> EventLoopFuture<ClientResponse> {
         self.responder.respond(to: .init(
             application: self.application,
             method: request.method,
