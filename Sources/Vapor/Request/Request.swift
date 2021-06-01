@@ -258,8 +258,10 @@ extension Request: LoggingContext {
             return self._logger
         }
         set {
-            self._logger = newValue
-            self._logger.updateMetadata(previous: .topLevel, latest: self.baggage)
+            self.eventLoop.execute {
+                self._logger = newValue
+                self._logger.updateMetadata(previous: .topLevel, latest: self.baggage)
+            }
         }
     }
 }
