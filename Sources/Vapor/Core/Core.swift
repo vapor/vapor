@@ -9,15 +9,15 @@ extension Application {
         set { self.core.storage.commands = newValue }
     }
 
-    /// Access to the application threadpool. Vapor provides a threadpool with 64 threads by default.
+    /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
     ///
-    /// It's possible to configure the threadpool size by overriding this value to your own threadpool.
+    /// It's possible to configure the thread pool size by overriding this value with your own thread pool.
     ///
     /// ```
     /// application.threadPool = NIOThreadPool(numberOfThreads: 100)
     /// ```
     ///
-    /// If overriden, Vapor will take ownership of the threadpool and automatically start it and shut it down when needed.
+    /// If overriden, Vapor will take ownership of the thread pool and automatically start it and shut it down when needed.
     /// - Warning: Should only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {
         get { self.core.storage.threadPool }
