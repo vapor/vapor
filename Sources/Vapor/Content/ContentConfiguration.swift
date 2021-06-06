@@ -29,6 +29,7 @@ public struct ContentConfiguration {
         
         // data
         config.use(encoder: PlaintextEncoder(), for: .plainText)
+        config.use(decoder: PlaintextDecoder(), for: .plainText)
         config.use(encoder: PlaintextEncoder(.html), for: .html)
         
         // form-urlencoded

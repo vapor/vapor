@@ -357,6 +357,23 @@ final class ContentTests: XCTestCase {
             )
         }
     }
+
+    func testPlaintextDecode() throws {
+        let data = "255"
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode(data, as: .plainText)
+            return res
+        }
+
+        try app.testable().test(.GET, "/plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(UInt8.self), 255)
+        }
+    }
 }
 
 private struct SampleContent: Content {
