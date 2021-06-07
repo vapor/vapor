@@ -18,10 +18,16 @@ extension Application {
     /// ```
     ///
     /// If overriden, Vapor will take ownership of the thread pool and automatically start it and shut it down when needed.
-    /// - Warning: Should only be set during application setup/initialization.
+    ///
+    /// - Warning: Can only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {
         get { self.core.storage.threadPool }
         set {
+            guard !self.isBooted else {
+                self.logger.warning("Cannot replace thread pool after application has booted.")
+                return
+            }
+            
             try! self.core.storage.threadPool.syncShutdownGracefully()
             self.core.storage.threadPool = newValue
             self.core.storage.threadPool.start()
