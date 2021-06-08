@@ -31,7 +31,7 @@ extension HTTPHeaders {
             guard let decodedToken = Data(base64Encoded: .init(headerParts[1])) else {
                 return nil
             }
-            let parts = String.init(decoding: decodedToken, as: UTF8.self).split(separator: ":")
+            let parts = String.init(decoding: decodedToken, as: UTF8.self).split(separator: ":", maxSplits: 1)
 
             guard parts.count == 2 else {
                 return nil

@@ -25,13 +25,23 @@ extension HTTPHeaders {
     func parseDirectives(name: Name) -> [[Directive]] {
         let headers = self[name]
         var values: [[Directive]] = []
+        let separatorCharacters = getSeparatorCharacters(for: name)
         for header in headers {
             var parser = DirectiveParser(string: header)
-            while let directives = parser.nextDirectives() {
+            while let directives = parser.nextDirectives(separatorCharacters: separatorCharacters) {
                 values.append(directives)
             }
         }
         return values
+    }
+
+    private func getSeparatorCharacters(for headerName: Name) -> [Character] {
+        switch headerName {
+        // Headers with dates can't have comma as a separator
+        case .setCookie, .ifModifiedSince, .date, .lastModified, .expires:
+            return [.semicolon]
+        default: return [.comma, .semicolon]
+        }
     }
 
     mutating func serializeDirectives(_ directives: [[Directive]], name: Name) {
@@ -48,18 +58,18 @@ extension HTTPHeaders {
             self.current = .init(string)
         }
 
-        mutating func nextDirectives() -> [Directive]? {
+        mutating func nextDirectives(separatorCharacters: [Character] = [.comma, .semicolon]) -> [Directive]? {
             guard !self.current.isEmpty else {
                 return nil
             }
             var directives: [Directive] = []
-            while let directive = self.nextDirective() {
+            while let directive = self.nextDirective(separatorCharacters: separatorCharacters) {
                 directives.append(directive)
             }
             return directives
         }
 
-        private mutating func nextDirective() -> Directive? {
+        private mutating func nextDirective(separatorCharacters: [Character] = [.comma, .semicolon]) -> Directive? {
             self.popWhitespace()
             guard !self.current.isEmpty else {
                 return nil
@@ -75,9 +85,9 @@ extension HTTPHeaders {
             if let equals = self.firstParameterToken() {
                 value = self.pop(to: equals)
                 self.pop()
-                parameter = self.nextDirectiveValue()
+                parameter = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
             } else {
-                value = self.nextDirectiveValue()
+                value = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
                 parameter = nil
             }
             return .init(
@@ -87,7 +97,7 @@ extension HTTPHeaders {
             )
         }
 
-        private mutating func nextDirectiveValue() -> Substring {
+        private mutating func nextDirectiveValue(separatorCharacters: [Character]) -> Substring {
             let value: Substring
             self.popWhitespace()
             if self.current.first == .doubleQuote {
@@ -101,7 +111,7 @@ extension HTTPHeaders {
                 if self.current.first == .semicolon {
                     self.pop()
                 }
-            } else if let separatorMatch = self.firstIndex(matchingAnyOf: .comma, .semicolon) {
+            } else if let separatorMatch = self.firstIndex(matchingAnyOf: separatorCharacters) {
                 value = self.pop(to: separatorMatch.index)
                 if separatorMatch.matchedCharacter == .semicolon {
                     self.pop()
@@ -143,7 +153,7 @@ extension HTTPHeaders {
         }
 
         /// Returns the first index matching any of the passed in Characters, nil if no match
-        private func firstIndex(matchingAnyOf characters: Character...) -> (index: Substring.Index, matchedCharacter: Character)? {
+        private func firstIndex(matchingAnyOf characters: [Character]) -> (index: Substring.Index, matchedCharacter: Character)? {
             guard characters.isEmpty == false else { return nil }
 
             for index in self.current.indices {

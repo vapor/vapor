@@ -2,7 +2,7 @@ name: deploy-api-docs
 on:
   push:
     branches:
-      - master
+      - main
 
 jobs:
   deploy:
