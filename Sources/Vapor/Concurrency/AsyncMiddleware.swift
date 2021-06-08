@@ -1,4 +1,4 @@
-#if compiler(>=5.5) && $AsyncAwait
+#if compiler(>=5.5)
 import _NIOConcurrency
 
 /// `AsyncMiddleware` is placed between the server and your router. It is capable of
