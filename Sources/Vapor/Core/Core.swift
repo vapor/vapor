@@ -24,6 +24,7 @@ extension Application {
         get { self.core.storage.threadPool }
         set {
             guard !self.isBooted else {
+                self.logger.critical("Cannot replace thread pool after application has booted")
                 fatalError("Cannot replace thread pool after application has booted")
             }
             
