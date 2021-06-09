@@ -8,7 +8,7 @@ public final class Application {
     public var storage: Storage
     public private(set) var didShutdown: Bool
     public var logger: Logger
-    private var isBooted: Bool
+    var isBooted: Bool
 
     public struct Lifecycle {
         var handlers: [LifecycleHandler]

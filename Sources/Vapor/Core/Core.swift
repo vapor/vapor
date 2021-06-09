@@ -9,9 +9,31 @@ extension Application {
         set { self.core.storage.commands = newValue }
     }
 
+    /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
+    ///
+    /// It's possible to configure the thread pool size by overriding this value with your own thread pool.
+    ///
+    /// ```
+    /// application.threadPool = NIOThreadPool(numberOfThreads: 100)
+    /// ```
+    ///
+    /// If overriden, Vapor will take ownership of the thread pool and automatically start it and shut it down when needed.
+    ///
+    /// - Warning: Can only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {
-        self.core.storage.threadPool
+        get { self.core.storage.threadPool }
+        set {
+            guard !self.isBooted else {
+                self.logger.critical("Cannot replace thread pool after application has booted")
+                fatalError("Cannot replace thread pool after application has booted")
+            }
+            
+            try! self.core.storage.threadPool.syncShutdownGracefully()
+            self.core.storage.threadPool = newValue
+            self.core.storage.threadPool.start()
+        }
     }
+    
     public var fileio: NonBlockingFileIO {
         .init(threadPool: self.threadPool)
     }
@@ -47,7 +69,7 @@ extension Application {
                 self.console = Terminal()
                 self.commands = Commands()
                 self.commands.use(BootCommand(), as: "boot")
-                self.threadPool = NIOThreadPool(numberOfThreads: 1)
+                self.threadPool = NIOThreadPool(numberOfThreads: 64)
                 self.threadPool.start()
                 self.allocator = .init()
                 self.running = .init()
