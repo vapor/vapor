@@ -369,9 +369,21 @@ final class ContentTests: XCTestCase {
             return res
         }
 
+        app.routes.get("empty-plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode("", as: .plainText)
+            return res
+        }
+
         try app.testable().test(.GET, "/plaintext") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(try res.content.decode(UInt8.self), 255)
+            XCTAssertEqual(try res.content.decode(String.self), "255")
+        }
+
+        try app.testable().test(.GET, "/empty-plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(String.self), "")
         }
     }
 }
