@@ -48,7 +48,7 @@ public struct Validations {
             throw Abort(.unprocessableEntity)
         }
         guard let body = request.body.data else {
-            throw Abort(.unprocessableEntity)
+            throw Abort(.unprocessableEntity, reason: "Empty Body")
         }
         let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
         let decoder = try contentDecoder.decode(DecoderUnwrapper.self, from: body, headers: request.headers)
