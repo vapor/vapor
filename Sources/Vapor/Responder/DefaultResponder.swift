@@ -77,6 +77,7 @@ internal struct DefaultResponder: Responder {
                 ofKind: .server,
                 at: startTime
             )
+            request.baggage = span.baggage
             request.route = cachedRoute.route
             response = cachedRoute.responder.respond(to: request)
         } else {
@@ -86,10 +87,10 @@ internal struct DefaultResponder: Responder {
                 ofKind: .server,
                 at: startTime
             )
+            request.baggage = span.baggage
             response = self.notFoundResponder.respond(to: request)
         }
 
-        request.baggage = span.baggage
         span.attributes.http.method = request.method.rawValue
         span.attributes.http.flavor = "\(request.version.major).\(request.version.minor)"
         span.attributes.http.target = request.url.path
