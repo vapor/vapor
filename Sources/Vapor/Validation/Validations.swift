@@ -45,7 +45,7 @@ public struct Validations {
     
     public func validate(request: Request) throws -> ValidationsResult {
         guard let contentType = request.headers.contentType else {
-            throw Abort(.unprocessableEntity)
+            throw Abort(.unprocessableEntity, reason: "Missing \"Content-Type\" header")
         }
         guard let body = request.body.data else {
             throw Abort(.unprocessableEntity, reason: "Empty Body")
