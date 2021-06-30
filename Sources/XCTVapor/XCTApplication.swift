@@ -84,7 +84,7 @@ extension Application {
                 method: request.method,
                 url: request.url,
                 headers: headers,
-                collectedBody: request.body,
+                collectedBody: request.body.readableBytes == 0 ? nil : request.body,
                 remoteAddress: nil,
                 on: self.app.eventLoopGroup.next()
             )
