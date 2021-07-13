@@ -411,8 +411,8 @@ final class ContentTests: XCTestCase {
         headers.add(name: .contentType, value: "text/plain")
 
         try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(try res.content.decode(String.self), "body")
+            // This should return a 400 Bad Request and not crash
+            XCTAssertEqual(res.status, .badRequest)
         }
     }
 }
