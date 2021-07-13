@@ -83,6 +83,8 @@ public final class Application {
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
+        self.router.initialize()
+        self.router.use(.default)
         self.responder.initialize()
         self.responder.use(.default)
         self.servers.initialize()
