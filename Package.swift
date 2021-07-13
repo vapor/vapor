@@ -55,7 +55,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
         
         // MultipartKit, Multipart encoding and decoding
-        .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.0.0"),
+        .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.2.1"),
     ],
     targets: [
         // C helpers

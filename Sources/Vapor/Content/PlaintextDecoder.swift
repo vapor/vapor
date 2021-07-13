@@ -27,11 +27,17 @@ private final class _PlaintextDecoder: Decoder {
     }
 
     func container<Key>(keyedBy type: Key.Type) throws -> KeyedDecodingContainer<Key> where Key : CodingKey {
-        fatalError("Plaintext decoding does not support dictionaries.")
+        throw DecodingError.typeMismatch(type, DecodingError.Context(
+            codingPath: codingPath,
+            debugDescription: "Plaintext decoding does not support dictionaries."
+        ))
     }
 
     func unkeyedContainer() throws -> UnkeyedDecodingContainer {
-        fatalError("Plaintext decoding does not support arrays.")
+        throw DecodingError.typeMismatch(String.self, DecodingError.Context(
+            codingPath: codingPath,
+            debugDescription: "Plaintext decoding does not support arrays."
+        ))
     }
 
     func singleValueContainer() throws -> SingleValueDecodingContainer {
