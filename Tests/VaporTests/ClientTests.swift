@@ -1,5 +1,6 @@
 import Vapor
 import XCTest
+import Baggage
 
 final class ClientTests: XCTestCase {
     func testClientConfigurationChange() throws {
@@ -14,8 +15,9 @@ final class ClientTests: XCTestCase {
 
         try app.server.start(address: .hostname("localhost", port: 8080))
         defer { app.server.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        let res = try app.client.get("http://localhost:8080/redirect").wait()
+        let res = try app.client.get("http://localhost:8080/redirect", context: context).wait()
 
         XCTAssertEqual(res.status, .seeOther)
     }
@@ -23,6 +25,7 @@ final class ClientTests: XCTestCase {
     func testClientConfigurationCantBeChangedAfterClientHasBeenUsed() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
         app.http.client.configuration.redirectConfiguration = .disallow
 
@@ -33,18 +36,19 @@ final class ClientTests: XCTestCase {
         try app.server.start(address: .hostname("localhost", port: 8080))
         defer { app.server.shutdown() }
 
-        _ = try app.client.get("http://localhost:8080/redirect").wait()
+        _ = try app.client.get("http://localhost:8080/redirect", context: context).wait()
         
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-        let res = try app.client.get("http://localhost:8080/redirect").wait()
+        let res = try app.client.get("http://localhost:8080/redirect", context: context).wait()
         XCTAssertEqual(res.status, .seeOther)
     }
 
     func testClientResponseCodable() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        let res = try app.client.get("https://httpbin.org/json").wait()
+        let res = try app.client.get("https://httpbin.org/json", context: context).wait()
 
         let encoded = try JSONEncoder().encode(res)
         let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
@@ -56,8 +60,9 @@ final class ClientTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
         
-        let res = try app.client.post("http://httpbin.org/anything") { req in
+        let res = try app.client.post("http://httpbin.org/anything", context: context) { req in
             try req.content.encode(["hello": "world"])
         }.wait()
 
@@ -73,9 +78,10 @@ final class ClientTests: XCTestCase {
     func testBoilerplateClient() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
         app.get("foo") { req -> EventLoopFuture<String> in
-            return req.client.get("https://httpbin.org/status/201").map { res in
+            return req.client.get("https://httpbin.org/status/201", context: req).map { res in
                 XCTAssertEqual(res.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
@@ -89,7 +95,7 @@ final class ClientTests: XCTestCase {
         try app.boot()
         try app.start()
 
-        let res = try app.client.get("http://localhost:8080/foo").wait()
+        let res = try app.client.get("http://localhost:8080/foo", context: context).wait()
         XCTAssertEqual(res.body?.string, "bar")
 
         try app.running?.onStop.wait()
@@ -128,7 +134,8 @@ final class ClientTests: XCTestCase {
         defer { app.shutdown() }
 
         app.clients.use(.custom)
-        _ = try app.client.get("https://vapor.codes").wait()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
+        _ = try app.client.get("https://vapor.codes", context: context).wait()
 
         XCTAssertEqual(app.customClient.requests.count, 1)
         XCTAssertEqual(app.customClient.requests.first?.url.host, "vapor.codes")
@@ -139,8 +146,9 @@ final class ClientTests: XCTestCase {
         defer { app.shutdown() }
         let logs = TestLogHandler()
         app.logger = logs.logger
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        _ = try app.client.get("https://httpbin.org/json").wait()
+        _ = try app.client.get("https://httpbin.org/json", context: context).wait()
 
         XCTAssertNotNil(logs.metadata["ahc-request-id"])
     }
@@ -156,7 +164,7 @@ private final class CustomClient: Client {
         self.requests = []
     }
 
-    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+    func send(_ request: ClientRequest, context: LoggingContext) -> EventLoopFuture<ClientResponse> {
         self.requests.append(request)
         return self.eventLoop.makeSucceededFuture(ClientResponse())
     }

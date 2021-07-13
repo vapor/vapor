@@ -1,3 +1,5 @@
+import Baggage
+
 extension HTTPClient {
     func delegating(to eventLoop: EventLoop, logger: Logger) -> Client {
         EventLoopHTTPClient(
@@ -14,7 +16,8 @@ private struct EventLoopHTTPClient: Client {
     var logger: Logger?
 
     func send(
-        _ client: ClientRequest
+        _ client: ClientRequest,
+        context: LoggingContext
     ) -> EventLoopFuture<ClientResponse> {
         do {
             let request = try HTTPClient.Request(
@@ -26,7 +29,7 @@ private struct EventLoopHTTPClient: Client {
             return self.http.execute(
                 request: request,
                 eventLoop: .delegate(on: self.eventLoop),
-                logger: logger
+                context: context
             ).map { response in
                 let client = ClientResponse(
                     status: response.status,

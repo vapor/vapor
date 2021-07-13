@@ -1,6 +1,7 @@
 import Vapor
 import XCTest
 import protocol AsyncHTTPClient.HTTPClientResponseDelegate
+import Baggage
 
 final class ServerTests: XCTestCase {
     func testPortOverride() throws {
@@ -16,8 +17,9 @@ final class ServerTests: XCTestCase {
             return "bar"
         }
         try app.start()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        let res = try app.client.get("http://127.0.0.1:8123/foo").wait()
+        let res = try app.client.get("http://127.0.0.1:8123/foo", context: context).wait()
         XCTAssertEqual(res.body?.string, "bar")
     }
     
@@ -36,12 +38,13 @@ final class ServerTests: XCTestCase {
             return "bar"
         }
         try app.start()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")).wait()
+        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo"), context: context).wait()
         XCTAssertEqual(res.body?.string, "bar")
 
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo", context: context).wait())
     }
     
     func testIncompatibleStartupOptions() throws {
@@ -225,6 +228,7 @@ final class ServerTests: XCTestCase {
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
         let smallOrigString = "Hello, world!"
         let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAA=")! // "Hello, world!"
@@ -240,7 +244,7 @@ final class ServerTests: XCTestCase {
         defer { app.server.shutdown() }
 
         // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:8080/gzip") { req in
+        let res = try app.client.post("http://localhost:8080/gzip", context: context) { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.body = smallBody
         }.wait()
@@ -249,7 +253,7 @@ final class ServerTests: XCTestCase {
         // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
         // protocol decoding errors are only ever logged and can't be directly caught.
         do {
-            _ = try app.client.post("http://localhost:8080/gzip") { req in
+            _ = try app.client.post("http://localhost:8080/gzip", context: context) { req in
                 req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
                 req.body = bigBody
             }.wait()

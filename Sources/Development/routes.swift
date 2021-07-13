@@ -143,7 +143,7 @@ public func routes(_ app: Application) throws {
     }
 
     app.get("client") { req in
-        return req.client.get("http://httpbin.org/status/201").map { $0.description }
+        return req.client.get("http://httpbin.org/status/201", context: req).map { $0.description }
     }
 
     app.get("client-json") { req -> EventLoopFuture<String> in
@@ -153,7 +153,7 @@ public func routes(_ app: Application) throws {
             }
             var slideshow: Slideshow
         }
-        return req.client.get("http://httpbin.org/json")
+        return req.client.get("http://httpbin.org/json", context: req)
             .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
             .map { $0.slideshow.title }
     }

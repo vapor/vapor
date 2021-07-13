@@ -1,4 +1,6 @@
 import Metrics
+import Tracing
+import TracingOpenTelemetrySupport
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
@@ -60,25 +62,68 @@ internal struct DefaultResponder: Responder {
 
     /// See `Responder`
     public func respond(to request: Request) -> EventLoopFuture<Response> {
-        let startTime = DispatchTime.now().uptimeNanoseconds
+        let startTime = DispatchWallTime.now()
+        var routeString = request.url.path
+        let span: Span
+
         let response: EventLoopFuture<Response>
         if let cachedRoute = self.getRoute(for: request) {
+            routeString = "/\(cachedRoute.route.path.string)"
+            span = InstrumentationSystem.tracer.startSpan(
+                routeString,
+                baggage: request.baggage,
+                ofKind: .server,
+                at: startTime
+            )
+            request.baggage = span.baggage
             request.route = cachedRoute.route
             response = cachedRoute.responder.respond(to: request)
         } else {
+            span = InstrumentationSystem.tracer.startSpan(
+                routeString,
+                baggage: request.baggage,
+                ofKind: .server,
+                at: startTime
+            )
+            request.baggage = span.baggage
             response = self.notFoundResponder.respond(to: request)
         }
+
+        span.attributes.http.method = request.method.rawValue
+        span.attributes.http.flavor = "\(request.version.major).\(request.version.minor)"
+        span.attributes.http.target = request.url.path
+        span.attributes.http.host = request.headers.first(name: .host)
+        span.attributes.http.server.name = request.application.http.server.configuration.hostname
+        span.attributes.net.host.port = request.application.http.server.configuration.port
+        span.attributes.http.scheme = request.url.scheme
+        span.attributes.http.server.route = routeString
+        span.attributes.net.peer.ip = request.remoteAddress?.ipAddress
+        span.attributes.http.requestContentLength = request.body.data?.readableBytes
+        span.attributes.http.userAgent = request.headers.first(name: .userAgent)
+
         return response.always { result in
             let status: HTTPStatus
             switch result {
             case .success(let response):
                 status = response.status
-            case .failure:
+                span.attributes.http.statusCode = Int(response.status.code)
+                span.attributes.http.responseContentLength = response.body.buffer?.readableBytes
+
+                if 400 ... 600 ~= response.status.code {
+                    span.recordError(Abort(response.status))
+                    span.setStatus(SpanStatus(code: .error))
+                }
+            case .failure(let error):
+                span.recordError(error)
+                span.setStatus(SpanStatus(code: .error))
                 status = .internalServerError
             }
+            let endTime = DispatchWallTime.now()
+            span.end(at: endTime)
             self.updateMetrics(
                 for: request,
                 startTime: startTime,
+                endTime: endTime,
                 statusCode: status.code
             )
         }
@@ -110,7 +155,8 @@ internal struct DefaultResponder: Responder {
     /// Records the requests metrics.
     private func updateMetrics(
         for request: Request,
-        startTime: UInt64,
+        startTime: DispatchWallTime,
+        endTime: DispatchWallTime,
         statusCode: UInt
     ) {
         let pathForMetrics: String
@@ -141,7 +187,7 @@ internal struct DefaultResponder: Responder {
             label: "http_request_duration_seconds",
             dimensions: dimensions,
             preferredDisplayUnit: .seconds
-        ).recordNanoseconds(DispatchTime.now().uptimeNanoseconds - startTime)
+        ).recordNanoseconds(Int64(bitPattern: endTime.rawValue) / -1 - Int64(bitPattern: startTime.rawValue) / -1)
     }
 }
 

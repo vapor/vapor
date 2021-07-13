@@ -1,4 +1,5 @@
 import NIO
+import Baggage
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
@@ -107,9 +108,14 @@ public final class Request: CustomStringConvertible {
             // ignore since Request is a reference type
         }
     }
-    
-    public var logger: Logger
-    
+
+    private var _logger: Logger
+    public var baggage: Baggage {
+        willSet {
+            self._logger.updateMetadata(previous: self.baggage, latest: newValue)
+        }
+    }
+
     public var body: Body {
         return Body(self)
     }
@@ -202,7 +208,22 @@ public final class Request: CustomStringConvertible {
         self.parameters = .init()
         self.storage = .init()
         self.isKeepAlive = true
-        self.logger = logger
-        self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self._logger = logger
+        self._logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self.baggage = .topLevel
+    }
+}
+
+extension Request: LoggingContext {
+    public var logger: Logger {
+        get {
+            return self._logger
+        }
+        set {
+            self.eventLoop.execute {
+                self._logger = newValue
+                self._logger.updateMetadata(previous: .topLevel, latest: self.baggage)
+            }
+        }
     }
 }

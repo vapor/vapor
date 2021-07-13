@@ -1,3 +1,5 @@
+import Baggage
+
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
     case contentDecodeFailure(Error)
@@ -26,15 +28,15 @@ public final class EndpointCache<T> where T: Decodable {
     ///   - request: The `Request` which is initiating the download.
     ///   - logger: An optional logger
     public func get(on request: Request, logger: Logger? = nil) -> EventLoopFuture<T> {
-        return self.download(on: request.eventLoop, using: request.client, logger: logger ?? request.logger)
+        return self.download(on: request.eventLoop, using: request.client, context: request)
     }
 
     /// Downloads the resource.
     /// - Parameters:
     ///   - eventLoop: The `EventLoop` to use for the download.
     ///   - client: The `Client` which will perform the download.
-    ///   - logger: An optional logger
-    public func get(using client: Client, logger: Logger? = nil, on eventLoop: EventLoop) -> EventLoopFuture<T> {
+    ///   - context: The `LoggingContext` used for instrumentation.
+    public func get(using client: Client, on eventLoop: EventLoop, context: LoggingContext) -> EventLoopFuture<T> {
         self.sync.lock()
         defer { self.sync.unlock() }
 
@@ -52,9 +54,9 @@ public final class EndpointCache<T> where T: Decodable {
             return request.hop(to: eventLoop)
         }
 
-        logger?.debug("Requesting data from \(self.uri)")
+        context.logger.debug("Requesting data from \(self.uri)")
 
-        let request = self.download(on: eventLoop, using: client, logger: logger)
+        let request = self.download(on: eventLoop, using: client, context: context)
         self.request = request
 
         // Once the request finishes, clear the current request and return the data.
@@ -68,7 +70,7 @@ public final class EndpointCache<T> where T: Decodable {
         }
     }
 
-    private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
+    private func download(on eventLoop: EventLoop, using client: Client, context: LoggingContext) -> EventLoopFuture<T> {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPHeaders = [:]
         if let eTag = self.headers?.first(name: .eTag) {
@@ -85,7 +87,9 @@ public final class EndpointCache<T> where T: Decodable {
         let requestSentAt = Date()
 
         return client.get(
-            self.uri, headers: headers
+            self.uri,
+            headers: headers,
+            context: context
         ).flatMapThrowing { response -> ClientResponse in
             if !(response.status == .notModified || response.status == .ok) {
                 throw EndpointCacheError.unexpctedResponseStatus(response.status, uri: self.uri)
@@ -107,18 +111,18 @@ public final class EndpointCache<T> where T: Decodable {
 
             switch response.status {
             case .notModified:
-                logger?.debug("Cached data is still valid.")
+                context.logger.debug("Cached data is still valid.")
 
                 guard let cached = self.cached else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
-                    return self.download(on: eventLoop, using: client, logger: logger)
+                    return self.download(on: eventLoop, using: client, context: context)
                 }
 
                 return eventLoop.makeSucceededFuture(cached)
 
             case .ok:
-                logger?.debug("New data received")
+                context.logger.debug("New data received")
 
                 let data: T
 

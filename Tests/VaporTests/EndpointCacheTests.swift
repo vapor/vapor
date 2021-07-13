@@ -1,4 +1,5 @@
 import XCTVapor
+import Baggage
 
 final class EndpointCacheTests: XCTestCase {
     func testEndpointCacheNoCache() throws {
@@ -15,22 +16,24 @@ final class EndpointCacheTests: XCTestCase {
             return Test(number: current)
         }
 
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
+
         app.clients.use(.responder)
 
         let cache = EndpointCache<Test>(uri: "/number")
         do {
             let test = try cache.get(
                 using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
+                on: app.eventLoopGroup.next(),
+                context: context
             ).wait()
             XCTAssertEqual(test.number, 0)
         }
         do {
             let test = try cache.get(
                 using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
+                on: app.eventLoopGroup.next(),
+                context: context
             ).wait()
             XCTAssertEqual(test.number, 1)
         }
@@ -44,6 +47,8 @@ final class EndpointCacheTests: XCTestCase {
         struct Test: Content {
             let number: Int
         }
+
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
 
         app.clients.use(.responder)
 
@@ -59,16 +64,16 @@ final class EndpointCacheTests: XCTestCase {
         do {
             let test = try cache.get(
                 using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
+                on: app.eventLoopGroup.next(),
+                context: context
             ).wait()
             XCTAssertEqual(test.number, 0)
         }
         do {
             let test = try cache.get(
                 using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
+                on: app.eventLoopGroup.next(),
+                context: context
             ).wait()
             XCTAssertEqual(test.number, 0)
         }
@@ -77,8 +82,8 @@ final class EndpointCacheTests: XCTestCase {
         do {
             let test = try cache.get(
                 using: app.client,
-                logger: app.logger,
-                on: app.eventLoopGroup.next()
+                on: app.eventLoopGroup.next(),
+                context: context
             ).wait()
             XCTAssertEqual(test.number, 1)
         }

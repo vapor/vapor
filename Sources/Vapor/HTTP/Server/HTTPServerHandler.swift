@@ -1,3 +1,4 @@
+import Instrumentation
 import NIO
 
 final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
@@ -16,6 +17,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let request = self.unwrapInboundIn(data)
+        InstrumentationSystem.instrument.extract(request.headers, into: &request.baggage, using: HTTPHeadersExtractor())
         self.responder.respond(to: request).whenComplete { response in
             self.serialize(response, for: request, context: context)
         }
@@ -65,5 +67,11 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         default:
             self.logger.trace("Unhandled user event: \(event)")
         }
+    }
+}
+
+private struct HTTPHeadersExtractor: Extractor {
+    func extract(key: String, from headers: HTTPHeaders) -> String? {
+        headers.first(name: key)
     }
 }

@@ -16,7 +16,7 @@ let package = Package(
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
+        .package(url: "https://github.com/slashmo/async-http-client.git", .branch("feature/tracing")),
     
         // Sugary extensions for the SwiftNIO library
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0"),
@@ -51,6 +51,9 @@ let package = Package(
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.0.0"),
 
+        // Swift tracing API
+        .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "0.1.2"),
+
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
         
@@ -76,6 +79,8 @@ let package = Package(
             .product(name: "ConsoleKit", package: "console-kit"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
+            .product(name: "Tracing", package: "swift-distributed-tracing"),
+            .product(name: "TracingOpenTelemetrySupport", package: "swift-distributed-tracing"),
             .product(name: "NIO", package: "swift-nio"),
             .product(name: "NIOExtras", package: "swift-nio-extras"),
             .product(name: "NIOFoundationCompat", package: "swift-nio"),
