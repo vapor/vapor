@@ -386,6 +386,35 @@ final class ContentTests: XCTestCase {
             XCTAssertEqual(try res.content.decode(String.self), "")
         }
     }
+
+    func testPlaintextDecoderDoesntCrash() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        struct WrongType: Content {
+            let example: String
+        }
+
+        app.routes.post("plaintext") { req -> String in
+            _ = try req.content.decode(WrongType.self)
+            return "OK"
+        }
+
+        let body = """
+        {
+          "example": "example"
+        }
+        """
+
+        let byteBuffer = ByteBuffer(string: body)
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "text/plain")
+
+        try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(String.self), "body")
+        }
+    }
 }
 
 private struct SampleContent: Content {
