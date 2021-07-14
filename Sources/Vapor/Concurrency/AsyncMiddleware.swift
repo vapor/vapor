@@ -7,7 +7,7 @@ import _NIOConcurrency
 /// return a custom `Response` if desired.
 ///
 /// This is an async version of `Middleware`
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public protocol AsyncMiddleware: Middleware {
     /// Called with each `Request` that passes through this middleware.
     /// - parameters:
@@ -17,7 +17,7 @@ public protocol AsyncMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) async throws -> Response
 }
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncMiddleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)

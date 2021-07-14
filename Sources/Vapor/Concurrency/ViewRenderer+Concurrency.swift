@@ -1,7 +1,7 @@
 #if compiler(>=5.5)
 import _NIOConcurrency
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public extension ViewRenderer {
     func render<E>(_ name: String, _ context: E) async throws -> View where E: Encodable {
         try await self.render(name, context).get()
@@ -12,7 +12,7 @@ public extension ViewRenderer {
     }
 }
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public extension View {
     func encodeResponse(for request: Request) async throws -> Response {
         try await self.encodeResponse(for: request).get()

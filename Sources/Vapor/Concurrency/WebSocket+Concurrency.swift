@@ -1,7 +1,7 @@
 #if compiler(>=5.5)
 import _NIOConcurrency
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
@@ -28,7 +28,7 @@ extension Request {
     }
 }
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension RoutesBuilder {
 
     /// Adds a route for opening a web socket connection

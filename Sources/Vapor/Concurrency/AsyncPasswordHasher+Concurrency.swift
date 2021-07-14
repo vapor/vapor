@@ -1,7 +1,7 @@
 #if compiler(>=5.5)
 import _NIOConcurrency
 
-@available(macOS 9999, iOS 9999, watchOS 9999, tvOS 9999, *)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncPasswordHasher {
     public func hash<Password>(_ password: Password) async throws -> [UInt8]
         where Password: DataProtocol
