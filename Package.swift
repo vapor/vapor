@@ -100,9 +100,6 @@ let package = Package(
             .unsafeFlags([
                             "-cross-module-optimization"
             ], .when(configuration: .release)),
-            .unsafeFlags([
-                "-Xfrontend", "-disable-availability-checking",
-            ])
         ]),
 
         // Testing
