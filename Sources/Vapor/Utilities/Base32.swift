@@ -22,6 +22,7 @@ extension Data {
         let size = base32Encoded.withUnsafeBytes { ptr in
             cbase32_decode(ptr.baseAddress?.assumingMemoryBound(to: UInt8.self), result, numericCast(maxSize))
         }
+        guard size >= 0 else { return nil }
         self = .init(buffer: UnsafeBufferPointer(start: result, count: numericCast(size)))
     }
 

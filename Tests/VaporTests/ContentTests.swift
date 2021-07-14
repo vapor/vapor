@@ -357,6 +357,64 @@ final class ContentTests: XCTestCase {
             )
         }
     }
+
+    func testPlaintextDecode() throws {
+        let data = "255"
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode(data, as: .plainText)
+            return res
+        }
+
+        app.routes.get("empty-plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode("", as: .plainText)
+            return res
+        }
+
+        try app.testable().test(.GET, "/plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(UInt8.self), 255)
+            XCTAssertEqual(try res.content.decode(String.self), "255")
+        }
+
+        try app.testable().test(.GET, "/empty-plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(String.self), "")
+        }
+    }
+
+    func testPlaintextDecoderDoesntCrash() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        struct WrongType: Content {
+            let example: String
+        }
+
+        app.routes.post("plaintext") { req -> String in
+            _ = try req.content.decode(WrongType.self)
+            return "OK"
+        }
+
+        let body = """
+        {
+          "example": "example"
+        }
+        """
+
+        let byteBuffer = ByteBuffer(string: body)
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "text/plain")
+
+        try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+            // This should return a 400 Bad Request and not crash
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
 }
 
 private struct SampleContent: Content {

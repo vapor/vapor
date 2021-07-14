@@ -192,6 +192,12 @@ final class RouteTests: XCTestCase {
         }) { res in
             XCTAssertEqual(res.status, .badRequest)
             XCTAssertContains(res.body.string, "email is not a valid email address")
+        }.test(.POST, "/users") { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertContains(res.body.string.replacingOccurrences(of: "\\", with: ""), "Missing \"Content-Type\" header")
+        }.test(.POST, "/users", headers: ["Content-Type":"application/json"]) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+            XCTAssertContains(res.body.string, "Empty Body")
         }
     }
 

@@ -1,5 +1,4 @@
 import Vapor
-import _Vapor3
 
 struct Creds: Content {
     var email: String

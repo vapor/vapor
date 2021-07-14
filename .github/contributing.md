@@ -13,6 +13,10 @@ Don't forget to add tests for your new features.
 If you are fixing a single GitHub issue in particular, you can add a test named `testGH<issue number>` to ensure
 that your fix is working. This will also help prevent regression.
 
+## API Documentation
+
+Make sure that any new public API is covered by API documentation and update any existing documentation where relevant. See [Formatting Quick Help](https://developer.apple.com/library/archive/documentation/Xcode/Reference/xcode_markup_formatting_ref/SymbolDocumentation.html#//apple_ref/doc/uid/TP40016497-CH51-SW1) and [Swift Documentation](https://nshipster.com/swift-documentation/) for more information.
+
 ## Style Guide
 
 When contributing code to Vapor, please try to follow existing style for consistency. 
@@ -151,9 +155,11 @@ When Vapor's release bot makes a release, it will automatically notify the `#rel
 
 Each repo under the Vapor organization has at least one [volunteer maintainer.](maintainers.md) [vapor/vapor's](https://github.com/vapor/vapor) current list of maintainers is:
 
-- [@tanner0101](https://github.com/tanner0101)
 - [@MrLotU](https://github.com/MrLotU)
 - [@Joannis](https://github.com/Joannis)
+- [@0xTim](https://github.com/0xtim)
+- [@gwynne](https://github.com/gwynne)
+- [@siemensikkema](https://github.com/siemensikkema)
 
 ## Extras
 
