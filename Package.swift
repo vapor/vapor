@@ -16,7 +16,7 @@ let package = Package(
     dependencies: [
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.2.0"),
-    
+
         // Sugary extensions for the SwiftNIO library
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0"),
 
@@ -87,6 +87,7 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
+            .product(name: "_NIOConcurrency", package: "swift-nio"),
         ]),
 	
         // Development
@@ -96,7 +97,9 @@ let package = Package(
             // Enable better optimizations when building in Release configuration. Despite the use of
             // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
             // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-            .unsafeFlags(["-cross-module-optimization"], .when(configuration: .release))
+            .unsafeFlags([
+                            "-cross-module-optimization"
+            ], .when(configuration: .release)),
         ]),
 
         // Testing
