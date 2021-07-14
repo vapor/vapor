@@ -12,7 +12,6 @@ let package = Package(
     products: [
         .library(name: "Vapor", targets: ["Vapor"]),
         .library(name: "XCTVapor", targets: ["XCTVapor"]),
-        .library(name: "_Vapor3", targets: ["_Vapor3"]),
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
@@ -89,16 +88,10 @@ let package = Package(
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
         ]),
-        // Vapor 3 API shim
-        .target(name: "_Vapor3", dependencies: [
-            .target(name: "Vapor"),
-            .product(name: "_NIO1APIShims", package: "swift-nio")
-        ]),
-
+	
         // Development
         .target(name: "Development", dependencies: [
             .target(name: "Vapor"),
-            .target(name: "_Vapor3"),
         ], swiftSettings: [
             // Enable better optimizations when building in Release configuration. Despite the use of
             // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release

@@ -5,7 +5,7 @@ public func configure(_ app: Application) throws {
     switch app.environment {
     case .tls:
         app.http.server.configuration.port = 8443
-        try app.http.server.configuration.tlsConfiguration = .forServer(
+        try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
             certificateChain: [
                 .certificate(.init(
                     file: "/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem",
