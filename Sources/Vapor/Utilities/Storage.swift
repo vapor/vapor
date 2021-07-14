@@ -34,6 +34,15 @@ public struct Storage {
         }
     }
 
+    public subscript<Key>(
+        _ key: Key.Type,
+        orSetDefault fallback: @autoclosure () -> Key.Value
+    ) -> Key.Value where Key: StorageKey {
+        mutating get {
+            self.get(Key.self, orSetDefault: fallback())
+        }
+    }
+
     public func contains<Key>(_ key: Key.Type) -> Bool {
         self.storage.keys.contains(ObjectIdentifier(Key.self))
     }
@@ -45,6 +54,18 @@ public struct Storage {
             return nil
         }
         return value.value
+    }
+
+    public mutating func get<Key>(
+        _ key: Key.Type, 
+        orSetDefault fallback: @autoclosure () -> Key.Value
+    ) -> Key.Value where Key: StorageKey {
+        guard let value = self.get(key) else {
+            let value = fallback()
+            self.set(key, to: value)
+            return value
+        }
+        return value
     }
 
     public mutating func set<Key>(
