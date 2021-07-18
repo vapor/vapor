@@ -185,7 +185,7 @@ extension DebuggableError {
             }
 
             if !self.gitHubIssues.isEmpty {
-                print.append("See these Github issues for discussion on this topic:\(self.gitHubIssues.bulletedList)")
+                print.append("See these GitHub issues for discussion on this topic:\(self.gitHubIssues.bulletedList)")
             }
             if let stackTrace = self.stackTrace {
                 print.append("Stack trace:\n\(stackTrace)")
