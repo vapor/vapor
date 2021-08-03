@@ -32,7 +32,6 @@ public final class SessionsMiddleware: Middleware {
         self.configuration = configuration
     }
 
-    /// See `Middleware.respond`
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // Signal middleware has been added.
         request._sessionCache.middlewareFlag = true
