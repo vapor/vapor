@@ -11,7 +11,6 @@ public final class FileMiddleware: Middleware {
         self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
     }
 
-    /// See `Middleware`.
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {

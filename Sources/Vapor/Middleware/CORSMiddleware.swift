@@ -120,7 +120,6 @@ public final class CORSMiddleware: Middleware {
         self.configuration = configuration
     }
 
-    /// See `Middleware`.
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // Check if it's valid CORS request
         guard request.headers[.origin].first != nil else {
