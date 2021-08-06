@@ -39,11 +39,10 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
         self.error = error
     }
 
-    /// See `Middleware`.
-    public func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        guard req.auth.has(A.self) else {
-            return req.eventLoop.makeFailedFuture(self.error)
+    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        guard request.auth.has(A.self) else {
+            return request.eventLoop.makeFailedFuture(self.error)
         }
-        return next.respond(to: req)
+        return next.respond(to: request)
     }
 }
