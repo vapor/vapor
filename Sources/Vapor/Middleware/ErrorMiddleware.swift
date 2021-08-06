@@ -67,8 +67,7 @@ public final class ErrorMiddleware: Middleware {
     public init(_ closure: @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
-
-    /// See `Middleware`.
+    
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         return next.respond(to: request).flatMapErrorThrowing { error in
             return self.closure(request, error)
