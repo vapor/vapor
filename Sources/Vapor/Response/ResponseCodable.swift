@@ -10,7 +10,15 @@ public protocol ResponseEncodable {
     func encodeResponse(for request: Request) -> EventLoopFuture<Response>
 }
 
+/// Can convert `Request` to a `Self`.
+///
+/// Types that conform to this protocol can be returned in route closures.
 public protocol RequestDecodable {
+    /// Decodes an instance of `HTTPRequest` to a `Self`.
+    ///
+    /// - parameters:
+    ///     - request: The `HTTPRequest` to be decoded.
+    /// - returns: An asynchronous `Self`.
     static func decodeRequest(_ request: Request) -> EventLoopFuture<Self>
 }
 
