@@ -55,6 +55,7 @@ let package = Package(
 
         // Swift tracing API
         .package(url: "https://github.com/apple/swift-distributed-tracing.git", from: "0.1.2"),
+        .package(url: "https://github.com/apple/swift-distributed-tracing-baggage", .upToNextMinor(from: "0.1.1")),
 
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
@@ -77,6 +78,7 @@ let package = Package(
             .product(name: "ConsoleKit", package: "console-kit"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
+            .product(name: "Baggage", package: "swift-distributed-tracing-baggage"),
             .product(name: "Tracing", package: "swift-distributed-tracing"),
             .product(name: "TracingOpenTelemetrySupport", package: "swift-distributed-tracing"),
             .product(name: "NIO", package: "swift-nio"),
