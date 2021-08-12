@@ -12,7 +12,7 @@ public protocol ResponseEncodable {
 
 /// Can convert `Request` to a `Self`.
 ///
-/// Types that conform to this protocol can be returned in route closures.
+/// Types that conform to this protocol can decode requests to their type.
 public protocol RequestDecodable {
     /// Decodes an instance of `HTTPRequest` to a `Self`.
     ///
