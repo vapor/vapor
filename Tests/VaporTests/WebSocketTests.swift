@@ -5,7 +5,7 @@ final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
         let server = Application(.testing)
 
-        server.http.server.configuration.port = 8086
+        server.http.server.configuration.port = 0
 
         server.webSocket("echo") { req, ws in
             ws.onText { ws.send($1) }
@@ -19,10 +19,16 @@ final class WebSocketTests: XCTestCase {
             server.shutdown()
         }
 
+        guard let localAddress = server.http.server.shared.localAddress,
+              let port = localAddress.port else {
+                  XCTFail("couldn't get port from \(app.http.server.shared.localAddress.debugDescription)")
+                  return
+              }
+
         app.get("ws") { req -> EventLoopFuture<String> in
             let promise = req.eventLoop.makePromise(of: String.self)
             return WebSocket.connect(
-                to: "ws://localhost:8086/echo",
+                to: "ws://localhost:\(port)/echo",
                 on: req.eventLoop
             ) { ws in
                 ws.send("Hello, world!")
