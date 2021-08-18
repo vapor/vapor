@@ -3,13 +3,26 @@ import XCTest
 
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
+        let server = Application(.testing)
+
+        server.http.server.configuration.port = 8086
+
+        server.webSocket("echo") { req, ws in
+            ws.onText { ws.send($1) }
+        }
+        server.environment.arguments = ["serve"]
+        try server.start()
+
         let app = Application(.testing)
-        defer { app.shutdown() }
+        defer {
+            app.shutdown()
+            server.shutdown()
+        }
 
         app.get("ws") { req -> EventLoopFuture<String> in
             let promise = req.eventLoop.makePromise(of: String.self)
             return WebSocket.connect(
-                to: "ws://echo.websocket.org/",
+                to: "ws://localhost:8086/echo",
                 on: req.eventLoop
             ) { ws in
                 ws.send("Hello, world!")
