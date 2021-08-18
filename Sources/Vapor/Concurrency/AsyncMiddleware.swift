@@ -21,7 +21,7 @@ public protocol AsyncMiddleware: Middleware {
 extension AsyncMiddleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)
-        promise.completeWithAsync {
+        promise.completeWithTask {
             try await respond(to: request, chainingTo: next)
         }
         return promise.futureResult
