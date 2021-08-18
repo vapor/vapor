@@ -32,6 +32,9 @@ final class WebSocketTests: XCTestCase {
                 }
             }.flatMap {
                 return promise.futureResult
+            }.flatMapError { error in
+                promise.fail(error)
+                return promise.futureResult
             }
         }
 
