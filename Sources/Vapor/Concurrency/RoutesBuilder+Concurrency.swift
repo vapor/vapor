@@ -132,14 +132,14 @@ extension RoutesBuilder {
                     max: max?.value ?? request.application.routes.defaultMaxBodySize.value
                 ).flatMap { _ -> EventLoopFuture<Response> in
                     let promise = request.eventLoop.makePromise(of: Response.self)
-                    promise.completeWithAsync {
+                    promise.completeWithTask {
                         try await closure(request)
                     }
                     return promise.futureResult
                 }.encodeResponse(for: request)
             } else {
                 let promise = request.eventLoop.makePromise(of: Response.self)
-                promise.completeWithAsync {
+                promise.completeWithTask {
                     try await closure(request)
                 }
                 return promise.futureResult.encodeResponse(for: request)

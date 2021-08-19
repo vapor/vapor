@@ -14,7 +14,7 @@ extension Request {
             maxFrameSize: maxFrameSize,
             shouldUpgrade: { request in
                 let promise = request.eventLoop.makePromise(of: HTTPHeaders?.self)
-                promise.completeWithAsync {
+                promise.completeWithTask {
                     try await shouldUpgrade(request)
                 }
                 return promise.futureResult
