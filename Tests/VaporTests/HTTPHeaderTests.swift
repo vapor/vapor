@@ -130,6 +130,15 @@ final class HTTPHeaderTests: XCTestCase {
             XCTAssertEqual(headers.accept.first(where: { $0.mediaType == .png })?.q, 0.8)
             XCTAssertTrue(headers.accept.comparePreference(for: .xml, to: .png) == .orderedDescending)
         }
+
+        // #2668 Preference should be consistent: present types are preferred to missing types
+        do {
+            headers.replaceOrAdd(name: .accept, value: "image/png;q=0.5")
+            XCTAssertEqual(headers.accept.comparePreference(for: .png, to: .gif), .orderedDescending)
+            XCTAssertEqual(headers.accept.comparePreference(for: .gif, to: .png), .orderedAscending)
+            XCTAssertEqual(headers.accept.comparePreference(for: .png, to: .png), .orderedSame)
+            XCTAssertEqual(headers.accept.comparePreference(for: .gif, to: .gif), .orderedSame)
+        }
     }
 
     func testComplexCookieParsing() throws {
