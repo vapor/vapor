@@ -106,4 +106,29 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.body.string, "bar\n")
         }
     }
+    
+    func testDefaultFile() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
+
+        try app.test(.GET, "Utilities/") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "<h1>Default</h1>\n")
+        }
+    }
+    
+    func testNoDefaultFile() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
+
+        try app.test(.GET, "Utilities/") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
 }
