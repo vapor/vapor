@@ -54,7 +54,7 @@ extension HTTPHeaders {
                 case "filename":
                     self.filename = .init(parameter)
                 default:
-                    return nil
+                    continue
                 }
             }
         }
