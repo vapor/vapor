@@ -2,7 +2,7 @@ import XCTVapor
 
 final class RequestTests: XCTestCase {
     
-    func testCustomHostAdress() throws {
+    func testCustomHostAddress() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
         
