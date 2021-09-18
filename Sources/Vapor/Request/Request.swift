@@ -168,6 +168,7 @@ public final class Request: CustomStringConvertible {
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
             logger: logger,
             on: eventLoop
         )
