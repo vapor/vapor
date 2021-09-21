@@ -577,9 +577,13 @@ class ValidationTests: XCTestCase {
     func testValidateNullWhenNotRequired() throws {
         struct Site: Validatable, Codable {
             var url: String?
+            var number: Int?
+            var name: String?
 
             static func validations(_ v: inout Validations) {
                 v.add("url", as: String.self, is: .url, required: false)
+                v.add("number", as: Int.self, required: false)
+                v.add("name", as: String.self, required: false)
             }
         }
 
@@ -595,6 +599,65 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertNoThrow(try Site.validate(json: valid2))
+
+        let valid3 = """
+        {
+            "name": "Tim"
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid3))
+
+        let valid4 = """
+        {
+            "name": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid4))
+
+        let valid5 = """
+        {
+            "number": 3
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid5))
+
+        let valid6 = """
+        {
+            "number": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid6))
+
+        let invalid1 = """
+        {
+            "number": "Tim"
+        }
+        """
+
+        do {
+            try Site.validate(json: invalid1)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "number")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "is not a(n) Int")
+        }
+
+        let invalid2 = """
+        {
+            "name": 3
+        }
+        """
+        do {
+            try Site.validate(json: invalid2)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "name")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "is not a(n) String")
+        }
     }
 
     override class func setUp() {
