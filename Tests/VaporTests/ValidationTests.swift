@@ -589,6 +589,12 @@ class ValidationTests: XCTestCase {
         }
         """
         XCTAssertNoThrow(try Site.validate(json: valid))
+
+        let valid2 = """
+        {
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid2))
     }
 
     override class func setUp() {
