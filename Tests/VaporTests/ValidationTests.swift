@@ -574,6 +574,23 @@ class ValidationTests: XCTestCase {
         })
     }
 
+    func testValidateNullWhenNotRequired() throws {
+        struct Site: Validatable, Codable {
+            var url: String?
+
+            static func validations(_ v: inout Validations) {
+                v.add("url", as: String.self, is: .url, required: false)
+            }
+        }
+
+        let valid = """
+        {
+            "url": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid))
+    }
+
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
     }
