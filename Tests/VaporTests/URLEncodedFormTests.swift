@@ -574,6 +574,20 @@ final class URLEncodedFormTests: XCTestCase {
         ])
         XCTAssertEqual(data, "test=%26%3B!$'(),/:%3D%3F@~")
     }
+
+    func testDecodeNumberAsEmptyStringToNil() throws {
+        let data1 = """
+        name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&position=&nums=3.14
+        """
+        let data2 = """
+        name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14&position=
+        """
+        let user1 = try URLEncodedFormDecoder().decode(User.self, from: data1)
+        XCTAssertNil(user1.position)
+
+        let user2 = try URLEncodedFormDecoder().decode(User.self, from: data2)
+        XCTAssertNil(user2.position)
+    }
 }
 
 private struct User: Codable, Equatable {
@@ -584,6 +598,7 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
+    var position: Int?
 }
 
 class BaseClass: Codable, Equatable {
