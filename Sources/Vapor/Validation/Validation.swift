@@ -5,7 +5,7 @@ public struct Validation {
         self.init { container in
             let result: ValidatorResult
             do {
-                if container.contains(key) {
+                if container.contains(key), try !container.decodeNil(forKey: key) {
                     result = try validator.validate(container.decode(T.self, forKey: key))
                 } else if required {
                     result = ValidatorResults.Missing()
