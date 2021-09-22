@@ -1,4 +1,4 @@
-#if compiler(>=5.5)
+#if compiler(>=5.5) && canImport(_Concurrency)
 import _NIOConcurrency
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)

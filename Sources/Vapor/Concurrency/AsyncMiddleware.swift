@@ -1,4 +1,4 @@
-#if compiler(>=5.5)
+#if compiler(>=5.5) && canImport(_Concurrency)
 import _NIOConcurrency
 
 /// `AsyncMiddleware` is placed between the server and your router. It is capable of
