@@ -5,8 +5,8 @@ let package = Package(
     name: "vapor",
     platforms: [
         .macOS(.v10_15),
-        .iOS(.v13),
-        .tvOS(.v13),
+        .iOS(.v11),
+        .tvOS(.v11),
         .watchOS(.v6)
     ],
     products: [
@@ -22,9 +22,6 @@ let package = Package(
 
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0"),
-
-        // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", from: "1.0.0"),
 
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.0.0"),
@@ -83,7 +80,6 @@ let package = Package(
             .product(name: "NIOHTTP2", package: "swift-nio-http2"),
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOWebSocket", package: "swift-nio"),
-            .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),

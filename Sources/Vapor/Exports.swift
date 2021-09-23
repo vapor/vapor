@@ -3,7 +3,6 @@
 @_exported import class AsyncHTTPClient.HTTPClient
 @_exported import struct AsyncHTTPClient.HTTPClientError
 
-@_exported import Crypto
 @_exported import RoutingKit
 @_exported import ConsoleKit
 @_exported import Foundation
