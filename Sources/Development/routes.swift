@@ -231,6 +231,7 @@ public func routes(_ app: Application) throws {
         }
     }
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
     if #available(macOS 12, *) {
         let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware())
         asyncRoutes.get("client") { req async throws -> String in
@@ -250,6 +251,7 @@ public func routes(_ app: Application) throws {
         }
         asyncRoutes.get("client2", use: asyncRouteTester)
     }
+    #endif
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -283,6 +285,7 @@ struct TestError: AbortError, DebuggableError {
     }
 }
 
+#if compiler(>=5.5) && canImport(_Concurrency)
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 struct TestAsyncMiddleware: AsyncMiddleware {
     func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
@@ -290,3 +293,4 @@ struct TestAsyncMiddleware: AsyncMiddleware {
         return try await next.respond(to: request)
     }
 }
+#endif
