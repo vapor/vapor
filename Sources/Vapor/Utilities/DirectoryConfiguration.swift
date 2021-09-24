@@ -35,7 +35,9 @@ public struct DirectoryConfiguration {
         // get actual working directory
         let cwd = getcwd(nil, Int(PATH_MAX))
         defer {
-            free(cwd)
+            if let cwd = cwd {
+                free(cwd)
+            }
         }
 
         let workingDirectory: String
