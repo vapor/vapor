@@ -1,5 +1,5 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
-import _NIOConcurrency
+import NIOCore
 
 /// `AsyncMiddleware` is placed between the server and your router. It is capable of
 /// mutating both incoming requests and outgoing responses. `AsyncMiddleware` can choose
