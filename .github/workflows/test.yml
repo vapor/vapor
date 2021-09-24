@@ -24,7 +24,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:5.3-focal
+    container: swift:5.5-focal
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v2
