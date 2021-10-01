@@ -34,8 +34,6 @@ extension ContentContainer {
     public mutating func encode<C>(_ encodable: C) throws
         where C: Content
     {
-        var encodable = encodable
-        try encodable.beforeEncode()
         try self.encode(encodable, as: C.defaultContentType)
     }
 
