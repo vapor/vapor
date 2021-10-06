@@ -367,6 +367,7 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "wmlsc": HTTPMediaType(type: "application", subType: "vnd.wap.wmlscriptc"),
     "wpd": HTTPMediaType(type: "application", subType: "vnd.wordperfect"),
     "wp5": HTTPMediaType(type: "application", subType: "vnd.wordperfect5.1"),
+    "wasm": HTTPMediaType(type: "application", subType: "wasm"),
     "wk": HTTPMediaType(type: "application", subType: "x-123"),
     "7z": HTTPMediaType(type: "application", subType: "x-7z-compressed"),
     "abw": HTTPMediaType(type: "application", subType: "x-abiword"),
