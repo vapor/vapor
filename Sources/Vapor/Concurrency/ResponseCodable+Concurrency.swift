@@ -40,7 +40,7 @@ extension Request: AsyncRequestDecodable {
 
 // MARK: Convenience
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)x
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
     ///
