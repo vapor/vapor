@@ -143,7 +143,8 @@ final class ClientTests: XCTestCase {
 
         _ = try app.client.get("https://httpbin.org/json").wait()
 
-        XCTAssertNotNil(logs.metadata["ahc-request-id"])
+        let metadata = logs.getMetadata()
+        XCTAssertNotNil(metadata["ahc-request-id"])
     }
 }
 
@@ -232,5 +233,9 @@ final class TestLogHandler: LogHandler {
         let copy = self.messages
         self.messages = []
         return copy.map { $0.description }
+    }
+    
+    func getMetadata() -> Logger.Metadata {
+        return self.metadata
     }
 }
