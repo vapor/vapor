@@ -190,12 +190,14 @@ private extension Application.Clients.Provider {
     }
 }
 
+
 final class TestLogHandler: LogHandler {
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }
         set { self.metadata[key] = newValue }
     }
 
+    @ThreadSafe
     var metadata: Logger.Metadata
     var logLevel: Logger.Level
     var messages: [Logger.Message]
