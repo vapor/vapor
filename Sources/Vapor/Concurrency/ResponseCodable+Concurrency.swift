@@ -107,4 +107,18 @@ extension Content: AsyncRequestDecodable, AsyncResponseEncodable {
     }
 }
 
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension Array: AsyncResponseEncodable, AsyncRequestDecodable where Element: Content {
+    public static var defaultContentType: HTTPMediaType {
+        return .json
+    }
+}
+
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension Dictionary: AsyncResponseEncodable, AsyncRequestDecodable where Key == String, Value: Content {
+    public static var defaultContentType: HTTPMediaType {
+        return .json
+    }
+}
+
 #endif
