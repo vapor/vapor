@@ -135,6 +135,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testClientLogging() throws {
+        print("We are testing client logging")
         let app = Application(.testing)
         defer { app.shutdown() }
         let logs = TestLogHandler()
