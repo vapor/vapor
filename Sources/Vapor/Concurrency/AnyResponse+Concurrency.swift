@@ -1,16 +1,16 @@
 /// A type erased response useful for routes that can return more than one type.
 ///
-///     router.get("foo") { req -> AnyResponse in
+///     router.get("foo") { req -> AnyAsyncResponse in
 ///         if /* something */ {
-///             return AnyResponse(42)
+///             return AnyAsyncResponse(42)
 ///         } else {
-///             return AnyResponse("string")
+///             return AnyAsyncResponse("string")
 ///         }
 ///     }
 ///
-/// This can also be done using a `ResponseEncodable` enum.
+/// This can also be done using a `AsyncResponseEncodable` enum.
 ///
-///     enum IntOrString: ResponseEncodable {
+///     enum IntOrString: AsyncResponseEncodable {
 ///         case int(Int)
 ///         case string(String)
 ///
@@ -30,19 +30,19 @@
 ///         }
 ///     }
 ///
-public struct AnyResponse: ResponseEncodable {
-    /// The wrapped `ResponseEncodable` type.
-    private let encodable: ResponseEncodable
+public struct AnyAsyncResponse: AsyncResponseEncodable {
+    /// The wrapped `AsyncResponseEncodable` type.
+    private let encodable: AsyncResponseEncodable
 
-    /// Creates a new `AnyResponse`.
+    /// Creates a new `AnyAsyncResponse`.
     ///
     /// - parameters:
-    ///     - encodable: Something `ResponseEncodable`.
-    public init(_ encodable: ResponseEncodable) {
+    ///     - encodable: Something `AsyncResponseEncodable`.
+    public init(_ encodable: AsyncResponseEncodable) {
         self.encodable = encodable
     }
 
-    public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        return self.encodable.encodeResponse(for: request)
+    public func encodeResponse(for request: Request) async throws -> Response {
+        return try await self.encodable.encodeResponse(for: request)
     }
 }
