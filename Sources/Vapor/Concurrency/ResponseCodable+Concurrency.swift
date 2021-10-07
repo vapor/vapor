@@ -121,4 +121,41 @@ extension Dictionary: AsyncResponseEncodable, AsyncRequestDecodable where Key ==
     }
 }
 
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension ClientResponse: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let body: Response.Body
+        if let buffer = self.body {
+            body = .init(buffer: buffer)
+        } else {
+            body = .empty
+        }
+        let response = Response(
+            status: self.status,
+            headers: self.headers,
+            body: body
+        )
+        return response
+    }
+}
+
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension View: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async throws -> Response {
+        let response = Response()
+        response.headers.contentType = .html
+        response.body = .init(buffer: self.data)
+        return response
+    }
+}
+
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension HTTPStatus: AsyncResponseEncodable {
+    public func encodeResponse(for request: Request) async throws -> Response {
+        return Response(status: self)
+    }
+}
+
+
+
 #endif

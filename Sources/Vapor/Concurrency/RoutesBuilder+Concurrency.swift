@@ -8,7 +8,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
@@ -18,7 +18,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
@@ -28,7 +28,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -38,7 +38,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -48,7 +48,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -58,7 +58,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -68,7 +68,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -78,7 +78,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -88,7 +88,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -98,7 +98,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -110,7 +110,7 @@ extension RoutesBuilder {
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         return self.on(method, path, body: body, use: { request in
             return try await closure(request)
@@ -124,7 +124,7 @@ extension RoutesBuilder {
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @escaping (Request) async throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+        where Response: AsyncResponseEncodable
     {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
