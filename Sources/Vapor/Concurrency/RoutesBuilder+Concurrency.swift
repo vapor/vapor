@@ -126,24 +126,11 @@ extension RoutesBuilder {
     ) -> Route
         where Response: AsyncResponseEncodable
     {
-        let responder = BasicResponder { request in
+        let responder = AsyncBasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(
-                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
-                ).flatMap { _ -> EventLoopFuture<Response> in
-                    let promise = request.eventLoop.makePromise(of: Response.self)
-                    promise.completeWithTask {
-                        try await closure(request)
-                    }
-                    return promise.futureResult
-                }.encodeResponse(for: request)
-            } else {
-                let promise = request.eventLoop.makePromise(of: Response.self)
-                promise.completeWithTask {
-                    try await closure(request)
-                }
-                return promise.futureResult.encodeResponse(for: request)
+                _ = try await request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
             }
+            return try await closure(request).encodeResponse(for: request)
         }
         let route = Route(
             method: method,
