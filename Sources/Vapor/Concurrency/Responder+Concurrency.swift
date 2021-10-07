@@ -6,6 +6,7 @@ public protocol AsyncResponder: Responder {
     func respond(to request: Request) async throws -> Response
 }
 
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncResponder {
     public func respond(to request: Request) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)
