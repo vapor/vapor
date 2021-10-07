@@ -288,7 +288,7 @@ struct TestError: AbortError, DebuggableError {
 #if compiler(>=5.5) && canImport(_Concurrency)
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 struct TestAsyncMiddleware: AsyncMiddleware {
-    func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         request.logger.debug("In async middleware")
         return try await next.respond(to: request)
     }
