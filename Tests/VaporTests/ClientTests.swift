@@ -200,6 +200,7 @@ final class TestLogHandler: LogHandler {
     @ThreadSafe
     var metadata: Logger.Metadata
     var logLevel: Logger.Level
+    @ThreadSafe
     var messages: [Logger.Message]
 
     var logger: Logger {
