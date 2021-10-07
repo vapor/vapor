@@ -55,7 +55,7 @@ extension AsyncResponseEncodable {
     ///     - status: `HTTPStatus` to set on the `Response`.
     ///     - headers: `HTTPHeaders` to merge into the `Response`'s headers.
     /// - returns: Newly encoded `Response`.
-    public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) -> EventLoopFuture<Response> {
+    public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) async throws -> Response {
         let response = try await self.encodeResponse(for: request)
         for (name, value) in headers {
             response.headers.replaceOrAdd(name: name, value: value)
@@ -94,13 +94,13 @@ extension String: AsyncResponseEncodable {
 }
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Content: AsyncRequestDecodable, AsyncResponseEncodable {
+extension Content {
     public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response()
         try response.content.encode(self)
         return response
     }
-    
+
     public static func decodeRequest(_ request: Request) async throws -> Self {
         let content = try request.content.decode(Self.self)
         return content
@@ -108,18 +108,14 @@ extension Content: AsyncRequestDecodable, AsyncResponseEncodable {
 }
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Array: AsyncResponseEncodable, AsyncRequestDecodable where Element: Content {
-    public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-}
+extension Array: AsyncResponseEncodable where Element: Content {}
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension Array: AsyncRequestDecodable where Element: Content {}
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Dictionary: AsyncResponseEncodable, AsyncRequestDecodable where Key == String, Value: Content {
-    public static var defaultContentType: HTTPMediaType {
-        return .json
-    }
-}
+extension Dictionary: AsyncRequestDecodable where Key == String, Value: Content {}
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+extension Dictionary: AsyncResponseEncodable where Key == String, Value: Content {}
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension ClientResponse: AsyncResponseEncodable {
@@ -135,16 +131,6 @@ extension ClientResponse: AsyncResponseEncodable {
             headers: self.headers,
             body: body
         )
-        return response
-    }
-}
-
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension View: AsyncResponseEncodable {
-    public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response()
-        response.headers.contentType = .html
-        response.body = .init(buffer: self.data)
         return response
     }
 }

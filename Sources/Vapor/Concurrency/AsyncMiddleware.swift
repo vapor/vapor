@@ -14,7 +14,7 @@ public protocol AsyncMiddleware: Middleware {
     ///     - request: The incoming `Request`.
     ///     - next: Next `Responder` in the chain, potentially another middleware or the main router.
     /// - returns: An asynchronous `Response`.
-    func respond(to request: Request, chainingTo next: Responder) async throws -> Response
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response
 }
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
@@ -22,7 +22,7 @@ extension AsyncMiddleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)
         promise.completeWithTask {
-            try await respond(to: request, chainingTo: next)
+            try await respond(to: request, chainingTo: next).get()
         }
         return promise.futureResult
     }

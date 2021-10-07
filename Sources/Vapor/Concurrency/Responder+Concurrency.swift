@@ -2,9 +2,17 @@
 import NIOCore
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Responder {
-    public func respond(to request: Request) async throws -> Response {
-        try await self.respond(to: request).get()
+public protocol AsyncResponder: Responder {
+    func respond(to request: Request) async throws -> Response
+}
+
+extension AsyncResponder {
+    public func respond(to request: Request) -> EventLoopFuture<Response> {
+        let promise = request.eventLoop.makePromise(of: Response.self)
+        promise.completeWithTask {
+            try await self.respond(to: request)
+        }
+        return promise.futureResult
     }
 }
 

@@ -22,7 +22,7 @@ public protocol AsyncRequestAuthenticator: AsyncAuthenticator {
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncRequestAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) async throws Response {
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         try await self.authenticate(request: request)
         return try await next.respond(to: request)
     }
@@ -105,7 +105,7 @@ public protocol AsyncSessionAuthenticator: Authenticator {
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncSessionAuthenticator {
-    public func respond(to request: Request, chainingTo next: Responder) async throws -> Response {
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         // if the user has already been authenticated
         // by a previous middleware, continue
         if request.auth.has(User.self) {
