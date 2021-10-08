@@ -54,7 +54,7 @@ extension AsyncBasicAuthenticator {
 ///
 /// This is an async version of `BearerAuthenticator`
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-public protocol AsyncBearerAuthenticator: RequestAuthenticator {
+public protocol AsyncBearerAuthenticator: AsyncRequestAuthenticator {
     func authenticate(bearer: BearerAuthorization, for request: Request) async throws
 }
 
@@ -74,7 +74,7 @@ extension AsyncBearerAuthenticator {
 ///
 /// This is an async version of `CredentialsAuthenticator`
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-public protocol AsyncCredentialsAuthenticator: RequestAuthenticator {
+public protocol AsyncCredentialsAuthenticator: AsyncRequestAuthenticator {
     associatedtype Credentials: Content
     func authenticate(credentials: Credentials, for request: Request) async throws
 }
@@ -96,7 +96,7 @@ extension AsyncCredentialsAuthenticator {
 ///
 /// This is an async version of `SessionAuthenticator`
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-public protocol AsyncSessionAuthenticator: Authenticator {
+public protocol AsyncSessionAuthenticator: AsyncAuthenticator {
     associatedtype User: SessionAuthenticatable
 
     /// Authenticate a model with the supplied ID.
