@@ -128,7 +128,8 @@ extension RoutesBuilder {
     {
         let responder = AsyncBasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                _ = try await request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value).get()
+                
             }
             return try await closure(request).encodeResponse(for: request)
         }
