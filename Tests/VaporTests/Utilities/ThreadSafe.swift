@@ -1,7 +1,7 @@
 import Foundation
 
 @propertyWrapper
-struct ThreadSafe<Value> {
+class ThreadSafe<Value> {
     private var value: Value
     private let lock = Lock()
     
@@ -15,7 +15,7 @@ struct ThreadSafe<Value> {
     }
 }
 
-fileprivate struct Lock {
+fileprivate class Lock {
     private let nslock = NSLock()
     init() {}
     
