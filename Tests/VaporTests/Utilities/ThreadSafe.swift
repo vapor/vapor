@@ -29,8 +29,8 @@ fileprivate class Lock {
     
     func run(_ closure: () throws -> Void) rethrows {
         lock()
+        defer { unlock() }
         try closure()
-        unlock()
     }
     
     func run<T>(_ closure: () throws -> T) rethrows -> T {
