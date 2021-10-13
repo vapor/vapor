@@ -38,7 +38,7 @@ jobs:
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --sanitize=thread
         working-directory: provider
         
   test-vapor:
