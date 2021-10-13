@@ -22,7 +22,10 @@ extension AsyncMiddleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)
         promise.completeWithTask {
-            try await respond(to: request, chainingTo: next).get()
+            let asyncResponder = AsyncBasicResponder { req in
+                return try await next.respond(to: req).get()
+            }
+            return try await respond(to: request, chainingTo: asyncResponder)
         }
         return promise.futureResult
     }
