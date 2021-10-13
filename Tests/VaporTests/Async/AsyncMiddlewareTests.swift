@@ -1,15 +1,17 @@
+#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 
-final class MiddlewareTests: XCTestCase {
-    final class OrderMiddleware: Middleware {
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+final class AsyncMiddlewareTests: XCTestCase {
+    final class OrderMiddleware: AsyncMiddleware {
         static var order: [String] = []
         let pos: String
         init(_ pos: String) {
             self.pos = pos
         }
-        func respond(to req: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
             OrderMiddleware.order.append(pos)
-            return next.respond(to: req)
+            return try await next.respond(to: request)
         }
     }
 
@@ -92,3 +94,4 @@ final class MiddlewareTests: XCTestCase {
         }
     }
 }
+#endif
