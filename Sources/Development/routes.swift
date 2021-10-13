@@ -233,7 +233,7 @@ public func routes(_ app: Application) throws {
 
     #if compiler(>=5.5) && canImport(_Concurrency)
     if #available(macOS 12, *) {
-        let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware())
+        let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
         asyncRoutes.get("client") { req async throws -> String in
             let response = try await req.client.get("https://www.google.com")
             guard let body = response.body else {
@@ -250,6 +250,11 @@ public func routes(_ app: Application) throws {
             return String(buffer: body)
         }
         asyncRoutes.get("client2", use: asyncRouteTester)
+        
+        // Make sure jumping between multiple different types of middleware works
+        asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
+            return "OK"
+        }
     }
     #endif
 }
@@ -288,9 +293,25 @@ struct TestError: AbortError, DebuggableError {
 #if compiler(>=5.5) && canImport(_Concurrency)
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 struct TestAsyncMiddleware: AsyncMiddleware {
+    let number: Int
+    
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
-        request.logger.debug("In async middleware")
-        return try await next.respond(to: request)
+        request.logger.debug("In async middleware - \(number)")
+        let response = try await next.respond(to: request)
+        request.logger.debug("In async middleware way out - \(number)")
+        return response
     }
 }
 #endif
+
+struct TestMiddleware: Middleware {
+    let number: Int
+    
+    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        request.logger.debug("In non-async middleware - \(number)")
+        return next.respond(to: request).map { response in
+            request.logger.debug("In non-async middleware way out - \(number)")
+            return response
+        }
+    }
+}
