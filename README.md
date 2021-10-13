@@ -58,9 +58,6 @@ Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/
 <a href="http://omrd.com">
     <img src="https://user-images.githubusercontent.com/9938337/112326871-d1f9ba80-8cac-11eb-88b2-b2ca23a80c03.png" height="100px" alt="omrd">
 </a>
-<a href="https://github.com/gwynne">
-    <img src="https://user-images.githubusercontent.com/1342803/70094097-c6820c00-15ef-11ea-899d-f4010ad65875.png" height="100px" alt="Gwynne Raskind">
-</a>
 <a href="https://github.com/MrLotU">
     <img src="https://user-images.githubusercontent.com/1342803/79599312-426a8580-80b3-11ea-89b3-8b2722485e37.png" height="100px" alt="Jari">
 </a>
