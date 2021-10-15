@@ -24,7 +24,7 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:5.3-focal
+    container: swift:5.5-focal
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v2
@@ -38,7 +38,7 @@ jobs:
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --sanitize=thread
         working-directory: provider
         
   test-vapor:
