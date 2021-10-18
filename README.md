@@ -46,7 +46,7 @@ If you find a **security vulnerability**, please contact [security@vapor.codes](
 
 Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/vapor).
 
-<a href="https://www.brokenhands.io.com">
+<a href="https://www.brokenhands.io">
     <img src="https://user-images.githubusercontent.com/9938337/137103192-21f99099-6aaa-4cc1-a1a7-21ee767a72d1.png" height="100px" alt="Broken Hands">
 </a>
 <a href="https://monstar-lab.com">
