@@ -6,13 +6,13 @@ import NIOCore
 /// Types that conform to this protocol can be returned in route closures.
 ///
 /// This is the async version of `ResponseEncodable`
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public protocol AsyncResponseEncodable {
     /// Encodes an instance of `Self` to a `HTTPResponse`.
     ///
     /// - parameters:
     ///     - for: The `HTTPRequest` associated with this `HTTPResponse`.
     /// - returns: An `HTTPResponse`.
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     func encodeResponse(for request: Request) async throws -> Response
 }
 
@@ -21,18 +21,18 @@ public protocol AsyncResponseEncodable {
 /// Types that conform to this protocol can decode requests to their type.
 ///
 /// This is the async version of `RequestDecodable`
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public protocol AsyncRequestDecodable {
     /// Decodes an instance of `HTTPRequest` to a `Self`.
     ///
     /// - parameters:
     ///     - request: The `HTTPRequest` to be decoded.
     /// - returns: An asynchronous `Self`.
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     static func decodeRequest(_ request: Request) async throws -> Self
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request: AsyncRequestDecodable {
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public static func decodeRequest(_ request: Request) async throws -> Request {
         return request
     }
@@ -75,18 +75,18 @@ extension Response: AsyncResponseEncodable {
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension StaticString: AsyncResponseEncodable {
     /// See `AsyncResponseEncodable`.
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
         return res
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension String: AsyncResponseEncodable {
     /// See `AsyncResponseEncodable`.
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(string: self))
         return res
@@ -106,16 +106,6 @@ extension Content {
         return content
     }
 }
-
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Array: AsyncResponseEncodable where Element: Content {}
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Array: AsyncRequestDecodable where Element: Content {}
-
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Dictionary: AsyncRequestDecodable where Key == String, Value: Content {}
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
-extension Dictionary: AsyncResponseEncodable where Key == String, Value: Content {}
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension ClientResponse: AsyncResponseEncodable {

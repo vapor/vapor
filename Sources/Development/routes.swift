@@ -61,9 +61,17 @@ public func routes(_ app: Application) throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    if #available(macOS 12, iOS 15, watchOS 8, tvOS 15, *) {
+        app.get("json") { req -> [String: String] in
+            return ["foo": "bar"]
+        }.description("returns some test json")
+    }
+    #else
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
+    #endif
     
     app.webSocket("ws") { req, ws in
         ws.onText { ws, text in
@@ -250,6 +258,16 @@ public func routes(_ app: Application) throws {
             return String(buffer: body)
         }
         asyncRoutes.get("client2", use: asyncRouteTester)
+        
+        asyncRoutes.get("content", use: asyncContentTester)
+        
+        func asyncContentTester(_ req: Request) async throws -> Creds {
+            return Creds(email: "name", password: "password")
+        }
+        
+        asyncRoutes.get("content2") { req async throws -> Creds in
+            return Creds(email: "name", password: "password")
+        }
         
         // Make sure jumping between multiple different types of middleware works
         asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
