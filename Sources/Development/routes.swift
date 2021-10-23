@@ -269,6 +269,11 @@ public func routes(_ app: Application) throws {
             return Creds(email: "name", password: "password")
         }
         
+        func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
+            "Hello World"
+        }
+        asyncRoutes.get("opaque", use: opaqueRouteTester)
+        
         // Make sure jumping between multiple different types of middleware works
         asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
             return "OK"
