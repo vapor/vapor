@@ -61,17 +61,17 @@ public func routes(_ app: Application) throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
-    #if compiler(>=5.5) && canImport(_Concurrency)
-    if #available(macOS 12, iOS 15, watchOS 8, tvOS 15, *) {
-        app.get("json") { req -> [String: String] in
-            return ["foo": "bar"]
-        }.description("returns some test json")
-    }
-    #else
+//    #if compiler(>=5.5) && canImport(_Concurrency)
+//    if #available(macOS 12, iOS 15, watchOS 8, tvOS 15, *) {
+//        app.get("json") { req -> [String: String] in
+//            return ["foo": "bar"]
+//        }.description("returns some test json")
+//    }
+//    #else
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
-    #endif
+//    #endif
     
     app.webSocket("ws") { req, ws in
         ws.onText { ws, text in
@@ -267,6 +267,11 @@ public func routes(_ app: Application) throws {
         
         asyncRoutes.get("content2") { req async throws -> Creds in
             return Creds(email: "name", password: "password")
+        }
+        
+        asyncRoutes.get("contentArray") { req async throws -> [Creds] in
+            let cred1 = Creds(email: "name", password: "password")
+            return [cred1]
         }
         
         func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
