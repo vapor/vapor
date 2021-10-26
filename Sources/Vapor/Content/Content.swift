@@ -16,7 +16,7 @@
 ///         return Hello() // {"message":"Hello!"}
 ///     }
 ///
-public protocol Content: Codable, RequestDecodable, ResponseEncodable {
+public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequestDecodable, AsyncResponseEncodable {
     /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
     ///
     /// Default implementation is `MediaType.json` for all types.
@@ -119,12 +119,13 @@ extension BinaryFloatingPoint where Self: Content {
 extension Double: Content { }
 extension Float: Content { }
 
-extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
+extension Array: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
-extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
+
+extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
