@@ -63,4 +63,5 @@ jobs:
       - name: Run async tests without Thread Sanitizer
         # TSAN and async aren't playing nice at the moment
         timeout-minutes: 30
+        if: ${{ matrix.env.toolchain == '' }}
         run: swift test --enable-test-discovery --filter AsyncTests
