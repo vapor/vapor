@@ -148,7 +148,7 @@ final class ClientTests: XCTestCase {
     }
 }
 
-private final class CustomClient: Client {
+final class CustomClient: Client {
     var eventLoop: EventLoop {
         EmbeddedEventLoop()
     }
@@ -168,7 +168,7 @@ private final class CustomClient: Client {
     }
 }
 
-private extension Application {
+extension Application {
     struct CustomClientKey: StorageKey {
         typealias Value = CustomClient
     }
@@ -184,7 +184,7 @@ private extension Application {
     }
 }
 
-private extension Application.Clients.Provider {
+extension Application.Clients.Provider {
     static var custom: Self {
         .init {
             $0.clients.use { $0.customClient }
