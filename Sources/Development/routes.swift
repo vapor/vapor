@@ -275,6 +275,32 @@ public func routes(_ app: Application) throws {
         asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
             return "OK"
         }
+        
+        let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
+        basicAuthRoutes.get("auth") { req async throws -> String in
+            return try req.auth.require(Test.self).name
+        }
+    }
+    
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    struct Test: Authenticatable {
+        static func authenticator() -> AsyncAuthenticator {
+            TestAuthenticator()
+        }
+
+        var name: String
+    }
+
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    struct TestAuthenticator: AsyncBasicAuthenticator {
+        typealias User = Test
+
+        func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+            if basic.username == "test" && basic.password == "secret" {
+                let test = Test(name: "Vapor")
+                request.auth.login(test)
+            }
+        }
     }
     #endif
 }
