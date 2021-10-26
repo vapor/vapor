@@ -61,17 +61,9 @@ public func routes(_ app: Application) throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
-//    #if compiler(>=5.5) && canImport(_Concurrency)
-//    if #available(macOS 12, iOS 15, watchOS 8, tvOS 15, *) {
-//        app.get("json") { req -> [String: String] in
-//            return ["foo": "bar"]
-//        }.description("returns some test json")
-//    }
-//    #else
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
-//    #endif
     
     app.webSocket("ws") { req, ws in
         ws.onText { ws, text in

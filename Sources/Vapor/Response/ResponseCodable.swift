@@ -58,14 +58,14 @@ extension ResponseEncodable {
 // MARK: Default Conformances
 
 extension Response: ResponseEncodable {
-    /// See `ResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         return request.eventLoop.makeSucceededFuture(self)
     }
 }
 
 extension StaticString: ResponseEncodable {
-    /// See `ResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
         return request.eventLoop.makeSucceededFuture(res)
@@ -73,7 +73,7 @@ extension StaticString: ResponseEncodable {
 }
 
 extension String: ResponseEncodable {
-    /// See `ResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         let res = Response(headers: staticStringHeaders, body: .init(string: self))
         return request.eventLoop.makeSucceededFuture(res)
@@ -81,7 +81,7 @@ extension String: ResponseEncodable {
 }
 
 extension EventLoopFuture: ResponseEncodable where Value: ResponseEncodable {
-    /// See `ResponseEncodable`.
+    // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         return self.flatMap { t in
             return t.encodeResponse(for: request)
