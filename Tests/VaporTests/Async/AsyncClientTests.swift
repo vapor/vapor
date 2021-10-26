@@ -1,4 +1,5 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
+#if !os(Linux)
 import Vapor
 import XCTest
 
@@ -122,4 +123,5 @@ final class AsyncClientTests: XCTestCase {
         XCTAssertNotNil(metadata["ahc-request-id"])
     }
 }
+#endif
 #endif
