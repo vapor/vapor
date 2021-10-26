@@ -59,4 +59,4 @@ jobs:
         uses: actions/checkout@v2
       - name: Run tests with Thread Sanitizer
         timeout-minutes: 30
-        run: swift test --enable-test-discovery --sanitize=thread
+        run: swift test --enable-test-discovery --sanitize=thread --filter VaporTests
