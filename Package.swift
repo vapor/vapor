@@ -113,6 +113,7 @@ let package = Package(
         .testTarget(name: "AsyncTests", dependencies: [
             .product(name: "NIOTestUtils", package: "swift-nio"),
             .target(name: "XCTVapor"),
+            .target(name: "VaporTests"),
         ]),
     ]
 )

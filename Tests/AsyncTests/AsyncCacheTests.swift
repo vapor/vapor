@@ -1,6 +1,7 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 #if !os(Linux)
 import XCTVapor
+@testable import VaporTests
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncCacheTests: XCTestCase {
