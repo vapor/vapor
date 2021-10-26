@@ -338,7 +338,7 @@ struct TestMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         request.logger.debug("In non-async middleware - \(number)")
         return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(number)")
+            request.logger.debug("In non-async middleware way out - \(self.number)")
             return response
         }
     }
