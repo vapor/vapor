@@ -57,10 +57,10 @@ jobs:
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
         uses: actions/checkout@v2
-     - name: Run main tests with Thread Sanitizer
-       timeout-minutes: 30
-       run: swift test --enable-test-discovery --filter VaporTests --sanitize=thread
-     - name: Run async tests without Thread Sanitizer
-       # TSAN and async aren't playing nice at the moment
-       timeout-minutes: 30
-       run: swift test --enable-test-discovery --filter AsyncTests
+      - name: Run main tests with Thread Sanitizer
+        timeout-minutes: 30
+        run: swift test --enable-test-discovery --filter VaporTests --sanitize=thread
+      - name: Run async tests without Thread Sanitizer
+        # TSAN and async aren't playing nice at the moment
+        timeout-minutes: 30
+        run: swift test --enable-test-discovery --filter AsyncTests
