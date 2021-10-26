@@ -1,7 +1,6 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 #if !os(Linux)
 import XCTVapor
-@testable import VaporTests
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncCacheTests: XCTestCase {
@@ -32,6 +31,41 @@ final class AsyncCacheTests: XCTestCase {
         try await app.cache.set("1", to: "2")
         let value = try await app.cache.get("foo", as: String.self)
         XCTAssertEqual(value, "bar")
+    }
+}
+
+extension Application.Caches.Provider {
+    static var foo: Self {
+        .init { $0.caches.use { FooCache(on: $0.eventLoopGroup.next()) } }
+    }
+}
+
+// Always returns "bar" for key "foo".
+// That's all...
+struct FooCache: Cache {
+    let eventLoop: EventLoop
+    init(on eventLoop: EventLoop) {
+        self.eventLoop = eventLoop
+    }
+
+    func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
+        where T : Decodable
+    {
+        let value: T?
+        if key == "foo" {
+            value = "bar" as? T
+        } else {
+            value = nil
+        }
+        return self.eventLoop.makeSucceededFuture(value)
+    }
+
+    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
+        return self.eventLoop.makeSucceededFuture(())
+    }
+
+    func `for`(_ request: Request) -> FooCache {
+        return self
     }
 }
 #endif

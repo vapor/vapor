@@ -2,7 +2,6 @@
 #if !os(Linux)
 import XCTVapor
 import Vapor
-@testable import VaporTests
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncWebSocketTests: XCTestCase {
@@ -126,10 +125,6 @@ final class AsyncWebSocketTests: XCTestCase {
         let string = try await promise.futureResult.get()
 
         XCTAssertEqual(string, "foo")
-    }
-
-    override class func setUp() {
-        XCTAssertTrue(isLoggingConfigured)
     }
 }
 #endif

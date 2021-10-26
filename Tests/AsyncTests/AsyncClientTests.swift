@@ -123,5 +123,96 @@ final class AsyncClientTests: XCTestCase {
         XCTAssertNotNil(metadata["ahc-request-id"])
     }
 }
+
+
+final class CustomClient: Client {
+    var eventLoop: EventLoop {
+        EmbeddedEventLoop()
+    }
+    var requests: [ClientRequest]
+
+    init() {
+        self.requests = []
+    }
+
+    func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
+        self.requests.append(request)
+        return self.eventLoop.makeSucceededFuture(ClientResponse())
+    }
+
+    func delegating(to eventLoop: EventLoop) -> Client {
+        self
+    }
+}
+
+extension Application {
+    struct CustomClientKey: StorageKey {
+        typealias Value = CustomClient
+    }
+
+    var customClient: CustomClient {
+        if let existing = self.storage[CustomClientKey.self] {
+            return existing
+        } else {
+            let new = CustomClient()
+            self.storage[CustomClientKey.self] = new
+            return new
+        }
+    }
+}
+
+extension Application.Clients.Provider {
+    static var custom: Self {
+        .init {
+            $0.clients.use { $0.customClient }
+        }
+    }
+}
+
+
+final class TestLogHandler: LogHandler {
+    subscript(metadataKey key: String) -> Logger.Metadata.Value? {
+        get { self.metadata[key] }
+        set { self.metadata[key] = newValue }
+    }
+
+    var metadata: Logger.Metadata
+    var logLevel: Logger.Level
+    var messages: [Logger.Message]
+
+    var logger: Logger {
+        .init(label: "test") { label in
+            self
+        }
+    }
+
+    init() {
+        self.metadata = [:]
+        self.logLevel = .trace
+        self.messages = []
+    }
+
+    func log(
+        level: Logger.Level,
+        message: Logger.Message,
+        metadata: Logger.Metadata?,
+        source: String,
+        file: String,
+        function: String,
+        line: UInt
+    ) {
+        self.messages.append(message)
+    }
+
+    func read() -> [String] {
+        let copy = self.messages
+        self.messages = []
+        return copy.map { $0.description }
+    }
+
+    func getMetadata() -> Logger.Metadata {
+        return self.metadata
+    }
+}
 #endif
 #endif
