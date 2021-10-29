@@ -120,6 +120,7 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertNil(app.http.server.shared.localAddress)
 
+        app.environment.arguments = ["serve"]
         XCTAssertNoThrow(try app.start())
 
         XCTAssertNotNil(app.http.server.shared.localAddress)
