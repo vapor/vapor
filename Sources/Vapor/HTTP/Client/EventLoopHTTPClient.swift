@@ -16,9 +16,14 @@ private struct EventLoopHTTPClient: Client {
     func send(
         _ client: ClientRequest
     ) -> EventLoopFuture<ClientResponse> {
+        let urlString = client.url.string
+        guard let url = URL(string: urlString) else {
+            self.logger?.debug("\(urlString) is an invalid URL")
+            return self.eventLoop.makeFailedFuture(Abort(.internalServerError, reason: "\(urlString) is an invalid URL"))
+        }
         do {
             let request = try HTTPClient.Request(
-                url: URL(string: client.url.string)!,
+                url: url,
                 method: client.method,
                 headers: client.headers,
                 body: client.body.map { .byteBuffer($0) }
