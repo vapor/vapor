@@ -154,7 +154,7 @@ extension XCTApplicationTester {
         return self
     }
 
-    public func performTest(
+    public func sendRequest(
         _ method: HTTPMethod,
         _ path: String,
         headers: HTTPHeaders = [:],
