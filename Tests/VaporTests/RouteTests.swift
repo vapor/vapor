@@ -412,4 +412,18 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.headers.first(name: testMarkerHeaderKey), testMarkerHeaderValue)
         }
     }
+    
+    // https://github.com/vapor/vapor/issues/2716
+    func testGH2716() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("client") { req in
+            return req.client.get("http://httpbin.org/status/2 1").map { $0.description }
+        }
+        
+        try app.testable(method: .running).test(.GET, "/client") { res in
+            XCTAssertEqual(res.status.code, 500)
+        }
+    }
 }
