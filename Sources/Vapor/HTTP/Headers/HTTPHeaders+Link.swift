@@ -91,7 +91,7 @@ extension HTTPHeaders {
         public var relation: Relation
         public var attributes: [String: String]
         
-        init(uri: String, relation: Relation, attributes: [String: String]) {
+        public init(uri: String, relation: Relation, attributes: [String: String]) {
             self.uri = uri
             self.relation = relation
             self.attributes = attributes
