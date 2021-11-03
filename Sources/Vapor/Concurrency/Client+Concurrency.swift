@@ -33,6 +33,10 @@ extension Client {
         try beforeSend(&request)
         return try await self.send(request).get()
     }
+    
+    public func send(_ request: ClientRequest) async throws -> ClientResponse {
+        return try await self.send(request).get()
+    }
 }
 
 #endif
