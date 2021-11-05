@@ -57,9 +57,10 @@ jobs:
         if: ${{ matrix.env.toolchain != '' }}
       - name: Check out Vapor
         uses: actions/checkout@v2
-      - name: Run main tests with Thread Sanitizer
+      - name: Run main tests without Thread Sanitizer
+        # TSAN doesn't seem to be playing nice with Xcode 13.2
         timeout-minutes: 30
-        run: swift test --enable-test-discovery --filter VaporTests --sanitize=thread
+        run: swift test --enable-test-discovery --filter VaporTests
       - name: Run async tests without Thread Sanitizer
         # TSAN and async aren't playing nice at the moment
         timeout-minutes: 30
