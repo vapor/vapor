@@ -1,3 +1,4 @@
+#if compiler(>=5.5) && canImport(_Concurrency)
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -55,6 +56,65 @@ public protocol Content: Codable, RequestDecodable, ResponseEncodable, AsyncRequ
     /// the decoding if something isn't valid. An empty string may indicate an error, for example.
     mutating func afterDecode() throws
 }
+#else
+/// Convertible to / from content in an HTTP message.
+///
+/// Conformance to this protocol consists of:
+///
+/// - `Codable`
+/// - `RequestDecodable`
+/// - `ResponseEncodable`
+///
+/// If adding conformance in an extension, you must ensure the type already conforms to `Codable`.
+///
+///     struct Hello: Content {
+///         let message = "Hello!"
+///     }
+///
+///     router.get("greeting") { req in
+///         return Hello() // {"message":"Hello!"}
+///     }
+///
+public protocol Content: Codable, RequestDecodable, ResponseEncodable {
+    /// The default `MediaType` to use when _encoding_ content. This can always be overridden at the encode call.
+    ///
+    /// Default implementation is `MediaType.json` for all types.
+    ///
+    ///     struct Hello: Content {
+    ///         static let defaultContentType = .urlEncodedForm
+    ///         let message = "Hello!"
+    ///     }
+    ///
+    ///     router.get("greeting") { req in
+    ///         return Hello() // message=Hello!
+    ///     }
+    ///
+    ///     router.get("greeting2") { req in
+    ///         let res = req.response()
+    ///         try res.content.encode(Hello(), as: .json)
+    ///         return res // {"message":"Hello!"}
+    ///     }
+    ///
+    static var defaultContentType: HTTPMediaType { get }
+
+    /// Called before this `Content` is encoded, generally for a `Response` object.
+    ///
+    /// You should use this method to perform any "sanitizing" which you need on the data.
+    /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
+    /// strings or replace empty arrays with `nil`. You can also use this method to abort
+    /// the encoding if something isn't valid. An empty array may indicate an error, for example.
+    mutating func beforeEncode() throws
+
+
+    /// Called after this `Content` is decoded, generally from a `Request` object.
+    ///
+    /// You should use this method to perform any "sanitizing" which you need on the data.
+    /// For example, you may wish to replace empty strings with a `nil`, `trim()` your
+    /// strings or replace empty arrays with `nil`. You can also use this method to abort
+    /// the decoding if something isn't valid. An empty string may indicate an error, for example.
+    mutating func afterDecode() throws
+}
+#endif
 
 /// MARK: Default Implementations
 
@@ -119,14 +179,22 @@ extension BinaryFloatingPoint where Self: Content {
 extension Double: Content { }
 extension Float: Content { }
 
-extension Array: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Element: Content {
+extension Array: Content, ResponseEncodable, RequestDecodable where Element: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
 
-extension Dictionary: Content, ResponseEncodable, RequestDecodable, AsyncRequestDecodable, AsyncResponseEncodable where Key == String, Value: Content {
+#if compiler(>=5.5) && canImport(_Concurrency)
+extension Array: AsyncResponseEncodable, AsyncRequestDecodable where Element: Content {}
+#endif
+
+extension Dictionary: Content, ResponseEncodable, RequestDecodable where Key == String, Value: Content {
     public static var defaultContentType: HTTPMediaType {
         return .json
     }
 }
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+extension Dictionary: AsyncResponseEncodable, AsyncRequestDecodable where Key == String, Value: Content {}
+#endif
