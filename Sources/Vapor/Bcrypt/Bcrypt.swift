@@ -29,7 +29,8 @@ public final class BCryptDigest {
     /// Creates a new `BCryptDigest`. Use the global `BCrypt` convenience variable.
     public init() { }
 
-
+    /// Creates a new BCrypt hash with a randomly generated salt.
+    /// The result can be stored in a database.
     public func hash(_ plaintext: String, cost: Int = 12) throws -> String {
         guard cost >= BCRYPT_MINLOGROUNDS && cost <= 31 else {
             throw BcryptError.invalidCost

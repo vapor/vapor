@@ -99,6 +99,8 @@ public final class Request: CustomStringConvertible {
         }
     }
 
+    /// This container is used to read your Decodable type using a ContentDecoder implementation.
+    /// If no ContentDecoder is provided, a supported Decoder will be selected based on the Request's Content-Type header.
     public var content: ContentContainer {
         get {
             return _ContentContainer(request: self)
@@ -108,6 +110,8 @@ public final class Request: CustomStringConvertible {
         }
     }
     
+    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
+    /// Vapor alraedy provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger
     
     public var body: Body {
@@ -142,12 +146,21 @@ public final class Request: CustomStringConvertible {
         return desc.joined(separator: "\n")
     }
 
+    /// The address from which this HTTP request was received by SwiftNIO.
+    /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
     
+    /// The EventLoop upon which Vapor calls the middlewares and route handler for this request.
+    /// While respond to this request asynchronously, you **MUST** ensure the resulting EventLoopFuture is bound to this EventLoop.
+    ///
+    /// If you cannot ensure that a library returns on this EventLoop, you can use `eventLoopFuture.hop(to: request.eventLoop)`
     public let eventLoop: EventLoop
     
+    /// A container containing the route parameters that were captured when receiving this request.
+    /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters
 
+    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage
     
     public convenience init(
