@@ -99,8 +99,8 @@ public final class Request: CustomStringConvertible {
         }
     }
 
-    /// This container is used to read your Decodable type using a ContentDecoder implementation.
-    /// If no ContentDecoder is provided, a supported Decoder will be selected based on the Request's Content-Type header.
+    /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
+    /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
     public var content: ContentContainer {
         get {
             return _ContentContainer(request: self)
@@ -111,7 +111,7 @@ public final class Request: CustomStringConvertible {
     }
     
     /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
-    /// Vapor alraedy provides metadata to this logger so that multiple logged messages can be traced back to the same request.
+    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger
     
     public var body: Body {
@@ -150,10 +150,10 @@ public final class Request: CustomStringConvertible {
     /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
     
-    /// The EventLoop upon which Vapor calls the middlewares and route handler for this request.
-    /// While respond to this request asynchronously, you **MUST** ensure the resulting EventLoopFuture is bound to this EventLoop.
+    /// The `EventLoop` which is handling this `Request`. The route handler and any relevant middleware are invoked in this event loop.
     ///
-    /// If you cannot ensure that a library returns on this EventLoop, you can use `eventLoopFuture.hop(to: request.eventLoop)`
+    /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
+    ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
     public let eventLoop: EventLoop
     
     /// A container containing the route parameters that were captured when receiving this request.

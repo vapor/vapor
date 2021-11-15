@@ -97,7 +97,7 @@ public final class Application {
     /// Starts the Application using the `start()` command, then waits for any running tasks to complete
     /// If your application is started without arguments, the default argument is used.
     ///
-    /// Under normal circumstances, `run `will start the shut down and wait for the web server to (manually) shut down before exiting the application.
+    /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.
     public func run() throws {
         do {
             try self.start()
