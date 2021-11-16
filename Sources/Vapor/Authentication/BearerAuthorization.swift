@@ -21,7 +21,7 @@ extension HTTPHeaders {
             guard headerParts.count == 2 else {
                 return nil
             }
-            guard headerParts[0] == "Bearer" else {
+            guard headerParts[0].lowercased() == "bearer" else {
                 return nil
             }
             return .init(token: String(headerParts[1]))
