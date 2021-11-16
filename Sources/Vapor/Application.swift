@@ -94,7 +94,7 @@ public final class Application {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
-    /// Starts the Application using the `start()` command, then waits for any running tasks to complete
+    /// Starts the Application using the `start()` method, then waits for any running tasks to complete
     /// If your application is started without arguments, the default argument is used.
     ///
     /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.

@@ -14,7 +14,7 @@ extension Client {
 extension Client {
     public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
         return self.send(.GET, headers: headers, to: url, beforeSend: beforeSend)
-    }`
+    }
 
     public func post(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
         return self.send(.POST, headers: headers, to: url, beforeSend: beforeSend)
