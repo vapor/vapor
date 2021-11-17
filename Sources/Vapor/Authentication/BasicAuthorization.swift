@@ -25,7 +25,7 @@ extension HTTPHeaders {
             guard headerParts.count == 2 else {
                 return nil
             }
-            guard headerParts[0] == "Basic" else {
+            guard headerParts[0].lowercased() == "basic" else {
                 return nil
             }
             guard let decodedToken = Data(base64Encoded: .init(headerParts[1])) else {
