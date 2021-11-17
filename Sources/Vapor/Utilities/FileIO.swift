@@ -42,7 +42,7 @@ public struct FileIO {
     private let allocator: ByteBufferAllocator
     
     /// HTTP request context.
-    private let request: Request
+    let request: Request
 
     /// Creates a new `FileIO`.
     ///

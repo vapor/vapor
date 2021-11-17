@@ -1,28 +1,29 @@
+#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 
-final class AuthenticationTests: XCTestCase {
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+final class AsyncAuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BearerAuthenticator {
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+        struct TestAuthenticator: AsyncBearerAuthenticator {
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
-        
+
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
@@ -44,25 +45,24 @@ final class AuthenticationTests: XCTestCase {
 
     func testBasicAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
-        
+
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -71,7 +71,7 @@ final class AuthenticationTests: XCTestCase {
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
-        
+
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
@@ -83,28 +83,27 @@ final class AuthenticationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
-    
+
     func testBasicAuthenticatorWithColonInPassword() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret:with:colon" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
-        
+
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -113,7 +112,7 @@ final class AuthenticationTests: XCTestCase {
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
-        
+
         let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
@@ -122,70 +121,30 @@ final class AuthenticationTests: XCTestCase {
             XCTAssertEqual(res.body.string, "Vapor")
         }
     }
-    
-    func testBasicAuthenticatorWithEmptyPassword() throws {
-        struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
-                TestAuthenticator()
-            }
 
-            var name: String
-        }
-
-        struct TestAuthenticator: BasicAuthenticator {
-            typealias User = Test
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
-                if basic.username == "test" && basic.password == "" {
-                    let test = Test(name: "Vapor")
-                    request.auth.login(test)
-                }
-                return request.eventLoop.makeSucceededFuture(())
-            }
-        }
-        
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.grouped([
-            Test.authenticator(), Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
-        
-        let basic = Data("test:".utf8).base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-        }
-    }
-    
     func testBasicAuthenticatorWithRedirect() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
-        
+
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         let redirectMiddleware = Test.redirectMiddleware { req -> String in
             return "/redirect?orig=\(req.url.path)"
         }
@@ -195,7 +154,7 @@ final class AuthenticationTests: XCTestCase {
         ]).get("test") { req -> String in
             return try req.auth.require(Test.self).name
         }
-        
+
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .seeOther)
@@ -208,11 +167,11 @@ final class AuthenticationTests: XCTestCase {
 
     func testSessionAuthentication() throws {
         struct Test: Authenticatable, SessionAuthenticatable {
-            static func bearerAuthenticator() -> Authenticator {
+            static func bearerAuthenticator() -> AsyncAuthenticator {
                 TestBearerAuthenticator()
             }
 
-            static func sessionAuthenticator() -> Authenticator {
+            static func sessionAuthenticator() -> AsyncAuthenticator {
                 TestSessionAuthenticator()
             }
 
@@ -222,29 +181,27 @@ final class AuthenticationTests: XCTestCase {
             var name: String
         }
 
-        struct TestBearerAuthenticator: BearerAuthenticator {
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+        struct TestBearerAuthenticator: AsyncBearerAuthenticator {
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
 
-        struct TestSessionAuthenticator: SessionAuthenticator {
+        struct TestSessionAuthenticator: AsyncSessionAuthenticator {
             typealias User = Test
 
-            func authenticate(sessionID: String, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(sessionID: String, for request: Request) async throws {
                 let test = Test(name: sessionID)
                 request.auth.login(test)
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
-        
+
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.routes.grouped([
             app.sessions.middleware,
             Test.sessionAuthenticator(),
@@ -276,68 +233,21 @@ final class AuthenticationTests: XCTestCase {
 
     func testMiddlewareConfigExistential() {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
             var name: String
         }
 
-        struct TestAuthenticator: BearerAuthenticator {
+        struct TestAuthenticator: AsyncBearerAuthenticator {
             typealias User = Test
 
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
-                request.eventLoop.makeSucceededFuture(())
-            }
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {}
         }
 
         var config = Middlewares()
         config.use(Test.authenticator())
     }
-
-    func testAsyncAuthenticator() throws {
-        struct Test: Authenticatable {
-            static func authenticator(threadPool: NIOThreadPool) -> Authenticator {
-                TestAuthenticator(threadPool: threadPool)
-            }
-            var name: String
-        }
-
-        struct TestAuthenticator: BasicAuthenticator {
-            typealias User = Test
-            let threadPool: NIOThreadPool
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
-                let promise = request.eventLoop.makePromise(of: Void.self)
-                self.threadPool.submit { _ in
-                    sleep(1)
-                    request.eventLoop.execute {
-                        if basic.username == "test" && basic.password == "secret" {
-                            let test = Test(name: "Vapor")
-                            request.auth.login(test)
-                        }
-                        promise.succeed(())
-                    }
-                }
-                return promise.futureResult
-            }
-        }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.grouped([
-            Test.authenticator(threadPool: app.threadPool),
-            Test.guardMiddleware()
-        ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
-        }
-
-        let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
-        try app.testable().test(.GET, "/test") { res in
-            XCTAssertEqual(res.status, .unauthorized)
-        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Vapor")
-        }
-    }
 }
+
+#endif

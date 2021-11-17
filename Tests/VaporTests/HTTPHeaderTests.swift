@@ -357,4 +357,41 @@ final class HTTPHeaderTests: XCTestCase {
             HTTPHeaders.ContentRange(unit: .bytes, range: .withinWithLimit(start: 0, end: 1000, limit: 1001))
         )
     }
+    
+    func testLinkHeaderParsing() throws {
+        let headers = HTTPHeaders([
+            ("link", #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel=related, </?a=-2>; rel=related"#)
+        ])
+        
+        XCTAssertEqual(headers.links?.count, 4)
+        let a = try XCTUnwrap(headers.links?.dropFirst(0).first),
+            b = try XCTUnwrap(headers.links?.dropFirst(1).first),
+            c = try XCTUnwrap(headers.links?.dropFirst(2).first),
+            d = try XCTUnwrap(headers.links?.dropFirst(3).first)
+        XCTAssertEqual(a.uri, "https://localhost/?a=1")
+        XCTAssertEqual(a.relation, .next)
+        XCTAssertEqual(a.attributes, [:])
+        XCTAssertEqual(b.uri, "https://localhost/?a=2")
+        XCTAssertEqual(b.relation, .last)
+        XCTAssertEqual(b.attributes, ["custom1": "whatever"])
+        XCTAssertEqual(c.uri, "/?a=-1")
+        XCTAssertEqual(c.relation, .related)
+        XCTAssertEqual(c.attributes, [:])
+        XCTAssertEqual(d.uri, "/?a=-2")
+        XCTAssertEqual(d.relation, .related)
+        XCTAssertEqual(d.attributes, [:])
+    }
+    
+    func testLinkHeaderSerialization() throws {
+        let links: [HTTPHeaders.Link] = [
+            .init(uri: "https://localhost/?a=1", relation: .next, attributes: [:]),
+            .init(uri: "https://localhost/?a=2", relation: .last, attributes: ["custom1": "whatever"]),
+            .init(uri: "/?a=-1", relation: .related, attributes: [:]),
+            .init(uri: "/?a=-2", relation: .related, attributes: [:]),
+        ]
+        var headers = HTTPHeaders()
+        
+        headers.links = links
+        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel=next, <https://localhost/?a=2>; rel=last; custom1=whatever, </?a=-1>; rel=related, </?a=-2>; rel=related"#)
+    }
 }

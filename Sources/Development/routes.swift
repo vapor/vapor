@@ -230,6 +230,79 @@ public func routes(_ app: Application) throws {
             return promise.futureResult
         }
     }
+
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    if #available(macOS 12, *) {
+        let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
+        asyncRoutes.get("client") { req async throws -> String in
+            let response = try await req.client.get("https://www.google.com")
+            guard let body = response.body else {
+                throw Abort(.internalServerError)
+            }
+            return String(buffer: body)
+        }
+
+        func asyncRouteTester(_ req: Request) async throws -> String {
+            let response = try await req.client.get("https://www.google.com")
+            guard let body = response.body else {
+                throw Abort(.internalServerError)
+            }
+            return String(buffer: body)
+        }
+        asyncRoutes.get("client2", use: asyncRouteTester)
+        
+        asyncRoutes.get("content", use: asyncContentTester)
+        
+        func asyncContentTester(_ req: Request) async throws -> Creds {
+            return Creds(email: "name", password: "password")
+        }
+        
+        asyncRoutes.get("content2") { req async throws -> Creds in
+            return Creds(email: "name", password: "password")
+        }
+        
+        asyncRoutes.get("contentArray") { req async throws -> [Creds] in
+            let cred1 = Creds(email: "name", password: "password")
+            return [cred1]
+        }
+        
+        func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
+            "Hello World"
+        }
+        asyncRoutes.get("opaque", use: opaqueRouteTester)
+        
+        // Make sure jumping between multiple different types of middleware works
+        asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
+            return "OK"
+        }
+        
+        let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
+        basicAuthRoutes.get("auth") { req async throws -> String in
+            return try req.auth.require(Test.self).name
+        }
+    }
+    
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    struct Test: Authenticatable {
+        static func authenticator() -> AsyncAuthenticator {
+            TestAuthenticator()
+        }
+
+        var name: String
+    }
+
+    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    struct TestAuthenticator: AsyncBasicAuthenticator {
+        typealias User = Test
+
+        func authenticate(basic: BasicAuthorization, for request: Request) async throws {
+            if basic.username == "test" && basic.password == "secret" {
+                let test = Test(name: "Vapor")
+                request.auth.login(test)
+            }
+        }
+    }
+    #endif
 }
 
 struct TestError: AbortError, DebuggableError {
@@ -260,5 +333,31 @@ struct TestError: AbortError, DebuggableError {
             range: range
         )
         self.stackTrace = stackTrace
+    }
+}
+
+#if compiler(>=5.5) && canImport(_Concurrency)
+@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+struct TestAsyncMiddleware: AsyncMiddleware {
+    let number: Int
+    
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        request.logger.debug("In async middleware - \(number)")
+        let response = try await next.respond(to: request)
+        request.logger.debug("In async middleware way out - \(number)")
+        return response
+    }
+}
+#endif
+
+struct TestMiddleware: Middleware {
+    let number: Int
+    
+    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+        request.logger.debug("In non-async middleware - \(number)")
+        return next.respond(to: request).map { response in
+            request.logger.debug("In non-async middleware way out - \(self.number)")
+            return response
+        }
     }
 }
