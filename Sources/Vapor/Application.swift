@@ -94,6 +94,10 @@ public final class Application {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
+    /// Starts the Application using the `start()` method, then waits for any running tasks to complete
+    /// If your application is started without arguments, the default argument is used.
+    ///
+    /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.
     public func run() throws {
         do {
             try self.start()
@@ -104,6 +108,11 @@ public final class Application {
         }
     }
     
+    /// When called, this will execute the startup command provided through an argument. If no startup command is provided, the default is used.
+    /// Under normal circumstances, this will start running Vapor's webserver.
+    ///
+    /// If you `start` Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
+    /// If you want to run your Application indefinitely, or until your code shuts the application down, use `run()` instead.
     public func start() throws {
         try self.boot()
         let command = self.commands.group()
