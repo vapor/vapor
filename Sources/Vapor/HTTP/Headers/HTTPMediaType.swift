@@ -188,8 +188,14 @@ public extension HTTPMediaType {
     static let multipart = HTTPMediaType(type: "multipart", subType: "mixed")
     /// JSON media type.
     static let json = HTTPMediaType(type: "application", subType: "json", parameters: ["charset": "utf-8"])
-    /// JSON API media type (see https://jsonapi.org/format/).
+    /// JSON API media type.
+    ///
+    /// > Note: [JSON API specification](https://jsonapi.org/format/)
     static let jsonAPI = HTTPMediaType(type: "application", subType: "vnd.api+json", parameters: ["charset": "utf-8"])
+    /// JSON sequence media type.
+    ///
+    /// > Note: [JSON Text Sequence RFC](https://datatracker.ietf.org/doc/html/rfc7464)
+    static let jsonSequence = HTTPMediaType(type: "application", subType: "json-seq", parameters: ["charset": "utf-8"])
     /// XML media type.
     static let xml = HTTPMediaType(type: "application", subType: "xml", parameters: ["charset": "utf-8"])
     /// DTD media type.
