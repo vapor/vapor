@@ -1,12 +1,17 @@
 import NIO
 import NIOHTTP1
 
-final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHandler {
+fileprivate struct ResponseEndSentEvent {
+    
+}
+
+final class HTTPServerRequestHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
-    typealias OutboundIn = Never
+    typealias OutboundIn = Response
+    typealias OutboundOut = HTTPServerResponsePart
 
-    enum RequestState {
+    private enum RequestState {
         case ready
         case awaitingBody(Request)
         case awaitingEnd(Request, ByteBuffer)
@@ -14,20 +19,27 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
         case skipping
     }
 
-    var requestState: RequestState
-    var bodyStreamState: HTTPBodyStreamState
+    /// Optional server header.
+    private let serverHeader: String?
+    private let dateCache: RFC1123DateCache
 
-    var logger: Logger {
+    private var requestState: RequestState
+    private var bodyStreamState: HTTPBodyStreamState
+
+    private var logger: Logger {
         self.application.logger
     }
-    var application: Application
-    
-    init(application: Application) {
+    private var application: Application
+
+    init(application: Application, serverHeader: String?, dateCache: RFC1123DateCache) {
         self.application = application
         self.requestState = .ready
         self.bodyStreamState = .init()
+
+        self.serverHeader = serverHeader
+        self.dateCache = dateCache
     }
-    
+
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         assert(context.channel.eventLoop.inEventLoop)
         let part = self.unwrapInboundIn(data)
@@ -57,7 +69,7 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             }
         case .body(let buffer):
             switch self.requestState {
-            case .ready, .awaitingEnd: 
+            case .ready, .awaitingEnd:
                 assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
                 if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
@@ -102,19 +114,6 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
         }
     }
 
-    func read(context: ChannelHandlerContext) {
-        switch self.requestState {
-        case .streamingBody(let stream):
-            self.handleBodyStreamStateResult(
-                context: context,
-                self.bodyStreamState.didReceiveReadRequest(),
-                stream: stream
-            )
-        default:
-            context.read()
-        }
-    }
-
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         switch self.requestState {
         case .streamingBody(let stream):
@@ -143,7 +142,7 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
         context.fireChannelInactive()
     }
 
-    func handleBodyStreamStateResult(
+    private func handleBodyStreamStateResult(
         context: ChannelHandlerContext,
         _ result: HTTPBodyStreamState.Result,
         stream: Request.BodyStream
@@ -181,7 +180,7 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
 
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
-        case is HTTPServerResponseEncoder.ResponseEndSentEvent:
+        case is ResponseEndSentEvent:
             switch self.requestState {
             case .streamingBody(let bodyStream):
                 // Response ended during request stream.
@@ -211,6 +210,88 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
         default:
             self.logger.trace("Unhandled user event: \(event)")
         }
+    }
+}
+
+extension HTTPServerRequestHandler {
+    func read(context: ChannelHandlerContext) {
+        switch self.requestState {
+        case .streamingBody(let stream):
+            self.handleBodyStreamStateResult(
+                context: context,
+                self.bodyStreamState.didReceiveReadRequest(),
+                stream: stream
+            )
+        default:
+            context.read()
+        }
+    }
+
+    func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+        let response = self.unwrapOutboundIn(data)
+        // add a RFC1123 timestamp to the Date header to make this
+        // a valid request
+        response.headers.add(name: "date", value: self.dateCache.currentTimestamp())
+        
+        if let server = self.serverHeader {
+            response.headers.add(name: "server", value: server)
+        }
+        
+        // begin serializing
+        context.write(wrapOutboundOut(.head(.init(
+            version: response.version,
+            status: response.status,
+            headers: response.headers
+        ))), promise: nil)
+
+        
+        if response.status == .noContent || response.forHeadRequest {
+            // don't send bodies for 204 (no content) responses
+            // or HEAD requests
+            context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: promise)
+        } else {
+            switch response.body.storage {
+            case .none:
+                context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+                context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
+            case .buffer(let buffer):
+                self.writeAndflush(buffer: buffer, context: context, promise: promise)
+            case .string(let string):
+                var buffer = context.channel.allocator.buffer(capacity: string.count)
+                buffer.writeString(string)
+                self.writeAndflush(buffer: buffer, context: context, promise: promise)
+            case .staticString(let string):
+                var buffer = context.channel.allocator.buffer(capacity: string.utf8CodeUnitCount)
+                buffer.writeStaticString(string)
+                self.writeAndflush(buffer: buffer, context: context, promise: promise)
+            case .data(let data):
+                var buffer = context.channel.allocator.buffer(capacity: data.count)
+                buffer.writeBytes(data)
+                self.writeAndflush(buffer: buffer, context: context, promise: promise)
+            case .dispatchData(let data):
+                var buffer = context.channel.allocator.buffer(capacity: data.count)
+                buffer.writeDispatchData(data)
+                self.writeAndflush(buffer: buffer, context: context, promise: promise)
+            case .stream(let stream):
+                let channelStream = ChannelResponseBodyStream(
+                    context: context,
+                    handler: self,
+                    promise: promise,
+                    count: stream.count == -1 ? nil : stream.count
+                )
+                stream.callback(channelStream)
+            }
+        }
+    }
+    
+    /// Writes a `ByteBuffer` to the context.
+    private func writeAndflush(buffer: ByteBuffer, context: ChannelHandlerContext, promise: EventLoopPromise<Void>?) {
+        if buffer.readableBytes > 0 {
+            context.write(wrapOutboundOut(.body(.byteBuffer(buffer))), promise: nil)
+        }
+        context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+        context.writeAndFlush(wrapOutboundOut(.end(nil)), promise: promise)
     }
 }
 
@@ -280,7 +361,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         switch self.state {
         case .idle:
             self.state = .writing(.init(
-                bufferedWrites: .init(),
+                bufferedWrites: .init(initialCapacity: 4),
                 heldUpRead: false,
                 hasClosed: false
             ))
@@ -358,3 +439,66 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         preconditionFailure("illegal transition \(function) in \(self)")
     }
 }
+
+private final class ChannelResponseBodyStream: BodyStreamWriter {
+    let context: ChannelHandlerContext
+    let handler: HTTPServerRequestHandler
+    let promise: EventLoopPromise<Void>?
+    let count: Int?
+    var currentCount: Int
+    var isComplete: Bool
+
+    var eventLoop: EventLoop {
+        return self.context.eventLoop
+    }
+
+    enum Error: Swift.Error {
+        case tooManyBytes
+        case notEnoughBytes
+    }
+
+    init(
+        context: ChannelHandlerContext,
+        handler: HTTPServerRequestHandler,
+        promise: EventLoopPromise<Void>?,
+        count: Int?
+    ) {
+        self.context = context
+        self.handler = handler
+        self.promise = promise
+        self.count = count
+        self.currentCount = 0
+        self.isComplete = false
+    }
+    
+    func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+        switch result {
+        case .buffer(let buffer):
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
+            self.currentCount += buffer.readableBytes
+            if let count = self.count, self.currentCount > count {
+                self.promise?.fail(Error.tooManyBytes)
+                promise?.fail(Error.notEnoughBytes)
+            }
+        case .end:
+            self.isComplete = true
+            if let count = self.count, self.currentCount != count {
+                self.promise?.fail(Error.notEnoughBytes)
+                promise?.fail(Error.notEnoughBytes)
+            }
+            self.context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.promise?.succeed(())
+        case .error(let error):
+            self.isComplete = true
+            self.context.fireUserInboundEventTriggered(ResponseEndSentEvent())
+            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.promise?.fail(error)
+        }
+    }
+
+    deinit {
+        assert(self.isComplete, "Response body stream writer deinitialized before .end or .error was sent.")
+    }
+}
+

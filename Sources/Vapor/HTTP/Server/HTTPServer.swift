@@ -446,20 +446,16 @@ extension ChannelPipeline {
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
-        // add NIO -> HTTP request decoder
-        let serverReqDecoder = HTTPServerRequestDecoder(
-            application: application
-        )
-        handlers.append(serverReqDecoder)
-        
-        // add NIO -> HTTP response encoder
-        let serverResEncoder = HTTPServerResponseEncoder(
+        // add NIO -> HTTP request handler
+        let serverReqDecoder = HTTPServerRequestHandler(
+            application: application,
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
-        handlers.append(serverResEncoder)
+        handlers.append(serverReqDecoder)
         
-        // add server request -> response delegate
+        
+        // add server request -> response handler
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
         handlers.append(handler)
         
@@ -512,19 +508,16 @@ extension ChannelPipeline {
             break
         }
 
-        // add NIO -> HTTP response encoder
-        let serverResEncoder = HTTPServerResponseEncoder(
+        // add NIO -> HTTP response handler
+        let serverReqDecoder = HTTPServerRequestHandler(
+            application: application,
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
-        handlers.append(serverResEncoder)
-        
-        // add NIO -> HTTP request decoder
-        let serverReqDecoder = HTTPServerRequestDecoder(
-            application: application
-        )
+
         handlers.append(serverReqDecoder)
-        // add server request -> response delegate
+        
+        // add server request -> response handler
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
 
         // add HTTP upgrade handler
