@@ -447,13 +447,12 @@ extension ChannelPipeline {
         handlers.append(http2)
         
         // add NIO -> HTTP request handler
-        let serverReqDecoder = HTTPServerRequestHandler(
+        let serverRequestHandler = HTTPServerRequestHandler(
             application: application,
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
-        handlers.append(serverReqDecoder)
-        
+        handlers.append(serverRequestHandler)
         
         // add server request -> response handler
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
@@ -509,13 +508,13 @@ extension ChannelPipeline {
         }
 
         // add NIO -> HTTP response handler
-        let serverReqDecoder = HTTPServerRequestHandler(
+        let serverRequestHandler = HTTPServerRequestHandler(
             application: application,
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
 
-        handlers.append(serverReqDecoder)
+        handlers.append(serverRequestHandler)
         
         // add server request -> response handler
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
