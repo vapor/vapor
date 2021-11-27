@@ -10,9 +10,10 @@ public final class FileMiddleware: Middleware {
     ///
     /// - parameters:
     ///     - publicDirectory: The public directory to serve files from.
-    ///     - defaultFile: The name of the default file to serve if a request hits a directory. If `nil` is provided, default file serving is disabled.
+    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
+    ///     an absolute path from the public directory root. If `nil`, no default files are served.
     public init(publicDirectory: String, defaultFile: String? = nil) {
-        self.publicDirectory = publicDirectory.hasSuffix("/") ? publicDirectory : publicDirectory + "/"
+        self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
     }
 
@@ -23,46 +24,67 @@ public final class FileMiddleware: Middleware {
         }
 
         // path must be relative.
-        while path.hasPrefix("/") {
-            path = String(path.dropFirst())
-        }
+        path = path.removeLeadingSlashes()
 
         // protect against relative paths
         guard !path.contains("../") else {
             return request.eventLoop.makeFailedFuture(Abort(.forbidden))
         }
 
-        // create absolute file path
-        let filePath = self.publicDirectory + path
+        // create absolute path
+        var absPath = self.publicDirectory + path
 
-        // check if input exists and whether it is a directory
+        // check if path exists and whether it is a directory
         var isDir: ObjCBool = false
-        let fileExists = FileManager.default.fileExists(atPath: filePath, isDirectory: &isDir)
-        
-        guard fileExists else {
+        guard FileManager.default.fileExists(atPath: absPath, isDirectory: &isDir) else {
             return next.respond(to: request)
         }
         
-        if !isDir.boolValue {
-            // stream the file
-            let res = request.fileio.streamFile(at: filePath)
-            return request.eventLoop.makeSucceededFuture(res)
-        } else {
-            // Check for the default file
-            guard let defaultFileName = defaultFile else {
+        if isDir.boolValue {
+            // If a directory, check for the default file
+            guard let defaultFile = defaultFile else {
                 return next.respond(to: request)
             }
             
-            var defaultFilePath = filePath.hasSuffix("/") ? filePath : filePath + "/"
-            defaultFilePath = defaultFilePath + defaultFileName
-            
-            guard FileManager.default.fileExists(atPath: defaultFilePath) else {
-                return next.respond(to: request)
+            if defaultFile.isAbsolute() {
+                absPath = self.publicDirectory + defaultFile.removeLeadingSlashes()
+            } else {
+                absPath = absPath.addTrailingSlash() + defaultFile
             }
             
-            // stream the file
-            let res = request.fileio.streamFile(at: defaultFilePath)
-            return request.eventLoop.makeSucceededFuture(res)
+            // If the default file doesn't exist, pass on request
+            guard FileManager.default.fileExists(atPath: absPath) else {
+                return next.respond(to: request)
+            }
         }
+        
+        // stream the file
+        let res = request.fileio.streamFile(at: absPath)
+        return request.eventLoop.makeSucceededFuture(res)
+    }
+}
+
+fileprivate extension String {
+    /// Determines if input path is absolute based on a leading slash
+    func isAbsolute() -> Bool {
+        return self.hasPrefix("/")
+    }
+
+    /// Makes a path relative by removing all leading slashes
+    func removeLeadingSlashes() -> String {
+        var newPath = self
+        while newPath.hasPrefix("/") {
+            newPath = String(newPath.dropFirst())
+        }
+        return newPath
+    }
+
+    /// Adds a trailing slash to the path if one is not already present
+    func addTrailingSlash() -> String {
+        var newPath = self
+        if !newPath.hasSuffix("/") {
+            newPath += "/"
+        }
+        return newPath
     }
 }
