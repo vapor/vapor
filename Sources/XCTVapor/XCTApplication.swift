@@ -153,4 +153,28 @@ extension XCTApplicationTester {
         }
         return self
     }
+
+    public func sendRequest(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in }
+    ) throws -> XCTHTTPResponse {
+        var request = XCTHTTPRequest(
+            method: method,
+            url: .init(path: path),
+            headers: headers,
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+        )
+        try beforeRequest(&request)
+        do {
+            return try self.performTest(request: request)
+        } catch {
+            XCTFail("\(error)", file: (file), line: line)
+            throw error
+        }
+    }
 }
