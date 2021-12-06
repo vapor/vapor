@@ -74,7 +74,7 @@ fileprivate extension String {
     func removeLeadingSlashes() -> String {
         var newPath = self
         while newPath.hasPrefix("/") {
-            newPath = String(newPath.dropFirst())
+            newPath.removeFirst()
         }
         return newPath
     }
