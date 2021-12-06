@@ -36,6 +36,10 @@ final class AuthenticationTests: XCTestCase {
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
+        .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Vapor")
+        }
     }
 
     func testBasicAuthenticator() throws {
@@ -74,6 +78,9 @@ final class AuthenticationTests: XCTestCase {
         }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
+        }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Vapor")
         }
     }
     
@@ -108,6 +115,45 @@ final class AuthenticationTests: XCTestCase {
         }
         
         let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
+        try app.testable().test(.GET, "/test") { res in
+            XCTAssertEqual(res.status, .unauthorized)
+        }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Vapor")
+        }
+    }
+    
+    func testBasicAuthenticatorWithEmptyPassword() throws {
+        struct Test: Authenticatable {
+            static func authenticator() -> Authenticator {
+                TestAuthenticator()
+            }
+
+            var name: String
+        }
+
+        struct TestAuthenticator: BasicAuthenticator {
+            typealias User = Test
+
+            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+                if basic.username == "test" && basic.password == "" {
+                    let test = Test(name: "Vapor")
+                    request.auth.login(test)
+                }
+                return request.eventLoop.makeSucceededFuture(())
+            }
+        }
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.grouped([
+            Test.authenticator(), Test.guardMiddleware()
+        ]).get("test") { req -> String in
+            return try req.auth.require(Test.self).name
+        }
+        
+        let basic = Data("test:".utf8).base64EncodedString()
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
