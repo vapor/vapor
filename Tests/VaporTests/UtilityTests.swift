@@ -20,6 +20,7 @@ final class UtilityTests: XCTestCase {
         let data = Data([1, 2, 3, 4])
         XCTAssertEqual(data.base32EncodedString(), "AEBAGBA")
         XCTAssertEqual(Data(base32Encoded: "AEBAGBA"), data)
+        XCTAssertNil(Data(base32Encoded: data.base64EncodedString()))
     }
 
     func testByteCount() throws {

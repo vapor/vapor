@@ -43,16 +43,16 @@ extension Array where Element == HTTPMediaTypePreference {
             if aq == bq {
                 return .orderedSame
             } else if aq > bq {
-                return .orderedAscending
-            } else {
                 return .orderedDescending
+            } else {
+                return .orderedAscending
             }
         case (.none, .some):
             // there is not a value for a, no way it can be preferred
-            return .orderedDescending
+            return .orderedAscending
         case (.some, .none):
             // there is not a value for b, a is preferred by default
-            return .orderedAscending
+            return .orderedDescending
         case (.none, .none):
             // there is no value for either, neither is preferred
             return .orderedSame

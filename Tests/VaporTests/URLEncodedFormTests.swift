@@ -107,11 +107,28 @@ final class URLEncodedFormTests: XCTestCase {
         }
 
         let data = """
-        array[0]=a&array[1]=b
+        array[0]=a&array[1]=&array[2]=b&array[3]=
         """
         let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
         XCTAssertEqual(test.array[0], "a")
-        XCTAssertEqual(test.array[1], "b")
+        XCTAssertEqual(test.array[1], "")
+        XCTAssertEqual(test.array[2], "b")
+        XCTAssertEqual(test.array[3], "")
+    }
+    
+    func testDecodeUnindexedArray() throws {
+        struct Test: Decodable {
+            let array: [String]
+        }
+
+        let data = """
+        array[]=a&array[]=&array[]=b&array[]=
+        """
+        let test = try URLEncodedFormDecoder().decode(Test.self, from: data)
+        XCTAssertEqual(test.array[0], "a")
+        XCTAssertEqual(test.array[1], "")
+        XCTAssertEqual(test.array[2], "b")
+        XCTAssertEqual(test.array[3], "")
     }
 
     func testDecodeIndexedArray_dictionary() throws {

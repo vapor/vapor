@@ -331,10 +331,24 @@ class ValidationTests: XCTestCase {
         assert(" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~", passes: .ascii)
         assert("ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .ascii, "contains '🤠' (allowed: ASCII)")
     }
+    
+    func testCollectionASCII() {
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .ascii)
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], fails: !.ascii, "contains only ASCII")
+        assert(["\n\r\t"], passes: .ascii)
+        assert(["\n\r\t", "\u{129}"], fails: .ascii, "string at index 1 contains 'ĩ' (allowed: ASCII)")
+        assert([" !\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~"], passes: .ascii)
+        assert(["ABCDEFGHIJKLMNOPQR🤠STUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"], fails: .ascii, "string at index 0 contains '🤠' (allowed: ASCII)")
+    }
 
     func testAlphanumeric() {
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789", passes: .alphanumeric)
         assert("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/", fails: .alphanumeric, "contains '+' (allowed: A-Z, a-z, 0-9)")
+    }
+    
+    func testCollectionAlphanumeric() {
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"], passes: .alphanumeric)
+        assert(["ABCDEFGHIJKLMNOPQRSTUVWXYZabcdef", "ghijklmnopqrstuvwxyz0123456789+/"], fails: .alphanumeric, "string at index 1 contains '+' (allowed: A-Z, a-z, 0-9)")
     }
 
     func testEmpty() {
@@ -558,6 +572,92 @@ class ValidationTests: XCTestCase {
             let content = try res.content.decode(ValidationErrorMiddleware.ErrorResponse.self)
             XCTAssertEqual(content.errors.count, 1)
         })
+    }
+
+    func testValidateNullWhenNotRequired() throws {
+        struct Site: Validatable, Codable {
+            var url: String?
+            var number: Int?
+            var name: String?
+
+            static func validations(_ v: inout Validations) {
+                v.add("url", as: String.self, is: .url, required: false)
+                v.add("number", as: Int.self, required: false)
+                v.add("name", as: String.self, required: false)
+            }
+        }
+
+        let valid = """
+        {
+            "url": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid))
+
+        let valid2 = """
+        {
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid2))
+
+        let valid3 = """
+        {
+            "name": "Tim"
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid3))
+
+        let valid4 = """
+        {
+            "name": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid4))
+
+        let valid5 = """
+        {
+            "number": 3
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid5))
+
+        let valid6 = """
+        {
+            "number": null
+        }
+        """
+        XCTAssertNoThrow(try Site.validate(json: valid6))
+
+        let invalid1 = """
+        {
+            "number": "Tim"
+        }
+        """
+
+        do {
+            try Site.validate(json: invalid1)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "number")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "is not a(n) Int")
+        }
+
+        let invalid2 = """
+        {
+            "name": 3
+        }
+        """
+        do {
+            try Site.validate(json: invalid2)
+        } catch let error as ValidationsError {
+            XCTAssertEqual(error.failures.count, 1)
+            let name = error.failures[0]
+            XCTAssertEqual(name.key.stringValue, "name")
+            XCTAssertEqual(name.result.isFailure, true)
+            XCTAssertEqual(name.result.failureDescription, "is not a(n) String")
+        }
     }
 
     override class func setUp() {

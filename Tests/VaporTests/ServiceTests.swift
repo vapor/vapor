@@ -28,6 +28,7 @@ final class ServiceTests: XCTestCase {
         defer { app.shutdown() }
 
         app.lifecycle.use(Hello())
+        app.environment.arguments = ["serve"]
         try app.start()
         app.running?.stop()
     }

@@ -295,6 +295,25 @@ final class ContentTests: XCTestCase {
         let content = try request.content.decode(SampleContent.self)
         XCTAssertEqual(content.name, "new name after decode")
     }
+    
+    func testSupportsJsonApi() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        var body = ByteBufferAllocator().buffer(capacity: 0)
+        body.writeString(#"{"data": ["entity0", "entity1"], "meta": {}}"#)
+
+        let request = Request(
+            application: app,
+            collectedBody: body,
+            on: EmbeddedEventLoop()
+        )
+
+        request.headers.contentType = .jsonAPI
+
+        let content = try request.content.decode(JsonApiContent.self)
+        XCTAssertEqual(content.data, ["entity0", "entity1"])
+    }
 
     func testQueryHooks() throws {
         let app = Application()
@@ -338,6 +357,64 @@ final class ContentTests: XCTestCase {
             )
         }
     }
+
+    func testPlaintextDecode() throws {
+        let data = "255"
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode(data, as: .plainText)
+            return res
+        }
+
+        app.routes.get("empty-plaintext") { (req) -> Response in
+            let res = Response()
+            try res.content.encode("", as: .plainText)
+            return res
+        }
+
+        try app.testable().test(.GET, "/plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(UInt8.self), 255)
+            XCTAssertEqual(try res.content.decode(String.self), "255")
+        }
+
+        try app.testable().test(.GET, "/empty-plaintext") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(try res.content.decode(String.self), "")
+        }
+    }
+
+    func testPlaintextDecoderDoesntCrash() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        struct WrongType: Content {
+            let example: String
+        }
+
+        app.routes.post("plaintext") { req -> String in
+            _ = try req.content.decode(WrongType.self)
+            return "OK"
+        }
+
+        let body = """
+        {
+          "example": "example"
+        }
+        """
+
+        let byteBuffer = ByteBuffer(string: body)
+        var headers = HTTPHeaders()
+        headers.add(name: .contentType, value: "text/plain")
+
+        try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
+            // This should return a 400 Bad Request and not crash
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
 }
 
 private struct SampleContent: Content {
@@ -350,4 +427,11 @@ private struct SampleContent: Content {
     mutating func afterDecode() throws {
         name = "new name after decode"
     }
+}
+
+private struct JsonApiContent: Content {
+    struct Meta: Codable {}
+    
+    var data: [String]
+    var meta = Meta()
 }

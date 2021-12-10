@@ -108,6 +108,59 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.forwarded.first?.by, "203.0.113.43")
     }
 
+    func testAcceptType() throws {
+        var headers = HTTPHeaders()
+
+        // Simple accept type
+        do {
+            headers.replaceOrAdd(name: .accept, value: "text/html")
+            XCTAssertEqual(headers.accept.mediaTypes.count, 1)
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.html))
+        }
+
+        // Complex accept type (used e.g. from safari browser)
+        do {
+            headers.replaceOrAdd(name: .accept, value: "text/html,application/xhtml+xml,application/xml;q=0.9,image/png;q=0.8")
+            XCTAssertEqual(headers.accept.mediaTypes.count, 4)
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.html))
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.xml))
+            XCTAssertTrue(headers.accept.mediaTypes.contains(.png))
+            XCTAssertTrue(headers.accept.comparePreference(for: .html, to: .xml) == .orderedDescending)
+            XCTAssertEqual(headers.accept.first(where: { $0.mediaType == .xml })?.q, 0.9)
+            XCTAssertEqual(headers.accept.first(where: { $0.mediaType == .png })?.q, 0.8)
+            XCTAssertTrue(headers.accept.comparePreference(for: .xml, to: .png) == .orderedDescending)
+        }
+
+        // #2668 Preference should be consistent: present types are preferred to missing types
+        do {
+            headers.replaceOrAdd(name: .accept, value: "image/png;q=0.5")
+            XCTAssertEqual(headers.accept.comparePreference(for: .png, to: .gif), .orderedDescending)
+            XCTAssertEqual(headers.accept.comparePreference(for: .gif, to: .png), .orderedAscending)
+            XCTAssertEqual(headers.accept.comparePreference(for: .png, to: .png), .orderedSame)
+            XCTAssertEqual(headers.accept.comparePreference(for: .gif, to: .gif), .orderedSame)
+        }
+    }
+
+    func testComplexCookieParsing() throws {
+        var headers = HTTPHeaders()
+        do {
+            headers.add(name: .setCookie, value: "SIWA_STATE=CJKxa71djx6CaZ0MwRjtvtJ5Zub+kfaoIEZGoY3wXKA=; Path=/; SameSite=None; HttpOnly; Secure")
+            headers.add(name: .setCookie, value: "vapor-session=TL7r+TS3RNhpEC6HoCfukq+7edNHKF2elF6WiKV4JCg=; Expires=Wed, 02 Jun 2021 14:57:57 GMT; Path=/; SameSite=None; HttpOnly; Secure")
+            XCTAssertEqual(headers.setCookie?.all.count, 2)
+            let siwaState = try XCTUnwrap(headers.setCookie?["SIWA_STATE"])
+            XCTAssertEqual(siwaState.sameSite, HTTPCookies.SameSitePolicy.none)
+            XCTAssertEqual(siwaState.expires, nil)
+            XCTAssertTrue(siwaState.isHTTPOnly)
+            XCTAssertTrue(siwaState.isSecure)
+
+            let vaporSession = try XCTUnwrap(headers.setCookie?["vapor-session"])
+            XCTAssertEqual(vaporSession.sameSite, HTTPCookies.SameSitePolicy.none)
+            XCTAssertEqual(vaporSession.expires, Date(timeIntervalSince1970: 1622645877))
+            XCTAssertTrue(siwaState.isHTTPOnly)
+            XCTAssertTrue(siwaState.isSecure)
+        }
+    }
+
     func testForwarded_quote() throws {
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .forwarded, value: #"For="[2001:db8:cafe::17]:4711""#)
@@ -158,12 +211,19 @@ final class HTTPHeaderTests: XCTestCase {
 
     func testCookie_parsing() throws {
         let headers = HTTPHeaders([
-            ("cookie", "vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561")
+            (
+                "cookie",
+                """
+                vapor-session=0FuTYcHmGw7Bz1G4HiF+EA==; _ga=GA1.1.500315824.1585154561; _gid=GA1.1.500224287.1585154561; !#$%&'*+-.^_`~=symbols
+                """
+            )
         ])
+        print(headers.cookie!.all.keys)
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
         XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")
         XCTAssertEqual(headers.cookie?["_gid"]?.string, "GA1.1.500224287.1585154561")
+        XCTAssertEqual(headers.cookie?["!#$%&'*+-.^_`~"]?.string, "symbols")
     }
 
     // https://github.com/vapor/vapor/issues/2316
@@ -176,35 +236,18 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "ZFPQ46p3frNX52i3dM+JFlWbTxQX5rtGuQ5r7Gb6JUs=")
         XCTAssertEqual(headers.cookie?["oauth2_consent_csrf"]?.string, "MTU4NjkzNzgwMnxEdi1CQkFFQ180SUFBUkFCRUFBQVB2LUNBQUVHYzNSeWFXNW5EQVlBQkdOemNtWUdjM1J5YVc1bkRDSUFJR1ExWVRnM09USmhOamRsWXpSbU4yRmhOR1UwTW1KaU5tRXpPRGczTmpjMHweHbVecAf193ev3_1Tcf60iY9jSsq5-IQxGTyoztRTfg==")
     }
-
-    func testCookie_dotParsing() throws {
-        let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie.two=2")
-        ])
-
-        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
-        XCTAssertEqual(headers.cookie?["cookie.two"]?.string, "2")
-    }
-    
-    func testCookie_percentParsing() throws {
-        let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie%40cookieCom=2;cookie_3=three")
-        ])
-        
-        XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
-        XCTAssertEqual(headers.cookie?["cookie%40cookieCom"]?.string, "2")
-        XCTAssertEqual(headers.cookie?["cookie_3"]?.string, "three")
-    }
     
     func testCookie_invalidCookie() throws {
         let headers = HTTPHeaders([
-            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3")
+            ("cookie", "cookie_one=1;cookie\ntwo=2;cookie_three=3;cookie_④=4;cookie_fivé=5")
         ])
         
         XCTAssertEqual(headers.cookie?.all.count, 2)
         XCTAssertEqual(headers.cookie?["cookie_one"]?.string, "1")
         XCTAssertNil(headers.cookie?["cookie\ntwo"])
         XCTAssertEqual(headers.cookie?["cookie_three"]?.string, "3")
+        XCTAssertNil(headers.cookie?["cookie_④"])
+        XCTAssertNil(headers.cookie?["cookie_fivé"])
     }
 
     func testMediaTypeMainTypeCaseInsensitive() throws {
@@ -313,5 +356,42 @@ final class HTTPHeaderTests: XCTestCase {
             HTTPHeaders.ContentRange(directive: HTTPHeaders.Directive(value: "bytes 0-1000/1001")),
             HTTPHeaders.ContentRange(unit: .bytes, range: .withinWithLimit(start: 0, end: 1000, limit: 1001))
         )
+    }
+    
+    func testLinkHeaderParsing() throws {
+        let headers = HTTPHeaders([
+            ("link", #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel=related, </?a=-2>; rel=related"#)
+        ])
+        
+        XCTAssertEqual(headers.links?.count, 4)
+        let a = try XCTUnwrap(headers.links?.dropFirst(0).first),
+            b = try XCTUnwrap(headers.links?.dropFirst(1).first),
+            c = try XCTUnwrap(headers.links?.dropFirst(2).first),
+            d = try XCTUnwrap(headers.links?.dropFirst(3).first)
+        XCTAssertEqual(a.uri, "https://localhost/?a=1")
+        XCTAssertEqual(a.relation, .next)
+        XCTAssertEqual(a.attributes, [:])
+        XCTAssertEqual(b.uri, "https://localhost/?a=2")
+        XCTAssertEqual(b.relation, .last)
+        XCTAssertEqual(b.attributes, ["custom1": "whatever"])
+        XCTAssertEqual(c.uri, "/?a=-1")
+        XCTAssertEqual(c.relation, .related)
+        XCTAssertEqual(c.attributes, [:])
+        XCTAssertEqual(d.uri, "/?a=-2")
+        XCTAssertEqual(d.relation, .related)
+        XCTAssertEqual(d.attributes, [:])
+    }
+    
+    func testLinkHeaderSerialization() throws {
+        let links: [HTTPHeaders.Link] = [
+            .init(uri: "https://localhost/?a=1", relation: .next, attributes: [:]),
+            .init(uri: "https://localhost/?a=2", relation: .last, attributes: ["custom1": "whatever"]),
+            .init(uri: "/?a=-1", relation: .related, attributes: [:]),
+            .init(uri: "/?a=-2", relation: .related, attributes: [:]),
+        ]
+        var headers = HTTPHeaders()
+        
+        headers.links = links
+        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel=next, <https://localhost/?a=2>; rel=last; custom1=whatever, </?a=-1>; rel=related, </?a=-2>; rel=related"#)
     }
 }

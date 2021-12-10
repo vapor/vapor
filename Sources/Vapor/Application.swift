@@ -1,5 +1,6 @@
 import Backtrace
 
+/// Core type representing a Vapor application.
 public final class Application {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
@@ -7,7 +8,7 @@ public final class Application {
     public var storage: Storage
     public private(set) var didShutdown: Bool
     public var logger: Logger
-    private var isBooted: Bool
+    var isBooted: Bool
 
     public struct Lifecycle {
         var handlers: [LifecycleHandler]
@@ -93,6 +94,10 @@ public final class Application {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
+    /// Starts the Application using the `start()` method, then waits for any running tasks to complete
+    /// If your application is started without arguments, the default argument is used.
+    ///
+    /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.
     public func run() throws {
         do {
             try self.start()
@@ -103,6 +108,11 @@ public final class Application {
         }
     }
     
+    /// When called, this will execute the startup command provided through an argument. If no startup command is provided, the default is used.
+    /// Under normal circumstances, this will start running Vapor's webserver.
+    ///
+    /// If you `start` Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
+    /// If you want to run your Application indefinitely, or until your code shuts the application down, use `run()` instead.
     public func start() throws {
         try self.boot()
         let command = self.commands.group()
@@ -125,7 +135,7 @@ public final class Application {
         self.logger.debug("Application shutting down")
 
         self.logger.trace("Shutting down providers")
-        self.lifecycle.handlers.forEach { $0.shutdown(self) }
+        self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
         
         self.logger.trace("Clearing Application storage")
@@ -140,7 +150,7 @@ public final class Application {
             do {
                 try self.eventLoopGroup.syncShutdownGracefully()
             } catch {
-                self.logger.error("Shutting down EventLoopGroup failed: \(error)")
+                self.logger.warning("Shutting down EventLoopGroup failed: \(error)")
             }
         }
 

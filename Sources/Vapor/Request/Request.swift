@@ -1,5 +1,6 @@
 import NIO
 
+/// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
     public let application: Application
 
@@ -73,7 +74,7 @@ public final class Request: CustomStringConvertible {
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Decoding streaming bodies not supported")
+                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableEntity)
             }
             return try decoder.decode(D.self, from: body, headers: self.request.headers)
@@ -89,7 +90,7 @@ public final class Request: CustomStringConvertible {
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
             guard let body = self.request.body.data else {
-                self.request.logger.debug("Decoding streaming bodies not supported")
+                self.request.logger.debug("Request body is empty. If you're trying to stream the body, decoding streaming bodies not supported")
                 throw Abort(.unprocessableEntity)
             }
             var decoded = try decoder.decode(C.self, from: body, headers: self.request.headers)
@@ -98,6 +99,8 @@ public final class Request: CustomStringConvertible {
         }
     }
 
+    /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
+    /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
     public var content: ContentContainer {
         get {
             return _ContentContainer(request: self)
@@ -107,6 +110,8 @@ public final class Request: CustomStringConvertible {
         }
     }
     
+    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
+    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger
     
     public var body: Body {
@@ -141,12 +146,21 @@ public final class Request: CustomStringConvertible {
         return desc.joined(separator: "\n")
     }
 
+    /// The address from which this HTTP request was received by SwiftNIO.
+    /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
     
+    /// The `EventLoop` which is handling this `Request`. The route handler and any relevant middleware are invoked in this event loop.
+    ///
+    /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
+    ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
     public let eventLoop: EventLoop
     
+    /// A container containing the route parameters that were captured when receiving this request.
+    /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters
 
+    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage
     
     public convenience init(
@@ -167,6 +181,7 @@ public final class Request: CustomStringConvertible {
             version: version,
             headersNoUpdate: headers,
             collectedBody: collectedBody,
+            remoteAddress: remoteAddress,
             logger: logger,
             on: eventLoop
         )

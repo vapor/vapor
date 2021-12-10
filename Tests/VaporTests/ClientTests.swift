@@ -85,6 +85,7 @@ final class ClientTests: XCTestCase {
             }
         }
 
+        app.environment.arguments = ["serve"]
         try app.boot()
         try app.start()
 
@@ -134,6 +135,7 @@ final class ClientTests: XCTestCase {
     }
 
     func testClientLogging() throws {
+        print("We are testing client logging")
         let app = Application(.testing)
         defer { app.shutdown() }
         let logs = TestLogHandler()
@@ -141,11 +143,12 @@ final class ClientTests: XCTestCase {
 
         _ = try app.client.get("https://httpbin.org/json").wait()
 
-        XCTAssertNotNil(logs.metadata["ahc-request-id"])
+        let metadata = logs.getMetadata()
+        XCTAssertNotNil(metadata["ahc-request-id"])
     }
 }
 
-private final class CustomClient: Client {
+final class CustomClient: Client {
     var eventLoop: EventLoop {
         EmbeddedEventLoop()
     }
@@ -165,7 +168,7 @@ private final class CustomClient: Client {
     }
 }
 
-private extension Application {
+extension Application {
     struct CustomClientKey: StorageKey {
         typealias Value = CustomClient
     }
@@ -181,7 +184,7 @@ private extension Application {
     }
 }
 
-private extension Application.Clients.Provider {
+extension Application.Clients.Provider {
     static var custom: Self {
         .init {
             $0.clients.use { $0.customClient }
@@ -189,14 +192,17 @@ private extension Application.Clients.Provider {
     }
 }
 
+
 final class TestLogHandler: LogHandler {
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }
         set { self.metadata[key] = newValue }
     }
 
+    @ThreadSafe
     var metadata: Logger.Metadata
     var logLevel: Logger.Level
+    @ThreadSafe
     var messages: [Logger.Message]
 
     var logger: Logger {
@@ -227,5 +233,9 @@ final class TestLogHandler: LogHandler {
         let copy = self.messages
         self.messages = []
         return copy.map { $0.description }
+    }
+    
+    func getMetadata() -> Logger.Metadata {
+        return self.metadata
     }
 }

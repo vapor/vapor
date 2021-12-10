@@ -1,11 +1,13 @@
 import Vapor
 
 public func configure(_ app: Application) throws {
+    app.logger.logLevel = .debug
+    
     app.http.server.configuration.hostname = "127.0.0.1"
     switch app.environment {
     case .tls:
         app.http.server.configuration.port = 8443
-        try app.http.server.configuration.tlsConfiguration = .forServer(
+        try app.http.server.configuration.tlsConfiguration = .makeServerConfiguration(
             certificateChain: [
                 .certificate(.init(
                     file: "/Users/tanner0101/dev/vapor/net-kit/certs/cert.pem",

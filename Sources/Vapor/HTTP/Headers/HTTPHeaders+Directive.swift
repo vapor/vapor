@@ -25,13 +25,23 @@ extension HTTPHeaders {
     func parseDirectives(name: Name) -> [[Directive]] {
         let headers = self[name]
         var values: [[Directive]] = []
+        let separatorCharacters = getSeparatorCharacters(for: name)
         for header in headers {
             var parser = DirectiveParser(string: header)
-            while let directives = parser.nextDirectives() {
+            while let directives = parser.nextDirectives(separatorCharacters: separatorCharacters) {
                 values.append(directives)
             }
         }
         return values
+    }
+
+    private func getSeparatorCharacters(for headerName: Name) -> [Character] {
+        switch headerName {
+        // Headers with dates can't have comma as a separator
+        case .setCookie, .ifModifiedSince, .date, .lastModified, .expires:
+            return [.semicolon]
+        default: return [.comma, .semicolon]
+        }
     }
 
     mutating func serializeDirectives(_ directives: [[Directive]], name: Name) {
@@ -48,18 +58,18 @@ extension HTTPHeaders {
             self.current = .init(string)
         }
 
-        mutating func nextDirectives() -> [Directive]? {
+        mutating func nextDirectives(separatorCharacters: [Character] = [.comma, .semicolon]) -> [Directive]? {
             guard !self.current.isEmpty else {
                 return nil
             }
             var directives: [Directive] = []
-            while let directive = self.nextDirective() {
+            while let directive = self.nextDirective(separatorCharacters: separatorCharacters) {
                 directives.append(directive)
             }
             return directives
         }
 
-        private mutating func nextDirective() -> Directive? {
+        private mutating func nextDirective(separatorCharacters: [Character] = [.comma, .semicolon]) -> Directive? {
             self.popWhitespace()
             guard !self.current.isEmpty else {
                 return nil
@@ -75,9 +85,9 @@ extension HTTPHeaders {
             if let equals = self.firstParameterToken() {
                 value = self.pop(to: equals)
                 self.pop()
-                parameter = self.nextDirectiveValue()
+                parameter = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
             } else {
-                value = self.nextDirectiveValue()
+                value = self.nextDirectiveValue(separatorCharacters: separatorCharacters)
                 parameter = nil
             }
             return .init(
@@ -87,7 +97,7 @@ extension HTTPHeaders {
             )
         }
 
-        private mutating func nextDirectiveValue() -> Substring {
+        private mutating func nextDirectiveValue(separatorCharacters: [Character]) -> Substring {
             let value: Substring
             self.popWhitespace()
             if self.current.first == .doubleQuote {
@@ -101,11 +111,11 @@ extension HTTPHeaders {
                 if self.current.first == .semicolon {
                     self.pop()
                 }
-            } else if let semicolon = self.current.firstIndex(of: .semicolon) {
-                value = self.pop(to: semicolon)
-                self.pop()
-            } else if let comma = self.current.firstIndex(of: .comma) {
-                value = self.pop(to: comma)
+            } else if let separatorMatch = self.firstIndex(matchingAnyOf: separatorCharacters) {
+                value = self.pop(to: separatorMatch.index)
+                if separatorMatch.matchedCharacter == .semicolon {
+                    self.pop()
+                }
             } else {
                 value = self.pop(to: self.current.endIndex)
             }
@@ -135,9 +145,22 @@ extension HTTPHeaders {
                 let character = self.current[index]
                 if character == .equals {
                     return index
-                } else if !character.isDirectiveKey {
+                } else if !character.isTokenCharacter {
                     return nil
                 }
+            }
+            return nil
+        }
+
+        /// Returns the first index matching any of the passed in Characters, nil if no match
+        private func firstIndex(matchingAnyOf characters: [Character]) -> (index: Substring.Index, matchedCharacter: Character)? {
+            guard characters.isEmpty == false else { return nil }
+
+            for index in self.current.indices {
+                let character = self.current[index]
+                guard let matchedCharacter = characters.first(where: { $0 == character }) else { continue }
+
+                return (index, matchedCharacter)
             }
             return nil
         }
@@ -230,27 +253,41 @@ private extension Character {
     static var equals: Self {
         .init("=")
     }
-    static var dash: Self {
-        .init("-")
-    }
     static var comma: Self {
         .init(",")
-    }
-    static var underscore: Self {
-        .init("_")
-    }
-    static var period: Self {
-        .init(".")
     }
     static var space: Self {
         .init(" ")
     }
-    static var percent: Self {
-        .init("%")
+    
+    /// The characters defined in RFC2616.
+    ///
+    /// Description from [RFC2616](https://tools.ietf.org/html/rfc2616):
+    ///
+    /// separators     = "(" | ")" | "<" | ">" | "@"
+    ///                | "," | ";" | ":" | "\" | <">
+    ///                | "/" | "[" | "]" | "?" | "="
+    ///                | "{" | "}" | SP | HT
+    static var separators: [Self] {
+        ["(", ")", "<", ">", "@", ",", ":", ";", "\\", "\"", "/", "[", "]", "?", "=", "{", "}", " ", "\t"]
     }
-
-    var isDirectiveKey: Bool {
-        self.isLetter || self.isNumber || self == .dash || self == .underscore || self == .period || self == .percent
+    
+    /// Check if this is valid character for token.
+    ///
+    /// Description from [RFC2616](]https://tools.ietf.org/html/rfc2616):
+    ///
+    /// token          = 1*<any CHAR except CTLs or separators>
+    /// CHAR           = <any US-ASCII character (octets 0 - 127)>
+    /// CTL            = <any US-ASCII control character
+    ///                  (octets 0 - 31) and DEL (127)>
+    var isTokenCharacter: Bool {
+        guard let asciiValue = self.asciiValue else {
+            return false
+        }
+        guard asciiValue > 31 && asciiValue != 127 else {
+            return false
+        }
+        return !Self.separators.contains(self)
     }
 }
 

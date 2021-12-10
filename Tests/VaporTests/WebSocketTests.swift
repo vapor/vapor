@@ -3,29 +3,44 @@ import XCTest
 
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
-        let app = Application(.testing)
-        defer { app.shutdown() }
+        let server = Application(.testing)
 
-        app.get("ws") { req -> EventLoopFuture<String> in
-            let promise = req.eventLoop.makePromise(of: String.self)
-            return WebSocket.connect(
-                to: "ws://echo.websocket.org/",
-                on: req.eventLoop
-            ) { ws in
-                ws.send("Hello, world!")
-                ws.onText { ws, text in
-                    promise.succeed(text)
-                    ws.close().cascadeFailure(to: promise)
-                }
-            }.flatMap {
-                return promise.futureResult
+        server.http.server.configuration.port = 0
+
+        server.webSocket("echo") { req, ws in
+            ws.onText { ws.send($1) }
+        }
+        server.environment.arguments = ["serve"]
+        try server.start()
+
+        defer {
+            server.shutdown()
+        }
+
+        guard let localAddress = server.http.server.shared.localAddress, let port = localAddress.port else {
+            XCTFail("couldn't get port from \(server.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let elg = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+
+        let promise = elg.next().makePromise(of: String.self)
+        let string = try WebSocket.connect(
+            to: "ws://localhost:\(port)/echo",
+            on: elg.next()
+        ) { ws in
+            ws.send("Hello, world!")
+            ws.onText { ws, text in
+                promise.succeed(text)
+                ws.close().cascadeFailure(to: promise)
             }
-        }
-
-        try app.testable().test(.GET, "/ws") { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "Hello, world!")
-        }
+        }.flatMap {
+            return promise.futureResult
+        }.flatMapError { error in
+            promise.fail(error)
+            return promise.futureResult
+        }.wait()
+        XCTAssertEqual(string, "Hello, world!")
     }
 
 
@@ -39,6 +54,8 @@ final class WebSocketTests: XCTestCase {
         app.webSocket("bar") { req, ws in
             ws.close(promise: nil)
         }
+
+        app.environment.arguments = ["serve"]
 
         try app.start()
 
@@ -61,6 +78,7 @@ final class WebSocketTests: XCTestCase {
             ws.send("foo")
             ws.close(promise: nil)
         }
+        app.environment.arguments = ["serve"]
 
         try app.start()
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
@@ -69,6 +87,35 @@ final class WebSocketTests: XCTestCase {
             on: app.eventLoopGroup.next()
         ) { ws in
             // do nothing
+            ws.onText { ws, string in
+                promise.succeed(string)
+            }
+        }.cascadeFailure(to: promise)
+
+        try XCTAssertEqual(promise.futureResult.wait(), "foo")
+    }
+
+    func testManualUpgradeToWebSocket() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.http.server.configuration.port = 8080
+
+        app.get("foo") { req in
+            return req.webSocket { req, ws in
+                ws.send("foo")
+                ws.close(promise: nil)
+            }
+        }
+
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+        WebSocket.connect(
+            to: "ws://localhost:8080/foo",
+            on: app.eventLoopGroup.next()
+        ) { ws in
             ws.onText { ws, string in
                 promise.succeed(string)
             }
@@ -128,6 +175,8 @@ final class WebSocketTests: XCTestCase {
             webSockets.track(ws)
             ws.send("hello")
         }
+
+        app.environment.arguments = ["serve"]
 
         try app.start()
 
