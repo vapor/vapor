@@ -1,5 +1,4 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
-#if !os(Linux)
 import Vapor
 import XCTest
 
@@ -214,5 +213,4 @@ final class TestLogHandler: LogHandler {
         return self.metadata
     }
 }
-#endif
 #endif

@@ -1,5 +1,4 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
-#if !os(Linux)
 import XCTVapor
 import Vapor
 
@@ -127,5 +126,4 @@ final class AsyncWebSocketTests: XCTestCase {
         XCTAssertEqual(string, "foo")
     }
 }
-#endif
 #endif
