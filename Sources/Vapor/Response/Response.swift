@@ -4,7 +4,7 @@ import NIOFoundationCompat
 
 /// An HTTP response from a server back to the client.
 ///
-///     let httpRes = HTTPResponse(status: .ok)
+///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient` and `HTTPServer`.
 public final class Response: CustomStringConvertible {
@@ -22,9 +22,9 @@ public final class Response: CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders
     
-    /// The `HTTPBody`. Updating this property will also update the associated transport headers.
+    /// The `Body`. Updating this property will also update the associated transport headers.
     ///
-    ///     httpRes.body = HTTPBody(string: "Hello, world!")
+    ///     res.body = Response.Body(string: "Hello, world!")
     ///
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
     /// represents the `HTTPBody`.
@@ -43,7 +43,7 @@ public final class Response: CustomStringConvertible {
 
     public var storage: Storage
     
-    /// Get and set `HTTPCookies` for this `HTTPResponse`
+    /// Get and set `HTTPCookies` for this `Response`
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
@@ -114,9 +114,9 @@ public final class Response: CustomStringConvertible {
     
     // MARK: Init
     
-    /// Creates a new `HTTPResponse`.
+    /// Creates a new `Response`.
     ///
-    ///     let httpRes = HTTPResponse(status: .ok)
+    ///     let res = Response(status: .ok)
     ///
     /// - parameters:
     ///     - status: `HTTPResponseStatus` to use. This defaults to `HTTPResponseStatus.ok`
@@ -124,8 +124,8 @@ public final class Response: CustomStringConvertible {
     ///     - headers: `HTTPHeaders` to include with this response.
     ///                Defaults to empty headers.
     ///                The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically.
-    ///     - body: `HTTPBody` for this response, defaults to an empty body.
-    ///             See `LosslessHTTPBodyRepresentable` for more information.
+    ///     - body: `Body` for this response, defaults to an empty body.
+    ///             See `Response.Body` for more information.
     public convenience init(
         status: HTTPResponseStatus = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
@@ -142,7 +142,7 @@ public final class Response: CustomStringConvertible {
     }
     
     
-    /// Internal init that creates a new `HTTPResponse` without sanitizing headers.
+    /// Internal init that creates a new `Response` without sanitizing headers.
     public init(
         status: HTTPResponseStatus,
         version: HTTPVersion,
