@@ -27,7 +27,7 @@ public final class Response: CustomStringConvertible {
     ///     res.body = Response.Body(string: "Hello, world!")
     ///
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
-    /// represents the `HTTPBody`.
+    /// represents the `Body`.
     public var body: Body {
         didSet { self.headers.updateContentLength(self.body.count) }
     }
@@ -43,7 +43,7 @@ public final class Response: CustomStringConvertible {
 
     public var storage: Storage
     
-    /// Get and set `HTTPCookies` for this `Response`
+    /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {

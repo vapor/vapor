@@ -6,7 +6,7 @@ public protocol ResponseEncodable {
     ///
     /// - parameters:
     ///     - for: The `Request` associated with this `Response`.
-    /// - returns: An `Response`.
+    /// - returns: A `Response`.
     func encodeResponse(for request: Request) -> EventLoopFuture<Response>
 }
 
