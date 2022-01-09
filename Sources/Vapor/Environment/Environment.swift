@@ -65,7 +65,7 @@ public struct Environment: Equatable {
         }
         #elseif os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
         // When tests are invoked directly through SwiftPM using `--filter`, SwiftPM will pass `-XCTest <filter>` to the
-        // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisifed
+        // runner binary, and also the test bundle path unconditionally. These must be stripped for Vapor to be satisfied
         // with the validity of the arguments. We detect this case reliably the hard way, by looking for the `xctest`
         // runner executable and a leading argument with the `.xctest` bundle suffix.
         if commandInput.executable.hasSuffix("/usr/bin/xctest") {
