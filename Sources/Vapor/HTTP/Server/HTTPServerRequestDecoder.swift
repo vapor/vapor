@@ -1,7 +1,7 @@
 import NIO
 import NIOHTTP1
 
-final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
     typealias OutboundIn = Never
@@ -60,7 +60,7 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             case .ready, .awaitingEnd: 
                 assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
-                if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
+                if request.headers.first(name: .contentLength).flatMap(Int.init) ?? .max <= buffer.readableBytes {
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop)
