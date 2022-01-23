@@ -55,7 +55,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 self.requestState = .awaitingBody(request)
             default: assertionFailure("Unexpected state: \(self.requestState)")
             }
-        case .body(var buffer):
+        case .body(let buffer):
             switch self.requestState {
             case .ready, .awaitingEnd:
                 assertionFailure("Unexpected state: \(self.requestState)")
