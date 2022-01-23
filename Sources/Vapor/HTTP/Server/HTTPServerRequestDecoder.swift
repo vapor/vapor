@@ -57,17 +57,14 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             }
         case .body(var buffer):
             switch self.requestState {
-            case .ready:
+            case .ready, .awaitingEnd:
                 assertionFailure("Unexpected state: \(self.requestState)")
-            case .awaitingEnd(let request, var body):
+            case .awaitingBody(let request):
                 // We cannot assume that a request's content-length represents the length of all of the body
                 // because when a request is g-zipped, content-length refers to the gzipped length.
                 // Therefore, we can receive data after our expected end-of-request
                 // When decompressing data, more bytes come out than came in, so content-length does not represent the maximum length
-                body.writeBuffer(&buffer)
-                self.requestState = .awaitingEnd(request, body)
-            case .awaitingBody(let request):
-                if request.headers.first(name: .contentLength).flatMap(Int.init) ?? .max <= buffer.readableBytes {
+                if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop)
