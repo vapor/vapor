@@ -231,7 +231,7 @@ public final class HTTPServer: Server {
 
     private var application: Application
     
-    init(
+    public init(
         application: Application,
         responder: Responder,
         configuration: Configuration,
