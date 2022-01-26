@@ -31,6 +31,18 @@ extension Client {
     public func delete(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) -> EventLoopFuture<ClientResponse> {
         return self.send(.DELETE, headers: headers, to: url, beforeSend: beforeSend)
     }
+    
+    public func post<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) -> EventLoopFuture<ClientResponse> where T: Content {
+        return self.post(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    }
+
+    public func patch<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) -> EventLoopFuture<ClientResponse> where T: Content {
+        return self.patch(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    }
+
+    public func put<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) -> EventLoopFuture<ClientResponse> where T: Content {
+        return self.put(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    }
 
     public func send(
         _ method: HTTPMethod,
