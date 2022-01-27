@@ -23,16 +23,16 @@ extension Client {
         return try await self.send(.DELETE, headers: headers, to: url, beforeSend: beforeSend).get()
     }
         
-    public func post<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) async throws -> ClientResponse where T: Content {
-        return try await self.post(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    public func post<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.post(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
     
-    public func patch<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) async throws -> ClientResponse where T: Content {
-        return try await self.patch(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    public func patch<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.patch(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
     
-    public func put<T>(_ url: URI, headers: HTTPHeaders = [:], body: T) async throws -> ClientResponse where T: Content {
-        return try await self.put(url, headers: headers, beforeSend: { try $0.content.encode(body) })
+    public func put<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.put(url, headers: headers, beforeSend: { try $0.content.encode(content) })
     }
 
     public func send(
