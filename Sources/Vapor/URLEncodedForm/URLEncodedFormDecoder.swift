@@ -83,7 +83,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// - parameters:
     ///     - decodable: Type to decode to
     ///     - url: URL to read the query string from
-    ///     - configuration: Overwrides the default coding configuration
+    ///     - configuration: Overrides the default coding configuration
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
         return try self.decode(D.self, from: url.query ?? "")
     }
@@ -98,7 +98,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// - parameters:
     ///     - decodable: Generic `Decodable` type (`D`) to decode.
     ///     - from: `Data` to decode a `D` from.
-    ///     - configuration: Overwrides the default coding configuration
+    ///     - configuration: Overrides the default coding configuration
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D>(_ decodable: D.Type, from string: String) throws -> D where D : Decodable {
