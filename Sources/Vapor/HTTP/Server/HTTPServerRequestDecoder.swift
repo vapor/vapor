@@ -1,7 +1,7 @@
 import NIO
 import NIOHTTP1
 
-final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHandler {
+final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
     typealias OutboundIn = Never
@@ -57,9 +57,13 @@ final class HTTPServerRequestDecoder: ChannelInboundHandler, RemovableChannelHan
             }
         case .body(let buffer):
             switch self.requestState {
-            case .ready, .awaitingEnd: 
+            case .ready, .awaitingEnd:
                 assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
+                // We cannot assume that a request's content-length represents the length of all of the body
+                // because when a request is g-zipped, content-length refers to the gzipped length.
+                // Therefore, we can receive data after our expected end-of-request
+                // When decompressing data, more bytes come out than came in, so content-length does not represent the maximum length
                 if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {

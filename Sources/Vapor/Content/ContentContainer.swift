@@ -120,9 +120,9 @@ extension ContentContainer {
         return try? get(at: keyPath)
     }
     
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's body.
     ///
-    ///     let name = try req.query.get(String.self, at: "user", "name")
+    ///     let name = try req.content.get(String.self, at: "user", "name")
     ///     print(name) /// String
     ///
     /// - parameters:
@@ -135,11 +135,11 @@ extension ContentContainer {
         return try get(at: keyPath)
     }
     
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's body.
     ///
     /// Note: This is the non-variadic version.
     ///
-    ///     let name = try req.query.get(String.self, at: "user", "name")
+    ///     let name = try req.content.get(String.self, at: "user", "name")
     ///     print(name) /// String
     ///
     /// - parameters:
