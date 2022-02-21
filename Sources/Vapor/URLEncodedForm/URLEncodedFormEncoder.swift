@@ -91,7 +91,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///
     /// - parameters:
     ///     - encodable: Generic `Encodable` object (`E`) to encode.
-    ///     - configuration: Overwrides the  coding config for this encoding call.
+    ///     - configuration: Overrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
     public func encode<E>(_ encodable: E) throws -> String

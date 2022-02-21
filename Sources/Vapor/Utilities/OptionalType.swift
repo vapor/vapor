@@ -7,7 +7,7 @@ extension EventLoopFuture where Value: OptionalType {
     ///
     /// - parameters:
     ///     - error: `Error` to throw if the value is `nil`. This is captured with `@autoclosure`
-    ///              to avoid intiailize the `Error` unless needed.
+    ///              to avoid initialize the `Error` unless needed.
     public func unwrap(or error: @autoclosure @escaping () -> Error) -> EventLoopFuture<Value.WrappedType> {
         return self.flatMapThrowing { optional -> Value.WrappedType in
             guard let wrapped = optional.wrapped else {
