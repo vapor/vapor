@@ -1,6 +1,8 @@
 import Vapor
 import XCTest
 import protocol AsyncHTTPClient.HTTPClientResponseDelegate
+import NIO
+import NIOHTTP1
 
 final class ServerTests: XCTestCase {
     func testPortOverride() throws {
@@ -686,6 +688,58 @@ final class ServerTests: XCTestCase {
         )
         let a = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(a.headers.connection, .keepAlive)
+    }
+
+    func testRequestBodyStreamGetsFinalisedEvenIfClientDisappears() {
+        let app = Application(.testing)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+
+        let serverIsFinalisedPromise = app.eventLoopGroup.any().makePromise(of: Void.self)
+        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
+
+        app.on(.POST, "hello", body: .stream) { req -> Response in
+            return Response(body: .init(stream: { writer in
+                req.body.drain { stream in
+                    switch stream {
+                    case .buffer:
+                        ()
+                    case .end:
+                        serverIsFinalisedPromise.succeed(())
+                        writer.write(.end, promise: nil)
+                    case .error(let error):
+                        serverIsFinalisedPromise.fail(error)
+                        writer.write(.error(error), promise: nil)
+                    }
+                    return allDonePromise.futureResult
+                }
+            }))
+        }
+
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
+        XCTAssertThrowsError(try app.http.client.shared.execute(.POST,
+                                                                url: "http://\(ip):\(port)/hello",
+                                                                body: .byteBuffer(tenMB),
+                                                                deadline: .now() + .milliseconds(100)).wait()) { error in
+            XCTAssertEqual(HTTPClientError.readTimeout, error as? HTTPClientError)
+        }
+
+        allDonePromise.succeed(()) // This unblocks the server
+        XCTAssertThrowsError(try serverIsFinalisedPromise.futureResult.wait()) { error in
+            XCTAssertEqual(HTTPParserError.invalidEOFState, error as? HTTPParserError)
+        }
     }
 
     override class func setUp() {
