@@ -18,7 +18,7 @@ jobs:
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
           project-location: https://github.com/orgs/vapor/projects
-          project-name: Beginner Issues
+          project-name: 'Beginner Issues'
           column-name: To do
           issue-number: ${{ github.event.number }}
 
@@ -29,7 +29,7 @@ jobs:
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
           project-location: https://github.com/orgs/vapor/projects
-          project-name: Beginner Issues
+          project-name: 'Beginner Issues'
           column-name: In progress
           issue-number: ${{ github.event.number }}
 
@@ -40,6 +40,6 @@ jobs:
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
           project-location: https://github.com/orgs/vapor/projects
-          project-name: Beginner Issues
+          project-name: 'Beginner Issues'
           column-name: Done
           issue-number: ${{ github.event.number }}
