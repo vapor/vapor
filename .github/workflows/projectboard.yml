@@ -9,6 +9,9 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'good first issue')
     steps:
+      - name: Print information
+      - run: echo ${{ github.event.number }}
+
       - name: Create or Update Project Card
         if: |
           github.event.action == 'labeled' || 
@@ -17,8 +20,9 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1.1.4
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
-          # project-location: vapor
-          project-name: 'Beginner Issues'
+          project-location: vapor
+          project-number: 10
+          project-name: "Beginner Issues"
           column-name: To do
           issue-number: ${{ github.event.number }}
 
@@ -29,7 +33,8 @@ jobs:
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
           project-location: vapor
-          project-name: 'Beginner Issues'
+          project-number: 10
+          project-name: "Beginner Issues"
           column-name: In progress
           issue-number: ${{ github.event.number }}
 
@@ -40,6 +45,7 @@ jobs:
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
           project-location: vapor
-          project-name: 'Beginner Issues'
+          project-number: 10
+          project-name: "Beginner Issues"
           column-name: Done
           issue-number: ${{ github.event.number }}
