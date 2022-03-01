@@ -5,13 +5,15 @@ on:
     types: [opened, reopened, closed, labeled, assigned]
 
 jobs:
+  print_event_information:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo ${{ github.event.number }}
+
   manage_project_issues:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'good first issue')
     steps:
-      - name: Print information
-      - run: echo ${{ github.event.number }}
-
       - name: Create or Update Project Card
         if: |
           github.event.action == 'labeled' || 
