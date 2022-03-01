@@ -17,7 +17,7 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1.1.4
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
-          project-location: vapor
+          project-location: https://github.com/orgs/vapor/projects
           project-name: Beginner Issues
           column-name: To do
           issue-number: ${{ github.event.number }}
@@ -28,7 +28,7 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1.1.4
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
-          project-location: vapor
+          project-location: https://github.com/orgs/vapor/projects
           project-name: Beginner Issues
           column-name: In progress
           issue-number: ${{ github.event.number }}
@@ -39,7 +39,7 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1.1.4
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
-          project-location: vapor
+          project-location: https://github.com/orgs/vapor/projects
           project-name: Beginner Issues
           column-name: Done
           issue-number: ${{ github.event.number }}
