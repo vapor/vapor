@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     if: contains(github.event.issue.labels.*.name, 'good first issue')
     steps:
-      - name: Create Project Card
+      - name: Create or Update Project Card
         if: |
           github.event.action == 'labeled' || 
           github.event.action == 'reopened' || 
@@ -17,7 +17,7 @@ jobs:
         uses: peter-evans/create-or-update-project-card@v1.1.4
         with:
           token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
-          project-location: vapor
+          # project-location: vapor
           project-name: 'Beginner Issues'
           column-name: To do
           issue-number: ${{ github.event.number }}
