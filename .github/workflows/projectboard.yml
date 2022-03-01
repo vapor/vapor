@@ -1,0 +1,45 @@
+name: Add good first issues to project board
+on:
+  # Trigger when an issue gets labeled or deleted
+  issues:
+    types: [opened, reopened, closed, labeled, assigned]
+
+jobs:
+  manage_project_issues:
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'good first issue')
+    steps:
+      - name: Create Project Card
+        if: |
+          github.event.action == 'labeled' || 
+          github.event.action == 'reopened' || 
+          github.event.action == 'opened'
+        uses: peter-evans/create-or-update-project-card@v1.1.4
+        with:
+          token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+          project-location: vapor
+          project-name: Beginner Issues
+          column-name: To do
+          issue-number: ${{ github.event.number }}
+
+      - name: Update Project Card
+        if: |
+          github.event.action == 'assigned'
+        uses: peter-evans/create-or-update-project-card@v1.1.4
+        with:
+          token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+          project-location: vapor
+          project-name: Beginner Issues
+          column-name: In progress
+          issue-number: ${{ github.event.number }}
+
+      - name: Close Project Card
+        if: |
+          github.event.action == 'closed'
+        uses: peter-evans/create-or-update-project-card@v1.1.4
+        with:
+          token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+          project-location: vapor
+          project-name: Beginner Issues
+          column-name: Done
+          issue-number: ${{ github.event.number }}
