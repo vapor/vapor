@@ -733,7 +733,11 @@ final class ServerTests: XCTestCase {
                                                                 url: "http://\(ip):\(port)/hello",
                                                                 body: .byteBuffer(tenMB),
                                                                 deadline: .now() + .milliseconds(100)).wait()) { error in
-            XCTAssertEqual(HTTPClientError.readTimeout, error as? HTTPClientError)
+            if let error = error as? HTTPClientError {
+                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
+            } else {
+                XCTFail("unexpected error: \(error)")
+            }
         }
 
         allDonePromise.succeed(()) // This unblocks the server
