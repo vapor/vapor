@@ -1,0 +1,72 @@
+name: first-issues-to-beginner-issues-project
+on:
+  # Trigger when an issue gets labeled or deleted
+  issues:
+    types: [reopened, closed, labeled, unlabeled, assigned, unassigned]
+
+jobs:
+  manage_project_issues:
+    strategy:
+      fail-fast: false
+      matrix:
+        project: 
+          - 'Beginner Issues'
+    runs-on: ubuntu-latest
+    if: contains(github.event.issue.labels.*.name, 'good first issue')
+    steps:
+        # When an issue that is open is labeled, unassigned or reopened without a assigned member
+        # create or move the card to "To do"
+      - name: Create or Update Project Card
+        if: | 
+          github.event.action == 'labeled' || 
+          github.event.action == 'reopened' || 
+          github.event.action == 'unassigned'
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        with:
+          project: ${{ matrix.project }}
+          column: 'To do'
+          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+
+        # When an issue that is open is assigned and has an assigned member
+        # create or move the card to "In progress"
+      - name: Assign Project Card
+        if: |
+          github.event.action == 'assigned' 
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        with:
+          project: ${{ matrix.project }}
+          column: 'In progress'
+          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+
+        # When an issue is closed with the good first issue tag
+        # Create or move the card to "Done"
+      - name: Close Project Card
+        if: |
+          github.event.action == 'closed'
+        uses: asmfnk/my-github-project-automation@v0.5.0
+        with:
+          project: ${{ matrix.project }}
+          column: 'Done'
+          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+
+  remove_project_issues:
+    strategy:
+      fail-fast: false
+      matrix:
+        project: 
+          - 'Beginner Issues'
+    runs-on: ubuntu-latest
+    if: ${{ !contains(github.event.issue.labels.*.name, 'good first issue') }}
+    steps:
+        # When an issue has the tag 'good first issue' removed
+        # Remove the card from the board
+      - name: Remove Project Card
+        if: |
+          github.event.action == 'unlabeled'
+        uses: alex-page/github-project-automation-plus@v0.8.1
+        with:
+          project: ${{ matrix.project }}
+          column: 'To do'
+          repo-token: ${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}
+          action: delete
+
