@@ -2,6 +2,7 @@ import Vapor
 import XCTVapor
 import COperatingSystem
 import AsyncHTTPClient
+import XCTest
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -136,5 +137,40 @@ final class ApplicationTests: XCTestCase {
 
         XCTAssertEqual("Hello, world!",
                        try app.client.get("http://localhost:\(port)/hello").wait().body?.string)
+    }
+
+    func testConfigurationAddressDetailsReflectedAfterBeingSet() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.hostname = "0.0.0.0"
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+        
+        struct AddressConfig: Content {
+            let hostname: String
+            let port: Int
+        }
+        
+        app.get("hello") { req -> AddressConfig in
+            let config = AddressConfig(hostname: req.application.http.server.configuration.hostname, port: req.application.http.server.configuration.port)
+            return config
+        }
+
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        XCTAssertEqual("0.0.0.0", app.http.server.configuration.hostname)
+        XCTAssertEqual(0, app.http.server.configuration.port)
+        
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        let response = try app.client.get("http://localhost:\(port)/hello").wait()
+        let returnedConfig = try response.content.decode(AddressConfig.self)
+        XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
+        XCTAssertEqual(returnedConfig.port, 0)
     }
 }
