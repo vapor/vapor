@@ -2,6 +2,7 @@ import Vapor
 import XCTest
 import protocol AsyncHTTPClient.HTTPClientResponseDelegate
 import NIO
+import NIOConcurrencyHelpers
 import NIOHTTP1
 
 final class ServerTests: XCTestCase {
@@ -744,6 +745,100 @@ final class ServerTests: XCTestCase {
         XCTAssertThrowsError(try serverIsFinalisedPromise.futureResult.wait()) { error in
             XCTAssertEqual(HTTPParserError.invalidEOFState, error as? HTTPParserError)
         }
+    }
+
+    func testRequestBodyBackpressureWorks() {
+        let app = Application(.testing)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+
+        let numberOfTimesTheServerGotOfferedBytes = NIOAtomic<Int>.makeAtomic(value: 0)
+        let bytesTheServerSaw = NIOAtomic<Int>.makeAtomic(value: 0)
+        let bytesTheClientSent = NIOAtomic<Int>.makeAtomic(value: 0)
+        let serverSawEnd = NIOAtomic<Bool>.makeAtomic(value: false)
+        let serverSawRequest = NIOAtomic<Bool>.makeAtomic(value: false)
+        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
+
+        app.on(.POST, "hello", body: .stream) { req -> Response in
+            XCTAssertTrue(serverSawRequest.compareAndExchange(expected: false, desired: true))
+
+            return Response(body: .init(stream: { writer in
+                req.body.drain { stream in
+                    switch stream {
+                    case .buffer(let bytes):
+                        _ = numberOfTimesTheServerGotOfferedBytes.add(1)
+                        _ = bytesTheServerSaw.add(bytes.readableBytes)
+                    case .end:
+                        serverSawEnd.store(true)
+                        writer.write(.end, promise: nil)
+                    case .error(let error):
+                        writer.write(.error(error), promise: nil)
+                    }
+                    return allDonePromise.futureResult
+                }
+            }))
+        }
+
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        final class ResponseDelegate: HTTPClientResponseDelegate {
+            typealias Response = Void
+
+            private let bytesTheClientSent: NIOAtomic<Int>
+
+            init(bytesTheClientSent: NIOAtomic<Int>) {
+                self.bytesTheClientSent = bytesTheClientSent
+            }
+
+            func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
+                return ()
+            }
+
+            func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
+                _ = self.bytesTheClientSent.add(part.readableBytes)
+            }
+        }
+
+        let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
+        let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
+                                         method: .POST,
+                                         headers: [:],
+                                         body: .byteBuffer(tenMB))
+        let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
+        XCTAssertThrowsError(try app.http.client.shared.execute(request: request,
+                                                                delegate: delegate,
+                                                                deadline: .now() + .milliseconds(500)).wait()) { error in
+            if let error = error as? HTTPClientError {
+                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
+            } else {
+                XCTFail("unexpected error: \(error)")
+            }
+        }
+
+        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load())
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load())
+        /*
+         // These two assertions _should_ work but AsyncHTTPClient >= 1.6.0 has a bug so we can't actually
+         // check this right now.
+         //
+         // https://github.com/swift-server/async-http-client/issues/565
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load())
+        XCTAssertEqual(0, bytesTheClientSent.load()) // We'd only see this if we sent the full 10 MB.
+         */
+        XCTAssertFalse(serverSawEnd.load())
+        XCTAssertTrue(serverSawRequest.load())
+
+        allDonePromise.succeed(())
     }
 
     override class func setUp() {
