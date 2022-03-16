@@ -770,6 +770,7 @@ final class ServerTests: XCTestCase {
                         _ = numberOfTimesTheServerGotOfferedBytes.add(1)
                         _ = bytesTheServerSaw.add(bytes.readableBytes)
                     case .end:
+                        XCTFail("backpressure should prevent us seeing the end of the request.")
                         serverSawEnd.store(true)
                         writer.write(.end, promise: nil)
                     case .error(let error):
