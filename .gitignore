@@ -7,3 +7,4 @@ Package.resolved
 .swiftpm
 Tests/LinuxMain.swift
 .vscode
+.env
