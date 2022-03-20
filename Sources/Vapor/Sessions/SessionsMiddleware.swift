@@ -7,9 +7,7 @@
 /// on the outgoing response with the session's unique identifier. This cookie must be
 /// returned on the next request to restore the session.
 ///
-///     var middlewareConfig = MiddlewareConfig()
-///     middlewareConfig.use(SessionsMiddleware.self)
-///     services.register(middlewareConfig)
+///     app.middleware.use(SessionsMiddleware.self)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
 public final class SessionsMiddleware: Middleware {

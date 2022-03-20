@@ -12,7 +12,7 @@ extension Request {
         if !self._sessionCache.middlewareFlag {
             // No `SessionsMiddleware` was detected on your app.
             // Suggested solutions:
-            // - Add the `SessionsMiddleware` globally to your app using `MiddlewareConfig`
+            // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
             // - Add the `SessionsMiddleware` to a route group.
             assertionFailure("No `SessionsMiddleware` detected.")
         }
