@@ -10,16 +10,14 @@ public struct Middlewares {
       case end
     }
   
-    /// Create a new, empty `MiddlewareConfig`.
+    /// Create a new, empty `Middleware`.
     public init() {
         self.storage = []
     }
 
     /// Adds a pre-initialized `Middleware` instance.
     ///
-    ///     var middlewareConfig = MiddlewareConfig.default()
-    ///     middlewareConfig.use(fooMiddleware)
-    ///     services.register(middlewareConfig)
+    ///     app.middleware.use(fooMiddleware)
     ///
     /// - warning: Ensure the `Middleware` is thread-safe when using this method.
     ///            Otherwise, use the type-based method and register the `Middleware`
