@@ -8,7 +8,7 @@ extension Authenticatable {
     /// Use this middleware to protect routes that might not otherwise attempt to access the
     /// authenticated user (which always requires prior authentication).
     ///
-    /// Use `Authenticatable.guardAuthMiddleware(...)` to create an instance.
+    /// Use `Authenticatable.guardMiddleware(...)` to create an instance.
     ///
     /// Use this middleware in conjunction with other middleware such as `BearerAuthenticator`
     /// and `BasicAuthenticator` to do the actual authentication.
