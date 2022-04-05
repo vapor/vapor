@@ -163,7 +163,7 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(0, app.http.server.configuration.port)
         
         guard let localAddress = app.http.server.shared.localAddress,
-              let ip = localAddress.ipAddress,
+              localAddress.ipAddress != nil,
               let port = localAddress.port else {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
