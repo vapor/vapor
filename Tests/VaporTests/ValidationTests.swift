@@ -659,6 +659,65 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual(name.result.failureDescription, "is not a(n) String")
         }
     }
+    
+    func testCustomFailureDescriptions() throws {
+        struct User: Validatable {
+            var name: String
+            var age: Int
+            var hobbies: [Hobby]
+
+            struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                struct CustomValidatorResult: ValidatorResult {
+                    var isFailure: Bool {
+                        true
+                    }
+                    var successDescription: String? {
+                        nil
+                    }
+                    var failureDescription: String? {
+                        "custom description"
+                    }
+                }
+
+                v.add("key", result: CustomValidatorResult(), customFailureDescription: "Something went wrong with the provided data")
+                v.add("name", as: String.self, is: .count(5...) && !.alphanumeric, customFailureDescription: "The provided name is invalid")
+                v.add(each: "hobbies", customFailureDescription: "A provided hobby value was not alphanumeric") { i, hobby in
+                    hobby.add("title", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+                }
+                v.add("hobbies", customFailureDescription: "A provided hobby value was empty") { hobby in
+                    hobby.add("title", as: String.self, is: !.empty)
+                }
+            }
+        }
+
+        let invalidNestedArray = """
+        {
+            "name": "Andre",
+            "age": 26,
+            "hobbies": [
+                {
+                    "title": "Running€"
+                },
+                {
+                    "title": "Co"
+                },
+                {
+                    "title": ""
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
+            XCTAssertEqual("\(error)", "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
+        }
+    }
 
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
