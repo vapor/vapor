@@ -828,14 +828,8 @@ final class ServerTests: XCTestCase {
 
         XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load())
         XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load())
-        /*
-         // These two assertions _should_ work but AsyncHTTPClient >= 1.6.0 has a bug so we can't actually
-         // check this right now.
-         //
-         // https://github.com/swift-server/async-http-client/issues/565
         XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load())
         XCTAssertEqual(0, bytesTheClientSent.load()) // We'd only see this if we sent the full 10 MB.
-         */
         XCTAssertFalse(serverSawEnd.load())
         XCTAssertTrue(serverSawRequest.load())
 
