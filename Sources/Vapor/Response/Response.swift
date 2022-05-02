@@ -39,6 +39,8 @@ public final class Response: CustomStringConvertible {
         case webSocket(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: (WebSocket) -> ())
     }
     
+    /// Optional Upgrade behavior to apply to this response.
+    /// currently, websocket upgrades are the only supported case.
     public var upgrader: Upgrader?
 
     public var storage: Storage
