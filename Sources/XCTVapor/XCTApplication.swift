@@ -1,6 +1,10 @@
 extension Application: XCTApplicationTester {
     public func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
-         try self.testable().performTest(request: request)
+        try self.testable().performTest(request: request)
+    }
+    
+    public func performTest(_ block: () throws -> Void) throws {
+        try self.testable().performTest(block)
     }
 }
 
@@ -62,6 +66,13 @@ extension Application {
                 body: response.body ?? ByteBufferAllocator().buffer(capacity: 0)
             )
         }
+        
+        func performTest(_ block: () throws -> Swift.Void) throws {
+            try app.server.start(address: .hostname(self.hostname, port: self.port))
+            defer { app.server.shutdown() }
+            
+            try block()
+        }
     }
 
     private struct InMemory: XCTApplicationTester {
@@ -95,11 +106,16 @@ extension Application {
                 body: res.body.collect(on: request.eventLoop).wait() ?? ByteBufferAllocator().buffer(capacity: 0)
             )
         }
+        
+        func performTest(_ block: () throws -> Swift.Void) throws {
+            try block()
+        }
     }
 }
 
 public protocol XCTApplicationTester {
     func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse
+    func performTest(_ block: () throws -> Swift.Void) throws
 }
 
 extension XCTApplicationTester {
@@ -255,5 +271,17 @@ extension XCTApplicationTester {
             XCTFail("\(error)", file: (file), line: line)
             throw error
         }
+    }
+    
+    @discardableResult
+    public func test(
+        _ block: () throws -> Swift.Void
+    ) throws -> XCTApplicationTester {
+        
+        try self.performTest {
+            try block()
+        }
+        
+        return self
     }
 }

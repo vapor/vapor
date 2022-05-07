@@ -173,4 +173,33 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
         XCTAssertEqual(returnedConfig.port, 0)
     }
+    
+    func testLiveApplication() throws {
+        
+        let liveApp = Application(.testing)
+        defer { liveApp.shutdown() }
+        
+        liveApp.get("hello", ":name") { req -> String in
+            let name = req.parameters.get("name") ?? "World"
+            return "Hello, \(name)!"
+        }
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get(":name") { req -> EventLoopFuture<String> in
+            let name = req.parameters.get("name") ?? "World"
+            let greet = req.client.get("http://localhost:8080/hello/\(name)").flatMapThrowing { res in
+                return try res.content.decode(String.self)
+            }
+            return greet
+        }
+        
+        try liveApp.testable(method: .running).test {
+            try app.test(.GET, "vapor") { res in
+                let greet = try res.content.decode(String.self)
+                XCTAssertEqual(greet, "Hello, vapor!")
+            }
+        }
+    }
 }
