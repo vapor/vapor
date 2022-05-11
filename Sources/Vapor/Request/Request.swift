@@ -1,4 +1,5 @@
 import NIO
+import NIOHTTP1
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
@@ -31,6 +32,26 @@ public final class Request: CustomStringConvertible {
     ///     req.route?.description // "GET /hello/:name"
     ///
     public var route: Route?
+
+    /// We try to determine true peer address if load balacer or reversed proxy provided info in headers
+    ///
+    /// Priority of getting value from headers is as following:
+    ///
+    /// 1. try the "Forwarded" header (e.g. for=192.0.2.60; proto=http; by=203.0.113.43)
+    /// 2. try the "X-Forwarded-For" header (e.g. client_IP, proxy1_IP, proxy2_IP)
+    /// 3. fallback to the socket's remote address provided by SwiftNIO ( e.g. 192.0.2.60:62934)
+    ///
+    public var peerAddress: String? {
+        if let forwarded = headers.first(name: .forwarded) {
+            return forwarded
+        }
+
+        if let xForwardedFor = headers.first(name: .xForwardedFor) {
+            return xForwardedFor
+        }
+
+        return self.remoteAddress?.ipAddress
+    }
 
     // MARK: Content
 
