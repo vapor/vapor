@@ -13,6 +13,11 @@ public extension Cache {
     func set<T>(_ key: String, to value: T?) async throws where T: Encodable {
         try await self.set(key, to: value).get()
     }
+    
+    /// Sets an encodable value into the cache. Removes value
+    func setToNil(_ key: String) async throws {
+        try await self.setToNil(key).get()
+    }
 
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable {

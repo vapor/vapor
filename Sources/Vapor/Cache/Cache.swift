@@ -1,3 +1,4 @@
+import NIOCore
 /// Codable key-value pair cache.
 public protocol Cache {
     /// Gets a decodable value from the cache. Returns `nil` if not found.
@@ -7,6 +8,9 @@ public protocol Cache {
     /// Sets an encodable value into the cache. Existing values are replaced. If `nil`, removes value.
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
         where T: Encodable
+    
+    /// Sets an encodable value into the cache. Removes value
+    func setToNil(_ key: String) -> EventLoopFuture<Void>
     
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
