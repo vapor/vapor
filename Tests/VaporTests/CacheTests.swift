@@ -14,6 +14,12 @@ final class CacheTests: XCTestCase {
         try XCTAssertEqual(app.cache.get("foo2").wait(), "bar2")
         sleep(1)
         try XCTAssertNil(app.cache.get("foo2", as: String.self).wait())
+        
+        // Reset value
+        try app.cache.set("foo3", to: "bar3").wait()
+        try XCTAssertEqual(app.cache.get("foo3").wait(), "bar3")
+        try app.cache.setToNil("foo3").wait()
+        try XCTAssertNil(app.cache.get("foo3", as: String.self).wait())
     }
     
     func testCustomCache() throws {
@@ -52,6 +58,10 @@ struct FooCache: Cache {
     }
     
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
+        return self.eventLoop.makeSucceededFuture(())
+    }
+    
+    func setToNil(_ key: String) -> EventLoopFuture<Void> {
         return self.eventLoop.makeSucceededFuture(())
     }
     
