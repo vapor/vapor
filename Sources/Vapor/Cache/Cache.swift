@@ -9,12 +9,12 @@ public protocol Cache {
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
         where T: Encodable
     
-    /// Sets an encodable value into the cache. Removes value
-    func setToNil(_ key: String) -> EventLoopFuture<Void>
-    
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
         where T: Encodable
+    
+    /// Sets an encodable value into the cache. Removes value
+    func set(_ key: String, to value: ExpressibleByNilLiteral?) -> EventLoopFuture<Void>
     
     /// Creates a request-specific cache instance.
     func `for`(_ request: Request) -> Self

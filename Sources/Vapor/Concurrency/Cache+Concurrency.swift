@@ -15,8 +15,8 @@ public extension Cache {
     }
     
     /// Sets an encodable value into the cache. Removes value
-    func setToNil(_ key: String) async throws {
-        try await self.setToNil(key).get()
+    func set(_ key: String, to value: ExpressibleByNilLiteral?) async throws {
+        try await self.set(key, to: value).get()
     }
 
     /// Sets an encodable value into the cache with an expiry time. Existing values are replaced. If `nil`, removes value.
