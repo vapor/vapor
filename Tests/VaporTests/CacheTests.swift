@@ -18,7 +18,7 @@ final class CacheTests: XCTestCase {
         // Test reset value
         try app.cache.set("foo3", to: "bar3").wait()
         try XCTAssertEqual(app.cache.get("foo3").wait(), "bar3")
-        try app.cache.set("foo3", to: nil).wait()
+        try app.cache.delete("foo3").wait()
         try XCTAssertNil(app.cache.get("foo3", as: String.self).wait())
     }
     

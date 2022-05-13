@@ -83,21 +83,6 @@ private final class MemoryCacheStorage {
             self.storage.removeValue(forKey: key)
         }
     }
-    
-    func set(_ key: String, to value: ExpressibleByNilLiteral?, expiresIn expirationTime: CacheExpirationTime?)
-    {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-        if let value = value {
-            var box = CacheEntryBox(value)
-            if let expirationTime = expirationTime {
-                box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
-            }
-            self.storage[key] = box
-        } else {
-            self.storage.removeValue(forKey: key)
-        }
-    }
 }
 
 private struct MemoryCache: Cache {
@@ -119,12 +104,6 @@ private struct MemoryCache: Cache {
         where T: Encodable
     {
         self.set(key, to: value, expiresIn: nil)
-    }
-    
-    func set(_ key: String, to value: ExpressibleByNilLiteral?) -> EventLoopFuture<Void>
-    {
-        self.storage.set(key, to: value, expiresIn: nil)
-        return self.eventLoop.makeSucceededFuture(())
     }
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>

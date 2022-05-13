@@ -26,7 +26,7 @@ final class AsyncCacheTests: XCTestCase {
         try await app.cache.set("foo3", to: "bar3")
         let value5: String? = try await app.cache.get("foo3")
         XCTAssertEqual(value5, "bar3")
-        try await app.cache.set("foo3", to: nil)
+        try await app.cache.delete("foo3")
         let value6 = try await app.cache.get("foo3", as: String.self)
         XCTAssertNil(value6)
     }
@@ -68,10 +68,6 @@ struct FooCache: Cache {
     }
 
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
-        return self.eventLoop.makeSucceededFuture(())
-    }
-    
-    func set(_ key: String, to value: ExpressibleByNilLiteral?) -> EventLoopFuture<Void> {
         return self.eventLoop.makeSucceededFuture(())
     }
 
