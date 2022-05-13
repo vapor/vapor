@@ -21,6 +21,14 @@ final class AsyncCacheTests: XCTestCase {
         sleep(1)
         let value4 = try await app.cache.get("foo2", as: String.self)
         XCTAssertNil(value4)
+        
+        // Test reset value
+        try await app.cache.set("foo3", to: "bar3")
+        let value5: String? = try await app.cache.get("foo3")
+        XCTAssertEqual(value5, "bar3")
+        try await app.cache.delete("foo3")
+        let value6 = try await app.cache.get("foo3", as: String.self)
+        XCTAssertNil(value6)
     }
 
     func testCustomCache() async throws {
