@@ -22,11 +22,11 @@ final class AsyncCacheTests: XCTestCase {
         let value4 = try await app.cache.get("foo2", as: String.self)
         XCTAssertNil(value4)
         
-        // Test reset
+        // Test reset value
         try await app.cache.set("foo3", to: "bar3")
         let value5: String? = try await app.cache.get("foo3")
         XCTAssertEqual(value5, "bar3")
-        try await app.cache.setToNil("foo3")
+        try await app.cache.set("foo3", to: nil)
         let value6 = try await app.cache.get("foo3", as: String.self)
         XCTAssertNil(value6)
     }
@@ -71,7 +71,7 @@ struct FooCache: Cache {
         return self.eventLoop.makeSucceededFuture(())
     }
     
-    func setToNil(_ key: String) -> EventLoopFuture<Void> {
+    func set(_ key: String, to value: ExpressibleByNilLiteral?) -> EventLoopFuture<Void> {
         return self.eventLoop.makeSucceededFuture(())
     }
 
