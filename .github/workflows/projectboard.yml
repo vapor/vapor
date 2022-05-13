@@ -11,7 +11,7 @@ jobs:
     steps:
       - id: set-matrix 
         run: |
-          output=$(curl ${{ github.event.issue.url }}/labels | jq '.[] | .name')
+          output=$(curl ${{ github.event.issue.url }}/labels | jq '.[] | .name') || output=""
 
           echo '======================'
           echo 'Process incoming data'
