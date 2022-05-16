@@ -29,13 +29,11 @@ extension HTTPHeaders {
         public var value: Value
         public var name: String?
         public var filename: String?
-        public var filenameASCII: String?
 
-        public init(_ value: Value, name: String? = nil, filename: String? = nil, filenameASCII: String? = nil) {
+        public init(_ value: Value, name: String? = nil, filename: String? = nil) {
             self.value = value
             self.name = name
             self.filename = filename
-            self.filenameASCII = filenameASCII
         }
 
         init?(directives: [Directive]) {
@@ -56,7 +54,7 @@ extension HTTPHeaders {
                 case "filename":
                     self.filename = .init(parameter)
                 case "filename*":
-                    self.filenameASCII = .init(parameter)
+                    self.filename = .init(parameter)
                 default:
                     return nil
                 }
@@ -72,9 +70,6 @@ extension HTTPHeaders {
             }
             if let filename = self.filename {
                 directives.append(.init(value: "filename", parameter: filename))
-            }
-            if let filenameASCII = filenameASCII {
-                directives.append(.init(value: "filename*", parameter: filenameASCII))
             }
             return directives
         }
