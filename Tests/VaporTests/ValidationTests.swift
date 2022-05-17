@@ -137,6 +137,49 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
         }
     }
+    
+    func testValidateInternationalEmail() throws {
+        struct Email: Validatable, Codable {
+            var email: String?
+            
+            init(email: String) {
+                self.email = email
+            }
+            
+            static func validations(_ v: inout Validations) {
+                // validate the international email is valid and is not nil
+                v.add("email", as: String?.self, is: !.nil && .internationalEmail)
+                v.add("email", as: String?.self, is: .internationalEmail && !.nil) // test other way
+            }
+        }
+        
+        let valid = """
+        {
+            "email": "ß@tanner.xyz"
+        }
+        """
+        XCTAssertNoThrow(try Email.validate(json: valid))
+        
+        let validURL: URI = "https://tanner.xyz/email?email=ß@tanner.xyz"
+        XCTAssertNoThrow(try Email.validate(query: validURL))
+        
+        let validURL2: URI = "https://tanner.xyz/email?email=me@ßanner.xyz"
+        XCTAssertNoThrow(try Email.validate(query: validURL2))
+        
+        let invalidUser = """
+        {
+            "email": "me@tanner@.xyz",
+        }
+        """
+        XCTAssertThrowsError(try Email.validate(json: invalidUser)) { error in
+            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        }
+        
+        let invalidUserURL: URI = "https://tanner.xyz/email?email=me@tanner@.xyz"
+        XCTAssertThrowsError(try Email.validate(query: invalidUserURL)) { error in
+            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        }
+    }
 
     func testValidateNested() throws {
         struct User: Validatable, Codable {
@@ -373,10 +416,10 @@ class ValidationTests: XCTestCase {
     }
     
     func testEmailWithSpecialCharacters() {
-        assert("ß@b.com", passes: .email)
-        assert("ß@b.com", fails: !.email, "is a valid email address")
-        assert("b@ß.com", passes: .email)
-        assert("b@ß.com", fails: !.email, "is a valid email address")
+        assert("ß@b.com", passes: .internationalEmail)
+        assert("ß@b.com", fails: !.internationalEmail, "is a valid email address")
+        assert("b@ß.com", passes: .internationalEmail)
+        assert("b@ß.com", fails: !.internationalEmail, "is a valid email address")
     }
 
     func testRange() {
