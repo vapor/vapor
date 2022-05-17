@@ -85,6 +85,12 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///     - url: URL to read the query string from
     ///     - configuration: Overrides the default coding configuration
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
+        do {
+            result = try self.decode(D.self, from: url.query ?? "")
+            print(result)
+        } catch let error {
+            print(error)
+        }
         return try self.decode(D.self, from: url.query ?? "")
     }
     

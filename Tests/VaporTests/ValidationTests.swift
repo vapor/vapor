@@ -371,6 +371,13 @@ class ValidationTests: XCTestCase {
         assert("asdf", fails: .email, "is not a valid email address")
         assert("asdf", passes: !.email)
     }
+    
+    func testEmailWithSpecialCharacters() {
+        assert("ß@b.com", passes: .email)
+        assert("ß@b.com", fails: !.email, "is a valid email address")
+        assert("b@ß.com", passes: .email)
+        assert("b@ß.com", fails: !.email, "is a valid email address")
+    }
 
     func testRange() {
         assert(4, passes: .range(-5...5))
