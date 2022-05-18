@@ -718,6 +718,35 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual("\(error)", "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
         }
     }
+    
+    func testValidationWithFloat() throws {
+        struct Weight: Validatable, Codable {
+            var weight: Float?
+            
+            init(weight: Float) {
+                self.weight = weight
+            }
+            
+            static func validations(_ v: inout Validations) {
+                // validate the international email is valid and is not nil
+                v.add("weight", as: Float?.self, is: .nil || .range(0...), required: false)
+            }
+        }
+        
+        let valid = """
+        {
+            "weight": 10.24
+        }
+        """
+        XCTAssertNoThrow(try Weight.validate(json: valid))
+        
+        let validURL2: URI = "https://tanner.xyz/weight?weight=10.2"
+        XCTAssertNoThrow(try Weight.validate(query: validURL2))
+        
+        let validURL: URI = "https://tanner.xyz/weight?weight=null"
+        // TODO: This fails
+        XCTAssertNoThrow(try Weight.validate(query: validURL))
+    }
 
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
