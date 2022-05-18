@@ -1,3 +1,4 @@
+import NIOCore
 extension Application.Caches {
     /// In-memory cache. Thread safe.
     /// Not shared between multiple instances of your application.

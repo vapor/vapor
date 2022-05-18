@@ -18,6 +18,10 @@ public extension Cache {
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable {
         try await self.set(key, to: value, expiresIn: expirationTime).get()
     }
+    
+    func delete(_ key: String) async throws {
+        try await self.delete(key).get()
+    }
 
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String) async throws -> T? where T: Decodable {
