@@ -10,7 +10,7 @@ public struct ClientRequest {
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        byteBufferAllocator: ByteBufferAllocator
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.method = method
         self.url = url
