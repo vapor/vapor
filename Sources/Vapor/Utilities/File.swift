@@ -51,8 +51,7 @@ public struct File: Codable, Equatable {
     ///     - data: The file's contents.
     ///     - filename: The name of the file, not including path.
     public init(data: String, filename: String) {
-        var buffer = ByteBufferAllocator().buffer(capacity: data.utf8.count)
-        buffer.writeString(data)
+        let buffer = ByteBufferAllocator().buffer(string: data)
         self.init(data: buffer, filename: filename)
     }
     

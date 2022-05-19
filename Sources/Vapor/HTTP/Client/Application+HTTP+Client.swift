@@ -2,7 +2,7 @@ extension Application.Clients.Provider {
     public static var http: Self {
         .init {
             $0.clients.use {
-                $0.http.client.shared.delegating(to: $0.eventLoopGroup.next(), logger: $0.logger)
+                $0.http.client.shared.delegating(to: $0.eventLoopGroup.next(), logger: $0.logger, byteBufferAllocator: $0.core.storage.allocator)
             }
         }
     }
