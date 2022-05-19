@@ -73,9 +73,9 @@ public final class Response: CustomStringConvertible {
         }
 
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = self.response.byteBufferAllocator.buffer(capacity: 0)
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.byteBufferAllocator)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -88,9 +88,9 @@ public final class Response: CustomStringConvertible {
         func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = self.response.byteBufferAllocator.buffer(capacity: 0)
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.byteBufferAllocator)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
@@ -111,8 +111,6 @@ public final class Response: CustomStringConvertible {
             // ignore since Request is a reference type
         }
     }
-
-    private var byteBufferAllocator: ByteBufferAllocator
     
     // MARK: Init
     
@@ -132,15 +130,13 @@ public final class Response: CustomStringConvertible {
         status: HTTPResponseStatus = .ok,
         version: HTTPVersion = .init(major: 1, minor: 1),
         headers: HTTPHeaders = .init(),
-        body: Body = .empty,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        body: Body = .empty
     ) {
         self.init(
             status: status,
             version: version,
             headersNoUpdate: headers,
-            body: body,
-            byteBufferAllocator: byteBufferAllocator
+            body: body
         )
         self.headers.updateContentLength(body.count)
     }
@@ -151,8 +147,7 @@ public final class Response: CustomStringConvertible {
         status: HTTPResponseStatus,
         version: HTTPVersion,
         headersNoUpdate headers: HTTPHeaders,
-        body: Body,
-        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+        body: Body
     ) {
         self.status = status
         self.version = version
@@ -160,7 +155,6 @@ public final class Response: CustomStringConvertible {
         self.body = body
         self.storage = .init()
         self.forHeadRequest = false
-        self.byteBufferAllocator = byteBufferAllocator
     }
 }
 

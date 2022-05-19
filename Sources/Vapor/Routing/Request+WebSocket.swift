@@ -6,7 +6,7 @@ extension Request {
          },
          onUpgrade: @escaping (Request, WebSocket) -> ()
      ) -> Response {
-         let res = Response(status: .switchingProtocols, byteBufferAllocator: self.byteBufferAllocator)
+         let res = Response(status: .switchingProtocols)
          res.upgrader = .webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: {
              shouldUpgrade(self)
          }, onUpgrade: { ws in

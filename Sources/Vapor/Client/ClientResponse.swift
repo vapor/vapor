@@ -90,8 +90,7 @@ extension ClientResponse: ResponseEncodable {
         let response = Response(
             status: self.status,
             headers: self.headers,
-            body: body,
-            byteBufferAllocator: self.byteBufferAllocator
+            body: body
         )
         return request.eventLoop.makeSucceededFuture(response)
     }

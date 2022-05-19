@@ -129,7 +129,7 @@ public final class CORSMiddleware: Middleware {
         // Determine if the request is pre-flight.
         // If it is, create empty response otherwise get response from the responder chain.
         let response = request.isPreflight
-            ? request.eventLoop.makeSucceededFuture(.init(byteBufferAllocator: request.byteBufferAllocator))
+            ? request.eventLoop.makeSucceededFuture(.init())
             : next.respond(to: request)
         
         return response.map { response in

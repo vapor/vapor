@@ -73,7 +73,7 @@ extension Content {
     }
     
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let response = Response(byteBufferAllocator: request.byteBufferAllocator)
+        let response = Response()
         do {
             try response.content.encode(self)
         } catch {

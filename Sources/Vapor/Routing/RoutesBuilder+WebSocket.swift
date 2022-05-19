@@ -51,7 +51,7 @@ extension RoutesBuilder {
         onUpgrade: @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
-            let res = Response(status: .switchingProtocols, byteBufferAllocator: request.byteBufferAllocator)
+            let res = Response(status: .switchingProtocols)
             res.upgrader = .webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: {
                 shouldUpgrade(request)                
             }, onUpgrade: { ws in

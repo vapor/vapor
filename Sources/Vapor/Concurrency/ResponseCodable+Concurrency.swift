@@ -88,7 +88,7 @@ extension StaticString: AsyncResponseEncodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public func encodeResponse(for request: Request) async throws -> Response {
-        let res = Response(headers: staticStringHeaders, body: .init(staticString: self), byteBufferAllocator: request.byteBufferAllocator)
+        let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
         return res
     }
     #endif
@@ -99,7 +99,7 @@ extension String: AsyncResponseEncodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public func encodeResponse(for request: Request) async throws -> Response {
-        let res = Response(headers: staticStringHeaders, body: .init(string: self), byteBufferAllocator: request.byteBufferAllocator)
+        let res = Response(headers: staticStringHeaders, body: .init(string: self))
         return res
     }
     #endif
@@ -109,7 +109,7 @@ extension String: AsyncResponseEncodable {
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Content {
     public func encodeResponse(for request: Request) async throws -> Response {
-        let response = Response(byteBufferAllocator: request.byteBufferAllocator)
+        let response = Response()
         try response.content.encode(self)
         return response
     }
@@ -134,8 +134,7 @@ extension ClientResponse: AsyncResponseEncodable {
         let response = Response(
             status: self.status,
             headers: self.headers,
-            body: body,
-            byteBufferAllocator: request.byteBufferAllocator
+            body: body
         )
         return response
     }
@@ -146,7 +145,7 @@ extension HTTPStatus: AsyncResponseEncodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
     @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
     public func encodeResponse(for request: Request) async throws -> Response {
-        return Response(status: self, byteBufferAllocator: request.byteBufferAllocator)
+        return Response(status: self)
     }
     #endif
 }
