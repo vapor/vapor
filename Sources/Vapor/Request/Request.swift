@@ -40,17 +40,17 @@ public final class Request: CustomStringConvertible {
     /// 1. try the "Forwarded" header (e.g. for=192.0.2.60; proto=http; by=203.0.113.43)
     /// 2. try the "X-Forwarded-For" header (e.g. client_IP, proxy1_IP, proxy2_IP)
     /// 3. fallback to the socket's remote address provided by SwiftNIO ( e.g. 192.0.2.60:62934)
-    ///
-    public var peerAddress: String? {
-        if let forwarded = headers.first(name: .forwarded) {
-            return forwarded
+    /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
+    public var peerAddress: SocketAddress? {
+        if let clientAddress = headers.forwarded.first?.for {
+            return try! SocketAddress.init(ipAddress: clientAddress, port: 80)
         }
 
         if let xForwardedFor = headers.first(name: .xForwardedFor) {
-            return xForwardedFor
+            return try! SocketAddress.init(ipAddress: xForwardedFor, port: 80)
         }
 
-        return self.remoteAddress?.ipAddress
+        return self.remoteAddress
     }
 
     // MARK: Content
