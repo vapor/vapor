@@ -23,7 +23,7 @@ let package = Package(
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0"),
 
-        // 🔑 Hashing (BCrypt, SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
+        // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "3.0.0"),
 
         // 🚍 High-performance trie-node router.
@@ -58,20 +58,16 @@ let package = Package(
     ],
     targets: [
         // C helpers
-        .target(name: "CBase32"),
-        .target(name: "CBcrypt"),
-        .target(name: "COperatingSystem"),
-        .target(name: "CURLParser"),
+        .target(name: "CVaporBcrypt"),
+        .target(name: "CVaporURLParser"),
 
         // Vapor
         .target(name: "Vapor", dependencies: [
             .product(name: "AsyncHTTPClient", package: "async-http-client"),
             .product(name: "AsyncKit", package: "async-kit"),
             .product(name: "Backtrace", package: "swift-backtrace"),
-            .target(name: "CBase32"),
-            .target(name: "CBcrypt"),
-            .target(name: "COperatingSystem"),
-            .target(name: "CURLParser"),
+            .target(name: "CVaporBcrypt"),
+            .target(name: "CVaporURLParser"),
             .product(name: "ConsoleKit", package: "console-kit"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),

@@ -1,74 +1,70 @@
-internal struct Base64 {
-    let lookupTable: [Character]
+/// IMPORTANT:
+///
+/// These APIs are `internal` rather than `public` on purpose - specifically due to the high risk of name collisions
+/// in the extensions and the extreme awkwardness of vendor prefixing for this use case.
 
-    init(lookupTable: String) {
-        self.lookupTable = .init(lookupTable)
-        assert(self.lookupTable.count == 64, "lookup table must be 64 chars")
+internal enum Base64 {
+    static let baseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
+    static let baseIgnores = Set<Character>()
+
+    /// Canonical Base64 encoding per [RFC 4648 §4](https://datatracker.ietf.org/doc/html/rfc4648#section-4)
+    static let canonical: BaseNInstance = {
+        return .init(
+            bits: 6/*64.trailingZeroBitCount*/,
+            pad: "=",
+            lookupTable: .init(Self.baseAlphabet),
+            reverseTable: .init(uniqueKeysWithValues: Self.baseAlphabet.enumerated().map { ($1, numericCast($0)) }),
+            reverseIgnores: Self.baseIgnores
+        )
+    }()
+    
+    /// The variant Base64 encoding used by BCrypt, using `.` instead of `/` for value 62 and ignoring padding.
+    static let bcrypt: BaseNInstance = {
+        let bcryptAlphabet = Self.baseAlphabet.map { $0 == "+" ? "." : $0 }
+        
+        return .init(
+            bits: 6/*64.trailingZeroBitCount*/,
+            lookupTable: bcryptAlphabet,
+            reverseTable: .init(uniqueKeysWithValues: bcryptAlphabet.enumerated().map { ($1, numericCast($0)) }),
+            reverseIgnores: Self.baseIgnores
+        )
+    }()
+}
+
+extension Array where Element == UInt8 {
+    internal init?(base64: String) {
+        guard let decoded = Base64.canonical.decodeString(base64) else { return nil }
+        self = decoded
+    }
+    
+    internal init?<S>(base64: S) where S: Sequence, S.Element == UInt8 {
+        guard let decoded = Base64.canonical.decodeBytes(base64) else { return nil }
+        self = decoded
     }
 
-    public static var bcrypt: Base64 {
-        return .init(lookupTable: "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./")
+    internal init?(bcryptBase64: String) {
+        guard let decoded = Base64.bcrypt.decodeString(bcryptBase64) else { return nil }
+        self = decoded
     }
-
-    public func encode(_ decoded: [UInt8]) -> String {
-        var encoded = ""
-        func push(_ code: UInt8) {
-            encoded.append(self.lookupTable[numericCast(code)])
-        }
-
-        var iterator = decoded.makeIterator()
-        while let one = iterator.next() {
-            push((one & 0b11111100) >> 2)
-            if let two = iterator.next() {
-                if let three = iterator.next() {
-                    push(((one & 0b00000011) << 4) | ((two & 0b11110000) >> 4))
-                    push(((two & 0b00001111)) << 2 | ((three & 0b11000000)) >> 6)
-                    push(three & 0b00111111)
-                } else {
-                    push(((one & 0b00000011) << 4) | ((two & 0b11110000) >> 4))
-                    push((two & 0b00001111) << 2)
-                }
-            } else {
-                push((one & 0b00000011) << 4)
-            }
-        }
-        return encoded
+    
+    internal init?<S>(bcryptBase64: S) where S: Sequence, S.Element == UInt8 {
+        guard let decoded = Base64.bcrypt.decodeBytes(bcryptBase64) else { return nil }
+        self = decoded
     }
+}
 
-    public func decode(_ encoded: String) -> [UInt8]? {
-        var decoded = [UInt8]()
+extension Sequence where Element == UInt8 {
+    internal var base64Bytes: [UInt8] { Base64.canonical.encodeBytes(self) }
+    internal var base64String: String { Base64.canonical.encodeString(self) }
 
-        func index(_ char: Character) -> UInt8? {
-            guard let index = self.lookupTable.firstIndex(of: char) else {
-                return nil
-            }
-            return numericCast(index)
-        }
+    internal var bcryptBase64Bytes: [UInt8] { Base64.bcrypt.encodeBytes(self) }
+    internal var bcryptBase64String: String { Base64.bcrypt.encodeString(self) }
+}
 
-        var iterator = encoded.makeIterator()
-        while let one = iterator.next() {
-            if let two = iterator.next() {
-                guard let a = index(one), let b = index(two) else {
-                    return nil
-                }
-                decoded.append(((a & 0b00111111) << 2) | ((b & 0b00110000) >> 4))
+extension StringProtocol {
+    internal var base64Bytes: [UInt8] { self.utf8.base64Bytes }
+    internal var base64String: String { self.utf8.base64String }
 
-                if let three = iterator.next() {
-                    guard let c = index(three) else {
-                        return nil
-                    }
-                    decoded.append(((b & 0b00001111) << 4) | ((c & 0b00111100) >> 2))
-
-                    if let four = iterator.next() {
-                        guard let d = index(four) else {
-                            return nil
-                        }
-                        decoded.append(((c & 0b00000011) << 6) | ((d & 0b00111111)))
-                    }
-                }
-            }
-        }
-
-        return decoded
-    }
+    internal var bcryptBase64Bytes: [UInt8] { self.utf8.bcryptBase64Bytes }
+    internal var bcryptBase64String: String { self.utf8.bcryptBase64String }
 }
