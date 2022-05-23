@@ -20,7 +20,7 @@ extension Parameters {
         where T: LosslessStringConvertible
     {
         guard let stringValue: String = get(name) else {
-            self.logger.debug("The parameter provided does not exist")
+            self.logger.debug("The parameter \(name) does not exist")
             throw Abort(.internalServerError, reason: "The parameter provided does not exist")
         }
 
