@@ -25,7 +25,7 @@ extension Parameters {
         }
 
         guard let value = T.init(stringValue) else {
-            self.logger.debug("The parameter value could not be converted to the required type")
+            self.logger.debug("The parameter \(stringValue) could not be converted to \(T.Type)")
             throw Abort(.unprocessableEntity, reason: "The parameter value could not be converted to the required type")
         }
 
