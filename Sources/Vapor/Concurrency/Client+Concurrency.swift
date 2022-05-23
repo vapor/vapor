@@ -41,7 +41,7 @@ extension Client {
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }
     ) async throws -> ClientResponse {
-        var request = ClientRequest(method: method, url: url, headers: headers, body: nil)
+        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator)
         try beforeSend(&request)
         return try await self.send(request).get()
     }

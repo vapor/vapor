@@ -143,7 +143,10 @@ public final class HTTPServer: Server {
         
         /// If set, this name will be serialized as the `Server` header in outgoing responses.
         public var serverName: String?
-        
+
+        /// When `true`, report http metrics through `swift-metrics`
+        public var reportMetrics: Bool
+
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
 
@@ -162,6 +165,7 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
+            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10)
         ) {
@@ -176,6 +180,7 @@ public final class HTTPServer: Server {
                 supportVersions: supportVersions,
                 tlsConfiguration: tlsConfiguration,
                 serverName: serverName,
+                reportMetrics: reportMetrics,
                 logger: logger,
                 shutdownTimeout: shutdownTimeout
             )
@@ -192,6 +197,7 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
+            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10)
         ) {
@@ -209,6 +215,7 @@ public final class HTTPServer: Server {
             }
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
+            self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
         }

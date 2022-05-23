@@ -192,7 +192,7 @@ public struct FileIO {
                 }
                 onCompleted(result)
             }
-        }, count: byteCount)
+        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
         
         return response
     }

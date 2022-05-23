@@ -15,7 +15,7 @@ let package = Package(
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.8.2"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.10.0"),
 
         // Sugary extensions for the SwiftNIO library
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0"),
@@ -92,7 +92,7 @@ let package = Package(
         ]),
 	
         // Development
-        .target(name: "Development", dependencies: [
+        .executableTarget(name: "Development", dependencies: [
             .target(name: "Vapor"),
         ], swiftSettings: [
             // Enable better optimizations when building in Release configuration. Despite the use of
@@ -110,6 +110,13 @@ let package = Package(
         .testTarget(name: "VaporTests", dependencies: [
             .product(name: "NIOTestUtils", package: "swift-nio"),
             .target(name: "XCTVapor"),
+        ], resources: [
+            .copy("Utilities/foo.txt"),
+            .copy("Utilities/index.html"),
+            .copy("Utilities/SubUtilities/"),
+            .copy("Utilities/foo bar.html"),
+            .copy("Utilities/test.env"),
+            .copy("Utilities/my-secret-env-content"),
         ]),
         .testTarget(name: "AsyncTests", dependencies: [
             .product(name: "NIOTestUtils", package: "swift-nio"),

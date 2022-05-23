@@ -47,20 +47,16 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             case .buffer(let buffer):
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .string(let string):
-                var buffer = context.channel.allocator.buffer(capacity: string.count)
-                buffer.writeString(string)
+                let buffer = context.channel.allocator.buffer(string: string)
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .staticString(let string):
-                var buffer = context.channel.allocator.buffer(capacity: string.utf8CodeUnitCount)
-                buffer.writeStaticString(string)
+                let buffer = context.channel.allocator.buffer(staticString: string)
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .data(let data):
-                var buffer = context.channel.allocator.buffer(capacity: data.count)
-                buffer.writeBytes(data)
+                let buffer = context.channel.allocator.buffer(bytes: data)
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .dispatchData(let data):
-                var buffer = context.channel.allocator.buffer(capacity: data.count)
-                buffer.writeDispatchData(data)
+                let buffer = context.channel.allocator.buffer(dispatchData: data)
                 self.writeAndflush(buffer: buffer, context: context, promise: promise)
             case .stream(let stream):
                 let channelStream = ChannelResponseBodyStream(
