@@ -187,7 +187,6 @@ public struct FileIO {
                 switch result {
                 case .failure(let error):
                     stream.write(.error(error), promise: nil)
-                    response.status = .internalServerError
                 case .success:
                     stream.write(.end, promise: nil)
                 }
