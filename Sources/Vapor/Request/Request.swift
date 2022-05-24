@@ -43,11 +43,11 @@ public final class Request: CustomStringConvertible {
     /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
     public var peerAddress: SocketAddress? {
         if let clientAddress = headers.forwarded.first?.for {
-            return try! SocketAddress.init(ipAddress: clientAddress, port: 80)
+            return try? SocketAddress.init(ipAddress: clientAddress, port: 80)
         }
 
         if let xForwardedFor = headers.first(name: .xForwardedFor) {
-            return try! SocketAddress.init(ipAddress: xForwardedFor, port: 80)
+            return try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
         }
 
         return self.remoteAddress
