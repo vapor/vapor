@@ -36,14 +36,14 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     func serialize(_ response: Response, for request: Request, context: ChannelHandlerContext) {
         switch request.version.major {
         case 2:
-            context.write(self.wrapOutboundOut(response), promise: nil)
+            context.writeAndFlush(self.wrapOutboundOut(response), promise: nil)
         default:
             let keepAlive = !self.isShuttingDown && request.isKeepAlive
             if self.isShuttingDown {
                 self.logger.debug("In-flight request has completed")
             }
             response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
-            let done = context.write(self.wrapOutboundOut(response))
+            let done = context.writeAndFlush(self.wrapOutboundOut(response))
             done.whenComplete { result in
                 switch result {
                 case .success:
