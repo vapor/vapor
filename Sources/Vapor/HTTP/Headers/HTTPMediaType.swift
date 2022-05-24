@@ -234,6 +234,8 @@ public extension HTTPMediaType {
     static let avi = HTTPMediaType(type: "video", subType: "avi")
     /// MPEG video.
     static let mpeg = HTTPMediaType(type: "video", subType: "mpeg")
+    /// MP4 video
+    static let mp4 = HTTPMediaType(type: "video", subType: "mp4")
 }
 
 // MARK: Extensions
