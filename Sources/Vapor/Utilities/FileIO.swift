@@ -259,7 +259,7 @@ extension HTTPHeaders.Range.Value {
             case .tail(let value):
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                return (offset: numericCast(start), byteCount: end + 1)
+                return (offset: numericCast(start), byteCount: end - start + 1)
         }
     }
 }
