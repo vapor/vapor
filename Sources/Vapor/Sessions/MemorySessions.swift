@@ -52,6 +52,6 @@ public struct MemorySessions: SessionDriver {
     }
     
     private func generateID() -> SessionID {
-        return .init(string: [UInt8].random(count: 32).base64String)
+        return .init(string: [UInt8].random(count: 32).base64String())
     }
 }

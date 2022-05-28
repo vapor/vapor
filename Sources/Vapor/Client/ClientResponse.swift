@@ -108,7 +108,7 @@ extension ClientResponse: Codable {
         self.status = try container.decode(HTTPStatus.self, forKey: .status)
         self.headers = try container.decode(HTTPHeaders.self, forKey: .headers)
         let bodyString = try container.decode(String?.self, forKey: .body)
-        guard let s = bodyString, let bodyData = [UInt8].init(base64: s) else {
+        guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
         }
         self.byteBufferAllocator = ByteBufferAllocator()
@@ -120,7 +120,7 @@ extension ClientResponse: Codable {
         try container.encode(self.status, forKey: .status)
         try container.encode(self.headers, forKey: .headers)
         if let body = self.body {
-            let string = body.readableBytesView.base64String
+            let string = body.readableBytesView.base64String()
             try container.encode(string, forKey: .body)
         } else {
             try container.encodeNil(forKey: .body)
