@@ -49,6 +49,9 @@ let package = Package(
 
         // Swift metrics API
         .package(url: "https://github.com/apple/swift-metrics.git", from: "2.0.0"),
+        
+        // Swift collection algorithms
+        .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
@@ -82,6 +85,7 @@ let package = Package(
             .product(name: "NIOSSL", package: "swift-nio-ssl"),
             .product(name: "NIOWebSocket", package: "swift-nio"),
             .product(name: "Crypto", package: "swift-crypto"),
+            .product(name: "Algorithms", package: "swift-algorithms"),
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
@@ -95,7 +99,7 @@ let package = Package(
             // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
             // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
             .unsafeFlags([
-                            "-cross-module-optimization"
+                "-cross-module-optimization"
             ], .when(configuration: .release)),
         ]),
 
