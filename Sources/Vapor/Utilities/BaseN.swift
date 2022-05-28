@@ -90,7 +90,7 @@ public struct BaseNEncoding {
     }
     
     @usableFromInline
-    internal struct BreakLoopError: Error, Sendable { @inlinable internal init() {} }
+    internal struct BreakLoopError: Error { @inlinable internal init() {} }
     
     // N.B.: The values used for the invalid and padding byte representations are not arbitrarily chosen; they are
     // intended to be used in optimized versions of the algorithm to quickly distinguish the vairous cases.
