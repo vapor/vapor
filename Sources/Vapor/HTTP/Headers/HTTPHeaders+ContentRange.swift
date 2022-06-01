@@ -249,13 +249,29 @@ extension HTTPHeaders.ContentRange {
 extension HTTPHeaders.Range.Value {
     
     ///Converts this `HTTPHeaders.Range.Value` to a `HTTPHeaders.ContentRange.Value` with the given `limit`.
-    public func asResponseContentRange(limit: Int) -> HTTPHeaders.ContentRange.Value {
+    public func asResponseContentRange(limit: Int) throws -> HTTPHeaders.ContentRange.Value {
         switch self {
         case .start(let start):
+            guard start <= limit, start >= 0 else {
+                throw Abort(.badRequest)
+            }
             return .withinWithLimit(start: start, end: limit - 1, limit: limit)
         case .tail(let end):
+            guard end <= limit, end >= 0 else {
+                throw Abort(.badRequest)
+            }
             return .withinWithLimit(start: (limit - end), end: limit - 1, limit: limit)
         case .within(let start, let end):
+            guard start >= 0, end >= 0, start < end, start <= limit, end <= limit else {
+                throw Abort(.badRequest)
+            }
+            
+            let(bytecount, overflow) = (end - start).addingReportingOverflow(1)
+            
+            guard !overflow else {
+                throw Abort(.badRequest)
+            }
+            
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
     }
