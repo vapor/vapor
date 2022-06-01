@@ -1,4 +1,5 @@
 import NIO
+import Logging
 
 extension Request {
     public var fileio: FileIO {
@@ -138,6 +139,11 @@ public struct FileIO {
             } else {
                 contentRange = nil
             }
+        } else if request.headers.contains(name: .range) {
+            // Range header was supplied but could not be parsed i.e. it was invalid
+            request.logger.debug("Range header was provided in request but was invalid")
+            let response = Response(status: .badRequest)
+            return response
         } else {
             contentRange = nil
         }
@@ -163,7 +169,12 @@ public struct FileIO {
             if let firstRange = contentRange.ranges.first {
                 let range = firstRange.asResponseContentRange(limit: fileSize)
                 response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
-                (offset, byteCount) = firstRange.asByteBufferBounds(withMaxSize: fileSize)
+                do {
+                    (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
+                } catch {
+                    let response = Response(status: .badRequest)
+                    return response
+                }
             } else {
                 offset = 0
                 byteCount = fileSize
@@ -252,14 +263,31 @@ public struct FileIO {
 
 extension HTTPHeaders.Range.Value {
     
-    fileprivate func asByteBufferBounds(withMaxSize size: Int) -> (offset: Int64, byteCount: Int) {
+    fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
         switch self {
             case .start(let value):
+                guard value <= size, value >= 0 else {
+                    logger.debug("Requested range start was invalid: \(value)")
+                    throw Abort(.badRequest)
+                }
                 return (offset: numericCast(value), byteCount: size - value)
             case .tail(let value):
+                guard value <= size, value >= 0 else {
+                    logger.debug("Requested range end was invalid: \(value)")
+                    throw Abort(.badRequest)
+                }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                return (offset: numericCast(start), byteCount: end - start + 1)
+                guard start >= 0, end >= 0, start < end else {
+                    logger.debug("Requested range was invalid: \(start)-\(end)")
+                    throw Abort(.badRequest)
+                }
+                let (byteCount, overflow) =  (end - start).addingReportingOverflow(1)
+                guard !overflow else {
+                    logger.debug("Requested range was invalid: \(start)-\(end)")
+                    throw Abort(.badRequest)
+                }
+                return (offset: numericCast(start), byteCount: byteCount)
         }
     }
 }

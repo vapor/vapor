@@ -246,4 +246,55 @@ final class FileTests: XCTestCase {
             XCTAssertEqual(res.status, .notFound)
         }
     }
+    
+    // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
+    func testInvalidRangeHeaderDoesNotCrash() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file)
+        }
+
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=100-10")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=10--100")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
 }
