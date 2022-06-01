@@ -254,7 +254,7 @@ extension HTTPHeaders.Range.Value {
         case .start(let start):
             return .withinWithLimit(start: start, end: limit - 1, limit: limit)
         case .tail(let end):
-            return .withinWithLimit(start: end, end: limit - 1, limit: limit)
+            return .withinWithLimit(start: (limit - end), end: limit - 1, limit: limit)
         case .within(let start, let end):
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
