@@ -266,12 +266,6 @@ extension HTTPHeaders.Range.Value {
                 throw Abort(.badRequest)
             }
             
-            let(bytecount, overflow) = (end - start).addingReportingOverflow(1)
-            
-            guard !overflow else {
-                throw Abort(.badRequest)
-            }
-            
             return .withinWithLimit(start: start, end: end, limit: limit)
         }
     }
