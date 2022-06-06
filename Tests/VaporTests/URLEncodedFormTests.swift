@@ -574,6 +574,15 @@ final class URLEncodedFormTests: XCTestCase {
         ])
         XCTAssertEqual(data, "test=%26%3B!$'(),/:%3D%3F@~")
     }
+    
+    func testHeavilyNestedArray() throws {
+        var body = "x"
+        body += String(repeating: "[]", count: 80000)
+        body += "=y"
+        struct Foo: Content {}
+        XCTAssertThrowsError(try URLEncodedFormDecoder().decode(Foo.self, from: body))
+        XCTAssert(true, "We should not have crashed")
+    }
 }
 
 private struct User: Codable, Equatable {

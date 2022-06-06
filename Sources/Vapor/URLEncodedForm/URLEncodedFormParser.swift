@@ -14,11 +14,11 @@ internal struct URLEncodedFormParser {
             switch kv.count {
             case 1:
                 let value = String(kv[0])
-                result.set(value: .urlEncoded(value), forPath: [])
+                try result.set(value: .urlEncoded(value), forPath: [], recursionDepth: 0)
             case 2:
                 let key = kv[0]
                 let value = String(kv[1])
-                result.set(value: .urlEncoded(value), forPath: try parseKey(key: Substring(key)))
+                try result.set(value: .urlEncoded(value), forPath: try parseKey(key: Substring(key)), recursionDepth: 0)
             default:
                 //Empty `&&`
                 continue
