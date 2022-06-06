@@ -34,12 +34,10 @@ public final class Response: CustomStringConvertible {
 
     // If `true`, don't serialize the body.
     var forHeadRequest: Bool
-
-    internal enum Upgrader {
-        case webSocket(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: (WebSocket) -> ())
-    }
     
-    internal var upgrader: Upgrader?
+    /// Optional Upgrade behavior to apply to this response.
+    /// currently, websocket upgrades are the only defined case.
+    public var upgrader: Upgrader?
 
     public var storage: Storage
     
