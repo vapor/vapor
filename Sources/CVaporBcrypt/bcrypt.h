@@ -35,5 +35,5 @@ typedef uint64_t u_int64_t;
 #define    BCRYPT_HASHSPACE    61
 
 
-int bcrypt_hashpass(const char *key, const char *salt, char *encrypted, size_t encryptedlen);
-int encode_base64(char *, const u_int8_t *, size_t);
+int vapor_bcrypt_hashpass(const char *key, const char *salt, char *encrypted, size_t encryptedlen);
+int vapor_encode_base64(char *, const u_int8_t *, size_t);

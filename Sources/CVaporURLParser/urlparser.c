@@ -497,7 +497,7 @@ http_parse_host_char(enum http_host_state s, const char ch) {
 }
 
 static int
-http_parse_host(const char * buf, struct urlparser_url *u, int found_at) {
+http_parse_host(const char * buf, struct vapor_urlparser_url *u, int found_at) {
     enum http_host_state s;
 
     const char *p;
@@ -579,17 +579,17 @@ http_parse_host(const char * buf, struct urlparser_url *u, int found_at) {
 }
 
 void
-urlparser_url_init(struct urlparser_url *u) {
+urlparser_url_init(struct vapor_urlparser_url *u) {
     memset(u, 0, sizeof(*u));
 }
 
 int
-urlparser_parse(const char *buf, size_t buflen, int is_connect,
-                      struct urlparser_url *u)
+vapor_urlparser_parse(const char *buf, size_t buflen, int is_connect,
+                      struct vapor_urlparser_url *u)
 {
     enum state s;
     const char *p;
-    enum urlparser_fields uf, old_uf;
+    enum vapor_urlparser_fields uf, old_uf;
     int found_at = 0;
 
     if (buflen == 0) {
