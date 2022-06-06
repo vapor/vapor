@@ -23,7 +23,7 @@
 #include <stdint.h>
 #include <stddef.h>
 
-enum urlparser_fields
+enum vapor_urlparser_fields
 { UF_SCHEMA           = 0
     , UF_HOST             = 1
     , UF_PORT             = 2
@@ -34,7 +34,7 @@ enum urlparser_fields
     , UF_MAX              = 7
 };
 
-struct urlparser_field_data {
+struct vapor_urlparser_field_data {
     uint16_t off;               /* Offset into buffer in which field starts */
     uint16_t len;               /* Length of run in buffer */
 };
@@ -46,14 +46,14 @@ struct urlparser_field_data {
  * because we probably have padding left over), we convert any port to
  * a uint16_t.
  */
-struct urlparser_url {
+struct vapor_urlparser_url {
     uint16_t field_set;           /* Bitmask of (1 << UF_*) values */
     uint16_t port;                /* Converted UF_PORT string */
-    struct urlparser_field_data field_data[UF_MAX];
+    struct vapor_urlparser_field_data field_data[UF_MAX];
 };
 
 /* Parse a URL; return nonzero on failure */
-int urlparser_parse(const char *buf, size_t buflen,
+int vapor_urlparser_parse(const char *buf, size_t buflen,
                           int is_connect,
-                          struct urlparser_url *u);
+                          struct vapor_urlparser_url *u);
 #endif

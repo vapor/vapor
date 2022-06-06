@@ -167,9 +167,9 @@ public struct FileIO {
             response.status = .partialContent
             response.headers.add(name: .accept, value: contentRange.unit.serialize())
             if let firstRange = contentRange.ranges.first {
-                let range = firstRange.asResponseContentRange(limit: fileSize)
-                response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
                 do {
+                    let range = try firstRange.asResponseContentRange(limit: fileSize)
+                    response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
                 } catch {
                     let response = Response(status: .badRequest)
@@ -278,7 +278,7 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                guard start >= 0, end >= 0, start < end else {
+                guard start >= 0, end >= 0, start < end, start <= size, end <= size else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }

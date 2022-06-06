@@ -1,6 +1,5 @@
 import Vapor
 import XCTVapor
-import COperatingSystem
 import AsyncHTTPClient
 import XCTest
 

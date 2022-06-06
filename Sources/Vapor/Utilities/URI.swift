@@ -1,4 +1,4 @@
-import CURLParser
+import CVaporURLParser
 
 public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     /// A URI's scheme.
@@ -199,9 +199,9 @@ public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
     }
 
     private func parse(_ component: Component) -> String? {
-        var url = urlparser_url()
-        urlparser_parse(self.string, self.string.count, 0, &url)
-        let data: urlparser_field_data
+        var url = vapor_urlparser_url()
+        vapor_urlparser_parse(self.string, self.string.count, 0, &url)
+        let data: vapor_urlparser_field_data
         switch component {
         case .scheme:
             data = url.field_data.0

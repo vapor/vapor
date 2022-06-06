@@ -1,4 +1,4 @@
-import CBcrypt
+import CVaporBcrypt
 
 // MARK: BCrypt
 
@@ -68,7 +68,7 @@ public final class BCryptDigest {
 
         let hashedBytes = UnsafeMutablePointer<Int8>.allocate(capacity: 128)
         defer { hashedBytes.deallocate() }
-        let hashingResult = bcrypt_hashpass(
+        let hashingResult = vapor_bcrypt_hashpass(
             plaintext,
             normalizedSalt,
             hashedBytes,
@@ -172,7 +172,7 @@ public final class BCryptDigest {
         let encodedBytes = UnsafeMutablePointer<Int8>.allocate(capacity: 25)
         defer { encodedBytes.deallocate() }
         let res = data.withUnsafeBytes { bytes in
-            encode_base64(encodedBytes, bytes.baseAddress?.assumingMemoryBound(to: UInt8.self), bytes.count)
+            vapor_encode_base64(encodedBytes, bytes.baseAddress?.assumingMemoryBound(to: UInt8.self), bytes.count)
         }
         assert(res == 0, "base64 convert failed")
         return String(cString: encodedBytes)

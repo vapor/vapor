@@ -42,15 +42,14 @@
 
 char   *bcrypt_gensalt(u_int8_t);
 
-int encode_base64(char *, const u_int8_t *, size_t);
 static int decode_base64(u_int8_t *, size_t, const char *);
 
 /*
  * the core bcrypt function
  */
 int
-bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
-                size_t encryptedlen)
+vapor_bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
+                      size_t encryptedlen)
 {
     blf_ctx state;
     u_int32_t rounds, i, k;
@@ -117,22 +116,22 @@ bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
     salt_len = BCRYPT_MAXSALT;
 
     /* Setting up S-Boxes and Subkeys */
-    Blowfish_initstate(&state);
-    Blowfish_expandstate(&state, csalt, salt_len,
-                         (u_int8_t *) key, key_len);
+    Vapor_Blowfish_initstate(&state);
+    Vapor_Blowfish_expandstate(&state, csalt, salt_len,
+                               (u_int8_t *) key, key_len);
     for (k = 0; k < rounds; k++) {
-        Blowfish_expand0state(&state, (u_int8_t *) key, key_len);
-        Blowfish_expand0state(&state, csalt, salt_len);
+        Vapor_Blowfish_expand0state(&state, (u_int8_t *) key, key_len);
+        Vapor_Blowfish_expand0state(&state, csalt, salt_len);
     }
 
     /* This can be precomputed later */
     j = 0;
     for (i = 0; i < BCRYPT_WORDS; i++)
-        cdata[i] = Blowfish_stream2word(ciphertext, 4 * BCRYPT_WORDS, &j);
+        cdata[i] = Vapor_Blowfish_stream2word(ciphertext, 4 * BCRYPT_WORDS, &j);
 
     /* Now do the encryption */
     for (k = 0; k < 64; k++)
-        blf_enc(&state, cdata, BCRYPT_WORDS / 2);
+        vapor_blf_enc(&state, cdata, BCRYPT_WORDS / 2);
 
     for (i = 0; i < BCRYPT_WORDS; i++) {
         ciphertext[4 * i + 3] = cdata[i] & 0xff;
@@ -146,8 +145,8 @@ bcrypt_hashpass(const char *key, const char *salt, char *encrypted,
 
 
     snprintf(encrypted, 8, "$2%c$%2.2u$", minor, logr);
-    encode_base64(encrypted + 7, csalt, BCRYPT_MAXSALT);
-    encode_base64(encrypted + 7 + 22, ciphertext, 4 * BCRYPT_WORDS - 1);
+    vapor_encode_base64(encrypted + 7, csalt, BCRYPT_MAXSALT);
+    vapor_encode_base64(encrypted + 7 + 22, ciphertext, 4 * BCRYPT_WORDS - 1);
     explicit_bzero(&state, sizeof(state));
     explicit_bzero(ciphertext, sizeof(ciphertext));
     explicit_bzero(csalt, sizeof(csalt));
@@ -229,7 +228,7 @@ decode_base64(u_int8_t *buffer, size_t len, const char *b64data)
  * This works without = padding.
  */
 int
-encode_base64(char *b64buffer, const u_int8_t *data, size_t len)
+vapor_encode_base64(char *b64buffer, const u_int8_t *data, size_t len)
 {
     u_int8_t *bp = (u_int8_t *)b64buffer;
     const u_int8_t *p = data;
