@@ -1,0 +1,4 @@
+module CVaporBcrypt [system][extern_c] {
+ header "../bcrypt.h"
+ export *
+}
