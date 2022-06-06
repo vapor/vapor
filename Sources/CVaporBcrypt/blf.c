@@ -61,7 +61,7 @@
 #define BLFRND(s,p,i,j,n) (i ^= F(s,j) ^ (p)[n])
 
 void
-Blowfish_encipher(blf_ctx *c, u_int32_t *x)
+Vapor_Blowfish_encipher(blf_ctx *c, u_int32_t *x)
 {
     u_int32_t Xl;
     u_int32_t Xr;
@@ -86,7 +86,7 @@ Blowfish_encipher(blf_ctx *c, u_int32_t *x)
 }
 
 void
-Blowfish_decipher(blf_ctx *c, u_int32_t *x)
+Vapor_Blowfish_decipher(blf_ctx *c, u_int32_t *x)
 {
     u_int32_t Xl;
     u_int32_t Xr;
@@ -111,7 +111,7 @@ Blowfish_decipher(blf_ctx *c, u_int32_t *x)
 }
 
 void
-Blowfish_initstate(blf_ctx *c)
+Vapor_Blowfish_initstate(blf_ctx *c)
 {
     /* P-box and S-box tables initialized with digits of Pi */
 
@@ -391,8 +391,8 @@ Blowfish_initstate(blf_ctx *c)
 }
 
 u_int32_t
-Blowfish_stream2word(const u_int8_t *data, u_int16_t databytes,
-                     u_int16_t *current)
+Vapor_Blowfish_stream2word(const u_int8_t *data, u_int16_t databytes,
+                           u_int16_t *current)
 {
     u_int8_t i;
     u_int16_t j;
@@ -412,7 +412,7 @@ Blowfish_stream2word(const u_int8_t *data, u_int16_t databytes,
 }
 
 void
-Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
+Vapor_Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
 {
     u_int16_t i;
     u_int16_t j;
@@ -423,7 +423,7 @@ Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
     j = 0;
     for (i = 0; i < BLF_N + 2; i++) {
         /* Extract 4 int8 to 1 int32 from keystream */
-        temp = Blowfish_stream2word(key, keybytes, &j);
+        temp = Vapor_Blowfish_stream2word(key, keybytes, &j);
         c->P[i] = c->P[i] ^ temp;
     }
 
@@ -431,7 +431,7 @@ Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
     data[0] = 0x00000000;
     data[1] = 0x00000000;
     for (i = 0; i < BLF_N + 2; i += 2) {
-        Blowfish_encipher(c, data);
+        Vapor_Blowfish_encipher(c, data);
 
         c->P[i] = data[0];
         c->P[i + 1] = data[1];
@@ -439,7 +439,7 @@ Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
 
     for (i = 0; i < 4; i++) {
         for (k = 0; k < 256; k += 2) {
-            Blowfish_encipher(c, data);
+            Vapor_Blowfish_encipher(c, data);
 
             c->S[i][k] = data[0];
             c->S[i][k + 1] = data[1];
@@ -449,8 +449,8 @@ Blowfish_expand0state(blf_ctx *c, const u_int8_t *key, u_int16_t keybytes)
 
 
 void
-Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
-                     const u_int8_t *key, u_int16_t keybytes)
+Vapor_Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
+                           const u_int8_t *key, u_int16_t keybytes)
 {
     u_int16_t i;
     u_int16_t j;
@@ -461,7 +461,7 @@ Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
     j = 0;
     for (i = 0; i < BLF_N + 2; i++) {
         /* Extract 4 int8 to 1 int32 from keystream */
-        temp = Blowfish_stream2word(key, keybytes, &j);
+        temp = Vapor_Blowfish_stream2word(key, keybytes, &j);
         c->P[i] = c->P[i] ^ temp;
     }
 
@@ -469,9 +469,9 @@ Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
     d[0] = 0x00000000;
     d[1] = 0x00000000;
     for (i = 0; i < BLF_N + 2; i += 2) {
-        d[0] ^= Blowfish_stream2word(data, databytes, &j);
-        d[1] ^= Blowfish_stream2word(data, databytes, &j);
-        Blowfish_encipher(c, d);
+        d[0] ^= Vapor_Blowfish_stream2word(data, databytes, &j);
+        d[1] ^= Vapor_Blowfish_stream2word(data, databytes, &j);
+        Vapor_Blowfish_encipher(c, d);
 
         c->P[i] = d[0];
         c->P[i + 1] = d[1];
@@ -479,9 +479,9 @@ Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
 
     for (i = 0; i < 4; i++) {
         for (k = 0; k < 256; k += 2) {
-            d[0]^= Blowfish_stream2word(data, databytes, &j);
-            d[1] ^= Blowfish_stream2word(data, databytes, &j);
-            Blowfish_encipher(c, d);
+            d[0] ^= Vapor_Blowfish_stream2word(data, databytes, &j);
+            d[1] ^= Vapor_Blowfish_stream2word(data, databytes, &j);
+            Vapor_Blowfish_encipher(c, d);
 
             c->S[i][k] = d[0];
             c->S[i][k + 1] = d[1];
@@ -491,43 +491,43 @@ Blowfish_expandstate(blf_ctx *c, const u_int8_t *data, u_int16_t databytes,
 }
 
 void
-blf_key(blf_ctx *c, const u_int8_t *k, u_int16_t len)
+vapor_blf_key(blf_ctx *c, const u_int8_t *k, u_int16_t len)
 {
     /* Initialize S-boxes and subkeys with Pi */
-    Blowfish_initstate(c);
+    Vapor_Blowfish_initstate(c);
 
     /* Transform S-boxes and subkeys with key */
-    Blowfish_expand0state(c, k, len);
+    Vapor_Blowfish_expand0state(c, k, len);
 }
 
 void
-blf_enc(blf_ctx *c, u_int32_t *data, u_int16_t blocks)
+vapor_blf_enc(blf_ctx *c, u_int32_t *data, u_int16_t blocks)
 {
     u_int32_t *d;
     u_int16_t i;
 
     d = data;
     for (i = 0; i < blocks; i++) {
-        Blowfish_encipher(c, d);
+        Vapor_Blowfish_encipher(c, d);
         d += 2;
     }
 }
 
 void
-blf_dec(blf_ctx *c, u_int32_t *data, u_int16_t blocks)
+vapor_blf_dec(blf_ctx *c, u_int32_t *data, u_int16_t blocks)
 {
     u_int32_t *d;
     u_int16_t i;
 
     d = data;
     for (i = 0; i < blocks; i++) {
-        Blowfish_decipher(c, d);
+        Vapor_Blowfish_decipher(c, d);
         d += 2;
     }
 }
 
 void
-blf_ecb_encrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
+vapor_blf_ecb_encrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
 {
     u_int32_t l, r, d[2];
     u_int32_t i;
@@ -537,7 +537,7 @@ blf_ecb_encrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
         r = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
         d[0] = l;
         d[1] = r;
-        Blowfish_encipher(c, d);
+        Vapor_Blowfish_encipher(c, d);
         l = d[0];
         r = d[1];
         data[0] = l >> 24 & 0xff;
@@ -553,7 +553,7 @@ blf_ecb_encrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
 }
 
 void
-blf_ecb_decrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
+vapor_blf_ecb_decrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
 {
     u_int32_t l, r, d[2];
     u_int32_t i;
@@ -563,7 +563,7 @@ blf_ecb_decrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
         r = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
         d[0] = l;
         d[1] = r;
-        Blowfish_decipher(c, d);
+        Vapor_Blowfish_decipher(c, d);
         l = d[0];
         r = d[1];
         data[0] = l >> 24 & 0xff;
@@ -579,7 +579,7 @@ blf_ecb_decrypt(blf_ctx *c, u_int8_t *data, u_int32_t len)
 }
 
 void
-blf_cbc_encrypt(blf_ctx *c, u_int8_t *iv, u_int8_t *data, u_int32_t len)
+vapor_blf_cbc_encrypt(blf_ctx *c, u_int8_t *iv, u_int8_t *data, u_int32_t len)
 {
     u_int32_t l, r, d[2];
     u_int32_t i, j;
@@ -591,7 +591,7 @@ blf_cbc_encrypt(blf_ctx *c, u_int8_t *iv, u_int8_t *data, u_int32_t len)
         r = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
         d[0] = l;
         d[1] = r;
-        Blowfish_encipher(c, d);
+        Vapor_Blowfish_encipher(c, d);
         l = d[0];
         r = d[1];
         data[0] = l >> 24 & 0xff;
@@ -608,7 +608,7 @@ blf_cbc_encrypt(blf_ctx *c, u_int8_t *iv, u_int8_t *data, u_int32_t len)
 }
 
 void
-blf_cbc_decrypt(blf_ctx *c, u_int8_t *iva, u_int8_t *data, u_int32_t len)
+vapor_blf_cbc_decrypt(blf_ctx *c, u_int8_t *iva, u_int8_t *data, u_int32_t len)
 {
     u_int32_t l, r, d[2];
     u_int8_t *iv;
@@ -621,7 +621,7 @@ blf_cbc_decrypt(blf_ctx *c, u_int8_t *iva, u_int8_t *data, u_int32_t len)
         r = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
         d[0] = l;
         d[1] = r;
-        Blowfish_decipher(c, d);
+        Vapor_Blowfish_decipher(c, d);
         l = d[0];
         r = d[1];
         data[0] = l >> 24 & 0xff;
@@ -641,7 +641,7 @@ blf_cbc_decrypt(blf_ctx *c, u_int8_t *iva, u_int8_t *data, u_int32_t len)
     r = data[4] << 24 | data[5] << 16 | data[6] << 8 | data[7];
     d[0] = l;
     d[1] = r;
-    Blowfish_decipher(c, d);
+    Vapor_Blowfish_decipher(c, d);
     l = d[0];
     r = d[1];
     data[0] = l >> 24 & 0xff;

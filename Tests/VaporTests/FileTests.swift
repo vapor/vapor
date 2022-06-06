@@ -63,37 +63,37 @@ final class FileTests: XCTestCase {
         }
     }
     
-//    func testStreamFileContentHeaderTail() throws {
-//        let app = Application(.testing)
-//        defer { app.shutdown() }
-//
-//        app.get("file-stream") { req in
-//            return req.fileio.streamFile(at: #file) { result in
-//                do {
-//                    try result.get()
-//                } catch {
-//                    XCTFail("File Stream should have succeeded")
-//                }
-//            }
-//        }
-//        
-//        var headerRequest = HTTPHeaders()
-//        headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-//        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
-//            
-//            let contentRange = res.headers.first(name: "content-range")
-//            let contentLength = res.headers.first(name: "content-length")
-//            
-//            let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
-//            let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
-//            
-//            let range = upperRange - lowerRange + 1
-//            let length = Int(contentLength!)!
-//            print("\(range) : \(length)")
-//
-//            XCTAssertTrue(range == length)
-//        }
-//    }
+    func testStreamFileContentHeaderTail() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+        
+        var headerRequest = HTTPHeaders()
+        headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            
+            let contentRange = res.headers.first(name: "content-range")
+            let contentLength = res.headers.first(name: "content-length")
+            
+            let lowerRange = Int((contentRange?.split(separator: "-")[0].split(separator: " ")[1])!)!
+            let upperRange = Int((contentRange?.split(separator: "-")[1].split(separator: "/")[0])!)!
+            
+            let range = upperRange - lowerRange + 1
+            let length = Int(contentLength!)!
+            print("\(range) : \(length)")
+
+            XCTAssertTrue(range == length)
+        }
+    }
     
     func testStreamFileContentHeaderStart() throws {
         let app = Application(.testing)
@@ -156,6 +156,84 @@ final class FileTests: XCTestCase {
             print("\(range) : \(length)")
 
             XCTAssertTrue(range == length)
+        }
+    }
+    
+    func testStreamFileContentHeadersWithinFail() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+        
+        var headerRequest = HTTPHeaders()
+        headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+
+        headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
+    
+    func testStreamFileContentHeadersStartFail() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+        
+        var headerRequest = HTTPHeaders()
+        headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+
+        headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+    }
+    
+    func testStreamFileContentHeadersTailFail() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+        
+        var headerRequest = HTTPHeaders()
+        headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+
+        headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+            XCTAssertEqual(res.status, .badRequest)
         }
     }
     
@@ -244,6 +322,57 @@ final class FileTests: XCTestCase {
 
         try app.test(.GET, "Utilities/") { res in
             XCTAssertEqual(res.status, .notFound)
+        }
+    }
+    
+    // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
+    func testInvalidRangeHeaderDoesNotCrash() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file)
+        }
+
+        var headers = HTTPHeaders()
+        headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=100-10")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=10--100")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
+        }
+        
+        headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .badRequest)
         }
     }
 }
