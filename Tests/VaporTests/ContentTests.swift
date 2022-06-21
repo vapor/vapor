@@ -489,6 +489,19 @@ final class ContentTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
+    
+    func testContentIsBool() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.routes.get("success") { req in
+            return true
+        }
+        
+        try app.testable().test(.GET, "/success") { res in
+            XCTAssertEqual(try res.content.decode(Bool.self), true)
+        }
+    }
 }
 
 private struct SampleContent: Content {
