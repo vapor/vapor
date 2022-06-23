@@ -116,7 +116,9 @@ public final class Application {
     public func start() throws {
         try self.boot()
         let command = self.commands.group()
-        var context = CommandContext(console: self.console, input: self.environment.commandInput)
+        var context = CommandContext(console: self.console,
+                                     input: self.environment.commandInput,
+                                     eventLoopGroup: eventLoopGroup)
         context.application = self
         try self.console.run(command, with: context)
     }
