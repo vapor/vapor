@@ -233,8 +233,16 @@ class ValidationTests: XCTestCase {
             var name: String
             var age: Int
             var hobbies: [Hobby]
+            var allergies: [Allergy]?
 
             struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+            
+            struct Allergy: Codable {
                 var title: String
                 init(title: String) {
                     self.title = title
@@ -248,6 +256,9 @@ class ValidationTests: XCTestCase {
                     hobby.add("title", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
                 }
                 v.add("hobbies", as: [Hobby].self, is: !.empty)
+                v.add(each: "allergies", required: false) { i, allergy in
+                    allergy.add("title", as: String.self, is: .characterSet(.letters))
+                }
             }
         }
 
@@ -268,6 +279,54 @@ class ValidationTests: XCTestCase {
         XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
             XCTAssertEqual("\(error)", "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
         }
+        
+        let invalidNestedArray2 = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "allergies": [
+                {
+                    "title": "Peanuts"
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray2)) { error in
+            XCTAssertEqual("\(error)", "hobbies is required, hobbies is required")
+        }
+        
+        let invalidNestedArray3 = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "Football"
+                }
+            ],
+            "allergies": [
+                {
+                    "title": "Peanuts€"
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray3)) { error in
+            XCTAssertEqual("\(error)", "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
+        }
+        
+        let validNestedArray = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "Football"
+                }
+            ],
+        }
+        """
+        XCTAssertNoThrow(try User.validate(json: validNestedArray))
     }
 
     func testValidateNestedEachIndex() throws {

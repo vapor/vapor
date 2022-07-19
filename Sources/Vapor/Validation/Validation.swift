@@ -52,18 +52,26 @@ public struct Validation {
         self.init { container in
             let result: ValidatorResult
             do {
-                var results: [[ValidatorResult]] = []
-                var array = try container.nestedUnkeyedContainer(forKey: key)
-                var i = 0
-                while !array.isAtEnd {
-                    defer { i += 1 }
-                    var validations = Validations()
-                    factory(i, &validations)
-                    let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
-                    let result = validations.validate(nested)
-                    results.append(result.results)
+                if container.contains(key), !required, try container.decodeNil(forKey: key) {
+                    result = ValidatorResults.Skipped()
+                } else if container.contains(key) {
+                    var results: [[ValidatorResult]] = []
+                    var array = try container.nestedUnkeyedContainer(forKey: key)
+                    var i = 0
+                    while !array.isAtEnd {
+                        defer { i += 1 }
+                        var validations = Validations()
+                        factory(i, &validations)
+                        let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
+                        let result = validations.validate(nested)
+                        results.append(result.results)
+                    }
+                    result = ValidatorResults.NestedEach(results: results)
+                } else if required {
+                    result = ValidatorResults.Missing()
+                } else {
+                    result = ValidatorResults.Skipped()
                 }
-                result = ValidatorResults.NestedEach(results: results)
             } catch {
                 result = ValidatorResults.Codable(error: error)
             }
