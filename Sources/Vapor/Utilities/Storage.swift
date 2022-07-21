@@ -53,8 +53,9 @@ public struct Storage {
     {
         mutating get {
             if let existing = self[key] { return existing }
-            self.set(Key.self, to: defaultValue())
-            return self[key]!
+            let new = defaultValue()
+            self.set(Key.self, to: new)
+            return new
         }
     }
 
