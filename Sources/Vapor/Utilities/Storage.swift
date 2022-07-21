@@ -18,7 +18,7 @@ public struct Storage {
         }
     }
     
-    /// The logger provied to shutdown closures.
+    /// The logger provided to shutdown closures.
     let logger: Logger
 
     /// Create a new ``Storage`` container using the given logger.
