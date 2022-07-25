@@ -542,6 +542,11 @@ class ValidationTests: XCTestCase {
         assert(true, fails: !.valid, "is valid")
         assert("123", fails: !.valid, "is valid")
     }
+    
+    func testPattern() {
+        assert("this are not numbers", fails: .pattern("^[0-9]*$"), "is not a valid pattern ^[0-9]*$")
+        assert("12345", passes: .pattern("^[0-9]*$"))
+    }
 
     func testPreexistingValidatorResultIsIncluded() throws {
         struct CustomValidatorResult: ValidatorResult {
