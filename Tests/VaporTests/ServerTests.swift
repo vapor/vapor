@@ -4,6 +4,7 @@ import protocol AsyncHTTPClient.HTTPClientResponseDelegate
 import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
+import NIOSSL
 
 final class ServerTests: XCTestCase {
     func testPortOverride() throws {
@@ -834,6 +835,65 @@ final class ServerTests: XCTestCase {
         XCTAssertTrue(serverSawRequest.load())
 
         allDonePromise.succeed(())
+    }
+
+    func testCanOverrideCertValidation() throws {
+        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+            XCTFail("Cannot load expired cert and associated key")
+            return
+        }
+
+        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+
+        let app = Application(.testing)
+
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+
+        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
+        serverConfig.certificateVerification = .noHostnameVerification
+
+        app.http.server.configuration.tlsConfiguration = serverConfig
+        app.http.server.configuration.customCertificateVerifyCallback = { peerCerts, successPromise in
+            // This lies and accepts the above cert, which has actually expired.
+            XCTAssertEqual(peerCerts, [cert])
+            successPromise.succeed(.certificateVerified)
+
+        }
+
+        // We need to disable verification on the client, because the cert we're using has expired, and we want to
+        // _send_ a client cert.
+        var clientConfig = TLSConfiguration.makeClientConfiguration()
+        clientConfig.certificateVerification = .none
+        clientConfig.certificateChain = [.certificate(cert)]
+        clientConfig.privateKey = .privateKey(key)
+        app.http.client.configuration.tlsConfiguration = clientConfig
+
+        app.environment.arguments = ["serve"]
+
+        app.get("hello") { req in
+            "world"
+        }
+
+        defer { app.shutdown() }
+        try app.start()
+
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let request = try HTTPClient.Request(
+            url: "https://\(ip):\(port)/hello",
+            method: .GET
+        )
+        let a = try app.http.client.shared.execute(request: request).wait()
+        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
     }
 
     override class func setUp() {
