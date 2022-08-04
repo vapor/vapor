@@ -117,6 +117,8 @@ let package = Package(
             .copy("Utilities/foo bar.html"),
             .copy("Utilities/test.env"),
             .copy("Utilities/my-secret-env-content"),
+            .copy("Utilities/expired.crt"),
+            .copy("Utilities/expired.key"),
         ]),
         .testTarget(name: "AsyncTests", dependencies: [
             .product(name: "NIOTestUtils", package: "swift-nio"),
