@@ -104,8 +104,8 @@ extension Application {
         }
     }
     
-    /// The async version of ``Application/commands``.
-    public var asyncCommands: AsyncCommands {
+    /// The async version of ``Application/commands``. See `Application+Concurrency.swift` for the public interface.
+    internal var asyncCommands: AsyncCommands {
         .init(application: self)
     }
 
