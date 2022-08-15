@@ -26,6 +26,7 @@ extension Request {
         }
     }
     
+    #warning("Just make session an actor?")
     public func asyncSession() async -> Session {
         if !self._sessionCache.middlewareFlag {
             // No `SessionsMiddleware` was detected on your app.

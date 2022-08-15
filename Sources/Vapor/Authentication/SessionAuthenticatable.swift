@@ -8,36 +8,32 @@ public protocol SessionAuthenticator: Authenticator {
 
 extension SessionAuthenticator {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        // if the user has already been authenticated
-        // by a previous middleware, continue
-        if request.auth.has(User.self) {
-            return next.respond(to: request)
-        }
-
-        let future: EventLoopFuture<Void>
-        if let aID = request.session.authenticated(User.self) {
-            // try to find user with id from session
-            future = self.authenticate(sessionID: aID, for: request)
-        } else {
-            // no need to authenticate
-            future = request.eventLoop.makeSucceededFuture(())
-        }
-
-        // map the auth future to a response
-        return future.flatMap { _ in
-            // respond to the request
-            return next.respond(to: request).map { response in
-                if let user = request.auth.get(User.self) {
-                    // if a user has been authed (or is still authed), store in the session
-                    request.session.authenticate(user)
-                } else if request.hasSession {
-                    // if no user is authed, it's possible they've been unauthed.
-                    // remove from session.
-                    request.session.unauthenticate(User.self)
-                }
-                return response
+        let promise = request.eventLoop.makePromise(of: Response.self)
+        promise.completeWithTask {
+            // if the user has already been authenticated
+            // by a previous middleware, continue
+            if await request.auth.has(User.self) {
+                return try await next.respond(to: request).get()
             }
+
+            if let aID = await request.asyncSession().authenticated(User.self) {
+                // try to find user with id from session
+                try await self.authenticate(sessionID: aID, for: request).get()
+            }
+
+            // respond to the request
+            let response = try await next.respond(to: request).get()
+            if let user = await request.auth.get(User.self) {
+                // if a user has been authed (or is still authed), store in the session
+                await request.asyncSession().authenticate(user)
+            } else if request.hasSession {
+                // if no user is authed, it's possible they've been unauthed.
+                // remove from session.
+                await request.asyncSession().unauthenticate(User.self)
+            }
+            return response
         }
+        return promise.futureResult
     }
 }
 
