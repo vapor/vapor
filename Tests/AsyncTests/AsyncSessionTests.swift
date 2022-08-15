@@ -1,7 +1,6 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if canImport(_Concurrency)
 import XCTVapor
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncSessionTests: XCTestCase {
     func testSessionDestroy() throws {
         final class MockKeyedCache: AsyncSessionDriver {
@@ -39,11 +38,11 @@ final class AsyncSessionTests: XCTestCase {
         app.sessions.use { _ in cache }
         let sessions = app.routes.grouped(app.sessions.middleware)
         sessions.get("set") { req -> String in
-            req.session.data["foo"] = "bar"
+            await req.asyncSession().data["foo"] = "bar"
             return "set"
         }
         sessions.get("del") { req  -> String in
-            req.session.destroy()
+            await req.asyncSession().destroy()
             return "del"
         }
 
