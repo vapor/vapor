@@ -26,7 +26,7 @@ final class AuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            return try await req.auth.require(Test.self).name
         }
 
         try app.testable().test(.GET, "/test") { res in
@@ -69,7 +69,7 @@ final class AuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try req.auth.require(Test.self).name
+            return try await req.auth.require(Test.self).name
         }
         
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()

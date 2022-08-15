@@ -101,7 +101,7 @@ extension AsyncSessionAuthenticator {
             return try await next.respond(to: request)
         }
 
-        if let aID = request.session.authenticated(User.self) {
+        if let aID = await request.session.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
@@ -110,13 +110,30 @@ extension AsyncSessionAuthenticator {
         let response = try await next.respond(to: request)
         if let user = await request.auth.get(User.self) {
             // if a user has been authed (or is still authed), store in the session
-            request.session.authenticate(user)
+            await request.session.authenticate(user)
         } else if request.hasSession {
             // if no user is authed, it's possible they've been unauthed.
             // remove from session.
-            request.session.unauthenticate(User.self)
+            await request.session.unauthenticate(User.self)
         }
         return response
+    }
+}
+
+/// Models conforming to this protocol can have their authentication
+/// status cached using `AsyncSessionAuthenticator`.
+/// `async` version of `SessionAuthenticatable`
+public protocol AsyncSessionAuthenticatable: Authenticatable {
+    /// Session identifier type.
+    associatedtype SessionID: LosslessStringConvertible
+
+    /// Unique session identifier.
+    var sessionID: SessionID { get }
+}
+
+private extension AsyncSessionAuthenticatable {
+    static var sessionName: String {
+        return "\(Self.self)"
     }
 }
 

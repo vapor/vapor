@@ -57,6 +57,7 @@ private extension SessionAuthenticatable {
     }
 }
 
+@available(*, deprecated, message: "Migrate to the async session APIs")
 extension Session {
     /// Authenticates the model into the session.
     public func authenticate<A>(_ a: A)
@@ -81,3 +82,30 @@ extension Session {
             .flatMap { A.SessionID.init($0) }
     }
 }
+
+#if canImport(_Concurrency)
+extension Session {
+    /// Authenticates the model into the session.
+    public func authenticate<A>(_ a: A) async
+        where A: SessionAuthenticatable
+    {
+        self.data["_" + A.sessionName + "Session"] = a.sessionID.description
+    }
+
+    /// Un-authenticates the model from the session.
+    public func unauthenticate<A>(_ a: A.Type) async
+        where A: SessionAuthenticatable
+    {
+        self.data["_" + A.sessionName + "Session"] = nil
+    }
+
+    /// Returns the authenticatable type's ID if it exists
+    /// in the session data.
+    public func authenticated<A>(_ a: A.Type) async -> A.SessionID?
+        where A: SessionAuthenticatable
+    {
+        self.data["_" + A.sessionName + "Session"]
+            .flatMap { A.SessionID.init($0) }
+    }
+}
+#endif

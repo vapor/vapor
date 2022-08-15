@@ -24,7 +24,7 @@ extension Authenticatable {
 
 
 
-private final class GuardAuthenticationMiddleware<A>: Middleware
+private final class GuardAuthenticationMiddleware<A>: AsyncMiddleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
@@ -39,10 +39,10 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
         self.error = error
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        guard request.auth.has(A.self) else {
-            return request.eventLoop.makeFailedFuture(self.error)
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        guard await request.auth.has(A.self) else {
+            throw error
         }
-        return next.respond(to: request)
+        return try await next.respond(to: request)
     }
 }
