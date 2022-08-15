@@ -10,7 +10,7 @@
 ///     app.middleware.use(app.sessions.middleware)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-public final class SessionsMiddleware: Middleware {
+public final class SessionsMiddleware: AsyncMiddleware {
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
@@ -29,66 +29,63 @@ public final class SessionsMiddleware: Middleware {
         self.session = session
         self.configuration = configuration
     }
-
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         // Signal middleware has been added.
         request._sessionCache.middlewareFlag = true
+        await request._asyncSessionCache.middlewareFlag = true
 
         // Check for an existing session
         if let cookieValue = request.cookies[self.configuration.cookieName] {
             // A cookie value exists, get the session for it.
             let id = SessionID(string: cookieValue.string)
-            return self.session.readSession(id, for: request).flatMap { data in
-                if let data = data {
-                    // Session found, restore data and id.
-                    request._sessionCache.session = .init(id: id, data: data)
-                } else {
-                    // Session id not found, create new session.
-                    request._sessionCache.session = .init()
-                }
-                return next.respond(to: request).flatMap { res in
-                    return self.addCookies(to: res, for: request)
-                }
-            }
-        } else {
-            // No cookie value exists, simply respond.
-            return next.respond(to: request).flatMap { response in
-                return self.addCookies(to: response, for: request)
+            let data = try await self.session.readSession(id, for: request).get()
+            if let data = data {
+                // Session found, restore data and id.
+                request._sessionCache.session = .init(id: id, data: data)
+                await request._asyncSessionCache.session = .init(id: id, data: data)
+            } else {
+                // Session id not found, create new session.
+                request._sessionCache.session = .init()
+                await request._asyncSessionCache.session = .init()
             }
         }
+        
+        let response = try await next.respond(to: request)
+        return try await self.addCookies(to: response, for: request)
     }
 
     /// Adds session cookie to response or clears if session was deleted.
-    private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
+    private func addCookies(to response: Response, for request: Request) async throws -> Response {
+        // Test old session
         if let session = request._sessionCache.session, session.isValid {
-            // A session exists or has been created. we must
-            // set a cookie value on the response
-            let createOrUpdate: EventLoopFuture<SessionID>
-            if let id = session.id {
-                // A cookie exists, just update this session.
-                createOrUpdate = self.session.updateSession(id, to: session.data, for: request)
-            } else {
-                // No cookie, this is a new session.
-                createOrUpdate = self.session.createSession(session.data, for: request)
-            }
-
-            // After create or update, set cookie on the response.
-            return createOrUpdate.map { id in
-                // the session has an id, set the cookie
-                response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(id)
-                return response
-            }
+            try await createOrUpdateSessionCookie(session: session, for: request, to: response)
+        // Test new session
+        } else if let session = await request._asyncSessionCache.session, session.isValid {
+            try await createOrUpdateSessionCookie(session: session, for: request, to: response)
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.
             // we need to perform cleanup.
             let id = SessionID(string: cookieValue.string)
-            return self.session.deleteSession(id, for: request).map {
-                response.cookies[self.configuration.cookieName] = .expired
-                return response
-            }
-        } else {
-            // no session or existing cookie
-            return request.eventLoop.makeSucceededFuture(response)
+            try await self.session.deleteSession(id, for: request).get()
+            response.cookies[self.configuration.cookieName] = .expired
         }
+        return response
+    }
+    
+    private func createOrUpdateSessionCookie(session: Session, for request: Request, to response: Response) async throws {
+        // A session exists or has been created. we must
+        // set a cookie value on the response
+        let newID: SessionID
+        if let id = session.id {
+            // A cookie exists, just update this session.
+            newID = try await self.session.updateSession(id, to: session.data, for: request).get()
+        } else {
+            // No cookie, this is a new session.
+            newID = try await self.session.createSession(session.data, for: request).get()
+        }
+
+        // After create or update, set cookie on the response.
+        response.cookies[self.configuration.cookieName] = self.configuration.cookieFactory(newID)
     }
 }

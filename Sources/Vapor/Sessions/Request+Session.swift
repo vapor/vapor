@@ -28,18 +28,18 @@ extension Request {
     
     #warning("Introduce AsyncSession as a thread safe actor")
     public func asyncSession() async -> Session {
-        if !self._sessionCache.middlewareFlag {
+        if await !self._asyncSessionCache.middlewareFlag {
             // No `SessionsMiddleware` was detected on your app.
             // Suggested solutions:
             // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
             // - Add the `SessionsMiddleware` to a route group.
             assertionFailure("No `SessionsMiddleware` detected.")
         }
-        if let existing = self._sessionCache.session {
+        if let existing = await self._asyncSessionCache.session {
             return existing
         } else {
             let new = Session()
-            self._sessionCache.session = new
+            await self._asyncSessionCache.session = new
             return new
         }
     }
@@ -62,13 +62,15 @@ extension Request {
         }
     }
     
-    internal func getSessionCache() async -> SessionCache {
-        if let existing = await self.asyncStorage.get(SessionCacheKey.self) {
-            return existing
-        } else {
-            let new = SessionCache()
-            await self.asyncStorage.set(SessionCacheKey.self, to: new)
-            return new
+    internal var _asyncSessionCache: SessionCache {
+        get async {
+            if let existing = await self.asyncStorage.get(SessionCacheKey.self) {
+                return existing
+            } else {
+                let new = SessionCache()
+                await self.asyncStorage.set(SessionCacheKey.self, to: new)
+                return new
+            }
         }
     }
 }
