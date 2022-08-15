@@ -181,8 +181,12 @@ public final class Request: CustomStringConvertible {
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters
 
-    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
+    /// This container is used as arbitrary request-local storage during the request-response lifecycle.
+    @available(*, deprecated, message: "To ensure thread safety when using async/await, you should migrate to `asyncStorage`")
     public var storage: Storage
+    
+    /// This container is used as arbitrary request-local therad safe storage during the request-response lifecycle.
+    public var asyncStorage: AsyncStorage
 
     public var byteBufferAllocator: ByteBufferAllocator
     
@@ -241,6 +245,7 @@ public final class Request: CustomStringConvertible {
         self.eventLoop = eventLoop
         self.parameters = .init()
         self.storage = .init()
+        self.asyncStorage = .init()
         self.isKeepAlive = true
         self.logger = logger
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)

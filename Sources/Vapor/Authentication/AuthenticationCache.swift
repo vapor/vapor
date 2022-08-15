@@ -16,22 +16,25 @@ extension Request {
 
 extension Request.Authentication {
     /// Authenticates the supplied instance for this request.
+    @available(*, deprecated, message: "To ensure thread safety, migrate to the async API")
     public func login<A>(_ instance: A)
         where A: Authenticatable
     {
-        self.cache[A.self] = instance
+        self.legacyCache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
+    @available(*, deprecated, message: "To ensure thread safety, migrate to the async API")
     public func logout<A>(_ type: A.Type = A.self)
         where A: Authenticatable
     {
-        self.cache[A.self] = nil
+        self.legacyCache[type] = nil
     }
 
     /// Returns an instance of the supplied type. Throws if no
     /// instance of that type has been authenticated or if there
     /// was a problem.
+    @available(*, deprecated, message: "To ensure thread safety, migrate to the async API")
     @discardableResult public func require<A>(_ type: A.Type = A.self) throws -> A
         where A: Authenticatable
     {
@@ -43,18 +46,62 @@ extension Request.Authentication {
 
     /// Returns the authenticated instance of the supplied type.
     /// - note: `nil` if no type has been authed.
+    @available(*, deprecated, message: "To ensure thread safety, migrate to the async API")
     public func get<A>(_ type: A.Type = A.self) -> A?
         where A: Authenticatable
     {
-        return self.cache[A.self]
+        return self.legacyCache[A.self]
     }
 
     /// Returns `true` if the type has been authenticated.
+    @available(*, deprecated, message: "To ensure thread safety, migrate to the async API")
     public func has<A>(_ type: A.Type = A.self) -> Bool
         where A: Authenticatable
     {
         return self.get(A.self) != nil
     }
+    
+    #if(canImport(_Concurrency))
+    public func login<A>(_ instance: A) async
+        where A: Authenticatable
+    {
+        await self.getCache()[A.self] = instance
+    }
+
+    /// Unauthenticates an authenticatable type.
+    public func logout<A>(_ type: A.Type = A.self) async
+        where A: Authenticatable
+    {
+        await self.getCache()[A.self] = nil
+    }
+
+    /// Returns an instance of the supplied type. Throws if no
+    /// instance of that type has been authenticated or if there
+    /// was a problem.
+    @discardableResult public func require<A>(_ type: A.Type = A.self) async throws -> A
+        where A: Authenticatable
+    {
+        guard let a = await self.get(A.self) else {
+            throw Abort(.unauthorized)
+        }
+        return a
+    }
+
+    /// Returns the authenticated instance of the supplied type.
+    /// - note: `nil` if no type has been authed.
+    public func get<A>(_ type: A.Type = A.self) async -> A?
+        where A: Authenticatable
+    {
+        return await self.getCache()[A.self]
+    }
+
+    /// Returns `true` if the type has been authenticated.
+    public func has<A>(_ type: A.Type = A.self) async -> Bool
+        where A: Authenticatable
+    {
+        return await self.get(A.self) != nil
+    }
+    #endif
 
     private final class Cache {
         private var storage: [ObjectIdentifier: Any]
@@ -74,8 +121,18 @@ extension Request.Authentication {
     private struct CacheKey: StorageKey {
         typealias Value = Cache
     }
+    
+    private func getCache() async -> Cache {
+        if let existing = await request.asyncStorage.get(CacheKey.self) {
+            return existing
+        } else {
+            let new = Cache()
+            await self.request.asyncStorage.set(CacheKey.self, to: new)
+            return new
+        }
+    }
 
-    private var cache: Cache {
+    private var legacyCache: Cache {
         get {
             if let existing = self.request.storage[CacheKey.self] {
                 return existing
