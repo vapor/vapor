@@ -37,11 +37,11 @@ final class SessionTests: XCTestCase {
         app.sessions.use { _ in cache }
         let sessions = app.routes.grouped(app.sessions.middleware)
         sessions.get("set") { req -> String in
-            req.session.data["foo"] = "bar"
+            await req.asyncSession().data["foo"] = "bar"
             return "set"
         }
         sessions.get("del") { req  -> String in
-            req.session.destroy()
+            await req.asyncSession().destroy()
             return "del"
         }
 
@@ -80,13 +80,13 @@ final class SessionTests: XCTestCase {
 
         // Adds data to the request session.
         app.get("set") { req -> HTTPStatus in
-            req.session.data["foo"] = "bar"
+            await req.asyncSession().data["foo"] = "bar"
             return .ok
         }
 
         // Fetches data from the request session.
         app.get("get") { req -> String in
-            guard let foo = req.session.data["foo"] else {
+            guard let foo = await req.asyncSession().data["foo"] else {
                 throw Abort(.badRequest)
             }
             return foo

@@ -130,14 +130,14 @@ public func routes(_ app: Application) throws {
     let sessions = app.grouped("sessions")
         .grouped(app.sessions.middleware)
     sessions.get("set", ":value") { req -> HTTPStatus in
-        req.session.data["name"] = req.parameters.get("value")
+        await req.asyncSession().data["name"] = req.parameters.get("value")
         return .ok
     }
     sessions.get("get") { req -> String in
-        req.session.data["name"] ?? "n/a"
+        await req.asyncSession().data["name"] ?? "n/a"
     }
     sessions.get("del") { req -> String in
-        req.session.destroy()
+        await req.asyncSession().destroy()
         return "done"
     }
 
