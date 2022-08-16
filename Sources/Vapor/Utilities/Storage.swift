@@ -1,6 +1,7 @@
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
+@available(*, deprecated, message: "To ensure thread safety when using async/await, you should migrate to `AsyncStorage`")
 public struct Storage {
     /// The internal storage area.
     var storage: [ObjectIdentifier: AnyStorageValue]

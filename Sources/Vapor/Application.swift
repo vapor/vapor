@@ -6,6 +6,7 @@ public final class Application {
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     public var asyncStorage: AsyncStorage
+    @available(*, deprecated, message: "To ensure thread safety when using async/await, you should migrate to `asyncStorage`")
     public var storage: Storage
     public private(set) var didShutdown: Bool
     public var logger: Logger
