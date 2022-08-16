@@ -26,8 +26,7 @@ extension Request {
         }
     }
     
-    #warning("Introduce AsyncSession as a thread safe actor")
-    public var asyncSession: Session {
+    public var asyncSession: AsyncSession {
         get async {
             if await !self._asyncSessionCache.middlewareFlag {
                 // No `SessionsMiddleware` was detected on your app.
@@ -39,7 +38,7 @@ extension Request {
             if let existing = await self._asyncSessionCache.session {
                 return existing
             } else {
-                let new = Session()
+                let new = AsyncSession()
                 await self._asyncSessionCache.session = new
                 return new
             }
@@ -62,6 +61,10 @@ extension Request {
         typealias Value = SessionCache
     }
     
+    private struct AsyncSessionCacheKey: StorageKey {
+        typealias Value = AsyncSessionCache
+    }
+    
     internal var _legacySessionCache: SessionCache {
         if let existing = self.storage[SessionCacheKey.self] {
             return existing
@@ -72,13 +75,13 @@ extension Request {
         }
     }
     
-    internal var _asyncSessionCache: SessionCache {
+    internal var _asyncSessionCache: AsyncSessionCache {
         get async {
-            if let existing = await self.asyncStorage.get(SessionCacheKey.self) {
+            if let existing = await self.asyncStorage.get(AsyncSessionCacheKey.self) {
                 return existing
             } else {
-                let new = SessionCache()
-                await self.asyncStorage.set(SessionCacheKey.self, to: new)
+                let new = AsyncSessionCache()
+                await self.asyncStorage.set(AsyncSessionCacheKey.self, to: new)
                 return new
             }
         }

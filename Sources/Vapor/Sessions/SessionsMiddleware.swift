@@ -59,11 +59,11 @@ public final class SessionsMiddleware: AsyncMiddleware {
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) async throws -> Response {
         // Test new session first
-        if let session = await request._asyncSessionCache.session, session.isValid {
+        if let session = await request._asyncSessionCache.session, await session.isValid {
             // Copy any data from old session to new session
             if let oldSession = request._legacySessionCache.session {
                 for (key, value) in oldSession.data.snapshot {
-                    session.data[key] = value
+                    await session.set(key, to: value)
                 }
             }
             try await createOrUpdateSessionCookie(session: session, for: request, to: response)
@@ -77,11 +77,11 @@ public final class SessionsMiddleware: AsyncMiddleware {
         return response
     }
     
-    private func createOrUpdateSessionCookie(session: Session, for request: Request, to response: Response) async throws {
+    private func createOrUpdateSessionCookie(session: AsyncSession, for request: Request, to response: Response) async throws {
         // A session exists or has been created. we must
         // set a cookie value on the response
         let newID: SessionID
-        if let id = session.id {
+        if let id = await session.id {
             // A cookie exists, just update this session.
             newID = try await self.session.updateSession(id, to: session.data, for: request).get()
         } else {

@@ -80,7 +80,7 @@ extension Session {
 }
 
 #if canImport(_Concurrency)
-extension Session {
+extension AsyncSession {
     /// Authenticates the model into the session.
     public func authenticate<A>(_ a: A) async
         where A: SessionAuthenticatable
