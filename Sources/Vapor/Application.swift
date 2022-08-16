@@ -5,6 +5,7 @@ public final class Application {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
+    public var asyncStorage: AsyncStorage
     public var storage: Storage
     public private(set) var didShutdown: Bool
     public var logger: Logger
@@ -75,6 +76,7 @@ public final class Application {
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
         self.storage = .init(logger: self.logger)
+        self.asyncStorage = .init(logger: self.logger)
         self.lifecycle = .init()
         self.isBooted = false
         self.core.initialize()
@@ -141,6 +143,14 @@ public final class Application {
         self.logger.trace("Clearing Application storage")
         self.storage.shutdown()
         self.storage.clear()
+        
+        let semaphore = DispatchSemaphore(value: 0)
+        Task {
+            await self.asyncStorage.shutdown()
+            await self.asyncStorage.clear()
+            semaphore.signal()
+        }
+        semaphore.wait()
 
         switch self.eventLoopGroupProvider {
         case .shared:
