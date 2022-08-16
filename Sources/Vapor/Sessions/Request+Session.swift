@@ -10,18 +10,18 @@ extension Request {
     /// - returns: `Session` for this `Request`.
     @available(*, deprecated, message: "To ensure thread safety, migrate to `asyncSession()`")
     public var session: Session {
-        if !self._sessionCache.middlewareFlag {
+        if !self._legacySessionCache.middlewareFlag {
             // No `SessionsMiddleware` was detected on your app.
             // Suggested solutions:
             // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
             // - Add the `SessionsMiddleware` to a route group.
             assertionFailure("No `SessionsMiddleware` detected.")
         }
-        if let existing = self._sessionCache.session {
+        if let existing = self._legacySessionCache.session {
             return existing
         } else {
             let new = Session()
-            self._sessionCache.session = new
+            self._legacySessionCache.session = new
             return new
         }
     }
@@ -44,15 +44,23 @@ extension Request {
         }
     }
     
+    @available(*, deprecated, message: "To ensure thread safety, migrate to `hasAsyncSession()`")
     public var hasSession: Bool {
-        return self._sessionCache.session != nil
+        return self._legacySessionCache.session != nil
+    }
+    
+    public var hasAsyncSession: Bool {
+        get async {
+            let hasAsyncSession = await self._asyncSessionCache.session != nil
+            return self._legacySessionCache.session != nil || hasAsyncSession
+        }
     }
 
     private struct SessionCacheKey: StorageKey {
         typealias Value = SessionCache
     }
     
-    internal var _sessionCache: SessionCache {
+    internal var _legacySessionCache: SessionCache {
         if let existing = self.storage[SessionCacheKey.self] {
             return existing
         } else {

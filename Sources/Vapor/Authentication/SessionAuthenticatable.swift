@@ -26,7 +26,7 @@ extension SessionAuthenticator {
             if let user = await request.auth.get(User.self) {
                 // if a user has been authed (or is still authed), store in the session
                 await request.asyncSession().authenticate(user)
-            } else if request.hasSession {
+            } else if await request.hasAsyncSession {
                 // if no user is authed, it's possible they've been unauthed.
                 // remove from session.
                 await request.asyncSession().unauthenticate(User.self)

@@ -32,7 +32,8 @@ public final class SessionsMiddleware: AsyncMiddleware {
     
     public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         // Signal middleware has been added.
-        request._sessionCache.middlewareFlag = true
+        // This is here to ensure that anyone who hasn't migrated doesn't start getting errors
+        request._legacySessionCache.middlewareFlag = true
         await request._asyncSessionCache.middlewareFlag = true
 
         // Check for an existing session
@@ -42,11 +43,11 @@ public final class SessionsMiddleware: AsyncMiddleware {
             let data = try await self.session.readSession(id, for: request).get()
             if let data = data {
                 // Session found, restore data and id.
-                request._sessionCache.session = .init(id: id, data: data)
+                request._legacySessionCache.session = .init(id: id, data: data)
                 await request._asyncSessionCache.session = .init(id: id, data: data)
             } else {
                 // Session id not found, create new session.
-                request._sessionCache.session = .init()
+                request._legacySessionCache.session = .init()
                 await request._asyncSessionCache.session = .init()
             }
         }
@@ -57,11 +58,17 @@ public final class SessionsMiddleware: AsyncMiddleware {
 
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) async throws -> Response {
-        // Test old session
-        if let session = request._sessionCache.session, session.isValid {
+        // Test new session first
+        if let session = await request._asyncSessionCache.session, session.isValid {
+            // Copy any data from old session to new session
+            if let oldSession = request._legacySessionCache.session {
+                for (key, value) in oldSession.data.snapshot {
+                    session.data[key] = value
+                }
+            }
             try await createOrUpdateSessionCookie(session: session, for: request, to: response)
-        // Test new session
-        } else if let session = await request._asyncSessionCache.session, session.isValid {
+        } else if let session = request._legacySessionCache.session, session.isValid {
+            // Test old session
             try await createOrUpdateSessionCookie(session: session, for: request, to: response)
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.
