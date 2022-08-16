@@ -101,7 +101,7 @@ extension AsyncSessionAuthenticator {
             return try await next.respond(to: request)
         }
 
-        if let aID = await request.asyncSession().authenticated(User.self) {
+        if let aID = await request.asyncSession.authenticated(User.self) {
             // try to find user with id from session
             try await self.authenticate(sessionID: aID, for: request)
         }
@@ -110,11 +110,11 @@ extension AsyncSessionAuthenticator {
         let response = try await next.respond(to: request)
         if let user = await request.auth.get(User.self) {
             // if a user has been authed (or is still authed), store in the session
-            await request.asyncSession().authenticate(user)
+            await request.asyncSession.authenticate(user)
         } else if await request.hasAsyncSession {
             // if no user is authed, it's possible they've been unauthed.
             // remove from session.
-            await request.asyncSession().unauthenticate(User.self)
+            await request.asyncSession.unauthenticate(User.self)
         }
         return response
     }

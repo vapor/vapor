@@ -282,7 +282,7 @@ final class RouteTests: XCTestCase {
 
         app.grouped(SessionsMiddleware(session: app.sessions.driver))
             .get("get") { req -> String in
-                await req.asyncSession().data["name"] ?? "n/a"
+                await req.asyncSession.data["name"] ?? "n/a"
             }
 
         var headers = HTTPHeaders()

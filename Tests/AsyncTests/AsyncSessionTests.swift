@@ -38,11 +38,11 @@ final class AsyncSessionTests: XCTestCase {
         app.sessions.use { _ in cache }
         let sessions = app.routes.grouped(app.sessions.middleware)
         sessions.get("set") { req -> String in
-            await req.asyncSession().data["foo"] = "bar"
+            await req.asyncSession.data["foo"] = "bar"
             return "set"
         }
         sessions.get("del") { req  -> String in
-            await req.asyncSession().destroy()
+            await req.asyncSession.destroy()
             return "del"
         }
 
