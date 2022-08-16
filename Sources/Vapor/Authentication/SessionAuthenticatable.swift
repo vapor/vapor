@@ -12,7 +12,7 @@ extension SessionAuthenticator {
         promise.completeWithTask {
             // if the user has already been authenticated
             // by a previous middleware, continue
-            if await request.auth.has(User.self) {
+            if await request.auth.asyncHas(User.self) {
                 return try await next.respond(to: request).get()
             }
 
@@ -23,7 +23,7 @@ extension SessionAuthenticator {
 
             // respond to the request
             let response = try await next.respond(to: request).get()
-            if let user = await request.auth.get(User.self) {
+            if let user = await request.auth.asyncGet(User.self) {
                 // if a user has been authed (or is still authed), store in the session
                 await request.asyncSession.authenticate(user)
             } else if await request.hasAsyncSession {

@@ -40,7 +40,7 @@ private final class GuardAuthenticationMiddleware<A>: AsyncMiddleware
     }
 
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
-        guard await request.auth.has(A.self) else {
+        guard await request.auth.asyncHas(A.self) else {
             throw error
         }
         return try await next.respond(to: request)

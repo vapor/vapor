@@ -15,7 +15,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
-                    await request.auth.login(test)
+                    await request.auth.asyncLogin(test)
                 }
             }
         }
@@ -26,7 +26,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req async throws -> String in
-            return try await req.auth.require(Test.self).name
+            return try await req.auth.asyncRequire(Test.self).name
         }
 
         try app.testable().test(.GET, "/test") { res in
@@ -57,7 +57,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
-                    await request.auth.login(test)
+                    await request.auth.asyncLogin(test)
                 }
             }
         }
@@ -68,7 +68,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req async throws -> String in
-            return try await req.auth.require(Test.self).name
+            return try await req.auth.asyncRequire(Test.self).name
         }
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
@@ -98,7 +98,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret:with:colon" {
                     let test = Test(name: "Vapor")
-                    await request.auth.login(test)
+                    await request.auth.asyncLogin(test)
                 }
             }
         }
@@ -109,7 +109,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), Test.guardMiddleware()
         ]).get("test") { req -> String in
-            return try await req.auth.require(Test.self).name
+            return try await req.auth.asyncRequire(Test.self).name
         }
 
         let basic = "test:secret:with:colon".data(using: .utf8)!.base64EncodedString()
@@ -136,7 +136,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
-                    await request.auth.login(test)
+                    await request.auth.asyncLogin(test)
                 }
             }
         }
@@ -151,7 +151,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         app.routes.grouped([
             Test.authenticator(), redirectMiddleware
         ]).get("test") { req -> String in
-            return try await req.auth.require(Test.self).name
+            return try await req.auth.asyncRequire(Test.self).name
         }
 
         let basic = "test:secret".data(using: .utf8)!.base64EncodedString()
@@ -184,7 +184,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
-                    await request.auth.login(test)
+                    await request.auth.asyncLogin(test)
                 }
             }
         }
@@ -194,7 +194,7 @@ final class AsyncAuthenticationTests: XCTestCase {
 
             func authenticate(sessionID: String, for request: Request) async throws {
                 let test = Test(name: sessionID)
-                await request.auth.login(test)
+                await request.auth.asyncLogin(test)
             }
         }
 
@@ -207,7 +207,7 @@ final class AsyncAuthenticationTests: XCTestCase {
             Test.bearerAuthenticator(),
             Test.guardMiddleware(),
         ]).get("test") { req -> String in
-            try await req.auth.require(Test.self).name
+            try await req.auth.asyncRequire(Test.self).name
         }
 
         var sessionCookie: HTTPCookies.Value?

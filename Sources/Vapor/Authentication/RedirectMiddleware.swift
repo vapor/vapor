@@ -27,7 +27,7 @@ private final class RedirectMiddleware<A>: AsyncMiddleware
     }
     
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
-        if await request.auth.has(A.self) {
+        if await request.auth.asyncHas(A.self) {
             return try await next.respond(to: request)
         }
 

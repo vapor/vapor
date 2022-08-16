@@ -277,7 +277,7 @@ public func routes(_ app: Application) throws {
     
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
-        return try await req.auth.require(Test.self).name
+        return try await req.auth.asyncRequire(Test.self).name
     }
     
     struct Test: Authenticatable {
@@ -294,7 +294,7 @@ public func routes(_ app: Application) throws {
         func authenticate(basic: BasicAuthorization, for request: Request) async throws {
             if basic.username == "test" && basic.password == "secret" {
                 let test = Test(name: "Vapor")
-                await request.auth.login(test)
+                await request.auth.asyncLogin(test)
             }
         }
     }
