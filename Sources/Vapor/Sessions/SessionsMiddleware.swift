@@ -67,9 +67,6 @@ public final class SessionsMiddleware: AsyncMiddleware {
                 }
             }
             try await createOrUpdateSessionCookie(session: session, for: request, to: response)
-        } else if let session = request._legacySessionCache.session, session.isValid {
-            // Test old session
-            try await createOrUpdateSessionCookie(session: session, for: request, to: response)
         } else if let cookieValue = request.cookies[self.configuration.cookieName] {
             // The request had a session cookie, but now there is no valid session.
             // we need to perform cleanup.
