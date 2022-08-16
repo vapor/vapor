@@ -65,14 +65,14 @@ extension Request.Authentication {
     public func asyncLogin<A>(_ instance: A) async
         where A: Authenticatable
     {
-        await self.getCache()[A.self] = instance
+        await self.cache[A.self] = instance
     }
 
     /// Unauthenticates an authenticatable type.
     public func asyncLogout<A>(_ type: A.Type = A.self) async
         where A: Authenticatable
     {
-        await self.getCache()[A.self] = nil
+        await self.cache[A.self] = nil
     }
 
     /// Returns an instance of the supplied type. Throws if no
@@ -92,7 +92,7 @@ extension Request.Authentication {
     public func asyncGet<A>(_ type: A.Type = A.self) async -> A?
         where A: Authenticatable
     {
-        return await self.getCache()[A.self]
+        return await self.cache[A.self]
     }
 
     /// Returns `true` if the type has been authenticated.
@@ -122,13 +122,15 @@ extension Request.Authentication {
         typealias Value = Cache
     }
     
-    private func getCache() async -> Cache {
-        if let existing = await request.asyncStorage.get(CacheKey.self) {
-            return existing
-        } else {
-            let new = Cache()
-            await self.request.asyncStorage.set(CacheKey.self, to: new)
-            return new
+    private var cache: Cache {
+        get async {
+            if let existing = await request.asyncStorage.get(CacheKey.self) {
+                return existing
+            } else {
+                let new = Cache()
+                await self.request.asyncStorage.set(CacheKey.self, to: new)
+                return new
+            }
         }
     }
 
