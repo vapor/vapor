@@ -1,7 +1,6 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
+#if canImport(_Concurrency)
 import NIOCore
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension FileIO {
     /// Reads the contents of a file at the supplied path.
     ///
