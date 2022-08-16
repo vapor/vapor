@@ -7,7 +7,7 @@
 /// This is the version of ``Session`` for use with `async`/`await`
 public final actor AsyncSession {
     /// This session's unique identifier. Usually a cookie value.
-    public var id: SessionID?
+    public let id: SessionID?
 
     /// This session's data.
     public var data: SessionData
@@ -17,7 +17,7 @@ public final actor AsyncSession {
 
     /// Create a new `Session`.
     ///
-    /// Normally you will use `Request.session()` to do this.
+    /// Normally you will use ``Request.asyncSession`` to do this.
     public init(id: SessionID? = nil, data: SessionData = .init()) {
         self.id = id
         self.data = data
@@ -30,6 +30,11 @@ public final actor AsyncSession {
         self.isValid = false
     }
     
+    
+    /// Set the underlying session data in a safe way
+    /// - Parameters:
+    ///   - key: The key for that piece of session data
+    ///   - value: The value of the session data
     public func set(_ key: String, to value: String?) {
         self.data[key] = value
     }

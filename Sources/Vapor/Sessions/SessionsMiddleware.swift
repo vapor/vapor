@@ -81,7 +81,7 @@ public final class SessionsMiddleware: AsyncMiddleware {
         // A session exists or has been created. we must
         // set a cookie value on the response
         let newID: SessionID
-        if let id = await session.id {
+        if let id = session.id {
             // A cookie exists, just update this session.
             newID = try await self.session.updateSession(id, to: session.data, for: request).get()
         } else {
