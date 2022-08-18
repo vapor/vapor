@@ -27,7 +27,9 @@ jobs:
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
-        run: export SWIFT_DETERMINISTIC_HASHING=true; swift test --sanitize=thread
+        env:
+            SWIFT_DETERMINISTIC_HASHING: 1
+        run: swift test --sanitize=thread
         working-directory: provider
   unit-tests:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
