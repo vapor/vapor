@@ -56,7 +56,7 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     var gitHubIssues: [String] { get }
 
     /// Which log level this error should report as. 
-    /// Defaults to `.error`.
+    /// Defaults to `.warning`.
     var logLevel: Logger.Level { get }
 }
 
