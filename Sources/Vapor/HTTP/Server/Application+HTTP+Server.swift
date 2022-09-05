@@ -35,9 +35,10 @@ extension Application.HTTP {
 
         public var configuration: HTTPServer.Configuration {
             get {
-                self.application.storage[ConfigurationKey.self] ?? .init(
-                    logger: self.application.logger
-                )
+                if self.application.storage[ConfigurationKey.self] == nil {
+                    self.application.storage[ConfigurationKey.self] = .init(logger: self.application.logger)
+                }
+                return self.application.storage[ConfigurationKey.self].unsafelyUnwrapped
             }
             nonmutating set {
                 if self.application.storage.contains(Key.self) {

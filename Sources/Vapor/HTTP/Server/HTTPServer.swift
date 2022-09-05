@@ -16,7 +16,7 @@ public final class HTTPServer: Server {
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
     ///     services.register(serverConfig)
     ///
-    public struct Configuration {
+    public final class Configuration {
         public static let defaultHostname = "127.0.0.1"
         public static let defaultPort = 8080
         
@@ -156,9 +156,9 @@ public final class HTTPServer: Server {
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
         public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
 
-        public init(
-            hostname: String = Self.defaultHostname,
-            port: Int = Self.defaultPort,
+        public convenience init(
+            hostname: String = Configuration.defaultHostname,
+            port: Int = Configuration.defaultPort,
             backlog: Int = 256,
             reuseAddress: Bool = true,
             tcpNoDelay: Bool = true,
@@ -233,7 +233,7 @@ public final class HTTPServer: Server {
     }
 
     private let responder: Responder
-    private var configuration: Configuration
+    private let configuration: Configuration
     private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
@@ -257,23 +257,21 @@ public final class HTTPServer: Server {
     }
     
     public func start(address: BindAddress?) throws {
-        var configuration = self.configuration
-        
         switch address {
         case .none: // use the configuration as is
             break
         case .hostname(let hostname, let port): // override the hostname, port, neither, or both
-            configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
+            self.configuration.address = .hostname(hostname ?? self.configuration.hostname, port: port ?? self.configuration.port)
         case .unixDomainSocket: // override the socket path
-            configuration.address = address!
+            self.configuration.address = address!
         }
         
         // print starting message
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
+        let scheme = self.configuration.tlsConfiguration == nil ? "http" : "https"
         let addressDescription: String
-        switch configuration.address {
+        switch self.configuration.address {
         case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
+            addressDescription = "\(scheme)://\(hostname ?? self.configuration.hostname):\(port ?? self.configuration.port)"
         case .unixDomainSocket(let socketPath):
             addressDescription = "\(scheme)+unix: \(socketPath)"
         }
@@ -284,11 +282,10 @@ public final class HTTPServer: Server {
         self.connection = try HTTPServerConnection.start(
             application: self.application,
             responder: self.responder,
-            configuration: configuration,
+            configuration: self.configuration,
             on: self.eventLoopGroup
         ).wait()
 
-        self.configuration = configuration
         self.didStart = true
     }
     
