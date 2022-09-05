@@ -232,8 +232,23 @@ public final class HTTPServer: Server {
         return connection.channel.closeFuture
     }
 
+    public var configuration: Configuration {
+        get { _configuration }
+        set {
+            guard !didStart else {
+                _configuration.logger.warning("Cannot modify server configuration after server has been started.")
+                return
+            }
+            _configuration = newValue
+        }
+    }
+
     private let responder: Responder
-    private var configuration: Configuration
+    private var _configuration: Configuration {
+        willSet {
+            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
+        }
+    }
     private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
@@ -250,7 +265,7 @@ public final class HTTPServer: Server {
     ) {
         self.application = application
         self.responder = responder
-        self.configuration = configuration
+        self._configuration = configuration
         self.eventLoopGroup = eventLoopGroup
         self.didStart = false
         self.didShutdown = false
