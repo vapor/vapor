@@ -232,7 +232,7 @@ public func routes(_ app: Application) throws {
     }
 
     #if compiler(>=5.5) && canImport(_Concurrency)
-    if #available(macOS 12, *) {
+    if #available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *) {
         let asyncRoutes = app.grouped("async").grouped(TestAsyncMiddleware(number: 1))
         asyncRoutes.get("client") { req async throws -> String in
             let response = try await req.client.get("https://www.google.com")
@@ -282,7 +282,7 @@ public func routes(_ app: Application) throws {
         }
     }
     
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     struct Test: Authenticatable {
         static func authenticator() -> AsyncAuthenticator {
             TestAuthenticator()
@@ -291,7 +291,7 @@ public func routes(_ app: Application) throws {
         var name: String
     }
 
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     struct TestAuthenticator: AsyncBasicAuthenticator {
         typealias User = Test
 
@@ -337,7 +337,7 @@ struct TestError: AbortError, DebuggableError {
 }
 
 #if compiler(>=5.5) && canImport(_Concurrency)
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 struct TestAsyncMiddleware: AsyncMiddleware {
     let number: Int
     
