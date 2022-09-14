@@ -5,6 +5,7 @@ import NIO
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL
+import Atomics
 
 final class ServerTests: XCTestCase {
     func testPortOverride() throws {
@@ -754,25 +755,25 @@ final class ServerTests: XCTestCase {
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
 
-        let numberOfTimesTheServerGotOfferedBytes = NIOAtomic<Int>.makeAtomic(value: 0)
-        let bytesTheServerSaw = NIOAtomic<Int>.makeAtomic(value: 0)
-        let bytesTheClientSent = NIOAtomic<Int>.makeAtomic(value: 0)
-        let serverSawEnd = NIOAtomic<Bool>.makeAtomic(value: false)
-        let serverSawRequest = NIOAtomic<Bool>.makeAtomic(value: false)
+        let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
+        let bytesTheServerSaw = ManagedAtomic<Int>(0)
+        let bytesTheClientSent = ManagedAtomic<Int>(0)
+        let serverSawEnd = ManagedAtomic<Bool>(false)
+        let serverSawRequest = ManagedAtomic<Bool>(false)
         let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
 
         app.on(.POST, "hello", body: .stream) { req -> Response in
-            XCTAssertTrue(serverSawRequest.compareAndExchange(expected: false, desired: true))
+            XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
 
             return Response(body: .init(stream: { writer in
                 req.body.drain { stream in
                     switch stream {
                     case .buffer(let bytes):
-                        _ = numberOfTimesTheServerGotOfferedBytes.add(1)
-                        _ = bytesTheServerSaw.add(bytes.readableBytes)
+                        numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
+                        bytesTheServerSaw.wrappingIncrement(by: bytes.readableBytes, ordering: .relaxed)
                     case .end:
                         XCTFail("backpressure should prevent us seeing the end of the request.")
-                        serverSawEnd.store(true)
+                        serverSawEnd.store(true, ordering: .relaxed)
                         writer.write(.end, promise: nil)
                     case .error(let error):
                         writer.write(.error(error), promise: nil)
@@ -796,9 +797,9 @@ final class ServerTests: XCTestCase {
         final class ResponseDelegate: HTTPClientResponseDelegate {
             typealias Response = Void
 
-            private let bytesTheClientSent: NIOAtomic<Int>
+            private let bytesTheClientSent: ManagedAtomic<Int>
 
-            init(bytesTheClientSent: NIOAtomic<Int>) {
+            init(bytesTheClientSent: ManagedAtomic<Int>) {
                 self.bytesTheClientSent = bytesTheClientSent
             }
 
@@ -807,7 +808,7 @@ final class ServerTests: XCTestCase {
             }
 
             func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
-                _ = self.bytesTheClientSent.add(part.readableBytes)
+                self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .relaxed)
             }
         }
 
@@ -827,12 +828,12 @@ final class ServerTests: XCTestCase {
             }
         }
 
-        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load())
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load())
-        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load())
-        XCTAssertEqual(0, bytesTheClientSent.load()) // We'd only see this if we sent the full 10 MB.
-        XCTAssertFalse(serverSawEnd.load())
-        XCTAssertTrue(serverSawRequest.load())
+        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .relaxed))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .relaxed))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .relaxed))
+        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .relaxed)) // We'd only see this if we sent the full 10 MB.
+        XCTAssertFalse(serverSawEnd.load(ordering: .relaxed))
+        XCTAssertTrue(serverSawRequest.load(ordering: .relaxed))
 
         allDonePromise.succeed(())
     }
