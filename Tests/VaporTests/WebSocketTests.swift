@@ -1,4 +1,5 @@
 import Vapor
+import NIOConcurrencyHelpers
 import XCTest
 
 final class WebSocketTests: XCTestCase {
@@ -129,7 +130,7 @@ final class WebSocketTests: XCTestCase {
         app.http.server.configuration.port = 1337
 
         final class WebSocketManager: LifecycleHandler {
-            private let lock: Lock
+            private let lock: NIOLock
             private var connections: Set<WebSocket>
 
             init() {

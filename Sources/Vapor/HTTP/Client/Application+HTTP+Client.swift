@@ -17,7 +17,7 @@ extension Application.HTTP {
         let application: Application
 
         public var shared: HTTPClient {
-            let lock = self.application.locks.lock(for: Key.self)
+            let lock = self.application.nioLocks.lock(for: Key.self)
             lock.lock()
             defer { lock.unlock() }
             if let existing = self.application.storage[Key.self] {

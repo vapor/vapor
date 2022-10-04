@@ -1,4 +1,5 @@
 import Backtrace
+import NIOConcurrencyHelpers
 
 /// Core type representing a Vapor application.
 public final class Application {
@@ -23,6 +24,7 @@ public final class Application {
 
     public var lifecycle: Lifecycle
 
+    @available(*, deprecated, renamed: "NIOLocks")
     public final class Locks {
         public let main: Lock
         var storage: [ObjectIdentifier: Lock]
@@ -46,11 +48,43 @@ public final class Application {
             }
         }
     }
+    
+    public final class NIOLocks {
+        public let main: NIOLock
+        var storage: [ObjectIdentifier: NIOLock]
+        
+        init() {
+            self.main = .init()
+            self.storage = [:]
+        }
+        
+        public func lock<Key>(for key: Key.Type) -> NIOLock
+        where Key: LockKey
+        {
+            self.main.lock()
+            defer { self.main.unlock() }
+            if let existing = self.storage[ObjectIdentifier(Key.self)] {
+                return existing
+            } else {
+                let new = NIOLock()
+                self.storage[ObjectIdentifier(Key.self)] = new
+                return new
+            }
+        }
+    }
 
-    public var locks: Locks
+    @available(*, deprecated, renamed: "nioLocks")
+    public var locks = Locks()
 
+    @available(*, deprecated, renamed: "nioSync")
     public var sync: Lock {
         self.locks.main
+    }
+    
+    public var nioLocks = NIOLocks()
+    
+    public var nioSync: NIOLock {
+        self.nioLocks.main
     }
     
     public enum EventLoopGroupProvider {
@@ -71,7 +105,6 @@ public final class Application {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
-        self.locks = .init()
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
         self.storage = .init(logger: self.logger)
