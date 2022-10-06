@@ -122,7 +122,7 @@ public struct FileIO {
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
-        onCompleted: @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @escaping (Result<Void, Error>) async -> () = { _ in }
     ) -> Response {
         // Get file attributes for this file.
         guard
@@ -202,7 +202,7 @@ public struct FileIO {
                 case .success:
                     stream.write(.end, promise: nil)
                 }
-                onCompleted(result)
+                await onCompleted(result)
             }
         }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
         
