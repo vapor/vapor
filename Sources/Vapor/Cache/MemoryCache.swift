@@ -9,7 +9,7 @@ extension Application.Caches {
     }
 
     private var memoryStorage: MemoryCacheStorage {
-        let lock = self.application.nioLocks.lock(for: MemoryCacheKey.self)
+        let lock = self.application.locks.lock(for: MemoryCacheKey.self)
         lock.lock()
         defer { lock.unlock() }
         if let existing = self.application.storage.get(MemoryCacheKey.self) {

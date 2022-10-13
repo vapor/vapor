@@ -37,13 +37,13 @@ final class ServiceTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.nioSync.withLock {
+        app.sync.withLock {
             // Do something.
         }
 
         struct TestKey: LockKey { }
 
-        let test = app.nioLocks.lock(for: TestKey.self)
+        let test = app.locks.lock(for: TestKey.self)
         test.withLock {
             // Do something.
         }

@@ -24,42 +24,17 @@ public final class Application {
 
     public var lifecycle: Lifecycle
 
-    @available(*, deprecated, renamed: "NIOLocks")
     public final class Locks {
-        public let main: Lock
-        var storage: [ObjectIdentifier: Lock]
-
-        init() {
-            self.main = .init()
-            self.storage = [:]
-        }
-
-        public func lock<Key>(for key: Key.Type) -> Lock
-            where Key: LockKey
-        {
-            self.main.lock()
-            defer { self.main.unlock() }
-            if let existing = self.storage[ObjectIdentifier(Key.self)] {
-                return existing
-            } else {
-                let new = Lock()
-                self.storage[ObjectIdentifier(Key.self)] = new
-                return new
-            }
-        }
-    }
-    
-    public final class NIOLocks {
         public let main: NIOLock
         var storage: [ObjectIdentifier: NIOLock]
-        
+
         init() {
             self.main = .init()
             self.storage = [:]
         }
-        
+
         public func lock<Key>(for key: Key.Type) -> NIOLock
-        where Key: LockKey
+            where Key: LockKey
         {
             self.main.lock()
             defer { self.main.unlock() }
@@ -73,18 +48,10 @@ public final class Application {
         }
     }
 
-    @available(*, deprecated, renamed: "nioLocks")
     public var locks = Locks()
 
-    @available(*, deprecated, renamed: "nioSync")
-    public var sync: Lock {
+    public var sync: NIOLock {
         self.locks.main
-    }
-    
-    public var nioLocks = NIOLocks()
-    
-    public var nioSync: NIOLock {
-        self.nioLocks.main
     }
     
     public enum EventLoopGroupProvider {
