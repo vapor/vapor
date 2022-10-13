@@ -182,6 +182,16 @@ private final class ResponseBodyCollector: BodyStreamWriter {
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+        if self.eventLoop.inEventLoop {
+            writeWhenOnEventLoop(result, promise: promise)
+        } else {
+            self.eventLoop.execute {
+                self.writeWhenOnEventLoop(result, promise: promise)
+            }
+        }
+    }
+    
+    private func writeWhenOnEventLoop(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(var buffer):
             self.buffer.writeBuffer(&buffer)
