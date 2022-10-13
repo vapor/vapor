@@ -3,7 +3,7 @@ import Foundation
 @propertyWrapper
 class ThreadSafe<Value> {
     private var value: Value
-    private let lock = Lock()
+    private let lock = NIOLock()
     
     public init(wrappedValue value: Value) {
         self.value = value
@@ -15,7 +15,7 @@ class ThreadSafe<Value> {
     }
 }
 
-fileprivate class Lock {
+fileprivate class NIOLock {
     private let nslock = NSLock()
     init() {}
     
