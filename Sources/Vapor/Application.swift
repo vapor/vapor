@@ -48,7 +48,7 @@ public final class Application {
         }
     }
 
-    public var locks = Locks()
+    public var locks: Locks
 
     public var sync: NIOLock {
         self.locks.main
@@ -72,6 +72,7 @@ public final class Application {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
+        self.locks = .init()
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
         self.storage = .init(logger: self.logger)
