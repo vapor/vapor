@@ -161,7 +161,8 @@ public final class Application {
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
-            assertionFailure("Application.shutdown() was not called before Application deinitialized.")
+            self.logger.error("Application.shutdown() was not called before Application deinitialized.")
+            self.shutdown()
         }
     }
 }
