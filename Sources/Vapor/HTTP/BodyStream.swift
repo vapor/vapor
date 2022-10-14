@@ -44,14 +44,17 @@ public protocol BodyStreamWriter {
 
 extension BodyStreamWriter {
     public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
-        let promise = self.eventLoop.makePromise(of: Void.self)
-        if self.eventLoop.inEventLoop {
+        func write0() -> EventLoopFuture<Void> {
+            let promise = self.eventLoop.makePromise(of: Void.self)
             self.write(result, promise: promise)
+            return promise.futureResult
+        }
+        if self.eventLoop.inEventLoop {
+            return write0()
         } else {
-            self.eventLoop.execute {
-                self.write(result, promise: promise)
+            return self.eventLoop.flatSubmit {
+                return write0()
             }
         }
-        return promise.futureResult
     }
 }
