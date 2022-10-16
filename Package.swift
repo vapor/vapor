@@ -53,9 +53,6 @@ let package = Package(
         // Swift collection algorithms
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
         
-        // Advanced swift async/await
-        .package(url: "https://github.com/apple/swift-async-algorithms", from: "0.0.3"),
-        
         // WebSocket client library built on SwiftNIO
         .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
         
@@ -89,7 +86,6 @@ let package = Package(
             .product(name: "NIOWebSocket", package: "swift-nio"),
             .product(name: "Crypto", package: "swift-crypto"),
             .product(name: "Algorithms", package: "swift-algorithms"),
-            .product(name: "AsyncAlgorithms", package: "swift-async-algorithms"),
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
