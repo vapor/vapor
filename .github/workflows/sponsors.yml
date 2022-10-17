@@ -22,8 +22,11 @@ jobs:
 
       # Here we can eventually add sponsors too rather than just backers
 
-      - name: Deploy to GitHub Pages 🚀
-        uses: JamesIves/github-pages-deploy-action@v4
-        with:
-          branch: main
-          folder: "."
+      - name: Commit changes
+        run: |
+          git config --global user.email "bot@vapor.codes"
+          git config --global user.name "VaporBot"
+          git config --global credential.helper cache
+          git add README.md
+          git diff-index --quiet HEAD || git commit -m "Automatic update of README.md after new sponsor joined"
+          git push https://VaporBot:${{secrets.SPONSORS_PAT}}@github.com/vapor/vapor main
