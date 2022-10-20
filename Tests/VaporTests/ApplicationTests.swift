@@ -179,7 +179,8 @@ final class ApplicationTests: XCTestCase {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
+        let response = try app.client.get("http://localhost:\(port)/hello", context: context).wait()
         let returnedConfig = try response.content.decode(AddressConfig.self)
         XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
         XCTAssertEqual(returnedConfig.port, 0)
@@ -212,7 +213,8 @@ final class ApplicationTests: XCTestCase {
             XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
             return
         }
-        let response = try app.client.get("http://localhost:\(port)/hello").wait()
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
+        let response = try app.client.get("http://localhost:\(port)/hello", context: context).wait()
         let returnedConfig = try response.content.decode(AddressConfig.self)
         XCTAssertEqual(returnedConfig.hostname, "0.0.0.0")
         XCTAssertEqual(returnedConfig.port, 3000)

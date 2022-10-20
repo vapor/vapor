@@ -243,9 +243,10 @@ final class ServerTests: XCTestCase {
         
         try app.server.start()
         defer { app.server.shutdown() }
+        let context = DefaultLoggingContext.topLevel(logger: app.logger)
         
         // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:8080/gzip") { req in
+        let res = try app.client.post("http://localhost:8080/gzip", context: context) { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.headers.replaceOrAdd(name: .contentType, value: "application/json")
             req.body = jsonPayload
@@ -741,7 +742,8 @@ final class ServerTests: XCTestCase {
                                                                 body: .byteBuffer(tenMB),
                                                                 deadline: .now() + .milliseconds(100)).wait()) { error in
             if let error = error as? HTTPClientError {
-                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
+                #warning("Fix")
+                XCTAssert(error == .readTimeout/* || error == .deadlineExceeded*/)
             } else {
                 XCTFail("unexpected error: \(error)")
             }
@@ -826,7 +828,8 @@ final class ServerTests: XCTestCase {
                                                                 delegate: delegate,
                                                                 deadline: .now() + .milliseconds(500)).wait()) { error in
             if let error = error as? HTTPClientError {
-                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
+                #warning("Fix")
+                XCTAssert(error == .readTimeout/* || error == .deadlineExceeded*/)
             } else {
                 XCTFail("unexpected error: \(error)")
             }

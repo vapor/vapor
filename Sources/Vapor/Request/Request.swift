@@ -1,5 +1,6 @@
 import NIOHTTP1
 import Baggage
+import NIOCore
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
