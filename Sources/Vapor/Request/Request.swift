@@ -1,5 +1,5 @@
 import NIOHTTP1
-import Baggage fc85c400 (Start span in DefaultResponder)
+import Baggage
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
