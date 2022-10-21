@@ -1,4 +1,5 @@
 import Vapor
+import NIOConcurrencyHelpers
 
 public func configure(_ app: Application) throws {
     app.logger.logLevel = .debug
@@ -26,7 +27,7 @@ public func configure(_ app: Application) throws {
 
 final class MemoryCache {
     var storage: [String: String]
-    var lock: Lock
+    var lock: NIOLock
 
     init() {
         self.storage = [:]
