@@ -2,6 +2,7 @@
 import NIOCore
 import NIOConcurrencyHelpers
 
+// MARK: - Request.Body.AsyncSequenceDelegate
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request.Body {
     
@@ -67,6 +68,7 @@ extension Request.Body {
     }
 }
 
+// MARK: - Request.Body.AsyncSequence
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request.Body: AsyncSequence {
     public typealias Element = ByteBuffer
@@ -76,7 +78,6 @@ extension Request.Body: AsyncSequence {
         public typealias Element = ByteBuffer
 
         fileprivate typealias Underlying = NIOThrowingAsyncSequenceProducer<ByteBuffer, any Error, NIOAsyncSequenceProducerBackPressureStrategies.HighLowWatermark, Request.Body.AsyncSequenceDelegate>.AsyncIterator
-        // AsyncThrowingStream<ByteBuffer, Error>.AsyncIterator
 
         private var underlying: Underlying
 
@@ -85,7 +86,8 @@ extension Request.Body: AsyncSequence {
         }
 
         public mutating func next() async throws -> ByteBuffer? {
-            try await self.underlying.next()
+            print("2. next")
+            return try await self.underlying.next()
         }
     }
 
@@ -93,11 +95,11 @@ extension Request.Body: AsyncSequence {
         switch request.bodyStorage {
         case .stream(_):
             // TODO: Remove debugging before merge
-            print("stream")
+            print("1. stream")
             break
         case .collected(_):
             // TODO: Remove debugging before merge
-            print("collected")
+            print("1. collected")
             break
         default:
             preconditionFailure("""
@@ -117,43 +119,37 @@ extension Request.Body: AsyncSequence {
         
         let source = producer.source
         
-        lazy var stream = AsyncThrowingStream<ByteBuffer, Error> { continuation in
-            continuation.onTermination = { @Sendable buffer in
-                // TODO: Remove before merge
-                debugPrint(buffer, "stream terminated")
-            }
-            // FIXME: This gets executed here, before `Request.Body.AsyncIterator/next()`
-            self.drain { streamResult in
-                switch streamResult {
-                case .buffer(let buffer):
-                    print("buff")
-                    // hand over the buffer to the async sequence
-                    let result = source.yield(buffer)
-                    // inspect what the source view and handle outcomes
-                    switch result {
-                    case .dropped:
-                        // the consumer dropped the sequence
-                        // we must inform the producer that we don't want more data.
-                        // we do this by returning an error in the future.
-                        return request.eventLoop.makeFailedFuture(CancellationError())
-                    case .stopProducing:
-                        // the consumer is consuming fast enough for us. we need to create a promise that we succeed later.
-                        let promise = request.eventLoop.makePromise(of: Void.self)
-                        // we pass the promise to the delegate so that we can succeed it, once we get a call to delegate.produceMore
-                        delegate.registerBackpressurePromise(promise)
-                        // return the future that we will fulfill eventually.
-                        return promise.futureResult
-                    case .produceMore:
-                        // we can produce more immidiatly. return a succeeded future.
-                        return request.eventLoop.makeSucceededVoidFuture()
-                    }
-                case .error(let error):
-                    source.finish(error)
-                    return request.eventLoop.makeSucceededVoidFuture()
-                case .end:
-                    source.finish()
+        self.drain { streamResult in
+            switch streamResult {
+            case .buffer(let buffer):
+                print("3. buff")
+                // hand over the buffer to the async sequence
+                let result = source.yield(buffer)
+                // inspect what the source view and handle outcomes
+                switch result {
+                case .dropped:
+                    // the consumer dropped the sequence
+                    // we must inform the producer that we don't want more data.
+                    // we do this by returning an error in the future.
+                    return request.eventLoop.makeFailedFuture(CancellationError())
+                case .stopProducing:
+                    // the consumer is consuming fast enough for us. we need to create a promise that we succeed later.
+                    let promise = request.eventLoop.makePromise(of: Void.self)
+                    // we pass the promise to the delegate so that we can succeed it, once we get a call to delegate.produceMore
+                    delegate.registerBackpressurePromise(promise)
+                    // return the future that we will fulfill eventually.
+                    return promise.futureResult
+                case .produceMore:
+                    // we can produce more immidiatly. return a succeeded future.
                     return request.eventLoop.makeSucceededVoidFuture()
                 }
+            case .error(let error):
+                source.finish(error)
+                return request.eventLoop.makeSucceededVoidFuture()
+            case .end:
+                print("4. end")
+                source.finish()
+                return request.eventLoop.makeSucceededVoidFuture()
             }
         }
         

@@ -3,10 +3,6 @@ import XCTVapor
 
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncRequestTests: XCTestCase {
-
-    private func cumulativelyAddUpTo(number: Int) -> Int {
-        return ((number * (number - 1)) / 2)
-    }
     
     func testStreamingRequest() throws {
         let app = Application(.testing)
