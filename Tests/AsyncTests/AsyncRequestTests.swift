@@ -1,16 +1,24 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 
+fileprivate extension String {
+    static func randomDigits(length: Int = 999) -> String {
+        var string = ""
+        for _ in 0...999 {
+            string += String(Int.random(in: 0...9))
+        }
+        return string
+    }
+}
+
 @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncRequestTests: XCTestCase {
     
     func testStreamingRequest() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        var testValue = ""
-        for _ in 0...999 {
-            testValue += String(Int.random(in: 0...9))
-        }
+        
+        let testValue = String.randomDigits()
 
         app.on(.POST, "stream", body: .stream) { req in
             var recievedBuffer = ByteBuffer()
