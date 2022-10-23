@@ -64,6 +64,14 @@ final class ApplicationTests: XCTestCase {
         XCTAssertEqual(foo.didBootFlag, true)
         XCTAssertEqual(foo.shutdownFlag, true)
     }
+    
+    func testThrowDoesNotCrash() throws {
+        enum Static {
+            static var app: Application!
+        }
+        Static.app = Application(.testing)
+        Static.app = nil
+    }
 
     func testSwiftError() throws {
         struct Foo: Error { }

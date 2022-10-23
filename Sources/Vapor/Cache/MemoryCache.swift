@@ -1,4 +1,6 @@
 import NIOCore
+import NIOConcurrencyHelpers
+
 extension Application.Caches {
     /// In-memory cache. Thread safe.
     /// Not shared between multiple instances of your application.
@@ -46,7 +48,7 @@ private final class MemoryCacheStorage {
     }
     
     private var storage: [String: Any]
-    private var lock: Lock
+    private var lock: NIOLock
     
     init() {
         self.storage = [:]
