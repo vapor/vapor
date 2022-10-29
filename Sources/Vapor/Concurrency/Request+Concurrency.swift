@@ -144,7 +144,7 @@ extension Request.Body: AsyncSequence {
                     // by returning an error in the future.
                     return request.eventLoop.makeFailedFuture(CancellationError())
                 case .stopProducing:
-                    // The consumer is consuming fast enough for us.
+                    // The consumer is too slow.
                     // We need to create a promise that we succeed later.
                     let promise = request.eventLoop.makePromise(of: Void.self)
                     // We pass the promise to the delegate so that we can succeed it,
