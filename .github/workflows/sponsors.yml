@@ -1,0 +1,29 @@
+name: Generate Sponsors README
+on: workflow_dispatch
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Generate Sponsors
+        uses: JamesIves/github-sponsors-readme-action@v1
+        with:
+          token: ${{ secrets.SPONSORS_PAT }}
+          file: "README.md"
+          minimum: 500
+          maximum: 9900
+          marker: "backers"
+          organization: true
+
+      # Here we can eventually add sponsors too rather than just backers
+
+      - name: Commit changes
+        run: |
+          git config --global user.email "bot@vapor.codes"
+          git config --global user.name "VaporBot"
+          git config --global credential.helper cache
+          git add README.md
+          git diff-index --quiet HEAD || git commit -m "Automatic update of README.md after new sponsor joined"
+          git push https://VaporBot:${{secrets.SPONSORS_PAT}}@github.com/vapor/vapor main
