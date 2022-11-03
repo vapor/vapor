@@ -394,4 +394,28 @@ final class HTTPHeaderTests: XCTestCase {
         headers.links = links
         XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel=next, <https://localhost/?a=2>; rel=last; custom1=whatever, </?a=-1>; rel=related, </?a=-2>; rel=related"#)
     }
+    
+    /// Test parse and serialize  of `Last-Modified` header
+    func testLastModifiedHeader() throws {
+        var headers = HTTPHeaders()
+        headers.lastModified = HTTPHeaders.LastModified(value: Date(timeIntervalSince1970: 18*3600))
+        guard let date = headers.lastModified else {
+            XCTFail("HTTPHeaders.LastModified parsing failed")
+            return
+        }
+        XCTAssertEqual(date.value.timeIntervalSince1970, 18*3600)
+        XCTAssertEqual(date.serialize(), "Thu, 01 Jan 1970 18:00:00 GMT")
+    }
+    
+    /// Test parse and serialize of `Expires` header
+    func testExpiresHeader() throws {
+        var headers = HTTPHeaders()
+        headers.expires = HTTPHeaders.Expires(expires: Date(timeIntervalSince1970: 18*3600))
+        guard let date = headers.expires else {
+            XCTFail("HTTPHeaders.Expires parsing failed")
+            return
+        }
+        XCTAssertEqual(date.expires.timeIntervalSince1970, 18*3600)
+        XCTAssertEqual(date.serialize(), "Thu, 01 Jan 1970 18:00:00 GMT")
+    }
 }

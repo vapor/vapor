@@ -9,7 +9,7 @@ extension HTTPHeaders {
             let fmt = DateFormatter()
             fmt.locale = Locale(identifier: "en_US_POSIX")
             fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
+            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
             guard let date = fmt.date(from: dateString) else {
                 return nil
@@ -22,7 +22,7 @@ extension HTTPHeaders {
             let fmt = DateFormatter()
             fmt.locale = Locale(identifier: "en_US_POSIX")
             fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
+            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
             return fmt.string(from: self.value)
         }
