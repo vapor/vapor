@@ -295,103 +295,51 @@ final class ServerTests: XCTestCase {
         }
     }
     
-    func testAbandonedRequests() async throws {
-        
+    func testRequestBodyStreamGetsFinalisedEvenIfClientAbandonsConnection() throws {
         let app = Application(.testing)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
         defer { app.shutdown() }
         
-        let numRequests = ManagedAtomic(0)
-        let numResponses = ManagedAtomic(0)
-        let numWriters = ManagedAtomic(0)
+        let numRequests = ManagedAtomic<Int>(0)
+        let writersStarted = DispatchSemaphore(value: 0)
         
-        app.get() { req -> EventLoopFuture<Response> in
+        app.get() { req in
+            numRequests.wrappingIncrement(ordering: .relaxed)
             
-            numRequests.wrappingIncrement(ordering: .sequentiallyConsistent)
-            
-            // make response asynchronously
-            return req.eventLoop.scheduleTask(in: .seconds(1)) {
-                
-                numResponses.wrappingIncrement(ordering: .sequentiallyConsistent)
+            return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
+                numRequests.wrappingIncrement(ordering: .relaxed)
                 
                 return Response(status: .ok, body: .init(stream: { writer in
-                    
-                    // BUG: if the client abandons the request, we never make it here!
-                    numWriters.wrappingIncrement(ordering: .sequentiallyConsistent)
-                    
-                    _ = writer.write(.buffer(ByteBuffer(string: "hello world")))
-                        .flatMap {
-                            writer.write(.end)
-                        }
-                        .flatMapError {
-                            writer.write(.error($0))
-                        }
+                    writersStarted.signal()
+                    _ = writer.write(.end)
                 }))
             }.futureResult
         }
         
-        try app.server.start(address: .hostname("127.0.0.1", port: 8765))
-        defer { app.server.shutdown() }
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
         
-        func sendRequest(receive: Bool) {
-            let sock = socket(AF_INET, SOCK_STREAM, 0)
-            guard sock > 0 else {
-                fatalError("sock < 0")
-            }
-            var sin = sockaddr_in()
-            sin.sin_family = sa_family_t(AF_INET)
-            sin.sin_len = UInt8(MemoryLayout<sockaddr_in>.size)
-            sin.sin_port = (8765 as in_port_t).bigEndian
-            sin.sin_addr.s_addr = inet_addr("127.0.0.1")
-            
-            let connectRes = withUnsafeBytes(of: sin) { p -> Int32 in
-                let addr = p.baseAddress!.assumingMemoryBound(to: sockaddr.self)
-                return connect(sock, addr, UInt32(p.count))
-            }
-            
-            print("connect res: \(connectRes), errno: \(errno)")
-            guard connectRes == 0 else {
-                fatalError("connect failed")
-            }
-            
-            let req = ByteBuffer(string: "GET / HTTP/1.1\r\nHost: localhost:8765\r\n\r\n")
-            let sendRes = req.withUnsafeReadableBytes { bufferPtr in
-                send(sock, bufferPtr.baseAddress, bufferPtr.count, 0)
-            }
-            print("send wrote \(sendRes) bytes")
-            guard sendRes >= 0 else {
-                fatalError("send failed")
-            }
-            
-            if receive {
-                var res = ByteBufferAllocator().buffer(capacity: 1024)
-                let recvRes = res.writeWithUnsafeMutableBytes(minimumWritableBytes: 1024) { bufferPtr in
-                    recv(sock, bufferPtr.baseAddress, bufferPtr.count, 0)
-                }
-                print("recv received \(recvRes) bytes")
-                guard recvRes >= 0 else {
-                    fatalError("recv failed")
-                }
-                print("res: \(res.readString(length: res.readableBytes) ?? "<no response>")")
-            }
-            
-            close(sock)
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
         }
         
-        sendRequest(receive: true)
+        let numberOfClients = 100
         
-        XCTAssertEqual(numRequests.load(ordering: .sequentiallyConsistent), 1)
-        XCTAssertEqual(numResponses.load(ordering: .sequentiallyConsistent), 1)
-        XCTAssertEqual(numWriters.load(ordering: .sequentiallyConsistent), 1)
+        for _ in 0 ..< numberOfClients {
+            let client = try ClientBootstrap(group: app.eventLoopGroup)
+                .connect(to: localAddress)
+                .wait()
+            try client.writeAndFlush(ByteBuffer(string: "GET / HTTP/1.1\r\nhost: foo\r\n\r\n")).wait()
+            try client.close().wait()
+        }
         
-        sendRequest(receive: false)
-        // since we abandon the request, give server some extra time (it should take 1 second)
-        sleep(3)
-        
-        XCTAssertEqual(numRequests.load(ordering: .sequentiallyConsistent), 2)
-        XCTAssertEqual(numResponses.load(ordering: .sequentiallyConsistent), 2)
-        // BUG: this should be 2, but is 1
-        XCTAssertEqual(numWriters.load(ordering: .sequentiallyConsistent), 2)
-        
+        for clientNumber in 0 ..< numberOfClients {
+            XCTAssertEqual(.success, writersStarted.wait(timeout: .now() + 1), "client #\(clientNumber) failed")
+        }
+        XCTAssertEqual(numberOfClients, numRequests.load(ordering: .relaxed))
     }
     
     func testLiveServer() throws {
