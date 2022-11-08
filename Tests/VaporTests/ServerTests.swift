@@ -304,7 +304,7 @@ final class ServerTests: XCTestCase {
         let numResponses = ManagedAtomic(0)
         let numWriters = ManagedAtomic(0)
         
-        app.get() { req in
+        app.get() { req -> EventLoopFuture<Response> in
             
             numRequests.wrappingIncrement(ordering: .sequentiallyConsistent)
             
@@ -343,7 +343,7 @@ final class ServerTests: XCTestCase {
             sin.sin_port = (8765 as in_port_t).bigEndian
             sin.sin_addr.s_addr = inet_addr("127.0.0.1")
             
-            let connectRes = withUnsafeBytes(of: sin) { p in
+            let connectRes = withUnsafeBytes(of: sin) { p -> Int32 in
                 let addr = p.baseAddress!.assumingMemoryBound(to: sockaddr.self)
                 return connect(sock, addr, UInt32(p.count))
             }
