@@ -13,14 +13,14 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:5.6-focal
+    container: swift:5.7-jammy
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
           repository: ${{ matrix.provider }}
           path: provider
@@ -36,3 +36,4 @@ jobs:
      with:
        with_coverage: false
        with_tsan: false
+       with_public_api_check: true
