@@ -339,7 +339,7 @@ final class ServerTests: XCTestCase {
         for clientNumber in 0 ..< numberOfClients {
             XCTAssertEqual(.success, writersStarted.wait(timeout: .now() + 1), "client #\(clientNumber) failed")
         }
-        XCTAssertEqual(numberOfClients, numRequests.load(ordering: .relaxed))
+        XCTAssertEqual(numberOfClients * 2, numRequests.load(ordering: .relaxed))
     }
     
     func testLiveServer() throws {
