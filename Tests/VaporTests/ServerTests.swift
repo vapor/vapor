@@ -304,7 +304,7 @@ final class ServerTests: XCTestCase {
         let numRequests = ManagedAtomic<Int>(0)
         let writersStarted = DispatchSemaphore(value: 0)
         
-        app.get() { req in
+        app.get() { req  -> EventLoopFuture<Response> in
             numRequests.wrappingIncrement(ordering: .relaxed)
             
             return req.eventLoop.scheduleTask(in: .milliseconds(10)) {
