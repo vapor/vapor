@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Generate Sponsors
         uses: JamesIves/github-sponsors-readme-action@v1
@@ -19,11 +19,33 @@ jobs:
 
       # Here we can eventually add sponsors too rather than just backers
 
-      - name: Commit changes
-        run: |
-          git config --global user.email "bot@vapor.codes"
-          git config --global user.name "VaporBot"
-          git config --global credential.helper cache
-          git add README.md
-          git diff-index --quiet HEAD || git commit -m "Automatic update of README.md after new sponsor joined"
-          git push https://VaporBot:${{secrets.SPONSORS_PAT}}@github.com/vapor/vapor main
+      - name: Commit and create PR
+        uses: peter-evans/create-pull-request@v4
+        with: 
+          token: ${{secrets.SPONSORS_PR_PAT}}
+          commit-message: Update README with new sponsor
+          committer: VaporBot <bot@vapor.codes>
+          branch: new-sponsor
+          delete-branch: true
+          title: Update README with new Sponsor
+          body: Update README adding new sponsor
+          labels: no-release-needed
+          team-reviewers: core
+      
+      # We can comment this out if we want to automate approve and merge
+      
+      # - name: Enable Pull Request Automerge
+      #   if: steps.cpr.outputs.pull-request-operation == 'created'
+      #   uses: peter-evans/enable-pull-request-automerge@v2
+      #   with:
+      #     token: ${{ secrets.SPONSORS_PR_PAT }}
+      #     pull-request-number: ${{ steps.cpr.outputs.pull-request-number }}
+      #     merge-method: merge
+
+      # - name: Auto approve
+      #   if: steps.cpr.outputs.pull-request-operation == 'created'
+      #   uses: juliangruber/approve-pull-request-action@v2
+      #   with:
+      #     github-token: ${{ secrets.SPONSORS_PR_PAT }}
+      #     number: ${{ steps.cpr.outputs.pull-request-number }}
+          
