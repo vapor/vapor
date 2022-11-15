@@ -76,6 +76,6 @@ struct ErrorBodyStreamWriter: BodyStreamWriter {
     var eventLoop: EventLoop
     var error: Error
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-        promise?.fail(ChannelError.ioOnClosedChannel)
+        promise?.fail(error)
     }
 }
