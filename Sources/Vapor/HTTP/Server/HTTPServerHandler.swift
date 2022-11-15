@@ -50,11 +50,10 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                     if !keepAlive {
                         context.close(mode: .output, promise: nil)
                     }
-                case .failure(ChannelError.ioOnClosedChannel):
-                    if case .stream(let stream) = response.body.storage {
-                        stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: ChannelError.ioOnClosedChannel))
-                    }
                 case .failure(let error):
+                    if case .stream(let stream) = response.body.storage {
+                        stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
+                    }
                     self.errorCaught(context: context, error: error)
                 }
             }
