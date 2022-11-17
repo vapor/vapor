@@ -332,6 +332,11 @@ private struct _Decoder: Decoder {
                 return try T(from: decoder)
             } else {
                 let value = self.values[self.currentIndex]
+                // Check if we received a date. We need the decode with the appropriate format.
+                guard !(T.self is Date.Type) else {
+                    return try configuration.decodeDate(from: value, codingPath: codingPath, forKey: nil) as! T
+                }
+                
                 if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                     if let result = convertible.init(urlQueryFragmentValue: value) {
                         return result as! T
@@ -428,6 +433,10 @@ private extension URLEncodedFormDecoder.Configuration {
             let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
             return try callback(decoder)
         }
+    }
+    
+    func decodeDate(from data: URLQueryFragment, codingPath: [CodingKey], forKey key: CodingKey?) throws -> Date {
+        try self.decodeDate(from: .init(values: [data]), codingPath: codingPath, forKey: key)
     }
 }
 
