@@ -21,30 +21,40 @@ extension Request {
         }
 
         func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handler = handler
-            for (result, promise) in self.buffer {
-                handler(result, promise)
+            // Submitting this function to the eventloop prevents a simultaneous write/read from losing a chunk
+            // It's also more sensible than a Lock, since this initializer literally has the `on eventLoop: EventLoop` argument
+            // See https://github.com/vapor/vapor/issues/2906
+            eventLoop.execute {
+                self.handler = handler
+                for (result, promise) in self.buffer {
+                    handler(result, promise)
+                }
+                self.buffer = []
             }
-            self.buffer = []
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-            switch chunk {
-            case .end, .error:
-                self.isClosed = true
-            case .buffer: break
-            }
-            
-            if let handler = self.handler {
-                handler(chunk, promise)
-                // remove reference to handler
+            // Submitting this function to the eventloop prevents a simultaneous write/read from losing a chunk
+            // It's also more sensible than a Lock, since this initializer literally has the `on eventLoop: EventLoop` argument
+            // See https://github.com/vapor/vapor/issues/2906
+            eventLoop.execute {
                 switch chunk {
                 case .end, .error:
-                    self.handler = nil
-                default: break
+                    self.isClosed = true
+                case .buffer: break
                 }
-            } else {
-                self.buffer.append((chunk, promise))
+                
+                if let handler = self.handler {
+                    handler(chunk, promise)
+                    // remove reference to handler
+                    switch chunk {
+                    case .end, .error:
+                        self.handler = nil
+                    default: break
+                    }
+                } else {
+                    self.buffer.append((chunk, promise))
+                }
             }
         }
 
