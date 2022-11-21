@@ -1,4 +1,5 @@
 import NIO
+import NIOConcurrencyHelpers
 
 extension Request {
     final class BodyStream: BodyStreamWriter {
@@ -9,6 +10,7 @@ extension Request {
         }
 
         private(set) var isClosed: Bool
+        private let lock = NIOLock()
         private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
         private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         private let allocator: ByteBufferAllocator
@@ -21,10 +23,9 @@ extension Request {
         }
 
         func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            // Submitting this function to the eventloop prevents a simultaneous write/read from losing a chunk
-            // It's also more sensible than a Lock, since this initializer literally has the `on eventLoop: EventLoop` argument
+            // A lock is needed, because some pipeline users (and known unit tests) rely on this being handled synchronously.
             // See https://github.com/vapor/vapor/issues/2906
-            eventLoop.execute {
+            lock.withLockVoid {
                 self.handler = handler
                 for (result, promise) in self.buffer {
                     handler(result, promise)
@@ -34,10 +35,9 @@ extension Request {
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-            // Submitting this function to the eventloop prevents a simultaneous write/read from losing a chunk
-            // It's also more sensible than a Lock, since this initializer literally has the `on eventLoop: EventLoop` argument
+            // A lock is needed, because some pipeline users (and known unit tests) rely on this being handled synchronously.
             // See https://github.com/vapor/vapor/issues/2906
-            eventLoop.execute {
+            lock.withLockVoid {
                 switch chunk {
                 case .end, .error:
                     self.isClosed = true
