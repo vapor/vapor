@@ -1,5 +1,7 @@
 import Vapor
 import NIOConcurrencyHelpers
+import NIOPosix
+import NIO
 
 public func configure(_ app: Application) throws {
     app.logger.logLevel = .debug
@@ -19,6 +21,15 @@ public func configure(_ app: Application) throws {
         )
     default:
         app.http.server.configuration.port = 8080
+    }
+    
+    
+    app.http.server.configuration.serverChannelOptionConfiguration = { serverBootstrap in
+        serverBootstrap.serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: SocketOptionValue(1))
+    }
+    
+    app.http.server.configuration.childChannelOptionConfiguration = { serverBootstrap in
+        serverBootstrap.childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: SocketOptionValue(1))
     }
     
     // routes
