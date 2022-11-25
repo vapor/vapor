@@ -16,6 +16,30 @@ public final class FileMiddleware: Middleware {
         self.publicDirectory = publicDirectory.addTrailingSlash()
         self.defaultFile = defaultFile
     }
+    
+    #if canImport(Foundation)
+    /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
+    ///
+    /// - parameters:
+    ///     - bundle: The Bundle which contains the files to serve.
+    ///     - publicDirectory: The public directory to serve files from.
+    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
+    ///     an absolute path from the public directory root. If `nil`, no default files are served.
+    ///
+    /// - important: Make sure the root directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
+    public init?(bundle: Bundle = .main, publicDirectory: String = "Public", defaultFile: String? = nil) {
+        let fullPublicDirectoryPath: String
+        if #available(macOS 13.0, *) {
+            guard let bundleResourceURL = bundle.resourceURL?.appending(path: publicDirectory) else { return nil }
+            fullPublicDirectoryPath = bundleResourceURL.path()
+        } else {
+            guard let bundleResourceURL = bundle.resourceURL?.appendingPathComponent(publicDirectory) else { return nil }
+            fullPublicDirectoryPath = bundleResourceURL.path
+        }
+        self.publicDirectory = fullPublicDirectoryPath.addTrailingSlash()
+        self.defaultFile = defaultFile
+    }
+    #endif
 
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         // make a copy of the percent-decoded path
