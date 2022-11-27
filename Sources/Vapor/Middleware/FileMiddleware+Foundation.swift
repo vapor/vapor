@@ -8,16 +8,11 @@ extension FileMiddleware {
     ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
     ///     an absolute path from the public directory root. If `nil`, no default files are served.
     ///
-    /// - important: Make sure the root directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
+    /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
+    /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, `nil` otherwise
     public convenience init?(bundle: Bundle = .main, publicDirectory: String = "Public", defaultFile: String? = nil) {
-        let fullPublicDirectoryPath: String
-        if #available(macOS 13.0, *) {
-            guard let bundleResourceURL = bundle.resourceURL?.appending(path: publicDirectory) else { return nil }
-            fullPublicDirectoryPath = bundleResourceURL.path()
-        } else {
-            guard let bundleResourceURL = bundle.resourceURL?.appendingPathComponent(publicDirectory) else { return nil }
-            fullPublicDirectoryPath = bundleResourceURL.path
-        }
+        guard let bundleResourceURL = bundle.resourceURL?.appendingPathComponent(publicDirectory) else { return nil }
+        let fullPublicDirectoryPath = bundleResourceURL.path
         
         self.init(publicDirectory: fullPublicDirectoryPath, defaultFile: defaultFile)
     }
