@@ -91,4 +91,25 @@ final class MiddlewareTests: XCTestCase {
             print(res.headers)
         }
     }
+    
+    #if canImport(Foundation)
+    func testFileMiddlewareFromBundle() throws {
+        guard let fileMiddleware = FileMiddleware(bundle: .module, publicDirectory: "/") else {
+            return XCTFail("FileMiddle instantiation from Bundle should not fail")
+        }
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        app.middleware.use(fileMiddleware)
+        
+        try app.testable().test(.GET, "/foo.txt") { result in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+        }
+    }
+    
+    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+        XCTAssertNil(FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder"))
+    }
+    #endif
 }
