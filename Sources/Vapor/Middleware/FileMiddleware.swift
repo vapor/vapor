@@ -64,6 +64,29 @@ public final class FileMiddleware: Middleware {
     }
 }
 
+#if canImport(Foundation)
+extension FileMiddleware {
+    /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
+    ///
+    /// - parameters:
+    ///     - bundle: The Bundle which contains the files to serve.
+    ///     - publicDirectory: The public directory to serve files from.
+    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies
+    ///     an absolute path from the public directory root. If `nil`, no default files are served.
+    ///
+    /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
+    /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, `nil` otherwise
+    public convenience init?(bundle: Bundle, publicDirectory: String = "Public", defaultFile: String? = nil) {
+        guard let bundleResourceURL = bundle.resourceURL?.appendingPathComponent(publicDirectory.removeLeadingSlashes()),
+              (try? bundleResourceURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            return nil
+        }
+        
+        self.init(publicDirectory: bundleResourceURL.path, defaultFile: defaultFile)
+    }
+}
+#endif
+
 fileprivate extension String {
     /// Determines if input path is absolute based on a leading slash
     func isAbsolute() -> Bool {
