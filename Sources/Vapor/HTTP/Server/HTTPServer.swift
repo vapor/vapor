@@ -449,15 +449,36 @@ private final class HTTPServerConnection {
 
 final class HTTPServerErrorHandler: ChannelInboundHandler {
     typealias InboundIn = Never
+    typealias OutboundOut = Response
     let logger: Logger
+    private var hasUnterminatedResponse: Bool = false
     
     init(logger: Logger) {
         self.logger = logger
     }
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        self.logger.debug("Unhandled HTTP server error: \(error)")
-        context.close(mode: .output, promise: nil)
+        guard error is HTTPParserError else {
+            context.fireErrorCaught(error)
+            return
+        }
+
+        // Any HTTPParserError is automatically fatal, and we don't actually need (or want) to
+        // provide that error to the client: we just want to tell it that it screwed up and then
+        // let the rest of the pipeline shut the door in its face. However, we can only send an
+        // HTTP error response if another response hasn't started yet.
+        //
+        // A side note here: we cannot block or do any delayed work. ByteToMessageDecoder is going
+        // to come along and close the channel right after we return from this function.
+        if !self.hasUnterminatedResponse {
+            self.logger.debug("Bad Request - Invalid HTTP: \(error)")
+            let headers = HTTPHeaders([("Connection", "close"), ("Content-Length", "0")])
+            let res = Response(status: .badRequest, headers: headers)
+            context.writeAndFlush(self.wrapOutboundOut(res), promise: nil)
+        }
+
+        // Now pass the error on in case someone else wants to see it.
+        context.fireErrorCaught(error)
     }
 }
 
