@@ -95,7 +95,7 @@ final class MiddlewareTests: XCTestCase {
     #if canImport(Foundation)
     func testFileMiddlewareFromBundle() throws {
         guard let fileMiddleware = FileMiddleware(bundle: .module, publicDirectory: "/") else {
-            return XCTFail("FileMiddle instantiation from Bundle should not fail")
+            return XCTFail("FileMiddleware instantiation from Bundle should not fail")
         }
         
         let app = Application(.testing)
