@@ -447,6 +447,15 @@ private final class HTTPServerConnection {
     }
 }
 
+/// A simple channel handler that catches errors emitted by parsing HTTP requests
+/// and sends 400 Bad Request responses.
+///
+/// This channel handler provides the basic behaviour that the majority of simple HTTP
+/// servers want. This handler does not suppress the parser errors: it allows them to
+/// continue to pass through the pipeline so that other handlers (e.g. logging ones) can
+/// deal with the error.
+/// 
+/// adapted from: https://github.com/apple/swift-nio/blob/00341c92770e0a7bebdc5fda783f08765eb3ff56/Sources/NIOHTTP1/HTTPServerProtocolErrorHandler.swift
 final class HTTPServerErrorHandler: ChannelInboundHandler {
     typealias InboundIn = Never
     typealias OutboundOut = Response
