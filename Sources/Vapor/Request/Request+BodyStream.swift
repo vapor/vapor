@@ -23,58 +23,65 @@ extension Request {
         }
 
         func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            // A lock is needed, because some pipeline users (and known unit tests) rely on this being handled synchronously.
-            // See https://github.com/vapor/vapor/issues/2906
-            lock.withLockVoid {
-                self.handler = handler
-                for (result, promise) in self.buffer {
-                    handler(result, promise)
-                }
-                self.buffer = []
+            self.handler = handler
+            for (result, promise) in self.buffer {
+                handler(result, promise)
             }
+            self.buffer = []
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-            // A lock is needed, because some pipeline users (and known unit tests) rely on this being handled synchronously.
             // See https://github.com/vapor/vapor/issues/2906
-            lock.withLockVoid {
+            if self.eventLoop.inEventLoop {
+                write0(chunk, promise: promise)
+            } else {
+                self.eventLoop.execute {
+                    self.write0(chunk, promise: promise)
+                }
+            }
+        }
+        
+        private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+            switch chunk {
+            case .end, .error:
+                self.isClosed = true
+            case .buffer: break
+            }
+            
+            if let handler = self.handler {
+                handler(chunk, promise)
+                // remove reference to handler
                 switch chunk {
                 case .end, .error:
-                    self.isClosed = true
-                case .buffer: break
+                    self.handler = nil
+                default: break
                 }
-                
-                if let handler = self.handler {
-                    handler(chunk, promise)
-                    // remove reference to handler
-                    switch chunk {
-                    case .end, .error:
-                        self.handler = nil
-                    default: break
-                    }
-                } else {
-                    self.buffer.append((chunk, promise))
-                }
+            } else {
+                self.buffer.append((chunk, promise))
             }
         }
 
         func consume(max: Int?, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-            let promise = eventLoop.makePromise(of: ByteBuffer.self)
-            var data = self.allocator.buffer(capacity: 0)
-            self.read { chunk, next in
-                switch chunk {
-                case .buffer(var buffer):
-                    if let max = max, data.readableBytes + buffer.readableBytes >= max {
-                        promise.fail(Abort(.payloadTooLarge))
-                    } else {
-                        data.writeBuffer(&buffer)
+            // See https://github.com/vapor/vapor/issues/2906
+            return eventLoop.flatSubmit {
+                let promise = eventLoop.makePromise(of: ByteBuffer.self)
+                var data = self.allocator.buffer(capacity: 0)
+                self.read { chunk, next in
+                    switch chunk {
+                    case .buffer(var buffer):
+                        if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                            promise.fail(Abort(.payloadTooLarge))
+                        } else {
+                            data.writeBuffer(&buffer)
+                        }
+                    case .error(let error): promise.fail(error)
+                    case .end: promise.succeed(data)
                     }
-                case .error(let error): promise.fail(error)
-                case .end: promise.succeed(data)
+                    next?.succeed(())
                 }
-                next?.succeed(())
+                
+                return promise.futureResult
             }
-            return promise.futureResult
         }
 
         deinit {
