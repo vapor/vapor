@@ -4,7 +4,7 @@ import NIOCore
 /// Capable of managing CRUD operations for `Session`s.
 ///
 /// This is an async version of `SessionDriver`
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
 public protocol AsyncSessionDriver: SessionDriver {
     func createSession(_ data: SessionData, for request: Request) async throws -> SessionID
     func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData?
@@ -12,7 +12,7 @@ public protocol AsyncSessionDriver: SessionDriver {
     func deleteSession(_ sessionID: SessionID, for request: Request) async throws
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncSessionDriver {
     public func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
         let promise = request.eventLoop.makePromise(of: SessionID.self)

@@ -2,7 +2,7 @@
 import Vapor
 import XCTest
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncClientTests: XCTestCase {
     func testClientConfigurationChange() async throws {
         let app = Application(.testing)
