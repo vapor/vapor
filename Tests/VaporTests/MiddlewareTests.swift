@@ -92,11 +92,10 @@ final class MiddlewareTests: XCTestCase {
         }
     }
     
-    #if canImport(Foundation)
     func testFileMiddlewareFromBundle() throws {
-        guard let fileMiddleware = FileMiddleware(bundle: .module, publicDirectory: "/") else {
-            return XCTFail("FileMiddleware instantiation from Bundle should not fail")
-        }
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")
         
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -109,7 +108,20 @@ final class MiddlewareTests: XCTestCase {
     }
     
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
-        XCTAssertNil(FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder"))
+        XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
+            guard let error = error as? FileMiddleware.SetupError else {
+                return XCTFail("Error should be of type FileMiddleware.SetupError")
+            }
+            XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
+        }
     }
-    #endif
+    
+    func testFileMiddlewareFromInvalidBundle() {
+        XCTAssertThrowsError(try FileMiddleware(bundle: .init(), publicDirectory: "/")) { error in
+            guard let error = error as? FileMiddleware.SetupError else {
+                return XCTFail("Error should be of type FileMiddleware.SetupError")
+            }
+            XCTAssertEqual(error, .bundleResourceURLIsNil)
+        }
+    }
 }
