@@ -10,7 +10,6 @@ extension Request {
         }
 
         private(set) var isClosed: Bool
-        private let lock = NIOLock()
         private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
         private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         private let allocator: ByteBufferAllocator
