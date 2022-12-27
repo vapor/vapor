@@ -109,19 +109,10 @@ final class MiddlewareTests: XCTestCase {
     
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
         XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
-            guard let error = error as? FileMiddleware.SetupError else {
+            guard let error = error as? FileMiddleware.BundleSetupError else {
                 return XCTFail("Error should be of type FileMiddleware.SetupError")
             }
             XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
-        }
-    }
-    
-    func testFileMiddlewareFromInvalidBundle() {
-        XCTAssertThrowsError(try FileMiddleware(bundle: .init(), publicDirectory: "/")) { error in
-            guard let error = error as? FileMiddleware.SetupError else {
-                return XCTFail("Error should be of type FileMiddleware.SetupError")
-            }
-            XCTAssertEqual(error, .bundleResourceURLIsNil)
         }
     }
 }
