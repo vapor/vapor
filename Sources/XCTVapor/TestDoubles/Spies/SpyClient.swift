@@ -1,3 +1,5 @@
+import Foundation
+
 public final class SpyClient: Client {
     private(set) var requestUrlComponentsUsed: URLComponents = .init()
     private(set) var requestHttpMethodUsed: HTTPMethod?
