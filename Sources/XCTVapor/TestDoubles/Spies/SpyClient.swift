@@ -6,7 +6,7 @@ public final class SpyClient: Client {
     private(set) var requestHeadersUsed: HTTPHeaders?
     private(set) var requestBodyUsed: Data?
     
-    private var stubResponse: ClientResponse!
+    private var stubResponse: ClientResponse = .init(status: .ok)
     
     public var eventLoop: EventLoop
     
