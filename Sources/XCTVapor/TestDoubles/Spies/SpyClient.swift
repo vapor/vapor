@@ -1,10 +1,7 @@
 import Foundation
 
 public final class SpyClient: Client {
-    private(set) var requestUrlComponentsUsed: URLComponents = .init()
-    private(set) var requestHttpMethodUsed: HTTPMethod?
-    private(set) var requestHeadersUsed: HTTPHeaders?
-    private(set) var requestBodyUsed: Data?
+    private(set) var requestsUsed: [ClientRequest] = []
     
     private var stubResponse: ClientResponse = .init(status: .ok)
     
@@ -25,17 +22,7 @@ public final class SpyClient: Client {
     
     // Conforming to the protocol: Client
     public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.requestUrlComponentsUsed.scheme = request.url.scheme
-        self.requestUrlComponentsUsed.host = request.url.host
-        self.requestUrlComponentsUsed.path = request.url.path
-        self.requestUrlComponentsUsed.query = request.url.query
-        
-        self.requestHttpMethodUsed = request.method
-        self.requestHeadersUsed = request.headers
-        
-        if var body = request.body {
-            self.requestBodyUsed = body.readData(length: body.readableBytes)
-        }
+        self.requestsUsed.append(request)
         
         return self.eventLoop.future(self.stubResponse)
     }
