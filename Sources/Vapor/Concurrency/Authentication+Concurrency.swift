@@ -6,7 +6,7 @@ import NIOCore
 /// See `AsyncRequestAuthenticator` and `AsyncSessionAuthenticator` for more information.
 ///
 /// This is an async version of `Authenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncAuthenticator: AsyncMiddleware { }
 
 /// Help for creating authentication middleware based on `Request`.
@@ -15,12 +15,12 @@ public protocol AsyncAuthenticator: AsyncMiddleware { }
 /// If valid authentication credentials are present, the authenticated user is added to `req.auth`.
 ///
 /// This is an async version of `RequestAuthenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncRequestAuthenticator: AsyncAuthenticator {
     func authenticate(request: Request) async throws
 }
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncRequestAuthenticator {
     public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         try await self.authenticate(request: request)
@@ -33,12 +33,12 @@ extension AsyncRequestAuthenticator {
 /// Helper for creating authentication middleware using the Basic authorization header.
 ///
 /// This is an async version of `BasicAuthenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncBasicAuthenticator: AsyncRequestAuthenticator {
     func authenticate(basic: BasicAuthorization, for request: Request) async throws
 }
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncBasicAuthenticator {
     public func authenticate(request: Request) async throws {
         guard let basicAuthorization = request.headers.basicAuthorization else {
@@ -53,12 +53,12 @@ extension AsyncBasicAuthenticator {
 /// Helper for creating authentication middleware using the Bearer authorization header.
 ///
 /// This is an async version of `BearerAuthenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncBearerAuthenticator: AsyncRequestAuthenticator {
     func authenticate(bearer: BearerAuthorization, for request: Request) async throws
 }
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncBearerAuthenticator {
     public func authenticate(request: Request) async throws {
         guard let bearerAuthorization = request.headers.bearerAuthorization else {
@@ -73,13 +73,13 @@ extension AsyncBearerAuthenticator {
 /// Helper for creating authentication middleware using request body contents.
 ///
 /// This is an async version of `CredentialsAuthenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncCredentialsAuthenticator: AsyncRequestAuthenticator {
     associatedtype Credentials: Content
     func authenticate(credentials: Credentials, for request: Request) async throws
 }
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncCredentialsAuthenticator {
     public func authenticate(request: Request) async throws {
         let credentials: Credentials
@@ -95,7 +95,7 @@ extension AsyncCredentialsAuthenticator {
 /// Helper for creating authentication middleware in conjunction with `SessionsMiddleware`.
 ///
 /// This is an async version of `SessionAuthenticator`
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncSessionAuthenticator: AsyncAuthenticator {
     associatedtype User: SessionAuthenticatable
 
@@ -103,7 +103,7 @@ public protocol AsyncSessionAuthenticator: AsyncAuthenticator {
     func authenticate(sessionID: User.SessionID, for request: Request) async throws
 }
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncSessionAuthenticator {
     public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         // if the user has already been authenticated

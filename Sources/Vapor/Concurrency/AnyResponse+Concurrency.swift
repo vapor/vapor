@@ -33,7 +33,7 @@ import NIOCore
 ///         }
 ///     }
 ///
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public struct AnyAsyncResponse: AsyncResponseEncodable {
     /// The wrapped `AsyncResponseEncodable` type.
     private let encodable: AsyncResponseEncodable

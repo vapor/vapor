@@ -2,7 +2,7 @@
 import XCTVapor
 import Vapor
 
-@available(macOS 10.15, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncWebSocketTests: XCTestCase {
     func testWebSocketClient() async throws {
         let server = Application(.testing)
