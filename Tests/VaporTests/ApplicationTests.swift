@@ -104,6 +104,16 @@ final class ApplicationTests: XCTestCase {
     func testBoilerplate() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        
+        let client = SpyClient(
+            eventLoop: app.eventLoopGroup.next()
+        )
+        
+        app.clients.use { _ in
+            return client
+        }
+        
+        try configure(app)
 
         app.get("hello") { req in
             "Hello, world!"
