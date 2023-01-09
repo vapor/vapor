@@ -467,8 +467,21 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     }
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        guard error is HTTPParserError else {
-            context.fireErrorCaught(error)
+        guard let error = error as? HTTPParserError else {
+            context.close(mode: .output, promise: nil)
+            return
+            // TODO: why can we not make this: ?
+            // otherwise the `PipelineTests.testBadStreamLength` fails
+            // context.fireErrorCaught(error)
+            // return
+        }
+
+        // TODO: why do we need a special case for this this??
+        // Otherwise the "general fix" would brake the `testRequestBodyStreamGetsFinalisedEvenIfClientDisappears` 
+        // and `testRequestBodyBackpressureWorks`
+        if error == HTTPParserError.invalidEOFState {
+            self.logger.debug("HTTP invalid EOF")
+            context.close(mode: .output, promise: nil)
             return
         }
 
