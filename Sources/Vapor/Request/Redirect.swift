@@ -17,7 +17,8 @@ extension Request {
 
 /// Specifies the type of redirect that the client should receive.
 public enum RedirectType {
-    /// A cacheable redirect.
+    /// A cacheable redirect. Not all user-agents preserve request method and body, so
+    /// this should only be used for GET or HEAD requests
     /// `301 permanent`
     case permanent
     /// Forces the redirect to come with a GET, regardless of req method.
@@ -26,6 +27,10 @@ public enum RedirectType {
     /// Maintains original request method, ie: PUT will call PUT on redirect.
     /// `307 Temporary`
     case temporary
+    /// Redirect where the request method and the body will not be altered. This should
+    /// be used for POST redirects.
+    /// `308 Permanent Redirect`
+    case permanentPost
 
     /// Associated `HTTPStatus` for this redirect type.
     public var status: HTTPStatus {
@@ -33,6 +38,7 @@ public enum RedirectType {
         case .permanent: return .movedPermanently
         case .normal: return .seeOther
         case .temporary: return .temporaryRedirect
+        case .permanentPost: return .permanentRedirect
         }
     }
 }
