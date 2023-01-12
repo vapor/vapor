@@ -325,6 +325,46 @@ final class FileTests: XCTestCase {
         }
     }
     
+    func testRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .redirect
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }.test(.GET, "Utilities/SubUtilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }
+    }
+    
+    func testNoRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .none
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "Utilities/SubUtilities") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
+    
     // https://github.com/vapor/vapor/security/advisories/GHSA-vj2m-9f5j-mpr5
     func testInvalidRangeHeaderDoesNotCrash() throws {
         let app = Application(.testing)
