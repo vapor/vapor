@@ -12,7 +12,20 @@ public struct Abort: AbortError, DebuggableError {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
+    @available(*, deprecated, renamed: "redirectTo")
     public static func redirect(to location: String, type: RedirectType = .normal) -> Abort {
+        var headers: HTTPHeaders = [:]
+        headers.replaceOrAdd(name: .location, value: location)
+        return .init(type.status, headers: headers)
+    }
+    
+    /// Creates a redirecting `Abort` error.
+    ///
+    ///     throw Abort.redirectTo("https://vapor.codes")"
+    ///
+    /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
+    /// Defaulting to non-permanent to prevent unexpected caching.
+    public static func redirectTo(_ location: String, type: Redirect = .normal) -> Abort {
         var headers: HTTPHeaders = [:]
         headers.replaceOrAdd(name: .location, value: location)
         return .init(type.status, headers: headers)
