@@ -112,8 +112,6 @@ final class ApplicationTests: XCTestCase {
         app.clients.use { _ in
             return client
         }
-        
-        try configure(app)
 
         app.get("hello") { req in
             "Hello, world!"
