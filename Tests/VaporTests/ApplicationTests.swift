@@ -112,11 +112,6 @@ final class ApplicationTests: XCTestCase {
         app.clients.use { _ in
             return client
         }
-
-        app.get("hello") { req in
-            "Hello, world!"
-        }
-        
         struct Greeting: Content {
             let message: String
         }
@@ -126,6 +121,10 @@ final class ApplicationTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        app.get("hello") { req in
+            "Hello, world!"
+        }
 
         let response = try app.client.get("http://localhost:8080/hello").wait()
         let message = try response.content.decode(Greeting.self).message
