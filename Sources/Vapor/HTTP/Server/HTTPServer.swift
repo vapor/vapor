@@ -456,8 +456,10 @@ private final class HTTPServerConnection {
 /// deal with the error.
 /// 
 /// adapted from: https://github.com/apple/swift-nio/blob/00341c92770e0a7bebdc5fda783f08765eb3ff56/Sources/NIOHTTP1/HTTPServerProtocolErrorHandler.swift
-final class HTTPServerErrorHandler: ChannelInboundHandler {
+final class HTTPServerErrorHandler: ChannelDuplexHandler {
     typealias InboundIn = Never
+    typealias InboundOut = Never
+    typealias OutboundIn = HTTPServerResponsePart
     typealias OutboundOut = Response
     let logger: Logger
     private var hasUnterminatedResponse: Bool = false
@@ -467,22 +469,13 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     }
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        guard let error = error as? HTTPParserError else {
+        guard error is HTTPParserError else {
             context.close(mode: .output, promise: nil)
             return
             // TODO: why can we not make this: ?
             // otherwise the `PipelineTests.testBadStreamLength` fails
             // context.fireErrorCaught(error)
             // return
-        }
-
-        // TODO: why do we need a special case for this this??
-        // Otherwise the "general fix" would brake the `testRequestBodyStreamGetsFinalisedEvenIfClientDisappears` 
-        // and `testRequestBodyBackpressureWorks`
-        if error == HTTPParserError.invalidEOFState {
-            self.logger.debug("HTTP invalid EOF")
-            context.close(mode: .output, promise: nil)
-            return
         }
 
         // Any HTTPParserError is automatically fatal, and we don't actually need (or want) to
@@ -501,6 +494,33 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
 
         // Now pass the error on in case someone else wants to see it.
         context.fireErrorCaught(error)
+    }
+
+    public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
+        let res = self.unwrapOutboundIn(data)
+        switch res {
+        case .head(let head) where head.isInformational:
+            precondition(!self.hasUnterminatedResponse)
+        case .head:
+            precondition(!self.hasUnterminatedResponse)
+            self.hasUnterminatedResponse = true
+        case .body:
+            precondition(self.hasUnterminatedResponse)
+        case .end:
+            precondition(self.hasUnterminatedResponse)
+            self.hasUnterminatedResponse = false
+        }
+        context.write(data, promise: promise)
+    }
+}
+
+extension HTTPResponseHead {
+    /// Determines if the head is purely informational. If a head is informational another head will follow this
+    /// head eventually.
+    /// 
+    /// This is also from SwiftNIO
+    var isInformational: Bool {
+        100 <= self.status.code && self.status.code < 200 && self.status.code != 101
     }
 }
 
