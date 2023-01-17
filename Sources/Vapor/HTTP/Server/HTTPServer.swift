@@ -456,11 +456,11 @@ private final class HTTPServerConnection {
 /// deal with the error.
 /// 
 /// adapted from: https://github.com/apple/swift-nio/blob/00341c92770e0a7bebdc5fda783f08765eb3ff56/Sources/NIOHTTP1/HTTPServerProtocolErrorHandler.swift
-final class HTTPServerErrorHandler: ChannelDuplexHandler {
+final class HTTPServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Never
     typealias InboundOut = Never
     typealias OutboundIn = HTTPServerResponsePart
-    typealias OutboundOut = Response
+    typealias OutboundOut = HTTPServerResponsePart
     let logger: Logger
     private var hasUnterminatedResponse: Bool = false
     
@@ -470,14 +470,10 @@ final class HTTPServerErrorHandler: ChannelDuplexHandler {
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         guard error is HTTPParserError else {
-            context.close(mode: .output, promise: nil)
+            context.fireErrorCaught(error)
             return
-            // TODO: why can we not make this: ?
-            // otherwise the `PipelineTests.testBadStreamLength` fails
-            // context.fireErrorCaught(error)
-            // return
         }
-
+        
         // Any HTTPParserError is automatically fatal, and we don't actually need (or want) to
         // provide that error to the client: we just want to tell it that it screwed up and then
         // let the rest of the pipeline shut the door in its face. However, we can only send an
@@ -488,8 +484,9 @@ final class HTTPServerErrorHandler: ChannelDuplexHandler {
         if !self.hasUnterminatedResponse {
             self.logger.debug("Bad Request - Invalid HTTP: \(error)")
             let headers = HTTPHeaders([("Connection", "close"), ("Content-Length", "0")])
-            let res = Response(status: .badRequest, headers: headers)
-            context.writeAndFlush(self.wrapOutboundOut(res), promise: nil)
+            let head = HTTPResponseHead(version: .http1_1, status: .badRequest, headers: headers)
+            context.write(self.wrapOutboundOut(.head(head)), promise: nil)
+            context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
         }
 
         // Now pass the error on in case someone else wants to see it.
@@ -541,6 +538,9 @@ extension ChannelPipeline {
             application: application
         )
         handlers.append(serverReqDecoder)
+
+        let errorHandler = HTTPServerErrorHandler(logger: configuration.logger)
+        handlers.append(errorHandler)
         
         // add NIO -> HTTP response encoder
         let serverResEncoder = HTTPServerResponseEncoder(
@@ -554,7 +554,8 @@ extension ChannelPipeline {
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
-            self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+            // close the connection in case of any errors
+            self.addHandler(NIOCloseOnErrorHandler())
         }
     }
     
@@ -602,6 +603,9 @@ extension ChannelPipeline {
             break
         }
 
+        let errorHandler = HTTPServerErrorHandler(logger: configuration.logger)
+        handlers.append(errorHandler)
+
         // add NIO -> HTTP response encoder
         let serverResEncoder = HTTPServerResponseEncoder(
             serverHeader: configuration.serverName,
@@ -626,9 +630,9 @@ extension ChannelPipeline {
         handlers.append(upgrader)
         handlers.append(handler)
         
-        // wait to add delegate as final step
         return self.addHandlers(handlers).flatMap {
-            self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+            // close the connection in case of any errors
+            self.addHandler(NIOCloseOnErrorHandler())
         }
     }
 }
