@@ -31,7 +31,7 @@ public final class SpyClient: Client {
     /// - Parameters:
     ///   - httpStatus: Provide HTTP status, you want the response to have
     ///   - responseData: Provide response data, you want the response to have
-    public func stubResponse(httpStatus: HTTPStatus, responseData: (any Content)? = nil) throws {
+    public func stubResponse<T: Content>(httpStatus: HTTPStatus, responseData: T? = nil) throws {
         self.stubResponse = .init(status: httpStatus)
         
         if let responseData = responseData {
