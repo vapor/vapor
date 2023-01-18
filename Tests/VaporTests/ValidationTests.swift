@@ -137,6 +137,49 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual("\(error)", "name contains '!' (allowed: A-Z, a-z, 0-9)")
         }
     }
+    
+    func testValidateInternationalEmail() throws {
+        struct Email: Validatable, Codable {
+            var email: String?
+            
+            init(email: String) {
+                self.email = email
+            }
+            
+            static func validations(_ v: inout Validations) {
+                // validate the international email is valid and is not nil
+                v.add("email", as: String?.self, is: !.nil && .internationalEmail)
+                v.add("email", as: String?.self, is: .internationalEmail && !.nil) // test other way
+            }
+        }
+        
+        let valid = """
+        {
+            "email": "ß@tanner.xyz"
+        }
+        """
+        XCTAssertNoThrow(try Email.validate(json: valid))
+        
+        let validURL: URI = "https://tanner.xyz/email?email=ß@tanner.xyz"
+        XCTAssertNoThrow(try Email.validate(query: validURL))
+        
+        let validURL2: URI = "https://tanner.xyz/email?email=me@ßanner.xyz"
+        XCTAssertNoThrow(try Email.validate(query: validURL2))
+        
+        let invalidUser = """
+        {
+            "email": "me@tanner@.xyz",
+        }
+        """
+        XCTAssertThrowsError(try Email.validate(json: invalidUser)) { error in
+            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        }
+        
+        let invalidUserURL: URI = "https://tanner.xyz/email?email=me@tanner@.xyz"
+        XCTAssertThrowsError(try Email.validate(query: invalidUserURL)) { error in
+            XCTAssertEqual("\(error)", "email is not a valid email address, email is not a valid email address")
+        }
+    }
 
     func testValidateNested() throws {
         struct User: Validatable, Codable {
@@ -190,8 +233,16 @@ class ValidationTests: XCTestCase {
             var name: String
             var age: Int
             var hobbies: [Hobby]
+            var allergies: [Allergy]?
 
             struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+            
+            struct Allergy: Codable {
                 var title: String
                 init(title: String) {
                     self.title = title
@@ -205,6 +256,9 @@ class ValidationTests: XCTestCase {
                     hobby.add("title", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
                 }
                 v.add("hobbies", as: [Hobby].self, is: !.empty)
+                v.add(each: "allergies", required: false) { i, allergy in
+                    allergy.add("title", as: String.self, is: .characterSet(.letters))
+                }
             }
         }
 
@@ -225,6 +279,54 @@ class ValidationTests: XCTestCase {
         XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
             XCTAssertEqual("\(error)", "hobbies at index 0 title contains '€' (allowed: whitespace, A-Z, a-z, 0-9) and at index 1 title is less than minimum of 5 character(s)")
         }
+        
+        let invalidNestedArray2 = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "allergies": [
+                {
+                    "title": "Peanuts"
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray2)) { error in
+            XCTAssertEqual("\(error)", "hobbies is required, hobbies is required")
+        }
+        
+        let invalidNestedArray3 = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "Football"
+                }
+            ],
+            "allergies": [
+                {
+                    "title": "Peanuts€"
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray3)) { error in
+            XCTAssertEqual("\(error)", "allergies at index 0 title contains '€' (allowed: A-Z, a-z)")
+        }
+        
+        let validNestedArray = """
+        {
+            "name": "Tanner",
+            "age": 24,
+            "hobbies": [
+                {
+                    "title": "Football"
+                }
+            ],
+        }
+        """
+        XCTAssertNoThrow(try User.validate(json: validNestedArray))
     }
 
     func testValidateNestedEachIndex() throws {
@@ -371,6 +473,13 @@ class ValidationTests: XCTestCase {
         assert("asdf", fails: .email, "is not a valid email address")
         assert("asdf", passes: !.email)
     }
+    
+    func testEmailWithSpecialCharacters() {
+        assert("ß@b.com", passes: .internationalEmail)
+        assert("ß@b.com", fails: !.internationalEmail, "is a valid email address")
+        assert("b@ß.com", passes: .internationalEmail)
+        assert("b@ß.com", fails: !.internationalEmail, "is a valid email address")
+    }
 
     func testRange() {
         assert(4, passes: .range(-5...5))
@@ -432,6 +541,11 @@ class ValidationTests: XCTestCase {
         assert("some random string", fails: !.valid, "is valid")
         assert(true, fails: !.valid, "is valid")
         assert("123", fails: !.valid, "is valid")
+    }
+    
+    func testPattern() {
+        assert("this are not numbers", fails: .pattern("^[0-9]*$"), "is not a valid pattern ^[0-9]*$")
+        assert("12345", passes: .pattern("^[0-9]*$"))
     }
 
     func testPreexistingValidatorResultIsIncluded() throws {
@@ -657,6 +771,65 @@ class ValidationTests: XCTestCase {
             XCTAssertEqual(name.key.stringValue, "name")
             XCTAssertEqual(name.result.isFailure, true)
             XCTAssertEqual(name.result.failureDescription, "is not a(n) String")
+        }
+    }
+    
+    func testCustomFailureDescriptions() throws {
+        struct User: Validatable {
+            var name: String
+            var age: Int
+            var hobbies: [Hobby]
+
+            struct Hobby: Codable {
+                var title: String
+                init(title: String) {
+                    self.title = title
+                }
+            }
+
+            static func validations(_ v: inout Validations) {
+                struct CustomValidatorResult: ValidatorResult {
+                    var isFailure: Bool {
+                        true
+                    }
+                    var successDescription: String? {
+                        nil
+                    }
+                    var failureDescription: String? {
+                        "custom description"
+                    }
+                }
+
+                v.add("key", result: CustomValidatorResult(), customFailureDescription: "Something went wrong with the provided data")
+                v.add("name", as: String.self, is: .count(5...) && !.alphanumeric, customFailureDescription: "The provided name is invalid")
+                v.add(each: "hobbies", customFailureDescription: "A provided hobby value was not alphanumeric") { i, hobby in
+                    hobby.add("title", as: String.self, is: .count(5...) && .characterSet(.alphanumerics + .whitespaces))
+                }
+                v.add("hobbies", customFailureDescription: "A provided hobby value was empty") { hobby in
+                    hobby.add("title", as: String.self, is: !.empty)
+                }
+            }
+        }
+
+        let invalidNestedArray = """
+        {
+            "name": "Andre",
+            "age": 26,
+            "hobbies": [
+                {
+                    "title": "Running€"
+                },
+                {
+                    "title": "Co"
+                },
+                {
+                    "title": ""
+                }
+            ]
+        }
+        """
+        XCTAssertThrowsError(try User.validate(json: invalidNestedArray)) { error in
+            XCTAssertEqual("\(error)", "Something went wrong with the provided data, The provided name is invalid, A provided hobby value was not alphanumeric, A provided hobby value was empty")
         }
     }
 

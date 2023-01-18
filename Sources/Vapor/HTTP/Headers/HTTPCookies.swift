@@ -153,7 +153,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         ///     - maxAge: The maximum cookie age in seconds. Defaults to `nil`.
         ///     - domain: The affected domain at which the cookie is active. Defaults to `nil`.
         ///     - path: The path at which the cookie is active. Defaults to `"/"`.
-        ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overriden with `true`. Defaults to `false`.
+        ///     - isSecure: Limits the cookie to secure connections. If `sameSite` is `none`, this flag will be overridden with `true`. Defaults to `false`.
         ///     - isHTTPOnly: Does not expose the cookie over non-HTTP channels. Defaults to `false`.
         ///     - sameSite: See `HTTPSameSitePolicy`. Defaults to `lax`.
         public init(

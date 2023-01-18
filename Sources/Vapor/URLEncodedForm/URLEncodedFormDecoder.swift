@@ -83,7 +83,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// - parameters:
     ///     - decodable: Type to decode to
     ///     - url: URL to read the query string from
-    ///     - configuration: Overwrides the default coding configuration
+    ///     - configuration: Overrides the default coding configuration
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
         return try self.decode(D.self, from: url.query ?? "")
     }
@@ -98,7 +98,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// - parameters:
     ///     - decodable: Generic `Decodable` type (`D`) to decode.
     ///     - from: `Data` to decode a `D` from.
-    ///     - configuration: Overwrides the default coding configuration
+    ///     - configuration: Overrides the default coding configuration
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D>(_ decodable: D.Type, from string: String) throws -> D where D : Decodable {
@@ -332,6 +332,11 @@ private struct _Decoder: Decoder {
                 return try T(from: decoder)
             } else {
                 let value = self.values[self.currentIndex]
+                // Check if we received a date. We need the decode with the appropriate format.
+                guard !(T.self is Date.Type) else {
+                    return try configuration.decodeDate(from: value, codingPath: codingPath, forKey: nil) as! T
+                }
+                
                 if let convertible = T.self as? URLQueryFragmentConvertible.Type {
                     if let result = convertible.init(urlQueryFragmentValue: value) {
                         return result as! T
@@ -428,6 +433,10 @@ private extension URLEncodedFormDecoder.Configuration {
             let decoder = _Decoder(data: data, codingPath: newCodingPath, configuration: self)
             return try callback(decoder)
         }
+    }
+    
+    func decodeDate(from data: URLQueryFragment, codingPath: [CodingKey], forKey key: CodingKey?) throws -> Date {
+        try self.decodeDate(from: .init(values: [data]), codingPath: codingPath, forKey: key)
     }
 }
 

@@ -1,7 +1,7 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Client {
     public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
         return try await self.send(.GET, headers: headers, to: url, beforeSend: beforeSend).get()
@@ -22,6 +22,18 @@ extension Client {
     public func delete(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
         return try await self.send(.DELETE, headers: headers, to: url, beforeSend: beforeSend).get()
     }
+        
+    public func post<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.post(url, headers: headers, beforeSend: { try $0.content.encode(content) })
+    }
+    
+    public func patch<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.patch(url, headers: headers, beforeSend: { try $0.content.encode(content) })
+    }
+    
+    public func put<T>(_ url: URI, headers: HTTPHeaders = [:], content: T) async throws -> ClientResponse where T: Content {
+        return try await self.put(url, headers: headers, beforeSend: { try $0.content.encode(content) })
+    }
 
     public func send(
         _ method: HTTPMethod,
@@ -29,8 +41,12 @@ extension Client {
         to url: URI,
         beforeSend: (inout ClientRequest) throws -> () = { _ in }
     ) async throws -> ClientResponse {
-        var request = ClientRequest(method: method, url: url, headers: headers, body: nil)
+        var request = ClientRequest(method: method, url: url, headers: headers, body: nil, byteBufferAllocator: self.byteBufferAllocator)
         try beforeSend(&request)
+        return try await self.send(request).get()
+    }
+    
+    public func send(_ request: ClientRequest) async throws -> ClientResponse {
         return try await self.send(request).get()
     }
 }

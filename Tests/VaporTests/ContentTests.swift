@@ -103,7 +103,7 @@ final class ContentTests: XCTestCase {
             XCTAssertContains(res.body.string, "hi")
         }
     }
-
+    
     func testMultipartDecode() throws {
         let data = """
         --123\r
@@ -125,6 +125,52 @@ final class ContentTests: XCTestCase {
             name: "Vapor",
             age: 4,
             image: File(data: "<contents of image>", filename: "droplet.png")
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqualJSON(res.body.string, expected)
+        }
+    }
+    
+    func testMultipartDecodeUnicode() throws {
+        let data = """
+        --123\r
+        Content-Disposition: form-data; name="name"\r
+        \r
+        Vapor\r
+        --123\r
+        Content-Disposition: form-data; name="age"\r
+        \r
+        4\r
+        --123\r
+        Content-Disposition: form-data; name="image"; filename="她在吃水果.png"; filename*="UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png"\r
+        \r
+        <contents of image>\r
+        --123--\r
+
+        """
+        let expected = User(
+            name: "Vapor",
+            age: 4,
+            image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
         )
 
         struct User: Content, Equatable {
@@ -174,6 +220,34 @@ final class ContentTests: XCTestCase {
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
             XCTAssertContains(res.body.string, "filename=droplet.png")
+            XCTAssertContains(res.body.string, "name=\"image\"")
+        }
+    }
+    
+    func testMultiPartEncodeUnicode() throws {
+        struct User: Content {
+            static var defaultContentType: HTTPMediaType = .formData
+            var name: String
+            var age: Int
+            var image: File
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("multipart") { req -> User in
+            return User(
+                name: "Vapor",
+                age: 4,
+                image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            )
+        }
+        try app.testable().test(.GET, "/multipart") { res in
+            XCTAssertEqual(res.status, .ok)
+            let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
+            XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
+            XCTAssertContains(res.body.string, "--\(boundary)")
+            XCTAssertContains(res.body.string, "filename=UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -413,6 +487,19 @@ final class ContentTests: XCTestCase {
         try app.testable().test(.POST, "/plaintext", headers: headers, body: byteBuffer) { res in
             // This should return a 400 Bad Request and not crash
             XCTAssertEqual(res.status, .badRequest)
+        }
+    }
+    
+    func testContentIsBool() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.routes.get("success") { req in
+            return true
+        }
+        
+        try app.testable().test(.GET, "/success") { res in
+            XCTAssertEqual(try res.content.decode(Bool.self), true)
         }
     }
 }

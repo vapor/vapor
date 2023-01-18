@@ -1,7 +1,7 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncAuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
@@ -34,6 +34,10 @@ final class AsyncAuthenticationTests: XCTestCase {
             XCTAssertEqual(res.status, .unauthorized)
         }
         .test(.GET, "/test", headers: ["Authorization": "Bearer test"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Vapor")
+        }
+        .test(.GET, "/test", headers: ["Authorization": "bearer test"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }
@@ -72,6 +76,9 @@ final class AsyncAuthenticationTests: XCTestCase {
         try app.testable().test(.GET, "/test") { res in
             XCTAssertEqual(res.status, .unauthorized)
         }.test(.GET, "/test", headers: ["Authorization": "Basic \(basic)"]) { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "Vapor")
+        }.test(.GET, "/test", headers: ["Authorization": "basic \(basic)"]) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.body.string, "Vapor")
         }

@@ -1,12 +1,16 @@
+import NIO
+
 public struct ClientResponse {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
+    private let byteBufferAllocator: ByteBufferAllocator
 
-    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil) {
+    public init(status: HTTPStatus = .ok, headers: HTTPHeaders = [:], body: ByteBuffer? = nil, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
         self.status = status
         self.headers = headers
         self.body = body
+        self.byteBufferAllocator = byteBufferAllocator
     }
 }
 
@@ -14,13 +18,14 @@ extension ClientResponse {
     private struct _ContentContainer: ContentContainer {
         var body: ByteBuffer?
         var headers: HTTPHeaders
+        let allocator: ByteBufferAllocator
 
         var contentType: HTTPMediaType? {
             return self.headers.contentType
         }
 
         mutating func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.allocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.headers)
             self.body = body
         }
@@ -33,7 +38,7 @@ extension ClientResponse {
         }
 
         mutating func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.allocator.buffer(capacity: 0)
             var content = content
             try content.beforeEncode()
             try encoder.encode(content, to: &body, headers: &self.headers)
@@ -52,7 +57,7 @@ extension ClientResponse {
 
     public var content: ContentContainer {
         get {
-            return _ContentContainer(body: self.body, headers: self.headers)
+            return _ContentContainer(body: self.body, headers: self.headers, allocator: self.byteBufferAllocator)
         }
         set {
             let container = (newValue as! _ContentContainer)
@@ -78,7 +83,7 @@ extension ClientResponse: ResponseEncodable {
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
         let body: Response.Body
         if let buffer = self.body {
-            body = .init(buffer: buffer)
+            body = .init(buffer: buffer, byteBufferAllocator: request.byteBufferAllocator)
         } else {
             body = .empty
         }
@@ -103,12 +108,11 @@ extension ClientResponse: Codable {
         self.status = try container.decode(HTTPStatus.self, forKey: .status)
         self.headers = try container.decode(HTTPHeaders.self, forKey: .headers)
         let bodyString = try container.decode(String?.self, forKey: .body)
-        guard let s = bodyString, let bodyData = Data(base64Encoded: s) else {
+        guard let s = bodyString, let bodyData = [UInt8].init(decodingBase64: s) else {
             throw Abort(.internalServerError, reason: "Could not decode client response body from base64 string")
         }
-        var body = ByteBufferAllocator().buffer(capacity: 0)
-        body.writeBytes(bodyData)
-        self.body = body
+        self.byteBufferAllocator = ByteBufferAllocator()
+        self.body = self.byteBufferAllocator.buffer(bytes: bodyData)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -116,7 +120,7 @@ extension ClientResponse: Codable {
         try container.encode(self.status, forKey: .status)
         try container.encode(self.headers, forKey: .headers)
         if let body = self.body {
-            let string = Data(body.readableBytesView).base64EncodedString()
+            let string = body.readableBytesView.base64String()
             try container.encode(string, forKey: .body)
         } else {
             try container.encodeNil(forKey: .body)
@@ -124,4 +128,8 @@ extension ClientResponse: Codable {
     }
 }
 
-extension ClientResponse: Equatable { }
+extension ClientResponse: Equatable {
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        return lhs.status == rhs.status && lhs.headers == rhs.headers && lhs.body == rhs.body
+    }
+}

@@ -103,6 +103,30 @@ public protocol XCTApplicationTester {
 }
 
 extension XCTApplicationTester {
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @discardableResult
+    public func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        afterResponse: (XCTHTTPResponse) async throws -> ()
+    ) async throws -> XCTApplicationTester {
+        try await self.test(
+            method,
+            path,
+            headers: headers,
+            body: body,
+            file: file,
+            line: line,
+            beforeRequest: { _ in },
+            afterResponse: afterResponse
+        )
+    }
+    #endif
+
     @discardableResult
     public func test(
         _ method: HTTPMethod,
@@ -125,6 +149,35 @@ extension XCTApplicationTester {
         )
     }
 
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    @discardableResult
+    public func test(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in },
+        afterResponse: (XCTHTTPResponse) async throws -> () = { _ in }
+    ) async throws -> XCTApplicationTester {
+        var request = XCTHTTPRequest(
+            method: method,
+            url: .init(path: path),
+            headers: headers,
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+        )
+        try await beforeRequest(&request)
+        do {
+            let response = try self.performTest(request: request)
+            try await afterResponse(response)
+        } catch {
+            XCTFail("\(error)", file: (file), line: line)
+            throw error
+        }
+        return self
+    }
+    #endif
 
     @discardableResult
     public func test(
@@ -152,5 +205,55 @@ extension XCTApplicationTester {
             throw error
         }
         return self
+    }
+    
+    #if compiler(>=5.5) && canImport(_Concurrency)
+    public func sendRequest(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in }
+    ) async throws -> XCTHTTPResponse {
+        var request = XCTHTTPRequest(
+            method: method,
+            url: .init(path: path),
+            headers: headers,
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+        )
+        try await beforeRequest(&request)
+        do {
+            return try self.performTest(request: request)
+        } catch {
+            XCTFail("\(error)", file: (file), line: line)
+            throw error
+        }
+    }
+    #endif
+
+    public func sendRequest(
+        _ method: HTTPMethod,
+        _ path: String,
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        file: StaticString = #file,
+        line: UInt = #line,
+        beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in }
+    ) throws -> XCTHTTPResponse {
+        var request = XCTHTTPRequest(
+            method: method,
+            url: .init(path: path),
+            headers: headers,
+            body: body ?? ByteBufferAllocator().buffer(capacity: 0)
+        )
+        try beforeRequest(&request)
+        do {
+            return try self.performTest(request: request)
+        } catch {
+            XCTFail("\(error)", file: (file), line: line)
+            throw error
+        }
     }
 }

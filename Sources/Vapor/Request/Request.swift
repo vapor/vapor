@@ -1,4 +1,5 @@
 import NIO
+import NIOHTTP1
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
@@ -31,6 +32,26 @@ public final class Request: CustomStringConvertible {
     ///     req.route?.description // "GET /hello/:name"
     ///
     public var route: Route?
+
+    /// We try to determine true peer address if load balacer or reversed proxy provided info in headers
+    ///
+    /// Priority of getting value from headers is as following:
+    ///
+    /// 1. try the "Forwarded" header (e.g. for=192.0.2.60; proto=http; by=203.0.113.43)
+    /// 2. try the "X-Forwarded-For" header (e.g. client_IP, proxy1_IP, proxy2_IP)
+    /// 3. fallback to the socket's remote address provided by SwiftNIO ( e.g. 192.0.2.60:62934)
+    /// in 1. and 2. will use port 80 as default port, and  3. will have port number provided by NIO if any
+    public var peerAddress: SocketAddress? {
+        if let clientAddress = headers.forwarded.first?.for {
+            return try? SocketAddress.init(ipAddress: clientAddress, port: 80)
+        }
+
+        if let xForwardedFor = headers.first(name: .xForwardedFor) {
+            return try? SocketAddress.init(ipAddress: xForwardedFor, port: 80)
+        }
+
+        return self.remoteAddress
+    }
 
     // MARK: Content
 
@@ -67,7 +88,7 @@ public final class Request: CustomStringConvertible {
         }
 
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
             self.request.bodyStorage = .collected(body)
         }
@@ -83,7 +104,7 @@ public final class Request: CustomStringConvertible {
         func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
             self.request.bodyStorage = .collected(body)
         }
@@ -99,6 +120,8 @@ public final class Request: CustomStringConvertible {
         }
     }
 
+    /// This container is used to read your `Decodable` type using a `ContentDecoder` implementation.
+    /// If no `ContentDecoder` is provided, a `Request`'s `Content-Type` header is used to select a registered decoder.
     public var content: ContentContainer {
         get {
             return _ContentContainer(request: self)
@@ -108,6 +131,8 @@ public final class Request: CustomStringConvertible {
         }
     }
     
+    /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
+    /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger
     
     public var body: Body {
@@ -142,13 +167,24 @@ public final class Request: CustomStringConvertible {
         return desc.joined(separator: "\n")
     }
 
+    /// The address from which this HTTP request was received by SwiftNIO.
+    /// This address may not represent the original address of the peer, especially if Vapor receives its requests through a reverse-proxy such as nginx.
     public let remoteAddress: SocketAddress?
     
+    /// The `EventLoop` which is handling this `Request`. The route handler and any relevant middleware are invoked in this event loop.
+    ///
+    /// - Warning: A futures-based route handler **MUST** return an `EventLoopFuture` bound to this event loop.
+    ///  If this is difficult or awkward to guarantee, use `EventLoopFuture.hop(to:)` to jump to this event loop.
     public let eventLoop: EventLoop
     
+    /// A container containing the route parameters that were captured when receiving this request.
+    /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters
 
+    /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage
+
+    public var byteBufferAllocator: ByteBufferAllocator
     
     public convenience init(
         application: Application,
@@ -159,6 +195,7 @@ public final class Request: CustomStringConvertible {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
         self.init(
@@ -170,6 +207,7 @@ public final class Request: CustomStringConvertible {
             collectedBody: collectedBody,
             remoteAddress: remoteAddress,
             logger: logger,
+            byteBufferAllocator: byteBufferAllocator,
             on: eventLoop
         )
         if let body = collectedBody {
@@ -186,6 +224,7 @@ public final class Request: CustomStringConvertible {
         collectedBody: ByteBuffer? = nil,
         remoteAddress: SocketAddress? = nil,
         logger: Logger = .init(label: "codes.vapor.request"),
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
         self.application = application
@@ -205,5 +244,6 @@ public final class Request: CustomStringConvertible {
         self.isKeepAlive = true
         self.logger = logger
         self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self.byteBufferAllocator = byteBufferAllocator
     }
 }

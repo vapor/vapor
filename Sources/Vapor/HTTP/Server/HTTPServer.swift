@@ -143,12 +143,18 @@ public final class HTTPServer: Server {
         
         /// If set, this name will be serialized as the `Server` header in outgoing responses.
         public var serverName: String?
-        
+
+        /// When `true`, report http metrics through `swift-metrics`
+        public var reportMetrics: Bool
+
         /// Any uncaught server or responder errors will go here.
         public var logger: Logger
 
         /// A time limit to complete a graceful shutdown
         public var shutdownTimeout: TimeAmount
+
+        /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
+        public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
 
         public init(
             hostname: String = Self.defaultHostname,
@@ -162,6 +168,7 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
+            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10)
         ) {
@@ -176,6 +183,7 @@ public final class HTTPServer: Server {
                 supportVersions: supportVersions,
                 tlsConfiguration: tlsConfiguration,
                 serverName: serverName,
+                reportMetrics: reportMetrics,
                 logger: logger,
                 shutdownTimeout: shutdownTimeout
             )
@@ -192,6 +200,7 @@ public final class HTTPServer: Server {
             supportVersions: Set<HTTPVersionMajor>? = nil,
             tlsConfiguration: TLSConfiguration? = nil,
             serverName: String? = nil,
+            reportMetrics: Bool = true,
             logger: Logger? = nil,
             shutdownTimeout: TimeAmount = .seconds(10)
         ) {
@@ -209,8 +218,10 @@ public final class HTTPServer: Server {
             }
             self.tlsConfiguration = tlsConfiguration
             self.serverName = serverName
+            self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
+            self.customCertificateVerifyCallback = nil
         }
     }
     
@@ -221,8 +232,23 @@ public final class HTTPServer: Server {
         return connection.channel.closeFuture
     }
 
+    public var configuration: Configuration {
+        get { _configuration }
+        set {
+            guard !didStart else {
+                _configuration.logger.warning("Cannot modify server configuration after server has been started.")
+                return
+            }
+            _configuration = newValue
+        }
+    }
+
     private let responder: Responder
-    private let configuration: Configuration
+    private var _configuration: Configuration {
+        willSet {
+            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
+        }
+    }
     private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
@@ -231,7 +257,7 @@ public final class HTTPServer: Server {
 
     private var application: Application
     
-    init(
+    public init(
         application: Application,
         responder: Responder,
         configuration: Configuration,
@@ -239,7 +265,7 @@ public final class HTTPServer: Server {
     ) {
         self.application = application
         self.responder = responder
-        self.configuration = configuration
+        self._configuration = configuration
         self.eventLoopGroup = eventLoopGroup
         self.didStart = false
         self.didShutdown = false
@@ -277,6 +303,7 @@ public final class HTTPServer: Server {
             on: self.eventLoopGroup
         ).wait()
 
+        self.configuration = configuration
         self.didStart = true
     }
     
@@ -339,7 +366,7 @@ private final class HTTPServerConnection {
                     let tlsHandler: NIOSSLServerHandler
                     do {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = NIOSSLServerHandler(context: sslContext)
+                        tlsHandler = NIOSSLServerHandler(context: sslContext, customVerifyCallback: configuration.customCertificateVerifyCallback)
                     } catch {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
@@ -539,6 +566,17 @@ extension ChannelPipeline {
         // wait to add delegate as final step
         return self.addHandlers(handlers).flatMap {
             self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+        }
+    }
+}
+
+// MARK: Helper function for constructing NIOSSLServerHandler.
+extension NIOSSLServerHandler {
+    convenience init(context: NIOSSLContext, customVerifyCallback: NIOSSLCustomVerificationCallback?) {
+        if let callback = customVerifyCallback {
+            self.init(context: context, customVerificationCallback: callback)
+        } else {
+            self.init(context: context)
         }
     }
 }

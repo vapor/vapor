@@ -54,6 +54,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
     var values: [URLQueryFragment]
     var children: [String: URLEncodedFormData]
+    let maxRecursionDepth = 100
     
     var hasOnlyValues: Bool {
         return children.count == 0
@@ -90,7 +91,10 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         self.children = Dictionary(uniqueKeysWithValues: dictionaryLiteral)
     }
         
-    mutating func set(value: URLQueryFragment, forPath path: [String]) {
+    mutating func set(value: URLQueryFragment, forPath path: [String], recursionDepth: Int) throws {
+        guard recursionDepth <= maxRecursionDepth else {
+            throw URLEncodedFormError.reachedNestingLimit
+        }
         guard let firstElement = path.first else {
             self.values.append(value)
             return
@@ -101,7 +105,7 @@ internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStri
         } else {
             child = []
         }
-        child.set(value: value, forPath: Array(path[1...]))
+        try child.set(value: value, forPath: Array(path[1...]), recursionDepth: recursionDepth + 1)
         self.children[firstElement] = child
     }
 }

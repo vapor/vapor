@@ -1,9 +1,8 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
-#if !os(Linux)
 import Vapor
 import XCTest
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncClientTests: XCTestCase {
     func testClientConfigurationChange() async throws {
         let app = Application(.testing)
@@ -214,5 +213,4 @@ final class TestLogHandler: LogHandler {
         return self.metadata
     }
 }
-#endif
 #endif

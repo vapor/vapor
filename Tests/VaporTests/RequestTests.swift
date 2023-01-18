@@ -15,7 +15,78 @@ final class RequestTests: XCTestCase {
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
     }
-    
+
+    func testRequestPeerAddressForwarded() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") { req -> String in
+            req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
+            guard let peerAddress = req.peerAddress else {
+                return "n/a"
+            }
+            return peerAddress.description
+        }
+
+        try app.testable(method: .running).test(.GET, "remote") { res in
+            XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
+        }
+    }
+
+    func testRequestPeerAddressXForwardedFor() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") { req -> String in
+            req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
+            guard let peerAddress = req.peerAddress else {
+                return "n/a"
+            }
+            return peerAddress.description
+        }
+
+        try app.testable(method: .running).test(.GET, "remote") { res in
+            XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
+        }
+    }
+
+    func testRequestPeerAddressRemoteAddres() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") { req -> String in
+            guard let peerAddress = req.peerAddress else {
+                return "n/a"
+            }
+            return peerAddress.description
+        }
+
+        let ipV4Hostname = "127.0.0.1"
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+            XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
+        }
+    }
+
+    func testRequestPeerAddressMultipleHeadersOrder() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") { req -> String in
+            req.headers.add(name: .xForwardedFor, value: "5.6.7.8")
+            req.headers.add(name: .forwarded, value: "for=192.0.2.60; proto=http; by=203.0.113.43")
+            guard let peerAddress = req.peerAddress else {
+                return "n/a"
+            }
+            return peerAddress.description
+        }
+
+        let ipV4Hostname = "127.0.0.1"
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+            XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
+        }
+    }
+
+
     func testRequestRemoteAddress() throws {
         let app = Application(.testing)
         defer { app.shutdown() }

@@ -2,11 +2,11 @@
 ///
 /// Types that conform to this protocol can be returned in route closures.
 public protocol ResponseEncodable {
-    /// Encodes an instance of `Self` to a `HTTPResponse`.
+    /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:
-    ///     - for: The `HTTPRequest` associated with this `HTTPResponse`.
-    /// - returns: An `HTTPResponse`.
+    ///     - for: The `Request` associated with this `Response`.
+    /// - returns: A `Response`.
     func encodeResponse(for request: Request) -> EventLoopFuture<Response>
 }
 
@@ -14,10 +14,10 @@ public protocol ResponseEncodable {
 ///
 /// Types that conform to this protocol can decode requests to their type.
 public protocol RequestDecodable {
-    /// Decodes an instance of `HTTPRequest` to a `Self`.
+    /// Decodes an instance of `Request` to a `Self`.
     ///
     /// - parameters:
-    ///     - request: The `HTTPRequest` to be decoded.
+    ///     - request: The `Request` to be decoded.
     /// - returns: An asynchronous `Self`.
     static func decodeRequest(_ request: Request) -> EventLoopFuture<Self>
 }
@@ -67,7 +67,7 @@ extension Response: ResponseEncodable {
 extension StaticString: ResponseEncodable {
     // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
+        let res = Response(headers: staticStringHeaders, body: .init(staticString: self, byteBufferAllocator: request.byteBufferAllocator))
         return request.eventLoop.makeSucceededFuture(res)
     }
 }
@@ -75,7 +75,7 @@ extension StaticString: ResponseEncodable {
 extension String: ResponseEncodable {
     // See `ResponseEncodable`.
     public func encodeResponse(for request: Request) -> EventLoopFuture<Response> {
-        let res = Response(headers: staticStringHeaders, body: .init(string: self))
+        let res = Response(headers: staticStringHeaders, body: .init(string: self, byteBufferAllocator: request.byteBufferAllocator))
         return request.eventLoop.makeSucceededFuture(res)
     }
 }

@@ -9,37 +9,41 @@ public struct Validations {
         _ key: ValidationKey,
         as type: T.Type = T.self,
         is validator: Validator<T> = .valid,
-        required: Bool = true
+        required: Bool = true,
+        customFailureDescription: String? = nil
     ) {
-        let validation = Validation(key: key, required: required, validator: validator)
+        let validation = Validation(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription)
         self.storage.append(validation)
     }
     
     public mutating func add(
         _ key: ValidationKey,
-        result: ValidatorResult
+        result: ValidatorResult,
+        customFailureDescription: String? = nil
     ) {
-        let validation = Validation(key: key, result: result)
+        let validation = Validation(key: key, result: result, customFailureDescription: customFailureDescription)
         self.storage.append(validation)
     }
 
     public mutating func add(
         _ key: ValidationKey,
         required: Bool = true,
+        customFailureDescription: String? = nil,
         _ nested: (inout Validations) -> ()
     ) {
         var validations = Validations()
         nested(&validations)
-        let validation = Validation(nested: key, required: required, keyed: validations)
+        let validation = Validation(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription)
         self.storage.append(validation)
     }
     
     public mutating func add(
         each key: ValidationKey,
         required: Bool = true,
+        customFailureDescription: String? = nil,
         _ handler: @escaping (Int, inout Validations) -> ()
     ) {
-        let validation = Validation(nested: key, required: required, unkeyed: handler)
+        let validation = Validation(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription)
         self.storage.append(validation)
     }
     

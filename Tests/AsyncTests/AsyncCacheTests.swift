@@ -1,8 +1,7 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
-#if !os(Linux)
 import XCTVapor
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncCacheTests: XCTestCase {
     func testInMemoryCache() async throws {
         let app = Application(.testing)
@@ -22,6 +21,14 @@ final class AsyncCacheTests: XCTestCase {
         sleep(1)
         let value4 = try await app.cache.get("foo2", as: String.self)
         XCTAssertNil(value4)
+        
+        // Test reset value
+        try await app.cache.set("foo3", to: "bar3")
+        let value5: String? = try await app.cache.get("foo3")
+        XCTAssertEqual(value5, "bar3")
+        try await app.cache.delete("foo3")
+        let value6 = try await app.cache.get("foo3", as: String.self)
+        XCTAssertNil(value6)
     }
 
     func testCustomCache() async throws {
@@ -68,5 +75,4 @@ struct FooCache: Cache {
         return self
     }
 }
-#endif
 #endif

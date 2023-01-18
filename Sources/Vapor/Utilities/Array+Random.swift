@@ -21,13 +21,13 @@ extension Array where Element: FixedWidthInteger {
         where T: RandomNumberGenerator
     {
         var array: [Element] = .init(repeating: 0, count: count)
-        (0..<count).forEach { array[$0] = Element.random() }
+        (0..<count).forEach { array[$0] = Element.random(using: &generator) }
         return array
     }
 }
 
 extension Array where Element == UInt8 {
     public var base64: String {
-        Data(self).base64EncodedString()
+        self.base64String()
     }
 }

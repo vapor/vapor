@@ -17,7 +17,7 @@ extension Application {
     /// application.threadPool = NIOThreadPool(numberOfThreads: 100)
     /// ```
     ///
-    /// If overriden, Vapor will take ownership of the thread pool and automatically start it and shut it down when needed.
+    /// If overridden, Vapor will take ownership of the thread pool and automatically start it and shut it down when needed.
     ///
     /// - Warning: Can only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {

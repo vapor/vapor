@@ -1,7 +1,7 @@
 public struct Validation {
     let run: (KeyedDecodingContainer<ValidationKey>) -> ValidationResult
 
-    init<T>(key: ValidationKey, required: Bool, validator: Validator<T>) {
+    init<T>(key: ValidationKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
         self.init { container in
             let result: ValidatorResult
             do {
@@ -21,11 +21,12 @@ public struct Validation {
             } catch {
                result = ValidatorResults.Codable(error: error)
            }
-            return .init(key: key, result: result)
+            
+            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
-    init(nested key: ValidationKey, required: Bool, keyed validations: Validations) {
+    init(nested key: ValidationKey, required: Bool, keyed validations: Validations, customFailureDescription: String?) {
         self.init { container in
             let result: ValidatorResult
             do {
@@ -43,36 +44,44 @@ public struct Validation {
             } catch {
                 result = ValidatorResults.Codable(error: error)
             }
-            return .init(key: key, result: result)
+            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
-    init(nested key: ValidationKey, required: Bool, unkeyed factory: @escaping (Int, inout Validations) -> ()) {
+    init(nested key: ValidationKey, required: Bool, unkeyed factory: @escaping (Int, inout Validations) -> (), customFailureDescription: String?) {
         self.init { container in
             let result: ValidatorResult
             do {
-                var results: [[ValidatorResult]] = []
-                var array = try container.nestedUnkeyedContainer(forKey: key)
-                var i = 0
-                while !array.isAtEnd {
-                    defer { i += 1 }
-                    var validations = Validations()
-                    factory(i, &validations)
-                    let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
-                    let result = validations.validate(nested)
-                    results.append(result.results)
+                if container.contains(key), !required, try container.decodeNil(forKey: key) {
+                    result = ValidatorResults.Skipped()
+                } else if container.contains(key) {
+                    var results: [[ValidatorResult]] = []
+                    var array = try container.nestedUnkeyedContainer(forKey: key)
+                    var i = 0
+                    while !array.isAtEnd {
+                        defer { i += 1 }
+                        var validations = Validations()
+                        factory(i, &validations)
+                        let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
+                        let result = validations.validate(nested)
+                        results.append(result.results)
+                    }
+                    result = ValidatorResults.NestedEach(results: results)
+                } else if required {
+                    result = ValidatorResults.Missing()
+                } else {
+                    result = ValidatorResults.Skipped()
                 }
-                result = ValidatorResults.NestedEach(results: results)
             } catch {
                 result = ValidatorResults.Codable(error: error)
             }
-            return .init(key: key, result: result)
+            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
-    init(key: ValidationKey, result: ValidatorResult) {
+    init(key: ValidationKey, result: ValidatorResult, customFailureDescription: String?) {
         self.init { decoder in
-            .init(key: key, result: result)
+            .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
@@ -84,6 +93,13 @@ public struct Validation {
 public struct ValidationResult {
     public let key: ValidationKey
     public let result: ValidatorResult
+    public let customFailureDescription: String?
+    
+    init(key: ValidationKey, result: ValidatorResult, customFailureDescription: String? = nil) {
+        self.key = key
+        self.result = result
+        self.customFailureDescription = customFailureDescription
+    }
 }
 
 extension ValidationResult: ValidatorResult {

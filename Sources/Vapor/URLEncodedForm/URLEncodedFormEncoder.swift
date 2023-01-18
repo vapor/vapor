@@ -91,7 +91,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///
     /// - parameters:
     ///     - encodable: Generic `Encodable` object (`E`) to encode.
-    ///     - configuration: Overwrides the  coding config for this encoding call.
+    ///     - configuration: Overrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
     public func encode<E>(_ encodable: E) throws -> String
@@ -274,7 +274,19 @@ private class _Encoder: Encoder {
         
         func encode<T>(_ value: T) throws where T: Encodable {
             defer { self.count += 1 }
-            if let convertible = value as? URLQueryFragmentConvertible {
+            
+            if let date = value as? Date {
+                let encodedDate = try configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
+                
+                switch self.configuration.arrayEncoding {
+                case .bracket:
+                    var emptyStringChild = self.internalData.children[""] ?? []
+                    emptyStringChild.values.append(contentsOf: encodedDate.values)
+                    self.internalData.children[""] = emptyStringChild
+                case .separator, .values:
+                    self.internalData.values.append(contentsOf: encodedDate.values)
+                }
+            } else if let convertible = value as? URLQueryFragmentConvertible {
                 let value = convertible.urlQueryFragmentValue
                 switch self.configuration.arrayEncoding {
                 case .bracket:

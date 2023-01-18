@@ -12,7 +12,7 @@ extension Request {
             case .none, .stream: return nil
             }
         }
-
+        
         public var string: String? {
             if var data = self.data {
                 return data.readString(length: data.readableBytes)
@@ -50,7 +50,12 @@ extension Request {
         }
         
         public var description: String {
-            return ""
+            if var data = self.data,
+               let description = data.readString(length: data.readableBytes) {
+                return description
+            } else {
+                return ""
+            }
         }
     }
 }

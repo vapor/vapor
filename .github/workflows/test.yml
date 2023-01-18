@@ -2,18 +2,7 @@ name: test
 on: { pull_request: {} }
 
 jobs:
-  getcidata:
-    runs-on: ubuntu-latest
-    outputs:
-      environments: ${{ steps.output.outputs.environments }}
-    steps:
-      - id: output
-        run: |
-          envblob="$(curl -fsSL https://raw.githubusercontent.com/vapor/ci/main/pr-environments.json | jq -cMj '.')"
-          echo "::set-output name=environments::${envblob}"
-    
   test-providers:
-    needs: getcidata
     strategy:
       fail-fast: false
       matrix:
@@ -24,44 +13,27 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:5.5-focal
+    container: swift:5.7-jammy
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
           repository: ${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
+        env:
+            SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --sanitize=thread
         working-directory: provider
-        
-  test-vapor:
-    needs: getcidata
-    strategy:
-      fail-fast: false
-      matrix:
-        env: ${{ fromJSON(needs.getcidata.outputs.environments) }}
-    runs-on: ${{ matrix.env.os }}
-    container: ${{ matrix.env.image }}
-    steps: 
-      - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1.2.1
-        with:
-          xcode-version: ${{ matrix.env.toolchain }}
-        if: ${{ matrix.env.toolchain != '' }}
-      - name: Check out Vapor
-        uses: actions/checkout@v2
-      - name: Run main tests with Thread Sanitizer
-        timeout-minutes: 30
-        run: swift test --enable-test-discovery --filter VaporTests --sanitize=thread
-      - name: Run async tests without Thread Sanitizer
-        # TSAN and async aren't playing nice at the moment
-        timeout-minutes: 30
-        if: ${{ matrix.env.toolchain == '' }}
-        run: swift test --enable-test-discovery --filter AsyncTests
+  unit-tests:
+     uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
+     with:
+       with_coverage: false
+       with_tsan: false
+       with_public_api_check: true

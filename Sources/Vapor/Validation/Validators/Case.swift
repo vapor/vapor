@@ -11,13 +11,13 @@ extension Validator {
 }
 
 extension ValidatorResults {
-    /// `ValidatorResult` of a validator thaat validates whether the data can be represented as a specific Enum case.
+    /// `ValidatorResult` of a validator that validates whether the data can be represented as a specific Enum case.
     public struct Case<T, E>
         where E: RawRepresentable & CaseIterable, E.RawValue == T, T: CustomStringConvertible 
     {
         /// The type of the enum to check.
         public let enumType: E.Type
-        /// The raw value that would be tested agains the enum type.
+        /// The raw value that would be tested against the enum type.
         public let rawValue: T
     }
 }

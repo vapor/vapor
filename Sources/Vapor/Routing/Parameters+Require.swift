@@ -20,11 +20,13 @@ extension Parameters {
         where T: LosslessStringConvertible
     {
         guard let stringValue: String = get(name) else {
-            throw Abort(.internalServerError)
+            self.logger.debug("The parameter \(name) does not exist")
+            throw Abort(.internalServerError, reason: "The parameter provided does not exist")
         }
 
         guard let value = T.init(stringValue) else {
-            throw Abort(.unprocessableEntity)
+            self.logger.debug("The parameter \(stringValue) could not be converted to \(T.Type.self)")
+            throw Abort(.unprocessableEntity, reason: "The parameter value could not be converted to the required type")
         }
 
         return value
