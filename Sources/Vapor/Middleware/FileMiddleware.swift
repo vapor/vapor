@@ -5,6 +5,18 @@ public final class FileMiddleware: Middleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
+    
+    public struct BundleSetupError: Equatable, Error {
+        
+        /// The description of this error.
+        let description: String
+        
+        /// Cannot generate Bundle Resource URL
+        public static let bundleResourceURLIsNil: Self = .init(description: "Cannot generate Bundle Resource URL: Bundle Resource URL is nil")
+        
+        /// Cannot find any actual folder for the given Public Directory
+        public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
+    }
 
     /// Creates a new `FileMiddleware`.
     ///
@@ -61,6 +73,27 @@ public final class FileMiddleware: Middleware {
         // stream the file
         let res = request.fileio.streamFile(at: absPath)
         return request.eventLoop.makeSucceededFuture(res)
+    }
+
+    /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
+    ///
+    /// - parameters:
+    ///     - bundle: The Bundle which contains the files to serve.
+    ///     - publicDirectory: The public directory to serve files from.
+    ///     - defaultFile: The name of the default file to look for and serve if a request hits any public directory. Starting with `/` implies an absolute path from the public directory root. If `nil`, no default files are served.
+    ///
+    /// - important: Make sure the public directory you wish to serve files from is included in the `Copy Bundle Resources` build phase of your project
+    /// - returns: A fully qualified FileMiddleware if the given `publicDirectory` can be served, throws a `BundleSetupError` otherwise
+    public convenience init(bundle: Bundle, publicDirectory: String = "Public", defaultFile: String? = nil) throws {
+        guard let bundleResourceURL = bundle.resourceURL else {
+            throw BundleSetupError.bundleResourceURLIsNil
+        }
+        let publicDirectoryURL = bundleResourceURL.appendingPathComponent(publicDirectory.removeLeadingSlashes())
+        guard (try? publicDirectoryURL.resourceValues(forKeys: [.isDirectoryKey]))?.isDirectory == true else {
+            throw BundleSetupError.publicDirectoryIsNotAFolder
+        }
+        
+        self.init(publicDirectory: bundleResourceURL.path, defaultFile: defaultFile)
     }
 }
 
