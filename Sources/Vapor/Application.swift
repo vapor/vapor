@@ -1,4 +1,5 @@
 import Backtrace
+import NIOConcurrencyHelpers
 
 /// Core type representing a Vapor application.
 public final class Application {
@@ -24,15 +25,15 @@ public final class Application {
     public var lifecycle: Lifecycle
 
     public final class Locks {
-        public let main: Lock
-        var storage: [ObjectIdentifier: Lock]
+        public let main: NIOLock
+        var storage: [ObjectIdentifier: NIOLock]
 
         init() {
             self.main = .init()
             self.storage = [:]
         }
 
-        public func lock<Key>(for key: Key.Type) -> Lock
+        public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
             self.main.lock()
@@ -40,7 +41,7 @@ public final class Application {
             if let existing = self.storage[ObjectIdentifier(Key.self)] {
                 return existing
             } else {
-                let new = Lock()
+                let new = NIOLock()
                 self.storage[ObjectIdentifier(Key.self)] = new
                 return new
             }
@@ -49,7 +50,7 @@ public final class Application {
 
     public var locks: Locks
 
-    public var sync: Lock {
+    public var sync: NIOLock {
         self.locks.main
     }
     
@@ -161,7 +162,8 @@ public final class Application {
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
-            assertionFailure("Application.shutdown() was not called before Application deinitialized.")
+            self.logger.error("Application.shutdown() was not called before Application deinitialized.")
+            self.shutdown()
         }
     }
 }

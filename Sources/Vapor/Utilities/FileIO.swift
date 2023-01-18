@@ -103,19 +103,20 @@ public struct FileIO {
         )
     }
 
-    /// Generates a chunked `HTTPResponse` for the specified file. This method respects values in
+    /// Generates a chunked `Response` for the specified file. This method respects values in
     /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
     /// has not been modified since last served. This method will also set the `"Content-Type"` header
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
-    ///     router.get("file-stream") { req -> HTTPResponse in
-    ///         return try req.fileio().chunkedResponse(file: "/path/to/file.txt")
+    ///     router.get("file-stream") { req in
+    ///         return req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
-    ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
+    ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
@@ -167,9 +168,9 @@ public struct FileIO {
             response.status = .partialContent
             response.headers.add(name: .accept, value: contentRange.unit.serialize())
             if let firstRange = contentRange.ranges.first {
-                let range = firstRange.asResponseContentRange(limit: fileSize)
-                response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
                 do {
+                    let range = try firstRange.asResponseContentRange(limit: fileSize)
+                    response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
                     (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
                 } catch {
                     let response = Response(status: .badRequest)
@@ -278,7 +279,7 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                guard start >= 0, end >= 0, start < end else {
+                guard start >= 0, end >= 0, start < end, start <= size, end <= size else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }

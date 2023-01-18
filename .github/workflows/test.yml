@@ -13,20 +13,22 @@ jobs:
           - vapor/queues
           - vapor/apns
     runs-on: ubuntu-latest
-    container: swift:5.6-focal
+    container: swift:5.7-jammy
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
           repository: ${{ matrix.provider }}
           path: provider
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests with Thread Sanitizer
+        env:
+            SWIFT_DETERMINISTIC_HASHING: 1
         run: swift test --sanitize=thread
         working-directory: provider
   unit-tests:
@@ -34,3 +36,4 @@ jobs:
      with:
        with_coverage: false
        with_tsan: false
+       with_public_api_check: true

@@ -153,6 +153,9 @@ public final class HTTPServer: Server {
         /// A time limit to complete a graceful shutdown
         public var shutdownTimeout: TimeAmount
 
+        /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
+        public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
+
         public init(
             hostname: String = Self.defaultHostname,
             port: Int = Self.defaultPort,
@@ -218,6 +221,7 @@ public final class HTTPServer: Server {
             self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
+            self.customCertificateVerifyCallback = nil
         }
     }
     
@@ -228,8 +232,23 @@ public final class HTTPServer: Server {
         return connection.channel.closeFuture
     }
 
+    public var configuration: Configuration {
+        get { _configuration }
+        set {
+            guard !didStart else {
+                _configuration.logger.warning("Cannot modify server configuration after server has been started.")
+                return
+            }
+            _configuration = newValue
+        }
+    }
+
     private let responder: Responder
-    private var configuration: Configuration
+    private var _configuration: Configuration {
+        willSet {
+            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
+        }
+    }
     private let eventLoopGroup: EventLoopGroup
     
     private var connection: HTTPServerConnection?
@@ -246,7 +265,7 @@ public final class HTTPServer: Server {
     ) {
         self.application = application
         self.responder = responder
-        self.configuration = configuration
+        self._configuration = configuration
         self.eventLoopGroup = eventLoopGroup
         self.didStart = false
         self.didShutdown = false
@@ -347,7 +366,7 @@ private final class HTTPServerConnection {
                     let tlsHandler: NIOSSLServerHandler
                     do {
                         sslContext = try NIOSSLContext(configuration: tlsConfiguration)
-                        tlsHandler = NIOSSLServerHandler(context: sslContext)
+                        tlsHandler = NIOSSLServerHandler(context: sslContext, customVerifyCallback: configuration.customCertificateVerifyCallback)
                     } catch {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
@@ -547,6 +566,17 @@ extension ChannelPipeline {
         // wait to add delegate as final step
         return self.addHandlers(handlers).flatMap {
             self.addHandler(HTTPServerErrorHandler(logger: configuration.logger))
+        }
+    }
+}
+
+// MARK: Helper function for constructing NIOSSLServerHandler.
+extension NIOSSLServerHandler {
+    convenience init(context: NIOSSLContext, customVerifyCallback: NIOSSLCustomVerificationCallback?) {
+        if let callback = customVerifyCallback {
+            self.init(context: context, customVerificationCallback: callback)
+        } else {
+            self.init(context: context)
         }
     }
 }

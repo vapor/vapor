@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
     case contentDecodeFailure(Error)
@@ -10,7 +12,7 @@ public final class EndpointCache<T> where T: Decodable {
     private var headers: HTTPHeaders?
     private var cacheUntil: Date?
 
-    private let sync: Lock
+    private let sync: NIOLock
     private let uri: URI
 
     /// The designated initializer.
