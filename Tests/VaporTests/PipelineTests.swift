@@ -1,5 +1,7 @@
 @testable import Vapor
+import enum NIOHTTP1.HTTPParserError
 import XCTest
+import NIO
 
 final class PipelineTests: XCTestCase {
     func testEchoHandlers() throws {
@@ -105,10 +107,37 @@ final class PipelineTests: XCTestCase {
         ).wait()
 
         XCTAssertEqual(channel.isActive, true)
-        try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+        // throws a notEnoughBytes error which is good
+        XCTAssertThrowsError(try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n")))
         XCTAssertEqual(channel.isActive, false)
         try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
+        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+    }
+    
+    func testInvalidHttp() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let channel = EmbeddedChannel()
+        try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
+        try channel.pipeline.addVaporHTTP1Handlers(
+            application: app,
+            responder: app.responder,
+            configuration: app.http.server.configuration
+        ).wait()
+
+        XCTAssertEqual(channel.isActive, true)
+        let request = ByteBuffer(string: "POST /echo/þ HTTP/1.1\r\n\r\n")
+        XCTAssertThrowsError(try channel.writeInbound(request)) { error in
+            if let error = error as? HTTPParserError {
+                XCTAssertEqual(error, HTTPParserError.invalidURL)
+            } else {
+                XCTFail("Caught error \"\(error)\"")
+            }
+        }
+        XCTAssertEqual(channel.isActive, false)
+        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 400 Bad Request")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
 
