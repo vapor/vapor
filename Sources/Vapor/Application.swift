@@ -110,6 +110,7 @@ public final class Application {
         }
     }
     
+    #if swift(>=5.7)
     /// Starts the Application using the `start()` method, then awaits the end of any tasks that are running
     /// If your application is started without arguments, the default argument is used.
     ///
@@ -123,6 +124,7 @@ public final class Application {
             throw error
         }
     }
+    #endif
     
     /// When called, this will execute the startup command provided through an argument. If no startup command is provided, the default is used.
     /// Under normal circumstances, this will start running Vapor's webserver.
