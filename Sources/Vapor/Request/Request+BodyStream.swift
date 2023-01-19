@@ -2,7 +2,7 @@ import NIO
 import NIOConcurrencyHelpers
 
 extension Request {
-    final class BodyStream: BodyStreamWriter {
+    final class BodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
@@ -27,6 +27,14 @@ extension Request {
                 handler(result, promise)
             }
             self.buffer = []
+        }
+        
+        func write(_ result: BodyStreamResult) async throws {
+            try await self.eventLoop.flatSubmit {
+                let promise = self.eventLoop.makePromise(of: Void.self)
+                self.write0(result, promise: promise)
+                return promise.futureResult
+            }.get()
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {

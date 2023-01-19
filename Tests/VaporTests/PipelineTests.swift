@@ -1,5 +1,6 @@
 @testable import Vapor
 import XCTest
+import AsyncHTTPClient
 
 final class PipelineTests: XCTestCase {
     func testEchoHandlers() throws {
@@ -53,6 +54,64 @@ final class PipelineTests: XCTestCase {
         try channel.writeInbound(ByteBuffer(string: "0\r\n\r\n"))
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "0\r\n\r\n")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+    }
+    
+    @available(macOS 13.0, *)
+    func testAsyncEchoHandlers() async throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.on(.POST, "echo", body: .stream) { request -> Response in
+            return Response(body: .init(managedAsyncStream: { writer in
+                for try await chunk in request.body {
+                    try await writer.writeBuffer(chunk)
+                }
+            }))
+        }
+        
+        try app.start()
+        
+        guard
+            let localAddress = app.http.server.shared.localAddress,
+            let port = localAddress.port
+        else {
+            XCTFail("couldn't get port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        let client = HTTPClient(eventLoopGroupProvider: .createNew)
+        
+        let chunks = [
+            "1\r\n",
+            "a",
+            "\r\n",
+            "1\r\n",
+            "b",
+            "\r\n",
+            "1\r\n",
+            "c",
+            "\r\n",
+        ]
+        
+        let response = try await client.post(url: "http://localhost:\(port)/echo", body: .stream { writer in
+            @Sendable func write(chunks: [String]) -> EventLoopFuture<Void> {
+                var chunks = chunks
+                let chunk = chunks.removeFirst()
+                
+                if chunks.isEmpty {
+                    return writer.write(.byteBuffer(ByteBuffer(string: chunk)))
+                } else {
+                    return writer.write(.byteBuffer(ByteBuffer(string: chunk))).flatMap { [chunks] in
+                        return write(chunks: chunks)
+                    }
+                }
+            }
+            
+            return write(chunks: chunks)
+        }).get()
+        
+        XCTAssertEqual(response.body?.string, chunks.joined(separator: ""))
+        try await client.shutdown()
     }
 
     func testEOFFraming() throws {
