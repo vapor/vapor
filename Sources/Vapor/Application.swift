@@ -95,6 +95,7 @@ public final class Application {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
+    #if swift(>=5.7)
     /// Starts the Application using the `start()` method, then blocks the thread while any tasks are running
     /// If your application is started without arguments, the default argument is used.
     ///
@@ -109,8 +110,22 @@ public final class Application {
             throw error
         }
     }
+    #else
+    /// Starts the Application using the `start()` method, then blocks the thread while any tasks are running
+    /// If your application is started without arguments, the default argument is used.
+    ///
+    /// Under normal circumstances, `run()` starts the webserver, then wait for the web server to (manually) shut down before returning.g
+    public func run() throws {
+        do {
+            try self.start()
+            try self.running?.onStop.wait()
+        } catch {
+            self.logger.report(error: error)
+            throw error
+        }
+    }
+    #endif
     
-    #if swift(>=5.7)
     /// Starts the Application using the `start()` method, then awaits the end of any tasks that are running
     /// If your application is started without arguments, the default argument is used.
     ///
@@ -124,7 +139,6 @@ public final class Application {
             throw error
         }
     }
-    #endif
     
     /// When called, this will execute the startup command provided through an argument. If no startup command is provided, the default is used.
     /// Under normal circumstances, this will start running Vapor's webserver.
