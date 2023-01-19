@@ -122,7 +122,8 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     }
     
     func write(_ result: BodyStreamResult) async throws {
-        try await self.eventLoop.flatSubmit {
+        // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
+        try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
             let promise = self.eventLoop.makePromise(of: Void.self)
             self.write(result, promise: promise)
             return promise.futureResult
