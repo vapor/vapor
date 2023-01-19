@@ -95,14 +95,29 @@ public final class Application {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
-    /// Starts the Application using the `start()` method, then waits for any running tasks to complete
+    /// Starts the Application using the `start()` method, then blocks the thread while any tasks are running
     /// If your application is started without arguments, the default argument is used.
     ///
-    /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.
+    /// Under normal circumstances, `run()` starts the webserver, then wait for the web server to (manually) shut down before returning.
+    @available(*, noasync)
     public func run() throws {
         do {
             try self.start()
             try self.running?.onStop.wait()
+        } catch {
+            self.logger.report(error: error)
+            throw error
+        }
+    }
+    
+    /// Starts the Application using the `start()` method, then awaits the end of any tasks that are running
+    /// If your application is started without arguments, the default argument is used.
+    ///
+    /// Under normal circumstances, `run()` starts the webserver, then wait for the web server to (manually) shut down before returning.
+    public func run() async throws {
+        do {
+            try self.start()
+            try await self.running?.onStop.get()
         } catch {
             self.logger.report(error: error)
             throw error
