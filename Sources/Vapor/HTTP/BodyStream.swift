@@ -49,3 +49,14 @@ extension BodyStreamWriter {
         return promise.futureResult
     }
 }
+
+public protocol AsyncBodyStreamWriter {
+    func write(_ result: BodyStreamResult) async throws
+    func writeBuffer(_ buffer: ByteBuffer) async throws
+}
+
+extension AsyncBodyStreamWriter {
+    public func writeBuffer(_ buffer: ByteBuffer) async throws {
+        try await write(.buffer(buffer))
+    }
+}
