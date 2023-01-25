@@ -152,7 +152,7 @@ public struct FileIO {
         var headers: HTTPHeaders = [:]
 
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-        let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize)"
+        let fileETag = "\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\""
         headers.replaceOrAdd(name: .eTag, value: fileETag)
 
         // Check if file has been cached already and return NotModified response if the etags match
