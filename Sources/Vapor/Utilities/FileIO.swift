@@ -151,6 +151,9 @@ public struct FileIO {
         // Create empty headers array.
         var headers: HTTPHeaders = [:]
 
+        // Respond with lastModified header
+        headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
+        
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
         let fileETag = "\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\""
         headers.replaceOrAdd(name: .eTag, value: fileETag)
