@@ -213,4 +213,77 @@ final class RequestTests: XCTestCase {
             XCTAssertEqual(uri.string, "/")
         }
     }
+    
+    func testRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.http.client.configuration.redirectConfiguration = .disallow
+
+        app.get("redirect_normal") {
+            $0.redirectTo("foo", type: .normal)
+        }
+        app.get("redirect_permanent") {
+            $0.redirectTo("foo", type: .permanent)
+        }
+        app.post("redirect_temporary") {
+            $0.redirectTo("foo", type: .temporary)
+        }
+        app.post("redirect_permanentPost") {
+            $0.redirectTo("foo", type: .permanentPost)
+        }
+        
+        try app.server.start(address: .hostname("localhost", port: 8080))
+        defer { app.server.shutdown() }
+        
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            .seeOther
+        )
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            .movedPermanently
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            .temporaryRedirect
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_permanentPost").wait().status,
+            .permanentRedirect
+        )
+    }
+    
+    func testRedirect_old() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.http.client.configuration.redirectConfiguration = .disallow
+
+        app.get("redirect_normal") {
+            $0.redirect(to: "foo", type: .normal)
+        }
+        app.get("redirect_permanent") {
+            $0.redirect(to: "foo", type: .permanent)
+        }
+        app.post("redirect_temporary") {
+            $0.redirect(to: "foo", type: .temporary)
+        }
+        
+        try app.server.start(address: .hostname("localhost", port: 8080))
+        defer { app.server.shutdown() }
+        
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            .seeOther
+        )
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            .movedPermanently
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            .temporaryRedirect
+        )
+    }
 }
