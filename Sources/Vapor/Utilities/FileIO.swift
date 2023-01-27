@@ -160,7 +160,11 @@ public struct FileIO {
 
         // Check if file has been cached already and return NotModified response if the etags match
         if fileETag == request.headers.first(name: .ifNoneMatch) {
-            return Response(status: .notModified)
+            // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
+            // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
+            // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
+            headers.replaceOrAdd(name: .contentLength, value: fileSize.description)
+            return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
         }
 
         // Create the HTTP response.
