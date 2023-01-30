@@ -95,7 +95,7 @@ final class AsyncClientTests: XCTestCase {
         let res = try await app.client.get("http://localhost:8080/foo")
         XCTAssertEqual(res.body?.string, "bar")
 
-        try app.running?.onStop.wait()
+        try await app.running?.onStop.get()
     }
 
     func testCustomClient() async throws {
