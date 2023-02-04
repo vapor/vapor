@@ -5,15 +5,8 @@ on:
       - main
 
 jobs:
-  deploy:
-    name: api.vapor.codes
-    runs-on: ubuntu-latest
-    steps:
-    - name: Deploy api-docs
-      uses: appleboy/ssh-action@master
-      with:
-        host: vapor.codes
-        username: vapor
-        key: ${{ secrets.VAPOR_CODES_SSH_KEY }}
-        script: ./github-actions/deploy-api-docs.sh
-        command_timeout: 60m 
+  build-and-deploy:
+     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml
+     with:
+       package_name: vapor
+       modules: Vapor,XCTVapor
