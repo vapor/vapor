@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-deploy:
-     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml
+     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@main
      with:
        package_name: vapor
        modules: Vapor,XCTVapor
