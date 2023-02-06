@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-deploy:
-     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@56c6cc0e4cb8a2295f1d9ff178daefdcba3c2937
+     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@e704662eb58d50aa11a8a78e4a63b8146515b1ec
      secrets: inherit
      with:
        package_name: vapor
