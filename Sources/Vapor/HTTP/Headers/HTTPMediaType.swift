@@ -236,6 +236,8 @@ public extension HTTPMediaType {
     static let avi = HTTPMediaType(type: "video", subType: "avi")
     /// MPEG video.
     static let mpeg = HTTPMediaType(type: "video", subType: "mpeg")
+    /// Event-Stream.
+    static let eventStream = HTTPMediaType(type: "text", subType: "event-stream")
 }
 
 // MARK: Extensions

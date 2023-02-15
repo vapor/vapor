@@ -1,0 +1,16 @@
+<html>
+    <body>
+        <ul id="list"></ul>
+        <script>
+            const evtSource = new EventSource("http://localhost:8080/sse");
+            evtSource.onmessage = (event) => {
+                const newElement = document.createElement("li");
+                const eventList = document.getElementById("list");
+                
+                newElement.textContent = `message: ${event.data}`;
+                console.log(event.data)
+                eventList.appendChild(newElement);
+            };
+        </script>
+    </body>
+</html>

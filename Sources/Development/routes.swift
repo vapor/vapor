@@ -11,16 +11,16 @@ public func routes(_ app: Application) throws {
     app.on(.GET, "ping") { req -> StaticString in
         return "123" as StaticString
     }
-
-
+    
+    
     // ( echo -e 'POST /slow-stream HTTP/1.1\r\nContent-Length: 1000000000\r\n\r\n'; dd if=/dev/zero; ) | nc localhost 8080
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
-
+        
         var total = 0
         req.body.drain { result in
             let promise = req.eventLoop.makePromise(of: Void.self)
-
+            
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
@@ -33,7 +33,7 @@ public func routes(_ app: Application) throws {
                 promise.succeed(())
                 done.succeed(total.description)
             }
-
+            
             // manually return pre-completed future
             // this should balloon in memory
             // return req.eventLoop.makeSucceededFuture(())
@@ -42,14 +42,14 @@ public func routes(_ app: Application) throws {
             // this should use very little memory
             return promise.futureResult
         }
-
+        
         return done.futureResult
     }
-
+    
     app.get("test", "head") { req -> String in
         return "OK!"
     }
-
+    
     app.post("test", "head") { req -> String in
         return "OK!"
     }
@@ -62,7 +62,7 @@ public func routes(_ app: Application) throws {
     app.on(.POST, "large-file", body: .collect(maxSize: 1_000_000_000)) { req -> String in
         return req.body.data?.readableBytes.description  ?? "none"
     }
-
+    
     app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
     }.description("returns some test json")
@@ -74,7 +74,7 @@ public func routes(_ app: Application) throws {
                 ws.close(promise: nil)
             }
         }
-
+        
         let ip = req.remoteAddress?.description ?? "<no ip>"
         ws.send("Hello 👋 \(ip)")
     }
@@ -94,7 +94,7 @@ public func routes(_ app: Application) throws {
         }
         return promise.futureResult
     }
-
+    
     app.get("shutdown") { req -> HTTPStatus in
         guard let running = req.application.running else {
             throw Abort(.internalServerError)
@@ -102,7 +102,7 @@ public func routes(_ app: Application) throws {
         running.stop()
         return .ok
     }
-
+    
     let cache = MemoryCache()
     app.get("cache", "get", ":key") { req -> String in
         guard let key = req.parameters.get("key") else {
@@ -120,15 +120,15 @@ public func routes(_ app: Application) throws {
         cache.set(key, to: value)
         return "\(key) = \(value)"
     }
-
+    
     app.get("hello", ":name") { req in
         return req.parameters.get("name") ?? "<nil>"
     }
-
+    
     app.get("search") { req in
         return req.query["q"] ?? "none"
     }
-
+    
     let sessions = app.grouped("sessions")
         .grouped(app.sessions.middleware)
     sessions.get("set", ":value") { req -> HTTPStatus in
@@ -142,11 +142,11 @@ public func routes(_ app: Application) throws {
         req.session.destroy()
         return "done"
     }
-
+    
     app.get("client") { req in
         return req.client.get("http://httpbin.org/status/201").map { $0.description }
     }
-
+    
     app.get("client-json") { req -> EventLoopFuture<String> in
         struct HTTPBinResponse: Decodable {
             struct Slideshow: Decodable {
@@ -157,6 +157,21 @@ public func routes(_ app: Application) throws {
         return req.client.get("http://httpbin.org/json")
             .flatMapThrowing { try $0.content.decode(HTTPBinResponse.self) }
             .map { $0.slideshow.title }
+    }
+    
+    if #available(macOS 13, *) {
+        let app = app.grouped(CORSMiddleware())
+        app.get("sse") { req in
+            try await req.serverSentEvents { producer in
+                for i in 0..<1000 {
+                    let event = SSEvent(
+                        data: SSEValue(string: "\(i)")
+                    )
+                    try await producer.sendEvent(event)
+                    try await Task.sleep(for: .milliseconds(1))
+                }
+            }
+        }
     }
     
     let users = app.grouped("users")
