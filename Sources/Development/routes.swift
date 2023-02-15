@@ -159,17 +159,14 @@ public func routes(_ app: Application) throws {
             .map { $0.slideshow.title }
     }
     
-    if #available(macOS 13, *) {
-        let app = app.grouped(CORSMiddleware())
-        app.get("sse") { req in
-            try await req.serverSentEvents { producer in
-                for i in 0..<1000 {
-                    let event = SSEvent(
-                        data: SSEValue(string: "\(i)")
-                    )
-                    try await producer.sendEvent(event)
-                    try await Task.sleep(for: .milliseconds(1))
-                }
+    app.grouped(CORSMiddleware()).get("sse") { req in
+        try await req.serverSentEvents { producer in
+            for i in 0..<1000 {
+                let event = SSEvent(
+                    data: SSEValue(string: "\(i)")
+                )
+                try await producer.sendEvent(event)
+                try await Task.sleep(nanoseconds: 1_000_000_000) // 1 sec
             }
         }
     }

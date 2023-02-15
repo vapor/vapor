@@ -42,6 +42,7 @@ public struct SSEvent {
     public var type: String?
     public var comment: SSEValue?
     public var data: SSEValue
+    public var id: String?
     
     public init(data: SSEValue) {
         self.data = data
@@ -62,6 +63,10 @@ public struct SSEvent {
         
         for part in data.parts {
             string += "data: \(part)\n"
+        }
+        
+        if let id = id {
+            string += "id: \(id)\n"
         }
         
         string.append("\n")

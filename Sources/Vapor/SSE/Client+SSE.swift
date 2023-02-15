@@ -25,7 +25,8 @@ extension HTTPClientResponse {
                 continuation.finish()
             }
             
-            continuation.onTermination = { reason in
+            // Explicitly marked as `@Sendable` for Swift 5.5
+            continuation.onTermination = { @Sendable reason in
                 task.cancel()
             }
         }
@@ -41,6 +42,7 @@ internal enum SSEParser {
         var events = [SSEvent]()
         var type = "message"
         var data = [String]()
+        var id: String?
         
         func checkEndOfEventAndStream() -> ParsingStatus {
             guard let nextCharacter: UInt8 = text.getInteger(at: text.readerIndex) else {
@@ -59,11 +61,13 @@ internal enum SSEParser {
                 
                 var event = SSEvent(data: SSEValue(unchecked: data))
                 event.type = type
+                event.id = id
                 events.append(event)
                 
                 // reset state
                 type = "message"
                 data.removeAll(keepingCapacity: true)
+                id = nil
                 
                 return text.readableBytes > 0 ? .nextEvent : .haltParsing
             }
@@ -79,13 +83,10 @@ internal enum SSEParser {
                 lastEventReaderIndex = text.readerIndex
                 fallthrough
             case .nextField:
-                guard let colonIndex = text.readableBytesView.firstIndex(where: { byte in
+                var value = ""
+                let colonIndex = text.readableBytesView.firstIndex(where: { byte in
                     byte == 0x3a // `:`
-                }) else {
-                    // Reset to before this event, as we didn't fully process this
-                    text.moveReaderIndex(to: lastEventReaderIndex)
-                    return events
-                }
+                })
                 
                 guard var lineEndingIndex = text.readableBytesView.firstIndex(where: { byte in
                     byte == 0x0a || byte == 0x0d // `\n` or `\r`
@@ -95,23 +96,40 @@ internal enum SSEParser {
                     return events
                 }
                 
-                guard let key = text.readString(length: colonIndex) else {
-                    // Reset to before this event, as we didn't fully process this
-                    text.moveReaderIndex(to: lastEventReaderIndex)
-                    return events
-                }
-                
-                // Skip past colon
-                text.moveReaderIndex(forwardBy: 1)
-                
-                // Reduce the index by `key size + colon character`
-                lineEndingIndex -= colonIndex
-                lineEndingIndex -= 1
-                
-                guard var value = text.readString(length: lineEndingIndex) else {
-                    // Reset to before this event, as we didn't fully process this
-                    text.moveReaderIndex(to: lastEventReaderIndex)
-                    return events
+                if let colonIndex = colonIndex {
+                    guard let key = text.readString(length: colonIndex) else {
+                        // Reset to before this event, as we didn't fully process this
+                        text.moveReaderIndex(to: lastEventReaderIndex)
+                        return events
+                    }
+                    
+                    // Skip past colon
+                    text.moveReaderIndex(forwardBy: 1)
+                    
+                    // Reduce the index by `key size + colon character`
+                    lineEndingIndex -= colonIndex
+                    lineEndingIndex -= 1
+                    
+                    guard let readValue = text.readString(length: lineEndingIndex) else {
+                        // Reset to before this event, as we didn't fully process this
+                        text.moveReaderIndex(to: lastEventReaderIndex)
+                        return events
+                    }
+                    
+                    value = readValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                    
+                    // see https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
+                    switch key {
+                    case "event":
+                        type = value
+                    case "data":
+                        data.append(value)
+                    case "id":
+                        id = value
+                        //                case "retry":
+                    default:
+                        () // Ignore field
+                    }
                 }
                 
                 guard let byte: UInt8 = text.readInteger() else {
@@ -126,20 +144,6 @@ internal enum SSEParser {
                     text.moveReaderIndex(forwardBy: 1)
                 }
                 // TODO: What if we receive an `\r` here, and a `\n` in the next TCP read? Do we pair them up, or regard one as an empty event?
-                
-                value = value.trimmingCharacters(in: .whitespacesAndNewlines)
-                
-                // see https://html.spec.whatwg.org/multipage/server-sent-events.html#event-stream-interpretation
-                switch key {
-                case "event":
-                    type = value
-                case "data":
-                    data.append(value)
-//                case "id":
-//                case "retry":
-                default:
-                    () // Ignore field
-                }
             case .haltParsing:
                 text.moveReaderIndex(to: lastEventReaderIndex)
                 return events
