@@ -51,7 +51,7 @@ internal enum SSEParser {
             
             // Blank lines must dispatch an event
             if nextCharacter == 0x0a || nextCharacter == 0x0d {
-                if nextCharacter == 0x0d, text.getInteger(at: text.readerIndex, as: UInt8.self) == 0x0a {
+                if nextCharacter == 0x0d, text.getInteger(at: text.readerIndex + 1, as: UInt8.self) == 0x0a {
                     // Skip the 0x0a as well
                     // CRLF, CR and LF are all valid delimiters
                     text.moveReaderIndex(forwardBy: 2)
@@ -138,7 +138,7 @@ internal enum SSEParser {
                     return events
                 }
                 
-                if byte == 0x0d, text.readInteger(as: UInt8.self) == 0x0a {
+                if byte == 0x0d, text.getInteger(at: text.readerIndex, as: UInt8.self) == 0x0a {
                     // Skip the 0x0a as well
                     // CRLF, CR and LF are all valid delimiters
                     text.moveReaderIndex(forwardBy: 1)
