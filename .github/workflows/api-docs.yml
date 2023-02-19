@@ -11,3 +11,4 @@ jobs:
      with:
        package_name: vapor
        modules: Vapor,XCTVapor
+       pathsToInvalidate: /vapor /xctvapor
