@@ -104,16 +104,31 @@ final class ApplicationTests: XCTestCase {
     func testBoilerplate() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        
+        let client = SpyClient(
+            eventLoop: app.eventLoopGroup.next()
+        )
+        
+        app.clients.use { _ in
+            return client
+        }
+        struct Greeting: Content {
+            let message: String
+        }
+        
+        let greeting: Greeting = .init(message: "Hello, world!")
+        try client.stubResponse(httpStatus: .ok, responseData: greeting)
 
+        app.environment.arguments = ["serve"]
+        try app.start()
+        
         app.get("hello") { req in
             "Hello, world!"
         }
 
-        app.environment.arguments = ["serve"]
-        try app.start()
-
-        let res = try app.client.get("http://localhost:8080/hello").wait()
-        XCTAssertEqual(res.body?.string, "Hello, world!")
+        let response = try app.client.get("http://localhost:8080/hello").wait()
+        let message = try response.content.decode(Greeting.self).message
+        XCTAssertEqual(message, "Hello, world!")
     }
 
     func testAutomaticPortPickingWorks() {
