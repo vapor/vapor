@@ -1,3 +1,7 @@
+import Foundation
+import NIOCore
+import NIOHTTP1
+
 public protocol ContentEncoder {
     func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable

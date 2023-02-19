@@ -1,7 +1,8 @@
 import Vapor
 import XCTest
-import protocol AsyncHTTPClient.HTTPClientResponseDelegate
-import NIO
+import AsyncHTTPClient
+import NIOCore
+import NIOPosix
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL

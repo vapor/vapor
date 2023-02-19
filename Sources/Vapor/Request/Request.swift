@@ -1,5 +1,8 @@
+import Foundation
 import NIO
 import NIOHTTP1
+import Logging
+import RoutingKit
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {

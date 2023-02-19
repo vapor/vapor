@@ -1,3 +1,5 @@
+import MultipartKit
+
 extension FormDataEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable

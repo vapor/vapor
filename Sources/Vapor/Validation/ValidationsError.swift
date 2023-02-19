@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 public struct ValidationsResult {
     public let results: [ValidationResult]
     

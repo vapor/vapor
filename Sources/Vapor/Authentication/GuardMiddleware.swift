@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
     /// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform

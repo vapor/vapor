@@ -1,6 +1,10 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 import Vapor
+import XCTest
+import WebSocketKit
+import NIOCore
+import NIOPosix
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncWebSocketTests: XCTestCase {

@@ -1,5 +1,9 @@
 import Backtrace
 import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import ConsoleKit
+import NIOPosix
 
 /// Core type representing a Vapor application.
 public final class Application {

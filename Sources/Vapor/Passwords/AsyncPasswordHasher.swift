@@ -1,3 +1,7 @@
+import NIOCore
+import NIOPosix
+import Foundation
+
 extension PasswordHasher {
     public func async(
         on threadPool: NIOThreadPool,

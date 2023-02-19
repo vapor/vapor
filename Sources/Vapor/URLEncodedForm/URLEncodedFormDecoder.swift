@@ -1,3 +1,7 @@
+import NIOCore
+import Foundation
+import NIOHTTP1
+
 /// Decodes instances of `Decodable` types from `application/x-www-form-urlencoded` `Data`.
 ///
 ///     print(data) // "name=Vapor&age=3"

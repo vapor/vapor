@@ -1,3 +1,7 @@
+import Foundation
+import NIOCore
+import NIOHTTP1
+
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
     /// Private encoder.

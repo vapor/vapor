@@ -1,6 +1,10 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import Vapor
 import XCTest
+import XCTVapor
+import NIOCore
+import Logging
+import NIOEmbedded
 
 @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncClientTests: XCTestCase {

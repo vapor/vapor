@@ -1,4 +1,5 @@
 import Vapor
+import Logging
 
 var env = try Environment.detect()
 try LoggingSystem.bootstrap(from: &env)

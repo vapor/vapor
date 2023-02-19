@@ -1,6 +1,8 @@
 import Vapor
 import NIOConcurrencyHelpers
 import XCTest
+import WebSocketKit
+import NIOPosix
 
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {

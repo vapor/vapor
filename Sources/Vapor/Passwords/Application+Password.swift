@@ -1,3 +1,5 @@
+import Foundation
+
 extension Application {
     public var password: Password {
         .init(application: self)

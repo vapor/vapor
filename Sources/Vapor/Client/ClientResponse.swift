@@ -1,4 +1,6 @@
-import NIO
+import NIOCore
+import NIOHTTP1
+import Foundation
 
 public struct ClientResponse {
     public var status: HTTPStatus

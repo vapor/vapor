@@ -1,4 +1,7 @@
-import NIO
+import Foundation
+import NIOCore
+import NIOHTTP1
+import NIOPosix
 import Logging
 
 extension Request {

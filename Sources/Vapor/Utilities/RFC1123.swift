@@ -1,3 +1,4 @@
+import Foundation
 import NIO
 
 /// An internal helper that formats cookie dates as RFC1123

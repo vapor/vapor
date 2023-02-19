@@ -2,6 +2,8 @@ import Vapor
 import XCTVapor
 import AsyncHTTPClient
 import XCTest
+import NIOCore
+import NIOEmbedded
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {

@@ -1,6 +1,7 @@
 import NIO
 import NIOHTTP1
 import NIOWebSocket
+import WebSocketKit
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request

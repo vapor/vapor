@@ -1,5 +1,9 @@
-import Vapor
 import XCTest
+import Vapor
+import NIOCore
+import Logging
+import AsyncHTTPClient
+import NIOEmbedded
 
 final class ClientTests: XCTestCase {
     func testClientConfigurationChange() throws {

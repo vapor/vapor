@@ -1,3 +1,4 @@
+import Foundation
 import NIO
 
 fileprivate final class ISO8601 {

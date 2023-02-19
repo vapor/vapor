@@ -1,3 +1,6 @@
+import Foundation
+import NIOCore
+
 /// Represents a single file.
 public struct File: Codable, Equatable {
     /// Name of the file, including extension.
