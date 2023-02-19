@@ -38,16 +38,12 @@ jobs:
        with_tsan: false
        with_public_api_check: true
   test-exports:
-      name: Test exports
-      runs-on: ubuntu-latest
-      steps:
-        - name: Check out Vapor
-          uses: actions/checkout@v3
-          with:
-            fetch-depth: 0
-        - name: Remove exports
-          run: |
-            rm -rf Sources/Vapor/Exports.swift
-            rm -rf Sources/XCTVapor/Exports.swift
-        - name: Build
-          run: swift build
+    name: Test exports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out Vapor
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Build
+        run: swift build -Xswiftc -DBUILDING_DOCC
