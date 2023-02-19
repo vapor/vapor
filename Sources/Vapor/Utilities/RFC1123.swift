@@ -1,5 +1,5 @@
 import Foundation
-import NIO
+import NIOPosix
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {
