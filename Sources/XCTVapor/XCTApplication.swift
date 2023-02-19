@@ -1,3 +1,9 @@
+import AsyncHTTPClient
+import NIOCore
+import NIOHTTP1
+import XCTest
+import Vapor
+
 extension Application: XCTApplicationTester {
     public func performTest(request: XCTHTTPRequest) throws -> XCTHTTPResponse {
          try self.testable().performTest(request: request)

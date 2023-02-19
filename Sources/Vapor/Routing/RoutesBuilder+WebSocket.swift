@@ -1,3 +1,6 @@
+import RoutingKit
+import WebSocketKit
+
 public struct WebSocketMaxFrameSize: ExpressibleByIntegerLiteral {
     let value: Int
 

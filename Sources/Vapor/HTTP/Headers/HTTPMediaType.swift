@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
 ///
 ///     text/plain

@@ -1,3 +1,5 @@
+import Foundation
+
 public struct Validations {
     var storage: [Validation]
     

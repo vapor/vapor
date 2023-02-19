@@ -1,4 +1,7 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 final class ServiceTests: XCTestCase {
     func testReadOnly() throws {
@@ -26,6 +29,7 @@ final class ServiceTests: XCTestCase {
     func testLifecycle() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        app.http.server.configuration.port = 0
 
         app.lifecycle.use(Hello())
         app.environment.arguments = ["serve"]

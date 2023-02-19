@@ -6,8 +6,9 @@ on:
 
 jobs:
   build-and-deploy:
-     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@fc8584486d15d22fbb3dabc28b27f518eb77a84c
+     uses: vapor/api-docs/.github/workflows/build-and-deploy-docs-workflow.yml@main
      secrets: inherit
      with:
        package_name: vapor
        modules: Vapor,XCTVapor
+       pathsToInvalidate: /vapor /xctvapor

@@ -1,5 +1,6 @@
 @testable import Vapor
 import XCTest
+import NIOHTTP1
 
 final class HTTPHeaderTests: XCTestCase {
     func testValue() throws {

@@ -1,4 +1,9 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
+import NIOHTTP1
+import NIOEmbedded
 
 final class ContentTests: XCTestCase {
     func testContent() throws {

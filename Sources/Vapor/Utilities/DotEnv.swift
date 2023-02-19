@@ -3,6 +3,9 @@ import Glibc
 #else
 import Darwin
 #endif
+import Logging
+import NIOCore
+import NIOPosix
 
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
