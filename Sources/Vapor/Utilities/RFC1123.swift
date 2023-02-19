@@ -1,5 +1,6 @@
 import Foundation
 import NIOPosix
+import NIOCore
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {
