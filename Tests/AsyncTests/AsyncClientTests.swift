@@ -78,6 +78,7 @@ final class AsyncClientTests: XCTestCase {
 
     func testBoilerplateClient() async throws {
         let app = Application(.testing)
+        app.http.server.configuration.port = 0
         defer { app.shutdown() }
 
         app.get("foo") { req async throws -> String in
@@ -95,8 +96,15 @@ final class AsyncClientTests: XCTestCase {
         app.environment.arguments = ["serve"]
         try app.boot()
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
 
-        let res = try await app.client.get("http://localhost:8080/foo")
+        let res = try await app.client.get("http://localhost:\(port)/foo")
         XCTAssertEqual(res.body?.string, "bar")
 
         try await app.running?.onStop.get()

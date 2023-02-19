@@ -106,10 +106,18 @@ final class ClientTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
         try app.boot()
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
 
-        let res = try app.client.get("http://localhost:8080/foo").wait()
+        let res = try app.client.get("http://localhost:\(port)/foo").wait()
         XCTAssertEqual(res.body?.string, "bar")
 
         try app.running?.onStop.wait()
