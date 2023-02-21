@@ -1,5 +1,6 @@
 import XCTest
 import Vapor
+import Logging
 
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {

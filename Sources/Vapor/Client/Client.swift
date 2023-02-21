@@ -1,3 +1,7 @@
+import NIOCore
+import Logging
+import NIOHTTP1
+
 public protocol Client {
     var eventLoop: EventLoop { get }
     var byteBufferAllocator: ByteBufferAllocator { get }

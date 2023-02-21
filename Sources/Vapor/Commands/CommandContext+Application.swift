@@ -1,3 +1,5 @@
+import ConsoleKit
+
 extension CommandContext {
     public var application: Application {
         get {

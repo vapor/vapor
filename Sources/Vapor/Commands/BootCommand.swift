@@ -1,3 +1,5 @@
+import ConsoleKit
+
 /// Boots the `Application` then exits successfully.
 ///
 ///     $ swift run Run boot

@@ -1,4 +1,4 @@
-import NIO
+import NIOCore
 import NIOConcurrencyHelpers
 
 extension Request {

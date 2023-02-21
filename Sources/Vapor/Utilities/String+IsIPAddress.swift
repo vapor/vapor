@@ -1,3 +1,5 @@
+import Foundation
+
 extension String {
     func isIPAddress() -> Bool {
         // We need some scratch space to let inet_pton write into.

@@ -1,3 +1,6 @@
+import Foundation
+import ConsoleKit
+
 /// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
 ///
 ///     $ swift run Run serve

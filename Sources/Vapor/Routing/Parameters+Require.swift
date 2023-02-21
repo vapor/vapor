@@ -1,3 +1,5 @@
+import RoutingKit
+
 extension Parameters {
     /// Grabs the named parameter from the parameter bag.
     /// If the parameter does not exist, `Abort(.internalServerError)` is thrown.

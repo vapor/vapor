@@ -1,4 +1,7 @@
-import NIO
+import NIOCore
+import AsyncHTTPClient
+import Logging
+import Foundation
 
 extension HTTPClient {
     func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator) -> Client {

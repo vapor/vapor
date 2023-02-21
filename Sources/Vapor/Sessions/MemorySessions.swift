@@ -1,3 +1,6 @@
+import Foundation
+import NIOCore
+
 /// Simple in-memory sessions implementation.
 public struct MemorySessions: SessionDriver {
     public let storage: Storage

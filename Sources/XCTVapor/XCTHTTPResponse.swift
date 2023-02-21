@@ -1,3 +1,8 @@
+import NIOCore
+import NIOHTTP1
+import Vapor
+import XCTest
+
 public struct XCTHTTPResponse {
     public var status: HTTPStatus
     public var headers: HTTPHeaders

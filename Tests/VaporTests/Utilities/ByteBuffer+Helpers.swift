@@ -1,4 +1,4 @@
-import Vapor
+import NIOCore
 
 extension ByteBuffer {
     init(string: String) {

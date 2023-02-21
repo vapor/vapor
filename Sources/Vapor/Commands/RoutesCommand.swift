@@ -1,3 +1,6 @@
+import ConsoleKit
+import RoutingKit
+
 /// Displays all routes registered to the `Application`'s `Router` in an ASCII-formatted table.
 ///
 ///     $ swift run Run routes

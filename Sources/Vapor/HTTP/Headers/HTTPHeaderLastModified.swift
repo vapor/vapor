@@ -1,3 +1,6 @@
+import Foundation
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Represents the HTTP `Last-Modified` header.
     /// - See Also:

@@ -1,3 +1,7 @@
+import Logging
+import NIOCore
+import NIOPosix
+
 extension DotEnvFile {
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///

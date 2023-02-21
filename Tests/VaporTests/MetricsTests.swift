@@ -2,6 +2,7 @@ import XCTVapor
 import Vapor
 import Metrics
 @testable import CoreMetrics
+import XCTest
 
 class MetricsTests: XCTestCase {
     func testMetricsIncreasesCounter() {

@@ -1,4 +1,4 @@
-import struct Foundation.Decimal
+import Foundation
 
 /// Capable of converting to / from `URLQueryFragment`.
 protocol URLQueryFragmentConvertible {

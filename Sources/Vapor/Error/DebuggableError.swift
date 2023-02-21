@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.

@@ -1,3 +1,4 @@
+import Foundation
 import NIOCore
 import NIOConcurrencyHelpers
 

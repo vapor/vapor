@@ -1,3 +1,7 @@
+import Foundation
+import NIOHTTP1
+import NIOCore
+
 /// Encodes `Encodable` instances to `application/x-www-form-urlencoded` data.
 ///
 ///     print(user) /// User

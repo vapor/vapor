@@ -1,3 +1,5 @@
+import NIOCore
+
 public enum BodyStreamResult {
     /// A normal data chunk.
     /// There will be 0 or more of these.
