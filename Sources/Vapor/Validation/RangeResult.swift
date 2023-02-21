@@ -15,10 +15,13 @@ public enum RangeResult<T>: Equatable where T: Comparable {
     /// The value was less than `min`.
     case lessThanMin(T)
 
+    /// not comparable, e.g. Float.nan
+    case notComparable
+
     var isWithinRange: Bool {
         switch self {
         case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax: return true
-        case .greaterThanMax, .lessThanMin: return false
+        case .greaterThanMax, .lessThanMin, .notComparable: return false
         }
     }
 
@@ -34,6 +37,8 @@ public enum RangeResult<T>: Equatable where T: Comparable {
             return "less than minimum of \(min)"
         case let .lessThanOrEqualToMax(max):
             return "less than or equal to maximum of \(max)"
+        case .notComparable:
+            return "not comparable"
         }
     }
 
@@ -46,14 +51,15 @@ public enum RangeResult<T>: Equatable where T: Comparable {
             self = .lessThanMin(min)
         case let (_, .some(max)) where value > max:
             self = .greaterThanMax(max)
-        case let (.some(min), _):
+        case let (.some(min), _) where value >= min:
             self = .greaterThanOrEqualToMin(min)
-        case let (_, .some(max)):
+        case let (_, .some(max)) where value <= max:
             self = .lessThanOrEqualToMax(max)
-        case (.none, .none):
-            // This cannot happen because all static methods on `Validator` that can make
+        case (_, _):
+            // any other case is either not comparable (e.g. comparing Float.nan with anything is always false)
+            // or it should never happen because all static methods on `Validator` that can make
             // the count and range validators all result in at least a minimum or a maximum or both.
-            fatalError("No minimum or maximum was supplied to the Count validator")
+            self = .notComparable
         }
     }
 }
