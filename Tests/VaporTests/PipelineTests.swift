@@ -64,10 +64,17 @@ final class PipelineTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
         
-        app.on(.POST, "echo", body: .stream) { request -> Response in
-            return Response(body: .init(managedAsyncStream: { writer in
-                for try await chunk in request.body {
-                    try await writer.writeBuffer(chunk)
+        
+        app.on(.POST, "echo", body: .stream) { request async throws -> Response in
+            var buffers = [ByteBuffer]()
+            
+            for try await buffer in request.body {
+                buffers.append(buffer)
+            }
+            
+            return Response(body: .init(managedAsyncStream: { [buffers] writer in
+                for buffer in buffers {
+                    try await writer.writeBuffer(buffer)
                 }
             }))
         }
