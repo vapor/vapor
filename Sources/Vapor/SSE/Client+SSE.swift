@@ -1,3 +1,4 @@
+import NIO
 import AsyncHTTPClient
 import Algorithms
 

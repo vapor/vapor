@@ -1,3 +1,5 @@
+import NIO
+
 extension Request {
     public func serverSentEvents(
         produce: @escaping @Sendable (SSEStreamProducer) async throws -> ()

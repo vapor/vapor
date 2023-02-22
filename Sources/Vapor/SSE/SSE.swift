@@ -1,3 +1,5 @@
+import NIO
+
 enum SSEError: Error {
     case notAString, protocolViolation
 }
