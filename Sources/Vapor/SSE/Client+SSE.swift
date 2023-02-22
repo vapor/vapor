@@ -35,7 +35,7 @@ extension HTTPClientResponse {
 
 internal enum SSEParser {
     enum ParsingStatus {
-        case nextField, nextEvent, haltParsing
+        case nextField, haltParsing
     }
     
     static func process(sse text: inout ByteBuffer) throws -> [SSEvent] {
@@ -69,7 +69,9 @@ internal enum SSEParser {
                 data.removeAll(keepingCapacity: true)
                 id = nil
                 
-                return text.readableBytes > 0 ? .nextEvent : .haltParsing
+                lastEventReaderIndex = text.readerIndex
+                
+                return text.readableBytes > 0 ? .nextField : .haltParsing
             }
             
             return .nextField
@@ -79,16 +81,15 @@ internal enum SSEParser {
         
         repeat {
             switch checkEndOfEventAndStream() {
-            case .nextEvent:
-                lastEventReaderIndex = text.readerIndex
-                fallthrough
             case .nextField:
                 var value = ""
-                let colonIndex = text.readableBytesView.firstIndex(where: { byte in
+                
+                let readableBytesView = text.readableBytesView
+                let colonIndex = readableBytesView.firstIndex(where: { byte in
                     byte == 0x3a // `:`
                 })
                 
-                guard var lineEndingIndex = text.readableBytesView.firstIndex(where: { byte in
+                guard var lineEndingIndex = readableBytesView.firstIndex(where: { byte in
                     byte == 0x0a || byte == 0x0d // `\n` or `\r`
                 }) else {
                     // Reset to before this event, as we didn't fully process this
@@ -96,7 +97,13 @@ internal enum SSEParser {
                     return events
                 }
                 
-                if let colonIndex = colonIndex {
+                // The indices are offset from the start of the buffer, not the start of the readable bytes
+                lineEndingIndex -= readableBytesView.startIndex
+                
+                if var colonIndex = colonIndex {
+                    // The indices are offset from the start of the buffer, not the start of the readable bytes
+                    colonIndex -= readableBytesView.startIndex
+                    
                     guard let key = text.readString(length: colonIndex) else {
                         // Reset to before this event, as we didn't fully process this
                         text.moveReaderIndex(to: lastEventReaderIndex)
