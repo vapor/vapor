@@ -3,6 +3,7 @@ import Glibc
 #else
 import Darwin.C
 #endif
+import Logging
 
 /// `DirectoryConfiguration` represents a configured working directory.
 /// It can also be used to derive a working directory automatically.

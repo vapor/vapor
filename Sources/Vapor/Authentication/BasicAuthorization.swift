@@ -1,3 +1,6 @@
+import Foundation
+import NIOHTTP1
+
 /// A basic username and password.
 public struct BasicAuthorization {
     /// The username, sometimes an email address

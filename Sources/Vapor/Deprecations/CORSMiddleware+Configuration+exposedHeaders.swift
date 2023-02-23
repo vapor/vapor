@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension CORSMiddleware.Configuration {
     /// Instantiate a CORSConfiguration struct that can be used to create a `CORSConfiguration`
     /// middleware for adding support for CORS in your responses.

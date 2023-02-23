@@ -1,3 +1,5 @@
+import NIOCore
+
 extension EventLoopFuture where Value: OptionalType {
     /// Unwraps an `Optional` value contained inside a Future's expectation.
     /// If the optional resolves to `nil` (`.none`), the supplied error will be thrown instead.

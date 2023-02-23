@@ -1,4 +1,5 @@
-import NIO
+import Foundation
+import NIOPosix
 
 fileprivate final class ISO8601 {
     fileprivate static let threadSpecific: ThreadSpecificVariable<ISO8601DateFormatter> = .init()

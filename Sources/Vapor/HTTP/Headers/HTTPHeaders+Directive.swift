@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     struct Directive: Equatable, CustomStringConvertible {
         var value: Substring

@@ -1,7 +1,8 @@
 @testable import Vapor
 import enum NIOHTTP1.HTTPParserError
 import XCTest
-import NIO
+import NIOEmbedded
+import NIOCore
 
 final class PipelineTests: XCTestCase {
     func testEchoHandlers() throws {

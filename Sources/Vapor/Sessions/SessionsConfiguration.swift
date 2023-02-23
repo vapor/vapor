@@ -1,3 +1,5 @@
+import Foundation
+
 /// Configuration options for sessions.
 public struct SessionsConfiguration {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.

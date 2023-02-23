@@ -1,4 +1,4 @@
-import struct Foundation.Decimal
+import Foundation
 
 /// Capable of converting to / from `URLQueryFragment`.
 protocol URLQueryFragmentConvertible {
@@ -78,6 +78,7 @@ extension Bool: URLQueryFragmentConvertible {
         switch decodedString.lowercased() {
         case "1", "true": self = true
         case "0", "false": self = false
+        case "on": self = true
         default: return nil
         }
     }

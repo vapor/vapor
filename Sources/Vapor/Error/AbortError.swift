@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// Errors conforming to this protocol will always be displayed by
 /// Vapor to the end-user (even in production mode where most errors are silenced).
 ///

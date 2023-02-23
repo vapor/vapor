@@ -1,5 +1,7 @@
-import NIO
+import Logging
+import NIOCore
 import NIOHTTP1
+import Foundation
 
 final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart

@@ -1,3 +1,7 @@
+import Foundation
+import NIOCore
+import NIOHTTP1
+
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
     /// Structure of `ErrorMiddleware` default response.

@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Request {
     public struct Body: CustomStringConvertible {
         let request: Request

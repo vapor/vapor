@@ -1,3 +1,5 @@
+import AsyncHTTPClient
+
 extension Application.Clients.Provider {
     public static var http: Self {
         .init {

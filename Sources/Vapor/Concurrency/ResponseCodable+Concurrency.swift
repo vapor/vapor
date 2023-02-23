@@ -1,4 +1,5 @@
 import NIOCore
+import NIOHTTP1
 
 /// Can convert `self` to a `Response`.
 ///

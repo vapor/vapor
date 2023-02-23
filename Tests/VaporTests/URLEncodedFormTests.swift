@@ -1,6 +1,6 @@
 @testable import Vapor
 import XCTest
-import NIO
+import NIOPosix
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable
@@ -518,6 +518,14 @@ final class URLEncodedFormTests: XCTestCase {
             var flag: Bool
         }
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
+        XCTAssertEqual(foo.flag, true)
+    }
+    
+    func testFlagIsOnDecodingAsBool() throws {
+        struct Foo: Codable {
+            var flag: Bool
+        }
+        let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=on")
         XCTAssertEqual(foo.flag, true)
     }
 

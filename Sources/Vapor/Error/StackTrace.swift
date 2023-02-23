@@ -1,3 +1,4 @@
+import Foundation
 #if os(Linux)
 import Backtrace
 import CBacktrace

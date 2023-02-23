@@ -1,5 +1,6 @@
-import Vapor
 import XCTest
+import Vapor
+import NIOCore
 
 class ValidationTests: XCTestCase {
     func testValidate() throws {

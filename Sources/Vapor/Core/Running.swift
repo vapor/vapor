@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Application {
     public struct Running {
         final class Storage {

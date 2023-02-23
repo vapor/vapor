@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Application {
     public var responder: Responder {
         .init(application: self)

@@ -1,9 +1,11 @@
-import NIO
+import NIOCore
 import NIOExtras
 import NIOHTTP1
 import NIOHTTP2
 import NIOHTTPCompression
 import NIOSSL
+import Logging
+import NIOPosix
 
 public enum HTTPVersionMajor: Equatable, Hashable {
     case one

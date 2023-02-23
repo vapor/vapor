@@ -1,5 +1,8 @@
 #if compiler(>=5.7) && canImport(_Concurrency)
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {

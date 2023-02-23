@@ -1,3 +1,6 @@
+import NIOCore
+import WebSocketKit
+
 extension Request {
      public func webSocket(
          maxFrameSize: WebSocketMaxFrameSize = .`default`,

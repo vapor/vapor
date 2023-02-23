@@ -1,3 +1,6 @@
+import Foundation
+import MultipartKit
+
 /// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
 ///
 ///     ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)

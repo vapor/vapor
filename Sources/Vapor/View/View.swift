@@ -1,3 +1,5 @@
+import NIOCore
+
 public struct View: ResponseEncodable {
     public var data: ByteBuffer
 
