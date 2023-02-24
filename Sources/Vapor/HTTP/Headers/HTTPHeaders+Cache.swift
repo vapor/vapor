@@ -1,3 +1,6 @@
+import Foundation
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Determines when the cached data should be expired.
     ///

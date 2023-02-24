@@ -1,6 +1,6 @@
 @testable import Vapor
 import XCTest
-import NIO
+import NIOPosix
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable

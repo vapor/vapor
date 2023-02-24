@@ -1,4 +1,4 @@
-import NIO
+import NIOCore
 import NIOHTTP1
 
 final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelHandler {

@@ -1,3 +1,5 @@
+import NIOCore
+
 /// Capable of being authenticated.
 public protocol Authenticatable { }
 

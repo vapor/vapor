@@ -1,3 +1,5 @@
+#if !BUILDING_DOCC
+
 @_exported import AsyncKit
 
 @_exported import class AsyncHTTPClient.HTTPClient
@@ -37,3 +39,4 @@
 
 @_exported import WebSocketKit
 @_exported import MultipartKit
+#endif

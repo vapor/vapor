@@ -1,3 +1,5 @@
+import NIOCore
+
 /// Uses HTTP cookies to save and restore sessions for connecting clients.
 ///
 /// If a cookie matching the configured cookie name is found on an incoming request,

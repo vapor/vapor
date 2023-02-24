@@ -1,3 +1,6 @@
+import Foundation
+import NIOHTTP1
+
 /// Represents a `MediaType` and its associated preference, `q`.
 public struct HTTPMediaTypePreference {
     /// The `MediaType` in question.

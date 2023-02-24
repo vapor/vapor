@@ -1,4 +1,5 @@
-import NIO
+import NIOCore
+import Logging
 
 final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request

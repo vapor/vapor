@@ -1,3 +1,6 @@
+import Foundation
+import NIOCore
+
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.

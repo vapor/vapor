@@ -1,3 +1,5 @@
 version: 1
 metadata:
-  authors: “Maintained by the Vapor Core Team with hundreds of contributions from the Vapor Community.”
+  authors: "Maintained by the Vapor Core Team with hundreds of contributions from the Vapor Community."
+external_links:
+  documentation: "https://docs.vapor.codes"

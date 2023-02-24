@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Authenticatable {
     /// Basic middleware to redirect unauthenticated requests to the supplied path
     ///
