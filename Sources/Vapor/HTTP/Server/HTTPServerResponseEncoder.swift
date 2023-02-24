@@ -134,7 +134,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
             self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
-        }
+            }
     }
 
     deinit {
