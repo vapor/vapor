@@ -1,4 +1,6 @@
 import Foundation
+import Vapor
+import NIOCore
 
 public final class SpyClient: Client {
     private(set) var requestsSeen: [ClientRequest] = []
