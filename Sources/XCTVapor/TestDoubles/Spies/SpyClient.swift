@@ -1,7 +1,7 @@
 import Foundation
 
 public final class SpyClient: Client {
-    private(set) var requestsUsed: [ClientRequest] = []
+    private(set) var requestsSeen: [ClientRequest] = []
     
     public var stubResponse: ClientResponse = .init(status: .ok)
     
