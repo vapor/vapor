@@ -126,7 +126,15 @@ final class ApplicationTests: XCTestCase {
             "Hello, world!"
         }
 
-        let response = try app.client.get("http://localhost:8080/hello").wait()
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else
+        {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+
+        let response = try app.client.get("http://localhost:\(port)/hello").wait()
         let message = try response.content.decode(Greeting.self).message
         XCTAssertEqual(message, "Hello, world!")
     }
