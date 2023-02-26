@@ -22,7 +22,7 @@ public final class SpyClient: Client {
     
     // Conforming to the protocol: Client
     public func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.requestsUsed.append(request)
+        self.requestsSeen.append(request)
         
         return self.eventLoop.future(self.stubResponse)
     }
