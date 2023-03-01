@@ -27,6 +27,9 @@ public final class Request: CustomStringConvertible {
     
     internal var isKeepAlive: Bool
     
+    /// A uniquely generated ID for each request
+    public let id: String
+    
     // MARK: Metadata
     
     /// Route object we found for this request.
@@ -230,6 +233,7 @@ public final class Request: CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
+        self.id = UUID().uuidString
         self.application = application
         self.method = method
         self.url = url
@@ -246,7 +250,7 @@ public final class Request: CustomStringConvertible {
         self.storage = .init()
         self.isKeepAlive = true
         self.logger = logger
-        self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        self.logger[metadataKey: "request-id"] = .string(id)
         self.byteBufferAllocator = byteBufferAllocator
     }
 }
