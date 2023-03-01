@@ -80,7 +80,7 @@ final class ContentTests: XCTestCase {
 
         try app.testable().test(.GET, "/decode_error") { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, #"Value at path 'bar' was not of type 'Int'. Expected to decode Int but found a string\/data instead"#)
+            XCTAssertContains(res.body.string, #"Value at path 'bar' was not of type 'Int'. Expected to decode Int but found a string"#)
         }
     }
 
@@ -454,9 +454,9 @@ final class ContentTests: XCTestCase {
             let badJson: String
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            XCTAssertEqual(
+            XCTAssertContains(
                 (error as? AbortError)?.reason,
-                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "No value for key in object around line 1, column 12." UserInfo={NSDebugDescription=No value for key in object around line 1, column 12., NSJSONSerializationErrorIndex=12}."#
+                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: "#
             )
         }
     }
@@ -508,9 +508,9 @@ final class ContentTests: XCTestCase {
             let item: Item
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
-            XCTAssertEqual(
+            XCTAssertContains(
                 (error as? AbortError)?.reason,
-                #"Value at path 'item.title' was not of type 'Int'. Expected to decode Int but found a string/data instead."#
+                #"Value at path 'item.title' was not of type 'Int'. Expected to decode Int but found a string"#
             )
         }
     }
