@@ -539,7 +539,6 @@ final class ContentTests: XCTestCase {
     func testDataCorruptionError() throws {
         let app = Application()
         defer { app.shutdown() }
-
         let req = Request(
             application: app,
             method: .GET,
@@ -548,7 +547,6 @@ final class ContentTests: XCTestCase {
             collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
             on: app.eventLoopGroup.next()
         )
-
         struct DecodeModel: Content {
             let badJson: String
         }
@@ -563,12 +561,10 @@ final class ContentTests: XCTestCase {
     func testValueNotFoundError() throws {
         let app = Application()
         defer { app.shutdown() }
-
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.content.encode([
             "items": ["1"]
         ], as: .json)
-
         struct DecodeModel: Content {
             struct Item: Content {
                 init(from decoder: Decoder) throws {
@@ -578,7 +574,6 @@ final class ContentTests: XCTestCase {
                     fatalError()
                 }
             }
-
             let items: Item
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
@@ -592,14 +587,12 @@ final class ContentTests: XCTestCase {
     func testTypeMismatchError() throws {
         let app = Application()
         defer { app.shutdown() }
-
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.content.encode([
             "item": [
                 "title": "The title"
             ]
         ], as: .json)
-
         struct DecodeModel: Content {
             struct Item: Content {
                 let title: Int
