@@ -437,6 +437,84 @@ final class ContentTests: XCTestCase {
         }
     }
 
+    func testDataCorruptionError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "https://vapor.codes"),
+            headersNoUpdate: ["Content-Type": "application/json"],
+            collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
+            on: app.eventLoopGroup.next()
+        )
+        
+        struct DecodeModel: Content {
+            let badJson: String
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertEqual(
+                (error as? AbortError)?.reason,
+                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: Error Domain=NSCocoaErrorDomain Code=3840 "No value for key in object around line 1, column 12." UserInfo={NSDebugDescription=No value for key in object around line 1, column 12., NSJSONSerializationErrorIndex=12}."#
+            )
+        }
+    }
+
+    func testValueNotFoundError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+        try req.content.encode([
+            "items": ["1"]
+        ], as: .json)
+        
+        struct DecodeModel: Content {
+            struct Item: Content {
+                init(from decoder: Decoder) throws {
+                    var container = try decoder.unkeyedContainer()
+                    _ = try container.decode(String.self)
+                    _ = try container.decode(String.self)
+                    fatalError()
+                }
+            }
+            
+            let items: Item
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertEqual(
+                (error as? AbortError)?.reason,
+                #"Value of type 'String' was not found at path 'items.Index 1'. Unkeyed container is at end."#
+            )
+        }
+    }
+
+    func testTypeMismatchError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+        try req.content.encode([
+            "item": [
+                "title": "The title"
+            ]
+        ], as: .json)
+        
+        struct DecodeModel: Content {
+            struct Item: Content {
+                let title: Int
+            }
+            let item: Item
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertEqual(
+                (error as? AbortError)?.reason,
+                #"Value at path 'item.title' was not of type 'Int'. Expected to decode Int but found a string/data instead."#
+            )
+        }
+    }
+
     func testPlaintextDecode() throws {
         let data = "255"
         let app = Application(.testing)

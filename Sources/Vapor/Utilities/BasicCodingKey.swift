@@ -20,11 +20,7 @@ extension Int: CodingKeyRepresentable {
 
 extension Array where Element == CodingKey {
     public var dotPath: String {
-        if isEmpty {
-           return "none"
-        } else {
-            return map { $0.stringValue }.joined(separator: ".")
-        }
+        return map { $0.stringValue }.joined(separator: ".")
     }
 }
 

@@ -69,7 +69,7 @@ extension DecodingError: AbortError {
     public var reason: String {
         switch self {
         case .dataCorrupted(let ctx):
-            return "Data corrupted at path \(ctx.codingPath.dotPath)\(ctx.debugDescriptionAndUnderlyingError)"
+            return "Data corrupted at path '\(ctx.codingPath.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .keyNotFound(let key, let ctx):
             let path = ctx.codingPath + [key]
             return "Value required for key at path '\(path.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
