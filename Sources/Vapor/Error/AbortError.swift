@@ -69,20 +69,20 @@ extension DecodingError: AbortError {
     public var reason: String {
         switch self {
         case .dataCorrupted(let ctx):
-            return "\(ctx.debugDescription) for key \(ctx.codingPath.dotPath)"
+            return "Data corrupted. \(ctx.description)"
         case .keyNotFound(let key, let ctx):
-            let path: String
-            if ctx.codingPath.count > 0 {
-                path = ctx.codingPath.dotPath + "." + key.stringValue
-            } else {
-                path = key.stringValue
-            }
-            return "Value required for key '\(path)'."
+            return "Key '\(key)' was not found. \(ctx.description)"
         case .typeMismatch(let type, let ctx):
-            return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
+            return "Value was not of type '\(type)'. \(ctx.description)"
         case .valueNotFound(let type, let ctx):
-            return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
+            return "Value of type '\(type)' was not found. \(ctx.description)"
         @unknown default: return "Unknown error."
         }
+    }
+}
+
+extension DecodingError.Context {
+    var description: String {
+        "Coding path: \(self.codingPath.dotPath). Debug description: \(self.debugDescription). Underlying error: \(String(describing: self.underlyingError))."
     }
 }
