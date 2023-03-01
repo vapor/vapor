@@ -80,7 +80,7 @@ final class ContentTests: XCTestCase {
 
         try app.testable().test(.GET, "/decode_error") { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
+            XCTAssertContains(res.body.string, #"Value at path 'bar' was not of type 'Int'. Expected to decode Int but found a string\/data instead"#)
         }
     }
 
@@ -432,7 +432,7 @@ final class ContentTests: XCTestCase {
         XCTAssertThrowsError(try req.content.decode(PostInput.self)) { error in
             XCTAssertEqual(
                 (error as? AbortError)?.reason,
-                "Value required for key 'is_free'."
+                #"Value required for key at path 'is_free'. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
             )
         }
     }

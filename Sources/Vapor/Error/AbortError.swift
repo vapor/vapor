@@ -69,20 +69,40 @@ extension DecodingError: AbortError {
     public var reason: String {
         switch self {
         case .dataCorrupted(let ctx):
-            return "Data corrupted. \(ctx.description)"
+            return "Data corrupted at path \(ctx.codingPath.dotPath)\(ctx.debugDescriptionAndUnderlyingError)"
         case .keyNotFound(let key, let ctx):
-            return "Key '\(key)' was not found. \(ctx.description)"
+            let path = ctx.codingPath + [key]
+            return "Value required for key at path '\(path.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .typeMismatch(let type, let ctx):
-            return "Value was not of type '\(type)'. \(ctx.description)"
+            return "Value at path '\(ctx.codingPath.dotPath)' was not of type '\(type)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .valueNotFound(let type, let ctx):
-            return "Value of type '\(type)' was not found. \(ctx.description)"
+            return "Value of type '\(type)' was not found at path '\(ctx.codingPath.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         @unknown default: return "Unknown error."
         }
     }
 }
 
-extension DecodingError.Context {
-    var description: String {
-        "Coding path: \(self.codingPath.dotPath). Debug description: \(self.debugDescription). Underlying error: \(String(describing: self.underlyingError))."
+private extension DecodingError.Context {
+    var debugDescriptionAndUnderlyingError: String {
+        "\(self.debugDescriptionNoTrailingDot)\(self.underlyingErrorDescription)."
+    }
+    
+    /// `debugDescription` sometimes has a trailing dot, and sometimes not.
+    private var debugDescriptionNoTrailingDot: String {
+        if self.debugDescription.isEmpty {
+            return ""
+        } else if self.debugDescription.last == "." {
+            return ". \(String(self.debugDescription.dropLast()))"
+        } else {
+            return ". \(self.debugDescription)"
+        }
+    }
+    
+    private var underlyingErrorDescription: String {
+        if let underlyingError = self.underlyingError {
+            return ". Underlying error: \(underlyingError)"
+        } else {
+            return ""
+        }
     }
 }
