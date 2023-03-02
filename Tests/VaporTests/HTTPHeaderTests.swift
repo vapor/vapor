@@ -419,4 +419,18 @@ final class HTTPHeaderTests: XCTestCase {
         XCTAssertEqual(date.expires.timeIntervalSince1970, 18*3600)
         XCTAssertEqual(date.serialize(), "Thu, 01 Jan 1970 18:00:00 GMT")
     }
+
+    /// Test parse and serialize of `Cache-Control` header
+    func testCacheControlHeader() throws {
+        var headers = HTTPHeaders()
+        headers.cacheControl = HTTPHeaders.CacheControl(immutable: true)
+
+        guard let cacheControl = headers.cacheControl else {
+            XCTFail("HTTPHeaders.CacheControl parsing failed")
+            return
+        }
+
+        XCTAssertEqual(cacheControl.serialize(), "immutable")
+
+    }
 }
