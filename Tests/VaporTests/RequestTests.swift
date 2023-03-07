@@ -221,16 +221,16 @@ final class RequestTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect_normal") {
-            $0.redirectTo("foo", type: .normal)
+            $0.redirect(to: "foo", redirectType: .normal)
         }
         app.get("redirect_permanent") {
-            $0.redirectTo("foo", type: .permanent)
+            $0.redirect(to: "foo", redirectType: .permanent)
         }
         app.post("redirect_temporary") {
-            $0.redirectTo("foo", type: .temporary)
+            $0.redirect(to: "foo", redirectType: .temporary)
         }
         app.post("redirect_permanentPost") {
-            $0.redirectTo("foo", type: .permanentPost)
+            $0.redirect(to: "foo", redirectType: .permanentPost)
         }
         
         try app.server.start(address: .hostname("localhost", port: 8080))

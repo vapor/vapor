@@ -7,8 +7,8 @@ extension Request {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
-    @available(*, deprecated, renamed: "redirectTo")
-    public func redirect(to location: String, type: RedirectType = .normal) -> Response {
+    @available(*, deprecated, renamed: "redirect(to:redirectType:)")
+    public func redirect(to location: String, type: RedirectType) -> Response {
         let response = Response()
         response.status = type.status
         response.headers.replaceOrAdd(name: .location, value: location)
@@ -23,9 +23,9 @@ extension Request {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
-    public func redirectTo(_ location: String, type: Redirect = .normal) -> Response {
+    public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
         let response = Response()
-        response.status = type.status
+        response.status = redirectType.status
         response.headers.replaceOrAdd(name: .location, value: location)
         return response
     }

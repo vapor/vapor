@@ -15,7 +15,7 @@ final class AsyncClientTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
-            $0.redirectTo("foo")
+            $0.redirect(to: "foo")
         }
 
         try app.server.start(address: .hostname("localhost", port: 8080))
@@ -33,7 +33,7 @@ final class AsyncClientTests: XCTestCase {
         app.http.client.configuration.redirectConfiguration = .disallow
 
         app.get("redirect") {
-            $0.redirectTo("foo")
+            $0.redirect(to: "foo")
         }
 
         try app.server.start(address: .hostname("localhost", port: 8080))

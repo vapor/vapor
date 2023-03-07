@@ -33,7 +33,7 @@ private final class RedirectMiddleware<A>: Middleware
             return next.respond(to: request)
         }
 
-        let redirect = request.redirectTo(self.makePath(request))
+        let redirect = request.redirect(to: self.makePath(request))
         return request.eventLoop.makeSucceededFuture(redirect)
     }
 }
