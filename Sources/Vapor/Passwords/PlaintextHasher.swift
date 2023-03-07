@@ -1,3 +1,5 @@
+import Foundation
+
 extension Application.Passwords.Provider {
     public static var plaintext: Self {
         .init {

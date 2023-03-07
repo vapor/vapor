@@ -1,6 +1,6 @@
 @testable import Vapor
 import XCTest
-import NIO
+import NIOPosix
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable
@@ -156,6 +156,94 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssert(result.contains("foos[]=baz"))
         XCTAssert(result.contains("nums[]=3.14"))
         XCTAssert(result.contains("isCool=true"))
+    }
+    
+    func testDateArrayCoding() throws {
+        let toEncode = DateArrayCoding(
+            dates: [
+                Date(timeIntervalSince1970: 0),
+                Date(timeIntervalSince1970: 10_000),
+                Date(timeIntervalSince1970: 20_000),
+                Date(timeIntervalSince1970: 30_000),
+                Date(timeIntervalSince1970: 40_000),
+                Date(timeIntervalSince1970: 50_000),
+            ]
+        )
+        
+        let decodedDefaultFromUnixTimestamp = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: "dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0")
+        XCTAssertEqual(decodedDefaultFromUnixTimestamp, toEncode)
+        
+        let resultForDefault = try URLEncodedFormEncoder().encode(toEncode)
+        XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
+        
+        let decodedDefault = try URLEncodedFormDecoder().decode(DateArrayCoding.self, from: resultForDefault)
+        XCTAssertEqual(decodedDefault, toEncode)
+        
+        let resultForTimeIntervalSince1970 = try URLEncodedFormEncoder(
+            configuration: .init(dateEncodingStrategy: .secondsSince1970)
+        ).encode(toEncode)
+        XCTAssertEqual("dates[]=0.0&dates[]=10000.0&dates[]=20000.0&dates[]=30000.0&dates[]=40000.0&dates[]=50000.0", resultForDefault)
+        
+        let decodedTimeIntervalSince1970 = try URLEncodedFormDecoder(
+            configuration: .init(dateDecodingStrategy: .secondsSince1970)
+        ).decode(DateArrayCoding.self, from: resultForTimeIntervalSince1970)
+        XCTAssertEqual(decodedTimeIntervalSince1970, toEncode)
+        
+        let resultForInternetDateTime = try URLEncodedFormEncoder(
+            configuration: .init(dateEncodingStrategy: .iso8601)
+        ).encode(toEncode)
+        XCTAssertEqual("dates[]=1970-01-01T00:00:00Z&dates[]=1970-01-01T02:46:40Z&dates[]=1970-01-01T05:33:20Z&dates[]=1970-01-01T08:20:00Z&dates[]=1970-01-01T11:06:40Z&dates[]=1970-01-01T13:53:20Z", resultForInternetDateTime)
+        
+        let decodedInternetDateTime = try URLEncodedFormDecoder(
+            configuration: .init(dateDecodingStrategy: .iso8601)
+        ).decode(DateArrayCoding.self, from: resultForInternetDateTime)
+        XCTAssertEqual(decodedInternetDateTime, toEncode)
+        
+        XCTAssertThrowsError(try URLEncodedFormDecoder(
+            configuration: .init(dateDecodingStrategy: .iso8601)
+        ).decode(DateArrayCoding.self, from: "dates=bad-date"))
+        
+        class DateFormatterFactory {
+            private var threadSpecificValue = ThreadSpecificVariable<DateFormatter>()
+            var currentValue: DateFormatter {
+                get {
+                    guard let dateFormatter = threadSpecificValue.currentValue else {
+                        let threadSpecificDateFormatter = self.newDateFormatter
+                        threadSpecificValue.currentValue = threadSpecificDateFormatter
+                        return threadSpecificDateFormatter
+                    }
+                    return dateFormatter
+                }
+            }
+            
+            private var newDateFormatter: DateFormatter {
+                let dateFormatter = DateFormatter()
+                dateFormatter.locale = Locale(identifier: "en_US_POSIX")
+                dateFormatter.dateFormat = "'Date:' yyyy-MM-dd 'Time:' HH:mm:ss 'Timezone:' ZZZZZ"
+                dateFormatter.timeZone = TimeZone(secondsFromGMT: 0)
+                return dateFormatter
+            }
+        }
+        let factory = DateFormatterFactory()
+        let resultCustom = try URLEncodedFormEncoder(
+            configuration: .init(dateEncodingStrategy: .custom({ (date, encoder) in
+                var container = encoder.singleValueContainer()
+                try container.encode(factory.currentValue.string(from: date))
+            }))
+        ).encode(toEncode)
+        XCTAssertEqual("dates[]=Date:%201970-01-01%20Time:%2000:00:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2002:46:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2005:33:20%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2008:20:00%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2011:06:40%20Timezone:%20Z&dates[]=Date:%201970-01-01%20Time:%2013:53:20%20Timezone:%20Z", resultCustom)
+        
+        let decodedCustom = try URLEncodedFormDecoder(
+            configuration: .init(dateDecodingStrategy: .custom({ (decoder) -> Date in
+                let container = try decoder.singleValueContainer()
+                let string = try container.decode(String.self)
+                guard let date = factory.currentValue.date(from: string) else {
+                    throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unable to decode date from string '\(string)'")
+                }
+                return date
+            }))
+        ).decode(DateArrayCoding.self, from: resultCustom)
+        XCTAssertEqual(decodedCustom, toEncode)
     }
 
     func testDateCoding() throws {
@@ -432,6 +520,14 @@ final class URLEncodedFormTests: XCTestCase {
         let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag")
         XCTAssertEqual(foo.flag, true)
     }
+    
+    func testFlagIsOnDecodingAsBool() throws {
+        struct Foo: Codable {
+            var flag: Bool
+        }
+        let foo = try URLEncodedFormDecoder().decode(Foo.self, from: "flag=on")
+        XCTAssertEqual(foo.flag, true)
+    }
 
     /// https://github.com/vapor/url-encoded-form/issues/3
     func testGH3() throws {
@@ -619,4 +715,8 @@ private enum Foo: String, Codable {
 
 struct DateCoding: Codable, Equatable {
     let date: Date
+}
+
+struct DateArrayCoding: Codable, Equatable {
+    let dates: [Date]
 }

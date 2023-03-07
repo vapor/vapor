@@ -1,3 +1,6 @@
+import MultipartKit
+import NIOHTTP1
+
 extension File: MultipartPartConvertible {
     public var multipart: MultipartPart? {
         var part = MultipartPart(headers: [:], body: .init(self.data.readableBytesView))

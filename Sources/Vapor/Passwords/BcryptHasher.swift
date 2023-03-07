@@ -1,3 +1,5 @@
+import Foundation
+
 extension Application.Passwords.Provider {
     public static var bcrypt: Self {
         .bcrypt(cost: 12)

@@ -1,4 +1,5 @@
-import NIO
+import Foundation
+import NIOHTTP1
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPHeaders {

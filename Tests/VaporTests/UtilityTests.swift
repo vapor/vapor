@@ -1,5 +1,6 @@
 import XCTVapor
 @testable import Vapor
+import XCTest
 
 final class UtilityTests: XCTestCase {
     func testHexEncoding() throws {

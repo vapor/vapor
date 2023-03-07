@@ -1,3 +1,5 @@
+import NIOCore
+
 /// A basic, closure-based `Responder`.
 public struct BasicResponder: Responder {
     /// The stored responder closure.

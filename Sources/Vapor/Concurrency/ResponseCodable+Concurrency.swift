@@ -1,4 +1,5 @@
 import NIOCore
+import NIOHTTP1
 
 /// Can convert `self` to a `Response`.
 ///
@@ -12,7 +13,7 @@ public protocol AsyncResponseEncodable {
     ///     - for: The `HTTPRequest` associated with this `HTTPResponse`.
     /// - returns: An `HTTPResponse`.
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func encodeResponse(for request: Request) async throws -> Response
     #endif
 }
@@ -29,14 +30,14 @@ public protocol AsyncRequestDecodable {
     ///     - request: The `HTTPRequest` to be decoded.
     /// - returns: An asynchronous `Self`.
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     static func decodeRequest(_ request: Request) async throws -> Self
     #endif
 }
 
 extension Request: AsyncRequestDecodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public static func decodeRequest(_ request: Request) async throws -> Request {
         return request
     }
@@ -45,7 +46,7 @@ extension Request: AsyncRequestDecodable {
 
 // MARK: Convenience
 #if compiler(>=5.5) && canImport(_Concurrency)
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncResponseEncodable {
     /// Asynchronously encodes `Self` into a `Response`, setting the supplied status and headers.
     ///
@@ -76,7 +77,7 @@ extension AsyncResponseEncodable {
 extension Response: AsyncResponseEncodable {
     // See `AsyncResponseCodable`.
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         return self
     }
@@ -86,7 +87,7 @@ extension Response: AsyncResponseEncodable {
 extension StaticString: AsyncResponseEncodable {
     // See `AsyncResponseEncodable`.
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(staticString: self))
         return res
@@ -97,7 +98,7 @@ extension StaticString: AsyncResponseEncodable {
 extension String: AsyncResponseEncodable {
     // See `AsyncResponseEncodable`.
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         let res = Response(headers: staticStringHeaders, body: .init(string: self))
         return res
@@ -106,7 +107,7 @@ extension String: AsyncResponseEncodable {
 }
 
 #if compiler(>=5.5) && canImport(_Concurrency)
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Content {
     public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response()
@@ -123,7 +124,7 @@ extension Content {
 
 extension ClientResponse: AsyncResponseEncodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         let body: Response.Body
         if let buffer = self.body {
@@ -143,7 +144,7 @@ extension ClientResponse: AsyncResponseEncodable {
 
 extension HTTPStatus: AsyncResponseEncodable {
     #if compiler(>=5.5) && canImport(_Concurrency)
-    @available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     public func encodeResponse(for request: Request) async throws -> Response {
         return Response(status: self)
     }

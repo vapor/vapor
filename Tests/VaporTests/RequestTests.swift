@@ -1,4 +1,7 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 final class RequestTests: XCTestCase {
     
@@ -14,6 +17,16 @@ final class RequestTests: XCTestCase {
         try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun") { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
+    }
+    
+    func testRequestIdsAreUnique() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let request1 = Request(application: app, on: app.eventLoopGroup.next())
+        let request2 = Request(application: app, on: app.eventLoopGroup.next())
+        
+        XCTAssertNotEqual(request1.id, request2.id)
     }
 
     func testRequestPeerAddressForwarded() throws {

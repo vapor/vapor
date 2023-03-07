@@ -1,4 +1,5 @@
-import NIO
+import NIOCore
+import Logging
 
 final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -20,7 +21,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             self.serialize(response, for: request, context: context)
         }
     }
-
+    
     func serialize(_ response: Result<Response, Error>, for request: Request, context: ChannelHandlerContext) {
         switch response {
         case .failure(let error):
@@ -51,12 +52,15 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                         context.close(mode: .output, promise: nil)
                     }
                 case .failure(let error):
+                    if case .stream(let stream) = response.body.storage {
+                        stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
+                    }
                     self.errorCaught(context: context, error: error)
                 }
             }
         }
     }
-
+    
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case is ChannelShouldQuiesceEvent:
@@ -65,5 +69,13 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         default:
             self.logger.trace("Unhandled user event: \(event)")
         }
+    }
+}
+
+struct ErrorBodyStreamWriter: BodyStreamWriter {
+    var eventLoop: EventLoop
+    var error: Error
+    func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+        promise?.fail(error)
     }
 }

@@ -1,7 +1,10 @@
 #if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
+import XCTest
+import Vapor
+import NIOHTTP1
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
+@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncRouteTests: XCTestCase {
     func testEnumResponse() throws {
         enum IntOrString: AsyncResponseEncodable {

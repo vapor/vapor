@@ -1,3 +1,7 @@
+import NIOCore
+import NIOHTTP1
+import Foundation
+
 public struct ClientRequest {
     public var method: HTTPMethod
     public var url: URI

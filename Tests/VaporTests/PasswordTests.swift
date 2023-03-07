@@ -1,4 +1,7 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 final class PasswordTests: XCTestCase {
     func testSyncBCryptService() throws {

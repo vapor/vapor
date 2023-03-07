@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Convenience for accessing the Content-Disposition header.
     ///
