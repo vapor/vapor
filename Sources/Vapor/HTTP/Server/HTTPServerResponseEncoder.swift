@@ -133,7 +133,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
-            // TODO: What if it's complete at this point?
+            // See: https://github.com/vapor/vapor/issues/2976
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             self.currentCount += buffer.readableBytes
             if let count = self.count, self.currentCount > count {
@@ -141,7 +141,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStream
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
-            // TODO: What if it's already complete?
+            // See: https://github.com/vapor/vapor/issues/2976
             self.isComplete = true
             if let count = self.count, self.currentCount != count {
                 self.promise?.fail(Error.notEnoughBytes)

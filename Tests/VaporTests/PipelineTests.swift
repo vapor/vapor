@@ -58,7 +58,7 @@ final class PipelineTests: XCTestCase {
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
     
-    #if compiler(>=5.7) && canImport(_Concurrency)
+    #if compiler(>=5.6) && canImport(_Concurrency)
     @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
     func testAsyncEchoHandlers() async throws {
         let app = Application(.testing)
