@@ -7,6 +7,10 @@ extension Request {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
+    /// - Parameters:
+    ///   - location: The path to redirect to
+    ///   - type: The type of redirect to perform
+    /// - Returns: A response that provides a redirect to the specified location
     @available(*, deprecated, renamed: "redirect(to:redirectType:)")
     public func redirect(to location: String, type: RedirectType) -> Response {
         let response = Response()
@@ -23,6 +27,10 @@ extension Request {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
+    /// - Parameters:
+    ///   - location: The path to redirect to
+    ///   - redirectType: The type of redirect to perform
+    /// - Returns: A response that redirects the client to the specified location
     public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
         let response = Response()
         response.status = redirectType.status
