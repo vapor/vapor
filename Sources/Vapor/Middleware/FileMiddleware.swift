@@ -63,7 +63,7 @@ public final class FileMiddleware: Middleware {
                 switch directoryAction.kind {
                 case .redirect:
                     return request.eventLoop.future(
-                        request.redirect(to: request.url.path + "/", type: .permanent)
+                        request.redirect(to: request.url.path + "/", redirectType: .permanent)
                     )
                 case .none:
                     return next.respond(to: request)
