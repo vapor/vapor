@@ -1,4 +1,4 @@
-#if compiler(>=5.7) && canImport(_Concurrency)
+#if compiler(>=5.6) && canImport(_Concurrency)
 import XCTVapor
 import XCTest
 import Vapor
@@ -23,15 +23,14 @@ final class AsyncRequestTests: XCTestCase {
         
         let testValue = String.randomDigits()
 
-        app.on(.POST, "stream", body: .stream) { req in
+        app.on(.POST, "stream", body: .stream) { req -> String in
             var recievedBuffer = ByteBuffer()
             for try await part in req.body {
                 XCTAssertNotNil(part)
                 var part = part
                 recievedBuffer.writeBuffer(&part)
             }
-            let string = String(buffer: recievedBuffer)
-            return string
+            return String(buffer: recievedBuffer)
         }
 
         try app.testable().test(.POST, "/stream", beforeRequest: { req in
