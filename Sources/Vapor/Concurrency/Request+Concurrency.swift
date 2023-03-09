@@ -1,4 +1,4 @@
-#if compiler(>=5.6) && canImport(_Concurrency)
+#if compiler(>=5.7) && canImport(_Concurrency)
 import NIOCore
 import NIOConcurrencyHelpers
 
