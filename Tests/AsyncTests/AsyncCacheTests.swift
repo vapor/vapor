@@ -1,10 +1,8 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 import XCTest
 import Vapor
 import NIOCore
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncCacheTests: XCTestCase {
     func testInMemoryCache() async throws {
         let app = Application(.testing)
@@ -78,4 +76,3 @@ struct FooCache: Cache {
         return self
     }
 }
-#endif
