@@ -50,10 +50,9 @@ public struct StackTrace {
                 maxSplits: 3,
                 omittingEmptySubsequences: true
             )
-            let file = String(parts[1])
-            let functionParts = parts[3].split(separator: "+")
-            let mangledFunction = String(functionParts[0])
-                .trimmingCharacters(in: .whitespaces)
+            let file = parts.count > 1 ? String(parts[1]) : "unknown"
+            let functionPart = parts.count > 3 ? (parts[3].split(separator: "+").first.map({ String($0) }) ?? "unknown") : "unknown"
+            let mangledFunction = functionPart.trimmingCharacters(in: .whitespaces)
             return .init(file: file, mangledFunction: mangledFunction)
         }
         #endif
@@ -97,19 +96,14 @@ extension StackTrace.Frame: CustomStringConvertible {
     }
 }
 
-extension Collection where Element == StackTrace.Frame {
+extension Collection where Element == StackTrace.Frame, Index: BinaryInteger {
     var readable: String {
-        let maxIndexWidth = String(self.count).count
-        let maxFileWidth = self.map { $0.file.count }.max() ?? 0
-        return self.enumerated().map { (i, frame) in
-            let indexPad = String(
-                repeating: " ",
-                count: maxIndexWidth - String(i).count
-            )
-            let filePad = String(
-                repeating: " ",
-                count: maxFileWidth - frame.file.count
-            )
+        let maxIndexWidth = self.indices.max(by: { String($0).count < String($1).count }).map { String($0).count } ?? 0
+        let maxFileWidth = self.max(by: { $0.file.count < $1.file.count })?.file.count ?? 0
+        return self.enumerated().map { i, frame in
+            let indexPad = String(repeating: " ", count: Swift.max(0, maxIndexWidth - String(i).count))
+            let filePad = String(repeating: " ", count: Swift.max(0, maxFileWidth - frame.file.count))
+            
             return "\(i)\(indexPad) \(frame.file)\(filePad) \(frame.function)"
         }.joined(separator: "\n")
     }
