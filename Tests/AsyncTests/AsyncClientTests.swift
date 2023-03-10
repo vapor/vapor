@@ -221,7 +221,7 @@ final class TestLogHandler: LogHandler {
     }
 
     func read() -> [String] {
-        self.lock.withLock {
+        self.lock.withLock { () -> [Logger.Message] in
             let copy = self.messages
             self.messages = []
             return copy
@@ -229,7 +229,7 @@ final class TestLogHandler: LogHandler {
     }
 
     func getMetadata() -> Logger.Metadata {
-        self.lock.withLock {
+        self.lock.withLock { () -> Logger.Metadata in
             let copy = self.metadata
             return copy
         }
