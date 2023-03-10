@@ -30,7 +30,3 @@ func _stdlib_demangleName(_ mangledName: String) -> String {
         return mangledName
     }
 }
-
-/// backtrace is included on macOS and Linux, with the same ABI.
-@_silgen_name("backtrace")
-func backtrace(_: UnsafeMutablePointer<UnsafeMutableRawPointer?>!, _: UInt32) -> UInt32
