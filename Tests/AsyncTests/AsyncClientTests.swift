@@ -2,6 +2,7 @@
 import Vapor
 import XCTest
 import XCTVapor
+import NIOConcurrencyHelpers
 import NIOCore
 import Logging
 import NIOEmbedded
@@ -183,10 +184,11 @@ extension Application.Clients.Provider {
 
 final class TestLogHandler: LogHandler {
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get { self.metadata[key] }
-        set { self.metadata[key] = newValue }
+        get { self.lock.withLock { self.metadata[key] } }
+        set { self.lock.withLockVoid { self.metadata[key] = newValue } }
     }
 
+    let lock: NIOLock
     var metadata: Logger.Metadata
     var logLevel: Logger.Level
     var messages: [Logger.Message]
@@ -198,6 +200,7 @@ final class TestLogHandler: LogHandler {
     }
 
     init() {
+        self.lock = .init()
         self.metadata = [:]
         self.logLevel = .trace
         self.messages = []
@@ -212,17 +215,24 @@ final class TestLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        self.messages.append(message)
+        self.lock.withLockVoid {
+            self.messages.append(message)
+        }
     }
 
     func read() -> [String] {
-        let copy = self.messages
-        self.messages = []
-        return copy.map { $0.description }
+        self.lock.withLock {
+            let copy = self.messages
+            self.messages = []
+            return copy
+        }.map(\.description)
     }
 
     func getMetadata() -> Logger.Metadata {
-        return self.metadata
+        self.lock.withLock {
+            let copy = self.metadata
+            return copy
+        }
     }
 }
 #endif

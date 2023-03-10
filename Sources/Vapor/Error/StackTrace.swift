@@ -28,24 +28,20 @@ public struct StackTrace {
     static func captureRaw() -> [RawFrame] {
         #if os(Linux)
         final class Context {
-            var frames: [RawFrame]
-            init() {
-                self.frames = []
-            }
+            var frames: [RawFrame] = []
         }
-        var context = Context()
+        let context = Context()
         backtrace_full(self.state, /* skip: */ 1, { data, pc, filename, lineno, function in
             let frame = RawFrame(
                 file: filename.flatMap { String(cString: $0) } ?? "unknown",
                 mangledFunction: function.flatMap { String(cString: $0) } ?? "unknown"
             )
-            data!.assumingMemoryBound(to: Context.self)
-                .pointee.frames.append(frame)
+            Unmanaged<Context>.fromOpaque(data!).takeUnretainedValue().frames.append(frame)
             return 0
         }, { _, cMessage, _ in
             let message = cMessage.flatMap { String(cString: $0) } ?? "unknown"
             fatalError("Failed to capture Linux stacktrace: \(message)")
-        }, &context)
+        }, Unmanaged.passUnretained(context).toOpaque())
         return context.frames
         #else
         return Thread.callStackSymbols.dropFirst(1).map { line in
