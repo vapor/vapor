@@ -47,20 +47,22 @@ internal extension OTP {
         _ h: H,
         counter: UInt64
     ) -> String {
-        let hmac = Data(HMAC<H>.authenticationCode(for: counter.bigEndian.data, using: self.key))
+        let hmac = Array(HMAC<H>.authenticationCode(
+            for: Data([
+                UInt8(truncatingIfNeeded: counter >> 24), UInt8(truncatingIfNeeded: counter >> 16),
+                UInt8(truncatingIfNeeded: counter >> 8), UInt8(truncatingIfNeeded: counter)
+            ]),
+            using: self.key
+        ))
         // Get the last 4 bits of the HMAC for use as offset
         let offset = Int((hmac.last ?? 0x00) & 0x0f)
-        // Get 4 bytes of the HMAC using the offset
-        let data = hmac.subdata(in: offset ..< offset + 4)
-        // Convert to UInt32
-        var number = data.withUnsafeBytes { $0.load(as: UInt32.self ) }.bigEndian
-        // Remove most significant bit
-        number &= 0x7fffffff
-        number = number % self.digits.pow
-        
-        let strNum = String(number)
-        if strNum.count == self.digits.rawValue { return strNum }
-        return String(repeatElement("0", count: digits.rawValue - strNum.count)) + strNum
+        // Convert to UInt32, removing MSB, then to String
+        let number = String((
+            (UInt32(hmac[offset + 0] & 0x7f) << 24) | (UInt32(hmac[offset + 1]) << 16) |
+            (UInt32(hmac[offset + 2])        <<  8) |  UInt32(hmac[offset + 3])
+        ) % self.digits.pow)
+
+        return String(repeatElement("0", count: self.digits.rawValue - number.count)) + number
     }
     
     /// Generates a range of OTP's.
@@ -76,10 +78,7 @@ internal extension OTP {
     ) -> [String] {
         precondition(range > 0, "Cannot generate range of OTP's for range \(range). Range must be greater than 0")
         
-        return (-range ... range).map {
-            let offset = $0 >= 0 ? counter &+ UInt64($0) : counter &- UInt64(-$0)
-            return generate(h, counter: offset)
-        }
+        return (-range ... range).map { self.generate(h, counter: UInt64(Int64(counter) &+ Int64($0))) }
     }
     
     /// Generate the HOTP based on the counter.
@@ -221,8 +220,7 @@ public struct TOTP: OTP {
     public func generate(
         time: Date
     ) -> String {
-        let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
-        let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
+        let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return _generate(counter: UInt64(counter))
     }
     
@@ -238,8 +236,7 @@ public struct TOTP: OTP {
         time: Date,
         range: Int
     ) -> [String] {
-        let secondsPast1970 = Int(floor(time.timeIntervalSince1970))
-        let counter = Int(floor(Double(secondsPast1970) / Double(self.interval)))
+        let counter = Int(floor(time.timeIntervalSince1970) / Double(self.interval))
         return _generate(counter: UInt64(counter), range: range)
     }
     
@@ -259,13 +256,5 @@ public struct TOTP: OTP {
         time: Date
     ) -> String {
         return Self.init(key: key, digest: digest, digits: digits, interval: interval).generate(time: time)
-    }
-}
-
-fileprivate extension FixedWidthInteger {
-    /// The raw data representing the integer.
-    var data: Data {
-        var copy = self
-        return .init(bytes: &copy, count: MemoryLayout<Self>.size)
     }
 }

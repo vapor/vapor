@@ -8,7 +8,7 @@ extension Logger {
     ///     - error: `Error` to log.
     public func report(
         error: Error,
-        file: String = #file,
+        file: String = #fileID,
         function: String = #function,
         line: UInt = #line
     ) {

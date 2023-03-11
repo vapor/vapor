@@ -1,17 +1,21 @@
+#if swift(>=5.6) && os(Linux)
+public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
+#else
 /// Capable of being represented by a `CodingKey`.
 public protocol CodingKeyRepresentable {
     /// Converts this type to a `CodingKey`.
     var codingKey: CodingKey { get }
 }
+#endif
 
-extension String: CodingKeyRepresentable {
+extension String: Vapor.CodingKeyRepresentable {
     /// See `CodingKeyRepresentable`
     public var codingKey: CodingKey {
         return BasicCodingKey.key(self)
     }
 }
 
-extension Int: CodingKeyRepresentable {
+extension Int: Vapor.CodingKeyRepresentable {
     /// See `CodingKeyRepresentable`
     public var codingKey: CodingKey {
         return BasicCodingKey.index(self)
@@ -63,7 +67,7 @@ public enum BasicCodingKey: CodingKey {
         }
     }
 
-    public init(_ codingKeyRepresentable: CodingKeyRepresentable) {
+    public init(_ codingKeyRepresentable: Vapor.CodingKeyRepresentable) {
         self.init(codingKeyRepresentable.codingKey)
     }
 }

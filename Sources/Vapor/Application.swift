@@ -40,15 +40,7 @@ public final class Application {
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.lock()
-            defer { self.main.unlock() }
-            if let existing = self.storage[ObjectIdentifier(Key.self)] {
-                return existing
-            } else {
-                let new = NIOLock()
-                self.storage[ObjectIdentifier(Key.self)] = new
-                return new
-            }
+            self.main.withLock { self.storage[ObjectIdentifier(Key.self), default: .init()] }
         }
     }
 
