@@ -1,3 +1,4 @@
+import class Foundation.Bundle
 import Vapor
 import NIOCore
 import NIOHTTP1
@@ -108,7 +109,7 @@ public func routes(_ app: Application) throws {
         guard let key = req.parameters.get("key") else {
             throw Abort(.internalServerError)
         }
-        return "\(key) = \(cache.get(key) ?? "nil")"
+        return "\(key) = \(await cache.get(key) ?? "nil")"
     }
     app.get("cache", "set", ":key", ":value") { req -> String in
         guard let key = req.parameters.get("key") else {
@@ -117,7 +118,7 @@ public func routes(_ app: Application) throws {
         guard let value = req.parameters.get("value") else {
             throw Abort(.internalServerError)
         }
-        cache.set(key, to: value)
+        await cache.set(key, to: value)
         return "\(key) = \(value)"
     }
 
@@ -193,8 +194,9 @@ public func routes(_ app: Application) throws {
             case fileHandleClosedFailure(Error)
             case multipleFailures([BodyStreamWritingToDiskError])
         }
+        
         return req.application.fileio.openFile(
-            path: "/Users/tanner/Desktop/foo.txt",
+            path: Bundle.module.url(forResource: "Resources/fileio", withExtension: "txt")?.path ?? "",
             mode: .write,
             flags: .allowFileCreation(),
             eventLoop: req.eventLoop
@@ -314,7 +316,7 @@ struct TestError: AbortError, DebuggableError {
     var stackTrace: StackTrace?
 
     init(
-        file: String = #file,
+        file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
