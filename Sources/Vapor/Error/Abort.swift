@@ -12,10 +12,31 @@ public struct Abort: AbortError, DebuggableError {
     ///
     /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
     /// Defaulting to non-permanent to prevent unexpected caching.
-    public static func redirect(to location: String, type: RedirectType = .normal) -> Abort {
+    /// - Parameters:
+    ///   - location: The path to redirect to
+    ///   - type: The type of redirect to perform
+    /// - Returns: An abort error that provides a redirect to the specified location
+    @available(*, deprecated, renamed: "redirect(to:redirectType:)")
+    public static func redirect(to location: String, type: RedirectType) -> Abort {
         var headers: HTTPHeaders = [:]
         headers.replaceOrAdd(name: .location, value: location)
         return .init(type.status, headers: headers)
+    }
+    
+    /// Creates a redirecting `Abort` error.
+    ///
+    ///     throw Abort.redirect(to: "https://vapor.codes")
+    ///
+    /// Set type to '.permanently' to allow caching to automatically redirect from browsers.
+    /// Defaulting to non-permanent to prevent unexpected caching.
+    /// - Parameters:
+    ///   - location: The path to redirect to
+    ///   - redirectType: The type of redirect to perform
+    /// - Returns: An abort error that provides a redirect to the specified location
+    public static func redirect(to location: String, redirectType: Redirect = .normal) -> Abort {
+        var headers: HTTPHeaders = [:]
+        headers.replaceOrAdd(name: .location, value: location)
+        return .init(redirectType.status, headers: headers)
     }
 
     /// See `Debuggable`

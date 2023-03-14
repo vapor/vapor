@@ -178,6 +178,7 @@ extension HTTPHeaders {
         }
 
         private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+            "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
             "no-cache": \.noCache,
             "no-store": \.noStore,
