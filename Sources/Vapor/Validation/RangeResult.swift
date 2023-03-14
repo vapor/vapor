@@ -15,13 +15,10 @@ public enum RangeResult<T>: Equatable where T: Comparable {
     /// The value was less than `min`.
     case lessThanMin(T)
 
-    /// not comparable, e.g. Float.nan
-    case notComparable
-
     var isWithinRange: Bool {
         switch self {
         case .between, .greaterThanOrEqualToMin, .lessThanOrEqualToMax: return true
-        case .greaterThanMax, .lessThanMin, .notComparable: return false
+        case .greaterThanMax, .lessThanMin: return false
         }
     }
 
@@ -37,12 +34,13 @@ public enum RangeResult<T>: Equatable where T: Comparable {
             return "less than minimum of \(min)"
         case let .lessThanOrEqualToMax(max):
             return "less than or equal to maximum of \(max)"
-        case .notComparable:
-            return "not comparable"
         }
     }
 
-    init(min: T?, max: T?, value: T) {
+    /// initialize a range result
+    /// 
+    /// in case the provided value is not comparable (e.g. Float.nan) a `RangeResultError.notComparable` will be thrown
+    init(min: T?, max: T?, value: T) throws {
         precondition(min != nil || max != nil, "Either `min` or `max` has to be non-nil")
         switch (min, max) {
         case let (.some(min), .some(max)) where value >= min && value <= max:
@@ -59,7 +57,12 @@ public enum RangeResult<T>: Equatable where T: Comparable {
             // any other case is either not comparable (e.g. comparing Float.nan with anything is always false)
             // or it should never happen because all static methods on `Validator` that can make
             // the count and range validators all result in at least a minimum or a maximum or both.
-            self = .notComparable
+            // The thrown error needs to be handlded at a higher level then.
+            throw RangeResultError.notComparable
         }
     }
+}
+
+enum RangeResultError: Error {
+    case notComparable
 }
