@@ -27,7 +27,7 @@ public struct PlaintextEncoder: ContentEncoder {
         var container = self.encoder.singleValueContainer()
         try container.encode(encodable)
 
-        guard let string = actualEncoder.plaintext else {
+        guard let string = self.encoder.plaintext else {
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
