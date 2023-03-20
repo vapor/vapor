@@ -72,7 +72,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         self.configuration = configuration
     }
     
-    /// `ContentEncoder` conformance.
+    /// ``ContentEncoder`` conformance.
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
@@ -80,7 +80,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         try body.writeString(self.encode(encodable))
     }
     
-    /// `URLContentEncoder` conformance.
+    /// ``URLQueryEncoder`` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI) throws
         where E: Encodable
     {
@@ -114,20 +114,16 @@ private protocol _Container {
     func getData() throws -> URLEncodedFormData
 }
 
-private class _Encoder: Encoder {
-
+private class _Encoder: Encoder, _Container {
     var codingPath: [CodingKey]
-    private var container: _Container? = nil
-    
-    func getData() throws -> URLEncodedFormData {
-        return try container?.getData() ?? []
-    }
-    
     var userInfo: [CodingUserInfoKey: Any] {
         return [:]
     }
 
+    private var container: _Container? = nil
     private let configuration: URLEncodedFormEncoder.Configuration
+
+    func getData() throws -> URLEncodedFormData { try self.container?.getData() ?? [] }
 
     init(codingPath: [CodingKey], configuration: URLEncodedFormEncoder.Configuration) {
         self.codingPath = codingPath
@@ -160,7 +156,7 @@ private class _Encoder: Encoder {
         var childContainers: [String: _Container] = [:]
 
         func getData() throws -> URLEncodedFormData {
-            var result = internalData
+            var result = self.internalData
             for (key, childContainer) in self.childContainers {
                 result.children[key] = try childContainer.getData()
             }
@@ -187,9 +183,9 @@ private class _Encoder: Encoder {
             where T : Encodable
         {
             if let date = value as? Date {
-                self.internalData.children[key.stringValue] = try configuration.encodeDate(date, codingPath: self.codingPath, forKey: key)
+                self.internalData.children[key.stringValue] = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: key)
             } else if let convertible = value as? URLQueryFragmentConvertible {
-                internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
+                self.internalData.children[key.stringValue] = URLEncodedFormData(values: [convertible.urlQueryFragmentValue])
             } else {
                 let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
                 try value.encode(to: encoder)
@@ -221,12 +217,16 @@ private class _Encoder: Encoder {
         
         /// See `KeyedEncodingContainerProtocol`
         func superEncoder() -> Encoder {
-            fatalError()
+            let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
+            self.childContainers["super"] = encoder
+            return encoder
         }
         
         /// See `KeyedEncodingContainerProtocol`
         func superEncoder(forKey key: Key) -> Encoder {
-            fatalError()
+            let encoder = _Encoder(codingPath: self.codingPath + [key], configuration: self.configuration)
+            self.childContainers[key.stringValue] = encoder
+            return encoder
         }
     }
     
@@ -247,16 +247,11 @@ private class _Encoder: Encoder {
             case .separator(let arraySeparator):
                 var valuesToImplode = result.values
                 result.values = []
-                if
-                    case .bracket = self.configuration.arrayEncoding,
-                    let emptyStringChild = self.internalData.children[""]
-                {
+                if case .bracket = self.configuration.arrayEncoding, let emptyStringChild = self.internalData.children[""] {
                     valuesToImplode = valuesToImplode + emptyStringChild.values
                     result.children[""]?.values = []
                 }
-                let implodedValue = try valuesToImplode.map({ (value: URLQueryFragment) -> String in
-                    return try value.asUrlEncoded()
-                }).joined(separator: String(arraySeparator))
+                let implodedValue = try valuesToImplode.map { try $0.asUrlEncoded() }.joined(separator: String(arraySeparator))
                 result.values = [.urlEncoded(implodedValue)]
             case .bracket, .values:
                 break
@@ -264,10 +259,7 @@ private class _Encoder: Encoder {
             return result
         }
         
-        init(
-            codingPath: [CodingKey],
-            configuration: URLEncodedFormEncoder.Configuration
-        ) {
+        init(codingPath: [CodingKey], configuration: URLEncodedFormEncoder.Configuration) {
             self.codingPath = codingPath
             self.configuration = configuration
         }
@@ -277,11 +269,8 @@ private class _Encoder: Encoder {
         }
         
         func encode<T>(_ value: T) throws where T: Encodable {
-            defer { self.count += 1 }
-            
             if let date = value as? Date {
-                let encodedDate = try configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
-                
+                let encodedDate = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: BasicCodingKey.index(self.count))
                 switch self.configuration.arrayEncoding {
                 case .bracket:
                     var emptyStringChild = self.internalData.children[""] ?? []
@@ -301,7 +290,7 @@ private class _Encoder: Encoder {
                     self.internalData.values.append(value)
                 }
             } else {
-                let encoder = _Encoder(codingPath: codingPath, configuration: configuration)
+                let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.index(self.count)], configuration: configuration)
                 try value.encode(to: encoder)
                 let childData = try encoder.getData()
                 if childData.hasOnlyValues {
@@ -314,18 +303,19 @@ private class _Encoder: Encoder {
                         self.internalData.values.append(contentsOf: childData.values)
                     }
                 } else {
-                    self.internalData.children[count.description] = try encoder.getData()
+                    self.internalData.children[self.count.description] = try encoder.getData()
                 }
             }
+            self.count += 1 // we don't want to do this if anything earlier threw an error
         }
         
         /// See UnkeyedEncodingContainer.nestedContainer
         func nestedContainer<NestedKey>(keyedBy keyType: NestedKey.Type) -> KeyedEncodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
-            defer { count += 1 }
+            defer { self.count += 1 }
             let container = KeyedContainer<NestedKey>(
-                codingPath: self.codingPath,
+                codingPath: self.codingPath + [BasicCodingKey.index(self.count)],
                 configuration: self.configuration
             )
             self.childContainers[self.count] = container
@@ -334,18 +324,21 @@ private class _Encoder: Encoder {
         
         /// See UnkeyedEncodingContainer.nestedUnkeyedContainer
         func nestedUnkeyedContainer() -> UnkeyedEncodingContainer {
-            defer { count += 1 }
+            defer { self.count += 1 }
             let container = UnkeyedContainer(
-                codingPath: self.codingPath,
+                codingPath: self.codingPath + [BasicCodingKey.index(self.count)],
                 configuration: self.configuration
             )
-            self.childContainers[count] = container
+            self.childContainers[self.count] = container
             return container
         }
         
         /// See UnkeyedEncodingContainer.superEncoder
         func superEncoder() -> Encoder {
-            fatalError()
+            defer { self.count += 1 }
+            let encoder = _Encoder(codingPath: self.codingPath + [BasicCodingKey.index(self.count)], configuration: self.configuration)
+            self.childContainers[self.count] = encoder
+            return encoder
         }
     }
 
@@ -354,9 +347,7 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         var codingPath: [CodingKey]
         
-        func getData() throws -> URLEncodedFormData {
-            return data
-        }
+        func getData() throws -> URLEncodedFormData { self.data }
 
         /// The data being encoded
         var data: URLEncodedFormData = []
@@ -380,7 +371,7 @@ private class _Encoder: Encoder {
         /// See `SingleValueEncodingContainer`
         func encode<T>(_ value: T) throws where T: Encodable {
             if let date = value as? Date {
-                self.data = try configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
+                self.data = try self.configuration.encodeDate(date, codingPath: self.codingPath, forKey: nil)
             } else if let convertible = value as? URLQueryFragmentConvertible {
                 self.data.values.append(convertible.urlQueryFragmentValue)
             } else {
