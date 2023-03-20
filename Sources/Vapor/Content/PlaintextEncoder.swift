@@ -13,8 +13,7 @@ public struct PlaintextEncoder: ContentEncoder {
     /// Creates a new `PlaintextEncoder`.
     ///
     /// - parameters:
-    ///     - contentType: Plaintext `MediaType` to use.
-    ///                    Usually `.plainText` or `.html`.
+    ///     - contentType: Plaintext `MediaType` to use. Usually `.plainText` or `.html`.
     public init(_ contentType: HTTPMediaType = .plainText) {
         self.encoder = .init()
         self.contentType = contentType
@@ -24,10 +23,23 @@ public struct PlaintextEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
-        var container = self.encoder.singleValueContainer()
+        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+    }
+    
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+        where E: Encodable
+    {
+        let actualEncoder: _PlaintextEncoder
+        if !userInfo.isEmpty {
+            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfo.merging(userInfo) { $1 })
+        } else {
+            actualEncoder = self.encoder
+        }
+
+        var container = actualEncoder.singleValueContainer()
         try container.encode(encodable)
 
-        guard let string = self.encoder.plaintext else {
+        guard let string = actualEncoder.plaintext else {
             throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
@@ -44,8 +56,8 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     
     public init(userInfo: [CodingUserInfoKey: Any] = [:]) { self.userInfo = userInfo }
     
-    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailingEncoder().container(keyedBy: Key.self)) }
-    public func unkeyedContainer() -> UnkeyedEncodingContainer { FailingEncoder() }
+    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
+    public func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
     public func singleValueContainer() -> SingleValueEncodingContainer { self }
 
     func encodeNil() throws { self.plaintext = nil }
@@ -77,28 +89,22 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     }
 
     /// This ridiculosity is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
-    struct FailingEncoder: Encoder, UnkeyedEncodingContainer, SingleValueEncodingContainer {
-        var codingPath: [CodingKey] { [] }
-        var userInfo: [CodingUserInfoKey : Any] { [:] }
-        var count: Int { 0 }
-        private static var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
-
-        struct FailingKeyedContainer<K: CodingKey>: KeyedEncodingContainerProtocol {
-            var codingPath: [CodingKey] { [] }
-            func encodeNil(forKey: K) throws { throw FailingEncoder.error }
-            func encode<T: Encodable>(_: T, forKey: K) throws { throw FailingEncoder.error }
-            func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> { .init(FailingKeyedContainer<N>()) }
-            func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { FailingEncoder() }
-            func superEncoder() -> Encoder { FailingEncoder() }
-            func superEncoder(forKey: K) -> Encoder { FailingEncoder() }
-        }
-        func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { .init(FailingKeyedContainer<K>()) }
-        func unkeyedContainer() -> UnkeyedEncodingContainer { self }
-        func singleValueContainer() -> SingleValueEncodingContainer { self }
-        func encodeNil() throws { throw FailingEncoder.error }
-        func encode<T: Encodable>(_: T) throws { throw FailingEncoder.error }
-        func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(FailingKeyedContainer<N>()) }
+    struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer {
+        let codingPath = [CodingKey](), userInfo = [CodingUserInfoKey: Any](), count = 0
+        var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
+        init() {}; init() where K == BasicCodingKey {}
+        func encodeNil() throws { throw self.error }
+        func encodeNil(forKey: K) throws { throw self.error }
+        func encode<T: Encodable>(_: T) throws { throw self.error }
+        func encode<T: Encodable>(_: T, forKey: K) throws { throw self.error }
+        @_implements(Encoder, container(keyedBy:))
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
+        @_implements(Encoder, unkeyedContainer())
         func nestedUnkeyedContainer() -> UnkeyedEncodingContainer { self }
+        func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { self }
         func superEncoder() -> Encoder { self }
+        func superEncoder(forKey: K) -> Encoder { self }
+        func singleValueContainer() -> SingleValueEncodingContainer { self }
     }
 }

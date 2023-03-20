@@ -9,8 +9,16 @@ public struct PlaintextDecoder: ContentDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
         where D : Decodable
     {
+        try self.decode(D.self, from: body, headers: headers, userInfo: [:])
+    }
+    
+    /// `ContentDecoder` conformance.
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
+        where D : Decodable
+    {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)
-        return try D(from: _PlaintextDecoder(plaintext: string))
+        
+        return try D(from: _PlaintextDecoder(plaintext: string, userInfo: userInfo))
     }
 }
 

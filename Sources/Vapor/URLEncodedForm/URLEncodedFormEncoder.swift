@@ -43,6 +43,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
         public var dateEncodingStrategy: DateEncodingStrategy
+        public var userInfo: [CodingUserInfoKey: Any]
 
         /// Creates a new `Configuration`.
         ///
@@ -51,10 +52,12 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         ///     - dateFormat: Format to encode date format too. Defaults to `secondsSince1970`
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
-            dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970
+            dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970,
+            userInfo: [CodingUserInfoKey: Any] = [:]
         ) {
             self.arrayEncoding = arrayEncoding
             self.dateEncodingStrategy = dateEncodingStrategy
+            self.userInfo = userInfo
         }
     }
 
@@ -76,15 +79,28 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
+        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+    }
+
+    /// ``ContentEncoder`` conformance.
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+        where E: Encodable
+    {
         headers.contentType = .urlEncodedForm
-        try body.writeString(self.encode(encodable))
+        try body.writeString(self.encode(encodable, userInfo: userInfo))
     }
     
     /// ``URLQueryEncoder`` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI) throws
         where E: Encodable
     {
-        url.query = try self.encode(encodable)
+        try self.encode(encodable, to: &url, userInfo: [:])
+    }
+    
+    public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Any]) throws
+        where E: Encodable
+    {
+        url.query = try self.encode(encodable, userInfo: userInfo)
     }
 
     /// Encodes the supplied `Encodable` object to `Data`.
@@ -98,10 +114,14 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     ///     - configuration: Overrides the  coding config for this encoding call.
     /// - returns: Encoded `Data`
     /// - throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E) throws -> String
+    public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> String
         where E: Encodable
     {
-        let encoder = _Encoder(codingPath: [], configuration: self.configuration)
+        var configuration = self.configuration
+        if !userInfo.isEmpty {
+            configuration.userInfo.merge(userInfo) { $1 }
+        }
+        let encoder = _Encoder(codingPath: [], configuration: configuration)
         try encodable.encode(to: encoder)
         let serializer = URLEncodedFormSerializer()
         return try serializer.serialize(encoder.getData())
@@ -116,9 +136,7 @@ private protocol _Container {
 
 private class _Encoder: Encoder, _Container {
     var codingPath: [CodingKey]
-    var userInfo: [CodingUserInfoKey: Any] {
-        return [:]
-    }
+    var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
 
     private var container: _Container? = nil
     private let configuration: URLEncodedFormEncoder.Configuration

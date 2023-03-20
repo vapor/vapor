@@ -6,9 +6,21 @@ extension FormDataEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
+    
+    }
+
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+        where E: Encodable
+    {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
         headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
-        try self.encode(encodable, boundary: boundary, into: &body)
+        if !userInfo.isEmpty {
+            var actualEncoder = self
+            actualEncoder.userInfo.merge(userInfo) { $1 }
+            return try actualEncoder.encode(encodable, boundary: boundary, into: &body)
+        } else {
+            return try self.encode(encodable, boundary: boundary, into: &body)
+        }
     }
 }
 

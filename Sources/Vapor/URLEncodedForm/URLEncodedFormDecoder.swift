@@ -30,6 +30,8 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         let boolFlags: Bool
         let arraySeparators: [Character]
         let dateDecodingStrategy: DateDecodingStrategy
+        let userInfo: [CodingUserInfoKey: Any]
+        
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
         ///     - boolFlags: Set to `true` allows you to parse `flag1&flag2` as boolean variables
@@ -42,11 +44,13 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
-            dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970
+            dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970,
+            userInfo: [CodingUserInfoKey: Any] = [:]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
             self.dateDecodingStrategy = dateDecodingStrategy
+            self.userInfo = userInfo
         }
     }
 
@@ -73,11 +77,17 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D
         where D: Decodable
     {
+        try self.decode(D.self, from: body, headers: headers, userInfo: [:])
+    }
+    
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
+        where D: Decodable
+    {
         guard headers.contentType == .urlEncodedForm else {
             throw Abort(.unsupportedMediaType)
         }
         let string = body.getString(at: body.readerIndex, length: body.readableBytes) ?? ""
-        return try self.decode(D.self, from: string)
+        return try self.decode(D.self, from: string, userInfo: userInfo)
     }
 
     /// Decodes the URL's query string to the type provided
@@ -89,7 +99,11 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///     - url: URL to read the query string from
     ///     - configuration: Overrides the default coding configuration
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
-        return try self.decode(D.self, from: url.query ?? "")
+        try self.decode(D.self, from: url, userInfo: [:])
+    }
+    
+    public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D where D : Decodable {
+        try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
     }
     
 
@@ -105,9 +119,15 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///     - configuration: Overrides the default coding configuration
     /// - returns: An instance of the `Decodable` type (`D`).
     /// - throws: Any error that may occur while attempting to decode the specified type.
-    public func decode<D>(_ decodable: D.Type, from string: String) throws -> D where D : Decodable {
+    public func decode<D>(_ decodable: D.Type, from string: String, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> D where D : Decodable {
         let parsedData = try self.parser.parse(string)
-        let decoder = _Decoder(data: parsedData, codingPath: [], configuration: self.configuration)
+        let configuration: URLEncodedFormDecoder.Configuration
+        if !userInfo.isEmpty {
+            configuration = .init(boolFlags: self.configuration.boolFlags, arraySeparators: self.configuration.arraySeparators, dateDecodingStrategy: self.configuration.dateDecodingStrategy, userInfo: self.configuration.userInfo.merging(userInfo) { $1 })
+        } else {
+            configuration = self.configuration
+        }
+        let decoder = _Decoder(data: parsedData, codingPath: [], configuration: configuration)
         return try D(from: decoder)
     }
 }
@@ -121,9 +141,7 @@ private struct _Decoder: Decoder {
     var configuration: URLEncodedFormDecoder.Configuration
     
     /// See `Decoder`
-    var userInfo: [CodingUserInfoKey: Any] {
-        return [:]
-    }
+    var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
     
     /// Creates a new `_URLEncodedFormDecoder`.
     init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormDecoder.Configuration) {
