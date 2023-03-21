@@ -1,35 +1,28 @@
 #if swift(>=5.6) && os(Linux)
 public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
 #else
-/// Capable of being represented by a `CodingKey`.
+/// This is an unwelcome stand-in for the ``Swift/CodingKeyRepresentable`` protocol that appeared in Swift 5.6.
 public protocol CodingKeyRepresentable {
-    /// Converts this type to a `CodingKey`.
     var codingKey: CodingKey { get }
 }
 #endif
 
 extension String: Vapor.CodingKeyRepresentable {
-    /// See `CodingKeyRepresentable`
-    public var codingKey: CodingKey {
-        return BasicCodingKey.key(self)
-    }
+    @available(*, deprecated, message: "This property is unsafe, do not use.")
+    public var codingKey: CodingKey { BasicCodingKey.key(self) }
 }
 
 extension Int: Vapor.CodingKeyRepresentable {
-    /// See `CodingKeyRepresentable`
-    public var codingKey: CodingKey {
-        return BasicCodingKey.index(self)
-    }
+    @available(*, deprecated, message: "This property is unsafe, do not use.")
+    public var codingKey: CodingKey { BasicCodingKey.index(self) }
 }
 
 extension Array where Element == CodingKey {
-    public var dotPath: String {
-        return map { $0.stringValue }.joined(separator: ".")
-    }
+    public var dotPath: String { self.map(\.stringValue).joined(separator: ".") }
 }
 
 /// A basic `CodingKey` implementation.
-public enum BasicCodingKey: CodingKey {
+public enum BasicCodingKey: CodingKey, Hashable {
     case key(String)
     case index(Int)
     
@@ -66,7 +59,7 @@ public enum BasicCodingKey: CodingKey {
             self = .key(codingKey.stringValue)
         }
     }
-
+    
     public init(_ codingKeyRepresentable: Vapor.CodingKeyRepresentable) {
         self.init(codingKeyRepresentable.codingKey)
     }
@@ -91,5 +84,17 @@ extension BasicCodingKey: CustomDebugStringConvertible {
         case .key(let key):
             return key.debugDescription
         }
+    }
+}
+
+extension BasicCodingKey: ExpressibleByStringLiteral {
+    public init(stringLiteral: String) {
+        self = .key(stringLiteral)
+    }
+}
+
+extension BasicCodingKey: ExpressibleByIntegerLiteral {
+    public init(integerLiteral: Int) {
+        self = .index(integerLiteral)
     }
 }
