@@ -44,7 +44,7 @@ final class AsyncCacheTests: XCTestCase {
 
 extension Application.Caches.Provider {
     static var foo: Self {
-        .init { $0.caches.use { FooCache(on: $0.eventLoopGroup.next()) } }
+        .init { $0.caches.use { FooCache(on: $0.eventLoopGroup.any()) } }
     }
 }
 
@@ -67,9 +67,17 @@ struct FooCache: Cache {
         }
         return self.eventLoop.makeSucceededFuture(value)
     }
+    
+    func get<T>(_ key: String, as type: T.Type) async throws -> T? where T: Decodable {
+        return key == "foo" ? "bar" as? T : nil
+    }
 
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
         return self.eventLoop.makeSucceededFuture(())
+    }
+    
+    func set<T>(_ key: String, to value: T?) async throws where T: Encodable {
+        return
     }
 
     func `for`(_ request: Request) -> FooCache {
