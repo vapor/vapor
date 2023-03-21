@@ -69,7 +69,13 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     func decode(_: UInt64.Type) throws -> UInt64 { try self.losslessDecode(UInt64.self) }
     func decode<T>(_: T.Type) throws -> T where T : Decodable {
         if let convertible = T.self as? LosslessStringConvertible.Type {
+#if swift(<5.7)
+            guard let value = self.plaintext else { throw DecodingError.valueNotFound(T.self, .init(codingPath: self.codingPath, debugDescription: "Missing value of type \(T.self)")) }
+            guard let result = convertible.init(value) else { throw DecodingError.dataCorruptedError(in: self, debugDescription: "Could not decode \(T.self) from \"\(value)\"") }
+            return result as! T
+#else
             return try self.losslessDecode(convertible) as! T
+#endif
         }
         throw DecodingError.typeMismatch(T.self, .init(codingPath: self.codingPath, debugDescription: "Plaintext decoding does not support complex types."))
     }

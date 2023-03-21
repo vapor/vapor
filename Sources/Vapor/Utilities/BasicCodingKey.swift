@@ -5,17 +5,17 @@ public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
 public protocol CodingKeyRepresentable {
     var codingKey: CodingKey { get }
 }
-#endif
 
+/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
 extension String: Vapor.CodingKeyRepresentable {
-    @available(*, deprecated, message: "This property is unsafe, do not use.")
     public var codingKey: CodingKey { BasicCodingKey.key(self) }
 }
 
+/// This conformance is provided by the stdlib when ``CodingKeyRepresentable`` is available.
 extension Int: Vapor.CodingKeyRepresentable {
-    @available(*, deprecated, message: "This property is unsafe, do not use.")
     public var codingKey: CodingKey { BasicCodingKey.index(self) }
 }
+#endif
 
 extension Array where Element == CodingKey {
     public var dotPath: String { self.map(\.stringValue).joined(separator: ".") }

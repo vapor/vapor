@@ -78,7 +78,12 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode<T>(_ value: T) throws where T: Encodable {
         if let data = value as? Data {
             // special case for data
-            if let utf8 = data.withUnsafeBytes({ $0.withMemoryRebound(to: CChar.self, { String(validatingUTF8: $0.baseAddress!) }) }) {
+#if swift(>=5.7)
+            let utf8Maybe = data.withUnsafeBytes({ $0.withMemoryRebound(to: CChar.self, { String(validatingUTF8: $0.baseAddress!) }) })
+#else
+            let utf8Maybe = data.withUnsafeBytes({ String(validatingUTF8: $0.bindMemory(to: CChar.self).baseAddress!) })
+#endif
+            if let utf8 = utf8Maybe {
                 self.plaintext = utf8
             } else {
                 self.plaintext = data.base64EncodedString()
@@ -97,14 +102,14 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         func encodeNil(forKey: K) throws { throw self.error }
         func encode<T: Encodable>(_: T) throws { throw self.error }
         func encode<T: Encodable>(_: T, forKey: K) throws { throw self.error }
-        @_implements(Encoder, container(keyedBy:))
         func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
         func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
-        @_implements(Encoder, unkeyedContainer())
         func nestedUnkeyedContainer() -> UnkeyedEncodingContainer { self }
         func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { self }
         func superEncoder() -> Encoder { self }
         func superEncoder(forKey: K) -> Encoder { self }
+        func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { .init(FailureEncoder<K>()) }
+        func unkeyedContainer() -> UnkeyedEncodingContainer { self }
         func singleValueContainer() -> SingleValueEncodingContainer { self }
     }
 }

@@ -47,10 +47,12 @@ extension JSONDecoder: ContentDecoder {
             actualDecoder.dataDecodingStrategy = self.dataDecodingStrategy
             actualDecoder.nonConformingFloatDecodingStrategy = self.nonConformingFloatDecodingStrategy
             actualDecoder.keyDecodingStrategy = self.keyDecodingStrategy
+            #if os(macOS) || os(iOS) || os(tvOS) || os(watchOS)
             if #available(macOS 12.0, iOS 15.0, tvOS 15.0, watchOS 8.0, *) {
                 actualDecoder.allowsJSON5 = self.allowsJSON5
                 actualDecoder.assumesTopLevelDictionary = self.assumesTopLevelDictionary
             }
+            #endif
             actualDecoder.userInfo = self.userInfo.merging(userInfo) { $1 }
             return try actualDecoder.decode(D.self, from: data)
         } else {
