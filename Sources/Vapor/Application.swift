@@ -40,7 +40,7 @@ public final class Application {
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.withLock { self.storage[ObjectIdentifier(Key.self), default: .init()] }
+            self.main.withLock { self.storage.insertOrReturn(.init(), at: .init(Key.self)) }
         }
     }
 
@@ -165,3 +165,14 @@ public final class Application {
 }
 
 public protocol LockKey { }
+
+fileprivate extension Dictionary {
+    mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+        if let existing = self[key] {
+            return existing
+        }
+        let newValue = value()
+        self[key] = newValue
+        return newValue
+    }
+}

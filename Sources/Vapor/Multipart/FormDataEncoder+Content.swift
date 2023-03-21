@@ -6,7 +6,7 @@ extension FormDataEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
-    
+        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
 
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws

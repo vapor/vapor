@@ -250,7 +250,7 @@ private struct _Decoder: Decoder {
             guard let child = self.data.children["super"] else {
                 throw DecodingError.keyNotFound(BasicCodingKey.key("super"), .init(codingPath: self.codingPath, debugDescription: "Missing key"))
             }
-            return _Decoder(data: data, codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
+            return _Decoder(data: child, codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
