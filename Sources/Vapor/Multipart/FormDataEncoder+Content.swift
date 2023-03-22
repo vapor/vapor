@@ -1,4 +1,6 @@
 import MultipartKit
+import NIOHTTP1
+import NIOCore
 
 extension FormDataEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
