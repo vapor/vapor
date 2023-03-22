@@ -157,7 +157,13 @@ public final class HTTPServer: Server {
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
         public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
+        
+        /// An optional configuration for the setting the servers channels options
+        public var serverChannelOptionConfiguration: (ServerBootstrap) -> (ServerBootstrap)
 
+        /// An optional configuration for the setting the servers child channels options
+        public var childChannelOptionConfiguration: (ServerBootstrap) -> (ServerBootstrap)
+        
         public init(
             hostname: String = Self.defaultHostname,
             port: Int = Self.defaultPort,
@@ -172,7 +178,9 @@ public final class HTTPServer: Server {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            serverChannelOptionConfiguration: @escaping (ServerBootstrap) -> ServerBootstrap = { bootstrap in return bootstrap },
+            childChannelOptionConfiguration: @escaping (ServerBootstrap) -> ServerBootstrap = { bootstrap in return bootstrap }
         ) {
             self.init(
                 address: .hostname(hostname, port: port),
@@ -187,7 +195,9 @@ public final class HTTPServer: Server {
                 serverName: serverName,
                 reportMetrics: reportMetrics,
                 logger: logger,
-                shutdownTimeout: shutdownTimeout
+                shutdownTimeout: shutdownTimeout,
+                serverChannelOptionConfiguration: serverChannelOptionConfiguration,
+                childChannelOptionConfiguration: childChannelOptionConfiguration
             )
         }
         
@@ -204,7 +214,9 @@ public final class HTTPServer: Server {
             serverName: String? = nil,
             reportMetrics: Bool = true,
             logger: Logger? = nil,
-            shutdownTimeout: TimeAmount = .seconds(10)
+            shutdownTimeout: TimeAmount = .seconds(10),
+            serverChannelOptionConfiguration: @escaping (ServerBootstrap) -> ServerBootstrap = { bootstrap in return bootstrap },
+            childChannelOptionConfiguration: @escaping (ServerBootstrap) -> ServerBootstrap = { bootstrap in return bootstrap }
         ) {
             self.address = address
             self.backlog = backlog
@@ -224,6 +236,8 @@ public final class HTTPServer: Server {
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
             self.customCertificateVerifyCallback = nil
+            self.serverChannelOptionConfiguration = serverChannelOptionConfiguration
+            self.childChannelOptionConfiguration = childChannelOptionConfiguration
         }
     }
     
@@ -347,7 +361,7 @@ private final class HTTPServerConnection {
             // Specify backlog and enable SO_REUSEADDR for the server itself
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
-            
+            .serverChannelOption(configuation: configuration.serverChannelOptionConfiguration)
             // Set handlers that are applied to the Server's channel
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
@@ -409,6 +423,7 @@ private final class HTTPServerConnection {
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
+            .childChannelOption(configuation: configuration.childChannelOptionConfiguration)
         
         let channel: EventLoopFuture<Channel>
         switch configuration.address {
@@ -460,6 +475,16 @@ final class HTTPServerErrorHandler: ChannelInboundHandler {
     func errorCaught(context: ChannelHandlerContext, error: Error) {
         self.logger.debug("Unhandled HTTP server error: \(error)")
         context.close(mode: .output, promise: nil)
+    }
+}
+
+extension ServerBootstrap {
+    func serverChannelOption(configuation: (ServerBootstrap) -> ServerBootstrap) -> ServerBootstrap {
+        return configuation(self)
+    }
+    
+    func childChannelOption(configuation: (ServerBootstrap) -> ServerBootstrap) -> ServerBootstrap {
+        return configuation(self)
     }
 }
 
