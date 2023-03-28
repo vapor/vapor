@@ -18,7 +18,7 @@ extension FormDataDecoder: ContentDecoder {
         var body = body
         let buffer = body.readBytes(length: body.readableBytes) ?? []
         if !userInfo.isEmpty {
-            var actualDecoder = self
+            var actualDecoder = self // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualDecoder.userInfo.merge(userInfo) { $1 }
             return try actualDecoder.decode(D.self, from: buffer, boundary: boundary)
         } else {

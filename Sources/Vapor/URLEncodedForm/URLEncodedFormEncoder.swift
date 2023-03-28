@@ -117,7 +117,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> String
         where E: Encodable
     {
-        var configuration = self.configuration
+        var configuration = self.configuration  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
         if !userInfo.isEmpty {
             configuration.userInfo.merge(userInfo) { $1 }
         }

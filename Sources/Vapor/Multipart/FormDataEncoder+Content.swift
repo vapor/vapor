@@ -15,7 +15,7 @@ extension FormDataEncoder: ContentEncoder {
         let boundary = "----vaporBoundary\(randomBoundaryData())"
         headers.contentType = HTTPMediaType(type: "multipart", subType: "form-data", parameters: ["boundary": boundary])
         if !userInfo.isEmpty {
-            var actualEncoder = self
+            var actualEncoder = self  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualEncoder.userInfo.merge(userInfo) { $1 }
             return try actualEncoder.encode(encodable, boundary: boundary, into: &body)
         } else {

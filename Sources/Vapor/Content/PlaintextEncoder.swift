@@ -30,7 +30,7 @@ public struct PlaintextEncoder: ContentEncoder {
         where E: Encodable
     {
         let actualEncoder: _PlaintextEncoder
-        if !userInfo.isEmpty {
+        if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfo.merging(userInfo) { $1 })
         } else {
             actualEncoder = self.encoder
@@ -61,6 +61,9 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     public func singleValueContainer() -> SingleValueEncodingContainer { self }
 
     func encodeNil() throws { self.plaintext = nil }
+    
+    // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
+    // each type's Codable implementation yields substantial speedups.
     func encode(_ value: Bool) throws { self.plaintext = value.description }
     func encode(_ value: Int) throws { self.plaintext = value.description }
     func encode(_ value: Double) throws { self.plaintext = value.description }
@@ -75,6 +78,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     func encode(_ value: UInt32) throws { self.plaintext = value.description }
     func encode(_ value: UInt64) throws { self.plaintext = value.description }
     func encode(_ value: Float) throws { self.plaintext = value.description }
+    
     func encode<T>(_ value: T) throws where T: Encodable {
         if let data = value as? Data {
             // special case for data

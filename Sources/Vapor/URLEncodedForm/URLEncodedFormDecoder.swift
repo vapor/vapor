@@ -122,7 +122,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     public func decode<D>(_ decodable: D.Type, from string: String, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> D where D : Decodable {
         let parsedData = try self.parser.parse(string)
         let configuration: URLEncodedFormDecoder.Configuration
-        if !userInfo.isEmpty {
+        if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             configuration = .init(boolFlags: self.configuration.boolFlags, arraySeparators: self.configuration.arraySeparators, dateDecodingStrategy: self.configuration.dateDecodingStrategy, userInfo: self.configuration.userInfo.merging(userInfo) { $1 })
         } else {
             configuration = self.configuration

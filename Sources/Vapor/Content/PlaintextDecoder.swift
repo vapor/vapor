@@ -54,6 +54,8 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
 
     func decode(_ type: String.Type) throws -> String { self.plaintext ?? "" }
 
+    // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
+    // each type's Codable implementation yields substantial speedups.
     func decode(_: Bool.Type) throws -> Bool { try self.losslessDecode(Bool.self) }
     func decode(_: Double.Type) throws -> Double { try self.losslessDecode(Double.self) }
     func decode(_: Float.Type) throws -> Float { try self.losslessDecode(Float.self) }
@@ -67,6 +69,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     func decode(_: UInt16.Type) throws -> UInt16 { try self.losslessDecode(UInt16.self) }
     func decode(_: UInt32.Type) throws -> UInt32 { try self.losslessDecode(UInt32.self) }
     func decode(_: UInt64.Type) throws -> UInt64 { try self.losslessDecode(UInt64.self) }
+
     func decode<T>(_: T.Type) throws -> T where T : Decodable {
         if let convertible = T.self as? LosslessStringConvertible.Type {
 #if swift(<5.7)

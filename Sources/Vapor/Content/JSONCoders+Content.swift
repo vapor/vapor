@@ -14,15 +14,15 @@ extension JSONEncoder: ContentEncoder {
     {
         headers.contentType = .json
         
-        if !userInfo.isEmpty {
-            let actualEncoder = JSONEncoder()
-            actualEncoder.outputFormatting = self.outputFormatting
-            actualEncoder.dateEncodingStrategy = self.dateEncodingStrategy
-            actualEncoder.dataEncodingStrategy = self.dataEncodingStrategy
-            actualEncoder.nonConformingFloatEncodingStrategy = self.nonConformingFloatEncodingStrategy
-            actualEncoder.keyEncodingStrategy = self.keyEncodingStrategy
-            actualEncoder.userInfo = self.userInfo.merging(userInfo) { $1 }
-            try body.writeBytes(actualEncoder.encode(encodable))
+        if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
+            try body.writeBytes(JSONEncoder.custom(
+                dates: self.dateEncodingStrategy,
+                data: self.dataEncodingStrategy,
+                keys: self.keyEncodingStrategy,
+                format: self.outputFormatting,
+                floats: self.nonConformingFloatEncodingStrategy,
+                userInfo: self.userInfo.merging(userInfo) { $1 }
+            ).encode(encodable))
         } else {
             try body.writeBytes(self.encode(encodable))
         }
@@ -42,7 +42,7 @@ extension JSONDecoder: ContentDecoder {
         let data = body.getData(at: body.readerIndex, length: body.readableBytes) ?? Data()
         
         if !userInfo.isEmpty {
-            let actualDecoder = JSONDecoder()
+            let actualDecoder = JSONDecoder() // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualDecoder.dateDecodingStrategy = self.dateDecodingStrategy
             actualDecoder.dataDecodingStrategy = self.dataDecodingStrategy
             actualDecoder.nonConformingFloatDecodingStrategy = self.nonConformingFloatDecodingStrategy
