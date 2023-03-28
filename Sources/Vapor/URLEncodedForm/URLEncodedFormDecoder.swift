@@ -229,16 +229,14 @@ private struct _Decoder: Decoder {
         ) throws -> KeyedDecodingContainer<NestedKey>
             where NestedKey: CodingKey
         {
-            guard let child = self.data.children[key.stringValue] else {
-                throw DecodingError.valueNotFound([String: Any].self, at: self.codingPath + [key])
-            }
+            let child = self.data.children[key.stringValue] ?? []
+
             return KeyedDecodingContainer(KeyedContainer<NestedKey>(data: child, codingPath: self.codingPath + [key], configuration: configuration))
         }
         
         func nestedUnkeyedContainer(forKey key: Key) throws -> UnkeyedDecodingContainer {
-            guard let child = self.data.children[key.stringValue] else {
-                throw DecodingError.valueNotFound([Any].self, at: self.codingPath + [key])
-            }
+            let child = self.data.children[key.stringValue] ?? []
+
             return try UnkeyedContainer(
                 data: child,
                 codingPath: self.codingPath + [key],
@@ -247,16 +245,14 @@ private struct _Decoder: Decoder {
         }
         
         func superDecoder() throws -> Decoder {
-            guard let child = self.data.children["super"] else {
-                throw DecodingError.keyNotFound(BasicCodingKey.key("super"), .init(codingPath: self.codingPath, debugDescription: "Missing key"))
-            }
+            let child = self.data.children["super"] ?? []
+
             return _Decoder(data: child, codingPath: self.codingPath + [BasicCodingKey.key("super")], configuration: self.configuration)
         }
         
         func superDecoder(forKey key: Key) throws -> Decoder {
-            guard let child = self.data.children[key.stringValue] else {
-                throw DecodingError.keyNotFound(key, .init(codingPath: self.codingPath, debugDescription: "Missing key"))
-            }
+            let child = self.data.children[key.stringValue] ?? []
+
             return _Decoder(data: child, codingPath: self.codingPath + [key], configuration: self.configuration)
         }
     }
