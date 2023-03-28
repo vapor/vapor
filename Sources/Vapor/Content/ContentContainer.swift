@@ -1,3 +1,6 @@
+import NIOHTTP1
+import NIOCore
+
 public protocol ContentContainer {
     /// The type of data stored in the container.
     ///
