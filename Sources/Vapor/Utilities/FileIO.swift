@@ -265,6 +265,7 @@ public struct FileIO {
 extension HTTPHeaders.Range.Value {
     
     fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
+
         switch self {
             case .start(let value):
                 guard value <= size, value >= 0 else {
@@ -279,7 +280,7 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                guard start >= 0, end >= 0, start < end, start <= size, end <= size else {
+                guard start >= 0, end >= 0, start < end, start <= size else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
@@ -288,7 +289,8 @@ extension HTTPHeaders.Range.Value {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
-                return (offset: numericCast(start), byteCount: byteCount)
+                let myByteCount = end <= size ? byteCount : byteCount - (end - size)
+                return (offset: numericCast(start), byteCount: myByteCount)
         }
     }
 }
