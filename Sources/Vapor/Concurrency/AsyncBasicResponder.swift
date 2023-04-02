@@ -1,8 +1,6 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
 /// A basic, async closure-based `Responder`.
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public struct AsyncBasicResponder: AsyncResponder {
     /// The stored responder closure.
     private let closure: (Request) async throws -> Response
@@ -26,5 +24,3 @@ public struct AsyncBasicResponder: AsyncResponder {
         return try await closure(request)
     }
 }
-
-#endif

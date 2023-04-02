@@ -1,5 +1,4 @@
-<a href="https://discord.gg/vapor">
-	
+<a href="https://discord.gg/vapor">	
 ![Vapor](https://user-images.githubusercontent.com/1342803/75634175-4876d680-5bd9-11ea-90d6-12c7b6a9ee3f.png)
 </a>
 
@@ -14,10 +13,10 @@
         <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
     </a>
     <a href="https://github.com/vapor/vapor/actions">
-        <img src="https://github.com/vapor/vapor/workflows/test/badge.svg?branch=main" alt="Continuous Integration">
+        <img src="https://github.com/vapor/vapor/actions/workflows/test.yml/badge.svg?branch=main" alt="Continuous Integration">
     </a>
     <a href="https://swift.org">
-        <img src="https://img.shields.io/badge/swift-5.2-brightgreen.svg" alt="Swift 5.2">
+        <img src="https://img.shields.io/badge/swift-5.5-brightgreen.svg" alt="Swift 5.5">
     </a>
     <a href="https://twitter.com/codevapor">
         <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">

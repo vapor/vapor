@@ -1,9 +1,7 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 import XCTest
 import Vapor
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncPasswordTests: XCTestCase {
     func testAsyncBCryptRequestPassword() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
@@ -96,4 +94,3 @@ final class AsyncPasswordTests: XCTestCase {
         })
     }
 }
-#endif
