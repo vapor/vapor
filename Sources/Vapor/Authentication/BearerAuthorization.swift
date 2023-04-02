@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// A bearer token.
 public struct BearerAuthorization {
     /// The plaintext token

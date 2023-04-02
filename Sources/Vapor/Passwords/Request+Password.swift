@@ -1,3 +1,5 @@
+import Foundation
+
 extension Request {
     public var password: Password {
         .init(request: self)

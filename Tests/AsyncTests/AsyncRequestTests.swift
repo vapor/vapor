@@ -1,5 +1,8 @@
 #if compiler(>=5.7) && canImport(_Concurrency)
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {
@@ -11,7 +14,6 @@ fileprivate extension String {
     }
 }
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncRequestTests: XCTestCase {
     
     func testStreamingRequest() throws {

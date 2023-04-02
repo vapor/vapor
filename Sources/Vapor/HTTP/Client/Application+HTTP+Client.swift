@@ -1,3 +1,5 @@
+import AsyncHTTPClient
+
 extension Application.Clients.Provider {
     public static var http: Self {
         .init {
@@ -17,21 +19,20 @@ extension Application.HTTP {
         let application: Application
 
         public var shared: HTTPClient {
-            let lock = self.application.locks.lock(for: Key.self)
-            lock.lock()
-            defer { lock.unlock() }
-            if let existing = self.application.storage[Key.self] {
-                return existing
+            self.application.locks.lock(for: Key.self).withLock {
+                if let existing = self.application.storage[Key.self] {
+                    return existing
+                }
+                let new = HTTPClient(
+                    eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
+                    configuration: self.configuration,
+                    backgroundActivityLogger: self.application.logger
+                )
+                self.application.storage.set(Key.self, to: new) {
+                    try $0.syncShutdown()
+                }
+                return new
             }
-            let new = HTTPClient(
-                eventLoopGroupProvider: .shared(self.application.eventLoopGroup),
-                configuration: self.configuration,
-                backgroundActivityLogger: self.application.logger
-            )
-            self.application.storage.set(Key.self, to: new) {
-                try $0.syncShutdown()
-            }
-            return new
         }
 
         public var configuration: HTTPClient.Configuration {

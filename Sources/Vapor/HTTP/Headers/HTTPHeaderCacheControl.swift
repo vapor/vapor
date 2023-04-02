@@ -1,4 +1,5 @@
-import NIO
+import Foundation
+import NIOHTTP1
 
 // Comments on these properties are copied from the mozilla doc URL shown below.
 extension HTTPHeaders {
@@ -177,6 +178,7 @@ extension HTTPHeaders {
         }
 
         private static let exactMatch: [String: WritableKeyPath<Self, Bool>] = [
+            "immutable": \.immutable,
             "must-revalidate": \.mustRevalidate,
             "no-cache": \.noCache,
             "no-store": \.noStore,

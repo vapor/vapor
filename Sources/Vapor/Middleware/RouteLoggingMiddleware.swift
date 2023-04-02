@@ -1,3 +1,4 @@
+import NIOCore
 import Logging
 
 /// Emits a log message containing the request method and path to a `Request`'s logger.

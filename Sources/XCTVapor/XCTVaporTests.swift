@@ -1,3 +1,6 @@
+import Vapor
+import XCTest
+
 /**
  We recommend configuring this in your test’s `class func setUp()`
  */

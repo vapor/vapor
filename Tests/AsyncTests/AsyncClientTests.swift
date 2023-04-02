@@ -1,8 +1,11 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import Vapor
 import XCTest
+import XCTVapor
+import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import NIOEmbedded
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncClientTests: XCTestCase {
     func testClientConfigurationChange() async throws {
         let app = Application(.testing)
@@ -74,6 +77,7 @@ final class AsyncClientTests: XCTestCase {
 
     func testBoilerplateClient() async throws {
         let app = Application(.testing)
+        app.http.server.configuration.port = 0
         defer { app.shutdown() }
 
         app.get("foo") { req async throws -> String in
@@ -91,11 +95,18 @@ final class AsyncClientTests: XCTestCase {
         app.environment.arguments = ["serve"]
         try app.boot()
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
 
-        let res = try await app.client.get("http://localhost:8080/foo")
+        let res = try await app.client.get("http://localhost:\(port)/foo")
         XCTAssertEqual(res.body?.string, "bar")
 
-        try app.running?.onStop.wait()
+        try await app.running?.onStop.get()
     }
 
     func testCustomClient() async throws {
@@ -171,10 +182,11 @@ extension Application.Clients.Provider {
 
 final class TestLogHandler: LogHandler {
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
-        get { self.metadata[key] }
-        set { self.metadata[key] = newValue }
+        get { self.lock.withLock { self.metadata[key] } }
+        set { self.lock.withLockVoid { self.metadata[key] = newValue } }
     }
 
+    let lock: NIOLock
     var metadata: Logger.Metadata
     var logLevel: Logger.Level
     var messages: [Logger.Message]
@@ -186,6 +198,7 @@ final class TestLogHandler: LogHandler {
     }
 
     init() {
+        self.lock = .init()
         self.metadata = [:]
         self.logLevel = .trace
         self.messages = []
@@ -200,17 +213,23 @@ final class TestLogHandler: LogHandler {
         function: String,
         line: UInt
     ) {
-        self.messages.append(message)
+        self.lock.withLockVoid {
+            self.messages.append(message)
+        }
     }
 
     func read() -> [String] {
-        let copy = self.messages
-        self.messages = []
-        return copy.map { $0.description }
+        self.lock.withLock { () -> [Logger.Message] in
+            let copy = self.messages
+            self.messages = []
+            return copy
+        }.map(\.description)
     }
 
     func getMetadata() -> Logger.Metadata {
-        return self.metadata
+        self.lock.withLock { () -> Logger.Metadata in
+            let copy = self.metadata
+            return copy
+        }
     }
 }
-#endif

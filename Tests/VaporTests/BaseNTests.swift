@@ -1,6 +1,8 @@
 import XCTVapor
 import Algorithms
+import XCTest
 import Vapor
+import NIOCore
 
 final class Base32Tests: XCTestCase {
     func testBase32() throws {

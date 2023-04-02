@@ -1,4 +1,8 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
+import NIOHTTP1
 
 final class FileTests: XCTestCase {
     func testStreamFile() throws {
@@ -321,6 +325,46 @@ final class FileTests: XCTestCase {
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
         try app.test(.GET, "Utilities/") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
+    
+    func testRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .redirect
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }.test(.GET, "Utilities/SubUtilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }
+    }
+    
+    func testNoRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .none
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "Utilities/SubUtilities") { res in
             XCTAssertEqual(res.status, .notFound)
         }
     }

@@ -1,3 +1,4 @@
+import Foundation
 import ConsoleKit
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have

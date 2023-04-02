@@ -1,3 +1,7 @@
+import Foundation
+import NIOCore
+import NIOHTTP1
+
 /// Encodes data as plaintext, utf8.
 public struct PlaintextEncoder: ContentEncoder {
     /// Private encoder.
@@ -9,10 +13,9 @@ public struct PlaintextEncoder: ContentEncoder {
     /// Creates a new `PlaintextEncoder`.
     ///
     /// - parameters:
-    ///     - contentType: Plaintext `MediaType` to use.
-    ///                    Usually `.plainText` or `.html`.
+    ///     - contentType: Plaintext `MediaType` to use. Usually `.plainText` or `.html`.
     public init(_ contentType: HTTPMediaType = .plainText) {
-        encoder = .init()
+        self.encoder = .init()
         self.contentType = contentType
     }
     
@@ -20,9 +23,24 @@ public struct PlaintextEncoder: ContentEncoder {
     public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders) throws
         where E: Encodable
     {
-        try encodable.encode(to: encoder)
-        guard let string = self.encoder.plaintext else {
-            fatalError()
+        try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
+    }
+    
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+        where E: Encodable
+    {
+        let actualEncoder: _PlaintextEncoder
+        if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
+            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfo.merging(userInfo) { $1 })
+        } else {
+            actualEncoder = self.encoder
+        }
+
+        var container = actualEncoder.singleValueContainer()
+        try container.encode(encodable)
+
+        guard let string = actualEncoder.plaintext else {
+            throw EncodingError.invalidValue(encodable, .init(codingPath: [], debugDescription: "Nothing was encoded!"))
         }
         headers.contentType = self.contentType
         body.writeString(string)
@@ -31,77 +49,71 @@ public struct PlaintextEncoder: ContentEncoder {
 
 // MARK: Private
 
-private final class _PlaintextEncoder: Encoder {
-    public var codingPath: [CodingKey]
+private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
+    public var codingPath: [CodingKey] = []
     public var userInfo: [CodingUserInfoKey: Any]
     public var plaintext: String?
     
-    public init() {
-        self.codingPath = []
-        self.userInfo = [:]
-        self.plaintext = nil
-    }
+    public init(userInfo: [CodingUserInfoKey: Any] = [:]) { self.userInfo = userInfo }
     
-    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> {
-        fatalError("Plaintext encoding does not support dictionaries.")
-    }
-    
-    public func unkeyedContainer() -> UnkeyedEncodingContainer {
-        fatalError("Plaintext encoding does not support arrays.")
-    }
-    
-    public func singleValueContainer() -> SingleValueEncodingContainer {
-        return DataEncodingContainer(encoder: self)
-    }
-}
+    public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
+    public func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }
+    public func singleValueContainer() -> SingleValueEncodingContainer { self }
 
-private final class DataEncodingContainer: SingleValueEncodingContainer {
-    var codingPath: [CodingKey] {
-        return encoder.codingPath
-    }
+    func encodeNil() throws { self.plaintext = nil }
     
-    let encoder: _PlaintextEncoder
-    init(encoder: _PlaintextEncoder) {
-        self.encoder = encoder
-    }
+    // N.B.: Implementing the individual "primitive" coding methods on a container rather than forwarding through
+    // each type's Codable implementation yields substantial speedups.
+    func encode(_ value: Bool) throws { self.plaintext = value.description }
+    func encode(_ value: Int) throws { self.plaintext = value.description }
+    func encode(_ value: Double) throws { self.plaintext = value.description }
+    func encode(_ value: String) throws { self.plaintext = value }
+    func encode(_ value: Int8) throws { self.plaintext = value.description }
+    func encode(_ value: Int16) throws { self.plaintext = value.description }
+    func encode(_ value: Int32) throws { self.plaintext = value.description }
+    func encode(_ value: Int64) throws { self.plaintext = value.description }
+    func encode(_ value: UInt) throws { self.plaintext = value.description }
+    func encode(_ value: UInt8) throws { self.plaintext = value.description }
+    func encode(_ value: UInt16) throws { self.plaintext = value.description }
+    func encode(_ value: UInt32) throws { self.plaintext = value.description }
+    func encode(_ value: UInt64) throws { self.plaintext = value.description }
+    func encode(_ value: Float) throws { self.plaintext = value.description }
     
-    func encodeNil() throws {
-        encoder.plaintext = nil
-    }
-    
-    func encode(_ value: Bool) throws {
-        encoder.plaintext = value.description
-    }
-    
-    func encode(_ value: Int) throws {
-        encoder.plaintext = value.description
-    }
-    
-    func encode(_ value: Double) throws {
-        encoder.plaintext = value.description
-    }
-    
-    func encode(_ value: String) throws { encoder.plaintext = value }
-    func encode(_ value: Int8) throws { try encode(Int(value)) }
-    func encode(_ value: Int16) throws { try encode(Int(value)) }
-    func encode(_ value: Int32) throws { try encode(Int(value)) }
-    func encode(_ value: Int64) throws { try encode(Int(value)) }
-    func encode(_ value: UInt) throws { try encode(Int(value)) }
-    func encode(_ value: UInt8) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt16) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt32) throws { try encode(UInt(value)) }
-    func encode(_ value: UInt64) throws { try encode(UInt(value)) }
-    func encode(_ value: Float) throws { try encode(Double(value)) }
     func encode<T>(_ value: T) throws where T: Encodable {
         if let data = value as? Data {
             // special case for data
-            if let utf8 = String(data: data, encoding: .utf8) {
-                encoder.plaintext = utf8
+#if swift(>=5.7)
+            let utf8Maybe = data.withUnsafeBytes({ $0.withMemoryRebound(to: CChar.self, { String(validatingUTF8: $0.baseAddress!) }) })
+#else
+            let utf8Maybe = data.withUnsafeBytes({ String(validatingUTF8: $0.bindMemory(to: CChar.self).baseAddress!) })
+#endif
+            if let utf8 = utf8Maybe {
+                self.plaintext = utf8
             } else {
-                encoder.plaintext = data.base64EncodedString()
+                self.plaintext = data.base64EncodedString()
             }
         } else {
-            try value.encode(to: encoder)
+            try value.encode(to: self)
         }
+    }
+
+    /// This ridiculosity is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
+    struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer {
+        let codingPath = [CodingKey](), userInfo = [CodingUserInfoKey: Any](), count = 0
+        var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
+        init() {}; init() where K == BasicCodingKey {}
+        func encodeNil() throws { throw self.error }
+        func encodeNil(forKey: K) throws { throw self.error }
+        func encode<T: Encodable>(_: T) throws { throw self.error }
+        func encode<T: Encodable>(_: T, forKey: K) throws { throw self.error }
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
+        func nestedContainer<N: CodingKey>(keyedBy: N.Type, forKey: K) -> KeyedEncodingContainer<N> { .init(FailureEncoder<N>()) }
+        func nestedUnkeyedContainer() -> UnkeyedEncodingContainer { self }
+        func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { self }
+        func superEncoder() -> Encoder { self }
+        func superEncoder(forKey: K) -> Encoder { self }
+        func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { .init(FailureEncoder<K>()) }
+        func unkeyedContainer() -> UnkeyedEncodingContainer { self }
+        func singleValueContainer() -> SingleValueEncodingContainer { self }
     }
 }

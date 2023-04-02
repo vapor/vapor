@@ -2,6 +2,8 @@ import Vapor
 import XCTVapor
 import AsyncHTTPClient
 import XCTest
+import NIOCore
+import NIOEmbedded
 
 final class ApplicationTests: XCTestCase {
     func testApplicationStop() throws {
@@ -9,6 +11,7 @@ final class ApplicationTests: XCTestCase {
         let app = Application(test)
         defer { app.shutdown() }
         app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
         try app.start()
         guard let running = app.running else {
             XCTFail("app started without setting 'running'")
@@ -110,9 +113,17 @@ final class ApplicationTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
 
-        let res = try app.client.get("http://localhost:8080/hello").wait()
+        let res = try app.client.get("http://localhost:\(port)/hello").wait()
         XCTAssertEqual(res.body?.string, "Hello, world!")
     }
 

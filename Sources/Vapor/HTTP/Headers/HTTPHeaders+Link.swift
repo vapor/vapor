@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Convenience for accessing the Link header as an array of provided links.
     ///

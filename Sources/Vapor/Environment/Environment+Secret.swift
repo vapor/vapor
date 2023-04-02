@@ -1,3 +1,7 @@
+import NIOCore
+import NIOPosix
+import AsyncKit
+
 extension Environment {
     /// Reads a file's content for a secret. The secret key is the name of the environment variable that is expected to
     /// specify the path of the file containing the secret.

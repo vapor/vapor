@@ -1,3 +1,8 @@
+import RoutingKit
+import WebSocketKit
+import NIOCore
+import NIOHTTP1
+
 public struct WebSocketMaxFrameSize: ExpressibleByIntegerLiteral {
     let value: Int
 

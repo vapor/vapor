@@ -1,4 +1,8 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
+import NIOHTTP1
 
 final class SessionTests: XCTestCase {
     func testSessionDestroy() throws {
