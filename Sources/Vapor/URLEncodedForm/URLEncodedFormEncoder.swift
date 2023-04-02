@@ -65,13 +65,11 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
 
     /// Create a new `URLEncodedFormEncoder`.
     ///
-    ///        ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder(bracketsAsArray: true, flagsAsBool: true, arraySeparator: nil))
+    ///      ContentConfiguration.global.use(urlEncoder: URLEncodedFormEncoder())
     ///
-    /// - parameters:
-    ///    - configuration: Defines how encoding is done see `URLEncodedFormCodingConfig` for more information
-    public init(
-        configuration: Configuration = .init()
-    ) {
+    /// - Parameters:
+    ///  - configuration: Defines how encoding is done; see ``URLEncodedFormEncoder/Configuration`` for more information
+    public init(configuration: Configuration = .init()) {
         self.configuration = configuration
     }
     
@@ -97,23 +95,24 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         try self.encode(encodable, to: &url, userInfo: [:])
     }
     
+    /// ``URLQueryEncoder`` conformance.
     public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Any]) throws
         where E: Encodable
     {
         url.query = try self.encode(encodable, userInfo: userInfo)
     }
 
-    /// Encodes the supplied `Encodable` object to `Data`.
+    /// Encodes the supplied ``Encodable`` object to ``String``.
     ///
     ///     print(user) // User
     ///     let data = try URLEncodedFormEncoder().encode(user)
     ///     print(data) // "name=Vapor&age=3"
     ///
-    /// - parameters:
-    ///     - encodable: Generic `Encodable` object (`E`) to encode.
-    ///     - configuration: Overrides the  coding config for this encoding call.
-    /// - returns: Encoded `Data`
-    /// - throws: Any error that may occur while attempting to encode the specified type.
+    /// - Parameters:
+    ///   - encodable: Generic ``Encodable`` object (``E``) to encode.
+    ///   - userInfo: Overrides the default coder user info.
+    /// - Returns: Encoded ``String``
+    /// - Throws: Any error that may occur while attempting to encode the specified type.
     public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> String
         where E: Encodable
     {

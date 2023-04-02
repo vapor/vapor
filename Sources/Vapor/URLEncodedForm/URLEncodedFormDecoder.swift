@@ -80,6 +80,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
+    /// ``ContentDecoder`` conformance.
     public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
         where D: Decodable
     {
@@ -94,30 +95,36 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///
     ///     let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
     ///
-    /// - parameters:
-    ///     - decodable: Type to decode to
-    ///     - url: URL to read the query string from
-    ///     - configuration: Overrides the default coding configuration
+    /// - Parameters:
+    ///   - decodable: Type to decode to
+    ///   - url: ``URI`` to read the query string from
     public func decode<D>(_ decodable: D.Type, from url: URI) throws -> D where D : Decodable {
         try self.decode(D.self, from: url, userInfo: [:])
     }
     
+    /// Decodes the URL's query string to the type provided
+    ///
+    ///     let ziz = try URLEncodedFormDecoder().decode(Pet.self, from: "name=Ziz&type=cat")
+    ///
+    /// - Parameters:
+    ///   - decodable: Type to decode to
+    ///   - url: ``URI`` to read the query string from
+    ///   - userInfo: Overrides the default coder user info
     public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D where D : Decodable {
         try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
     }
-    
 
-    /// Decodes an instance of the supplied `Decodable` type from `Data`.
+    /// Decodes an instance of the supplied ``Decodable`` type from a ``String``.
     ///
     ///     print(data) // "name=Vapor&age=3"
     ///     let user = try URLEncodedFormDecoder().decode(User.self, from: data)
     ///     print(user) // User
     ///
-    /// - parameters:
-    ///     - decodable: Generic `Decodable` type (`D`) to decode.
-    ///     - from: `Data` to decode a `D` from.
-    ///     - configuration: Overrides the default coding configuration
-    /// - returns: An instance of the `Decodable` type (`D`).
+    /// - Parameters:
+    ///   - decodable: Generic ``Decodable`` type (``D``) to decode.
+    ///   - string: String to decode a ``D`` from.
+    ///   - userInfo: Overrides the default coder user info
+    /// - returns: An instance of the `Decodable` type (``D``).
     /// - throws: Any error that may occur while attempting to decode the specified type.
     public func decode<D>(_ decodable: D.Type, from string: String, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> D where D : Decodable {
         let parsedData = try self.parser.parse(string)

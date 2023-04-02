@@ -11,7 +11,7 @@ import MultipartKit
 ///
 ///     try res.content.encode("hello", as: .plainText)
 ///     print(res.mediaType) // .plainText
-///     print(res.http.body) // "hello"
+///     print(res.body.string) // "hello"
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
@@ -98,9 +98,9 @@ public struct ContentConfiguration {
     
     // MARK: Resolve
     
-    /// Returns an `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    /// Returns an ``ContentEncoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPEncoder(for: .json)
+    ///     let coder = try ContentConfiguration.global.requireEncoder(for: .json)
     ///
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
         guard let encoder = self.encoders[mediaType] else {
@@ -110,9 +110,10 @@ public struct ContentConfiguration {
         return encoder
     }
     
-    /// Returns a `HTTPMessageDecoder` for the specified `MediaType` or throws an error.
+    /// Returns a ``ContentDecoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPDecoder(for: .json)
+    ///     let coder = try ContentConfiguration.global.requireDecoder(for: .json)
+    ///     
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
         guard let decoder = self.decoders[mediaType] else {
             throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType) has not been configured.")
