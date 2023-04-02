@@ -18,6 +18,10 @@ jobs:
           - vapor/leaf
           - vapor/queues
           - vapor/apns
+        include:
+          - ref: main
+          - provider: vapor/apns
+            ref: 3.0.0
     runs-on: ubuntu-latest
     container: swift:5.7-jammy
     steps: 
@@ -30,6 +34,7 @@ jobs:
         with: 
           repository: ${{ matrix.provider }}
           path: provider
+          ref: ${{ matrix.ref }}
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
       - name: Run tests
