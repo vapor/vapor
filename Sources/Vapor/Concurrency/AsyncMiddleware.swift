@@ -1,4 +1,3 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
 /// `AsyncMiddleware` is placed between the server and your router. It is capable of
@@ -7,7 +6,6 @@ import NIOCore
 /// return a custom `Response` if desired.
 ///
 /// This is an async version of `Middleware`
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public protocol AsyncMiddleware: Middleware {
     /// Called with each `Request` that passes through this middleware.
     /// - parameters:
@@ -17,7 +15,6 @@ public protocol AsyncMiddleware: Middleware {
     func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response
 }
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension AsyncMiddleware {
     public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
         let promise = request.eventLoop.makePromise(of: Response.self)
@@ -30,5 +27,3 @@ extension AsyncMiddleware {
         return promise.futureResult
     }
 }
-
-#endif

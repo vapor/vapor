@@ -32,7 +32,15 @@ extension BaseNEncoding {
                 case 0: return; default: fatalError("unreachable")
             }
             n &+= 8 &- padding
-            if let pad = pad, padding > 0 { p.baseAddress!.advanced(by: n).assign(repeating: pad, count: padding); n &+= padding }
+            if let pad = pad, padding > 0 {
+                let pn = p.baseAddress!.advanced(by: n)
+#if swift(<5.8)
+                pn.assign(repeating: pad, count: padding)
+#else
+                pn.update(repeating: pad, count: padding)
+#endif
+                n &+= padding
+            }
         }
     }
 }

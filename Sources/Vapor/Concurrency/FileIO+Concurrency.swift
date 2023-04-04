@@ -1,7 +1,5 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension FileIO {
     /// Reads the contents of a file at the supplied path.
     ///
@@ -50,4 +48,3 @@ extension FileIO {
         return try await self.writeFile(buffer, at: path).get()
     }
 }
-#endif

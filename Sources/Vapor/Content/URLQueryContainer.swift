@@ -1,176 +1,107 @@
+import NIOHTTP1
+import NIOCore
+
 /// Helper for encoding and decoding data from an HTTP request query string.
 ///
-/// See `Request.query` for more information.
+/// See ``Request/query`` for more information.
 public protocol URLQueryContainer {
-    func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
-        where D: Decodable
+    func decode<D: Decodable>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
 
-    mutating func encode<E>(_ encodable: E, using encoder: URLQueryEncoder) throws
-        where E: Encodable
+    mutating func encode<E: Encodable>(_ encodable: E, using encoder: URLQueryEncoder) throws
 }
 
 extension URLQueryContainer {
-    // MARK: Content
+    // MARK: - Encoding helpers
 
-    /// Serializes a `Content` type to this HTTP request query string.
-    ///
-    ///     let flags: Flags ...
-    ///     try req.query.encode(flags)
-    ///
-    /// A `MediaType.urlEncodedForm` encoder will be used.
-    ///
-    /// - parameters:
-    ///     - content: `Content` type to encode to this HTTP message.
-    /// - throws: Any errors making the decoder for this media type or serializing the query string.
-    public mutating func encode<C>(_ content: C) throws 
-        where C: Content 
-    {
+    /// Serialize a ``Content`` object to the container.
+    public mutating func encode<C: Content>(_ content: C) throws {
         var content = content
+        try self.encode(&content)
+    }
+    
+    /// Serialize a ``Content`` object to the container without copying it.
+    public mutating func encode<C: Content>(_ content: inout C) throws {
         try content.beforeEncode()
         try self.encode(content, using: self.configuredEncoder())
     }
 
-    /// Parses a `Content` type from this HTTP request query string.
-    ///
-    ///     let flags = try req.query.decode(Flags.self)
-    ///     print(flags) // Flags
-    ///
-    /// A `MediaType.urlEncodedForm` decoder will be used.
-    ///
-    /// - parameters:
-    ///     - content: `Content` type to decode from this HTTP message.
-    /// - returns: Instance of the `Decodable` type.
-    /// - throws: Any errors making the decoder for this media type or parsing the query string.
-    public func decode<C>(_ content: C.Type) throws -> C 
-        where C: Content
-    {
+    /// Serialize an ``Encodable`` value to the container.
+    public mutating func encode<E: Encodable>(_ encodable: E) throws {
+        try self.encode(encodable, using: self.configuredEncoder())
+    }
+    
+    // MARK: - Decoding helpers
+
+    /// Parse a ``Content`` object from the container.
+    public func decode<C: Content>(_ content: C.Type) throws -> C {
         var content = try self.decode(C.self, using: self.configuredDecoder())
         try content.afterDecode()
         return content
     }
 
-    /// Serializes an `Encodable` type to this HTTP request query string.
-    ///
-    ///     let flags: Flags ...
-    ///     try req.query.encode(flags)
-    ///
-    /// A `MediaType.urlEncodedForm` encoder will be used.
-    ///
-    /// - parameters:
-    ///     - encodable: `Encodable` type to encode to this HTTP message.
-    /// - throws: Any errors making the decoder for this media type or serializing the query string.
-    public mutating func encode<E>(_ encodable: E) throws where E: Encodable {
-        try self.encode(encodable, using: self.configuredEncoder())
+    /// Parse a ``Decodable`` value from the container.
+    public func decode<D: Decodable>(_: D.Type) throws -> D {
+        try self.decode(D.self, using: self.configuredDecoder())
     }
 
-    /// Parses a `Decodable` type from this HTTP request query string.
-    ///
-    ///     let flags = try req.query.decode(Flags.self)
-    ///     print(flags) // Flags
-    ///
-    /// A `MediaType.urlEncodedForm` decoder will be used.
-    ///
-    /// - parameters:
-    ///     - decodable: `Decodable` type to decode from this HTTP message.
-    /// - returns: Instance of the `Decodable` type.
-    /// - throws: Any errors making the decoder for this media type or parsing the query string.
-    public func decode<D>(_ decodable: D.Type) throws -> D where D: Decodable {
-        return try self.decode(D.self, using: self.configuredDecoder())
+    // MARK: - Key path helpers
+
+    /// Legacy alias for ``subscript(_:at:)-26w0c``.
+    public subscript<D: Decodable>(_ path: CodingKeyRepresentable...) -> D? {
+        self[D.self, at: path]
     }
 
-    // MARK: Single Value
-
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
-    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`.
-    ///
-    ///     let name: String? = req.query["user", "name"]
-    ///     print(name) /// String?
-    ///
-    /// - parameters:
-    ///     - keyPath: One or more key path components to the desired value.
-    /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ keyPath: CodingKeyRepresentable...) -> D?
-        where D: Decodable
-    {
-        return self[D.self, at: keyPath]
+    ///     let name: String? = req.query[at: "user", "name"]
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) -> D? {
+        self[D.self, at: path]
     }
 
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
-    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`.
-    ///
-    ///     let name = req.query[String.self, at: "user", "name"]
-    ///     print(name) /// String?
-    ///
-    /// - parameters:
-    ///     - type: The `Decodable` value type to decode.
-    ///     - keyPath: One or more key path components to the desired value.
-    /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ type: D.Type, at keyPath: CodingKeyRepresentable...) -> D?
-        where D: Decodable
-    {
-        return self[D.self, at: keyPath]
+    ///     let name: String? = req.query[at: ["user", "name"]]
+    public subscript<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) -> D? {
+        try? self.get(D.self, at: path)
     }
-
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    
+    /// Fetch a single ``Decodable`` value at the supplied keypath in the container.
     ///
-    /// Note: This is a non-throwing subscript convenience method for `get(_:at:)`. This is the non-variadic version.
-    ///
-    ///     let name = req.query[String.self, at: "user", "name"]
-    ///     print(name) /// String?
-    ///
-    /// - parameters:
-    ///     - type: The `Decodable` value type to decode.
-    ///     - keyPath: One or more key path components to the desired value.
-    /// - returns: Decoded `Decodable` value.
-    public subscript<D>(_ type: D.Type, at keyPath: [CodingKeyRepresentable]) -> D?
-        where D: Decodable
-    {
-        return try? get(type, at: keyPath)
+    ///     let name: String = try req.query.get(at: "user", "name")
+    public func get<D: Decodable>(_: D.Type = D.self, at path: CodingKeyRepresentable...) throws -> D {
+        try self.get(at: path)
     }
-
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
+    
+    /// Fetch a single ``Decodable`` value at the supplied keypath in this container.
     ///
-    ///     let name = try req.query.get(String.self, at: "user", "name")
-    ///     print(name) /// String
-    ///
-    /// - parameters:
-    ///     - type: The `Decodable` value type to decode.
-    ///     - keyPath: One or more key path components to the desired value.
-    /// - returns: Decoded `Decodable` value.
-    public func get<D>(_ type: D.Type = D.self, at keyPath: CodingKeyRepresentable...) throws -> D
-        where D: Decodable
-    {
-        return try get(type, at: keyPath)
-    }
-
-    /// Fetches a single `Decodable` value at the supplied key-path from this HTTP request's query string.
-    ///
-    /// Note: This is the non-variadic version.
-    ///
-    ///     let name = try req.query.get(String.self, at: "user", "name")
-    ///     print(name) /// String
-    ///
-    /// - parameters:
-    ///     - type: The `Decodable` value type to decode.
-    ///     - keyPath: One or more key path components to the desired value.
-    /// - returns: Decoded `Decodable` value.
-    public func get<D>(_ type: D.Type = D.self, at keyPath: [CodingKeyRepresentable]) throws -> D
-        where D: Decodable
-    {
-        return try self.decode(SingleValueDecoder.self).get(at: keyPath.map { $0.codingKey })
+    ///     let name = try req.query.get(String.self, at: ["user", "name"])
+    public func get<D: Decodable>(_: D.Type = D.self, at path: [CodingKeyRepresentable]) throws -> D {
+        try self.get(D.self, path: path.map(\.codingKey))
     }
 
     // MARK: Private
 
-    /// Gets the`DataDecoder` or throws an error.
-    private func configuredDecoder() throws -> URLQueryDecoder {
-        return try ContentConfiguration.global.requireURLDecoder()
+    /// Execute a "get at coding key path" operation.
+    private func get<D: Decodable>(_: D.Type = D.self, path: [CodingKey]) throws -> D {
+        try self.decode(ContainerGetPathExecutor<D>.self, using: ForwardingURLQueryDecoder(
+            base: self.configuredDecoder(),
+            info: ContainerGetPathExecutor<D>.userInfo(for: path)
+        )).result
     }
 
-    /// Gets the `DataEncoder` or throws an error.
-    private func configuredEncoder() throws -> URLQueryEncoder {
-        return try ContentConfiguration.global.requireURLEncoder()
+    /// Look up a ``URLQueryDecoder``.
+    private func configuredDecoder() throws -> URLQueryDecoder { try ContentConfiguration.global.requireURLDecoder() }
+
+    /// Look up a ``URLQueryEncoder``.
+    private func configuredEncoder() throws -> URLQueryEncoder { try ContentConfiguration.global.requireURLEncoder() }
+}
+
+/// Injects coder userInfo into a ``URLQueryDecoder`` so we don't have to add passthroughs to ``URLQueryContainer``.
+fileprivate struct ForwardingURLQueryDecoder: URLQueryDecoder {
+    let base: URLQueryDecoder, info: [CodingUserInfoKey: Any]
+    
+    func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D { try self.base.decode(D.self, from: url, userInfo: self.info) }
+    func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D {
+        try self.base.decode(D.self, from: url, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

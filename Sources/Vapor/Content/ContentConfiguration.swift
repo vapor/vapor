@@ -1,24 +1,24 @@
 import Foundation
 import MultipartKit
 
-/// Configures which `Encoder`s and `Decoder`s to use when interacting with data in HTTP messages.
+/// Configures which ``Encoder``s and ``Decoder``s to use when interacting with data in HTTP messages.
 ///
 ///     ContentConfiguration.global.use(encoder: JSONEncoder(), for: .json)
 ///
-/// Each coder is registered to a specific `MediaType`. When _decoding_ content from HTTP messages,
-/// the `MediaType` will be specified by the message itself. When _encoding_ content from HTTP messages,
-/// the `MediaType` should be specified (`MediaType.json` is usually the assumed default).
+/// Each coder is registered to a specific ``HTTPMediaType``. When _decoding_ content from HTTP messages,
+/// the ``HTTPMediaType`` will be specified by the message itself. When _encoding_ content from HTTP messages,
+/// the ``HTTPMediaType`` should be specified (``HTTTMediaType/json`` is usually the assumed default).
 ///
 ///     try res.content.encode("hello", as: .plainText)
 ///     print(res.mediaType) // .plainText
-///     print(res.http.body) // "hello"
+///     print(res.body.string) // "hello"
 ///
-/// Most often, these configured coders are used to encode and decode types conforming to `Content`.
-/// See the `Content` protocol for more information.
+/// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
+/// See the ``Content`` protocol for more information.
 public struct ContentConfiguration {
     public static var global: ContentConfiguration = .default()
     
-    /// Creates a `ContentConfiguration` containing all of Vapor's default coders.
+    /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
     public static func `default`() -> ContentConfiguration {
         var config = ContentConfiguration()
         
@@ -48,10 +48,10 @@ public struct ContentConfiguration {
         return config
     }
     
-    /// Configured `ContentEncoder`s.
+    /// Configured ``ContentEncoder``s.
     private var encoders: [HTTPMediaType: ContentEncoder]
     
-    /// Configured `ContentDecoder`s.
+    /// Configured ``ContentDecoder``s.
     private var decoders: [HTTPMediaType: ContentDecoder]
     
     private var urlEncoder: URLQueryEncoder?
@@ -60,39 +60,37 @@ public struct ContentConfiguration {
     
     // MARK: Init
     
-    /// Create a new, empty `ContentConfig`.
+    /// Create a new, empty ``ContentConfiguration``.
     public init() {
         self.encoders = [:]
         self.decoders = [:]
     }
     
-    /// Adds an `ContentEncoder` for the specified `HTTPMediaType`.
+    /// Adds a ``ContentEncoder`` for the specified ``HTTPMediaType``.
     ///
     ///     contentConfig.use(encoder: JSONEncoder(), for: .json)
     ///
     /// - parameters:
-    ///     - encoder: `ContentEncoder` to use.
-    ///     - mediaType: `ContentEncoder` will be used to encode this `HTTPMediaType`.
+    ///     - encoder: ``ContentEncoder`` to use.
+    ///     - mediaType: ``ContentEncoder`` will be used to encode this ``HTTPMediaType``.
     public mutating func use(encoder: ContentEncoder, for mediaType: HTTPMediaType) {
         self.encoders[mediaType] = encoder
     }
     
-    /// Adds a `ContentDecoder` for the specified `HTTPMediaType`.
+    /// Adds a ``ContentDecoder`` for the specified ``HTTPMediaType``.
     ///
     ///     contentConfig.use(decoder: JSONDecoder(), for: .json)
     ///
     /// - parameters:
-    ///     - decoder: `ContentDecoder` to use.
-    ///     - mediaType: `ContentDecoder` will be used to decode this `HTTPMediaType`.
+    ///     - decoder: ``ContentDecoder`` to use.
+    ///     - mediaType: ``ContentDecoder`` will be used to decode this ``HTTPMediaType``.
     public mutating func use(decoder: ContentDecoder, for mediaType: HTTPMediaType) {
         self.decoders[mediaType] = decoder
     }
     
-
     public mutating func use(urlEncoder: URLQueryEncoder) {
         self.urlEncoder = urlEncoder
     }
-    
 
     public mutating func use(urlDecoder: URLQueryDecoder) {
         self.urlDecoder = urlDecoder
@@ -100,61 +98,47 @@ public struct ContentConfiguration {
     
     // MARK: Resolve
     
-    /// Returns an `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    /// Returns an ``ContentEncoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPEncoder(for: .json)
+    ///     let coder = try ContentConfiguration.global.requireEncoder(for: .json)
     ///
-    /// - parameters:
-    ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
     public func requireEncoder(for mediaType: HTTPMediaType) throws -> ContentEncoder {
         guard let encoder = self.encoders[mediaType] else {
-            throw Abort(.unsupportedMediaType, identifier: "httpEncoder")
+            throw Abort(.unsupportedMediaType, reason: "Support for writing media type '\(mediaType)' has not been configured.")
         }
         
         return encoder
     }
     
-    /// Returns a `HTTPMessageDecoder` for the specified `MediaType` or throws an error.
+    /// Returns a ``ContentDecoder`` for the specified ``HTTPMediaType`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPDecoder(for: .json)
-    ///
-    /// - parameters:
-    ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
+    ///     let coder = try ContentConfiguration.global.requireDecoder(for: .json)
+    ///     
     public func requireDecoder(for mediaType: HTTPMediaType) throws -> ContentDecoder {
         guard let decoder = self.decoders[mediaType] else {
-            throw Abort(.unsupportedMediaType, identifier: "httpDecoder")
+            throw Abort(.unsupportedMediaType, reason: "Support for reading media type '\(mediaType) has not been configured.")
         }
         
         return decoder
     }
     
-    
-    /// Returns an `HTTPMessageEncoder` for the specified `MediaType` or throws an error.
+    /// Returns a ``URLQueryEncoder`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPEncoder(for: .json)
-    ///
-    /// - parameters:
-    ///     - HTTPMediaType: An encoder for this `MediaType` will be returned.
+    ///     let coder = try coders.requireURLEncoder()
     public func requireURLEncoder() throws -> URLQueryEncoder {
         guard let encoder = self.urlEncoder else {
-            throw Abort(.unsupportedMediaType, identifier: "urlEncoder")
+            throw Abort(.unsupportedMediaType, reason: "No URL query encoding support has been configured.")
         }
-        
         return encoder
     }
     
-    /// Returns a `HTTPMessageDecoder` for the specified `MediaType` or throws an error.
+    /// Returns a ``URLQueryDecoder`` or throws an error.
     ///
-    ///     let coder = try coders.requireHTTPDecoder(for: .json)
-    ///
-    /// - parameters:
-    ///     - HTTPMediaType: A decoder for this `MediaType` will be returned.
+    ///     let coder = try coders.requireURLDecoder()
     public func requireURLDecoder() throws -> URLQueryDecoder {
         guard let decoder = self.urlDecoder else {
-            throw Abort(.unsupportedMediaType, identifier: "urlDecoder")
+            throw Abort(.unsupportedMediaType, reason: "No URL query decoding support has been configured.")
         }
-        
         return decoder
     }
 }
-
