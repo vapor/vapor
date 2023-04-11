@@ -23,7 +23,7 @@ jobs:
           - provider: vapor/apns
             ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.7-jammy
+    container: swift:5.8
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v3
