@@ -1,4 +1,4 @@
-#if swift(>=5.6) && os(Linux)
+#if os(Linux)
 public typealias CodingKeyRepresentable = Swift.CodingKeyRepresentable
 #else
 /// This is an unwelcome stand-in for the ``Swift/CodingKeyRepresentable`` protocol that appeared in Swift 5.6.
