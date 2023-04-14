@@ -53,7 +53,15 @@ public struct BaseNEncoding {
             if padding > 0 {
                 assert((1..<bits).contains(bufBits))
                 p[n] = table[(buf &<< (bits &- bufBits)) & mask]; n &+= 1
-                if let pad = pad { p.baseAddress!.advanced(by: n).assign(repeating: pad, count: padding); n &+= padding }
+                if let pad = pad {
+                    let pn = p.baseAddress!.advanced(by: n)
+#if swift(<5.8)
+                    pn.assign(repeating: pad, count: padding)
+#else
+                    pn.update(repeating: pad, count: padding)
+#endif
+                    n &+= padding
+                }
             }
         }
     }

@@ -1,4 +1,3 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
 /// A type erased response useful for routes that can return more than one type.
@@ -33,7 +32,6 @@ import NIOCore
 ///         }
 ///     }
 ///
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 public struct AnyAsyncResponse: AsyncResponseEncodable {
     /// The wrapped `AsyncResponseEncodable` type.
     private let encodable: AsyncResponseEncodable
@@ -51,4 +49,3 @@ public struct AnyAsyncResponse: AsyncResponseEncodable {
     }
 }
 
-#endif

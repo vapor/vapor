@@ -14,7 +14,6 @@ fileprivate extension String {
     }
 }
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncRequestTests: XCTestCase {
     
     func testStreamingRequest() throws {

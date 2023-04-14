@@ -1,9 +1,7 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 import NIOHTTP1
 import RoutingKit
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension RoutesBuilder {
     @discardableResult
     public func get<Response>(
@@ -130,7 +128,9 @@ extension RoutesBuilder {
     {
         let responder = AsyncBasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value).get()
+                _ = try await request.eventLoop.flatSubmit {
+                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                }.get()
                 
             }
             return try await closure(request).encodeResponse(for: request)
@@ -146,5 +146,3 @@ extension RoutesBuilder {
         return route
     }
 }
-
-#endif

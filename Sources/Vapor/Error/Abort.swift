@@ -64,7 +64,7 @@ public struct Abort: AbortError, DebuggableError {
         reason: String? = nil,
         identifier: String? = nil,
         suggestedFixes: [String] = [],
-        file: String = #file,
+        file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,

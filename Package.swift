@@ -1,4 +1,4 @@
-// swift-tools-version:5.5.2
+// swift-tools-version:5.6
 import PackageDescription
 
 let package = Package(
@@ -92,16 +92,21 @@ let package = Package(
         ]),
 	
         // Development
-        .executableTarget(name: "Development", dependencies: [
-            .target(name: "Vapor"),
-        ], swiftSettings: [
-            // Enable better optimizations when building in Release configuration. Despite the use of
-            // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
-            // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-            .unsafeFlags([
-                "-cross-module-optimization"
-            ], .when(configuration: .release)),
-        ]),
+        .executableTarget(
+            name: "Development",
+            dependencies: [
+                .target(name: "Vapor"),
+            ],
+            resources: [.copy("Resources")],
+            swiftSettings: [
+                // Enable better optimizations when building in Release configuration. Despite the use of
+                // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
+                // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
+                .unsafeFlags([
+                    "-cross-module-optimization"
+                ], .when(configuration: .release)),
+            ]
+        ),
 
         // Testing
         .target(name: "XCTVapor", dependencies: [
