@@ -3,7 +3,7 @@ extension Application {
         .init(application: self)
     }
 
-    public struct HTTP {
+    public struct HTTP: Sendable {
         public let application: Application
     }
 }

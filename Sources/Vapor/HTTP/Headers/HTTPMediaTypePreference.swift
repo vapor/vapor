@@ -2,7 +2,7 @@ import Foundation
 import NIOHTTP1
 
 /// Represents a `MediaType` and its associated preference, `q`.
-public struct HTTPMediaTypePreference {
+public struct HTTPMediaTypePreference: Sendable {
     /// The `MediaType` in question.
     public var mediaType: HTTPMediaType
     

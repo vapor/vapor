@@ -1,7 +1,7 @@
 import NIOHTTP1
 
 extension HTTPHeaders {
-    struct Directive: Equatable, CustomStringConvertible {
+    struct Directive: Equatable, CustomStringConvertible, Sendable {
         var value: Substring
         var parameter: Substring?
 
@@ -51,7 +51,7 @@ extension HTTPHeaders {
         self.replaceOrAdd(name: name, value: serializer.serialize())
     }
 
-    struct DirectiveParser {
+    struct DirectiveParser: Sendable {
         var current: Substring
 
         init<S>(string: S)
@@ -187,7 +187,7 @@ extension HTTPHeaders {
         }
     }
 
-    struct DirectiveSerializer {
+    struct DirectiveSerializer: Sendable {
         let directives: [[Directive]]
 
         init(directives: [[Directive]]) {

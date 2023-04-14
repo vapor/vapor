@@ -2,7 +2,7 @@ import NIOCore
 import NIOHTTP1
 import Foundation
 
-public struct ClientResponse {
+public struct ClientResponse: Sendable {
     public var status: HTTPStatus
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
@@ -17,7 +17,7 @@ public struct ClientResponse {
 }
 
 extension ClientResponse {
-    private struct _ContentContainer: ContentContainer {
+    private struct _ContentContainer: Sendable, ContentContainer {
         var body: ByteBuffer?
         var headers: HTTPHeaders
         let allocator: ByteBufferAllocator
@@ -99,7 +99,7 @@ extension ClientResponse: ResponseEncodable {
 }
 
 extension ClientResponse: Codable {
-    private enum CodingKeys: String, CodingKey {
+    private enum CodingKeys: String, Sendable, CodingKey {
         case status = "status"
         case headers = "headers"
         case body = "body"

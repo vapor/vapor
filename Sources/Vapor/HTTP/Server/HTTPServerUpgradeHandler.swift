@@ -116,7 +116,7 @@ public protocol Upgrader {
 }
 
 /// Handles upgrading an HTTP connection to a WebSocket
-public struct WebSocketUpgrader: Upgrader {
+public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
     var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
     var onUpgrade: (WebSocket) -> ()

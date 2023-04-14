@@ -19,9 +19,9 @@ extension HTTPHeaders {
     }
     
     // TODO: Support multiple relations in a single `rel` attribute, as permitted by spec.
-    public struct Link {
+    public struct Link: Sendable {
         /// See https://www.iana.org/assignments/link-relations/link-relations.xhtml
-        public struct Relation: RawRepresentable, Hashable {
+        public struct Relation: RawRepresentable, Hashable, Sendable {
             public static let about = Relation("about")
             public static let alternate = Relation("alternate")
             public static let appendix = Relation("appendix")

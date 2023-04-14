@@ -16,7 +16,7 @@ extension Application {
         }
     }
 
-    private struct MiddlewaresKey: StorageKey {
+    private struct MiddlewaresKey: StorageKey, Sendable {
         typealias Value = Middlewares
     }
 }

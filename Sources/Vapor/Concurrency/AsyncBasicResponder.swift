@@ -1,7 +1,7 @@
 import NIOCore
 
 /// A basic, async closure-based `Responder`.
-public struct AsyncBasicResponder: AsyncResponder {
+public struct AsyncBasicResponder: Sendable, AsyncResponder {
     /// The stored responder closure.
     private let closure: (Request) async throws -> Response
 

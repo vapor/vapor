@@ -7,7 +7,7 @@ import NIOFoundationCompat
 ///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient` and `HTTPServer`.
-public final class Response: CustomStringConvertible {
+public final class Response: Sendable, CustomStringConvertible {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 

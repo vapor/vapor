@@ -11,7 +11,7 @@ extension Application.HTTP {
         .init(application: self.application)
     }
     
-    public struct Server {
+    public struct Server: Sendable {
         let application: Application
 
         public var shared: HTTPServer {
@@ -29,7 +29,7 @@ extension Application.HTTP {
             }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = HTTPServer
         }
 
@@ -48,7 +48,7 @@ extension Application.HTTP {
             }
         }
 
-        struct ConfigurationKey: StorageKey {
+        struct ConfigurationKey: StorageKey, Sendable {
             typealias Value = HTTPServer.Configuration
         }
     }

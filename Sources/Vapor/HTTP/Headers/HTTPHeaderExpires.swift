@@ -2,7 +2,7 @@ import Foundation
 import NIOHTTP1
 
 extension HTTPHeaders {
-    public struct Expires {
+    public struct Expires: Sendable {
         /// The date represented by the header.
         public let expires: Date
 

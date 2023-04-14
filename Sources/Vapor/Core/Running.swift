@@ -1,7 +1,7 @@
 import NIOCore
 
 extension Application {
-    public struct Running {
+    public struct Running: Sendable {
         final class Storage {
             var current: Running?
             init() { }

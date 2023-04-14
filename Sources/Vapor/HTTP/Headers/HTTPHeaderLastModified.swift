@@ -5,7 +5,7 @@ extension HTTPHeaders {
     /// Represents the HTTP `Last-Modified` header.
     /// - See Also:
     /// [Last-Modified](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Last-Modified)
-    public struct LastModified {
+    public struct LastModified: Sendable {
         public let value: Date
 
         internal static func parse(_ dateString: String) -> LastModified? {

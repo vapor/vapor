@@ -1,6 +1,6 @@
 import CVaporURLParser
 
-public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
+public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConvertible {
     /// A URI's scheme.
     public struct Scheme: ExpressibleByStringInterpolation {
         /// HTTP

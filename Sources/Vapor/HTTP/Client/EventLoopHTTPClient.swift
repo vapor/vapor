@@ -14,7 +14,7 @@ extension HTTPClient {
     }
 }
 
-private struct EventLoopHTTPClient: Client {
+private struct EventLoopHTTPClient: Sendable, Client {
     let http: HTTPClient
     let eventLoop: EventLoop
     var logger: Logger?

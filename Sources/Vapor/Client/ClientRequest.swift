@@ -2,7 +2,7 @@ import NIOCore
 import NIOHTTP1
 import Foundation
 
-public struct ClientRequest {
+public struct ClientRequest: Sendable {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders
@@ -25,7 +25,7 @@ public struct ClientRequest {
 }
 
 extension ClientRequest {
-    private struct _URLQueryContainer: URLQueryContainer {
+    private struct _URLQueryContainer: Sendable, URLQueryContainer {
         var url: URI
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D

@@ -6,7 +6,7 @@ extension Request {
     }
 
     /// Request helper for storing and fetching authenticated objects.
-    public struct Authentication {
+    public struct Authentication: Sendable {
         let request: Request
         init(request: Request) {
             self.request = request
@@ -71,7 +71,7 @@ extension Request.Authentication {
         }
     }
 
-    private struct CacheKey: StorageKey {
+    private struct CacheKey: Sendable, StorageKey {
         typealias Value = Cache
     }
 

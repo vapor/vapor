@@ -2,7 +2,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Decodes data as plaintext, utf8.
-public struct PlaintextDecoder: ContentDecoder {
+public struct PlaintextDecoder: Sendable, ContentDecoder {
     public init() {}
 
     /// `ContentDecoder` conformance.

@@ -3,7 +3,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Encodes data as plaintext, utf8.
-public struct PlaintextEncoder: ContentEncoder {
+public struct PlaintextEncoder: Sendable, ContentEncoder {
     /// Private encoder.
     private let encoder: _PlaintextEncoder
     

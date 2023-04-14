@@ -1,7 +1,7 @@
 import NIOHTTP1
 
 extension HTTPHeaders {
-    public struct Connection: ExpressibleByStringLiteral, Equatable {
+    public struct Connection: Sendable, ExpressibleByStringLiteral, Equatable {
         public static let close: Self = "close"
         public static let keepAlive: Self = "keep-alive"
 

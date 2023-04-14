@@ -46,7 +46,7 @@ extension HTTPHeaders {
     }
 }
 
-struct HTTPSetCookie {
+struct HTTPSetCookie: Sendable {
     var name: String
     var value: HTTPCookies.Value
 
@@ -96,11 +96,11 @@ struct HTTPSetCookie {
 }
 
 /// A collection of `HTTPCookie`s.
-public struct HTTPCookies: ExpressibleByDictionaryLiteral {
+public struct HTTPCookies: Sendable, ExpressibleByDictionaryLiteral {
     /// A cookie which can only be sent in requests originating from the same origin as the target domain.
     ///
     /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
-    public enum SameSitePolicy: String {
+    public enum SameSitePolicy: String, Sendable {
         /// Strict mode.
         case strict = "Strict"
         /// Relaxed mode.
@@ -110,7 +110,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     }
     
     /// A single cookie (key/value pair).
-    public struct Value: ExpressibleByStringLiteral {
+    public struct Value: Sendable, ExpressibleByStringLiteral {
         // MARK: Static
         
         /// An expired `HTTPCookieValue`.

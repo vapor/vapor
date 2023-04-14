@@ -15,7 +15,7 @@ extension Application.HTTP {
         .init(application: self.application)
     }
 
-    public struct Client {
+    public struct Client: Sendable {
         let application: Application
 
         public var shared: HTTPClient {
@@ -48,11 +48,11 @@ extension Application.HTTP {
             }
         }
 
-        struct Key: StorageKey, LockKey {
+        struct Key: Sendable, StorageKey, LockKey {
             typealias Value = HTTPClient
         }
 
-        struct ConfigurationKey: StorageKey {
+        struct ConfigurationKey: Sendable, StorageKey {
             typealias Value = HTTPClient.Configuration
         }
     }

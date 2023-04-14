@@ -1,7 +1,7 @@
 import NIOCore
 
 /// A basic, closure-based `Responder`.
-public struct BasicResponder: Responder {
+public struct BasicResponder: Responder, Sendable {
     /// The stored responder closure.
     private let closure: (Request) throws -> EventLoopFuture<Response>
 

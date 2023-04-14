@@ -60,7 +60,7 @@ extension Application {
         .init(application: self)
     }
 
-    public struct Core {
+    public struct Core: Sendable {
         final class Storage {
             var console: Console
             var commands: Commands
@@ -81,13 +81,13 @@ extension Application {
             }
         }
 
-        struct LifecycleHandler: Vapor.LifecycleHandler {
+        struct LifecycleHandler: Sendable, Vapor.LifecycleHandler {
             func shutdown(_ application: Application) {
                 try! application.threadPool.syncShutdownGracefully()
             }
         }
 
-        struct Key: StorageKey {
+        struct Key: Sendable, StorageKey {
             typealias Value = Storage
         }
 

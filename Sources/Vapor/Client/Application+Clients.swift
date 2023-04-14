@@ -10,8 +10,8 @@ extension Application {
         return makeClient(self)
     }
 
-    public struct Clients {
-        public struct Provider {
+    public struct Clients: Sendable {
+        public struct Provider: Sendable {
             let run: (Application) -> ()
 
             public init(_ run: @escaping (Application) -> ()) {
@@ -24,7 +24,7 @@ extension Application {
             init() { }
         }
         
-        struct Key: StorageKey {
+        struct Key: Sendable, StorageKey {
             typealias Value = Storage
         }
 

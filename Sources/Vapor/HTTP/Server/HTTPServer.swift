@@ -7,7 +7,7 @@ import NIOSSL
 import Logging
 import NIOPosix
 
-public enum HTTPVersionMajor: Equatable, Hashable {
+public enum HTTPVersionMajor: Equatable, Hashable, Sendable {
     case one
     case two
 }
@@ -18,7 +18,7 @@ public final class HTTPServer: Server {
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
     ///     services.register(serverConfig)
     ///
-    public struct Configuration {
+    public struct Configuration: Sendable {
         public static let defaultHostname = "127.0.0.1"
         public static let defaultPort = 8080
         
@@ -78,7 +78,7 @@ public final class HTTPServer: Server {
         public var responseCompression: CompressionConfiguration
 
         /// Supported HTTP compression options.
-        public struct CompressionConfiguration {
+        public struct CompressionConfiguration: Sendable {
             /// Disables compression. This is the default.
             public static var disabled: Self {
                 .init(storage: .disabled)
@@ -110,7 +110,7 @@ public final class HTTPServer: Server {
         public var requestDecompression: DecompressionConfiguration
 
         /// Supported HTTP decompression options.
-        public struct DecompressionConfiguration {
+        public struct DecompressionConfiguration: Sendable {
             /// Disables decompression. This is the default option.
             public static var disabled: Self {
                 .init(storage: .disabled)
@@ -128,7 +128,7 @@ public final class HTTPServer: Server {
                 .init(storage: .enabled(limit: limit))
             }
 
-            enum Storage {
+            enum Storage: Sendable {
                 case disabled
                 case enabled(limit: NIOHTTPDecompression.DecompressionLimit)
             }
@@ -449,7 +449,7 @@ private final class HTTPServerConnection {
     }
 }
 
-final class HTTPServerErrorHandler: ChannelInboundHandler {
+final class HTTPServerErrorHandler: ChannelInboundHandler, Sendable {
     typealias InboundIn = Never
     let logger: Logger
     

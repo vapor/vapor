@@ -9,7 +9,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     private let serverHeader: String?
     private let dateCache: RFC1123DateCache
 
-    struct ResponseEndSentEvent { }
+    struct ResponseEndSentEvent: Sendable { }
     
     init(serverHeader: String?, dateCache: RFC1123DateCache) {
         self.serverHeader = serverHeader
@@ -92,7 +92,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         return self.context.eventLoop
     }
 
-    enum Error: Swift.Error {
+    enum Error: Swift.Error, Sendable {
         case tooManyBytes
         case notEnoughBytes
     }

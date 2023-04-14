@@ -19,8 +19,8 @@ extension HTTPHeaders {
         }
     }
 
-    public struct ContentDisposition {
-        public struct Value: Equatable {
+    public struct ContentDisposition: Sendable {
+        public struct Value: Equatable, Sendable {
             public static let inline = Value(string: "inline")
             public static let attachment = Value(string: "attachment")
             public static let formData = Value(string: "form-data")

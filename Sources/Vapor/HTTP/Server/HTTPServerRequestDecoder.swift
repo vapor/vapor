@@ -239,8 +239,8 @@ extension HTTPPart: CustomStringConvertible {
 }
 
 struct HTTPBodyStreamState: CustomStringConvertible {
-    struct Result {
-        enum Action {
+    struct Result: Sendable {
+        enum Action: Sendable {
             case nothing
             case write(ByteBuffer)
             case close(Error?)
@@ -249,7 +249,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         let callRead: Bool
     }
 
-    private struct BufferState {
+    private struct BufferState: Sendable {
         var bufferedWrites: CircularBuffer<ByteBuffer>
         var heldUpRead: Bool
         var hasClosed: Bool
@@ -267,7 +267,7 @@ struct HTTPBodyStreamState: CustomStringConvertible {
         }
     }
 
-    private enum State {
+    private enum State: Sendable {
         case idle
         case writing(BufferState)
         case error(Error)

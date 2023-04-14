@@ -14,7 +14,7 @@ import ConsoleKit
 ///
 ///     print(Environment.get("DB_PASSWORD"))
 ///
-public struct Environment: Equatable {
+public struct Environment: Sendable, Equatable {
     // MARK: - Detection
     
     /// Detects the environment from `CommandLine.arguments`. Invokes `detect(from:)`.
@@ -34,7 +34,7 @@ public struct Environment: Equatable {
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
         self.sanitize(commandInput: &commandInput)
         
-        struct EnvironmentSignature: CommandSignature {
+        struct EnvironmentSignature: Sendable, CommandSignature {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
         }

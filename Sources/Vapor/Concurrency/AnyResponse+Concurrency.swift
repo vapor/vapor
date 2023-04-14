@@ -32,7 +32,7 @@ import NIOCore
 ///         }
 ///     }
 ///
-public struct AnyAsyncResponse: AsyncResponseEncodable {
+public struct AnyAsyncResponse: Sendable, AsyncResponseEncodable {
     /// The wrapped `AsyncResponseEncodable` type.
     private let encodable: AsyncResponseEncodable
 

@@ -58,7 +58,7 @@ public struct StackTrace: Sendable {
         #endif
     }
 
-    public struct Frame {
+    public struct Frame: Sendable {
         public var file: String
         public var function: String
     }
@@ -72,7 +72,7 @@ public struct StackTrace: Sendable {
         }
     }
 
-    struct RawFrame {
+    struct RawFrame: Sendable {
         var file: String
         var mangledFunction: String
     }

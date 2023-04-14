@@ -43,7 +43,7 @@ extension HTTPHeaders {
     }
 
     /// Parses the `Forwarded` header.
-    public struct Forwarded {
+    public struct Forwarded: Sendable {
         /// "by" section of the header.
         public var by: String?
 

@@ -33,11 +33,12 @@ extension Application.Caches.Provider {
     }
 }
 
-private struct MemoryCacheKey: LockKey, StorageKey {
+private struct MemoryCacheKey: Sendable, LockKey, StorageKey {
     typealias Value = MemoryCacheStorage
 }
 
-private final class MemoryCacheStorage {
+// This can be Sendable since we use an internal lock to synchronise external access
+private final class MemoryCacheStorage: @unchecked Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
@@ -88,7 +89,7 @@ private final class MemoryCacheStorage {
     }
 }
 
-private struct MemoryCache: Cache {
+private struct MemoryCache: Sendable, Cache {
     let storage: MemoryCacheStorage
     let eventLoop: EventLoop
     
