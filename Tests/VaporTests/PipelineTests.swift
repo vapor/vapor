@@ -57,9 +57,7 @@ final class PipelineTests: XCTestCase {
         try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "0\r\n\r\n")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
-    
-    #if compiler(>=5.6) && canImport(_Concurrency)
-    @available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
+
     func testAsyncEchoHandlers() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -123,7 +121,6 @@ final class PipelineTests: XCTestCase {
         XCTAssertEqual(response.body?.string, chunks.joined(separator: ""))
         try await client.shutdown()
     }
-    #endif
 
     func testEOFFraming() throws {
         let app = Application(.testing)

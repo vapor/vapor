@@ -1,4 +1,3 @@
-#if compiler(>=5.6) && canImport(_Concurrency)
 import XCTVapor
 import XCTest
 import Vapor
@@ -41,4 +40,3 @@ final class AsyncRequestTests: XCTestCase {
         }
     }
 }
-#endif
