@@ -12,7 +12,17 @@ public final class Request: CustomStringConvertible {
     ///
     ///     httpReq.method = .GET
     ///
-    public var method: HTTPMethod
+    public var method: HTTPMethod/* {
+        get {
+            internalMethod
+        }
+        set {
+            
+        }
+    }
+    private var _method: HTTPMethod
+    private var methodLock: NIOLock
+                                  */
     
     /// The URL used on this request.
     public var url: URI
@@ -254,3 +264,5 @@ public final class Request: CustomStringConvertible {
         self.byteBufferAllocator = byteBufferAllocator
     }
 }
+
+extension Request: Sendable {}

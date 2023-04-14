@@ -1,4 +1,4 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.8
 import PackageDescription
 
 let package = Package(
@@ -89,6 +89,9 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
+        ],
+        swiftSettings: [
+            .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])
         ]),
 	
         // Development

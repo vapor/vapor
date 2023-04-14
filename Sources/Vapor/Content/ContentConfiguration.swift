@@ -15,7 +15,7 @@ import MultipartKit
 ///
 /// Most often, these configured coders are used to encode and decode types conforming to ``Content``.
 /// See the ``Content`` protocol for more information.
-public struct ContentConfiguration {
+public struct ContentConfiguration: Sendable {
     public static var global: ContentConfiguration = .default()
     
     /// Creates a ``ContentConfiguration`` containing all of Vapor's default coders.
