@@ -38,7 +38,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
             /// ISO 8601 formatted date
             case iso8601
             /// Using custom callback
-            case custom((Date, Encoder) throws -> Void)
+            case custom(@Sendable (Date, Encoder) throws -> Void)
         }
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding

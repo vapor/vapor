@@ -155,7 +155,7 @@ public final class Request: Sendable, CustomStringConvertible {
         return Body(self)
     }
     
-    internal enum BodyStorage {
+    internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
         case stream(BodyStream)

@@ -41,7 +41,7 @@ extension Request {
 
 /// Specifies the type of redirect that the client should receive.
 @available(*, deprecated, renamed: "Redirect")
-public enum RedirectType {
+public enum RedirectType: Sendable {
     /// A cacheable redirect. Not all user-agents preserve request method and body, so
     /// this should only be used for GET or HEAD requests
     /// `301 permanent`

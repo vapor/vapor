@@ -89,7 +89,7 @@ extension BaseNEncoding {
     }
 }
 
-public enum Base64 {
+public enum Base64: Sendable {
     private static let baseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/"
 
     /// Canonical Base64 encoding per [RFC 4648 §4](https://datatracker.ietf.org/doc/html/rfc4648#section-4)

@@ -24,7 +24,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
             /// ISO 8601 formatted date
             case iso8601
             /// Using custom callback
-            case custom((Decoder) throws -> Date)
+            case custom(@Sendable (Decoder) throws -> Date)
         }
 
         let boolFlags: Bool

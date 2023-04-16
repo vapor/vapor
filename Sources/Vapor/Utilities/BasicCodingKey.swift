@@ -22,7 +22,7 @@ extension Array where Element == CodingKey {
 }
 
 /// A basic `CodingKey` implementation.
-public enum BasicCodingKey: CodingKey, Hashable {
+public enum BasicCodingKey: CodingKey, Hashable, Sendable {
     case key(String)
     case index(Int)
     

@@ -7,13 +7,27 @@ import NIOPosix
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable {
-    public var environment: Environment
+    public var environment: Environment {
+        get {
+            _environment
+        }
+        set {
+            environmentLock.lock()
+            defer {
+                environmentLock.unlock()
+            }
+            _environment = newValue
+        }
+    }
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     public var storage: Storage
     public private(set) var didShutdown: Bool
     public var logger: Logger
     var isBooted: Bool
+    
+    private let environmentLock: NIOLock
+    private var _environment: Environment
 
     public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
@@ -60,7 +74,7 @@ public final class Application: Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
         Backtrace.install()
-        self.environment = environment
+        self._environment = environment
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .shared(let group):
@@ -69,6 +83,7 @@ public final class Application: Sendable {
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         self.locks = .init()
+        self.environmentLock = .init()
         self.didShutdown = false
         self.logger = .init(label: "codes.vapor.application")
         self.storage = .init(logger: self.logger)

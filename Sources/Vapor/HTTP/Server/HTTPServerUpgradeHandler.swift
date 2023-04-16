@@ -9,7 +9,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     typealias OutboundOut = Response
     
     
-    private enum UpgradeState {
+    private enum UpgradeState: Sendable {
         case ready
         case pending(Request, UpgradeBufferHandler)
         case upgraded

@@ -20,7 +20,7 @@ public protocol Server {
     func shutdown()
 }
 
-public enum BindAddress: Equatable {
+public enum BindAddress: Equatable, Sendable {
     case hostname(_ hostname: String?, port: Int?)
     case unixDomainSocket(path: String)
 }
@@ -57,7 +57,7 @@ extension Server {
 }
 
 /// Errors that may be thrown when starting a server
-internal enum ServerStartError: Error {
+internal enum ServerStartError: Error, Sendable {
     /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
     case unsupportedAddress(message: String)
 }

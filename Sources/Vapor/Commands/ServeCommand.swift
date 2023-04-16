@@ -24,7 +24,7 @@ public final class ServeCommand: Command {
     }
 
     /// Errors that may be thrown when serving a server
-    public enum Error: Swift.Error {
+    public enum Error: Swift.Error, Sendable {
         /// Incompatible flags were used together (for instance, specifying a socket path along with a port)
         case incompatibleFlags
     }

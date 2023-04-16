@@ -6,7 +6,7 @@ import NIOHTTP1
 /// Types that conform to this protocol can be returned in route closures.
 ///
 /// This is the async version of `ResponseEncodable`
-public protocol AsyncResponseEncodable {
+public protocol AsyncResponseEncodable: Sendable {
     /// Encodes an instance of `Self` to a `HTTPResponse`.
     ///
     /// - parameters:
@@ -20,7 +20,7 @@ public protocol AsyncResponseEncodable {
 /// Types that conform to this protocol can decode requests to their type.
 ///
 /// This is the async version of `RequestDecodable`
-public protocol AsyncRequestDecodable {
+public protocol AsyncRequestDecodable: Sendable {
     /// Decodes an instance of `HTTPRequest` to a `Self`.
     ///
     /// - parameters:

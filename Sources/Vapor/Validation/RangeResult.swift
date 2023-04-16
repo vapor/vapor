@@ -1,5 +1,5 @@
 /// Type used by `Range` and `Count` validators to indicate where a value fell within a range.
-public enum RangeResult<T>: Equatable where T: Comparable {
+public enum RangeResult<T>: Equatable, Sendable where T: Comparable & Sendable {
     /// The value was between `min` and `max`.
     case between(min: T, max: T)
 
@@ -63,6 +63,6 @@ public enum RangeResult<T>: Equatable where T: Comparable {
     }
 }
 
-enum RangeResultError: Error {
+enum RangeResultError: Error, Sendable {
     case notComparable
 }

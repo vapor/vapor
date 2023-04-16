@@ -150,7 +150,7 @@ extension DebuggableError {
 
 // MARK: Representations
 /// Available formatting options for generating debug info for `Debuggable` errors.
-public enum HelpFormat {
+public enum HelpFormat: Sendable {
     case short
     case long
 }

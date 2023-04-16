@@ -98,7 +98,7 @@ public final class HTTPServer: Server {
                 ))
             }
 
-            enum Storage {
+            enum Storage: Sendable {
                 case disabled
                 case enabled(initialByteBufferCapacity: Int)
             }

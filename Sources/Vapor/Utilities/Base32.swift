@@ -45,7 +45,7 @@ extension BaseNEncoding {
     }
 }
 
-public enum Base32 {
+public enum Base32: Sendable {
     private static let baseAlphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567"
 
     /// Corresponds to Base32 as implemented by the C code that was previously used for this functionality.

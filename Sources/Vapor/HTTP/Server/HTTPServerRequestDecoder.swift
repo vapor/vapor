@@ -8,7 +8,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     typealias InboundOut = Request
     typealias OutboundIn = Never
 
-    enum RequestState {
+    enum RequestState: Sendable {
         case ready
         case awaitingBody(Request)
         case awaitingEnd(Request, ByteBuffer)

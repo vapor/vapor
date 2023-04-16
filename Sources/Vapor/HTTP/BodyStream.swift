@@ -1,6 +1,6 @@
 import NIOCore
 
-public enum BodyStreamResult {
+public enum BodyStreamResult: Sendable {
     /// A normal data chunk.
     /// There will be 0 or more of these.
     case buffer(ByteBuffer)

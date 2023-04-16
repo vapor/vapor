@@ -98,7 +98,7 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         self.init(string: value)
     }
 
-    private enum Component {
+    private enum Component: Sendable {
         case scheme, host, port, path, query, fragment, userinfo
     }
 
