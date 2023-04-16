@@ -5,7 +5,7 @@ extension Validator where T: OptionalType {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that the data is `nil`.
-    public struct Nil {
+    public struct Nil: Sendable {
         /// Input is `nil`.
         public let isNil: Bool
     }

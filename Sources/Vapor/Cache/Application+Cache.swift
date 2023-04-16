@@ -17,9 +17,9 @@ extension Application {
 
     public struct Caches: Sendable {
         public struct Provider: Sendable {
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -29,7 +29,7 @@ extension Application {
             init() { }
         }
 
-        struct Key: StorageKey {
+        struct Key: Sendable, StorageKey {
             typealias Value = Storage
         }
 

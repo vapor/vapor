@@ -53,7 +53,7 @@ enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {
 }
 
 /// Represents application/x-www-form-urlencoded encoded data.
-internal struct URLEncodedFormData: ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
+internal struct URLEncodedFormData: Sendable, ExpressibleByArrayLiteral, ExpressibleByStringLiteral, ExpressibleByDictionaryLiteral, Equatable {
     var values: [URLQueryFragment]
     var children: [String: URLEncodedFormData]
     let maxRecursionDepth = 100

@@ -32,7 +32,7 @@ import NIOCore
 ///         }
 ///     }
 ///
-public struct AnyResponse: ResponseEncodable {
+public struct AnyResponse: ResponseEncodable, Sendable {
     /// The wrapped `ResponseEncodable` type.
     private let encodable: ResponseEncodable
 

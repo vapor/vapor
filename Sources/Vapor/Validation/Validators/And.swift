@@ -8,7 +8,7 @@ public func && <T: Decodable>(lhs: Validator<T>, rhs: Validator<T>) -> Validator
 extension ValidatorResults {
     /// `ValidatorResult` of "And" `Validator` that combines two `ValidatorResults`.
     /// If both results are successful the combined result is as well.
-    public struct And {
+    public struct And: Sendable {
         /// `ValidatorResult` of left hand side of the "And" validation.
         public let left: ValidatorResult
 

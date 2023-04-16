@@ -21,7 +21,7 @@ extension Validator where T == String {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether a string is a valid URL.
-    public struct URL {
+    public struct URL: Sendable {
         /// The input is a valid URL.
         public let isValidURL: Bool
     }

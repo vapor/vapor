@@ -27,7 +27,7 @@ import NIOPosix
 ///
 /// Single-quoted strings are parsed literally. Double-quoted strings may contain escaped newlines
 /// that will be converted to actual newlines.
-public struct DotEnvFile {
+public struct DotEnvFile: Sendable {
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment
@@ -185,7 +185,7 @@ public struct DotEnvFile {
     }
 
     /// Represents a `KEY=VALUE` pair in a dotenv file.
-    public struct Line: CustomStringConvertible, Equatable {
+    public struct Line: CustomStringConvertible, Equatable, Sendable {
         /// The key.
         public let key: String
 

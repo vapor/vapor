@@ -2,7 +2,7 @@ import Foundation
 import Crypto
 
 /// Supported OTP output sizes.
-public enum OTPDigits: Int {
+public enum OTPDigits: Int, Sendable {
     /// Six digits OTP.
     case six = 6
     /// Seven digits OTP.
@@ -21,7 +21,7 @@ public enum OTPDigits: Int {
 }
 
 /// Supported OTP digests.
-public enum OTPDigest {
+public enum OTPDigest: Sendable {
     /// The SHA-1 digest.
     case sha1
     /// The SHA-256 digest.
@@ -122,7 +122,7 @@ internal extension OTP {
 ///     print(code) "208503"
 ///
 /// See `TOTP` for time-based one-time passwords.
-public struct HOTP: OTP {
+public struct HOTP: Sendable, OTP {
     let key: SymmetricKey
     let digits: OTPDigits
     let digest: OTPDigest
@@ -190,7 +190,7 @@ public struct HOTP: OTP {
 ///     print(code) "501247"
 ///
 /// See `HOTP` for hash-based one-time passwords.
-public struct TOTP: OTP {
+public struct TOTP: Sendable, OTP {
     let key: SymmetricKey
     let digits: OTPDigits
     let digest: OTPDigest

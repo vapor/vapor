@@ -4,7 +4,7 @@
 /// to your app. This is usually done via HTTP cookies.
 ///
 /// See `Request.session()` and `SessionsMiddleware` for more information.
-public final class Session {
+public final class Session: Sendable {
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID?
 
@@ -30,7 +30,7 @@ public final class Session {
     }
 }
 
-public struct SessionID: Equatable, Hashable {
+public struct SessionID: Equatable, Hashable, Sendable {
     public let string: String
     public init(string: String) {
         self.string = string

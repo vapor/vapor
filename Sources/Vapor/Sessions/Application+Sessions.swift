@@ -3,17 +3,17 @@ extension Application {
         .init(application: self)
     }
 
-    public struct Sessions {
-        public struct Provider {
+    public struct Sessions: Sendable {
+        public struct Provider: Sendable {
             public static var memory: Self {
                 .init {
                     $0.sessions.use { $0.sessions.memory }
                 }
             }
 
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -28,7 +28,7 @@ extension Application {
             }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 

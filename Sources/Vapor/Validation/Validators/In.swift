@@ -16,7 +16,7 @@ extension Validator where T: Equatable & CustomStringConvertible {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
-    public struct In<T> where T: Equatable & CustomStringConvertible {
+    public struct In<T>: Sendable where T: Equatable & CustomStringConvertible & Sendable {
         /// Description of the item.
         public let item: T
         

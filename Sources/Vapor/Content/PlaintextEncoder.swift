@@ -98,7 +98,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     }
 
     /// This ridiculosity is a workaround for the inability of encoders to throw errors in various places. It's still better than fatalError()ing.
-    struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer {
+    struct FailureEncoder<K: CodingKey>: Encoder, KeyedEncodingContainerProtocol, UnkeyedEncodingContainer, SingleValueEncodingContainer, Sendable {
         let codingPath = [CodingKey](), userInfo = [CodingUserInfoKey: Any](), count = 0
         var error: EncodingError { .invalidValue((), .init(codingPath: [], debugDescription: "Plaintext encoding does not support nesting.")) }
         init() {}; init() where K == BasicCodingKey {}

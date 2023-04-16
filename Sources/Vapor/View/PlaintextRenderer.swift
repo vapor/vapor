@@ -2,7 +2,7 @@ import NIOCore
 import NIOPosix
 import Logging
 
-public struct PlaintextRenderer: ViewRenderer {
+public struct PlaintextRenderer: ViewRenderer, Sendable {
     public let eventLoopGroup: EventLoopGroup
     private let fileio: NonBlockingFileIO
     private let viewsDirectory: String

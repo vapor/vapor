@@ -55,7 +55,7 @@ extension Validator {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether the input is within a supplied range.
-    public struct Range<T> where T: Comparable {
+    public struct Range<T>: Sendable where T: Comparable & Sendable {
         /// The position of the data relative to the range.
         public let result: RangeResult<T>
         

@@ -5,17 +5,17 @@ extension Application {
         .init(application: self)
     }
 
-    public struct Responder {
-        public struct Provider {
+    public struct Responder: Sendable {
+        public struct Provider: Sendable {
             public static var `default`: Self {
                 .init {
                     $0.responder.use { $0.responder.default }
                 }
             }
 
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -25,7 +25,7 @@ extension Application {
             init() { }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 

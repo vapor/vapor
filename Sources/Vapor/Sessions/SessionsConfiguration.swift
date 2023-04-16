@@ -1,7 +1,7 @@
 import Foundation
 
 /// Configuration options for sessions.
-public struct SessionsConfiguration {
+public struct SessionsConfiguration: Sendable {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
     public var cookieFactory: (SessionID) -> HTTPCookies.Value
 

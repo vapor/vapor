@@ -5,7 +5,7 @@ extension Request {
         .init(request: self)
     }
     
-    public struct Password: PasswordHasher {
+    public struct Password: PasswordHasher, Sendable {
         let request: Request
         
         public var async: AsyncPasswordHasher {

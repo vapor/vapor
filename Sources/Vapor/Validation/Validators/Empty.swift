@@ -9,7 +9,7 @@ extension Validator where T: Collection {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether the data is empty.
-    public struct Empty {
+    public struct Empty: Sendable {
         /// The input is empty.
         public let isEmpty: Bool
     }

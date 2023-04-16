@@ -5,7 +5,7 @@ import Logging
 import RoutingKit
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible {
+public final class Request: Sendable, CustomStringConvertible {
     public let application: Application
 
     /// The HTTP method for this request.
@@ -71,7 +71,7 @@ public final class Request: CustomStringConvertible {
 
     // MARK: Content
 
-    private struct _URLQueryContainer: URLQueryContainer {
+    private struct _URLQueryContainer: Sendable, URLQueryContainer {
         let request: Request
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
@@ -96,7 +96,7 @@ public final class Request: CustomStringConvertible {
         }
     }
 
-    private struct _ContentContainer: ContentContainer {
+    private struct _ContentContainer: Sendable, ContentContainer {
         let request: Request
 
         var contentType: HTTPMediaType? {
@@ -264,5 +264,3 @@ public final class Request: CustomStringConvertible {
         self.byteBufferAllocator = byteBufferAllocator
     }
 }
-
-extension Request: Sendable {}

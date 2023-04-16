@@ -21,7 +21,7 @@ extension Validator where T == String {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that a `String` contains characters in a given `CharacterSet`.
-    public struct CharacterSet {
+    public struct CharacterSet: Sendable {
         /// The validated string.
         public let string: String
         
@@ -81,7 +81,7 @@ extension Validator where T == [String] {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that all elements of a `[String]` contain characters in a given `CharacterSet`.
-    public struct CollectionCharacterSet {
+    public struct CollectionCharacterSet: Sendable {
         /// The validated string.
         public let strings: [String]
         

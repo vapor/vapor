@@ -72,7 +72,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
 }
 
-struct ErrorBodyStreamWriter: BodyStreamWriter {
+struct ErrorBodyStreamWriter: Sendable, BodyStreamWriter {
     var eventLoop: EventLoop
     var error: Error
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {

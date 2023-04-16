@@ -29,7 +29,7 @@ extension Request {
         return self._sessionCache.session != nil
     }
 
-    private struct SessionCacheKey: StorageKey {
+    private struct SessionCacheKey: StorageKey, Sendable {
         typealias Value = SessionCache
     }
     

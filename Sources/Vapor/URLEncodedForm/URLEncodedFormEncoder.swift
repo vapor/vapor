@@ -15,11 +15,11 @@ import NIOCore
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
-public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
+public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     /// Used to capture URLForm Coding Configuration used for encoding.
-    public struct Configuration {
+    public struct Configuration: Sendable {
         /// Supported array encodings.
-        public enum ArrayEncoding {
+        public enum ArrayEncoding: Sendable {
             /// Arrays are serialized as separate values with bracket suffixed keys.
             /// For example, `foo = [1,2,3]` would be serialized as `foo[]=1&foo[]=2&foo[]=3`.
             case bracket
@@ -32,7 +32,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
         }
 
         /// Supported date formats
-        public enum DateEncodingStrategy {
+        public enum DateEncodingStrategy: Sendable {
             /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
             case secondsSince1970
             /// ISO 8601 formatted date

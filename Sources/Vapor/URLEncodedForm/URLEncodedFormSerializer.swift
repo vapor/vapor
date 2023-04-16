@@ -1,6 +1,6 @@
 import struct Foundation.CharacterSet
 
-struct URLEncodedFormSerializer {
+struct URLEncodedFormSerializer: Sendable {
     let splitVariablesOn: Character
     let splitKeyValueOn: Character
     
@@ -26,7 +26,7 @@ struct URLEncodedFormSerializer {
         return entries.joined(separator: String(splitVariablesOn))
     }
     
-    struct _CodingKey: CodingKey {
+    struct _CodingKey: CodingKey, Sendable {
         var stringValue: String
         
         init(stringValue: String) {

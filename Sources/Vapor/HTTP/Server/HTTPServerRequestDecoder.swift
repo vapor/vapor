@@ -238,7 +238,7 @@ extension HTTPPart: CustomStringConvertible {
     }
 }
 
-struct HTTPBodyStreamState: CustomStringConvertible {
+struct HTTPBodyStreamState: Sendable, CustomStringConvertible {
     struct Result: Sendable {
         enum Action: Sendable {
             case nothing

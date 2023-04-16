@@ -4,7 +4,7 @@ import NIOCore
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: Middleware {
+public final class FileMiddleware: Sendable, Middleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
@@ -120,7 +120,7 @@ public final class FileMiddleware: Middleware {
     }
     
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
-    public struct DirectoryAction {
+    public struct DirectoryAction: Sendable {
         let kind: Kind
         
         /// Indicates that the request should be passed through the middleware
@@ -133,7 +133,7 @@ public final class FileMiddleware: Middleware {
             return Self(kind: .redirect)
         }
         
-        enum Kind {
+        enum Kind: Sendable {
             case none
             case redirect
         }

@@ -8,7 +8,7 @@ public func ||<T> (lhs: Validator<T>, rhs: Validator<T>) -> Validator<T> {
 extension ValidatorResults {
     /// `ValidatorResult` of "Or" `Validator` that combines two `ValidatorResults`.
     /// If either result is successful the combined result is as well.
-    public struct Or {
+    public struct Or: Sendable {
         /// `ValidatorResult` of left hand side.
         public let left: ValidatorResult
 

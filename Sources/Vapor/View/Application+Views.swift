@@ -10,17 +10,17 @@ extension Application {
         return makeRenderer(self)
     }
 
-    public struct Views {
-        public struct Provider {
+    public struct Views: Sendable {
+        public struct Provider: Sendable {
             public static var plaintext: Self {
                 .init {
                     $0.views.use { $0.views.plaintext }
                 }
             }
 
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -30,7 +30,7 @@ extension Application {
             init() { }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 

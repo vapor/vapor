@@ -1,5 +1,5 @@
-public struct Validation {
-    enum ValuelessKeyBehavior {
+public struct Validation: Sendable {
+    enum ValuelessKeyBehavior: Sendable {
         case missing // value is required; return a Missing() result if key is not found
         case skipWhenUnset // value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all
         case skipAlways // value is not required, return a Skipped() result if key is unset or nil
@@ -8,7 +8,7 @@ public struct Validation {
     let key: ValidationKey
     let valuelessKeyBehavior: ValuelessKeyBehavior
     let customFailureDescription: String?
-    let run: (Decoder) -> ValidatorResult
+    let run: @Sendable (Decoder) -> ValidatorResult
 
     init<T>(key: ValidationKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
         self.init(
@@ -84,7 +84,7 @@ public struct Validation {
     }
 }
 
-public struct ValidationResult {
+public struct ValidationResult: Sendable {
     public let key: ValidationKey
     public let result: ValidatorResult
     public let customFailureDescription: String?

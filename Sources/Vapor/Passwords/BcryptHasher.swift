@@ -14,7 +14,7 @@ extension Application.Passwords.Provider {
     }
 }
 
-struct BcryptHasher: PasswordHasher {
+struct BcryptHasher: PasswordHasher, Sendable {
     let cost: Int
     func hash<Password>(
         _ password: Password

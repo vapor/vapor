@@ -9,7 +9,7 @@ extension Application {
         }
     }
 
-    private struct RoutesKey: StorageKey {
+    private struct RoutesKey: Sendable, StorageKey {
         typealias Value = Routes
     }
 }

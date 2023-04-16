@@ -6,12 +6,12 @@ import NIOHTTP1
 import Logging
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
+internal struct DefaultResponder: Sendable, Responder {
     private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: Responder
     private let reportMetrics: Bool
 
-    private struct CachedRoute {
+    private struct CachedRoute: Sendable {
         let route: Route
         let responder: Responder
     }
@@ -154,19 +154,19 @@ internal struct DefaultResponder: Responder {
     }
 }
 
-private struct HeadResponder: Responder {
+private struct HeadResponder: Sendable, Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
         request.eventLoop.makeSucceededFuture(.init(status: .ok))
     }
 }
 
-private struct NotFoundResponder: Responder {
+private struct NotFoundResponder: Sendable, Responder {
     func respond(to request: Request) -> EventLoopFuture<Response> {
         request.eventLoop.makeFailedFuture(RouteNotFound())
     }
 }
 
-struct RouteNotFound: Error {
+struct RouteNotFound: Sendable, Error {
     let stackTrace: StackTrace?
 
     init() {

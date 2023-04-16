@@ -32,7 +32,7 @@ public func &&<T> (lhs: Validator<T>, rhs: Validator<T?>) -> Validator<T?> {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that ignores nil values.
-    public struct NilIgnoring {
+    public struct NilIgnoring: Sendable {
         /// Result of a validation or nil if the input is nil.
         public let result: ValidatorResult?
     }

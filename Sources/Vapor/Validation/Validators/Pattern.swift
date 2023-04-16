@@ -15,7 +15,7 @@ extension Validator where T == String {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether a `String`matches a RegularExpression pattern
-    public struct Pattern {
+    public struct Pattern: Sendable {
         public let isValidPattern: Bool
         public let pattern: String
     }

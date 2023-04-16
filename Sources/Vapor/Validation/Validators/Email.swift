@@ -33,7 +33,7 @@ extension Validator where T == String {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether a `String` is a valid email address.
-    public struct Email {
+    public struct Email: Sendable {
         /// The input is a valid email address
         public let isValidEmail: Bool
     }

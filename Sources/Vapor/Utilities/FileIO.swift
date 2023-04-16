@@ -38,7 +38,7 @@ extension Request {
 ///     }
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
-public struct FileIO {
+public struct FileIO: Sendable {
     /// Wrapped non-blocking file io from SwiftNIO
     private let io: NonBlockingFileIO
 

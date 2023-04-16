@@ -6,7 +6,7 @@ import ConsoleKit
 import NIOPosix
 
 /// Core type representing a Vapor application.
-public final class Application {
+public final class Application: Sendable {
     public var environment: Environment
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
@@ -15,7 +15,7 @@ public final class Application {
     public var logger: Logger
     var isBooted: Bool
 
-    public struct Lifecycle {
+    public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
         init() {
             self.handlers = []
@@ -50,7 +50,7 @@ public final class Application {
         self.locks.main
     }
     
-    public enum EventLoopGroupProvider {
+    public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
         case createNew
     }

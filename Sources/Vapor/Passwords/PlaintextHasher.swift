@@ -10,7 +10,7 @@ extension Application.Passwords.Provider {
     }
 }
 
-private struct PlaintextHasher: PasswordHasher {
+private struct PlaintextHasher: PasswordHasher, Sendable {
     func hash<Password>(_ password: Password) throws -> [UInt8]
         where Password: DataProtocol
     {

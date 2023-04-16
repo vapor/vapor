@@ -4,7 +4,7 @@ import NIOHTTP1
 /// Can convert `self` to a `Response`.
 ///
 /// Types that conform to this protocol can be returned in route closures.
-public protocol ResponseEncodable {
+public protocol ResponseEncodable: Sendable {
     /// Encodes an instance of `Self` to a `Response`.
     ///
     /// - parameters:

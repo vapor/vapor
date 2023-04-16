@@ -64,7 +64,7 @@ public enum RedirectType {
 }
 
 /// Specifies the type of redirect that the client should receive.
-public struct Redirect {
+public struct Redirect: Sendable {
     let kind: Kind
     
     /// A cacheable redirect. Not all user-agents preserve request method and body, so
@@ -103,7 +103,7 @@ public struct Redirect {
         }
     }
     
-    enum Kind {
+    enum Kind: Sendable {
         case permanent
         case normal
         case temporary

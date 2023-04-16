@@ -10,16 +10,16 @@ extension Application {
         return makeServer(self)
     }
 
-    public struct Servers {
-        public struct Provider {
-            let run: (Application) -> ()
+    public struct Servers: Sendable {
+        public struct Provider: Sendable {
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
 
-        struct CommandKey: StorageKey {
+        struct CommandKey: Sendable, StorageKey {
             typealias Value = ServeCommand
         }
 
@@ -28,7 +28,7 @@ extension Application {
             init() { }
         }
 
-        struct Key: StorageKey {
+        struct Key: Sendable, StorageKey {
             typealias Value = Storage
         }
 

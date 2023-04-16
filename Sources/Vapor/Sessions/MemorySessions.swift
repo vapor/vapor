@@ -2,10 +2,10 @@ import Foundation
 import NIOCore
 
 /// Simple in-memory sessions implementation.
-public struct MemorySessions: SessionDriver {
+public struct MemorySessions: SessionDriver, Sendable {
     public let storage: Storage
     
-    public final class Storage {
+    public final class Storage: Sendable {
         public var sessions: [SessionID: SessionData]
         public let queue: DispatchQueue
         public init() {

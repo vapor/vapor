@@ -9,7 +9,7 @@ extension Validator {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates that the data is valid`.
-    public struct Valid {
+    public struct Valid: Sendable {
         /// As this validates nothing, this is always true.
         public let isValid: Bool = true
     }

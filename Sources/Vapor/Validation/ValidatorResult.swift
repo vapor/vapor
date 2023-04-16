@@ -1,27 +1,27 @@
-public struct ValidatorResults {
-    public struct Nested {
+public struct ValidatorResults: Sendable {
+    public struct Nested: Sendable {
         public let results: [ValidatorResult]
     }
 
-    public struct NestedEach {
+    public struct NestedEach: Sendable {
         public let results: [[ValidatorResult]]
     }
     
-    public struct Skipped { }
+    public struct Skipped: Sendable { }
 
-    public struct Missing { }
+    public struct Missing: Sendable { }
 
-    public struct NotFound { }
+    public struct NotFound: Sendable { }
 
-    public struct Codable {
+    public struct Codable: Sendable {
         public let error: Error
     }
 
-    public struct Invalid {
+    public struct Invalid: Sendable {
         public let reason: String
     }
 
-    public struct TypeMismatch {
+    public struct TypeMismatch: Sendable {
         public let type: Any.Type
     }
 }
@@ -160,7 +160,7 @@ extension ValidatorResults.Codable: ValidatorResult {
     }
 }
 
-public protocol ValidatorResult {
+public protocol ValidatorResult: Sendable {
     var isFailure: Bool { get }
     var successDescription: String? { get }
     var failureDescription: String? { get }

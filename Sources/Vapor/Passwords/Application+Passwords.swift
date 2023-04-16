@@ -3,16 +3,16 @@ extension Application {
         .init(application: self)
     }
 
-    public struct Passwords {
-        public struct Provider {
-            let run: (Application) -> ()
+    public struct Passwords: Sendable {
+        public struct Provider: Sendable {
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 
@@ -28,8 +28,8 @@ extension Application {
             self.storage.makeVerifier = makeVerifier
         }
 
-        final class Storage {
-            var makeVerifier: ((Application) -> PasswordHasher)?
+        final class Storage: Sendable {
+            var makeVerifier: (@Sendable (Application) -> PasswordHasher)?
             init() { }
         }
 

@@ -1,7 +1,7 @@
 import NIOCore
 
 extension Request {
-    public struct Body: CustomStringConvertible {
+    public struct Body: Sendable, CustomStringConvertible {
         let request: Request
         
         init(_ request: Request) {

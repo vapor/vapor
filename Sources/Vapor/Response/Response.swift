@@ -63,7 +63,7 @@ public final class Response: Sendable, CustomStringConvertible {
 
     // MARK: Content
 
-    private struct _ContentContainer: ContentContainer {
+    private struct _ContentContainer: Sendable, ContentContainer {
         let response: Response
 
         var contentType: HTTPMediaType? {

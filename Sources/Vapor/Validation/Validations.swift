@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Validations {
+public struct Validations: Sendable {
     var storage: [Validation]
     
     public init() {
@@ -97,7 +97,7 @@ fileprivate extension CodingUserInfoKey {
     static var pendingValidations: Self { .init(rawValue: "codes.vapor.validation.pendingValidations")! }
 }
 
-fileprivate struct ValidationsExecutor: Decodable {
+fileprivate struct ValidationsExecutor: Decodable, Sendable {
     let results: ValidationsResult
     
     init(from decoder: Decoder) throws {
