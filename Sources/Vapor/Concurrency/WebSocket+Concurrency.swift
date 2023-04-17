@@ -1,6 +1,7 @@
 import NIOCore
 import NIOHTTP1
-import WebSocketKit
+#warning("Fix")
+@preconcurrency import WebSocketKit
 import RoutingKit
 import Foundation
 
@@ -9,8 +10,8 @@ extension Request {
     /// Upgrades an existing request to a websocket connection
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Response {
         webSocket(
             maxFrameSize: maxFrameSize,
@@ -45,8 +46,8 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
@@ -64,8 +65,8 @@ extension RoutesBuilder {
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             return request.webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)

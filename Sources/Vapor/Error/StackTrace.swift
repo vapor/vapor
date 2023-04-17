@@ -3,6 +3,7 @@ import Foundation
 import Backtrace
 import CBacktrace
 #endif
+import NIOConcurrencyHelpers
 
 extension Optional where Wrapped == StackTrace {
     public static func capture(skip: Int = 0) -> Self {
@@ -11,7 +12,19 @@ extension Optional where Wrapped == StackTrace {
 }
 
 public struct StackTrace {
-    public static var isCaptureEnabled: Bool = true
+    public static var isCaptureEnabled: Bool {
+        get {
+            _isCaptureEnabled.withLockedValue {
+                $0
+            }
+        }
+        set {
+            _isCaptureEnabled.withLockedValue {
+                $0 = newValue
+            }
+        }
+    }
+    private static let _isCaptureEnabled: NIOLockedValueBox<Bool> = .init(true)
 
     public static func capture(skip: Int = 0) -> Self? {
         guard Self.isCaptureEnabled else {
