@@ -12,14 +12,15 @@ extension Application {
 
     public struct Clients: Sendable {
         public struct Provider: Sendable {
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
         
-        final class Storage {
+        // This doesn't need a lock as it's only mutated during app configuration
+        final class Storage: @unchecked Sendable {
             var makeClient: ((Application) -> Client)?
             init() { }
         }

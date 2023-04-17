@@ -24,8 +24,9 @@ extension Application {
             }
         }
         
-        final class Storage {
-            var makeCache: ((Application) -> Cache)?
+        // This doesn't need a lock as it's only mutated during app configuration
+        final class Storage: @unchecked Sendable {
+            var makeCache: (@Sendable (Application) -> Cache)?
             init() { }
         }
 
@@ -39,7 +40,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeCache: @escaping (Application) -> (Cache)) {
+        public func use(_ makeCache: @Sendable @escaping (Application) -> (Cache)) {
             self.storage.makeCache = makeCache
         }
 

@@ -18,9 +18,10 @@ extension Application {
             }
         }
 
-        final class Storage {
+        // This doesn't need a lock as it's only mutated during app configuration
+        final class Storage: @unchecked Sendable {
             let memory: MemorySessions.Storage
-            var makeDriver: ((Application) -> SessionDriver)?
+            var makeDriver: (@Sendable (Application) -> SessionDriver)?
             var configuration: SessionsConfiguration
             init() {
                 self.memory = .init()
@@ -65,7 +66,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeDriver: @escaping (Application) -> (SessionDriver)) {
+        public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
             self.storage.makeDriver = makeDriver
         }
 

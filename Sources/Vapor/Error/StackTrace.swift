@@ -10,7 +10,7 @@ extension Optional where Wrapped == StackTrace {
     }
 }
 
-public struct StackTrace: Sendable {
+public struct StackTrace {
     public static var isCaptureEnabled: Bool = true
 
     public static func capture(skip: Int = 0) -> Self? {

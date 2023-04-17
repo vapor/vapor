@@ -5,7 +5,7 @@ import NIOCore
 public struct MemorySessions: SessionDriver, Sendable {
     public let storage: Storage
     
-    public final class Storage: Sendable {
+    public final class Storage: @unchecked Sendable {
         public var sessions: [SessionID: SessionData]
         public let queue: DispatchQueue
         public init() {

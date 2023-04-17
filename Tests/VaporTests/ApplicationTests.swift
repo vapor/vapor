@@ -22,7 +22,7 @@ final class ApplicationTests: XCTestCase {
     }
 
     func testLifecycleHandler() throws {
-        final class Foo: LifecycleHandler {
+        final class Foo: LifecycleHandler, @unchecked Sendable {
             var willBootFlag: Bool
             var didBootFlag: Bool
             var shutdownFlag: Bool

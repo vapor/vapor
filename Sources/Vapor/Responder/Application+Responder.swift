@@ -20,8 +20,10 @@ extension Application {
             }
         }
 
-        final class Storage {
-            var factory: ((Application) -> Vapor.Responder)?
+        final class Storage: @unchecked Sendable {
+            // We don't need to lock this as it should only be touched on app start, there's no concurrent
+            // access
+            var factory: ( @Sendable (Application) -> Vapor.Responder)?
             init() { }
         }
 
@@ -50,7 +52,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ factory: @escaping (Application) -> (Vapor.Responder)) {
+        public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
             self.storage.factory = factory
         }
 

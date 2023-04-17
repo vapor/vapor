@@ -28,7 +28,8 @@ extension Application {
             self.storage.makeVerifier = makeVerifier
         }
 
-        final class Storage: Sendable {
+        // This doesn't need a lock as it's only mutated during app configuration
+        final class Storage: @unchecked Sendable {
             var makeVerifier: (@Sendable (Application) -> PasswordHasher)?
             init() { }
         }

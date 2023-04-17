@@ -1,4 +1,6 @@
-public final class Routes: RoutesBuilder, CustomStringConvertible {
+// All this is configured on app start-up and never concurrently so
+// this can all be unchecked
+public final class Routes: @unchecked Sendable, RoutesBuilder, CustomStringConvertible {
     public var all: [Route]
     
     /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.

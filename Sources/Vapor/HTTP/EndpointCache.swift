@@ -10,7 +10,7 @@ public enum EndpointCacheError: Swift.Error, Sendable {
 }
 
 /// Handles the complexities of HTTP caching.
-public final class EndpointCache<T> where T: Decodable {
+public final class EndpointCache<T>: @unchecked Sendable where T: Decodable {
     private var cached: T?
     private var request: EventLoopFuture<T>?
     private var headers: HTTPHeaders?

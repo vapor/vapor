@@ -3,7 +3,7 @@ import Foundation
 /// Configuration options for sessions.
 public struct SessionsConfiguration: Sendable {
     /// Creates a new `HTTPCookieValue` for the supplied value `String`.
-    public var cookieFactory: (SessionID) -> HTTPCookies.Value
+    public var cookieFactory: @Sendable (SessionID) -> HTTPCookies.Value
 
     /// Name of HTTP cookie, used as a key for the cookie value.
     public var cookieName: String
@@ -17,7 +17,7 @@ public struct SessionsConfiguration: Sendable {
     /// - parameters:
     ///     - cookieName: Name of HTTP cookie, used as a key for the cookie value.
     ///     - cookieFactory: Creates a new `HTTPCookieValue` for the supplied value `String`.
-    public init(cookieName: String, cookieFactory: @escaping (SessionID) -> HTTPCookies.Value) {
+    public init(cookieName: String, cookieFactory: @Sendable @escaping (SessionID) -> HTTPCookies.Value) {
         self.cookieName = cookieName
         self.cookieFactory = cookieFactory
     }

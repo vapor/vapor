@@ -1,6 +1,7 @@
 import ConsoleKit
 import NIOCore
 import NIOPosix
+import NIOConcurrencyHelpers
 
 extension Application {
     public var console: Console {
@@ -61,23 +62,98 @@ extension Application {
     }
 
     public struct Core: Sendable {
-        final class Storage {
-            var console: Console
-            var commands: Commands
-            var threadPool: NIOThreadPool
-            var allocator: ByteBufferAllocator
-            var running: Application.Running.Storage
-            var directory: DirectoryConfiguration
+        final class Storage: @unchecked Sendable {
+            var console: Console {
+                get {
+                    storageLock.withLock {
+                        return _console
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _console = newValue
+                    }
+                }
+            }
+            var commands: Commands {
+                get {
+                    storageLock.withLock {
+                        return _commands
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _commands = newValue
+                    }
+                }
+            }
+            var threadPool: NIOThreadPool {
+                get {
+                    storageLock.withLock {
+                        return _threadPool
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _threadPool = newValue
+                    }
+                }
+            }
+            var allocator: ByteBufferAllocator {
+                get {
+                    storageLock.withLock {
+                        return _allocator
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _allocator = newValue
+                    }
+                }
+            }
+            var running: Application.Running.Storage {
+                get {
+                    storageLock.withLock {
+                        return _running
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _running = newValue
+                    }
+                }
+            }
+            var directory: DirectoryConfiguration {
+                get {
+                    storageLock.withLock {
+                        return _directory
+                    }
+                }
+                set {
+                    storageLock.withLockVoid {
+                        _directory = newValue
+                    }
+                }
+            }
+            
+            private var _console: Console
+            private var _commands: Commands
+            private var _threadPool: NIOThreadPool
+            private var _allocator: ByteBufferAllocator
+            private var _running: Application.Running.Storage
+            private var _directory: DirectoryConfiguration
+            private let storageLock: NIOLock
 
             init() {
-                self.console = Terminal()
-                self.commands = Commands()
-                self.commands.use(BootCommand(), as: "boot")
-                self.threadPool = NIOThreadPool(numberOfThreads: 64)
-                self.threadPool.start()
-                self.allocator = .init()
-                self.running = .init()
-                self.directory = .detect()
+                self.storageLock = .init()
+                self._console = Terminal()
+                self._commands = Commands()
+                self._commands.use(BootCommand(), as: "boot")
+                self._threadPool = NIOThreadPool(numberOfThreads: 64)
+                self._threadPool.start()
+                self._allocator = .init()
+                self._running = .init()
+                self._directory = .detect()
             }
         }
 

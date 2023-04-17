@@ -25,8 +25,9 @@ extension Application {
             }
         }
         
-        final class Storage {
-            var makeRenderer: ((Application) -> ViewRenderer)?
+        // This doesn't need a lock as it's only mutated during app configuration
+        final class Storage: @unchecked Sendable {
+            var makeRenderer: (@Sendable (Application) -> ViewRenderer)?
             init() { }
         }
 
@@ -49,7 +50,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeRenderer: @escaping (Application) -> (ViewRenderer)) {
+        public func use(_ makeRenderer: @Sendable @escaping (Application) -> (ViewRenderer)) {
             self.storage.makeRenderer = makeRenderer
         }
 

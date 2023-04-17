@@ -12,7 +12,7 @@ import NIOCore
 ///     app.middleware.use(app.sessions.middleware)
 ///
 /// See `SessionsConfig` and `Sessions` for more information.
-public final class SessionsMiddleware: Middleware {
+public final class SessionsMiddleware: Middleware, Sendable {
     /// The cookie to work with
     let configuration: SessionsConfiguration
 
