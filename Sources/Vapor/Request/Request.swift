@@ -3,6 +3,7 @@ import NIOCore
 import NIOHTTP1
 import Logging
 import RoutingKit
+import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
 public final class Request: Sendable, CustomStringConvertible {
@@ -12,20 +13,32 @@ public final class Request: Sendable, CustomStringConvertible {
     ///
     ///     httpReq.method = .GET
     ///
-    public var method: HTTPMethod/* {
+    public var method: HTTPMethod {
         get {
-            internalMethod
+            methodLock.withLock {
+                return _method
+            }
         }
         set {
-            
+            methodLock.withLockVoid {
+                _method = newValue
+            }
         }
     }
-    private var _method: HTTPMethod
-    private var methodLock: NIOLock
-                                  */
     
     /// The URL used on this request.
-    public var url: URI
+    public var url: URI {
+        get {
+            urlLock.withLock {
+                return _url
+            }
+        }
+        set {
+            urlLock.withLockVoid {
+                _url = newValue
+            }
+        }
+    }
     
     /// The version for this HTTP request.
     public var version: HTTPVersion
@@ -202,6 +215,15 @@ public final class Request: Sendable, CustomStringConvertible {
 
     public var byteBufferAllocator: ByteBufferAllocator
     
+    // Sendable helpers
+    private let methodLock: NIOLock
+    private let urlLock: NIOLock
+    
+    private var _method: HTTPMethod
+    private var _url: URI
+    
+    // MARK: - Initialisers
+    
     public convenience init(
         application: Application,
         method: HTTPMethod = .GET,
@@ -243,10 +265,13 @@ public final class Request: Sendable, CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
+        self.methodLock = .init()
+        self.urlLock = .init()
+        
         self.id = UUID().uuidString
         self.application = application
-        self.method = method
-        self.url = url
+        self._method = method
+        self._url = url
         self.version = version
         self.headers = headers
         if let body = collectedBody {
