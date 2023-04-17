@@ -41,14 +41,34 @@ public final class Request: Sendable, CustomStringConvertible {
     }
     
     /// The version for this HTTP request.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            versionLock.withLock {
+                return _version
+            }
+        }
+        set {
+            versionLock.withLockVoid {
+                _version = newValue
+            }
+        }
+    }
     
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
-    
-    internal var isKeepAlive: Bool
+    public var headers: HTTPHeaders {
+        get {
+            headersLock.withLock {
+                return _headers
+            }
+        }
+        set {
+            headersLock.withLockVoid {
+                _headers = newValue
+            }
+        }
+    }
     
     /// A uniquely generated ID for each request
     public let id: String
@@ -60,7 +80,18 @@ public final class Request: Sendable, CustomStringConvertible {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public var route: Route?
+    public var route: Route? {
+        get {
+            routeLock.withLock {
+                return _route
+            }
+        }
+        set {
+            routeLock.withLockVoid {
+                _route = newValue
+            }
+        }
+    }
 
     /// We try to determine true peer address if load balacer or reversed proxy provided info in headers
     ///
@@ -162,7 +193,18 @@ public final class Request: Sendable, CustomStringConvertible {
     
     /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger
+    public var logger: Logger {
+        get {
+            loggerLock.withLock {
+                return _logger
+            }
+        }
+        set {
+            loggerLock.withLockVoid {
+                _logger = newValue
+            }
+        }
+    }
     
     public var body: Body {
         return Body(self)
@@ -174,7 +216,18 @@ public final class Request: Sendable, CustomStringConvertible {
         case stream(BodyStream)
     }
     
-    internal var bodyStorage: BodyStorage
+    internal var bodyStorage: BodyStorage {
+        get {
+            bodyStorageLock.withLock {
+                return _bodyStorage
+            }
+        }
+        set {
+            bodyStorageLock.withLockVoid {
+                _bodyStorage = newValue
+            }
+        }
+    }
     
     /// Get and set `HTTPCookies` for this `HTTPRequest`
     /// This accesses the `"Cookie"` header.
@@ -208,19 +261,71 @@ public final class Request: Sendable, CustomStringConvertible {
     
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
-    public var parameters: Parameters
+    public var parameters: Parameters {
+        get {
+            parametersLock.withLock {
+                return _parameters
+            }
+        }
+        set {
+            parametersLock.withLockVoid {
+                _parameters = newValue
+            }
+        }
+    }
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            storageLock.withLock {
+                return _storage
+            }
+        }
+        set {
+            storageLock.withLockVoid {
+                _storage = newValue
+            }
+        }
+    }
 
-    public var byteBufferAllocator: ByteBufferAllocator
+    public var byteBufferAllocator: ByteBufferAllocator {
+        get {
+            byteBufferAllocatorLock.withLock {
+                return _byteBufferAllocator
+            }
+        }
+        set {
+            byteBufferAllocatorLock.withLockVoid {
+                _byteBufferAllocator = newValue
+            }
+        }
+    }
+    
+    // This is only set when the request is constructed so doesn't need a lock
+    internal var isKeepAlive: Bool
     
     // Sendable helpers
     private let methodLock: NIOLock
     private let urlLock: NIOLock
+    private let versionLock: NIOLock
+    private let headersLock: NIOLock
+    private let routeLock: NIOLock
+    private let loggerLock: NIOLock
+    private let bodyStorageLock: NIOLock
+    private let parametersLock: NIOLock
+    private let storageLock: NIOLock
+    private let byteBufferAllocatorLock: NIOLock
     
     private var _method: HTTPMethod
     private var _url: URI
+    private var _version: HTTPVersion
+    private var _headers: HTTPHeaders
+    private var _route: Route?
+    private var _logger: Logger
+    private var _bodyStorage: BodyStorage
+    private var _parameters: Parameters
+    private var _storage: Storage
+    private var _byteBufferAllocator: ByteBufferAllocator
     
     // MARK: - Initialisers
     
@@ -267,25 +372,33 @@ public final class Request: Sendable, CustomStringConvertible {
     ) {
         self.methodLock = .init()
         self.urlLock = .init()
+        self.versionLock = .init()
+        self.headersLock = .init()
+        self.routeLock = .init()
+        self.loggerLock = .init()
+        self.bodyStorageLock = .init()
+        self.parametersLock = .init()
+        self.storageLock = .init()
+        self.byteBufferAllocatorLock = .init()
         
         self.id = UUID().uuidString
         self.application = application
         self._method = method
         self._url = url
-        self.version = version
-        self.headers = headers
+        self._version = version
+        self._headers = headers
         if let body = collectedBody {
-            self.bodyStorage = .collected(body)
+            self._bodyStorage = .collected(body)
         } else {
-            self.bodyStorage = .none
+            self._bodyStorage = .none
         }
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
-        self.parameters = .init()
-        self.storage = .init()
+        self._parameters = .init()
+        self._storage = .init()
         self.isKeepAlive = true
-        self.logger = logger
-        self.logger[metadataKey: "request-id"] = .string(id)
-        self.byteBufferAllocator = byteBufferAllocator
+        self._logger = logger
+        self._logger[metadataKey: "request-id"] = .string(id)
+        self._byteBufferAllocator = byteBufferAllocator
     }
 }
