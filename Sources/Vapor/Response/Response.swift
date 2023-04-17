@@ -8,7 +8,8 @@ import NIOConcurrencyHelpers
 ///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient` and `HTTPServer`.
-public final class Response: Sendable, CustomStringConvertible {
+// This is Sendable because all mutable properties are behind locks
+public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
@@ -88,13 +89,46 @@ public final class Response: Sendable, CustomStringConvertible {
     }
 
     // If `true`, don't serialize the body.
-    var forHeadRequest: Bool
+    var forHeadRequest: Bool {
+        get {
+            forHeaderRequestLock.withLock {
+                return _forHeadRequest
+            }
+        }
+        set {
+            forHeaderRequestLock.withLockVoid {
+                _forHeadRequest = newValue
+            }
+        }
+    }
     
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: Upgrader?
+    public var upgrader: Upgrader? {
+        get {
+            upgraderLock.withLock {
+                return _upgrader
+            }
+        }
+        set {
+            upgraderLock.withLockVoid {
+                _upgrader = newValue
+            }
+        }
+    }
 
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            storageLock.withLock {
+                return _storage
+            }
+        }
+        set {
+            storageLock.withLockVoid {
+                _storage = newValue
+            }
+        }
+    }
     
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
@@ -169,6 +203,9 @@ public final class Response: Sendable, CustomStringConvertible {
     private let statusLock: NIOLock
     private let headersLock: NIOLock
     private let bodyLock: NIOLock
+    private let forHeaderRequestLock: NIOLock
+    private let upgraderLock: NIOLock
+    private let storageLock: NIOLock
     
     private var _version: HTTPVersion
     private var _status: HTTPStatus
@@ -176,6 +213,9 @@ public final class Response: Sendable, CustomStringConvertible {
     private var _body: Body {
         didSet { self._headers.updateContentLength(self._body.count) }
     }
+    private var _forHeadRequest: Bool
+    private var _upgrader: Upgrader?
+    private var _storage: Storage
     
     // MARK: Init
     
@@ -218,13 +258,16 @@ public final class Response: Sendable, CustomStringConvertible {
         self.statusLock = .init()
         self.headersLock = .init()
         self.bodyLock = .init()
+        self.forHeaderRequestLock = .init()
+        self.upgraderLock = .init()
+        self.storageLock = .init()
         
         self._status = status
         self._version = version
         self._headers = headers
         self._body = body
-        self.storage = .init()
-        self.forHeadRequest = false
+        self._storage = .init()
+        self._forHeadRequest = false
     }
 }
 

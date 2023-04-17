@@ -3,6 +3,7 @@ import Logging
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
+#warning("Check if this really is sendable")
 public struct Storage: Sendable {
     /// The internal storage area.
     var storage: [ObjectIdentifier: AnyStorageValue]
