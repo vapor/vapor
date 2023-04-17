@@ -38,7 +38,7 @@ extension Validator {
         min: U?, max: U?, _ keyPath: KeyPath<T, U>,
         _ suffix: String? = nil
     ) -> Validator<T>
-        where U: Comparable
+    where U: Comparable & Sendable, T: Sendable
     {   
         .init { data in 
             if let result = try? RangeResult.init(min: min, max: max, value: data[keyPath: keyPath]) {

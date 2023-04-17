@@ -16,12 +16,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// The HTTP version that corresponds to this response.
     public var version: HTTPVersion {
         get {
-            versionLock.withLock {
+            concurrencyLock.withLock {
                 return _version
             }
         }
         set {
-            versionLock.withLock {
+            concurrencyLock.withLock {
                 _version = newValue
             }
         }
@@ -30,12 +30,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// The HTTP response status.
     public var status: HTTPResponseStatus {
         get {
-            statusLock.withLock {
+            concurrencyLock.withLock {
                 return _status
             }
         }
         set {
-            statusLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _status = newValue
             }
         }
@@ -46,12 +46,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            headersLock.withLock {
+            concurrencyLock.withLock {
                 return _headers
             }
         }
         set {
-            headersLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _headers = newValue
             }
         }
@@ -65,12 +65,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// represents the `Body`.
     public var body: Body {
         get {
-            bodyLock.withLock {
+            concurrencyLock.withLock {
                 return _body
             }
         }
         set {
-            bodyLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _body = newValue
             }
         }
@@ -79,12 +79,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     // If `true`, don't serialize the body.
     var forHeadRequest: Bool {
         get {
-            forHeaderRequestLock.withLock {
+            concurrencyLock.withLock {
                 return _forHeadRequest
             }
         }
         set {
-            forHeaderRequestLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _forHeadRequest = newValue
             }
         }
@@ -94,12 +94,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// currently, websocket upgrades are the only defined case.
     public var upgrader: Upgrader? {
         get {
-            upgraderLock.withLock {
+            concurrencyLock.withLock {
                 return _upgrader
             }
         }
         set {
-            upgraderLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _upgrader = newValue
             }
         }
@@ -107,12 +107,12 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
 
     public var storage: Storage {
         get {
-            storageLock.withLock {
+            concurrencyLock.withLock {
                 return _storage
             }
         }
         set {
-            storageLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _storage = newValue
             }
         }
@@ -187,13 +187,7 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
         }
     }
     
-    private let versionLock: NIOLock
-    private let statusLock: NIOLock
-    private let headersLock: NIOLock
-    private let bodyLock: NIOLock
-    private let forHeaderRequestLock: NIOLock
-    private let upgraderLock: NIOLock
-    private let storageLock: NIOLock
+    private let concurrencyLock: NIOLock
     
     private var _version: HTTPVersion
     private var _status: HTTPStatus
@@ -242,13 +236,7 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self.versionLock = .init()
-        self.statusLock = .init()
-        self.headersLock = .init()
-        self.bodyLock = .init()
-        self.forHeaderRequestLock = .init()
-        self.upgraderLock = .init()
-        self.storageLock = .init()
+        self.concurrencyLock = .init()
         
         self._status = status
         self._version = version
