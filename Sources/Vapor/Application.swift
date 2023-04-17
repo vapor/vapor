@@ -116,7 +116,7 @@ public final class Application: @unchecked Sendable {
         }
         set {
             locksLock.withLockVoid {
-                locks = newValue
+                _locks = newValue
             }
         }
     }
