@@ -48,7 +48,7 @@ public final class Application: @unchecked Sendable {
         }
         set {
             loggerLock.withLockVoid {
-                logger = newValue
+                _logger = newValue
             }
         }
     }
