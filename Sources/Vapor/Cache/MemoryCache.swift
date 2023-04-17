@@ -11,14 +11,14 @@ extension Application.Caches {
 
     private var memoryStorage: MemoryCacheStorage {
         let lock = self.application.locks.lock(for: MemoryCacheKey.self)
-        lock.lock()
-        defer { lock.unlock() }
-        if let existing = self.application.storage.get(MemoryCacheKey.self) {
-            return existing
-        } else {
-            let new = MemoryCacheStorage()
-            self.application.storage.set(MemoryCacheKey.self, to: new)
-            return new
+        return lock.withLock {
+            if let existing = self.application.storage.get(MemoryCacheKey.self) {
+                return existing
+            } else {
+                let new = MemoryCacheStorage()
+                self.application.storage.set(MemoryCacheKey.self, to: new)
+                return new
+            }
         }
     }
 }
@@ -60,31 +60,30 @@ private final class MemoryCacheStorage: @unchecked Sendable {
     func get<T>(_ key: String) -> T?
         where T: Decodable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-        
-        guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
-        if let expiresAt = box.expiresAt, expiresAt < Date() {
-            self.storage.removeValue(forKey: key)
-            return nil
+        self.lock.withLock {
+            guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
+            if let expiresAt = box.expiresAt, expiresAt < Date() {
+                self.storage.removeValue(forKey: key)
+                return nil
+            }
+            
+            return box.value
         }
-        
-        return box.value
     }
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
         where T: Encodable
     {
-        self.lock.lock()
-        defer { self.lock.unlock() }
-        if let value = value {
-            var box = CacheEntryBox(value)
-            if let expirationTime = expirationTime {
-                box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
+        self.lock.withLock {
+            if let value = value {
+                var box = CacheEntryBox(value)
+                if let expirationTime = expirationTime {
+                    box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
+                }
+                self.storage[key] = box
+            } else {
+                self.storage.removeValue(forKey: key)
             }
-            self.storage[key] = box
-        } else {
-            self.storage.removeValue(forKey: key)
         }
     }
 }

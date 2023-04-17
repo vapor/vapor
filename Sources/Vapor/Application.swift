@@ -10,60 +10,46 @@ import NIOPosix
 public final class Application: @unchecked Sendable {
     public var environment: Environment {
         get {
-            environmentLock.lock()
-            defer {
-                environmentLock.unlock()
+            environmentLock.withLock {
+                return _environment
             }
-            return _environment
         }
         set {
-            environmentLock.lock()
-            defer {
-                environmentLock.unlock()
+            environmentLock.withLockVoid {
+                _environment = newValue
             }
-            _environment = newValue
         }
     }
     
     public var storage: Storage {
         get {
-            storageLock.lock()
-            defer {
-                storageLock.unlock()
+            storageLock.withLock {
+                return _storage
             }
-            return _storage
         }
         set {
-            storageLock.lock()
-            defer {
-                storageLock.unlock()
+            storageLock.withLockVoid {
+                _storage = newValue
             }
-            _storage = newValue
         }
     }
     
     public var didShutdown: Bool {
-        shutdownLock.lock()
-        defer {
-            shutdownLock.unlock()
+        shutdownLock.withLock {
+            return _didShutdown
         }
-        return _didShutdown
     }
     
     public var logger: Logger {
         get {
-            loggerLock.lock()
-            defer {
-                loggerLock.unlock()
+            loggerLock.withLock {
+                return _logger
             }
-            return _logger
         }
         set {
-            loggerLock.lock()
-            defer {
-                loggerLock.unlock()
+            loggerLock.withLockVoid {
+                logger = newValue
             }
-            _logger = newValue
         }
     }
     
@@ -71,18 +57,14 @@ public final class Application: @unchecked Sendable {
     public let eventLoopGroup: EventLoopGroup
     var isBooted: Bool {
         get {
-            isBootedLock.lock()
-            defer {
-                isBootedLock.unlock()
+            isBootedLock.withLock {
+                return _isBooted
             }
-            return _isBooted
         }
         set {
-            isBootedLock.lock()
-            defer {
-                isBootedLock.unlock()
+            isBootedLock.withLockVoid {
+                _isBooted = newValue
             }
-            _isBooted = newValue
         }
     }
 
@@ -99,18 +81,14 @@ public final class Application: @unchecked Sendable {
 
     public var lifecycle: Lifecycle {
         get {
-            lifecycleLock.lock()
-            defer {
-                lifecycleLock.unlock()
+            lifecycleLock.withLock {
+                return _lifecycle
             }
-            return _lifecycle
         }
         set {
-            lifecycleLock.lock()
-            defer {
-                lifecycleLock.unlock()
+            lifecycleLock.withLockVoid {
+                _lifecycle = newValue
             }
-            _lifecycle = newValue
         }
     }
 
@@ -132,18 +110,14 @@ public final class Application: @unchecked Sendable {
 
     public var locks: Locks {
         get {
-            locksLock.lock()
-            defer {
-                locksLock.unlock()
+            locksLock.withLock {
+                return _locks
             }
-            return _locks
         }
         set {
-            locksLock.lock()
-            defer {
-                locksLock.unlock()
+            locksLock.withLockVoid {
+                locks = newValue
             }
-            _locks = newValue
         }
     }
 

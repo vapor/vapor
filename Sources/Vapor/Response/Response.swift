@@ -16,36 +16,28 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// The HTTP version that corresponds to this response.
     public var version: HTTPVersion {
         get {
-            versionLock.lock()
-            defer {
-                versionLock.unlock()
+            versionLock.withLock {
+                return _version
             }
-            return _version
         }
         set {
-            versionLock.lock()
-            defer {
-                versionLock.unlock()
+            versionLock.withLock {
+                _version = newValue
             }
-            _version = newValue
         }
     }
     
     /// The HTTP response status.
     public var status: HTTPResponseStatus {
         get {
-            statusLock.lock()
-            defer {
-                statusLock.unlock()
+            statusLock.withLock {
+                return _status
             }
-            return _status
         }
         set {
-            statusLock.lock()
-            defer {
-                statusLock.unlock()
+            statusLock.withLockVoid {
+                _status = newValue
             }
-            _status = newValue
         }
     }
     
@@ -54,18 +46,14 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            headersLock.lock()
-            defer {
-                headersLock.unlock()
+            headersLock.withLock {
+                return _headers
             }
-            return _headers
         }
         set {
-            headersLock.lock()
-            defer {
-                headersLock.unlock()
+            headersLock.withLockVoid {
+                _headers = newValue
             }
-            _headers = newValue
         }
     }
     

@@ -1,4 +1,5 @@
 import Foundation
+import NIOConcurrencyHelpers
 
 @propertyWrapper
 class ThreadSafe<Value> {
@@ -10,32 +11,7 @@ class ThreadSafe<Value> {
     }
     
     public var wrappedValue: Value {
-        get { return lock.run { return value } }
-        set { lock.run { value = newValue } }
-    }
-}
-
-fileprivate class NIOLock {
-    private let nslock = NSLock()
-    init() {}
-    
-    func lock() {
-        nslock.lock()
-    }
-    
-    func unlock() {
-        nslock.unlock()
-    }
-    
-    func run(_ closure: () throws -> Void) rethrows {
-        lock()
-        defer { unlock() }
-        try closure()
-    }
-    
-    func run<T>(_ closure: () throws -> T) rethrows -> T {
-        lock()
-        defer { unlock() }
-        return try closure()
+        get { return lock.withLock { return value } }
+        set { lock.withLockVoid { value = newValue } }
     }
 }
