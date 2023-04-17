@@ -6,7 +6,9 @@ import RoutingKit
 import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
-public final class Request: Sendable, CustomStringConvertible {
+// All mutable properties are put behind locks where applicable so this
+// can be Sendable
+public final class Request: @unchecked Sendable, CustomStringConvertible {
     public let application: Application
 
     /// The HTTP method for this request.

@@ -2,7 +2,7 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 extension Request {
-    final class BodyStream: BodyStreamWriter {
+    final class BodyStream: BodyStreamWriter, Sendable {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
