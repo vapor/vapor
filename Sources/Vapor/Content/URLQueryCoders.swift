@@ -1,4 +1,4 @@
-public protocol URLQueryDecoder {
+public protocol URLQueryDecoder: Sendable {
     func decode<D>(_ decodable: D.Type, from url: URI) throws -> D
         where D: Decodable
 
@@ -6,7 +6,7 @@ public protocol URLQueryDecoder {
         where D: Decodable
 }
 
-public protocol URLQueryEncoder {
+public protocol URLQueryEncoder: Sendable {
     func encode<E>(_ encodable: E, to url: inout URI) throws
         where E: Encodable
 

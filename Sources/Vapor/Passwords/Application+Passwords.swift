@@ -23,7 +23,7 @@ extension Application {
         }
 
         public func use(
-            _ makeVerifier: @escaping (Application) -> (PasswordHasher)
+            _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
             self.storage.makeVerifier = makeVerifier
         }

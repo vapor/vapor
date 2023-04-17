@@ -1,5 +1,5 @@
 /// Decodes nested single values from data at a key path.
-internal struct ContainerGetPathExecutor<D: Decodable>: Decodable, Sendable {
+internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
     let result: D
     
     static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Any] {

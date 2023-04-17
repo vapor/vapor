@@ -45,7 +45,7 @@ public struct Validation: Sendable {
         }
     }
     
-    init(nested key: ValidationKey, required: Bool, unkeyed factory: @escaping (Int, inout Validations) -> (), customFailureDescription: String?) {
+    init(nested key: ValidationKey, required: Bool, unkeyed factory: @Sendable @escaping (Int, inout Validations) -> (), customFailureDescription: String?) {
         self.init(
             key: key,
             valuelessKeyBehavior: required ? .missing : .skipAlways,

@@ -3,7 +3,7 @@ import NIOCore
 /// A basic, closure-based `Responder`.
 public struct BasicResponder: Responder, Sendable {
     /// The stored responder closure.
-    private let closure: (Request) throws -> EventLoopFuture<Response>
+    private let closure: @Sendable (Request) throws -> EventLoopFuture<Response>
 
     /// Create a new `BasicResponder`.
     ///
@@ -15,7 +15,7 @@ public struct BasicResponder: Responder, Sendable {
     /// - parameters:
     ///     - closure: Responder closure.
     public init(
-        closure: @escaping (Request) throws -> EventLoopFuture<Response>
+        closure: @Sendable @escaping (Request) throws -> EventLoopFuture<Response>
     ) {
         self.closure = closure
     }

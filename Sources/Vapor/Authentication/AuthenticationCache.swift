@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Request {
     /// Helper for accessing authenticated objects.
     /// See `Authenticator` for more information.
@@ -56,18 +58,29 @@ extension Request.Authentication {
         return self.get(A.self) != nil
     }
 
-    private final class Cache {
+    // Internal `storage` is behind a lock so this can be unchecked Sendable
+    private final class Cache: @unchecked Sendable {
         private var storage: [ObjectIdentifier: Any]
-
+        private let storageLock: NIOLock
+        
         init() {
+            self.storageLock = .init()
             self.storage = [:]
         }
 
         internal subscript<A>(_ type: A.Type) -> A?
             where A: Authenticatable
             {
-            get { return storage[ObjectIdentifier(A.self)] as? A }
-            set { storage[ObjectIdentifier(A.self)] = newValue }
+            get {
+                storageLock.withLock {
+                    return storage[ObjectIdentifier(A.self)] as? A
+                }
+            }
+            set {
+                storageLock.withLockVoid {
+                    storage[ObjectIdentifier(A.self)] = newValue
+                }
+            }
         }
     }
 

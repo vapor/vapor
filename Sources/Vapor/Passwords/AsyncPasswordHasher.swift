@@ -26,8 +26,8 @@ public struct AsyncPasswordHasher: Sendable {
         self.eventLoop = eventLoop
     }
     
-    public func hash<Password: Sendable>(_ password: Password) -> EventLoopFuture<[UInt8]>
-        where Password: DataProtocol
+    public func hash<Password>(_ password: Password) -> EventLoopFuture<[UInt8]>
+        where Password: DataProtocol & Sendable
     {
         return self.threadPool.runIfActive(eventLoop: self.eventLoop) {
             try self.hasher.hash(password)

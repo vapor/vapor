@@ -3,7 +3,7 @@ import NIOCore
 /// Capable of managing CRUD operations for `Session`s.
 ///
 /// This is an async version of `SessionDriver`
-public protocol AsyncSessionDriver: SessionDriver {
+public protocol AsyncSessionDriver: SessionDriver, Sendable {
     func createSession(_ data: SessionData, for request: Request) async throws -> SessionID
     func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData?
     func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) async throws -> SessionID
