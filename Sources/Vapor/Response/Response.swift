@@ -1,6 +1,7 @@
 import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
+import NIOConcurrencyHelpers
 
 /// An HTTP response from a server back to the client.
 ///
@@ -12,15 +13,60 @@ public final class Response: Sendable, CustomStringConvertible {
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
     /// The HTTP version that corresponds to this response.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            versionLock.lock()
+            defer {
+                versionLock.unlock()
+            }
+            return _version
+        }
+        set {
+            versionLock.lock()
+            defer {
+                versionLock.unlock()
+            }
+            _version = newValue
+        }
+    }
     
     /// The HTTP response status.
-    public var status: HTTPResponseStatus
+    public var status: HTTPResponseStatus {
+        get {
+            statusLock.lock()
+            defer {
+                statusLock.unlock()
+            }
+            return _status
+        }
+        set {
+            statusLock.lock()
+            defer {
+                statusLock.unlock()
+            }
+            _status = newValue
+        }
+    }
     
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders {
+        get {
+            headersLock.lock()
+            defer {
+                headersLock.unlock()
+            }
+            return _headers
+        }
+        set {
+            headersLock.lock()
+            defer {
+                headersLock.unlock()
+            }
+            _headers = newValue
+        }
+    }
     
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
@@ -29,7 +75,16 @@ public final class Response: Sendable, CustomStringConvertible {
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
     /// represents the `Body`.
     public var body: Body {
-        didSet { self.headers.updateContentLength(self.body.count) }
+        get {
+            bodyLock.withLock {
+                return _body
+            }
+        }
+        set {
+            bodyLock.withLockVoid {
+                _body = newValue
+            }
+        }
     }
 
     // If `true`, don't serialize the body.
@@ -110,6 +165,18 @@ public final class Response: Sendable, CustomStringConvertible {
         }
     }
     
+    private let versionLock: NIOLock
+    private let statusLock: NIOLock
+    private let headersLock: NIOLock
+    private let bodyLock: NIOLock
+    
+    private var _version: HTTPVersion
+    private var _status: HTTPStatus
+    private var _headers: HTTPHeaders
+    private var _body: Body {
+        didSet { self._headers.updateContentLength(self.body.count) }
+    }
+    
     // MARK: Init
     
     /// Creates a new `Response`.
@@ -147,10 +214,15 @@ public final class Response: Sendable, CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self.status = status
-        self.version = version
-        self.headers = headers
-        self.body = body
+        self.versionLock = .init()
+        self.statusLock = .init()
+        self.headersLock = .init()
+        self.bodyLock = .init()
+        
+        self._status = status
+        self._version = version
+        self._headers = headers
+        self._body = body
         self.storage = .init()
         self.forHeadRequest = false
     }

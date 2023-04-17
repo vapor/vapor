@@ -6,10 +6,15 @@ import ConsoleKit
 import NIOPosix
 
 /// Core type representing a Vapor application.
-public final class Application: Sendable {
+/// This is Sendable because all mutable properties are protected by locks
+public final class Application: @unchecked Sendable {
     public var environment: Environment {
         get {
-            _environment
+            environmentLock.lock()
+            defer {
+                environmentLock.unlock()
+            }
+            return _environment
         }
         set {
             environmentLock.lock()
@@ -19,15 +24,67 @@ public final class Application: Sendable {
             _environment = newValue
         }
     }
+    
+    public var storage: Storage {
+        get {
+            storageLock.lock()
+            defer {
+                storageLock.unlock()
+            }
+            return _storage
+        }
+        set {
+            storageLock.lock()
+            defer {
+                storageLock.unlock()
+            }
+            _storage = newValue
+        }
+    }
+    
+    public var didShutdown: Bool {
+        shutdownLock.lock()
+        defer {
+            shutdownLock.unlock()
+        }
+        return _didShutdown
+    }
+    
+    public var logger: Logger {
+        get {
+            loggerLock.lock()
+            defer {
+                loggerLock.unlock()
+            }
+            return _logger
+        }
+        set {
+            loggerLock.lock()
+            defer {
+                loggerLock.unlock()
+            }
+            _logger = newValue
+        }
+    }
+    
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
-    public var storage: Storage
-    public private(set) var didShutdown: Bool
-    public var logger: Logger
-    var isBooted: Bool
-    
-    private let environmentLock: NIOLock
-    private var _environment: Environment
+    var isBooted: Bool {
+        get {
+            isBootedLock.lock()
+            defer {
+                isBootedLock.unlock()
+            }
+            return _isBooted
+        }
+        set {
+            isBootedLock.lock()
+            defer {
+                isBootedLock.unlock()
+            }
+            _isBooted = newValue
+        }
+    }
 
     public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
@@ -40,7 +97,22 @@ public final class Application: Sendable {
         }
     }
 
-    public var lifecycle: Lifecycle
+    public var lifecycle: Lifecycle {
+        get {
+            lifecycleLock.lock()
+            defer {
+                lifecycleLock.unlock()
+            }
+            return _lifecycle
+        }
+        set {
+            lifecycleLock.lock()
+            defer {
+                lifecycleLock.unlock()
+            }
+            _lifecycle = newValue
+        }
+    }
 
     public final class Locks {
         public let main: NIOLock
@@ -58,7 +130,22 @@ public final class Application: Sendable {
         }
     }
 
-    public var locks: Locks
+    public var locks: Locks {
+        get {
+            locksLock.lock()
+            defer {
+                locksLock.unlock()
+            }
+            return _locks
+        }
+        set {
+            locksLock.lock()
+            defer {
+                locksLock.unlock()
+            }
+            _locks = newValue
+        }
+    }
 
     public var sync: NIOLock {
         self.locks.main
@@ -68,6 +155,22 @@ public final class Application: Sendable {
         case shared(EventLoopGroup)
         case createNew
     }
+    
+    private let environmentLock: NIOLock
+    private let storageLock: NIOLock
+    private let shutdownLock: NIOLock
+    private let loggerLock: NIOLock
+    private let isBootedLock: NIOLock
+    private let lifecycleLock: NIOLock
+    private let locksLock: NIOLock
+    
+    private var _environment: Environment
+    private var _storage: Storage
+    private var _didShutdown: Bool
+    private var _logger: Logger
+    private var _isBooted: Bool
+    private var _lifecycle: Lifecycle
+    private var _locks: Locks
 
     public init(
         _ environment: Environment = .development,
@@ -82,13 +185,21 @@ public final class Application: Sendable {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
-        self.locks = .init()
+        self._locks = .init()
+        
         self.environmentLock = .init()
-        self.didShutdown = false
-        self.logger = .init(label: "codes.vapor.application")
-        self.storage = .init(logger: self.logger)
-        self.lifecycle = .init()
-        self.isBooted = false
+        self.storageLock = .init()
+        self.shutdownLock = .init()
+        self.loggerLock = .init()
+        self.isBootedLock = .init()
+        self.lifecycleLock = .init()
+        self.locksLock = .init()
+        
+        self._didShutdown = false
+        self._logger = .init(label: "codes.vapor.application")
+        self._storage = .init(logger: self._logger)
+        self._lifecycle = .init()
+        self._isBooted = false
         self.core.initialize()
         self.caches.initialize()
         self.views.initialize()
@@ -166,13 +277,13 @@ public final class Application: Sendable {
             }
         }
 
-        self.didShutdown = true
+        self._didShutdown = true
         self.logger.trace("Application shutdown complete")
     }
     
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
-        if !self.didShutdown {
+        if !self._didShutdown {
             self.logger.error("Application.shutdown() was not called before Application deinitialized.")
             self.shutdown()
         }
