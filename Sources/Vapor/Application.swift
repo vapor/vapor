@@ -10,12 +10,12 @@ import NIOPosix
 public final class Application: @unchecked Sendable {
     public var environment: Environment {
         get {
-            environmentLock.withLock {
+            concurrencyLock.withLock {
                 return _environment
             }
         }
         set {
-            environmentLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _environment = newValue
             }
         }
@@ -23,31 +23,31 @@ public final class Application: @unchecked Sendable {
     
     public var storage: Storage {
         get {
-            storageLock.withLock {
+            concurrencyLock.withLock {
                 return _storage
             }
         }
         set {
-            storageLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _storage = newValue
             }
         }
     }
     
     public var didShutdown: Bool {
-        shutdownLock.withLock {
+        concurrencyLock.withLock {
             return _didShutdown
         }
     }
     
     public var logger: Logger {
         get {
-            loggerLock.withLock {
+            concurrencyLock.withLock {
                 return _logger
             }
         }
         set {
-            loggerLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _logger = newValue
             }
         }
@@ -57,12 +57,12 @@ public final class Application: @unchecked Sendable {
     public let eventLoopGroup: EventLoopGroup
     var isBooted: Bool {
         get {
-            isBootedLock.withLock {
+            concurrencyLock.withLock {
                 return _isBooted
             }
         }
         set {
-            isBootedLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _isBooted = newValue
             }
         }
@@ -81,12 +81,12 @@ public final class Application: @unchecked Sendable {
 
     public var lifecycle: Lifecycle {
         get {
-            lifecycleLock.withLock {
+            concurrencyLock.withLock {
                 return _lifecycle
             }
         }
         set {
-            lifecycleLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _lifecycle = newValue
             }
         }
@@ -110,12 +110,12 @@ public final class Application: @unchecked Sendable {
 
     public var locks: Locks {
         get {
-            locksLock.withLock {
+            concurrencyLock.withLock {
                 return _locks
             }
         }
         set {
-            locksLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _locks = newValue
             }
         }
@@ -130,13 +130,7 @@ public final class Application: @unchecked Sendable {
         case createNew
     }
     
-    private let environmentLock: NIOLock
-    private let storageLock: NIOLock
-    private let shutdownLock: NIOLock
-    private let loggerLock: NIOLock
-    private let isBootedLock: NIOLock
-    private let lifecycleLock: NIOLock
-    private let locksLock: NIOLock
+    private let concurrencyLock: NIOLock
     
     private var _environment: Environment
     private var _storage: Storage
@@ -161,13 +155,7 @@ public final class Application: @unchecked Sendable {
         }
         self._locks = .init()
         
-        self.environmentLock = .init()
-        self.storageLock = .init()
-        self.shutdownLock = .init()
-        self.loggerLock = .init()
-        self.isBootedLock = .init()
-        self.lifecycleLock = .init()
-        self.locksLock = .init()
+        self.concurrencyLock = .init()
         
         self._didShutdown = false
         self._logger = .init(label: "codes.vapor.application")
