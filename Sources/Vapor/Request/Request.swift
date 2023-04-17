@@ -17,12 +17,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     ///
     public var method: HTTPMethod {
         get {
-            methodLock.withLock {
+            concurrencyLock.withLock {
                 return _method
             }
         }
         set {
-            methodLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _method = newValue
             }
         }
@@ -31,12 +31,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// The URL used on this request.
     public var url: URI {
         get {
-            urlLock.withLock {
+            concurrencyLock.withLock {
                 return _url
             }
         }
         set {
-            urlLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _url = newValue
             }
         }
@@ -45,12 +45,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// The version for this HTTP request.
     public var version: HTTPVersion {
         get {
-            versionLock.withLock {
+            concurrencyLock.withLock {
                 return _version
             }
         }
         set {
-            versionLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _version = newValue
             }
         }
@@ -61,12 +61,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            headersLock.withLock {
+            concurrencyLock.withLock {
                 return _headers
             }
         }
         set {
-            headersLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _headers = newValue
             }
         }
@@ -84,12 +84,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     ///
     public var route: Route? {
         get {
-            routeLock.withLock {
+            concurrencyLock.withLock {
                 return _route
             }
         }
         set {
-            routeLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _route = newValue
             }
         }
@@ -197,12 +197,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger {
         get {
-            loggerLock.withLock {
+            concurrencyLock.withLock {
                 return _logger
             }
         }
         set {
-            loggerLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _logger = newValue
             }
         }
@@ -220,12 +220,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     
     internal var bodyStorage: BodyStorage {
         get {
-            bodyStorageLock.withLock {
+            concurrencyLock.withLock {
                 return _bodyStorage
             }
         }
         set {
-            bodyStorageLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _bodyStorage = newValue
             }
         }
@@ -265,12 +265,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
         get {
-            parametersLock.withLock {
+            concurrencyLock.withLock {
                 return _parameters
             }
         }
         set {
-            parametersLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _parameters = newValue
             }
         }
@@ -279,12 +279,12 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
         get {
-            storageLock.withLock {
+            concurrencyLock.withLock {
                 return _storage
             }
         }
         set {
-            storageLock.withLockVoid {
+            concurrencyLock.withLockVoid {
                 _storage = newValue
             }
         }
@@ -296,15 +296,7 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     internal var isKeepAlive: Bool
     
     // Sendable helpers
-    private let methodLock: NIOLock
-    private let urlLock: NIOLock
-    private let versionLock: NIOLock
-    private let headersLock: NIOLock
-    private let routeLock: NIOLock
-    private let loggerLock: NIOLock
-    private let bodyStorageLock: NIOLock
-    private let parametersLock: NIOLock
-    private let storageLock: NIOLock
+    private let concurrencyLock: NIOLock
     
     private var _method: HTTPMethod
     private var _url: URI
@@ -359,15 +351,7 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        self.methodLock = .init()
-        self.urlLock = .init()
-        self.versionLock = .init()
-        self.headersLock = .init()
-        self.routeLock = .init()
-        self.loggerLock = .init()
-        self.bodyStorageLock = .init()
-        self.parametersLock = .init()
-        self.storageLock = .init()
+        self.concurrencyLock = .init()
         
         self.id = UUID().uuidString
         self.application = application
