@@ -174,7 +174,7 @@ public final class Response: Sendable, CustomStringConvertible {
     private var _status: HTTPStatus
     private var _headers: HTTPHeaders
     private var _body: Body {
-        didSet { self._headers.updateContentLength(self.body.count) }
+        didSet { self._headers.updateContentLength(self._body.count) }
     }
     
     // MARK: Init
