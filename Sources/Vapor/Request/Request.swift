@@ -288,18 +288,7 @@ public final class Request: Sendable, CustomStringConvertible {
         }
     }
 
-    public var byteBufferAllocator: ByteBufferAllocator {
-        get {
-            byteBufferAllocatorLock.withLock {
-                return _byteBufferAllocator
-            }
-        }
-        set {
-            byteBufferAllocatorLock.withLockVoid {
-                _byteBufferAllocator = newValue
-            }
-        }
-    }
+    public let byteBufferAllocator: ByteBufferAllocator
     
     // This is only set when the request is constructed so doesn't need a lock
     internal var isKeepAlive: Bool
@@ -314,7 +303,6 @@ public final class Request: Sendable, CustomStringConvertible {
     private let bodyStorageLock: NIOLock
     private let parametersLock: NIOLock
     private let storageLock: NIOLock
-    private let byteBufferAllocatorLock: NIOLock
     
     private var _method: HTTPMethod
     private var _url: URI
@@ -325,7 +313,6 @@ public final class Request: Sendable, CustomStringConvertible {
     private var _bodyStorage: BodyStorage
     private var _parameters: Parameters
     private var _storage: Storage
-    private var _byteBufferAllocator: ByteBufferAllocator
     
     // MARK: - Initialisers
     
@@ -379,7 +366,6 @@ public final class Request: Sendable, CustomStringConvertible {
         self.bodyStorageLock = .init()
         self.parametersLock = .init()
         self.storageLock = .init()
-        self.byteBufferAllocatorLock = .init()
         
         self.id = UUID().uuidString
         self.application = application
@@ -399,6 +385,6 @@ public final class Request: Sendable, CustomStringConvertible {
         self.isKeepAlive = true
         self._logger = logger
         self._logger[metadataKey: "request-id"] = .string(id)
-        self._byteBufferAllocator = byteBufferAllocator
+        self.byteBufferAllocator = byteBufferAllocator
     }
 }
