@@ -49,7 +49,7 @@ extension Environment {
         return fileIO
             .openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
-                let handleWrapper = FileHandleWrapper(value: handle)
+                let handleWrapper = NIOLoopBound(handle, eventLoop: eventLoop)
                 return fileIO
                     .read(fileRegion: region, allocator: .init(), eventLoop: eventLoop)
                     .always { _ in try? handleWrapper.value.close() }
