@@ -39,7 +39,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         case 2:
             context.write(self.wrapOutboundOut(response), promise: nil)
         default:
-            let keepAlive = !self.isShuttingDown && request.isKeepAlive
+            let keepAlive = !self.isShuttingDown && request.isKeepAlive.withLockedValue { $0 }
             if self.isShuttingDown {
                 self.logger.debug("In-flight request has completed")
             }

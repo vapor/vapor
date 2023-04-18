@@ -2,7 +2,8 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 import Logging
-import RoutingKit
+#warning("fix")
+@preconcurrency import RoutingKit
 import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
@@ -256,9 +257,7 @@ public final class Request: Sendable, CustomStringConvertible {
 
     public let byteBufferAllocator: ByteBufferAllocator
     
-    // This is only set when the request is constructed so doesn't need a lock
-    internal var isKeepAlive: Bool
-    
+    internal let isKeepAlive: NIOLockedValueBox<Bool>
     private let _method: NIOLockedValueBox<HTTPMethod>
     private let _url: NIOLockedValueBox<URI>
     private let _version: NIOLockedValueBox<HTTPVersion>
@@ -327,7 +326,7 @@ public final class Request: Sendable, CustomStringConvertible {
         self.eventLoop = eventLoop
         self._parameters = .init(.init())
         self._storage = .init(.init())
-        self.isKeepAlive = true
+        self.isKeepAlive = .init(true)
         self._logger = .init(logger)
         self.byteBufferAllocator = byteBufferAllocator
         self._route = .init(nil)
