@@ -233,25 +233,28 @@ public struct FileIO: Sendable {
         chunkSize: Int,
         onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
-        do {
-            let fd = try NIOFileHandle(path: path)
-            let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
-            let done = self.io.readChunked(
-                fileHandle: fd,
-                fromOffset: offset,
-                byteCount: byteCount,
-                chunkSize: chunkSize,
-                allocator: allocator,
-                eventLoop: self.request.eventLoop
-            ) { chunk in
-                return onRead(chunk)
+        return self.request.eventLoop.flatSubmit {
+            do {
+                let fd = try NIOFileHandle(path: path)
+                
+                let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
+                let done = self.io.readChunked(
+                    fileHandle: fd,
+                    fromOffset: offset,
+                    byteCount: byteCount,
+                    chunkSize: chunkSize,
+                    allocator: allocator,
+                    eventLoop: self.request.eventLoop
+                ) { chunk in
+                    return onRead(chunk)
+                }
+                done.whenComplete { _ in
+                    try? fdWrapper.value.close()
+                }
+                return done
+            } catch {
+                return self.request.eventLoop.makeFailedFuture(error)
             }
-            done.whenComplete { _ in
-                try? fdWrapper.value.close()
-            }
-            return done
-        } catch {
-            return self.request.eventLoop.makeFailedFuture(error)
         }
     }
     
@@ -265,16 +268,18 @@ public struct FileIO: Sendable {
     ///     - buffer: The `ByteBuffer` to write.
     /// - returns: `Future` that will complete when the file write is finished.
     public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
-        do {
-            let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
-            let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
-            let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
-            done.whenComplete { _ in
-                try? fdWrapper.value.close()
+        self.request.eventLoop.flatSubmit {
+            do {
+                let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+                let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
+                let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
+                done.whenComplete { _ in
+                    try? fdWrapper.value.close()
+                }
+                return done
+            } catch {
+                return self.request.eventLoop.makeFailedFuture(error)
             }
-            return done
-        } catch {
-            return self.request.eventLoop.makeFailedFuture(error)
         }
     }
 }
