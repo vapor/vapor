@@ -235,6 +235,7 @@ public struct FileIO: Sendable {
     ) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path)
+            let fdWrapper = FileHandleWrapper(value: fd)
             let done = self.io.readChunked(
                 fileHandle: fd,
                 fromOffset: offset,
@@ -246,7 +247,7 @@ public struct FileIO: Sendable {
                 return onRead(chunk)
             }
             done.whenComplete { _ in
-                try? fd.close()
+                try? fdWrapper.value.close()
             }
             return done
         } catch {
@@ -266,9 +267,10 @@ public struct FileIO: Sendable {
     public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+            let fdWrapper = FileHandleWrapper(value: fd)
             let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
             done.whenComplete { _ in
-                try? fd.close()
+                try? fdWrapper.value.close()
             }
             return done
         } catch {
@@ -305,5 +307,13 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(start), byteCount: byteCount)
         }
+    }
+}
+
+final class FileHandleWrapper: @unchecked Sendable {
+    var value: NIOFileHandle
+    
+    init(value: NIOFileHandle) {
+        self.value = value
     }
 }
