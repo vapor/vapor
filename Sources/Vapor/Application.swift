@@ -7,7 +7,7 @@ import NIOPosix
 
 /// Core type representing a Vapor application.
 /// This is Sendable because all mutable properties are protected by locks
-public final class Application: @unchecked Sendable {
+public final class Application: Sendable {
     public var environment: Environment {
         get {
             _environment.withLockedValue { $0 }
@@ -32,14 +32,10 @@ public final class Application: @unchecked Sendable {
     
     public var logger: Logger {
         get {
-            concurrencyLock.withLock {
-                return _logger
-            }
+            return _logger.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _logger = newValue
-            }
+            _logger.withLockedValue { $0 = newValue }
         }
     }
     
@@ -47,14 +43,10 @@ public final class Application: @unchecked Sendable {
     public let eventLoopGroup: EventLoopGroup
     var isBooted: Bool {
         get {
-            concurrencyLock.withLock {
-                return _isBooted
-            }
+            return _isBooted.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _isBooted = newValue
-            }
+            _isBooted.withLockedValue { $0 = newValue }
         }
     }
 
@@ -71,43 +63,38 @@ public final class Application: @unchecked Sendable {
 
     public var lifecycle: Lifecycle {
         get {
-            concurrencyLock.withLock {
-                return _lifecycle
-            }
+            return _lifecycle.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _lifecycle = newValue
-            }
+            _lifecycle.withLockedValue { $0 = newValue }
         }
     }
 
-    public final class Locks {
+    // This does not have value semantics due to the use or `NIOLockedValueBox`
+    public struct Locks: Sendable {
         public let main: NIOLock
-        var storage: [ObjectIdentifier: NIOLock]
+        let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
 
         init() {
             self.main = .init()
-            self.storage = [:]
+            self.storage = .init([:])
         }
 
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.withLock { self.storage.insertOrReturn(.init(), at: .init(Key.self)) }
+            self.main.withLock {
+                self.storage.withLockedValue { $0.insertOrReturn(.init(), at: .init(Key.self)) }
+            }
         }
     }
 
     public var locks: Locks {
         get {
-            concurrencyLock.withLock {
-                return _locks
-            }
+            return _locks.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _locks = newValue
-            }
+            _locks.withLockedValue { $0 = newValue }
         }
     }
 
@@ -125,10 +112,10 @@ public final class Application: @unchecked Sendable {
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
-    private var _logger: Logger
-    private var _isBooted: Bool
-    private var _lifecycle: Lifecycle
-    private var _locks: Locks
+    private let _logger: NIOLockedValueBox<Logger>
+    private let _isBooted: NIOLockedValueBox<Bool>
+    private let _lifecycle: NIOLockedValueBox<Lifecycle>
+    private let _locks: NIOLockedValueBox<Locks>
 
     public init(
         _ environment: Environment = .development,
@@ -143,15 +130,16 @@ public final class Application: @unchecked Sendable {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
-        self._locks = .init()
+        self._locks = .init(.init())
         
         self.concurrencyLock = .init()
         
         self._didShutdown = .init(false)
-        self._logger = .init(label: "codes.vapor.application")
-        self._storage = .init(.init(logger: self._logger))
-        self._lifecycle = .init()
-        self._isBooted = false
+        let logger = Logger(label: "codes.vapor.application")
+        self._logger = .init(logger)
+        self._storage = .init(.init(logger: logger))
+        self._lifecycle = .init(.init())
+        self._isBooted = .init(false)
         self.core.initialize()
         self.caches.initialize()
         self.views.initialize()
