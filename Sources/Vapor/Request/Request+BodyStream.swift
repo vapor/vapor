@@ -16,23 +16,23 @@ extension Request {
         private let isClosedBox: NIOLockedValueBox<Bool>
         typealias BodyStreamHandler = (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())
         private let handler: NIOLockedValueBox<BodyStreamHandler?>
-        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
+        private let buffer: NIOLockedValueBox<[(BodyStreamResult, EventLoopPromise<Void>?)]>
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
             self.isClosedBox = .init(false)
-            self.buffer = []
+            self.buffer = .init([])
             self.allocator = byteBufferAllocator
             self.handler = .init(nil)
         }
 
         func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             self.handler.withLockedValue { $0 = handler }
-            for (result, promise) in self.buffer {
+            for (result, promise) in self.buffer.withLockedValue({ $0 }) {
                 handler(result, promise)
             }
-            self.buffer = []
+            self.buffer.withLockedValue { $0 = [] }
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -62,7 +62,7 @@ extension Request {
                 default: break
                 }
             } else {
-                self.buffer.append((chunk, promise))
+                self.buffer.withLockedValue { $0.append((chunk, promise)) }
             }
         }
 
