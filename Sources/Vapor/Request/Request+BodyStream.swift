@@ -9,14 +9,17 @@ extension Request {
             self.handler != nil
         }
 
-        private(set) var isClosed: Bool
+        var isClosed: Bool {
+            isClosedBox.withLockedValue { $0 }
+        }
+        private let isClosedBox: NIOLockedValueBox<Bool>
         private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
         private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
-            self.isClosed = false
+            self.isClosedBox = .init(false)
             self.buffer = []
             self.allocator = byteBufferAllocator
         }
@@ -43,7 +46,7 @@ extension Request {
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
-                self.isClosed = true
+                self.isClosedBox.withLockedValue { $0 = true }
             case .buffer: break
             }
             
