@@ -2,9 +2,8 @@ import Logging
 import NIOCore
 import NIOHTTP1
 import Foundation
-import NIOConcurrencyHelpers
 
-final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler, Sendable {
+final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = HTTPServerRequestPart
     typealias InboundOut = Request
     typealias OutboundIn = Never
@@ -17,18 +16,18 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         case skipping
     }
 
+    var requestState: RequestState
+    var bodyStreamState: HTTPBodyStreamState
+
     var logger: Logger {
-        self.application.withLockedValue { $0.logger }
+        self.application.logger
     }
-    
-    let application: NIOLockedValueBox<Application>
-    let requestState: NIOLockedValueBox<RequestState>
-    let bodyStreamState: NIOLockedValueBox<HTTPBodyStreamState>
+    var application: Application
     
     init(application: Application) {
-        self.application = .init(application)
-        self.requestState = .init(.ready)
-        self.bodyStreamState = .init(.init())
+        self.application = application
+        self.requestState = .ready
+        self.bodyStreamState = .init()
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -37,16 +36,16 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         self.logger.trace("Decoded HTTP part: \(part)")
         switch part {
         case .head(let head):
-            switch self.requestState.withLockedValue({ $0 }) {
+            switch self.requestState {
             case .ready:
                 let request = Request(
-                    application: self.application.withLockedValue { $0 },
+                    application: self.application,
                     method: head.method,
                     url: .init(string: head.uri),
                     version: head.version,
                     headersNoUpdate: head.headers,
                     remoteAddress: context.channel.remoteAddress,
-                    logger: self.logger,
+                    logger: self.application.logger,
                     byteBufferAllocator: context.channel.allocator,
                     on: context.channel.eventLoop
                 )
@@ -56,11 +55,11 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 default:
                     request.isKeepAlive.withLockedValue { $0 = head.isKeepAlive }
                 }
-                self.requestState.withLockedValue { $0 = .awaitingBody(request) }
+                self.requestState = .awaitingBody(request)
             default: assertionFailure("Unexpected state: \(self.requestState)")
             }
         case .body(let buffer):
-            switch self.requestState.withLockedValue({ $0 }) {
+            switch self.requestState {
             case .ready, .awaitingEnd:
                 assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
@@ -69,29 +68,29 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 // Therefore, we can receive data after our expected end-of-request
                 // When decompressing data, more bytes come out than came in, so content-length does not represent the maximum length
                 if request.headers.first(name: .contentLength) == buffer.readableBytes.description {
-                    self.requestState.withLockedValue { $0 = .awaitingEnd(request, buffer) }
+                    self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop, byteBufferAllocator: context.channel.allocator)
                     request.bodyStorage = .stream(stream)
-                    self.requestState.withLockedValue { $0 = .streamingBody(stream) }
+                    self.requestState = .streamingBody(stream)
                     context.fireChannelRead(self.wrapInboundOut(request))
                     self.handleBodyStreamStateResult(
                         context: context,
-                        self.bodyStreamState.withLockedValue { $0.didReadBytes(buffer) },
+                        self.bodyStreamState.didReadBytes(buffer),
                         stream: stream
                     )
                 }
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
                     context: context,
-                    self.bodyStreamState.withLockedValue { $0.didReadBytes(buffer) },
+                    self.bodyStreamState.didReadBytes(buffer),
                     stream: stream
                 )
             case .skipping: break
             }
         case .end(let tailHeaders):
             assert(tailHeaders == nil, "Tail headers are not supported.")
-            switch self.requestState.withLockedValue({ $0 }) {
+            switch self.requestState {
             case .ready: assertionFailure("Unexpected state: \(self.requestState)")
             case .awaitingBody(let request):
                 context.fireChannelRead(self.wrapInboundOut(request))
@@ -101,21 +100,21 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(
                     context: context,
-                    self.bodyStreamState.withLockedValue { $0.didEnd() },
+                    self.bodyStreamState.didEnd(),
                     stream: stream
                 )
             case .skipping: break
             }
-            self.requestState.withLockedValue { $0 = .ready }
+            self.requestState = .ready
         }
     }
 
     func read(context: ChannelHandlerContext) {
-        switch self.requestState.withLockedValue({ $0 }) {
+        switch self.requestState {
         case .streamingBody(let stream):
             self.handleBodyStreamStateResult(
                 context: context,
-                self.bodyStreamState.withLockedValue { $0.didReceiveReadRequest() },
+                self.bodyStreamState.didReceiveReadRequest(),
                 stream: stream
             )
         default:
@@ -124,11 +123,11 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     }
 
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        switch self.requestState.withLockedValue({ $0 }) {
+        switch self.requestState {
         case .streamingBody(let stream):
             self.handleBodyStreamStateResult(
                 context: context,
-                self.bodyStreamState.withLockedValue { $0.didError(error) },
+                self.bodyStreamState.didError(error),
                 stream: stream
             )
         default:
@@ -138,11 +137,11 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     }
 
     func channelInactive(context: ChannelHandlerContext) {
-        switch self.requestState.withLockedValue({ $0 }) {
+        switch self.requestState {
         case .streamingBody(let stream):
             self.handleBodyStreamStateResult(
                 context: context,
-                self.bodyStreamState.withLockedValue { $0.didEnd() },
+                self.bodyStreamState.didEnd(),
                 stream: stream
             )
         default:
@@ -164,14 +163,14 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 case .failure(let error):
                     self.handleBodyStreamStateResult(
                         context: context,
-                        self.bodyStreamState.withLockedValue { $0.didError(error) },
+                        self.bodyStreamState.didError(error),
                         stream: stream
                     )
                 case .success: break
                 }
                 self.handleBodyStreamStateResult(
                     context: context,
-                    self.bodyStreamState.withLockedValue { $0.didWrite() },
+                    self.bodyStreamState.didWrite(),
                     stream: stream
                 )
             }
@@ -190,7 +189,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
     func userInboundEventTriggered(context: ChannelHandlerContext, event: Any) {
         switch event {
         case is HTTPServerResponseEncoder.ResponseEndSentEvent:
-            switch self.requestState.withLockedValue({ $0 }) {
+            switch self.requestState {
             case .streamingBody(let bodyStream):
                 // Response ended during request stream.
                 if !bodyStream.isBeingRead {
@@ -202,13 +201,13 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             case .awaitingBody, .awaitingEnd:
                 // Response ended before request started streaming.
                 self.logger.trace("Response already sent, skipping request body.")
-                self.requestState.withLockedValue { $0 = .skipping }
+                self.requestState = .skipping
             case .ready, .skipping:
                 // Response ended after request had been read.
                 break
             }
         case is ChannelShouldQuiesceEvent:
-            switch self.requestState.withLockedValue({ $0 }) {
+            switch self.requestState {
             case .ready:
                 self.logger.trace("Closing keep-alive HTTP connection since server is going away")
                 context.channel.close(mode: .all, promise: nil)
