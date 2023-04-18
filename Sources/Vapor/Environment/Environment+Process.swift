@@ -2,7 +2,7 @@ import Foundation
 
 extension Environment {    
     /// The process information of an environment. Wraps `ProcessInto.processInfo`.
-    @dynamicMemberLookup public struct Process: Sendable {
+    @dynamicMemberLookup public struct Process {
         /// The process information of the environment.
         private let _info: ProcessInfo
         
