@@ -18,21 +18,21 @@ public func routes(_ app: Application) throws {
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
-        var total = 0
+        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
         req.body.drain { result in
             let promise = req.eventLoop.makePromise(of: Void.self)
 
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-                    total += buffer.readableBytes
+                    totalBox.value += buffer.readableBytes
                     promise.succeed(())
                 }
             case .error(let error):
                 done.fail(error)
             case .end:
                 promise.succeed(())
-                done.succeed(total.description)
+                done.succeed(totalBox.value.description)
             }
 
             // manually return pre-completed future
