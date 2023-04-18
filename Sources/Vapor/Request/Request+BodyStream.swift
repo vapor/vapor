@@ -4,10 +4,22 @@ import NIOConcurrencyHelpers
 extension Request {
     final class BodyStream: BodyStreamWriter, Sendable {
         let eventLoop: EventLoop
-
+        
         var isBeingRead: Bool {
-            self.handler.withLockedValue { $0 } != nil
+            self.handler != nil
         }
+
+//        var isBeingRead2: Bool {
+//            get {
+//                let isNil = self.handler2.withLockedValue { $0 }
+//    //            self.handler.withLockedValue { $0 } != nil
+//                return false
+//            }
+//        }
+        
+//        func getHandlerValue() -> BodyStreamHandler? {
+//            return self.handler2.withLockedValue { $0 }
+//        }
 
         // Ensure this can only be mutated from this class
         var isClosed: Bool {
@@ -15,7 +27,8 @@ extension Request {
         }
         private let isClosedBox: NIOLockedValueBox<Bool>
         typealias BodyStreamHandler = (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())
-        private let handler: NIOLockedValueBox<BodyStreamHandler?>
+        private let handler2: NIOLockedValueBox<BodyStreamHandler?>
+        private var handler: BodyStreamHandler?
         private let buffer: NIOLockedValueBox<[(BodyStreamResult, EventLoopPromise<Void>?)]>
         private let allocator: ByteBufferAllocator
 
@@ -24,11 +37,12 @@ extension Request {
             self.isClosedBox = .init(false)
             self.buffer = .init([])
             self.allocator = byteBufferAllocator
-            self.handler = .init(nil)
+            self.handler2 = .init(nil)
         }
 
         func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handler.withLockedValue { $0 = handler }
+            self.handler2.withLockedValue { $0 = handler }
+            self.handler = handler
             for (result, promise) in self.buffer.withLockedValue({ $0 }) {
                 handler(result, promise)
             }
@@ -53,12 +67,14 @@ extension Request {
             case .buffer: break
             }
             
-            if let handler = self.handler.withLockedValue({ $0 }) {
+//            if let handler = self.handler.withLockedValue({ $0 }) {
+            if let handler = self.handler {
                 handler(chunk, promise)
                 // remove reference to handler
                 switch chunk {
                 case .end, .error:
-                    self.handler.withLockedValue { $0 = nil }
+                    self.handler2.withLockedValue { $0 = nil }
+                    self.handler = nil
                 default: break
                 }
             } else {
