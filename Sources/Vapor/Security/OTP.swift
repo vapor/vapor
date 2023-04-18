@@ -1,5 +1,5 @@
 import Foundation
-import Crypto
+@preconcurrency import Crypto
 
 /// Supported OTP output sizes.
 public enum OTPDigits: Int, Sendable {
