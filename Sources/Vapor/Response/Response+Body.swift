@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+@preconcurrency import struct Dispatch.DispatchData
 
 extension Response {
     struct BodyStream: Sendable {
