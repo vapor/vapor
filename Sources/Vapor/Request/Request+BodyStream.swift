@@ -2,7 +2,10 @@ import NIOCore
 import NIOConcurrencyHelpers
 
 extension Request {
-    final class BodyStream: BodyStreamWriter, Sendable {
+    // This needs to be unchecked Sendable until the `handler` can be migrated.
+    // Currently held up by <TODO>
+    #warning("Add link to Swift Bug")
+    final class BodyStream: BodyStreamWriter, @unchecked Sendable {
         let eventLoop: EventLoop
         
         var isBeingRead: Bool {
@@ -10,40 +13,29 @@ extension Request {
         }
 
         var isBeingRead2: Bool {
-            get {
-//                return self.handler2.withLockedValue { $0 != nil }
-    //            self.handler.withLockedValue { $0 } != nil
-//                return false
-                return self.handler2 != nil
-            }
+            self.handler != nil
         }
         
-//        func getHandlerValue() -> BodyStreamHandler? {
-//            return self.handler2.withLockedValue { $0 }
-//        }
-
         // Ensure this can only be mutated from this class
         var isClosed: Bool {
             isClosedBox.withLockedValue { $0 }
         }
         private let isClosedBox: NIOLockedValueBox<Bool>
         typealias BodyStreamHandler = (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())
-//        private let handler2: NIOLockedValueBox2<BodyStreamHandler?>
         private let handlerLock: NIOLock
-        private var _handler2: BodyStreamHandler?
-        private var handler2: BodyStreamHandler? {
+        private var _handler: BodyStreamHandler?
+        private var handler: BodyStreamHandler? {
             get {
                 handlerLock.withLock {
-                    return _handler2
+                    return _handler
                 }
             }
             set {
                 handlerLock.withLockVoid {
-                    _handler2 = newValue
+                    _handler = newValue
                 }
             }
         }
-        private var handler: BodyStreamHandler?
         private let buffer: NIOLockedValueBox<[(BodyStreamResult, EventLoopPromise<Void>?)]>
         private let allocator: ByteBufferAllocator
 
@@ -52,13 +44,10 @@ extension Request {
             self.isClosedBox = .init(false)
             self.buffer = .init([])
             self.allocator = byteBufferAllocator
-//            self.handler2 = .init(nil)
             self.handlerLock = .init()
         }
 
         func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-//            self.handler2.withLockedValue { $0 = handler }
-            self.handler2 = handler
             self.handler = handler
             for (result, promise) in self.buffer.withLockedValue({ $0 }) {
                 handler(result, promise)
@@ -84,14 +73,11 @@ extension Request {
             case .buffer: break
             }
             
-//            if let handler = self.handler.withLockedValue({ $0 }) {
             if let handler = self.handler {
                 handler(chunk, promise)
                 // remove reference to handler
                 switch chunk {
                 case .end, .error:
-//                    self.handler2.withLockedValue { $0 = nil }
-                    self.handler2 = nil
                     self.handler = nil
                 default: break
                 }
