@@ -244,6 +244,7 @@ public func routes(_ app: Application) throws {
         return String(buffer: body)
     }
 
+    @Sendable
     func asyncRouteTester(_ req: Request) async throws -> String {
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
@@ -255,6 +256,7 @@ public func routes(_ app: Application) throws {
     
     asyncRoutes.get("content", use: asyncContentTester)
     
+    @Sendable
     func asyncContentTester(_ req: Request) async throws -> Creds {
         return Creds(email: "name", password: "password")
     }
@@ -268,6 +270,7 @@ public func routes(_ app: Application) throws {
         return [cred1]
     }
     
+    @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
         "Hello World"
     }
