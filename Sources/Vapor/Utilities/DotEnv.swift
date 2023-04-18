@@ -172,10 +172,11 @@ public struct DotEnvFile: Sendable {
         on eventLoop: EventLoop
     ) -> EventLoopFuture<DotEnvFile> {
         return fileio.openFile(path: path, eventLoop: eventLoop).flatMap { arg -> EventLoopFuture<ByteBuffer> in
+            let fileHandleWrapper = FileHandleWrapper(value: arg.0)
             return fileio.read(fileRegion: arg.1, allocator: .init(), eventLoop: eventLoop)
                 .flatMapThrowing
             { buffer in
-                try arg.0.close()
+                try fileHandleWrapper.value.close()
                 return buffer
             }
         }.map { buffer in

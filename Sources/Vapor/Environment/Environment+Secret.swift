@@ -49,9 +49,10 @@ extension Environment {
         return fileIO
             .openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
+                let handleWrapper = FileHandleWrapper(value: handle)
                 return fileIO
                     .read(fileRegion: region, allocator: .init(), eventLoop: eventLoop)
-                    .always { _ in try? handle.close() }
+                    .always { _ in try? handleWrapper.value.close() }
             }
             .map { buffer -> String in
                 return buffer

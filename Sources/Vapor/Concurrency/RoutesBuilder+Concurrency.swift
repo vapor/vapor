@@ -6,7 +6,7 @@ extension RoutesBuilder {
     @discardableResult
     public func get<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -16,7 +16,7 @@ extension RoutesBuilder {
     @discardableResult
     public func get<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -26,7 +26,7 @@ extension RoutesBuilder {
     @discardableResult
     public func post<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -36,7 +36,7 @@ extension RoutesBuilder {
     @discardableResult
     public func post<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -46,7 +46,7 @@ extension RoutesBuilder {
     @discardableResult
     public func patch<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -56,7 +56,7 @@ extension RoutesBuilder {
     @discardableResult
     public func patch<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -66,7 +66,7 @@ extension RoutesBuilder {
     @discardableResult
     public func put<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -76,7 +76,7 @@ extension RoutesBuilder {
     @discardableResult
     public func put<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -86,7 +86,7 @@ extension RoutesBuilder {
     @discardableResult
     public func delete<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -96,7 +96,7 @@ extension RoutesBuilder {
     @discardableResult
     public func delete<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -108,7 +108,7 @@ extension RoutesBuilder {
         _ method: HTTPMethod,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {
@@ -122,7 +122,7 @@ extension RoutesBuilder {
         _ method: HTTPMethod,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request) async throws -> Response
+        use closure: @Sendable @escaping (Request) async throws -> Response
     ) -> Route
         where Response: AsyncResponseEncodable
     {

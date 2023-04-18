@@ -30,7 +30,7 @@ extension RoutesBuilder {
     @discardableResult
     public func get<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -40,7 +40,7 @@ extension RoutesBuilder {
     @discardableResult
     public func get<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -50,7 +50,7 @@ extension RoutesBuilder {
     @discardableResult
     public func post<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -60,7 +60,7 @@ extension RoutesBuilder {
     @discardableResult
     public func post<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -70,7 +70,7 @@ extension RoutesBuilder {
     @discardableResult
     public func patch<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -80,7 +80,7 @@ extension RoutesBuilder {
     @discardableResult
     public func patch<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -90,7 +90,7 @@ extension RoutesBuilder {
     @discardableResult
     public func put<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -100,7 +100,7 @@ extension RoutesBuilder {
     @discardableResult
     public func put<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -110,7 +110,7 @@ extension RoutesBuilder {
     @discardableResult
     public func delete<Response>(
         _ path: PathComponent...,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -120,7 +120,7 @@ extension RoutesBuilder {
     @discardableResult
     public func delete<Response>(
         _ path: [PathComponent],
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -132,7 +132,7 @@ extension RoutesBuilder {
         _ method: HTTPMethod,
         _ path: PathComponent...,
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {
@@ -146,7 +146,7 @@ extension RoutesBuilder {
         _ method: HTTPMethod,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
-        use closure: @escaping (Request) throws -> Response
+        use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
         where Response: ResponseEncodable
     {

@@ -8,14 +8,18 @@ final class EndpointCacheTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        var current = 0
+        let current = NumberHolder()
+        class NumberHolder {
+            var number = 0
+        }
+        
         struct Test: Content {
             let number: Int
         }
 
         app.get("number") { req -> Test in
-            defer { current += 1 }
-            return Test(number: current)
+            defer { current.number += 1 }
+            return Test(number: current.number)
         }
 
         app.clients.use(.responder)
@@ -43,7 +47,10 @@ final class EndpointCacheTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        var current = 0
+        let current = NumberHolder()
+        class NumberHolder {
+            var number = 0
+        }
         struct Test: Content {
             let number: Int
         }
@@ -51,9 +58,9 @@ final class EndpointCacheTests: XCTestCase {
         app.clients.use(.responder)
 
         app.get("number") { req -> Response in
-            defer { current += 1 }
+            defer { current.number += 1 }
             let res = Response()
-            try res.content.encode(Test(number: current))
+            try res.content.encode(Test(number: current.number))
             res.headers.cacheControl = .init(maxAge: 1)
             return res
         }
