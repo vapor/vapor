@@ -3,6 +3,7 @@ import NIOCore
 import NIOHTTP1
 import NIOPosix
 import Logging
+import NIOConcurrencyHelpers
 
 extension Request {
     public var fileio: FileIO {
@@ -38,7 +39,7 @@ extension Request {
 ///     }
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
-public struct FileIO {
+public struct FileIO: Sendable {
     /// Wrapped non-blocking file io from SwiftNIO
     private let io: NonBlockingFileIO
 
@@ -66,12 +67,16 @@ public struct FileIO {
     ///     - path: Path to file on the disk.
     /// - returns: `Future` containing the file data.
     public func collectFile(at path: String) -> EventLoopFuture<ByteBuffer> {
-        var data = self.allocator.buffer(capacity: 0)
+        let dataWrapper: NIOLockedValueBox<ByteBuffer> = .init(self.allocator.buffer(capacity: 0))
         return self.readFile(at: path) { new in
             var new = new
-            data.writeBuffer(&new)
+            _ = dataWrapper.withLockedValue {
+                $0.writeBuffer(&new)
+            }
             return self.request.eventLoop.makeSucceededFuture(())
-        }.map { data }
+        }.map {
+            dataWrapper.withLockedValue { $0 }
+        }
     }
 
     /// Reads the contents of a file at the supplied path in chunks.
@@ -88,7 +93,7 @@ public struct FileIO {
     public func readFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
-        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+        onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
@@ -125,7 +130,7 @@ public struct FileIO {
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
-        onCompleted: @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @Sendable @escaping (Result<Void, Error>) -> () = { _ in }
     ) -> Response {
         // Get file attributes for this file.
         guard
@@ -226,7 +231,7 @@ public struct FileIO {
         fromOffset offset: Int64,
         byteCount: Int,
         chunkSize: Int,
-        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+        onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
         do {
             let fd = try NIOFileHandle(path: path)

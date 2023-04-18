@@ -2,6 +2,7 @@ import NIOCore
 import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
+import NIOConcurrencyHelpers
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -89,23 +90,27 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     }
 }
 
-private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChannelHandler {
+private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
     typealias InboundIn = ByteBuffer
     
-    var buffer: [ByteBuffer]
+    private let buffer: NIOLockedValueBox<[ByteBuffer]>
     
     init() {
-        self.buffer = []
+        self.buffer = .init([])
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let data = self.unwrapInboundIn(data)
-        self.buffer.append(data)
+        self.buffer.withLockedValue {
+            $0.append(data)
+        }
     }
     
     func handlerRemoved(context: ChannelHandlerContext) {
-        for data in self.buffer {
-            context.fireChannelRead(NIOAny(data))
+        self.buffer.withLockedValue {
+            for data in $0 {
+                context.fireChannelRead(NIOAny(data))
+            }
         }
     }
 }
@@ -118,10 +123,10 @@ public protocol Upgrader {
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
-    var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
-    var onUpgrade: (WebSocket) -> ()
+    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
+    var onUpgrade: @Sendable (WebSocket) -> ()
     
-    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
+    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade

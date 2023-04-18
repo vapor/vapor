@@ -39,7 +39,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
     }
 }
 
-public protocol BodyStreamWriter {
+public protocol BodyStreamWriter: Sendable {
     var eventLoop: EventLoop { get }
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?)
 }
