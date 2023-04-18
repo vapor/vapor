@@ -8,7 +8,7 @@ import NIOConcurrencyHelpers
 /// Represents an HTTP request in an application.
 // All mutable properties are put behind locks where applicable so this
 // can be Sendable
-public final class Request: @unchecked Sendable, CustomStringConvertible {
+public final class Request: Sendable, CustomStringConvertible {
     public let application: Application
 
     /// The HTTP method for this request.
@@ -17,42 +17,30 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     ///
     public var method: HTTPMethod {
         get {
-            concurrencyLock.withLock {
-                return _method
-            }
+            return _method.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _method = newValue
-            }
+            _method.withLockedValue { $0 = newValue }
         }
     }
     
     /// The URL used on this request.
     public var url: URI {
         get {
-            concurrencyLock.withLock {
-                return _url
-            }
+            return _url.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _url = newValue
-            }
+            _url.withLockedValue { $0 = newValue }
         }
     }
     
     /// The version for this HTTP request.
     public var version: HTTPVersion {
         get {
-            concurrencyLock.withLock {
-                return _version
-            }
+            return _version.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _version = newValue
-            }
+            _version.withLockedValue { $0 = newValue }
         }
     }
     
@@ -61,14 +49,10 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            concurrencyLock.withLock {
-                return _headers
-            }
+            return _headers.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _headers = newValue
-            }
+            _headers.withLockedValue { $0 = newValue }
         }
     }
     
@@ -84,14 +68,10 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     ///
     public var route: Route? {
         get {
-            concurrencyLock.withLock {
-                return _route
-            }
+            return _route.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _route = newValue
-            }
+            _route.withLockedValue { $0 = newValue }
         }
     }
 
@@ -197,14 +177,10 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger {
         get {
-            concurrencyLock.withLock {
-                return _logger
-            }
+            return _logger.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _logger = newValue
-            }
+            _logger.withLockedValue { $0 = newValue }
         }
     }
     
@@ -220,14 +196,10 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     
     internal var bodyStorage: BodyStorage {
         get {
-            concurrencyLock.withLock {
-                return _bodyStorage
-            }
+            return _bodyStorage.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _bodyStorage = newValue
-            }
+            _bodyStorage.withLockedValue { $0 = newValue }
         }
     }
     
@@ -265,28 +237,20 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
     public var parameters: Parameters {
         get {
-            concurrencyLock.withLock {
-                return _parameters
-            }
+            return _parameters.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _parameters = newValue
-            }
+            _parameters.withLockedValue { $0 = newValue }
         }
     }
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
         get {
-            concurrencyLock.withLock {
-                return _storage
-            }
+            return _storage.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _storage = newValue
-            }
+            _storage.withLockedValue { $0 = newValue }
         }
     }
 
@@ -295,18 +259,15 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
     // This is only set when the request is constructed so doesn't need a lock
     internal var isKeepAlive: Bool
     
-    // Sendable helpers
-    private let concurrencyLock: NIOLock
-    
-    private var _method: HTTPMethod
-    private var _url: URI
-    private var _version: HTTPVersion
-    private var _headers: HTTPHeaders
-    private var _route: Route?
-    private var _logger: Logger
-    private var _bodyStorage: BodyStorage
-    private var _parameters: Parameters
-    private var _storage: Storage
+    private let _method: NIOLockedValueBox<HTTPMethod>
+    private let _url: NIOLockedValueBox<URI>
+    private let _version: NIOLockedValueBox<HTTPVersion>
+    private let _headers: NIOLockedValueBox<HTTPHeaders>
+    private let _route: NIOLockedValueBox<Route?>
+    private let _logger: NIOLockedValueBox<Logger>
+    private let _bodyStorage: NIOLockedValueBox<BodyStorage>
+    private let _parameters: NIOLockedValueBox<Parameters>
+    private let _storage: NIOLockedValueBox<Storage>
     
     // MARK: - Initialisers
     
@@ -351,26 +312,26 @@ public final class Request: @unchecked Sendable, CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        self.concurrencyLock = .init()
-        
         self.id = UUID().uuidString
         self.application = application
-        self._method = method
-        self._url = url
-        self._version = version
-        self._headers = headers
+        self._method = .init(method)
+        self._url = .init(url)
+        self._version = .init(version)
+        self._headers = .init(headers)
         if let body = collectedBody {
-            self._bodyStorage = .collected(body)
+            self._bodyStorage = .init(.collected(body))
         } else {
-            self._bodyStorage = .none
+            self._bodyStorage = .init(.none)
         }
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
-        self._parameters = .init()
-        self._storage = .init()
+        self._parameters = .init(.init())
+        self._storage = .init(.init())
         self.isKeepAlive = true
-        self._logger = logger
-        self._logger[metadataKey: "request-id"] = .string(id)
+        self._logger = .init(logger)
         self.byteBufferAllocator = byteBufferAllocator
+        self._route = .init(nil)
+        
+        self.logger[metadataKey: "request-id"] = .string(id)
     }
 }
