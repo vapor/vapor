@@ -1,7 +1,7 @@
 import NIOCore
 
 // TODO: Remove these deprecated methods along with ServerStartError in the major release.
-public protocol Server: Sendable {
+public protocol Server {
     var onShutdown: EventLoopFuture<Void> { get }
     
     /// Start the server with the specified address.

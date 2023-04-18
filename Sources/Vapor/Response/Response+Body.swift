@@ -1,7 +1,6 @@
 import Foundation
 import NIOCore
 @preconcurrency import struct Dispatch.DispatchData
-import NIOConcurrencyHelpers
 
 extension Response {
     struct BodyStream: Sendable {
@@ -175,14 +174,13 @@ extension Response {
     }
 }
 
-// WARNING: This has reference semantics because of the use of NIOLockedValueBox
-private struct ResponseBodyCollector: BodyStreamWriter, Sendable {
-    let buffer: NIOLockedValueBox<ByteBuffer>
-    let eventLoop: EventLoop
-    let promise: EventLoopPromise<ByteBuffer>
+private final class ResponseBodyCollector: BodyStreamWriter {
+    var buffer: ByteBuffer
+    var eventLoop: EventLoop
+    var promise: EventLoopPromise<ByteBuffer>
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
-        self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
+        self.buffer = byteBufferAllocator.buffer(capacity: 0)
         self.eventLoop = eventLoop
         self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
     }
@@ -190,11 +188,11 @@ private struct ResponseBodyCollector: BodyStreamWriter, Sendable {
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(var buffer):
-            _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
+            self.buffer.writeBuffer(&buffer)
         case .error(let error):
             self.promise.fail(error)
         case .end:
-            self.promise.succeed(self.buffer.withLockedValue { $0 })
+            self.promise.succeed(self.buffer)
         }
         promise?.succeed(())
     }

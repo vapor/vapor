@@ -1,19 +1,18 @@
 import NIOCore
 import Logging
-import NIOConcurrencyHelpers
 
-final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
+final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
     
     let responder: Responder
     let logger: Logger
-    let isShuttingDown: NIOLockedValueBox<Bool>
+    var isShuttingDown: Bool
     
     init(responder: Responder, logger: Logger) {
         self.responder = responder
         self.logger = logger
-        self.isShuttingDown = .init(false)
+        self.isShuttingDown = false
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
@@ -40,8 +39,8 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler, S
         case 2:
             context.write(self.wrapOutboundOut(response), promise: nil)
         default:
-            let keepAlive = !self.isShuttingDown.withLockedValue({ $0 }) && request.isKeepAlive.withLockedValue { $0 }
-            if self.isShuttingDown.withLockedValue({ $0 }) {
+            let keepAlive = !self.isShuttingDown && request.isKeepAlive.withLockedValue { $0 }
+            if self.isShuttingDown {
                 self.logger.debug("In-flight request has completed")
             }
             response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
@@ -66,7 +65,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler, S
         switch event {
         case is ChannelShouldQuiesceEvent:
             self.logger.trace("HTTP handler will no longer respect keep-alive")
-            self.isShuttingDown.withLockedValue { $0 = true }
+            self.isShuttingDown = true
         default:
             self.logger.trace("Unhandled user event: \(event)")
         }
