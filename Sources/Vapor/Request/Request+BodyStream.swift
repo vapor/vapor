@@ -6,14 +6,16 @@ extension Request {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
-            self.handler != nil
+            self.handler.withLockedValue { $0 } != nil
         }
 
+        // Ensure this can only be mutated from this class
         var isClosed: Bool {
             isClosedBox.withLockedValue { $0 }
         }
         private let isClosedBox: NIOLockedValueBox<Bool>
-        private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+        typealias BodyStreamHandler = (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())
+        private let handler: NIOLockedValueBox<BodyStreamHandler?>
         private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         private let allocator: ByteBufferAllocator
 
@@ -22,10 +24,11 @@ extension Request {
             self.isClosedBox = .init(false)
             self.buffer = []
             self.allocator = byteBufferAllocator
+            self.handler = .init(nil)
         }
 
-        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handler = handler
+        func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+            self.handler.withLockedValue { $0 = handler }
             for (result, promise) in self.buffer {
                 handler(result, promise)
             }
@@ -50,12 +53,12 @@ extension Request {
             case .buffer: break
             }
             
-            if let handler = self.handler {
+            if let handler = self.handler.withLockedValue({ $0 }) {
                 handler(chunk, promise)
                 // remove reference to handler
                 switch chunk {
                 case .end, .error:
-                    self.handler = nil
+                    self.handler.withLockedValue { $0 = nil }
                 default: break
                 }
             } else {
