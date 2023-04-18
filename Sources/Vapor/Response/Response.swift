@@ -9,35 +9,27 @@ import NIOConcurrencyHelpers
 ///
 /// See `HTTPClient` and `HTTPServer`.
 // This is Sendable because all mutable properties are behind locks
-public final class Response: @unchecked Sendable, CustomStringConvertible {
+public final class Response: Sendable, CustomStringConvertible {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
     /// The HTTP version that corresponds to this response.
     public var version: HTTPVersion {
         get {
-            concurrencyLock.withLock {
-                return _version
-            }
+            return _version.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLock {
-                _version = newValue
-            }
+            _version.withLockedValue { $0 = newValue }
         }
     }
     
     /// The HTTP response status.
     public var status: HTTPResponseStatus {
         get {
-            concurrencyLock.withLock {
-                return _status
-            }
+            return _status.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _status = newValue
-            }
+            _status.withLockedValue { $0 = newValue }
         }
     }
     
@@ -46,14 +38,10 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            concurrencyLock.withLock {
-                return _headers
-            }
+            return _headers.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _headers = newValue
-            }
+            _headers.withLockedValue { $0 = newValue }
         }
     }
     
@@ -65,28 +53,21 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// represents the `Body`.
     public var body: Body {
         get {
-            concurrencyLock.withLock {
-                return _body
-            }
+            return _body.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _body = newValue
-            }
+            _body.withLockedValue { $0 = newValue }
+            self.headers.updateContentLength(newValue.count)
         }
     }
 
     // If `true`, don't serialize the body.
     var forHeadRequest: Bool {
         get {
-            concurrencyLock.withLock {
-                return _forHeadRequest
-            }
+            return _forHeadRequest.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _forHeadRequest = newValue
-            }
+            _forHeadRequest.withLockedValue { $0 = newValue }
         }
     }
     
@@ -94,27 +75,19 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
     /// currently, websocket upgrades are the only defined case.
     public var upgrader: Upgrader? {
         get {
-            concurrencyLock.withLock {
-                return _upgrader
-            }
+            return _upgrader.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _upgrader = newValue
-            }
+            _upgrader.withLockedValue { $0 = newValue }
         }
     }
 
     public var storage: Storage {
         get {
-            concurrencyLock.withLock {
-                return _storage
-            }
+            return _storage.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _storage = newValue
-            }
+            _storage.withLockedValue { $0 = newValue }
         }
     }
     
@@ -187,17 +160,13 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
         }
     }
     
-    private let concurrencyLock: NIOLock
-    
-    private var _version: HTTPVersion
-    private var _status: HTTPStatus
-    private var _headers: HTTPHeaders
-    private var _body: Body {
-        didSet { self._headers.updateContentLength(self._body.count) }
-    }
-    private var _forHeadRequest: Bool
-    private var _upgrader: Upgrader?
-    private var _storage: Storage
+    private let _version: NIOLockedValueBox<HTTPVersion>
+    private let _status: NIOLockedValueBox<HTTPStatus>
+    private let _headers: NIOLockedValueBox<HTTPHeaders>
+    private let _body: NIOLockedValueBox<Body>
+    private let _forHeadRequest: NIOLockedValueBox<Bool>
+    private let _upgrader: NIOLockedValueBox<Upgrader?>
+    private let _storage: NIOLockedValueBox<Storage>
     
     // MARK: Init
     
@@ -236,14 +205,13 @@ public final class Response: @unchecked Sendable, CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self.concurrencyLock = .init()
-        
-        self._status = status
-        self._version = version
-        self._headers = headers
-        self._body = body
-        self._storage = .init()
-        self._forHeadRequest = false
+        self._status = .init(status)
+        self._version = .init(version)
+        self._headers = .init(headers)
+        self._body = .init(body)
+        self._storage = .init(.init())
+        self._forHeadRequest = .init(false)
+        self._upgrader = .init(nil)
     }
 }
 

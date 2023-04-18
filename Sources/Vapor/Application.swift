@@ -106,9 +106,7 @@ public final class Application: Sendable {
         case shared(EventLoopGroup)
         case createNew
     }
-    
-    private let concurrencyLock: NIOLock
-    
+        
     private let _environment: NIOLockedValueBox<Environment>
     private let _storage: NIOLockedValueBox<Storage>
     private let _didShutdown: NIOLockedValueBox<Bool>
@@ -131,9 +129,6 @@ public final class Application: Sendable {
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
         self._locks = .init(.init())
-        
-        self.concurrencyLock = .init()
-        
         self._didShutdown = .init(false)
         let logger = Logger(label: "codes.vapor.application")
         self._logger = .init(logger)
