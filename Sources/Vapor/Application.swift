@@ -10,34 +10,24 @@ import NIOPosix
 public final class Application: @unchecked Sendable {
     public var environment: Environment {
         get {
-            concurrencyLock.withLock {
-                return _environment
-            }
+            _environment.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _environment = newValue
-            }
+            _environment.withLockedValue { $0 = newValue }
         }
     }
     
     public var storage: Storage {
         get {
-            concurrencyLock.withLock {
-                return _storage
-            }
+            _storage.withLockedValue { $0 }
         }
         set {
-            concurrencyLock.withLockVoid {
-                _storage = newValue
-            }
+            _storage.withLockedValue { $0 = newValue }
         }
     }
     
     public var didShutdown: Bool {
-        concurrencyLock.withLock {
-            return _didShutdown
-        }
+        _didShutdown.withLockedValue { $0 }
     }
     
     public var logger: Logger {
@@ -132,9 +122,9 @@ public final class Application: @unchecked Sendable {
     
     private let concurrencyLock: NIOLock
     
-    private var _environment: Environment
-    private var _storage: Storage
-    private var _didShutdown: Bool
+    private let _environment: NIOLockedValueBox<Environment>
+    private let _storage: NIOLockedValueBox<Storage>
+    private let _didShutdown: NIOLockedValueBox<Bool>
     private var _logger: Logger
     private var _isBooted: Bool
     private var _lifecycle: Lifecycle
@@ -145,7 +135,7 @@ public final class Application: @unchecked Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
         Backtrace.install()
-        self._environment = environment
+        self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .shared(let group):
@@ -157,9 +147,9 @@ public final class Application: @unchecked Sendable {
         
         self.concurrencyLock = .init()
         
-        self._didShutdown = false
+        self._didShutdown = .init(false)
         self._logger = .init(label: "codes.vapor.application")
-        self._storage = .init(logger: self._logger)
+        self._storage = .init(.init(logger: self._logger))
         self._lifecycle = .init()
         self._isBooted = false
         self.core.initialize()
@@ -239,13 +229,13 @@ public final class Application: @unchecked Sendable {
             }
         }
 
-        self._didShutdown = true
+        self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
     }
     
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
-        if !self._didShutdown {
+        if !self.didShutdown {
             self.logger.error("Application.shutdown() was not called before Application deinitialized.")
             self.shutdown()
         }
