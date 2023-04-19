@@ -80,7 +80,7 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws {
         guard let url = URL(string: url) else {
             throw WebSocketClient.Error.invalidURL
@@ -99,7 +99,7 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @escaping @Sendable (WebSocket) -> ()
     ) async throws  {
         let scheme = url.scheme ?? "ws"
         return try await self.connect(
@@ -122,7 +122,7 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @escaping @Sendable (WebSocket) -> ()
     ) async throws  {
         return try await WebSocketClient(
             eventLoopGroupProvider: .shared(eventLoopGroup),
