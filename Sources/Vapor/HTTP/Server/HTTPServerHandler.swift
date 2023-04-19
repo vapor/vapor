@@ -2,7 +2,7 @@ import NIOCore
 import Logging
 import NIOConcurrencyHelpers
 
-final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
+final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
     
