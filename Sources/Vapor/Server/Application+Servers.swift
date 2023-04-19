@@ -26,7 +26,7 @@ extension Application {
             typealias Value = ServeCommand
         }
 
-        struct Storage: Sendable {
+        final class Storage: Sendable {
             let makeServer: NIOLockedValueBox<(@Sendable (Application) -> Server)?>
             init() {
                 self.makeServer = .init(nil)
