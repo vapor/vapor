@@ -30,7 +30,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
         let boolFlags: Bool
         let arraySeparators: [Character]
         let dateDecodingStrategy: DateDecodingStrategy
-        let userInfo: [CodingUserInfoKey: Any]
+        let userInfo: [CodingUserInfoKey: Sendable]
         
         /// Creates a new `URLEncodedFormCodingConfiguration`.
         /// - parameters:
@@ -45,7 +45,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
             dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970,
-            userInfo: [CodingUserInfoKey: Any] = [:]
+            userInfo: [CodingUserInfoKey: Sendable] = [:]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
@@ -81,7 +81,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
     }
     
     /// ``ContentDecoder`` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
         where D: Decodable
     {
         guard headers.contentType == .urlEncodedForm else {
@@ -110,7 +110,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
     ///   - decodable: Type to decode to
     ///   - url: ``URI`` to read the query string from
     ///   - userInfo: Overrides the default coder user info
-    public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D where D : Decodable {
+    public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D where D : Decodable {
         try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
     }
 
@@ -126,7 +126,7 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
     ///   - userInfo: Overrides the default coder user info
     /// - returns: An instance of the `Decodable` type (``D``).
     /// - throws: Any error that may occur while attempting to decode the specified type.
-    public func decode<D>(_ decodable: D.Type, from string: String, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> D where D : Decodable {
+    public func decode<D>(_ decodable: D.Type, from string: String, userInfo: [CodingUserInfoKey: Sendable] = [:]) throws -> D where D : Decodable {
         let parsedData = try self.parser.parse(string)
         let configuration: URLEncodedFormDecoder.Configuration
         if !userInfo.isEmpty { // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
@@ -140,8 +140,6 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
 }
 
 // MARK: Private
-
-#warning("Should this be Sendable?")
 
 /// Private `Decoder`. See `URLEncodedFormDecoder` for public decoder.
 private struct _Decoder: Decoder {
