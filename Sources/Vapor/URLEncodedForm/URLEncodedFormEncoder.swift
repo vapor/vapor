@@ -43,7 +43,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
         /// Specified array encoding.
         public var arrayEncoding: ArrayEncoding
         public var dateEncodingStrategy: DateEncodingStrategy
-        public var userInfo: [CodingUserInfoKey: Sendable]
+        public var userInfo: [CodingUserInfoKey: Any]
 
         /// Creates a new `Configuration`.
         ///
@@ -53,7 +53,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
         public init(
             arrayEncoding: ArrayEncoding = .bracket,
             dateEncodingStrategy: DateEncodingStrategy = .secondsSince1970,
-            userInfo: [CodingUserInfoKey: Sendable] = [:]
+            userInfo: [CodingUserInfoKey: Any] = [:]
         ) {
             self.arrayEncoding = arrayEncoding
             self.dateEncodingStrategy = dateEncodingStrategy
@@ -81,7 +81,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     }
 
     /// ``ContentEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
         where E: Encodable
     {
         headers.contentType = .urlEncodedForm
@@ -96,7 +96,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     }
     
     /// ``URLQueryEncoder`` conformance.
-    public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Sendable]) throws
+    public func encode<E>(_ encodable: E, to url: inout URI, userInfo: [CodingUserInfoKey: Any]) throws
         where E: Encodable
     {
         url.query = try self.encode(encodable, userInfo: userInfo)
@@ -113,7 +113,7 @@ public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
     ///   - userInfo: Overrides the default coder user info.
     /// - Returns: Encoded ``String``
     /// - Throws: Any error that may occur while attempting to encode the specified type.
-    public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: Sendable] = [:]) throws -> String
+    public func encode<E>(_ encodable: E, userInfo: [CodingUserInfoKey: Any] = [:]) throws -> String
         where E: Encodable
     {
         var configuration = self.configuration  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
