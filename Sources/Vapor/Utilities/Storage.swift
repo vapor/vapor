@@ -4,6 +4,7 @@ import NIOConcurrencyHelpers
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
+/// This type has reference semantics with the use of ``NIOLockedValueBox``
 public struct Storage: Sendable {
     /// The internal storage area.
     private let storage: NIOLockedValueBox<[ObjectIdentifier: AnyStorageValue]>
@@ -31,7 +32,7 @@ public struct Storage: Sendable {
     }
 
     /// Delete all values from the container. Does _not_ invoke shutdown closures.
-    public mutating func clear() {
+    public func clear() {
         self.storage.withLockedValue { $0 = [:] }
     }
 
@@ -54,7 +55,7 @@ public struct Storage: Sendable {
     public subscript<Key>(_ key: Key.Type, default defaultValue: @autoclosure () -> Key.Value) -> Key.Value
         where Key: StorageKey
     {
-        mutating get {
+        nonmutating get {
             if let existing = self[key] { return existing }
             let new = defaultValue()
             self.set(Key.self, to: new)
@@ -82,7 +83,7 @@ public struct Storage: Sendable {
     /// Set or remove a value for a given key, optionally providing a shutdown closure for the value.
     ///
     /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
-    public mutating func set<Key>(
+    public nonmutating func set<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
         onShutdown: (@Sendable (Key.Value) throws -> ())? = nil
@@ -90,19 +91,21 @@ public struct Storage: Sendable {
         where Key: StorageKey
     {
         let key = ObjectIdentifier(Key.self)
-        if let value = value {
-            self.storage.withLockedValue { $0[key] = Value(value: value, onShutdown: onShutdown) }
-        } else if let existing = self.storage.withLockedValue({ $0[key] }) {
-            self.storage.withLockedValue { $0[key] = nil }
-            existing.shutdown(logger: self.logger)
+        self.storage.withLockedValue { storageBox in
+            if let value = value {
+                storageBox[key] = Value(value: value, onShutdown: onShutdown)
+            } else if let existing = storageBox[key] {
+                storageBox[key] = nil
+                existing.shutdown(logger: self.logger)
+            }
         }
     }
 
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
     public func shutdown() {
-        self.storage.withLockedValue { storage in
-            storage.values.forEach {
+        self.storage.withLockedValue { storageBox in
+            storageBox.values.forEach {
                 $0.shutdown(logger: self.logger)
             }
         }
