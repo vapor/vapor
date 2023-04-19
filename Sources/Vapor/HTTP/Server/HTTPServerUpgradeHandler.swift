@@ -53,16 +53,16 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         case .pending(let req, let buffer):
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
-                let protocolUpgrader = upgrader.applyUpgrade(req: req, res: res)
+                let protocolUpgrader = NIOLoopBound(upgrader.applyUpgrade(req: req, res: res), eventLoop: context.eventLoop)
 
-                var head = HTTPRequestHead(
+                let head = HTTPRequestHead(
                     version: req.version,
                     method: req.method,
-                    uri: req.url.string
+                    uri: req.url.string,
+                    headers: req.headers
                 )
-                head.headers = req.headers
 
-                protocolUpgrader.buildUpgradeResponse(
+                protocolUpgrader.value.buildUpgradeResponse(
                     channel: context.channel,
                     upgradeRequest: head,
                     initialResponseHeaders: [:]
@@ -75,7 +75,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                         return contextBox.value.pipeline.removeHandler(handler)
                     }, on: contextBox.value.eventLoop)
                 }.flatMap {
-                    return protocolUpgrader.upgrade(context: contextBox.value, upgradeRequest: head)
+                    return protocolUpgrader.value.upgrade(context: contextBox.value, upgradeRequest: head)
                 }.flatMap {
                     return contextBox.value.pipeline.removeHandler(buffer)
                 }.cascadeFailure(to: promise)

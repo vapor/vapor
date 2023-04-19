@@ -1,4 +1,3 @@
-import Foundation
 import ConsoleKit
 @preconcurrency import protocol Dispatch.DispatchSourceSignal
 import NIOConcurrencyHelpers
