@@ -6,7 +6,7 @@ extension Application {
     }
 
     public var server: Server {
-        let closure = self.servers.storage.makeServer.withLockedValue { $0 }
+        let closure = self.servers.storage.makeServer
         guard let makeServer = closure else {
             fatalError("No server configured. Configure with app.servers.use(...)")
         }
@@ -27,9 +27,9 @@ extension Application {
         }
 
         final class Storage: Sendable {
-            let makeServer: NIOLockedValueBox<(@Sendable (Application) -> Server)?>
+            var makeServer: (@Sendable (Application) -> Server)?
             init() {
-                self.makeServer = .init(nil)
+//                self.makeServer = .init(nil)
             }
         }
 
@@ -46,7 +46,8 @@ extension Application {
         }
 
         public func use(_ makeServer: @Sendable @escaping (Application) -> (Server)) {
-            self.storage.makeServer.withLockedValue { $0 = makeServer }
+//            self.storage.makeServer.withLockedValue { $0 = makeServer }
+            self.storage.makeServer = makeServer
         }
 
         public var command: ServeCommand {
