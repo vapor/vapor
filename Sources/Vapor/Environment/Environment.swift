@@ -1,6 +1,5 @@
 import Foundation
-#warning("Fix")
-@preconcurrency import ConsoleKit
+import ConsoleKit
 
 /// The environment the application is running in, i.e., production, dev, etc. All `Container`s will have
 /// an `Environment` that can be used to dynamically register and configure services.
@@ -35,7 +34,8 @@ public struct Environment: Sendable, Equatable {
     public static func detect(from commandInput: inout CommandInput) throws -> Environment {
         self.sanitize(commandInput: &commandInput)
         
-        struct EnvironmentSignature: Sendable, CommandSignature {
+        // This needs to be unchecked because of the property wrappers
+        struct EnvironmentSignature: @unchecked Sendable, CommandSignature {
             @Option(name: "env", short: "e", help: "Change the application's environment")
             var environment: String?
         }

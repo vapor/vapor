@@ -1,7 +1,6 @@
 import NIOCore
 import NIOHTTP1
-#warning("Fix")
-@preconcurrency import WebSocketKit
+import WebSocketKit
 import RoutingKit
 import Foundation
 
@@ -23,6 +22,7 @@ extension Request {
                 return promise.futureResult
             },
             onUpgrade: { request, socket in
+                
                 Task {
                     await onUpgrade(request, socket)
                 }

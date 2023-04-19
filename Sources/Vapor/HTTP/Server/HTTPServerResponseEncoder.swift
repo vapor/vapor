@@ -82,7 +82,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
 }
 
 private final class ChannelResponseBodyStream: BodyStreamWriter {
-    let context: ChannelHandlerContext
+    let contextBox: NIOLoopBound<ChannelHandlerContext>
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
     let count: Int?
@@ -90,7 +90,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     let isComplete: NIOLockedValueBox<Bool>
 
     var eventLoop: EventLoop {
-        return self.context.eventLoop
+        return self.contextBox.value.eventLoop
     }
 
     enum Error: Swift.Error, Sendable {
@@ -104,7 +104,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         promise: EventLoopPromise<Void>?,
         count: Int?
     ) {
-        self.context = context
+        self.contextBox = .init(context, eventLoop: context.eventLoop)
         self.handler = handler
         self.promise = promise
         self.count = count
@@ -115,7 +115,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
+            self.contextBox.value.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             self.currentCount.withLockedValue {
                 $0 += buffer.readableBytes
                 if let count = self.count, $0 > count {
@@ -131,13 +131,13 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
                     promise?.fail(Error.notEnoughBytes)
                 }
             }
-            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.contextBox.value.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.succeed(())
         case .error(let error):
             self.isComplete.withLockedValue { $0 = true }
-            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.contextBox.value.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
         }
     }

@@ -156,6 +156,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         _ result: HTTPBodyStreamState.Result,
         stream: Request.BodyStream
     ) {
+        let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
         switch result.action {
         case .nothing: break
         case .write(let buffer):
@@ -163,14 +164,14 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 switch writeResult {
                 case .failure(let error):
                     self.handleBodyStreamStateResult(
-                        context: context,
+                        context: contextBox.value,
                         self.bodyStreamState.withLockedValue { $0.didError(error) },
                         stream: stream
                     )
                 case .success: break
                 }
                 self.handleBodyStreamStateResult(
-                    context: context,
+                    context: contextBox.value,
                     self.bodyStreamState.withLockedValue { $0.didWrite() },
                     stream: stream
                 )
