@@ -104,10 +104,9 @@ public struct Storage: Sendable {
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
     public func shutdown() {
-        self.storage.withLockedValue { storageBox in
-            storageBox.values.forEach {
-                $0.shutdown(logger: self.logger)
-            }
+        let values = self.storage.withLockedValue { $0.values }
+        values.forEach {
+            $0.shutdown(logger: self.logger)
         }
     }
 }
