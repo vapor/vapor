@@ -14,9 +14,9 @@ import NIOHTTP1
 ///
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
-public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
+public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     /// Used to capture URLForm Coding Configuration used for decoding
-    public struct Configuration: Sendable {
+    public struct Configuration {
         /// Supported date formats
         public enum DateDecodingStrategy: Sendable {
             /// Seconds since 1 January 1970 00:00:00 UTC (Unix Timestamp)
@@ -140,8 +140,6 @@ public struct URLEncodedFormDecoder: Sendable, ContentDecoder, URLQueryDecoder {
 }
 
 // MARK: Private
-
-#warning("Should this be Sendable?")
 
 /// Private `Decoder`. See `URLEncodedFormDecoder` for public decoder.
 private struct _Decoder: Decoder {

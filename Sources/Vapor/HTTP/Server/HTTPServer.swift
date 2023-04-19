@@ -19,7 +19,7 @@ public final class HTTPServer: Server {
     ///     let serverConfig = HTTPServerConfig.default(port: 8123)
     ///     services.register(serverConfig)
     ///
-    public struct Configuration: Sendable {
+    public struct Configuration {
         public static let defaultHostname = "127.0.0.1"
         public static let defaultPort = 8080
         

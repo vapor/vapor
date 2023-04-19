@@ -62,7 +62,7 @@ extension Application {
     }
 
     public struct Core: Sendable {
-        final class Storage: @unchecked Sendable {
+        final class Storage {
             var console: Console {
                 get {
                     storageLock.withLock {

@@ -5,12 +5,14 @@ import NIOConcurrencyHelpers
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
 /// This type has reference semantics with the use of ``NIOLockedValueBox``
-public struct Storage: Sendable {
+public struct Storage: @unchecked Sendable {
     /// The internal storage area.
-    private let storage: NIOLockedValueBox<[ObjectIdentifier: AnyStorageValue]>
+    private var storage: [ObjectIdentifier: AnyStorageValue]
+    // In a concurrency world, we need to protect access with locks
+    private let lock: NIOLock
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
-    struct Value<T: Sendable>: AnyStorageValue, Sendable {
+    struct Value<T: Sendable>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) throws -> ())?
         func shutdown(logger: Logger) {
@@ -27,13 +29,16 @@ public struct Storage: Sendable {
 
     /// Create a new ``Storage`` container using the given logger.
     public init(logger: Logger = .init(label: "codes.vapor.storage")) {
-        self.storage = .init([:])
+        self.storage = [:]
         self.logger = logger
+        self.lock = .init()
     }
 
     /// Delete all values from the container. Does _not_ invoke shutdown closures.
-    public func clear() {
-        self.storage.withLockedValue { $0 = [:] }
+    public mutating func clear() {
+        self.lock.withLockVoid {
+            self.storage = [:]
+        }
     }
 
     /// Read/write access to values via keyed subscript.
@@ -55,7 +60,7 @@ public struct Storage: Sendable {
     public subscript<Key>(_ key: Key.Type, default defaultValue: @autoclosure () -> Key.Value) -> Key.Value
         where Key: StorageKey
     {
-        nonmutating get {
+        mutating get {
             if let existing = self[key] { return existing }
             let new = defaultValue()
             self.set(Key.self, to: new)
@@ -65,15 +70,17 @@ public struct Storage: Sendable {
 
     /// Test whether the given key exists in the container.
     public func contains<Key>(_ key: Key.Type) -> Bool {
-        self.storage.withLockedValue { $0.keys.contains(ObjectIdentifier(Key.self)) }
+        return self.lock.withLock {
+            return self.storage.keys.contains(ObjectIdentifier(Key.self))
+        }
     }
 
     /// Get the value of the given key if it exists and is of the proper type.
     public func get<Key>(_ key: Key.Type) -> Key.Value?
         where Key: StorageKey
     {
-        return self.storage.withLockedValue {
-            guard let value = $0[ObjectIdentifier(Key.self)] as? Value<Key.Value> else {
+        return self.lock.withLock {
+            guard let value = self.storage[ObjectIdentifier(Key.self)] as? Value<Key.Value> else {
                 return nil
             }
             return value.value
@@ -83,7 +90,7 @@ public struct Storage: Sendable {
     /// Set or remove a value for a given key, optionally providing a shutdown closure for the value.
     ///
     /// If a key that has a shutdown closure is removed by this method, the closure **is** invoked.
-    public nonmutating func set<Key>(
+    public mutating func set<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
         onShutdown: (@Sendable (Key.Value) throws -> ())? = nil
@@ -91,11 +98,11 @@ public struct Storage: Sendable {
         where Key: StorageKey
     {
         let key = ObjectIdentifier(Key.self)
-        self.storage.withLockedValue { storageBox in
+        self.lock.withLockVoid {
             if let value = value {
-                storageBox[key] = Value(value: value, onShutdown: onShutdown)
-            } else if let existing = storageBox[key] {
-                storageBox[key] = nil
+                self.storage[key] = Value(value: value, onShutdown: onShutdown)
+            } else if let existing = self.storage[key] {
+                self.storage[key] = nil
                 existing.shutdown(logger: self.logger)
             }
         }
@@ -104,21 +111,22 @@ public struct Storage: Sendable {
     /// For every key in the container having a shutdown closure, invoke the closure. Designed to
     /// be invoked during an explicit app shutdown process or in a reference type's `deinit`.
     public func shutdown() {
-        let values = self.storage.withLockedValue { $0.values }
-        values.forEach {
-            $0.shutdown(logger: self.logger)
+        self.lock.withLockVoid {
+            self.storage.values.forEach {
+                $0.shutdown(logger: self.logger)
+            }
         }
     }
 }
 
 /// ``Storage`` uses this protocol internally to generically invoke shutdown closures for arbitrarily-
 /// typed key values.
-protocol AnyStorageValue: Sendable {
+protocol AnyStorageValue {
     func shutdown(logger: Logger)
 }
 
 /// A key used to store values in a ``Storage`` must conform to this protocol.
-public protocol StorageKey: Sendable {
+public protocol StorageKey {
     /// The type of the stored value associated with this key type.
-    associatedtype Value: Sendable
+    associatedtype Value
 }

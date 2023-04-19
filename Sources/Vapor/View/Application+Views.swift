@@ -26,7 +26,7 @@ extension Application {
         }
         
         // This doesn't need a lock as it's only mutated during app configuration
-        final class Storage: @unchecked Sendable {
+        final class Storage {
             var makeRenderer: (@Sendable (Application) -> ViewRenderer)?
             init() { }
         }

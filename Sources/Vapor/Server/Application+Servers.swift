@@ -13,8 +13,8 @@ extension Application {
         return makeServer(self)
     }
 
-    public struct Servers: Sendable {
-        public struct Provider: Sendable {
+    public struct Servers {
+        public struct Provider {
             let run: @Sendable (Application) -> ()
 
             public init(_ run: @Sendable @escaping (Application) -> ()) {
@@ -26,11 +26,9 @@ extension Application {
             typealias Value = ServeCommand
         }
 
-        final class Storage: Sendable {
+        final class Storage {
             var makeServer: (@Sendable (Application) -> Server)?
-            init() {
-//                self.makeServer = .init(nil)
-            }
+            init() {}
         }
 
         struct Key: Sendable, StorageKey {
@@ -46,7 +44,6 @@ extension Application {
         }
 
         public func use(_ makeServer: @Sendable @escaping (Application) -> (Server)) {
-//            self.storage.makeServer.withLockedValue { $0 = makeServer }
             self.storage.makeServer = makeServer
         }
 

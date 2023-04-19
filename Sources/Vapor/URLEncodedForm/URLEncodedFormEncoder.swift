@@ -15,9 +15,9 @@ import NIOCore
 /// See [Mozilla's](https://developer.mozilla.org/en-US/docs/Web/HTTP/Methods/POST) docs for more information about
 /// url-encoded forms.
 /// NOTE: This implementation of the encoder does not support encoding booleans to "flags".
-public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder, Sendable {
+public struct URLEncodedFormEncoder: ContentEncoder, URLQueryEncoder {
     /// Used to capture URLForm Coding Configuration used for encoding.
-    public struct Configuration: Sendable {
+    public struct Configuration {
         /// Supported array encodings.
         public enum ArrayEncoding: Sendable {
             /// Arrays are serialized as separate values with bracket suffixed keys.

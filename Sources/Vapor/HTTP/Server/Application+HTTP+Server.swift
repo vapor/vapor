@@ -11,7 +11,7 @@ extension Application.HTTP {
         .init(application: self.application)
     }
     
-    public struct Server: Sendable {
+    public struct Server {
         let application: Application
 
         public var shared: HTTPServer {

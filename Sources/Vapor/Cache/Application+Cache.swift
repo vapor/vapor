@@ -15,8 +15,8 @@ extension Application {
         return makeCache(self)
     }
 
-    public struct Caches: Sendable {
-        public struct Provider: Sendable {
+    public struct Caches {
+        public struct Provider {
             let run: @Sendable (Application) -> ()
 
             public init(_ run: @Sendable @escaping (Application) -> ()) {
@@ -25,12 +25,12 @@ extension Application {
         }
         
         // This doesn't need a lock as it's only mutated during app configuration
-        final class Storage: @unchecked Sendable {
+        final class Storage {
             var makeCache: (@Sendable (Application) -> Cache)?
             init() { }
         }
 
-        struct Key: Sendable, StorageKey {
+        struct Key: StorageKey {
             typealias Value = Storage
         }
 
