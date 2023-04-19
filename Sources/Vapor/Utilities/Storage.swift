@@ -6,7 +6,7 @@ import NIOConcurrencyHelpers
 /// is keyed by a type conforming to ``StorageKey`` protocol.
 public struct Storage: Sendable {
     /// The internal storage area.
-    let storage: NIOLockedValueBox<[ObjectIdentifier: AnyStorageValue]>
+    private let storage: NIOLockedValueBox<[ObjectIdentifier: AnyStorageValue]>
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
     struct Value<T: Sendable>: AnyStorageValue, Sendable {
@@ -22,7 +22,7 @@ public struct Storage: Sendable {
     }
     
     /// The logger provided to shutdown closures.
-    let logger: Logger
+    private let logger: Logger
 
     /// Create a new ``Storage`` container using the given logger.
     public init(logger: Logger = .init(label: "codes.vapor.storage")) {
