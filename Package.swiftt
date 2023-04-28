@@ -17,7 +17,7 @@ let package = Package(
         // HTTP client library built on SwiftNIO
         .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.10.0"),
 
-        // Sugary extensions for the SwiftNIO library
+        // Sugary extensions for the Swift library
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.15.0"),
 
         // 💻 APIs for creating interactive CLI tools.
