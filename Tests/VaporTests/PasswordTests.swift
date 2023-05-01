@@ -48,6 +48,7 @@ final class PasswordTests: XCTestCase {
     func testAsyncBCryptApplicationPassword() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         
         try assertAsyncApplicationPasswordVerifies(.bcrypt, on: app)
@@ -56,6 +57,7 @@ final class PasswordTests: XCTestCase {
     func testAsyncPlaintextApplicationPassword() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         
         try assertAsyncApplicationPasswordVerifies(.plaintext, on: app)
@@ -64,6 +66,7 @@ final class PasswordTests: XCTestCase {
     func testAsyncUsesProvider() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try app.password.async(
@@ -76,6 +79,7 @@ final class PasswordTests: XCTestCase {
     func testAsyncApplicationDefault() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try app.password.async.hash("vapor").wait()

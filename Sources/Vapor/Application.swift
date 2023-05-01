@@ -112,7 +112,6 @@ public final class Application {
     /// If you want to run your Application indefinitely, or until your code shuts the application down, use `run()` instead.
     public func start() throws {
         try self.boot()
-        self.core.storage.threadPool.start()
         let command = self.commands.group()
         var context = CommandContext(console: self.console, input: self.environment.commandInput)
         context.application = self
@@ -124,6 +123,7 @@ public final class Application {
             return
         }
         self.isBooted = true
+        self.core.storage.threadPool.start()
         try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
         try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }

@@ -243,6 +243,7 @@ final class FileTests: XCTestCase {
     
     func testFileWrite() throws {
         let app = Application(.testing)
+        try app.boot()
         defer { app.shutdown() }
         
         let request = Request(application: app, on: app.eventLoopGroup.next())

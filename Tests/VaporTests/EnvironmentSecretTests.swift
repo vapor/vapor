@@ -8,6 +8,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let path = "/" + folder + "/Utilities/non-existing-secret"
 
         let app = Application(.testing)
+        try app.boot()
         defer { app.shutdown() }
 
         let eventLoop = app.eventLoopGroup.next()
@@ -20,6 +21,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let app = Application(.testing)
+        try app.boot()
         defer { app.shutdown() }
 
         let eventLoop = app.eventLoopGroup.next()
@@ -34,6 +36,7 @@ final class EnvironmentSecretTests: XCTestCase {
         let key = "MY_ENVIRONMENT_SECRET"
         setenv(key, path, 1)
         let app = Application(.testing)
+        try app.boot()
         defer {
             app.shutdown()
             unsetenv(key)

@@ -6,6 +6,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncBCryptRequestPassword() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
 
         try assertAsyncRequestPasswordVerifies(.bcrypt, on: app)
@@ -14,6 +15,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncPlaintextRequestPassword() throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
 
         try assertAsyncRequestPasswordVerifies(.plaintext, on: app)
@@ -22,6 +24,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncBCryptApplicationPassword() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
 
         try await assertAsyncApplicationPasswordVerifies(.bcrypt, on: app)
@@ -30,6 +33,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncPlaintextApplicationPassword() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
 
         try await assertAsyncApplicationPasswordVerifies(.plaintext, on: app)
@@ -38,6 +42,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncUsesProvider() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try await app.password.async(
@@ -50,6 +55,7 @@ final class AsyncPasswordTests: XCTestCase {
     func testAsyncApplicationDefault() async throws {
         let test = Environment(name: "testing", arguments: ["vapor"])
         let app = Application(test)
+        try app.boot()
         defer { app.shutdown() }
         app.passwords.use(.plaintext)
         let hash = try await app.password.async.hash("vapor")
