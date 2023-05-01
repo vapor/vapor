@@ -34,7 +34,6 @@ extension Application {
             
             try! self.core.storage.threadPool.syncShutdownGracefully()
             self.core.storage.threadPool = newValue
-            self.core.storage.threadPool.start()
         }
     }
     
@@ -74,7 +73,6 @@ extension Application {
                 self.commands = Commands()
                 self.commands.use(BootCommand(), as: "boot")
                 self.threadPool = NIOThreadPool(numberOfThreads: 64)
-                self.threadPool.start()
                 self.allocator = .init()
                 self.running = .init()
                 self.directory = .detect()
