@@ -3,6 +3,7 @@ import NIOCore
 import NIOHTTP1
 import NIOPosix
 import Logging
+import Crypto
 
 extension Request {
     public var fileio: FileIO {
@@ -265,9 +266,31 @@ public struct FileIO {
             done.whenComplete { _ in
                 try? fd.close()
             }
+
+            let digest = SHA256.hash(data: buffer.readableBytesView)
+            let filePath = URL(string: path)
+
+            filePath?.withUnsafeFileSystemRepresentation({ pointer in
+                let _ = digest.withUnsafeBytes { bufferPointer in
+                    setxattr(pointer, XAttributes.sha256Digest.getUnsafeMutablePointer(), bufferPointer.baseAddress, bufferPointer.count, 0, 0)
+                }
+            })
+
             return done
         } catch {
             return self.request.eventLoop.makeFailedFuture(error)
+        }
+    }
+}
+
+fileprivate extension FileIO {
+    /// Custom file attributes (_xattrs_) used by vapor when interacting with files.
+    enum XAttributes: String {
+        /// The key in a file attribute dictionary whose value represents a pre-computed SHA-256 digest of the file's content.
+        case sha256Digest = "x-vapor-sha256-digest"
+
+        func getUnsafeMutablePointer() -> UnsafeMutablePointer<CChar>? {
+            return UnsafeMutablePointer(mutating: (self.rawValue as NSString).utf8String)
         }
     }
 }
