@@ -10,7 +10,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch { 
@@ -31,7 +31,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file)
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
@@ -47,13 +47,13 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req -> Response in
+        app.get("file-stream") { req in
             var tmpPath: String
             repeat {
                 tmpPath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
             } while (FileManager.default.fileExists(atPath: tmpPath))
 
-            return req.fileio.streamFile(at: tmpPath) { result in
+            return req.fileio.streamFile(at: tmpPath, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                     XCTFail("File Stream should have failed")
@@ -72,7 +72,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -104,7 +104,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -136,7 +136,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -168,7 +168,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -194,7 +194,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -220,7 +220,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
                 } catch {
@@ -375,7 +375,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file)
+            return req.fileio.streamFile(at: #file, advancedETagComparison: true)
         }
 
         var headers = HTTPHeaders()
