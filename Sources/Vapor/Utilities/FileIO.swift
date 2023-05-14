@@ -235,7 +235,7 @@ public struct FileIO {
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
-    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created, otherwise a simple comparison based on the file's last modified date and size.
+    ///     - advancedETagComparison: The method used when ETags are generated. If true, a byte-by-byte hash is created (and cached), otherwise a simple comparison based on the file's last modified date and size.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
