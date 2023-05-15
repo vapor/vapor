@@ -1,6 +1,5 @@
 import Foundation
 import NIOCore
-import CryptoKit
 
 /// Serves static files from a public directory.
 ///
