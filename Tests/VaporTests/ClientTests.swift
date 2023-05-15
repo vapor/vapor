@@ -45,10 +45,29 @@ final class ClientTests: XCTestCase {
     }
 
     func testClientResponseCodable() throws {
+        let remoteApp = Application(.testing)
+        remoteApp.http.server.configuration.port = 0
+        defer { remoteApp.shutdown() }
+        
+        remoteApp.get("json") { _ in
+            SomeJSON()
+        }
+        
+        remoteApp.environment.arguments = ["serve"]
+        try remoteApp.boot()
+        try remoteApp.start()
+        
+        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
+        guard let localAddress = remoteApp.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let res = try app.client.get("https://httpbin.org/json").wait()
+        let res = try app.client.get("http://localhost:\(port)/json").wait()
 
         let encoded = try JSONEncoder().encode(res)
         let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
@@ -57,45 +76,123 @@ final class ClientTests: XCTestCase {
     }
     
     func testClientBeforeSend() throws {
+        let remoteApp = Application(.testing)
+        remoteApp.http.server.configuration.port = 0
+        defer { remoteApp.shutdown() }
+        
+        remoteApp.post("anything") { req -> AnythingResponse in
+            let headers = req.headers.reduce(into: [String: String]()) {
+                $0[$1.0] = $1.1
+            }
+            
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+                throw Abort(.badRequest)
+            }
+            
+            let jsonResponse = json.mapValues {
+                return "\($0)"
+            }
+            
+            return AnythingResponse(headers: headers, json: jsonResponse)
+        }
+        
+        remoteApp.environment.arguments = ["serve"]
+        try remoteApp.boot()
+        try remoteApp.start()
+        
+        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
+        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
+              let remoteAppPort = remoteAppLocalAddress.port else {
+            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
         
-        let res = try app.client.post("http://httpbin.org/anything") { req in
+        let res = try app.client.post("http://localhost:\(remoteAppPort)/anything") { req in
             try req.content.encode(["hello": "world"])
         }.wait()
 
-        struct HTTPBinAnything: Codable {
-            var headers: [String: String]
-            var json: [String: String]
-        }
-        let data = try res.content.decode(HTTPBinAnything.self)
+        let data = try res.content.decode(AnythingResponse.self)
         XCTAssertEqual(data.json, ["hello": "world"])
-        XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
+        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
     
     func testClientContent() throws {
+        let remoteApp = Application(.testing)
+        remoteApp.http.server.configuration.port = 0
+        defer { remoteApp.shutdown() }
+        
+        struct AnythingResponse: Content {
+            var headers: [String: String]
+            var json: [String: String]
+        }
+        
+        remoteApp.post("anything") { req -> AnythingResponse in
+            let headers = req.headers.reduce(into: [String: String]()) {
+                $0[$1.0] = $1.1
+            }
+            
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+                throw Abort(.badRequest)
+            }
+            
+            let jsonResponse = json.mapValues {
+                return "\($0)"
+            }
+            
+            return AnythingResponse(headers: headers, json: jsonResponse)
+        }
+        
+        remoteApp.environment.arguments = ["serve"]
+        try remoteApp.boot()
+        try remoteApp.start()
+        
+        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
+        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
+              let remoteAppPort = remoteAppLocalAddress.port else {
+            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
         
-        let res = try app.client.post("http://httpbin.org/anything", content: ["hello": "world"]).wait()
+        let res = try app.client.post("http://localhost:\(remoteAppPort)/anything", content: ["hello": "world"]).wait()
 
-        struct HTTPBinAnything: Codable {
-            var headers: [String: String]
-            var json: [String: String]
-        }
-        let data = try res.content.decode(HTTPBinAnything.self)
+        let data = try res.content.decode(AnythingResponse.self)
         XCTAssertEqual(data.json, ["hello": "world"])
         XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
     }
     
     func testBoilerplateClient() throws {
+        let remoteApp = Application(.testing)
+        remoteApp.http.server.configuration.port = 0
+        defer { remoteApp.shutdown() }
+        
+        remoteApp.get("status", "201") { _ in
+            return HTTPStatus.created
+        }
+        
+        remoteApp.environment.arguments = ["serve"]
+        try remoteApp.boot()
+        try remoteApp.start()
+        
+        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
+        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
+              let remoteAppPort = remoteAppLocalAddress.port else {
+            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let app = Application(.testing)
         defer { app.shutdown() }
 
         app.get("foo") { req -> EventLoopFuture<String> in
-            return req.client.get("https://httpbin.org/status/201").map { res in
+            return req.client.get("http://localhost:\(remoteAppPort)/status/201").map { res in
                 XCTAssertEqual(res.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
@@ -169,7 +266,7 @@ final class ClientTests: XCTestCase {
         let logs = TestLogHandler()
         app.logger = logs.logger
 
-        _ = try app.client.get("https://httpbin.org/json").wait()
+        _ = try app.client.get("https://www.vapor.codes").wait()
 
         let metadata = logs.getMetadata()
         XCTAssertNotNil(metadata["ahc-request-id"])
@@ -266,4 +363,32 @@ final class TestLogHandler: LogHandler {
     func getMetadata() -> Logger.Metadata {
         return self.metadata
     }
+}
+
+
+struct SomeJSON: Content {
+    let vapor: SomeNestedJSON
+    
+    init() {
+        vapor = SomeNestedJSON(name: "The Vapor Project", age: 7, repos: [
+            VaporRepoJSON(name: "WebsocketKit", url: "https://github.com/vapor/websocket-kit"),
+            VaporRepoJSON(name: "PostgresNIO", url: "https://github.com/vapor/postgres-nio")
+        ])
+    }
+}
+
+struct SomeNestedJSON: Content {
+    let name: String
+    let age: Int
+    let repos: [VaporRepoJSON]
+}
+
+struct VaporRepoJSON: Content {
+    let name: String
+    let url: String
+}
+
+struct AnythingResponse: Content {
+    var headers: [String: String]
+    var json: [String: String]
 }
