@@ -7,6 +7,57 @@ import Logging
 import NIOEmbedded
 
 final class AsyncClientTests: XCTestCase {
+    
+    var remoteAppPort: Int!
+    var remoteApp: Application!
+    
+    override func setUp() async throws {
+        remoteApp = Application(.testing)
+        remoteApp.http.server.configuration.port = 0
+        
+        remoteApp.get("json") { _ in
+            SomeJSON()
+        }
+        
+        remoteApp.get("status", ":status") { req -> HTTPStatus in
+            let status = try req.parameters.require("status", as: Int.self)
+            return HTTPStatus(statusCode: status)
+        }
+        
+        remoteApp.post("anything") { req -> AnythingResponse in
+            let headers = req.headers.reduce(into: [String: String]()) {
+                $0[$1.0] = $1.1
+            }
+            
+            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
+                throw Abort(.badRequest)
+            }
+            
+            let jsonResponse = json.mapValues {
+                return "\($0)"
+            }
+            
+            return AnythingResponse(headers: headers, json: jsonResponse)
+        }
+        
+        remoteApp.environment.arguments = ["serve"]
+        try remoteApp.boot()
+        try remoteApp.start()
+        
+        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
+        guard let localAddress = remoteApp.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        self.remoteAppPort = port
+    }
+    
+    override func tearDown() async throws {
+        remoteApp.shutdown()
+    }
+    
     func testClientConfigurationChange() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -46,29 +97,10 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientResponseCodable() async throws {
-        let remoteApp = Application(.testing)
-        remoteApp.http.server.configuration.port = 0
-        defer { remoteApp.shutdown() }
-        
-        remoteApp.get("json") { _ in
-            SomeJSON()
-        }
-        
-        remoteApp.environment.arguments = ["serve"]
-        try remoteApp.boot()
-        try remoteApp.start()
-        
-        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
-        guard let localAddress = remoteApp.http.server.shared.localAddress,
-              let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let res = try await app.client.get("http://localhost:\(port)/json")
+        let res = try await app.client.get("http://localhost:\(remoteAppPort!)/json")
 
         let encoded = try JSONEncoder().encode(res)
         let decoded = try JSONDecoder().decode(ClientResponse.self, from: encoded)
@@ -77,47 +109,11 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientBeforeSend() async throws {
-        let remoteApp = Application(.testing)
-        remoteApp.http.server.configuration.port = 0
-        defer { remoteApp.shutdown() }
-        
-        struct AnythingResponse: Content {
-            var headers: [String: String]
-            var json: [String: String]
-        }
-        
-        remoteApp.post("anything") { req -> AnythingResponse in
-            let headers = req.headers.reduce(into: [String: String]()) {
-                $0[$1.0] = $1.1
-            }
-            
-            guard let json:[String:Any] = try JSONSerialization.jsonObject(with: req.body.data!) as? [String:Any] else {
-                throw Abort(.badRequest)
-            }
-            
-            let jsonResponse = json.mapValues {
-                return "\($0)"
-            }
-            
-            return AnythingResponse(headers: headers, json: jsonResponse)
-        }
-        
-        remoteApp.environment.arguments = ["serve"]
-        try remoteApp.boot()
-        try remoteApp.start()
-        
-        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
-        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
-              let remoteAppPort = remoteAppLocalAddress.port else {
-            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
 
-        let res = try await app.client.post("http://localhost:\(remoteAppPort)/anything") { req in
+        let res = try await app.client.post("http://localhost:\(remoteAppPort!)/anything") { req in
             try req.content.encode(["hello": "world"])
         }
 
@@ -127,32 +123,13 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testBoilerplateClient() async throws {
-        let remoteApp = Application(.testing)
-        remoteApp.http.server.configuration.port = 0
-        defer { remoteApp.shutdown() }
-        
-        remoteApp.get("status", "201") { _ in
-            return HTTPStatus.created
-        }
-        
-        remoteApp.environment.arguments = ["serve"]
-        try remoteApp.boot()
-        try remoteApp.start()
-        
-        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
-        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
-              let remoteAppPort = remoteAppLocalAddress.port else {
-            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
         let app = Application(.testing)
         app.http.server.configuration.port = 0
         defer { app.shutdown() }
 
         app.get("foo") { req async throws -> String in
             do {
-                let response = try await req.client.get("http://localhost:\(remoteAppPort)/status/201")
+                let response = try await req.client.get("http://localhost:\(self.remoteAppPort!)/status/201")
                 XCTAssertEqual(response.status.code, 201)
                 req.application.running?.stop()
                 return "bar"
@@ -191,32 +168,12 @@ final class AsyncClientTests: XCTestCase {
     }
 
     func testClientLogging() async throws {
-        let remoteApp = Application(.testing)
-        remoteApp.http.server.configuration.port = 0
-        defer { remoteApp.shutdown() }
-        
-        remoteApp.get("status", "201") { _ in
-            return HTTPStatus.created
-        }
-        
-        remoteApp.environment.arguments = ["serve"]
-        try remoteApp.boot()
-        try remoteApp.start()
-        
-        XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
-        guard let remoteAppLocalAddress = remoteApp.http.server.shared.localAddress,
-              let remoteAppPort = remoteAppLocalAddress.port else {
-            XCTFail("couldn't get ip/port from \(remoteApp.http.server.shared.localAddress.debugDescription)")
-            return
-        }
-        
-        print("We are testing client logging")
         let app = Application(.testing)
         defer { app.shutdown() }
         let logs = TestLogHandler()
         app.logger = logs.logger
 
-        _ = try await app.client.get("http://localhost:\(remoteAppPort)/status/201")
+        _ = try await app.client.get("http://localhost:\(remoteAppPort!)/status/201")
 
         let metadata = logs.getMetadata()
         XCTAssertNotNil(metadata["ahc-request-id"])
@@ -343,4 +300,9 @@ struct SomeNestedJSON: Content {
 struct VaporRepoJSON: Content {
     let name: String
     let url: String
+}
+
+struct AnythingResponse: Content {
+    var headers: [String: String]
+    var json: [String: String]
 }
