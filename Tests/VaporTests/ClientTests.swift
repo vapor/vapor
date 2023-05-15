@@ -165,7 +165,7 @@ final class ClientTests: XCTestCase {
 
         let data = try res.content.decode(AnythingResponse.self)
         XCTAssertEqual(data.json, ["hello": "world"])
-        XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
+        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
     
     func testBoilerplateClient() throws {
