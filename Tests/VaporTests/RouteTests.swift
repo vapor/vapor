@@ -423,7 +423,7 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("client") { req in
-            return req.client.get("http://httpbin.org/status/2 1").map { $0.description }
+            return req.client.get("http://localhost/status/2 1").map { $0.description }
         }
         
         try app.testable(method: .running).test(.GET, "/client") { res in
