@@ -9,7 +9,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -30,7 +30,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true)
         }
 
@@ -47,7 +47,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             var tmpPath: String
             repeat {
                 tmpPath = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString).path
@@ -71,7 +71,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -103,7 +103,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -135,7 +135,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -167,7 +167,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -193,7 +193,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -219,7 +219,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true) { result in
                 do {
                     try result.get()
@@ -374,7 +374,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.get("file-stream") { req in
+        app.get("file-stream") { req -> EventLoopFuture<Response> in
             return req.fileio.streamFile(at: #file, advancedETagComparison: true)
         }
 
