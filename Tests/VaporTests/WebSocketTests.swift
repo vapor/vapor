@@ -158,33 +158,25 @@ final class WebSocketTests: XCTestCase {
             }
 
             func track(_ ws: WebSocket) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                self.connections.insert(ws)
-                ws.onClose.whenComplete { _ in
-                    self.lock.lock()
-                    defer { self.lock.unlock() }
-                    self.connections.remove(ws)
+                self.lock.withLockVoid {
+                    self.connections.insert(ws)
                 }
-            }
-
-            func broadcast(_ message: String) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                for ws in self.connections {
-                    ws.send(message)
+                ws.onClose.whenComplete { _ in
+                    self.lock.withLockVoid {
+                        self.connections.remove(ws)
+                    }
                 }
             }
 
             /// Closes all active WebSocket connections
             func shutdown(_ app: Application) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                app.logger.debug("Shutting down \(self.connections.count) WebSocket(s)")
-                try! EventLoopFuture<Void>.andAllSucceed(
-                    self.connections.map { $0.close() } ,
-                    on: app.eventLoopGroup.next()
-                ).wait()
+                self.lock.withLockVoid {
+                    app.logger.debug("Shutting down \(self.connections.count) WebSocket(s)")
+                    try! EventLoopFuture<Void>.andAllSucceed(
+                        self.connections.map { $0.close() } ,
+                        on: app.eventLoopGroup.next()
+                    ).wait()
+                }
             }
         }
 
@@ -204,7 +196,9 @@ final class WebSocketTests: XCTestCase {
         defer { try! clientGroup.syncShutdownGracefully() }
         let connectPromise = app.eventLoopGroup.next().makePromise(of: WebSocket.self)
         WebSocket.connect(to: "ws://localhost:1337/watcher", on: clientGroup) { ws in
-            connectPromise.succeed(ws)
+            ws.onText { ws, string in
+                connectPromise.succeed(ws)
+            }
         }.cascadeFailure(to: connectPromise)
 
         let ws = try connectPromise.futureResult.wait()
