@@ -12,7 +12,7 @@ public struct Storage: @unchecked Sendable {
     private let lock: NIOLock
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
-    struct Value<T: Sendable>: AnyStorageValue {
+    struct Value<T>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) throws -> ())?
         func shutdown(logger: Logger) {
