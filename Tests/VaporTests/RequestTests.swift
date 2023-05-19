@@ -315,6 +315,6 @@ final class RequestTests: XCTestCase {
             }
         }
         
-        self.wait(for: [handleBufferExpectation, endDrainExpectation], enforceOrder: true)
+        self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
     }
 }
