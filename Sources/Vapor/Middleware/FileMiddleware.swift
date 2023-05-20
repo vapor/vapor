@@ -23,7 +23,7 @@ public final class FileMiddleware: Middleware {
         public static let publicDirectoryIsNotAFolder: Self = .init(description: "Cannot find any actual folder for the given Public Directory")
     }
 
-    public struct ETagHashes: StorageKey {
+    struct ETagHashes: StorageKey {
         public typealias Value = [String: FileHash]
 
         public struct FileHash {

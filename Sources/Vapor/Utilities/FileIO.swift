@@ -224,7 +224,9 @@ public struct FileIO {
 
     /// Generates a chunked `Response` for the specified file. This method respects values in
     /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
-    /// has not been modified since last served. This method will also set the `"Content-Type"` header
+    /// has not been modified since last served. If `advancedETagComparison` is set to true,
+    /// the response will have its ETag field set to a byte-by-byte hash of the requested file. If set to false, a simple ETag consisting of the last modified date and file size
+    /// will be used. This method will also set the `"Content-Type"` header
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
     ///     router.get("file-stream") { req in
@@ -405,21 +407,19 @@ public struct FileIO {
     ///   - lastModified: When the file was last modified.
     /// - Returns: An `EventLoopFuture<String>` which holds the ETag.
     private func generateETagHash(path: String, lastModified: Date) -> EventLoopFuture<String> {
-        return NIOLock().withLock {
-            var hashingDictionary = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
+        var hashingDictionary = request.application.storage[FileMiddleware.ETagHashes.self] ?? [:]
 
-            if let hash = hashingDictionary[path], hash.lastModified == lastModified {
-                return request.eventLoop.makeSucceededFuture(hash.digest.hex)
-            } else {
-                return collectFile(at: path).map { buffer in
-                    let digest = SHA256.hash(data: buffer.readableBytesView)
+        if let hash = hashingDictionary[path], hash.lastModified == lastModified {
+            return request.eventLoop.makeSucceededFuture(hash.digest.hex)
+        } else {
+            return collectFile(at: path).map { buffer in
+                let digest = SHA256.hash(data: buffer.readableBytesView)
 
-                    // update hash in dictionary
-                    hashingDictionary[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digest: digest)
-                    request.application.storage[FileMiddleware.ETagHashes.self] = hashingDictionary
+                // update hash in dictionary
+                hashingDictionary[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digest: digest)
+                request.application.storage[FileMiddleware.ETagHashes.self] = hashingDictionary
 
-                    return digest.hex
-                }
+                return digest.hex
             }
         }
     }
