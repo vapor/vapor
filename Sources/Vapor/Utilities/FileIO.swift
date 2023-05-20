@@ -442,7 +442,7 @@ extension HTTPHeaders.Range.Value {
                 }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                guard start >= 0, end >= 0, start < end, start <= size, end <= size else {
+                guard start >= 0, end >= 0, start <= end, start <= size, end <= size else {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
