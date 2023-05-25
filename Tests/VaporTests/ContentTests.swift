@@ -84,7 +84,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testContentContainer() throws {
+    func testContentContainerEncode() throws {
         struct FooContent: Content {
             var message: String = "hi"
         }
@@ -106,6 +106,31 @@ final class ContentTests: XCTestCase {
         try app.testable().test(.GET, "/encode") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "hi")
+        }
+    }
+
+    func testContentContainerDecode() throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+        struct FooDecodable: Decodable, Equatable {
+            var message: String = "hi"
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("decode") { req async throws -> String in
+            XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
+            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
+            return "decoded!"
+        }
+
+        try app.testable().test(.GET, "/decode") { req in
+            try req.content.encode(FooContent())
+        } afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "decoded!")
         }
     }
     
