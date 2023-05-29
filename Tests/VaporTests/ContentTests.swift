@@ -120,14 +120,34 @@ final class ContentTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.routes.get("decode") { req async throws -> String in
+        app.routes.post("decode") { req async throws -> String in
             XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
             XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
             return "decoded!"
         }
 
-        try app.testable().test(.GET, "/decode") { req in
+        try app.testable().test(.POST, "/decode") { req in
             try req.content.encode(FooContent())
+        } afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "decoded!")
+        }
+
+        app.routes.post("decode-bad-header") { req async throws -> String in
+            XCTAssertEqual(req.headers.contentType, .audio)
+            XCTAssertThrowsError(try req.content.decode(FooContent.self)) { error in
+                guard let abort = error as? Abort, abort.status == .unsupportedMediaType else {
+                    XCTFail("Unexpected error: \(error)")
+                    return
+                }
+            }
+            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
+            return "decoded!"
+        }
+
+        try app.testable().test(.POST, "/decode-bad-header") { req in
+            try req.content.encode(FooContent())
+            req.headers.contentType = .audio
         } afterResponse: { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "decoded!")
