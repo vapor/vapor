@@ -34,8 +34,8 @@ extension ContentContainer {
         return content
     }
 
-    /// Use the default decoder for the ``contentType`` passed, to read a value of type `D`
-    /// from the container.
+    /// Use the default configured decoder for the ``contentType`` parameter to read a value
+    /// of type `D` from the container.
     public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) throws -> D {
         try self.decode(D.self, using: self.configuredDecoder(for: contentType))
     }
