@@ -22,7 +22,7 @@ public final class HTTPServer: Server {
     // This has to be unchecked because `NIOSSLCustomVerificationCallback` is not `Sendable`. We need
     // Configuration to be `Sendable` because of it's use everywhere and in `Sendable` closures which
     // we set up off the `EventLoop` so can't use a `NIOLoopBoundBox`
-    public struct Configuration: @unchecked Sendable {
+    public struct Configuration: Sendable {
         public static let defaultHostname = "127.0.0.1"
         public static let defaultPort = 8080
         
@@ -160,21 +160,9 @@ public final class HTTPServer: Server {
         public var shutdownTimeout: TimeAmount
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
-        public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback? {
-            get {
-                self.sendableLock.withLock {
-                    return self._customCertificateVerifyCallback
-                }
-            }
-            set {
-                self.sendableLock.withLockVoid {
-                    self._customCertificateVerifyCallback = newValue
-                }
-            }
-        }
-        
-        private var _customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
-        private let sendableLock: NIOLock
+        /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
+        @preconcurrency
+        public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
 
         public init(
             hostname: String = Self.defaultHostname,
@@ -241,8 +229,7 @@ public final class HTTPServer: Server {
             self.reportMetrics = reportMetrics
             self.logger = logger ?? Logger(label: "codes.vapor.http-server")
             self.shutdownTimeout = shutdownTimeout
-            self._customCertificateVerifyCallback = nil
-            self.sendableLock = .init()
+            self.customCertificateVerifyCallback = nil
         }
     }
     
