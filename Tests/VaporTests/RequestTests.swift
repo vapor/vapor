@@ -288,4 +288,35 @@ final class RequestTests: XCTestCase {
             .temporaryRedirect
         )
     }
+    
+    func testCollectedBodyDrain() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(
+            application: app,
+            collectedBody: .init(string: ""),
+            on: EmbeddedEventLoop()
+        )
+        
+        let handleBufferExpectation = XCTestExpectation()
+        let endDrainExpectation = XCTestExpectation()
+        
+        request.body.drain { part in
+            switch part {
+            case .buffer:
+                return request.eventLoop.makeFutureWithTask {
+                    handleBufferExpectation.fulfill()
+                }
+            case .error:
+                XCTAssertTrue(false)
+                return request.eventLoop.makeSucceededVoidFuture()
+            case .end:
+                endDrainExpectation.fulfill()
+                return request.eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        
+        self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
+    }
 }
