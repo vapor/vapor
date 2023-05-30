@@ -10,62 +10,44 @@ public final class Session: @unchecked Sendable {
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID? {
         get {
-            idLock.withLock {
-                return _id
-            }
+            self._id.withLockedValue { $0 }
         }
         set {
-            idLock.withLockVoid {
-                _id = newValue
-            }
+            self._id.withLockedValue { $0 = newValue }
         }
     }
 
     /// This session's data.
     public var data: SessionData {
         get {
-            dataLock.withLock {
-                return _data
-            }
+            self._data.withLockedValue { $0 }
         }
         set {
-            dataLock.withLockVoid {
-                _data = newValue
-            }
+            self._data.withLockedValue { $0 = newValue }
         }
     }
 
     /// `true` if this session is still valid.
     var isValid: Bool {
         get {
-            isValidLock.withLock {
-                return _isValid
-            }
+            self._isValid.withLockedValue { $0 }
         }
         set {
-            isValidLock.withLockVoid {
-                _isValid = newValue
-            }
+            self._isValid.withLockedValue { $0 = newValue }
         }
     }
     
-    private var _id: SessionID?
-    private var _data: SessionData
-    private var _isValid: Bool
-    private let idLock: NIOLock
-    private let dataLock: NIOLock
-    private let isValidLock: NIOLock
+    private let _id: NIOLockedValueBox<SessionID?>
+    private var _data: NIOLockedValueBox<SessionData>
+    private let _isValid: NIOLockedValueBox<Bool>
 
     /// Create a new `Session`.
     ///
     /// Normally you will use `Request.session()` to do this.
     public init(id: SessionID? = nil, data: SessionData = .init()) {
-        self.idLock = .init()
-        self.dataLock = .init()
-        self.isValidLock = .init()
-        self._id = id
-        self._data = data
-        self._isValid = true
+        self._id = .init(id)
+        self._data = .init(data)
+        self._isValid = .init(true)
     }
 
     /// Invalidates the current session, removing persisted data from the session driver

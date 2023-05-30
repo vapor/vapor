@@ -5,7 +5,7 @@ import NIOHTTP1
 ///
 ///     throw Abort(.badRequest, reason: "Something's not quite right...")
 ///
-public struct Abort: Sendable, AbortError, DebuggableError {
+public struct Abort: AbortError, DebuggableError {
     /// Creates a redirecting `Abort` error.
     ///
     ///     throw Abort.redirect(to: "https://vapor.codes")"

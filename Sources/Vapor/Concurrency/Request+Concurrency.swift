@@ -12,7 +12,7 @@ extension Request.Body {
     /// `AsyncSequenceDelegate` can be created and **must be retained**
     /// in `Request.Body/makeAsyncIterator()` method.
     fileprivate final class AsyncSequenceDelegate: @unchecked Sendable, NIOAsyncSequenceProducerDelegate {
-        private enum State: Sendable {
+        private enum State {
             case noSignalReceived
             case waitingForSignalFromConsumer(EventLoopPromise<Void>)
         }

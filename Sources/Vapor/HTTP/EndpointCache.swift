@@ -4,7 +4,7 @@ import NIOCore
 import Logging
 import NIOHTTP1
 
-public enum EndpointCacheError: Swift.Error, Sendable {
+public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
     case contentDecodeFailure(Error)
 }

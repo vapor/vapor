@@ -167,7 +167,7 @@ private struct NotFoundResponder: Sendable, Responder {
     }
 }
 
-struct RouteNotFound: Sendable, Error {
+struct RouteNotFound: Error {
     let stackTrace: StackTrace?
 
     init() {

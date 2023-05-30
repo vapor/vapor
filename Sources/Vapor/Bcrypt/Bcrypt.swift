@@ -180,7 +180,7 @@ public final class BCryptDigest {
     }
 
     /// Specific BCrypt algorithm.
-    private enum Algorithm: String, RawRepresentable, Sendable {
+    private enum Algorithm: String, RawRepresentable {
         /// older version
         case _2a = "$2a$"
         /// format specific to the crypt_blowfish BCrypt implementation, identical to `2b` in all but name.
@@ -210,7 +210,7 @@ public final class BCryptDigest {
     }
 }
 
-public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError, Sendable {
+public enum BcryptError: Swift.Error, CustomStringConvertible, LocalizedError {
     case invalidCost
     case invalidSalt
     case hashFailure

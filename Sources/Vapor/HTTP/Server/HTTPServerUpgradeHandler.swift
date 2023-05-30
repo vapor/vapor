@@ -10,7 +10,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     typealias OutboundOut = Response
     
     
-    private enum UpgradeState: Sendable {
+    private enum UpgradeState {
         case ready
         case pending(Request, UpgradeBufferHandler)
         case upgraded
@@ -52,6 +52,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         // check upgrade
         switch self.upgradeState {
         case .pending(let req, let buffer):
+            let bufferBox = NIOLoopBound(buffer, eventLoop: context.eventLoop)
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
                 let protocolUpgrader = NIOLoopBound(upgrader.applyUpgrade(req: req, res: res), eventLoop: context.eventLoop)
@@ -78,7 +79,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                 }.flatMap {
                     return protocolUpgrader.value.upgrade(context: contextBox.value, upgradeRequest: head)
                 }.flatMap {
-                    return contextBox.value.pipeline.removeHandler(buffer)
+                    return contextBox.value.pipeline.removeHandler(bufferBox.value)
                 }.cascadeFailure(to: promise)
             } else {
                 // reset handlers
@@ -92,7 +93,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     }
 }
 
-private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChannelHandler, Sendable {
+private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = ByteBuffer
     
     private let buffer: NIOLockedValueBox<[ByteBuffer]>
