@@ -47,6 +47,7 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let res = self.unwrapOutboundIn(data)
         let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
+        let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
         
         // check upgrade
         switch self.upgradeState {
@@ -68,9 +69,9 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
                     initialResponseHeaders: [:]
                 ).map { headers in
                     res.headers = headers
-                    contextBox.value.write(self.wrapOutboundOut(res), promise: promise)
+                    contextBox.value.write(sendableBox.value.wrapOutboundOut(res), promise: promise)
                 }.flatMap {
-                    let handlers: [RemovableChannelHandler] = [self] + self.httpHandlers
+                    let handlers: [RemovableChannelHandler] = [sendableBox.value] + sendableBox.value.httpHandlers
                     return .andAllComplete(handlers.map { handler in
                         return contextBox.value.pipeline.removeHandler(handler)
                     }, on: contextBox.value.eventLoop)
