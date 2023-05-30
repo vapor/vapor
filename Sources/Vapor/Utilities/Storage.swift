@@ -4,7 +4,8 @@ import NIOConcurrencyHelpers
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
-/// This type has reference semantics with the use of ``NIOLockedValueBox``
+// This is unchecked because of the lock - we can't guarantee that anything stored
+// is Sendable
 public struct Storage: @unchecked Sendable {
     /// The internal storage area.
     private var storage: [ObjectIdentifier: AnyStorageValue]

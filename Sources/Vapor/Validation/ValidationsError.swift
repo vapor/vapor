@@ -19,7 +19,7 @@ public struct ValidationsResult: Sendable {
     }
 }
 
-public struct ValidationsError: Error, Sendable {
+public struct ValidationsError: Error {
     public let failures: [ValidationResult]
 }
 
