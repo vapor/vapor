@@ -59,7 +59,7 @@ extension String {
     /// Prepares a `String` for inclusion in form-urlencoded data.
     func urlEncoded(codingPath: [CodingKey] = []) throws -> String {
         guard let result = self.addingPercentEncoding(
-            withAllowedCharacters: _allowedCharacters
+            withAllowedCharacters: Characters.allowedCharacters
         ) else {
             throw EncodingError.invalidValue(self, EncodingError.Context(
                 codingPath: codingPath,
@@ -71,9 +71,11 @@ extension String {
 }
 
 /// Characters allowed in form-urlencoded data.
-private var _allowedCharacters: CharacterSet = {
-    var allowed = CharacterSet.urlQueryAllowed
-    // these symbols are reserved for url-encoded form
-    allowed.remove(charactersIn: "?&=[];+")
-    return allowed
-}()
+private enum Characters {
+    static let allowedCharacters: CharacterSet = {
+        var allowed = CharacterSet.urlQueryAllowed
+        // these symbols are reserved for url-encoded form
+        allowed.remove(charactersIn: "?&=[];+")
+        return allowed
+    }()
+}
