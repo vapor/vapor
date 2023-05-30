@@ -286,6 +286,41 @@ public func routes(_ app: Application) throws {
         return try req.auth.require(Test.self).name
     }
     
+    asyncRoutes.get("test", "sendable") { req async throws -> HTTPStatus in
+        class Foo {
+          var bar: Int
+            
+            init(bar: Int) {
+                self.bar = bar
+            }
+        }
+        
+        
+        struct FooKey: StorageKey {
+            typealias Value = Foo
+        }
+
+        let foo = Foo(bar: 5)
+        req.storage.set(FooKey.self, to: foo)
+
+        await withTaskGroup(of: Void.self) { taskGroup in
+          taskGroup.addTask {
+            foo.bar = 3
+          }
+
+          taskGroup.addTask {
+            foo.bar = 4
+          }
+            
+            taskGroup.addTask {
+                let foo2 = req.storage.get(FooKey.self)!
+                foo2.bar = 5
+            }
+        }
+        
+        return .ok
+    }
+    
     struct Test: Authenticatable {
         static func authenticator() -> AsyncAuthenticator {
             TestAuthenticator()
