@@ -260,6 +260,8 @@ final class RequestTests: XCTestCase {
         
         app.http.client.configuration.redirectConfiguration = .disallow
 
+        // DO NOT fix these warnings.
+        // This is intentional to make sure the deprecated functions still work.
         app.get("redirect_normal") {
             $0.redirect(to: "foo", type: .normal)
         }
