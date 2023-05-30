@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Validator where T: Comparable & Strideable {
     /// Validates that the data is within the supplied `Range`.
     public static func range(_ range: Swift.Range<T>) -> Validator<T> {
@@ -39,9 +41,10 @@ extension Validator {
         _ suffix: String? = nil
     ) -> Validator<T>
     where U: Comparable & Sendable, T: Sendable
-    {   
-        .init { data in 
-            if let result = try? RangeResult.init(min: min, max: max, value: data[keyPath: keyPath]) {
+    {
+        let sendableKeyPath = UnsafeMutableTransferBox(keyPath)
+        return .init { data in 
+            if let result = try? RangeResult.init(min: min, max: max, value: data[keyPath: sendableKeyPath.wrappedValue]) {
                 return ValidatorResults.Range(
                     result: result,
                     suffix: suffix
@@ -52,6 +55,24 @@ extension Validator {
         }
     }
 }
+
+// TODO: Remove when keypaths are `Sendable`
+/// ``UnsafeMutableTransferBox`` can be used to make non-`Sendable` values `Sendable` and mutable.
+/// It can be used to capture local mutable values in a `@Sendable` closure and mutate them from within the closure.
+/// As the name implies, the usage of this is unsafe because it disables the sendable checking of the compiler and does not add any synchronisation.
+@usableFromInline
+final class UnsafeMutableTransferBox<Wrapped> {
+    @usableFromInline
+    var wrappedValue: Wrapped
+    
+    @inlinable
+    init(_ wrappedValue: Wrapped) {
+        self.wrappedValue = wrappedValue
+    }
+}
+
+extension UnsafeMutableTransferBox: @unchecked Sendable {}
+
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether the input is within a supplied range.
