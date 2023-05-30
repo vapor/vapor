@@ -163,8 +163,9 @@ final class AsyncClientTests: XCTestCase {
         app.clients.use(.custom)
         _ = try await app.client.get("https://vapor.codes")
 
-        XCTAssertEqual(app.customClient.requests.count, 1)
-        XCTAssertEqual(app.customClient.requests.first?.url.host, "vapor.codes")
+        let requests = app.customClient.requests.withLockedValue { $0 }
+        XCTAssertEqual(requests.count, 1)
+        XCTAssertEqual(requests.first?.url.host, "vapor.codes")
     }
 
     func testClientLogging() async throws {
@@ -185,14 +186,14 @@ final class CustomClient: Client {
     var eventLoop: EventLoop {
         EmbeddedEventLoop()
     }
-    var requests: [ClientRequest]
+    let requests: NIOLockedValueBox<[ClientRequest]>
 
     init() {
-        self.requests = []
+        self.requests = .init([])
     }
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
-        self.requests.append(request)
+        self.requests.withLockedValue { $0.append(request) }
         return self.eventLoop.makeSucceededFuture(ClientResponse())
     }
 
