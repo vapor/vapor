@@ -19,8 +19,9 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
+        let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
         self.responder.respond(to: request).whenComplete { response in
-            self.serialize(response, for: request, context: contextBox.value)
+            sendableBox.value.serialize(response, for: request, context: contextBox.value)
         }
     }
     
@@ -48,6 +49,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             }
             response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
+            let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
             done.whenComplete { result in
                 switch result {
                 case .success:
@@ -58,7 +60,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
                     if case .stream(let stream) = response.body.storage {
                         stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
                     }
-                    self.errorCaught(context: contextBox.value, error: error)
+                    sendableBox.value.errorCaught(context: contextBox.value, error: error)
                 }
             }
         }
