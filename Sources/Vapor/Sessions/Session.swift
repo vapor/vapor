@@ -6,7 +6,7 @@ import NIOConcurrencyHelpers
 /// to your app. This is usually done via HTTP cookies.
 ///
 /// See `Request.session()` and `SessionsMiddleware` for more information.
-public final class Session: @unchecked Sendable {
+public final class Session: Sendable {
     /// This session's unique identifier. Usually a cookie value.
     public var id: SessionID? {
         get {
@@ -38,7 +38,7 @@ public final class Session: @unchecked Sendable {
     }
     
     private let _id: NIOLockedValueBox<SessionID?>
-    private var _data: NIOLockedValueBox<SessionData>
+    private let _data: NIOLockedValueBox<SessionData>
     private let _isValid: NIOLockedValueBox<Bool>
 
     /// Create a new `Session`.
