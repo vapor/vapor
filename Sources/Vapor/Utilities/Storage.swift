@@ -4,15 +4,13 @@ import NIOConcurrencyHelpers
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
-// This is unchecked because of the lock - we can't guarantee that anything stored
-// is Sendable
-#warning("What to do")
-public struct Storage: @unchecked Sendable {
+@preconcurrency
+public struct Storage: Sendable {
     /// The internal storage area.
     private var storage: [ObjectIdentifier: AnyStorageValue]
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
-    struct Value<T>: AnyStorageValue {
+    struct Value<T: Sendable>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) throws -> ())?
         func shutdown(logger: Logger) {
@@ -110,7 +108,7 @@ public struct Storage: @unchecked Sendable {
 
 /// ``Storage`` uses this protocol internally to generically invoke shutdown closures for arbitrarily-
 /// typed key values.
-protocol AnyStorageValue {
+protocol AnyStorageValue: Sendable {
     func shutdown(logger: Logger)
 }
 
