@@ -10,6 +10,7 @@ public struct Storage: Sendable {
     private var storage: [ObjectIdentifier: AnyStorageValue]
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
+    @preconcurrency
     struct Value<T: Sendable>: AnyStorageValue {
         var value: T
         var onShutdown: (@Sendable (T) throws -> ())?

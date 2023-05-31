@@ -37,8 +37,7 @@ private struct MemoryCacheKey: Sendable, LockKey, StorageKey {
     typealias Value = MemoryCacheStorage
 }
 
-// This can be Sendable since we use an internal lock to synchronise external access
-private final class MemoryCacheStorage: @unchecked Sendable {
+private final class MemoryCacheStorage: Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
@@ -49,41 +48,40 @@ private final class MemoryCacheStorage: @unchecked Sendable {
         }
     }
     
-    private var storage: [String: Any]
-    private var lock: NIOLock
+    private let storage: NIOLockedValueBox<[String: Sendable]>
     
     init() {
-        self.storage = [:]
-        self.lock = .init()
+        self.storage = .init([:])
     }
     
     func get<T>(_ key: String) -> T?
         where T: Decodable
     {
-        self.lock.withLock {
-            guard let box = self.storage[key] as? CacheEntryBox<T> else { return nil }
-            if let expiresAt = box.expiresAt, expiresAt < Date() {
-                self.storage.removeValue(forKey: key)
-                return nil
-            }
-            
-            return box.value
+        let entry = self.storage.withLockedValue { $0[key] as? CacheEntryBox<T> }
+        guard let box = entry else { return nil }
+        if let expiresAt = box.expiresAt, expiresAt < Date() {
+            // This is a discardable result under the hood, we get a compiler warning
+            // because it's wrapped in NIOLockedValueBox without the _ = ...
+            _  = self.storage.withLockedValue { $0.removeValue(forKey: key) }
+            return nil
         }
+        
+        return box.value
     }
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
         where T: Encodable
     {
-        self.lock.withLock {
-            if let value = value {
-                var box = CacheEntryBox(value)
-                if let expirationTime = expirationTime {
-                    box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
-                }
-                self.storage[key] = box
-            } else {
-                self.storage.removeValue(forKey: key)
+        if let value = value {
+            var box = CacheEntryBox(value)
+            if let expirationTime = expirationTime {
+                box.expiresAt = Date().addingTimeInterval(TimeInterval(expirationTime.seconds))
             }
+            self.storage.withLockedValue { $0[key] = box }
+        } else {
+            // This is a discardable result under the hood, we get a compiler warning
+            // because it's wrapped in NIOLockedValueBox without the _ = ...
+            _ = self.storage.withLockedValue { $0.removeValue(forKey: key) }
         }
     }
 }

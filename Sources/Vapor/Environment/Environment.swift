@@ -21,7 +21,7 @@ public struct Environment: Sendable, Equatable {
     /// - parameters:
     ///     - arguments: Command line arguments to detect environment from.
     /// - returns: The detected environment, or default env.
-    public static func detect(arguments: [String] = CommandLine.arguments) throws -> Environment {
+    public static func detect(arguments: [String] = ProcessInfo.processInfo.arguments) throws -> Environment {
         var commandInput = CommandInput(arguments: arguments)
         return try Environment.detect(from: &commandInput)
     }
@@ -83,7 +83,7 @@ public struct Environment: Sendable, Equatable {
     
     /// Invokes `sanitize(commandInput:)` over a set of raw arguments and returns the
     /// resulting arguments, including the executable path.
-    private static func sanitizeArguments(_ arguments: [String] = CommandLine.arguments) -> [String] {
+    private static func sanitizeArguments(_ arguments: [String] = ProcessInfo.processInfo.arguments) -> [String] {
         var commandInput = CommandInput(arguments: arguments)
         sanitize(commandInput: &commandInput)
         return commandInput.executablePath + commandInput.arguments
@@ -155,7 +155,7 @@ public struct Environment: Sendable, Equatable {
     // MARK: - Init
 
     /// Create a new `Environment`.
-    public init(name: String, arguments: [String] = CommandLine.arguments) {
+    public init(name: String, arguments: [String] = ProcessInfo.processInfo.arguments) {
         self.name = name
         self.arguments = arguments
     }
