@@ -1,10 +1,12 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var views: Views {
         .init(application: self)
     }
 
     public var view: ViewRenderer {
-        guard let makeRenderer = self.views.storage.makeRenderer else {
+        guard let makeRenderer = self.views.storage.makeRenderer.withLockedValue({ $0 }) else {
             fatalError("No renderer configured. Configure with app.views.use(...)")
         }
         return makeRenderer(self)
@@ -26,9 +28,11 @@ extension Application {
         }
         
         // This doesn't need a lock as it's only mutated during app configuration
-        final class Storage {
-            var makeRenderer: (@Sendable (Application) -> ViewRenderer)?
-            init() { }
+        final class Storage: Sendable {
+            let makeRenderer: NIOLockedValueBox<(@Sendable (Application) -> ViewRenderer)?>
+            init() {
+                self.makeRenderer = .init(nil)
+            }
         }
 
         struct Key: StorageKey, Sendable {
@@ -51,7 +55,7 @@ extension Application {
         }
 
         public func use(_ makeRenderer: @Sendable @escaping (Application) -> (ViewRenderer)) {
-            self.storage.makeRenderer = makeRenderer
+            self.storage.makeRenderer.withLockedValue { $0 = makeRenderer }
         }
 
         func initialize() {
