@@ -206,13 +206,12 @@ final class ClientTests: XCTestCase {
     }
 
     func testClientLogging() throws {
-        print("We are testing client logging")
         let app = Application(.testing)
         defer { app.shutdown() }
         let logs = TestLogHandler()
         app.logger = logs.logger
 
-        _ = try app.client.get("https://www.vapor.codes").wait()
+        _ = try app.client.get("http://localhost:\(remoteAppPort!)/status/201").wait()
 
         let metadata = logs.getMetadata()
         XCTAssertNotNil(metadata["ahc-request-id"])
