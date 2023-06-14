@@ -144,4 +144,48 @@ final class AsyncWebSocketTests: XCTestCase {
 
         XCTAssertEqual(string, "foo")
     }
+    
+    // https://github.com/vapor/websocket-kit/issues/140
+    func testSendableCheckingCrash() async throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        app.webSocket("foo") { req, ws in
+            ws.send("foo")
+            ws.close(promise: nil)
+        }
+        app.webSocket("foo") { req in
+            return req.headers
+        } onUpgrade: { req, ws in
+            ws.onText { ws, text in
+                app.logger.info("\(text)")
+            }
+        }
+        
+        app.http.server.configuration.port = 0
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        let promise = app.eventLoopGroup.next().makePromise(of: String.self)
+        WebSocket.connect(
+            to: "ws://localhost:\(port)/foo",
+            on: app.eventLoopGroup.next()
+        ) { ws in
+            // do nothing
+            ws.onText { ws, string in
+                promise.succeed(string)
+            }
+        }.cascadeFailure(to: promise)
+
+        let string = try await promise.futureResult.get()
+        XCTAssertEqual(string, "foo")
+    }
+    
 }
