@@ -84,7 +84,7 @@ final class ContentTests: XCTestCase {
         }
     }
 
-    func testContentContainerEncode() throws {
+    func testContentContainer() throws {
         struct FooContent: Content {
             var message: String = "hi"
         }
@@ -106,51 +106,6 @@ final class ContentTests: XCTestCase {
         try app.testable().test(.GET, "/encode") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "hi")
-        }
-    }
-
-    func testContentContainerDecode() throws {
-        struct FooContent: Content, Equatable {
-            var message: String = "hi"
-        }
-        struct FooDecodable: Decodable, Equatable {
-            var message: String = "hi"
-        }
-
-        let app = Application(.testing)
-        defer { app.shutdown() }
-
-        app.routes.post("decode") { req async throws -> String in
-            XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
-            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
-            return "decoded!"
-        }
-
-        try app.testable().test(.POST, "/decode") { req in
-            try req.content.encode(FooContent())
-        } afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "decoded!")
-        }
-
-        app.routes.post("decode-bad-header") { req async throws -> String in
-            XCTAssertEqual(req.headers.contentType, .audio)
-            XCTAssertThrowsError(try req.content.decode(FooContent.self)) { error in
-                guard let abort = error as? Abort, abort.status == .unsupportedMediaType else {
-                    XCTFail("Unexpected error: \(error)")
-                    return
-                }
-            }
-            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
-            return "decoded!"
-        }
-
-        try app.testable().test(.POST, "/decode-bad-header") { req in
-            try req.content.encode(FooContent())
-            req.headers.contentType = .audio
-        } afterResponse: { res in
-            XCTAssertEqual(res.status, .ok)
-            XCTAssertContains(res.body.string, "decoded!")
         }
     }
     

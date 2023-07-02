@@ -34,12 +34,6 @@ extension ContentContainer {
         return content
     }
 
-    /// Use the default configured decoder for the ``contentType`` parameter to read a value
-    /// of type `D` from the container.
-    public func decode<D: Decodable>(_: D.Type, as contentType: HTTPMediaType) throws -> D {
-        try self.decode(D.self, using: self.configuredDecoder(for: contentType))
-    }
-
     // MARK: - Encoding helpers
 
     /// Serialize a ``Content`` object to the container as its default content type.
@@ -121,8 +115,8 @@ extension ContentContainer {
     }
     
     /// Look up a ``ContentDecoder`` for the container's ``contentType``.
-    private func configuredDecoder(for mediaType: HTTPMediaType? = nil) throws -> ContentDecoder {
-        guard let contentType = mediaType ?? self.contentType else {
+    private func configuredDecoder() throws -> ContentDecoder {
+        guard let contentType = self.contentType else {
             throw Abort(.unsupportedMediaType, reason: "Can't decode data without a content type")
         }
         return try ContentConfiguration.global.requireDecoder(for: contentType)

@@ -144,6 +144,74 @@ final class WebSocketTests: XCTestCase {
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
+    func testLifecycleShutdown() throws {
+        let app = Application(.testing)
+        app.http.server.configuration.port = 1337
+
+        final class WebSocketManager: LifecycleHandler {
+            private let lock: NIOLock
+            private var connections: Set<WebSocket>
+
+            init() {
+                self.lock = .init()
+                self.connections = .init()
+            }
+
+            func track(_ ws: WebSocket) {
+                self.lock.lock()
+                defer { self.lock.unlock() }
+                self.connections.insert(ws)
+                ws.onClose.whenComplete { _ in
+                    self.lock.lock()
+                    defer { self.lock.unlock() }
+                    self.connections.remove(ws)
+                }
+            }
+
+            func broadcast(_ message: String) {
+                self.lock.lock()
+                defer { self.lock.unlock() }
+                for ws in self.connections {
+                    ws.send(message)
+                }
+            }
+
+            /// Closes all active WebSocket connections
+            func shutdown(_ app: Application) {
+                self.lock.lock()
+                defer { self.lock.unlock() }
+                app.logger.debug("Shutting down \(self.connections.count) WebSocket(s)")
+                try! EventLoopFuture<Void>.andAllSucceed(
+                    self.connections.map { $0.close() } ,
+                    on: app.eventLoopGroup.next()
+                ).wait()
+            }
+        }
+
+        let webSockets = WebSocketManager()
+        app.lifecycle.use(webSockets)
+
+        app.webSocket("watcher") { req, ws in
+            webSockets.track(ws)
+            ws.send("hello")
+        }
+
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+
+        let clientGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        defer { try! clientGroup.syncShutdownGracefully() }
+        let connectPromise = app.eventLoopGroup.next().makePromise(of: WebSocket.self)
+        WebSocket.connect(to: "ws://localhost:1337/watcher", on: clientGroup) { ws in
+            connectPromise.succeed(ws)
+        }.cascadeFailure(to: connectPromise)
+
+        let ws = try connectPromise.futureResult.wait()
+        app.shutdown()
+        try ws.onClose.wait()
+    }
+
     override class func setUp() {
         XCTAssertTrue(isLoggingConfigured)
     }

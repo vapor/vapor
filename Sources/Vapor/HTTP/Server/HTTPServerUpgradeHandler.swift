@@ -117,9 +117,16 @@ public protocol Upgrader {
 
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader {
+    
     var maxFrameSize: WebSocketMaxFrameSize
     var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
     var onUpgrade: (WebSocket) -> ()
+    
+    // can maybe mirror config in headers since it comes from them
+    // so the api wont need to change?
+    // really feels like the upgrader shoold know about the pmce so calers dont need to init headers
+    // and pmce
+    //
     
     public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
@@ -130,8 +137,22 @@ public struct WebSocketUpgrader: Upgrader {
     public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
         let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
             return self.shouldUpgrade()
-        }, upgradePipelineHandler: { channel, req in
-            return WebSocket.server(on: channel, onUpgrade: self.onUpgrade)
+        }, upgradePipelineHandler: { channel, req  in
+            
+            var wsConfig = WebSocket.Configuration()
+                      
+            if let config = PMCE.DeflateConfig.configsFrom(headers: req.headers).first {
+                print("deflate config applied \(config)")
+                
+                ///TODO
+                // here you cold modify the zlibsettings
+                // for client / sever. not clear how they map to the rfc yet
+                wsConfig.deflateConfig = config
+            }
+            
+            return WebSocket.server(on: channel,
+                                    config: wsConfig,
+                                    onUpgrade: self.onUpgrade)
         })
         
         return webSocketUpgrader

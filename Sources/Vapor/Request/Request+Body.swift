@@ -31,9 +31,7 @@ extension Request {
                 }
             case .collected(let buffer):
                 _ = handler(.buffer(buffer))
-                    .map {
-                        handler(.end)
-                    }
+                _ = handler(.end)
             case .none:
                 _ = handler(.end)
             }

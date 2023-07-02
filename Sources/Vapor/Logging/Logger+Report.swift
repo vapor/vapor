@@ -32,8 +32,12 @@ extension Logger {
             reason = localized.localizedDescription
             source = nil
             level = .warning
+        case let convertible as CustomStringConvertible:
+            reason = convertible.description
+            source = nil
+            level = .warning
         default:
-            reason = String(reflecting: error)
+            reason = "\(error)"
             source = nil
             level = .warning
         }
