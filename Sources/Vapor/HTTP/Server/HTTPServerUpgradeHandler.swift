@@ -143,6 +143,7 @@ public struct WebSocketUpgrader: Upgrader {
                       
             if let config = PMCE.DeflateConfig.configsFrom(headers: req.headers).first {
                 print("deflate config applied \(config)")
+                print("from \(req.headers)")
                 
                 ///TODO
                 // here you cold modify the zlibsettings
