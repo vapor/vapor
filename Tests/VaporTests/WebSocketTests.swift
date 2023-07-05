@@ -144,7 +144,7 @@ final class WebSocketTests: XCTestCase {
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
-    func testWebSocket_no_pmce() throws {
+    func testWebSocketClient_with_no_pmce_sent_to_server_gets_none_back() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -152,31 +152,17 @@ final class WebSocketTests: XCTestCase {
 
         app.webSocket("test",
                       maxFrameSize: WebSocketMaxFrameSize.default) { req in
-            // here we decide if we should upgrade so this is where we negotioate the compression strategy.
-            // RFC isnt so clear on how this is determined really.
+           
+            // Check for PMCE config.
             let requestedConfigs = PMCE.DeflateConfig.configsFrom(headers: req.headers)
-            
-            ///TODO
-            /// as the server this is where you determine if and how compression is used by returning the proper headers.
-            
+        
             return requestedConfigs.first?.headers() ?? [:]
             
         } onUpgrade: { req, webSoc in
             
-            // Our WebSocket's PMCE is configured and it will handle compressing
-            // and decompressing behind the scenes for text and binary messages.
-            // If no headers where retuned above, no compression will be used.
             webSoc.eventLoop.execute {
-                req.logger.info("WebSocket upgrade Complete. Registering handlers .\nPMCE is \(String(describing: webSoc.pmce))")
+                req.logger.info("WebSocket upgrade Complete. PMCE is \(String(describing: webSoc.pmce))")
               
-                webSoc.onText({ ws, text in
-                    
-                })
-                
-                webSoc.onBinary( { ws, bin in
-        
-                    app.logger.info("tbserver: got bin (as String):\(String(buffer: bin))")
-                })
             }
         }
 
@@ -186,6 +172,7 @@ final class WebSocketTests: XCTestCase {
 
         do {
           
+            // connect without PMCE
             try WebSocket.connect(
                 to: "ws://localhost:8085/test",
                 on: app.eventLoopGroup.next()
@@ -193,11 +180,12 @@ final class WebSocketTests: XCTestCase {
                 XCTAssertNil(ws.pmce, "PMCE shuold be nil")
             }.wait()
         } catch {
-            // pass
+          
         }
     }
     
-    func testWebSocket_with_pmce() throws {
+    func testWebSocketClient_with_pmce_sent_to_server_gets_pmce_back() throws {
+        
         let app = Application(.testing)
         defer { app.shutdown() }
 
