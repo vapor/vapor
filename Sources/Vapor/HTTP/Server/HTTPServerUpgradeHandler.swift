@@ -145,10 +145,11 @@ public struct WebSocketUpgrader: Upgrader {
                 print("deflate config applied \(config)")
                 print("from \(req.headers)")
                 
-                ///TODO
-                // here you cold modify the zlibsettings
-                // for client / sever. not clear how they map to the rfc yet
+               
+               
                 wsConfig.deflateConfig = config
+            }else {
+                print("NO PMCE config in headers...")
             }
             
             return WebSocket.server(on: channel,
