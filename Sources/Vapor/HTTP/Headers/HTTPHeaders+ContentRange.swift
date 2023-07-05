@@ -263,7 +263,7 @@ extension HTTPHeaders.Range.Value {
             }
             return .withinWithLimit(start: (limit - end), end: limit - 1, limit: limit)
         case .within(let start, let end):
-            guard start >= 0, end >= 0, start < end, start <= limit, end <= limit else {
+            guard start >= 0, end >= 0, start <= end, start <= limit, end <= limit else {
                 throw Abort(.badRequest)
             }
             

@@ -109,7 +109,6 @@ public protocol XCTApplicationTester {
 }
 
 extension XCTApplicationTester {
-    #if compiler(>=5.5) && canImport(_Concurrency)
     @discardableResult
     public func test(
         _ method: HTTPMethod,
@@ -131,7 +130,6 @@ extension XCTApplicationTester {
             afterResponse: afterResponse
         )
     }
-    #endif
 
     @discardableResult
     public func test(
@@ -155,7 +153,6 @@ extension XCTApplicationTester {
         )
     }
 
-    #if compiler(>=5.5) && canImport(_Concurrency)
     @discardableResult
     public func test(
         _ method: HTTPMethod,
@@ -183,7 +180,6 @@ extension XCTApplicationTester {
         }
         return self
     }
-    #endif
 
     @discardableResult
     public func test(
@@ -213,7 +209,6 @@ extension XCTApplicationTester {
         return self
     }
     
-    #if compiler(>=5.5) && canImport(_Concurrency)
     public func sendRequest(
         _ method: HTTPMethod,
         _ path: String,
@@ -237,7 +232,6 @@ extension XCTApplicationTester {
             throw error
         }
     }
-    #endif
 
     public func sendRequest(
         _ method: HTTPMethod,
