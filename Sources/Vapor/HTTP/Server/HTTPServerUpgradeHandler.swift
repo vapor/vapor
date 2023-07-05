@@ -145,8 +145,6 @@ public struct WebSocketUpgrader: Upgrader {
                 print("deflate config applied \(config)")
                 print("from \(req.headers)")
                 
-               
-               
                 wsConfig.deflateConfig = config
             }else {
                 print("NO PMCE config in headers...")
