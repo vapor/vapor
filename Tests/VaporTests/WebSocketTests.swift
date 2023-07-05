@@ -144,6 +144,98 @@ final class WebSocketTests: XCTestCase {
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
+    func testWebSocket_no_pmce() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.http.server.configuration.port = 8085
+
+        app.webSocket("test",
+                      maxFrameSize: WebSocketMaxFrameSize.default) { req in
+            // here we decide if we should upgrade so this is where we negotioate the compression strategy.
+            // RFC isnt so clear on how this is determined really.
+            let requestedConfigs = PMCE.DeflateConfig.configsFrom(headers: req.headers)
+            
+            ///TODO
+            /// as the server this is where you determine if and how compression is used by returning the proper headers.
+            
+            return requestedConfigs.first?.headers() ?? [:]
+            
+        } onUpgrade: { req, webSoc in
+            
+            // Our WebSocket's PMCE is configured and it will handle compressing
+            // and decompressing behind the scenes for text and binary messages.
+            // If no headers where retuned above, no compression will be used.
+            webSoc.eventLoop.execute {
+                req.logger.info("WebSocket upgrade Complete. Registering handlers .\nPMCE is \(String(describing: webSoc.pmce))")
+              
+                webSoc.onText({ ws, text in
+                    
+                })
+                
+                webSoc.onBinary( { ws, bin in
+        
+                    app.logger.info("tbserver: got bin (as String):\(String(buffer: bin))")
+                })
+            }
+        }
+
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+
+        do {
+          
+            try WebSocket.connect(
+                to: "ws://localhost:8085/test",
+                on: app.eventLoopGroup.next()
+            ) { ws in
+                XCTAssertNil(ws.pmce, "PMCE shuold be nil")
+            }.wait()
+        } catch {
+            // pass
+        }
+    }
+    
+    func testWebSocket_with_pmce() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.http.server.configuration.port = 8085
+
+        app.webSocket("test",
+                      maxFrameSize: WebSocketMaxFrameSize.default) { req in
+            // give em the PMCE they ask for.
+            let requestedConfigs = PMCE.DeflateConfig.configsFrom(headers: req.headers)
+            
+            return requestedConfigs.first?.headers() ?? [:]
+            
+        } onUpgrade: { req, webSoc in
+            
+            webSoc.eventLoop.execute {
+                req.logger.info("WebSocket upgrade Complete. PMCE is \(String(describing: webSoc.pmce))")
+            }
+        }
+
+        app.environment.arguments = ["serve"]
+
+        try app.start()
+
+        do {
+            let deflate = PMCE.DeflateConfig.init(clientCfg: .init(takeover: .noTakeover),
+                                                  serverCfg: .init(takeover: .noTakeover))
+            try WebSocket.connect(
+                to: "ws://localhost:8085/test",
+                configuration: .init(deflateConfig: deflate),
+                on: app.eventLoopGroup.next()
+            ) { ws in
+                XCTAssertNotNil(ws.pmce, "PMCE shuold NOT be nil")
+            }.wait()
+        } catch {
+            app.logger.error("\(error.localizedDescription)")
+        }
+    }
+    
     func testLifecycleShutdown() throws {
         let app = Application(.testing)
         app.http.server.configuration.port = 1337
