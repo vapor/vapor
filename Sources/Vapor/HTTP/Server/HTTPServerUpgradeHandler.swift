@@ -8,13 +8,11 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     typealias OutboundIn = Response
     typealias OutboundOut = Response
     
-    
     private enum UpgradeState {
         case ready
         case pending(Request, UpgradeBufferHandler)
         case upgraded
     }
-    
     
     private var upgradeState: UpgradeState
     let httpRequestDecoder: ByteToMessageHandler<HTTPRequestDecoder>
@@ -122,12 +120,6 @@ public struct WebSocketUpgrader: Upgrader {
     var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
     var onUpgrade: (WebSocket) -> ()
     
-    // can maybe mirror config in headers since it comes from them
-    // so the api wont need to change?
-    // really feels like the upgrader shoold know about the pmce so calers dont need to init headers
-    // and pmce
-    //
-    
     public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
@@ -142,12 +134,7 @@ public struct WebSocketUpgrader: Upgrader {
             var wsConfig = WebSocket.Configuration()
                       
             if let config = PMCE.DeflateConfig.configsFrom(headers: req.headers).first {
-                print("deflate config applied \(config)")
-                print("from \(req.headers)")
-                
                 wsConfig.deflateConfig = config
-            }else {
-                print("NO PMCE config in headers...")
             }
             
             return WebSocket.server(on: channel,
