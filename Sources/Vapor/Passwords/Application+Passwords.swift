@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var passwords: Passwords {
         .init(application: self)
@@ -25,13 +27,16 @@ extension Application {
         public func use(
             _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
-            self.storage.makeVerifier = makeVerifier
+            self.storage.makeVerifier.withLockedValue { $0 = makeVerifier }
         }
 
         // This doesn't need a lock as it's only mutated during app configuration
-        final class Storage {
-            var makeVerifier: (@Sendable (Application) -> PasswordHasher)?
-            init() { }
+        final class Storage: Sendable {
+            typealias MakeVerifier = (@Sendable (Application) -> PasswordHasher)
+            let makeVerifier: NIOLockedValueBox<MakeVerifier?>
+            init() {
+                self.makeVerifier = .init(nil)
+            }
         }
 
         var storage: Storage {
