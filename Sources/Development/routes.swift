@@ -2,6 +2,7 @@ import class Foundation.Bundle
 import Vapor
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 
 struct Creds: Content {
     var email: String
@@ -202,17 +203,18 @@ public func routes(_ app: Application) throws {
             eventLoop: req.eventLoop
         ).flatMap { fileHandle in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
             req.body.drain { part in
                 switch part {
                 case .buffer(let buffer):
                     return req.application.fileio.write(
-                        fileHandle: fileHandle,
+                        fileHandle: fileHandleBox.value,
                         buffer: buffer,
                         eventLoop: req.eventLoop
                     )
                 case .error(let drainError):
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.multipleFailures([
@@ -223,7 +225,7 @@ public func routes(_ app: Application) throws {
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.succeed(.ok)
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
