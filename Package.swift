@@ -1,5 +1,6 @@
 // swift-tools-version:5.7
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "vapor",
@@ -89,9 +90,6 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
-        ],
-        swiftSettings: [
-            .unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])
         ]),
 	
         // Development
@@ -134,3 +132,11 @@ let package = Package(
         ]),
     ]
 )
+
+//if ProcessInfo.processInfo.environment["STRICT_CONCURRENCY"] == "true" {
+    for target in package.targets {
+        if !target.isTest {
+            target.swiftSettings = [.unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])]
+        }
+    }
+//}

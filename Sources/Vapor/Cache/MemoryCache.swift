@@ -38,7 +38,7 @@ private struct MemoryCacheKey: Sendable, LockKey, StorageKey {
 }
 
 private final class MemoryCacheStorage: Sendable {
-    struct CacheEntryBox<T> {
+    struct CacheEntryBox<T: Sendable>: Sendable {
         var expiresAt: Date?
         var value: T
         
@@ -54,7 +54,7 @@ private final class MemoryCacheStorage: Sendable {
         self.storage = .init([:])
     }
     
-    func get<T>(_ key: String) -> T?
+    func get<T: Sendable>(_ key: String) -> T?
         where T: Decodable
     {
         let entry = self.storage.withLockedValue { $0[key] as? CacheEntryBox<T> }
@@ -69,7 +69,7 @@ private final class MemoryCacheStorage: Sendable {
         return box.value
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
+    func set<T: Sendable>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?)
         where T: Encodable
     {
         if let value = value {
@@ -95,19 +95,19 @@ private struct MemoryCache: Sendable, Cache {
         self.eventLoop = eventLoop
     }
     
-    func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
+    func get<T: Sendable>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
         where T: Decodable
     {
         self.eventLoop.makeSucceededFuture(self.storage.get(key))
     }
     
-    func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
+    func set<T: Sendable>(_ key: String, to value: T?) -> EventLoopFuture<Void>
         where T: Encodable
     {
         self.set(key, to: value, expiresIn: nil)
     }
     
-    func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
+    func set<T: Sendable>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
         where T: Encodable
     {
         self.storage.set(key, to: value, expiresIn: expirationTime)
