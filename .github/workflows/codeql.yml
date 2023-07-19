@@ -1,0 +1,29 @@
+name: "CodeQL"
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  run-codeql:
+    name: Run CodeQL
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@v2
+      with:
+        languages: swift
+
+    - name: Build
+      run: swift build
+    
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@v2
