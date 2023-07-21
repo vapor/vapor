@@ -408,7 +408,6 @@ private final class HTTPServerConnection {
             // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
-            .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
         
         let channel: EventLoopFuture<Channel>
         switch configuration.address {
