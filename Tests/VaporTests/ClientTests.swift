@@ -120,22 +120,18 @@ final class ClientTests: XCTestCase {
         XCTAssertEqual(data.json, ["hello": "world"])
         XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
+    
     func testClientContent() throws {
         let app = Application()
         defer { app.shutdown() }
         try app.boot()
         
-        let res = try app.client.post("http://httpbin.org/anything", content: ["hello": "world"]).wait()
+        let res = try app.client.post("http://localhost:\(remoteAppPort!)/anything", content: ["hello": "world"]).wait()
 
-        struct HTTPBinAnything: Codable {
-            var headers: [String: String]
-            var json: [String: String]
-        }
-        let data = try res.content.decode(HTTPBinAnything.self)
+        let data = try res.content.decode(AnythingResponse.self)
         XCTAssertEqual(data.json, ["hello": "world"])
-        XCTAssertEqual(data.headers["Content-Type"], "application/json; charset=utf-8")
+        XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
     }
-    
     func testBoilerplateClient() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
