@@ -477,8 +477,8 @@ final class HTTPServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandle
         }
         
         // Any HTTPParserError is automatically fatal, and we don't actually need (or want) to
-        // provide that error to the client: we just want to tell it that it screwed up and then
-        // let the rest of the pipeline shut the door in its face. However, we can only send an
+        // provide that error to the client: we just want to inform them something went wrong
+        // and then close off the pipeline. However, we can only send an
         // HTTP error response if another response hasn't started yet.
         //
         // A side note here: we cannot block or do any delayed work. ByteToMessageDecoder is going
@@ -492,6 +492,8 @@ final class HTTPServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandle
         }
 
         // Now pass the error on in case someone else wants to see it.
+        // In the Vapor Channel Pipeline the Connection will eventually 
+        // be closed by the NIOCloseOnErrorHandler
         context.fireErrorCaught(error)
     }
 
