@@ -471,18 +471,24 @@ final class HTTP1ServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandl
     }
     
     func errorCaught(context: ChannelHandlerContext, error: Error) {
-        guard error is HTTPParserError else {
-            context.fireErrorCaught(error)
-            return
+        if let error = error as? HTTPParserError {
+            self.makeHTTPParserErrorResponse(context: context, error: error)
         }
-        
+
+        // Now pass the error on in case someone else wants to see it.
+        // In the Vapor ChannelPipeline the connection will eventually 
+        // be closed by the NIOCloseOnErrorHandler
+        context.fireErrorCaught(error)
+    }
+
+    private func makeHTTPParserErrorResponse(context: ChannelHandlerContext, error: HTTPParserError) {
         // Any HTTPParserError is automatically fatal, and we don't actually need (or want) to
         // provide that error to the client: we just want to inform them something went wrong
         // and then close off the pipeline. However, we can only send an
         // HTTP error response if another response hasn't started yet.
         //
-        // A side note here: we cannot block or do any delayed work. ByteToMessageDecoder is going
-        // to come along and close the channel right after we return from this function.
+        // A side note here: we cannot block or do any delayed work. 
+        // The channel might be closed right after we return from this function.
         if !self.hasUnterminatedResponse {
             self.logger.debug("Bad Request - Invalid HTTP: \(error)")
             let headers = HTTPHeaders([("Connection", "close"), ("Content-Length", "0")])
@@ -490,11 +496,6 @@ final class HTTP1ServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandl
             context.write(self.wrapOutboundOut(.head(head)), promise: nil)
             context.writeAndFlush(self.wrapOutboundOut(.end(nil)), promise: nil)
         }
-
-        // Now pass the error on in case someone else wants to see it.
-        // In the Vapor Channel Pipeline the Connection will eventually 
-        // be closed by the NIOCloseOnErrorHandler
-        context.fireErrorCaught(error)
     }
 
     public func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
