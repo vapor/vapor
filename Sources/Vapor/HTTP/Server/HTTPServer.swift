@@ -458,7 +458,7 @@ private final class HTTPServerConnection {
 /// deal with the error.
 /// 
 /// adapted from: https://github.com/apple/swift-nio/blob/00341c92770e0a7bebdc5fda783f08765eb3ff56/Sources/NIOHTTP1/HTTPServerProtocolErrorHandler.swift
-final class HTTPServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandler {
+final class HTTP1ServerErrorHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Never
     typealias InboundOut = Never
     typealias OutboundIn = HTTPServerResponsePart
@@ -542,9 +542,6 @@ extension ChannelPipeline {
             application: application
         )
         handlers.append(serverReqDecoder)
-
-        let errorHandler = HTTPServerErrorHandler(logger: configuration.logger)
-        handlers.append(errorHandler)
         
         // add NIO -> HTTP response encoder
         let serverResEncoder = HTTPServerResponseEncoder(
@@ -607,7 +604,7 @@ extension ChannelPipeline {
             break
         }
 
-        let errorHandler = HTTPServerErrorHandler(logger: configuration.logger)
+        let errorHandler = HTTP1ServerErrorHandler(logger: configuration.logger)
         handlers.append(errorHandler)
 
         // add NIO -> HTTP response encoder
