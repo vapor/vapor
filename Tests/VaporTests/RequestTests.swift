@@ -213,4 +213,110 @@ final class RequestTests: XCTestCase {
             XCTAssertEqual(uri.string, "/")
         }
     }
+    
+    func testRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.http.client.configuration.redirectConfiguration = .disallow
+
+        app.get("redirect_normal") {
+            $0.redirect(to: "foo", redirectType: .normal)
+        }
+        app.get("redirect_permanent") {
+            $0.redirect(to: "foo", redirectType: .permanent)
+        }
+        app.post("redirect_temporary") {
+            $0.redirect(to: "foo", redirectType: .temporary)
+        }
+        app.post("redirect_permanentPost") {
+            $0.redirect(to: "foo", redirectType: .permanentPost)
+        }
+        
+        try app.server.start(address: .hostname("localhost", port: 8080))
+        defer { app.server.shutdown() }
+        
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            .seeOther
+        )
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            .movedPermanently
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            .temporaryRedirect
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_permanentPost").wait().status,
+            .permanentRedirect
+        )
+    }
+    
+    func testRedirect_old() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.http.client.configuration.redirectConfiguration = .disallow
+
+        // DO NOT fix these warnings.
+        // This is intentional to make sure the deprecated functions still work.
+        app.get("redirect_normal") {
+            $0.redirect(to: "foo", type: .normal)
+        }
+        app.get("redirect_permanent") {
+            $0.redirect(to: "foo", type: .permanent)
+        }
+        app.post("redirect_temporary") {
+            $0.redirect(to: "foo", type: .temporary)
+        }
+        
+        try app.server.start(address: .hostname("localhost", port: 8080))
+        defer { app.server.shutdown() }
+        
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            .seeOther
+        )
+        XCTAssertEqual(
+            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            .movedPermanently
+        )
+        XCTAssertEqual(
+            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            .temporaryRedirect
+        )
+    }
+    
+    func testCollectedBodyDrain() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(
+            application: app,
+            collectedBody: .init(string: ""),
+            on: EmbeddedEventLoop()
+        )
+        
+        let handleBufferExpectation = XCTestExpectation()
+        let endDrainExpectation = XCTestExpectation()
+        
+        request.body.drain { part in
+            switch part {
+            case .buffer:
+                return request.eventLoop.makeFutureWithTask {
+                    handleBufferExpectation.fulfill()
+                }
+            case .error:
+                XCTAssertTrue(false)
+                return request.eventLoop.makeSucceededVoidFuture()
+            case .end:
+                endDrainExpectation.fulfill()
+                return request.eventLoop.makeSucceededVoidFuture()
+            }
+        }
+        
+        self.wait(for: [handleBufferExpectation, endDrainExpectation], timeout: 1.0, enforceOrder: true)
+    }
 }

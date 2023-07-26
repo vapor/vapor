@@ -162,6 +162,33 @@ final class FileTests: XCTestCase {
             XCTAssertTrue(range == length)
         }
     }
+
+    func testStreamFileContentHeadersOnlyFirstByte() async throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+
+        var headers = HTTPHeaders()
+        headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
+        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+            XCTAssertEqual(res.status, .partialContent)
+
+            XCTAssertEqual(res.headers.first(name: .contentLength), "1")
+            let range = res.headers.first(name: .contentRange)!.split(separator: "/").first!.split(separator: " ").last!
+            XCTAssertEqual(range, "0-0")
+
+            XCTAssertEqual(res.body.readableBytes, 1)
+        }
+    }
     
     func testStreamFileContentHeadersWithinFail() throws {
         let app = Application(.testing)
@@ -325,6 +352,46 @@ final class FileTests: XCTestCase {
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
         try app.test(.GET, "Utilities/") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }
+    }
+    
+    func testRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .redirect
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }.test(.GET, "Utilities/SubUtilities") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+        }
+    }
+    
+    func testNoRedirect() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .none
+            )
+        )
+
+        try app.test(.GET, "Utilities") { res in
+            XCTAssertEqual(res.status, .notFound)
+        }.test(.GET, "Utilities/SubUtilities") { res in
             XCTAssertEqual(res.status, .notFound)
         }
     }

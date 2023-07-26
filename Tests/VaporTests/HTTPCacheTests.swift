@@ -128,4 +128,12 @@ class HTTPCacheTests: XCTestCase {
         XCTAssertNotNil(cache.maxStale?.seconds)
         XCTAssertEqual(cache.maxStale?.seconds, 12)
     }
+
+    func testImmutable() {
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "immutable"))
+        let response = ClientResponse(status: .ok, headers: headers)
+
+        let cache = response.headers.cacheControl!
+        XCTAssertTrue(cache.immutable)
+    }
 }

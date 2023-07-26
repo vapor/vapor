@@ -14,8 +14,7 @@ public struct Validations {
         required: Bool = true,
         customFailureDescription: String? = nil
     ) {
-        let validation = Validation(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription)
-        self.storage.append(validation)
+        self.storage.append(.init(key: key, required: required, validator: validator, customFailureDescription: customFailureDescription))
     }
     
     public mutating func add(
@@ -23,8 +22,7 @@ public struct Validations {
         result: ValidatorResult,
         customFailureDescription: String? = nil
     ) {
-        let validation = Validation(key: key, result: result, customFailureDescription: customFailureDescription)
-        self.storage.append(validation)
+        self.storage.append(.init(key: key, result: result, customFailureDescription: customFailureDescription))
     }
 
     public mutating func add(
@@ -35,8 +33,7 @@ public struct Validations {
     ) {
         var validations = Validations()
         nested(&validations)
-        let validation = Validation(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription)
-        self.storage.append(validation)
+        self.storage.append(.init(nested: key, required: required, keyed: validations, customFailureDescription: customFailureDescription))
     }
     
     public mutating func add(
@@ -45,8 +42,7 @@ public struct Validations {
         customFailureDescription: String? = nil,
         _ handler: @escaping (Int, inout Validations) -> ()
     ) {
-        let validation = Validation(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription)
-        self.storage.append(validation)
+        self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }
     
     public func validate(request: Request) throws -> ValidationsResult {
@@ -57,29 +53,61 @@ public struct Validations {
             throw Abort(.unprocessableEntity, reason: "Empty Body")
         }
         let contentDecoder = try ContentConfiguration.global.requireDecoder(for: contentType)
-        let decoder = try contentDecoder.decode(DecoderUnwrapper.self, from: body, headers: request.headers)
-        return try self.validate(decoder.decoder)
+        return try contentDecoder.decode(ValidationsExecutor.self, from: body, headers: request.headers, userInfo: [.pendingValidations: self]).results
     }
     
     public func validate(query: URI) throws -> ValidationsResult {
         let urlDecoder = try ContentConfiguration.global.requireURLDecoder()
-        let decoder = try urlDecoder.decode(DecoderUnwrapper.self, from: query)
-        return try self.validate(decoder.decoder)
+        return try urlDecoder.decode(ValidationsExecutor.self, from: query, userInfo: [.pendingValidations: self]).results
     }
     
     public func validate(json: String) throws -> ValidationsResult {
-        let decoder = try JSONDecoder().decode(DecoderUnwrapper.self, from: Data(json.utf8))
-        return try self.validate(decoder.decoder)
+        return try ContentConfiguration.global.requireDecoder(for: .json)
+            .decode(ValidationsExecutor.self, from: .init(string: json), headers: [:], userInfo: [.pendingValidations: self]).results
     }
     
     public func validate(_ decoder: Decoder) throws -> ValidationsResult {
-        try self.validate(decoder.container(keyedBy: ValidationKey.self))
-    }
-
-    internal func validate(_ decoder: KeyedDecodingContainer<ValidationKey>) -> ValidationsResult {
-        .init(results: self.storage.map {
-            $0.run(decoder)
+        let container = try decoder.container(keyedBy: ValidationKey.self)
+        
+        return try .init(results: self.storage.map {
+            try .init(
+                key: $0.key,
+                result: {
+                    switch (container.contains($0.key), $0.valuelessKeyBehavior) {
+                    case (_, .ignore):          return $0.run(decoder) // do *NOT* call superDecoder(forKey:) here!
+                    case (false, .missing):     return ValidatorResults.Missing()
+                    case (true, .skipAlways) where try container.decodeNil(forKey: $0.key),
+                         (false, .skipWhenUnset),
+                         (false, .skipAlways):  return ValidatorResults.Skipped()
+                    case (true, _):             return try $0.run(container.superDecoder(forKey: $0.key))
+                    }
+                }($0),
+                customFailureDescription: $0.customFailureDescription
+            )
         })
     }
 }
 
+/// N.B.: The only reason we need all this is that "top-level" decoders like JSONDecoder etc. do not actually conform to
+/// Decoder, so we can only invoke our logic from the other end of Codable. And the only way to pass the validation set
+/// through is via Codable's oft-ignored userInfo mechanism. (Ideally, we'd flip things around and do some magic with
+/// _En_coder instead, but we can't do that without breaking public API.)
+
+fileprivate extension CodingUserInfoKey {
+    static var pendingValidations: Self { .init(rawValue: "codes.vapor.validation.pendingValidations")! }
+}
+
+fileprivate struct ValidationsExecutor: Decodable {
+    let results: ValidationsResult
+    
+    init(from decoder: Decoder) throws {
+        guard let pendingValidations = decoder.userInfo[.pendingValidations] as? Validations else {
+            throw DecodingError.dataCorrupted(.init(codingPath: [], debugDescription: "Validation executor couldn't find any validations to run (broken Decoder?)"))
+        }
+        try self.init(from: decoder, explicitValidations: pendingValidations)
+    }
+    
+    init(from decoder: Decoder, explicitValidations: Validations) throws {
+        self.results = try explicitValidations.validate(decoder)
+    }
+}
