@@ -7,6 +7,7 @@ public struct ClientRequest {
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
+    public var timeout: TimeAmount?
     private let byteBufferAllocator: ByteBufferAllocator
 
     public init(
@@ -14,12 +15,14 @@ public struct ClientRequest {
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
+        timeout: TimeAmount? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.method = method
         self.url = url
         self.headers = headers
         self.body = body
+        self.timeout = timeout
         self.byteBufferAllocator = byteBufferAllocator
     }
 }
