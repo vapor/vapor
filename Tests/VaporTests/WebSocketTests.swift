@@ -200,9 +200,6 @@ final class WebSocketTests: XCTestCase {
             
         } onUpgrade: { req, webSoc in
             
-            webSoc.eventLoop.execute {
-                req.logger.info("WebSocket upgrade Complete. PMCE is \(String(describing: webSoc.pmce))")
-            }
         }
 
         app.environment.arguments = ["serve"]
