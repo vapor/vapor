@@ -144,6 +144,7 @@ final class WebSocketTests: XCTestCase {
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
     }
 
+    ///PMCE additions
     func testWebSocketClient_with_no_pmce_sent_to_server_gets_none_back() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -223,6 +224,7 @@ final class WebSocketTests: XCTestCase {
             app.logger.error("\(error.localizedDescription)")
         }
     }
+    
     
     func testLifecycleShutdown() throws {
         let app = Application(.testing)
