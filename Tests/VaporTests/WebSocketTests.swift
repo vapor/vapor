@@ -152,14 +152,7 @@ final class WebSocketTests: XCTestCase {
         app.http.server.configuration.port = 8085
 
         app.webSocket("test",
-                      maxFrameSize: WebSocketMaxFrameSize.default) { req in
-           
-            // Check for PMCE config.
-            let requestedConfigs = PMCE.DeflateConfig.configsFrom(headers: req.headers)
-        
-            return requestedConfigs.first?.headers() ?? [:]
-            
-        } onUpgrade: { req, webSoc in
+                      maxFrameSize: WebSocketMaxFrameSize.default) { req, webSoc in
             
             webSoc.eventLoop.execute {
                 req.logger.info("WebSocket upgrade Complete. PMCE is \(String(describing: webSoc.pmce))")
@@ -193,13 +186,7 @@ final class WebSocketTests: XCTestCase {
         app.http.server.configuration.port = 8085
 
         app.webSocket("test",
-                      maxFrameSize: WebSocketMaxFrameSize.default) { req in
-            // give em the PMCE they ask for.
-            let requestedConfigs = PMCE.DeflateConfig.configsFrom(headers: req.headers)
-            
-            return requestedConfigs.first?.headers() ?? [:]
-            
-        } onUpgrade: { req, webSoc in
+                      maxFrameSize: WebSocketMaxFrameSize.default) { req, webSoc in
             
         }
 
