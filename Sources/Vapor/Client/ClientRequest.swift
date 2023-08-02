@@ -15,7 +15,7 @@ public struct ClientRequest {
         url: URI = "/",
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        timeout: TimeAmount? = nil,
+        timeout: TimeAmount?,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
         self.method = method
@@ -24,6 +24,21 @@ public struct ClientRequest {
         self.body = body
         self.timeout = timeout
         self.byteBufferAllocator = byteBufferAllocator
+    }
+
+    public init(
+        method: HTTPMethod = .GET,
+        url: URI = "/",
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) {
+        self.init(method: method,
+                  url: url,
+                  headers: headers,
+                  body: body,
+                  timeout: nil,
+                  byteBufferAllocator: byteBufferAllocator)
     }
 }
 
