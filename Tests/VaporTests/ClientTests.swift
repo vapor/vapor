@@ -38,6 +38,10 @@ final class ClientTests: XCTestCase {
             
             return AnythingResponse(headers: headers, json: jsonResponse)
         }
+
+        remoteApp.get("stalling") {
+            $0.eventLoop.scheduleTask(in: .seconds(5)) { SomeJSON() }.futureResult
+        }
         
         remoteApp.environment.arguments = ["serve"]
         try remoteApp.boot()
@@ -131,6 +135,18 @@ final class ClientTests: XCTestCase {
         let data = try res.content.decode(AnythingResponse.self)
         XCTAssertEqual(data.json, ["hello": "world"])
         XCTAssertEqual(data.headers["content-type"], "application/json; charset=utf-8")
+    }
+
+    func testClientTimeout() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        try app.boot()
+
+        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(2) }.wait())
+        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .seconds(2) }.wait()) {
+            XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
+            XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
+        }
     }
     
     func testBoilerplateClient() throws {
