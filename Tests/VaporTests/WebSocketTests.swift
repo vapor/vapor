@@ -195,7 +195,7 @@ final class WebSocketTests: XCTestCase {
         try app.start()
 
         do {
-            let deflate = PMCE.DeflateConfig.init(clientCfg: .init(takeover: .noTakeover),
+            let deflate = PMCE.PMCEConfig.init(clientCfg: .init(takeover: .noTakeover),
                                                   serverCfg: .init(takeover: .noTakeover))
             try WebSocket.connect(
                 to: "ws://localhost:8085/test",

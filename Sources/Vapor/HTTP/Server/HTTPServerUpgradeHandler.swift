@@ -127,13 +127,15 @@ public struct WebSocketUpgrader: Upgrader {
     }
     
     public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
-        let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
+        let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value,
+                                                           automaticErrorHandling: false,
+                                                           shouldUpgrade: { _, _ in
             return self.shouldUpgrade()
         }, upgradePipelineHandler: { channel, req  in
             
             var wsConfig = WebSocket.Configuration()
                       
-            if let config = PMCE.DeflateConfig.configsFrom(headers: req.headers).first {
+            if let config = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
                 wsConfig.deflateConfig = config
             }
             
