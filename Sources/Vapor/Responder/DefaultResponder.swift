@@ -1,6 +1,6 @@
 import Foundation
 import Metrics
-import RoutingKit
+@preconcurrency import RoutingKit
 import NIOCore
 import NIOHTTP1
 import Logging

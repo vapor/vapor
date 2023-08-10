@@ -27,7 +27,7 @@ import NIOPosix
 ///
 /// Single-quoted strings are parsed literally. Double-quoted strings may contain escaped newlines
 /// that will be converted to actual newlines.
-public struct DotEnvFile {
+public struct DotEnvFile: Sendable {
     /// Reads the dotenv files relevant to the environment and loads them into the process.
     ///
     ///     let environment: Environment
@@ -172,10 +172,11 @@ public struct DotEnvFile {
         on eventLoop: EventLoop
     ) -> EventLoopFuture<DotEnvFile> {
         return fileio.openFile(path: path, eventLoop: eventLoop).flatMap { arg -> EventLoopFuture<ByteBuffer> in
+            let fileHandleWrapper = NIOLoopBound(arg.0, eventLoop: eventLoop)
             return fileio.read(fileRegion: arg.1, allocator: .init(), eventLoop: eventLoop)
                 .flatMapThrowing
             { buffer in
-                try arg.0.close()
+                try fileHandleWrapper.value.close()
                 return buffer
             }
         }.map { buffer in
@@ -185,7 +186,7 @@ public struct DotEnvFile {
     }
 
     /// Represents a `KEY=VALUE` pair in a dotenv file.
-    public struct Line: CustomStringConvertible, Equatable {
+    public struct Line: Sendable, CustomStringConvertible, Equatable {
         /// The key.
         public let key: String
 
