@@ -57,7 +57,6 @@ jobs:
 
   unit-tests:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
-     permissions: { security-events: write }
      with:
        with_coverage: true
        with_tsan: false
