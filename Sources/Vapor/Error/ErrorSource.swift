@@ -1,5 +1,5 @@
 /// A source-code location.
-public struct ErrorSource {
+public struct ErrorSource: Sendable {
     /// File in which this location exists.
     public var file: String
 
