@@ -2,6 +2,7 @@ import class Foundation.Bundle
 import Vapor
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
 
 struct Creds: Content {
     var email: String
@@ -18,21 +19,21 @@ public func routes(_ app: Application) throws {
     app.on(.POST, "slow-stream", body: .stream) { req -> EventLoopFuture<String> in
         let done = req.eventLoop.makePromise(of: String.self)
 
-        var total = 0
+        let totalBox = NIOLoopBoundBox(0, eventLoop: req.eventLoop)
         req.body.drain { result in
             let promise = req.eventLoop.makePromise(of: Void.self)
 
             switch result {
             case .buffer(let buffer):
                 req.eventLoop.scheduleTask(in: .milliseconds(1000)) {
-                    total += buffer.readableBytes
+                    totalBox.value += buffer.readableBytes
                     promise.succeed(())
                 }
             case .error(let error):
                 done.fail(error)
             case .end:
                 promise.succeed(())
-                done.succeed(total.description)
+                done.succeed(totalBox.value.description)
             }
 
             // manually return pre-completed future
@@ -202,17 +203,18 @@ public func routes(_ app: Application) throws {
             eventLoop: req.eventLoop
         ).flatMap { fileHandle in
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
+            let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
             req.body.drain { part in
                 switch part {
                 case .buffer(let buffer):
                     return req.application.fileio.write(
-                        fileHandle: fileHandle,
+                        fileHandle: fileHandleBox.value,
                         buffer: buffer,
                         eventLoop: req.eventLoop
                     )
                 case .error(let drainError):
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.multipleFailures([
@@ -223,7 +225,7 @@ public func routes(_ app: Application) throws {
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.succeed(.ok)
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))
@@ -244,6 +246,7 @@ public func routes(_ app: Application) throws {
         return String(buffer: body)
     }
 
+    @Sendable
     func asyncRouteTester(_ req: Request) async throws -> String {
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
@@ -255,6 +258,7 @@ public func routes(_ app: Application) throws {
     
     asyncRoutes.get("content", use: asyncContentTester)
     
+    @Sendable
     func asyncContentTester(_ req: Request) async throws -> Creds {
         return Creds(email: "name", password: "password")
     }
@@ -268,6 +272,7 @@ public func routes(_ app: Application) throws {
         return [cred1]
     }
     
+    @Sendable
     func opaqueRouteTester(_ req: Request) async throws -> some AsyncResponseEncodable {
         "Hello World"
     }
