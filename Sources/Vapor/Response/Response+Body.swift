@@ -8,7 +8,7 @@ extension Response {
         let count: Int
         let callback: @Sendable (BodyStreamWriter) -> ()
     }
-
+    
     /// Represents a `Response`'s body.
     ///
     ///     let body = Response.Body(string: "Hello, world!")
@@ -87,7 +87,7 @@ extension Response {
             case .stream: return nil
             }
         }
-
+        
         public func collect(on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer?> {
             switch self.storage {
             case .stream(let stream):
@@ -156,7 +156,7 @@ extension Response {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
-
+        
         public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
@@ -180,22 +180,31 @@ private struct ResponseBodyCollector: BodyStreamWriter, Sendable {
     let buffer: NIOLockedValueBox<ByteBuffer>
     let eventLoop: EventLoop
     let promise: EventLoopPromise<ByteBuffer>
-
+    
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
         self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
         self.eventLoop = eventLoop
         self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
     }
-
+    
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-        switch result {
-        case .buffer(var buffer):
-            _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
-        case .error(let error):
-            self.promise.fail(error)
-        case .end:
-            self.promise.succeed(self.buffer.withLockedValue { $0 })
+        @Sendable
+        func write0() {
+            switch result {
+            case .buffer(var buffer):
+                _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
+            case .error(let error):
+                self.promise.fail(error)
+            case .end:
+                self.promise.succeed(self.buffer.withLockedValue { $0 })
+            }
+            promise?.succeed(())
         }
-        promise?.succeed(())
+        
+        if self.eventLoop.inEventLoop {
+            write0()
+        } else {
+            self.eventLoop.execute { write0() }
+        }
     }
 }
