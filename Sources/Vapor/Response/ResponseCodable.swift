@@ -1,3 +1,6 @@
+import NIOCore
+import NIOHTTP1
+
 /// Can convert `self` to a `Response`.
 ///
 /// Types that conform to this protocol can be returned in route closures.

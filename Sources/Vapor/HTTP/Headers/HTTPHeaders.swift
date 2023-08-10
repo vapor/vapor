@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// `MediaType` specified by this message's `"Content-Type"` header.
     public var contentType: HTTPMediaType? {

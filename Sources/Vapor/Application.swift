@@ -1,5 +1,9 @@
 import Backtrace
 import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import ConsoleKit
+import NIOPosix
 
 /// Core type representing a Vapor application.
 public final class Application {
@@ -36,15 +40,7 @@ public final class Application {
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.lock()
-            defer { self.main.unlock() }
-            if let existing = self.storage[ObjectIdentifier(Key.self)] {
-                return existing
-            } else {
-                let new = NIOLock()
-                self.storage[ObjectIdentifier(Key.self)] = new
-                return new
-            }
+            self.main.withLock { self.storage.insertOrReturn(.init(), at: .init(Key.self)) }
         }
     }
 
@@ -169,3 +165,14 @@ public final class Application {
 }
 
 public protocol LockKey { }
+
+fileprivate extension Dictionary {
+    mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+        if let existing = self[key] {
+            return existing
+        }
+        let newValue = value()
+        self[key] = newValue
+        return newValue
+    }
+}

@@ -1,3 +1,6 @@
+import Foundation
+import NIOCore
+
 extension Response {
     struct BodyStream {
         let count: Int

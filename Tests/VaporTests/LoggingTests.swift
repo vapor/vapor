@@ -1,4 +1,6 @@
 import XCTVapor
+import Vapor
+import XCTest
 
 final class LoggingTests: XCTestCase {
     func testChangeRequestLogLevel() throws {

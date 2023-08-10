@@ -1,7 +1,7 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
+import Vapor
+import XCTest
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 final class AsyncAuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
@@ -249,5 +249,3 @@ final class AsyncAuthenticationTests: XCTestCase {
         config.use(Test.authenticator())
     }
 }
-
-#endif

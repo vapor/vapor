@@ -1,5 +1,6 @@
 @testable import Vapor
 import XCTest
+import NIOCore
 
 final class BodyStreamStateTests: XCTestCase {
     func testSynchronous() throws {

@@ -1,50 +1,10 @@
-public enum ValidationKey {
-    case integer(Int)
-    case string(String)
-}
+public typealias ValidationKey = BasicCodingKey
 
-extension ValidationKey: CodingKey {
-    public var stringValue: String {
-        switch self {
-        case .integer(let integer):
-            return integer.description
-        case .string(let string):
-            return string
-        }
-    }
+/// Old names
+extension ValidationKey {
+    @available(*, deprecated, renamed: "index(_:)")
+    public static func integer(_ i: Int) -> Self { .index(i) }
     
-    public var intValue: Int? {
-        switch self {
-        case .integer(let integer):
-            return integer
-        case .string:
-            return nil
-        }
-    }
-    
-    public init?(stringValue: String) {
-        self = .string(stringValue)
-    }
-    
-    public init?(intValue: Int) {
-        self = .integer(intValue)
-    }
-}
-
-extension ValidationKey: ExpressibleByStringLiteral {
-    public init(stringLiteral value: String) {
-        self = .string(value)
-    }
-}
-
-extension ValidationKey: ExpressibleByIntegerLiteral {
-    public init(integerLiteral value: Int) {
-        self = .integer(value)
-    }
-}
-
-extension ValidationKey: CustomStringConvertible {
-    public var description: String {
-        self.stringValue
-    }
+    @available(*, deprecated, renamed: "key(_:)")
+    public static func string(_ s: String) -> Self { .key(s) }
 }

@@ -1,7 +1,6 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
+import NIOHTTP1
 
-@available(macOS 10.15, iOS 13, tvOS 13, watchOS 6, *)
 extension Client {
     public func get(_ url: URI, headers: HTTPHeaders = [:], beforeSend: (inout ClientRequest) throws -> () = { _ in }) async throws -> ClientResponse {
         return try await self.send(.GET, headers: headers, to: url, beforeSend: beforeSend).get()
@@ -50,5 +49,3 @@ extension Client {
         return try await self.send(request).get()
     }
 }
-
-#endif

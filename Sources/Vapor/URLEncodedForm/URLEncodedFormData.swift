@@ -1,3 +1,5 @@
+import Logging
+
 /// Keeps track if the string was percent encoded or not.
 /// Prevents double encoding/double decoding
 enum URLQueryFragment: ExpressibleByStringLiteral, Equatable {

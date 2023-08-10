@@ -1,4 +1,5 @@
-import NIO
+import Foundation
+import NIOHTTP1
 
 extension HTTPHeaders {
     public struct Expires {

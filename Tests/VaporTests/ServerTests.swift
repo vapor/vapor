@@ -1,7 +1,8 @@
 import Vapor
 import XCTest
-import protocol AsyncHTTPClient.HTTPClientResponseDelegate
-import NIO
+import AsyncHTTPClient
+import NIOCore
+import NIOPosix
 import NIOConcurrencyHelpers
 import NIOHTTP1
 import NIOSSL
@@ -233,6 +234,7 @@ final class ServerTests: XCTestCase {
         
         let app = Application(.testing)
         defer { app.shutdown() }
+        app.http.server.configuration.port = 0
         
         // Max out at the smaller payload (.size is of compressed data)
         app.http.server.configuration.requestDecompression = .enabled(limit: .size(200_000))
@@ -241,8 +243,15 @@ final class ServerTests: XCTestCase {
         try app.server.start()
         defer { app.server.shutdown() }
         
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:8080/gzip") { req in
+        let res = try app.client.post("http://localhost:\(port)/gzip") { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.headers.replaceOrAdd(name: .contentType, value: "application/json")
             req.body = jsonPayload
@@ -260,6 +269,7 @@ final class ServerTests: XCTestCase {
     func testConfigureHTTPDecompressionLimit() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
+        app.http.server.configuration.port = 0
         
         let smallOrigString = "Hello, world!"
         let smallBody = ByteBuffer(base64String: "H4sIAAAAAAAAE/NIzcnJ11Eozy/KSVEEAObG5usNAAAA")! // "Hello, world!"
@@ -274,8 +284,15 @@ final class ServerTests: XCTestCase {
         try app.server.start()
         defer { app.server.shutdown() }
         
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         // Small payload should just barely get through.
-        let res = try app.client.post("http://localhost:8080/gzip") { req in
+        let res = try app.client.post("http://localhost:\(port)/gzip") { req in
             req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
             req.body = smallBody
         }.wait()
@@ -284,7 +301,7 @@ final class ServerTests: XCTestCase {
         // Big payload should be hard-rejected. We can't test for the raw NIOHTTPDecompression.DecompressionError.limit error here because
         // protocol decoding errors are only ever logged and can't be directly caught.
         do {
-            _ = try app.client.post("http://localhost:8080/gzip") { req in
+            _ = try app.client.post("http://localhost:\(port)/gzip") { req in
                 req.headers.replaceOrAdd(name: .contentEncoding, value: "gzip")
                 req.body = bigBody
             }.wait()
@@ -639,7 +656,7 @@ final class ServerTests: XCTestCase {
     
     func testStartWithDefaultHostname() throws {
         let app = Application(.testing)
-        app.http.server.configuration.address = .hostname(nil, port: 8008)
+        app.http.server.configuration.address = .hostname(nil, port: 0)
         defer { app.shutdown() }
         app.environment.arguments = ["serve"]
         
