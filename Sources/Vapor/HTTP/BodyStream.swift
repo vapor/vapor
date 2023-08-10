@@ -1,6 +1,6 @@
 import NIOCore
 
-public enum BodyStreamResult {
+public enum BodyStreamResult: Sendable {
     /// A normal data chunk.
     /// There will be 0 or more of these.
     case buffer(ByteBuffer)
@@ -39,7 +39,7 @@ extension BodyStreamResult: CustomDebugStringConvertible {
     }
 }
 
-public protocol BodyStreamWriter {
+public protocol BodyStreamWriter: Sendable {
     var eventLoop: EventLoop { get }
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?)
 }
