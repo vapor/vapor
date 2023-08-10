@@ -131,3 +131,11 @@ let package = Package(
         ]),
     ]
 )
+
+//if ProcessInfo.processInfo.environment["STRICT_CONCURRENCY"] == "true" {
+    for target in package.targets {
+        if !target.isTest {
+            target.swiftSettings = [.unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])]
+        }
+    }
+//}
