@@ -3,7 +3,7 @@ import WebSocketKit
 import NIOCore
 import NIOHTTP1
 
-public struct WebSocketMaxFrameSize: ExpressibleByIntegerLiteral {
+public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     let value: Int
 
     public init(integerLiteral value: Int) {

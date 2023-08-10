@@ -2,6 +2,7 @@ import NIOCore
 import NIOHTTP1
 import NIOWebSocket
 import WebSocketKit
+import NIOConcurrencyHelpers
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -111,17 +112,17 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
 }
 
 /// Conformance for any struct that performs an HTTP Upgrade
-public protocol Upgrader {
+public protocol Upgrader: Sendable {
     func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader
 }
 
 /// Handles upgrading an HTTP connection to a WebSocket
 public struct WebSocketUpgrader: Upgrader {
     var maxFrameSize: WebSocketMaxFrameSize
-    var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
-    var onUpgrade: (WebSocket) -> ()
+    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
+    var onUpgrade: @Sendable (WebSocket) -> ()
     
-    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
+    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade
