@@ -1,4 +1,4 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.7
 import PackageDescription
 
 let package = Package(
@@ -131,3 +131,12 @@ let package = Package(
         ]),
     ]
 )
+
+
+//if ProcessInfo.processInfo.environment["STRICT_CONCURRENCY"] == "true" {
+    for target in package.targets {
+        if !target.isTest {
+            target.swiftSettings = [.unsafeFlags(["-Xfrontend", "-strict-concurrency=complete"])]
+        }
+    }
+//}

@@ -1,10 +1,12 @@
 import Foundation
 import NIOCore
+@preconcurrency import struct Dispatch.DispatchData
+import NIOConcurrencyHelpers
 
 extension Response {
-    struct BodyStream {
+    struct BodyStream: Sendable {
         let count: Int
-        let callback: (BodyStreamWriter) -> ()
+        let callback: @Sendable (BodyStreamWriter) -> ()
     }
 
     /// Represents a `Response`'s body.
@@ -12,9 +14,9 @@ extension Response {
     ///     let body = Response.Body(string: "Hello, world!")
     ///
     /// This can contain any data (streaming or static) and should match the message's `"Content-Type"` header.
-    public struct Body: CustomStringConvertible, ExpressibleByStringLiteral {
+    public struct Body: Sendable, CustomStringConvertible, ExpressibleByStringLiteral {
         /// The internal HTTP body storage enum. This is an implementation detail.
-        internal enum Storage {
+        internal enum Storage: Sendable {
             /// Cases
             case none
             case buffer(ByteBuffer)
@@ -150,12 +152,12 @@ extension Response {
             self.storage = .buffer(buffer)
         }
         
-        public init(stream: @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
-        public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
@@ -173,13 +175,14 @@ extension Response {
     }
 }
 
-private final class ResponseBodyCollector: BodyStreamWriter {
-    var buffer: ByteBuffer
-    var eventLoop: EventLoop
-    var promise: EventLoopPromise<ByteBuffer>
+// WARNING: This has reference semantics because of the use of NIOLockedValueBox
+private struct ResponseBodyCollector: BodyStreamWriter, Sendable {
+    let buffer: NIOLockedValueBox<ByteBuffer>
+    let eventLoop: EventLoop
+    let promise: EventLoopPromise<ByteBuffer>
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
-        self.buffer = byteBufferAllocator.buffer(capacity: 0)
+        self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
         self.eventLoop = eventLoop
         self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
     }
@@ -187,11 +190,11 @@ private final class ResponseBodyCollector: BodyStreamWriter {
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(var buffer):
-            self.buffer.writeBuffer(&buffer)
+            _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
         case .error(let error):
             self.promise.fail(error)
         case .end:
-            self.promise.succeed(self.buffer)
+            self.promise.succeed(self.buffer.withLockedValue { $0 })
         }
         promise?.succeed(())
     }
