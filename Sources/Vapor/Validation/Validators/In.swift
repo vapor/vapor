@@ -6,7 +6,7 @@ extension Validator where T: Equatable & CustomStringConvertible {
 
     /// Validates whether an item is contained in the supplied sequence.
     public static func `in`<S>(_ sequence: S) -> Validator<T>
-        where S: Sequence, S.Element == T
+        where S: Sequence & Sendable, S.Element == T
     {
         .init {
             ValidatorResults.In(item: $0, items: .init(sequence))
@@ -16,7 +16,7 @@ extension Validator where T: Equatable & CustomStringConvertible {
 
 extension ValidatorResults {
     /// `ValidatorResult` of a validator that validates whether an item is contained in the supplied sequence.
-    public struct In<T> where T: Equatable & CustomStringConvertible {
+    public struct In<T> where T: Equatable & CustomStringConvertible & Sendable {
         /// Description of the item.
         public let item: T
         
