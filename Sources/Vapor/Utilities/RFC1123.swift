@@ -1,6 +1,7 @@
 import Foundation
 import NIOPosix
 import NIOCore
+import NIOConcurrencyHelpers
 
 /// An internal helper that formats cookie dates as RFC1123
 private final class RFC1123 {
@@ -58,7 +59,7 @@ extension Date {
 }
 
 /// Performant method for generating RFC1123 date headers.
-internal final class RFC1123DateCache {
+internal final class RFC1123DateCache: Sendable {
     static func eventLoop(_ eventLoop: EventLoop) -> RFC1123DateCache {
         assert(eventLoop.inEventLoop)
         
@@ -80,19 +81,20 @@ internal final class RFC1123DateCache {
     private static let thread: ThreadSpecificVariable<RFC1123DateCache> = .init()
     
     /// Currently cached time components.
-    private var cachedTimeComponents: (key: time_t, components: tm)?
+    private let cachedTimeComponents: NIOLockedValueBox<(key: time_t, components: tm)?>
     
     /// Currently cached timestamp.
-    private var timestamp: String
+    private let timestamp: NIOLockedValueBox<String>
     
     /// Creates a new `RFC1123DateCache`.
     private init() {
-        self.timestamp = ""
+        self.timestamp = .init("")
+        self.cachedTimeComponents = .init(nil)
         self.updateTimestamp()
     }
     
     func currentTimestamp() -> String {
-        return self.timestamp
+        return self.timestamp.withLockedValue { $0 }
     }
     
     /// Updates the current RFC 1123 date string.
@@ -106,13 +108,13 @@ internal final class RFC1123DateCache {
         
         // get time components
         let dateComponents: tm
-        if let cached = self.cachedTimeComponents, cached.key == key {
+        if let cached = self.cachedTimeComponents.withLockedValue({ $0 }), cached.key == key {
             dateComponents = cached.components
         } else {
             var tc = tm.init()
             gmtime_r(&date, &tc)
             dateComponents = tc
-            self.cachedTimeComponents = (key: key, components: tc)
+            self.cachedTimeComponents.withLockedValue { $0 = (key: key, components: tc) }
         }
         
         // parse components
@@ -147,7 +149,7 @@ internal final class RFC1123DateCache {
         rfc1123.append(" GMT")
         
         // cache the new timestamp
-        self.timestamp = rfc1123
+        self.timestamp.withLockedValue { $0 = rfc1123 }
     }
 }
 
