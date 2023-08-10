@@ -325,7 +325,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=droplet.png")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -353,7 +353,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            XCTAssertContains(res.body.string, "filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
