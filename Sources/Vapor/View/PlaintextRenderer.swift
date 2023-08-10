@@ -2,7 +2,7 @@ import NIOCore
 import NIOPosix
 import Logging
 
-public struct PlaintextRenderer: ViewRenderer {
+public struct PlaintextRenderer: ViewRenderer, Sendable {
     public let eventLoopGroup: EventLoopGroup
     private let fileio: NonBlockingFileIO
     private let viewsDirectory: String
@@ -38,8 +38,9 @@ public struct PlaintextRenderer: ViewRenderer {
             ? name
             : self.viewsDirectory + name
         return self.fileio.openFile(path: path, eventLoop: eventLoop).flatMap { (handle, region) in
+            let fileHandleWrapper = NIOLoopBound(handle, eventLoop: eventLoop)
             return self.fileio.read(fileRegion: region, allocator: .init(), eventLoop: eventLoop).flatMapThrowing { buffer in
-                try handle.close()
+                try fileHandleWrapper.value.close()
                 return buffer
             }
         }.map { data in

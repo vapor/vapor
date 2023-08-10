@@ -3,7 +3,7 @@ import WebSocketKit
 import NIOCore
 import NIOHTTP1
 
-public struct WebSocketMaxFrameSize: ExpressibleByIntegerLiteral {
+public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     let value: Int
 
     public init(integerLiteral value: Int) {
@@ -25,14 +25,15 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
+    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) -> EventLoopFuture<HTTPHeaders?>) = {
+        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
             $0.eventLoop.makeSucceededFuture([:])
         },
-        onUpgrade: @escaping (Request, WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
@@ -46,14 +47,15 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
+    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) -> EventLoopFuture<HTTPHeaders?>) = {
+        shouldUpgrade: @escaping (@Sendable (Request) -> EventLoopFuture<HTTPHeaders?>) = {
             $0.eventLoop.makeSucceededFuture([:])
         },
-        onUpgrade: @escaping (Request, WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (Request, WebSocket) -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             let res = Response(status: .switchingProtocols)
