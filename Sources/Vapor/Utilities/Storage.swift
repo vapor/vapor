@@ -112,6 +112,7 @@ protocol AnyStorageValue: Sendable {
 }
 
 /// A key used to store values in a ``Storage`` must conform to this protocol.
+@preconcurrency
 public protocol StorageKey {
     /// The type of the stored value associated with this key type.
     associatedtype Value: Sendable
