@@ -1,3 +1,7 @@
+import ConsoleKit
+import NIOCore
+import NIOPosix
+
 extension Application {
     public var console: Console {
         get { self.core.storage.console }

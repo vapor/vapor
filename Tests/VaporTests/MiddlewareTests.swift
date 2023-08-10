@@ -1,4 +1,7 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 final class MiddlewareTests: XCTestCase {
     final class OrderMiddleware: Middleware {
@@ -89,6 +92,30 @@ final class MiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.accessControlAllowOrigin], [""])
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
             print(res.headers)
+        }
+    }
+    
+    func testFileMiddlewareFromBundle() throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "/"), "FileMiddleware instantiation from Bundle should not fail")
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        app.middleware.use(fileMiddleware)
+        
+        try app.testable().test(.GET, "/foo.txt") { result in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "bar\n")
+        }
+    }
+    
+    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+        XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
+            guard let error = error as? FileMiddleware.BundleSetupError else {
+                return XCTFail("Error should be of type FileMiddleware.SetupError")
+            }
+            XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
         }
     }
 }

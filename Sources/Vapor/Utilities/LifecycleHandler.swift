@@ -1,5 +1,3 @@
-import NIO
-
 public protocol LifecycleHandler {
     func willBoot(_ application: Application) throws
     func didBoot(_ application: Application) throws

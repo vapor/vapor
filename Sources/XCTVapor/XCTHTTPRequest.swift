@@ -1,3 +1,7 @@
+import NIOCore
+import NIOHTTP1
+import Vapor
+
 public struct XCTHTTPRequest {
     public var method: HTTPMethod
     public var url: URI

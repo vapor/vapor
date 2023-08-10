@@ -1,4 +1,5 @@
 import Foundation
+import Logging
 
 /// `Debuggable` provides an interface that allows a type
 /// to be more easily debugged in the case of an error.
@@ -56,7 +57,7 @@ public protocol DebuggableError: LocalizedError, CustomDebugStringConvertible, C
     var gitHubIssues: [String] { get }
 
     /// Which log level this error should report as. 
-    /// Defaults to `.error`.
+    /// Defaults to `.warning`.
     var logLevel: Logger.Level { get }
 }
 

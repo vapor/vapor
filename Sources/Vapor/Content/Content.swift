@@ -1,3 +1,5 @@
+import NIOCore
+
 /// Convertible to / from content in an HTTP message.
 ///
 /// Conformance to this protocol consists of:
@@ -110,6 +112,8 @@ extension UInt8: Content { }
 extension UInt16: Content { }
 extension UInt32: Content { }
 extension UInt64: Content { }
+
+extension Bool: Content {}
 
 extension BinaryFloatingPoint where Self: Content {
     public static var defaultContentType: HTTPMediaType {

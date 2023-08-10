@@ -1,8 +1,14 @@
 name: test
-on: { pull_request: {} }
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
+  push: { branches: [ main ] }
 
 jobs:
   test-providers:
+    if: ${{ !(github.event.pull_request.draft || false) }}
     strategy:
       fail-fast: false
       matrix:
@@ -12,65 +18,33 @@ jobs:
           - vapor/leaf
           - vapor/queues
           - vapor/apns
+        include:
+          - ref: main
+          - provider: vapor/apns
+            ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.5-focal
+    container: swift:5.8-jammy
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with: 
           repository: ${{ matrix.provider }}
           path: provider
+          ref: ${{ matrix.ref }}
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
-      - name: Run tests with Thread Sanitizer
-        run: swift test --sanitize=thread
-        working-directory: provider
+      - name: Run tests
+        env:
+            SWIFT_DETERMINISTIC_HASHING: 1
+        run: swift test --package-path ./provider
 
-  test-vapor-linux:
-    strategy:
-      fail-fast: false
-      matrix:
-        image:
-          - swift:5.2-focal
-          - swift:5.3-focal
-          - swift:5.4-focal
-          - swift:5.5-focal
-    runs-on: ubuntu-latest
-    container: ${{ matrix.image }}
-    steps:
-      - name: Check out Vapor
-        uses: actions/checkout@v2
-      - name: Run main tests with Thread Sanitizer
-        run: swift test --enable-test-discovery --filter '^VaporTests' --sanitize=thread
-      - name: Run async tests without Thread Sanitizer
-        # TSAN and async don't play nice at the moment
-        run: swift test --enable-test-discovery --filter '^AsyncTests'
-  
-  test-vapor-macos:
-    strategy:
-      fail-fast: false
-      matrix:
-        xcode:
-          - latest
-          - latest-stable
-    runs-on: macos-11
-    steps: 
-      - name: Select toolchain
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: ${{ matrix.xcode }}
-      - name: Check out Vapor
-        uses: actions/checkout@v2
-      - name: Run main tests with Thread Sanitizer
-        run: |
-          swift test --filter '^VaporTests' --sanitize=thread -Xlinker -rpath \
-                -Xlinker $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/macosx
-      - name: Run async tests without Thread Sanitizer
-        # TSAN and async don't play nice at the moment
-        run: |
-          swift test --filter '^AsyncTests' -Xlinker -rpath \
-                -Xlinker $(xcode-select -p)/Toolchains/XcodeDefault.xctoolchain/usr/lib/swift-5.5/macosx
+  unit-tests:
+     uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
+     with:
+       with_coverage: true
+       with_tsan: false
+       with_public_api_check: true

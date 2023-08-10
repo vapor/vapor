@@ -1,83 +1,85 @@
 public struct Validation {
-    let run: (KeyedDecodingContainer<ValidationKey>) -> ValidationResult
+    enum ValuelessKeyBehavior {
+        case missing // value is required; return a Missing() result if key is not found
+        case skipWhenUnset // value is not required, but should not be nil-checked; return a Skipped() result only if key doesn't exist at all
+        case skipAlways // value is not required, return a Skipped() result if key is unset or nil
+        case ignore // value is not relevant, call run closure regardless of key presence
+    }
+    let key: ValidationKey
+    let valuelessKeyBehavior: ValuelessKeyBehavior
+    let customFailureDescription: String?
+    let run: (Decoder) -> ValidatorResult
 
     init<T>(key: ValidationKey, required: Bool, validator: Validator<T>, customFailureDescription: String?) {
-        self.init { container in
-            let result: ValidatorResult
+        self.init(
+            key: key,
+            valuelessKeyBehavior: required ? .missing : .skipAlways,
+            customFailureDescription: customFailureDescription
+        ) { decoder -> ValidatorResult in
             do {
-                if container.contains(key), try !container.decodeNil(forKey: key) {
-                    result = try validator.validate(container.decode(T.self, forKey: key))
-                } else if required {
-                    result = ValidatorResults.Missing()
-                } else {
-                    result = ValidatorResults.Skipped()
-                }
+                let container = try decoder.singleValueContainer()
+                return try validator.validate(container.decode(T.self))
             } catch DecodingError.valueNotFound {
-                result = ValidatorResults.NotFound()
-           } catch DecodingError.typeMismatch(let type, _) {
-                result = ValidatorResults.TypeMismatch(type: type)
+                return ValidatorResults.NotFound()
+            } catch DecodingError.typeMismatch(let type, _) {
+                return ValidatorResults.TypeMismatch(type: type)
             } catch DecodingError.dataCorrupted(let context) {
-                result = ValidatorResults.Invalid(reason: context.debugDescription)
+                return ValidatorResults.Invalid(reason: context.debugDescription)
             } catch {
-               result = ValidatorResults.Codable(error: error)
-           }
-            
-            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
+               return ValidatorResults.Codable(error: error)
+            }
         }
     }
     
     init(nested key: ValidationKey, required: Bool, keyed validations: Validations, customFailureDescription: String?) {
-        self.init { container in
-            let result: ValidatorResult
+        self.init(
+            key: key,
+            valuelessKeyBehavior: required ? .missing : .skipAlways,
+            customFailureDescription: customFailureDescription
+        ) { decoder in
             do {
-                if container.contains(key), !required, try container.decodeNil(forKey: key) {
-                    result = ValidatorResults.Skipped()
-                } else if container.contains(key) {
-                    let nested = try container.nestedContainer(keyedBy: ValidationKey.self, forKey: key)
-                    let results = validations.validate(nested)
-                    result = ValidatorResults.Nested(results: results.results)
-                } else if required {
-                    result = ValidatorResults.Missing()
-                } else {
-                    result = ValidatorResults.Skipped()
-                }
+                return try ValidatorResults.Nested(results: validations.validate(decoder).results)
             } catch {
-                result = ValidatorResults.Codable(error: error)
+                return ValidatorResults.Codable(error: error)
             }
-            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
     init(nested key: ValidationKey, required: Bool, unkeyed factory: @escaping (Int, inout Validations) -> (), customFailureDescription: String?) {
-        self.init { container in
-            let result: ValidatorResult
+        self.init(
+            key: key,
+            valuelessKeyBehavior: required ? .missing : .skipAlways,
+            customFailureDescription: customFailureDescription
+        ) { decoder in
             do {
+                var container = try decoder.unkeyedContainer()
                 var results: [[ValidatorResult]] = []
-                var array = try container.nestedUnkeyedContainer(forKey: key)
-                var i = 0
-                while !array.isAtEnd {
-                    defer { i += 1 }
+                
+                while !container.isAtEnd {
                     var validations = Validations()
-                    factory(i, &validations)
-                    let nested = try array.nestedContainer(keyedBy: ValidationKey.self)
-                    let result = validations.validate(nested)
-                    results.append(result.results)
+                    factory(container.currentIndex, &validations)
+                    try results.append(validations.validate(container.superDecoder()).results)
                 }
-                result = ValidatorResults.NestedEach(results: results)
+                return ValidatorResults.NestedEach(results: results)
             } catch {
-                result = ValidatorResults.Codable(error: error)
+                return ValidatorResults.Codable(error: error)
             }
-            return .init(key: key, result: result, customFailureDescription: customFailureDescription)
         }
     }
     
     init(key: ValidationKey, result: ValidatorResult, customFailureDescription: String?) {
-        self.init { decoder in
-            .init(key: key, result: result, customFailureDescription: customFailureDescription)
-        }
+        self.init(key: key, valuelessKeyBehavior: .ignore, customFailureDescription: customFailureDescription) { _ in result }
     }
     
-    init(run: @escaping (KeyedDecodingContainer<ValidationKey>) -> ValidationResult) {
+    init(
+        key: ValidationKey,
+        valuelessKeyBehavior: ValuelessKeyBehavior,
+        customFailureDescription: String?,
+        run: @escaping @Sendable (Decoder) -> ValidatorResult
+    ) {
+        self.key = key
+        self.valuelessKeyBehavior = valuelessKeyBehavior
+        self.customFailureDescription = customFailureDescription
         self.run = run
     }
 }

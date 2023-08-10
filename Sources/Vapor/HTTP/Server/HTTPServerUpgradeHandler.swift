@@ -1,6 +1,7 @@
-import NIO
+import NIOCore
 import NIOHTTP1
 import NIOWebSocket
+import WebSocketKit
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -50,39 +51,32 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         case .pending(let req, let buffer):
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
-                switch upgrader {
-                case .webSocket(let maxFrameSize, let shouldUpgrade, let onUpgrade):
-                    let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
-                        return shouldUpgrade()
-                    }, upgradePipelineHandler: { channel, req in
-                        return WebSocket.server(on: channel, onUpgrade: onUpgrade)
-                    })
+                let protocolUpgrader = upgrader.applyUpgrade(req: req, res: res)
 
-                    var head = HTTPRequestHead(
-                        version: req.version,
-                        method: req.method,
-                        uri: req.url.string
-                    )
-                    head.headers = req.headers
+                var head = HTTPRequestHead(
+                    version: req.version,
+                    method: req.method,
+                    uri: req.url.string
+                )
+                head.headers = req.headers
 
-                    webSocketUpgrader.buildUpgradeResponse(
-                        channel: context.channel,
-                        upgradeRequest: head,
-                        initialResponseHeaders: [:]
-                    ).map { headers in
-                        res.headers = headers
-                        context.write(self.wrapOutboundOut(res), promise: promise)
-                    }.flatMap {
-                        let handlers: [RemovableChannelHandler] = [self] + self.httpHandlers
-                        return .andAllComplete(handlers.map { handler in
-                            return context.pipeline.removeHandler(handler)
-                        }, on: context.eventLoop)
-                    }.flatMap {
-                        return webSocketUpgrader.upgrade(context: context, upgradeRequest: head)
-                    }.flatMap {
-                        return context.pipeline.removeHandler(buffer)
-                    }.cascadeFailure(to: promise)
-                }
+                protocolUpgrader.buildUpgradeResponse(
+                    channel: context.channel,
+                    upgradeRequest: head,
+                    initialResponseHeaders: [:]
+                ).map { headers in
+                    res.headers = headers
+                    context.write(self.wrapOutboundOut(res), promise: promise)
+                }.flatMap {
+                    let handlers: [RemovableChannelHandler] = [self] + self.httpHandlers
+                    return .andAllComplete(handlers.map { handler in
+                        return context.pipeline.removeHandler(handler)
+                    }, on: context.eventLoop)
+                }.flatMap {
+                    return protocolUpgrader.upgrade(context: context, upgradeRequest: head)
+                }.flatMap {
+                    return context.pipeline.removeHandler(buffer)
+                }.cascadeFailure(to: promise)
             } else {
                 // reset handlers
                 self.upgradeState = .ready
@@ -113,5 +107,33 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
         for data in self.buffer {
             context.fireChannelRead(NIOAny(data))
         }
+    }
+}
+
+/// Conformance for any struct that performs an HTTP Upgrade
+public protocol Upgrader {
+    func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader
+}
+
+/// Handles upgrading an HTTP connection to a WebSocket
+public struct WebSocketUpgrader: Upgrader {
+    var maxFrameSize: WebSocketMaxFrameSize
+    var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
+    var onUpgrade: (WebSocket) -> ()
+    
+    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
+        self.maxFrameSize = maxFrameSize
+        self.shouldUpgrade = shouldUpgrade
+        self.onUpgrade = onUpgrade
+    }
+    
+    public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
+        let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value, automaticErrorHandling: false, shouldUpgrade: { _, _ in
+            return self.shouldUpgrade()
+        }, upgradePipelineHandler: { channel, req in
+            return WebSocket.server(on: channel, onUpgrade: self.onUpgrade)
+        })
+        
+        return webSocketUpgrader
     }
 }

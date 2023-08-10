@@ -1,4 +1,4 @@
-import NIO
+import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
 
@@ -34,12 +34,10 @@ public final class Response: CustomStringConvertible {
 
     // If `true`, don't serialize the body.
     var forHeadRequest: Bool
-
-    internal enum Upgrader {
-        case webSocket(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: (WebSocket) -> ())
-    }
     
-    internal var upgrader: Upgrader?
+    /// Optional Upgrade behavior to apply to this response.
+    /// currently, websocket upgrades are the only defined case.
+    public var upgrader: Upgrader?
 
     public var storage: Storage
     
@@ -73,9 +71,9 @@ public final class Response: CustomStringConvertible {
         }
 
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -88,9 +86,9 @@ public final class Response: CustomStringConvertible {
         func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = ByteBufferAllocator().buffer(capacity: 0)
+            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body)
+            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {

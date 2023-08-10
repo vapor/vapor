@@ -1,4 +1,9 @@
 import Backtrace
+import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import ConsoleKit
+import NIOPosix
 
 /// Core type representing a Vapor application.
 public final class Application {
@@ -24,32 +29,24 @@ public final class Application {
     public var lifecycle: Lifecycle
 
     public final class Locks {
-        public let main: Lock
-        var storage: [ObjectIdentifier: Lock]
+        public let main: NIOLock
+        var storage: [ObjectIdentifier: NIOLock]
 
         init() {
             self.main = .init()
             self.storage = [:]
         }
 
-        public func lock<Key>(for key: Key.Type) -> Lock
+        public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.lock()
-            defer { self.main.unlock() }
-            if let existing = self.storage[ObjectIdentifier(Key.self)] {
-                return existing
-            } else {
-                let new = Lock()
-                self.storage[ObjectIdentifier(Key.self)] = new
-                return new
-            }
+            self.main.withLock { self.storage.insertOrReturn(.init(), at: .init(Key.self)) }
         }
     }
 
     public var locks: Locks
 
-    public var sync: Lock {
+    public var sync: NIOLock {
         self.locks.main
     }
     
@@ -161,9 +158,21 @@ public final class Application {
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
-            assertionFailure("Application.shutdown() was not called before Application deinitialized.")
+            self.logger.error("Application.shutdown() was not called before Application deinitialized.")
+            self.shutdown()
         }
     }
 }
 
 public protocol LockKey { }
+
+fileprivate extension Dictionary {
+    mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+        if let existing = self[key] {
+            return existing
+        }
+        let newValue = value()
+        self[key] = newValue
+        return newValue
+    }
+}

@@ -1,7 +1,5 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public extension Cache {
 
     /// Gets a decodable value from the cache. Returns `nil` if not found.
@@ -18,11 +16,13 @@ public extension Cache {
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) async throws where T: Encodable {
         try await self.set(key, to: value, expiresIn: expirationTime).get()
     }
+    
+    func delete(_ key: String) async throws {
+        try await self.delete(key).get()
+    }
 
     /// Gets a decodable value from the cache. Returns `nil` if not found.
     func get<T>(_ key: String) async throws -> T? where T: Decodable {
         try await self.get(key).get()
     }
 }
-
-#endif

@@ -1,5 +1,6 @@
 import Vapor
 import XCTest
+import NIOHTTP1
 
 class HTTPCacheTests: XCTestCase {
     func testNoStoreWithExpires() {
@@ -56,7 +57,7 @@ class HTTPCacheTests: XCTestCase {
 
     func testPreferredFormat() {
         let expires = "Sun, 06 Nov 1994 08:49:37 GMT"
-        let format = "EEE, dd MMM yyyy hh:mm:ss zzz"
+        let format = "EEE, dd MMM yyyy HH:mm:ss zzz"
         let required = dateFromFormat(format: format, dateStr: expires)
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
@@ -66,7 +67,7 @@ class HTTPCacheTests: XCTestCase {
 
     func testObsoleteFormatOne() {
         let expires = "Sunday, 06-Nov-94 08:49:37 GMT"
-        let format = "EEEE, dd-MMM-yy hh:mm:ss zzz"
+        let format = "EEEE, dd-MMM-yy HH:mm:ss zzz"
         let required = dateFromFormat(format: format, dateStr: expires)
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
@@ -76,7 +77,7 @@ class HTTPCacheTests: XCTestCase {
 
     func testObsoleteFormatTwo() {
         let expires = "Sun Nov  6 08:49:37 1994"
-        let format = "EEE MMM d hh:mm:s yyyy"
+        let format = "EEE MMM d HH:mm:s yyyy"
         let required = dateFromFormat(format: format, dateStr: expires)
         let headers = HTTPHeaders(dictionaryLiteral: ("Expires", expires))
         let response = ClientResponse(status: .ok, headers: headers)
@@ -126,5 +127,13 @@ class HTTPCacheTests: XCTestCase {
         XCTAssertNotNil(cache.maxStale)
         XCTAssertNotNil(cache.maxStale?.seconds)
         XCTAssertEqual(cache.maxStale?.seconds, 12)
+    }
+
+    func testImmutable() {
+        let headers = HTTPHeaders(dictionaryLiteral: ("Cache-Control", "immutable"))
+        let response = ClientResponse(status: .ok, headers: headers)
+
+        let cache = response.headers.cacheControl!
+        XCTAssertTrue(cache.immutable)
     }
 }

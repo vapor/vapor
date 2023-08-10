@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Convenience for accessing the Content-Disposition header.
     ///
@@ -52,6 +54,8 @@ extension HTTPHeaders {
                 case "name":
                     self.name = .init(parameter)
                 case "filename":
+                    self.filename = .init(parameter)
+                case "filename*":
                     self.filename = .init(parameter)
                 default:
                     return nil

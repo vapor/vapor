@@ -1,3 +1,5 @@
+import NIOCore
+
 /// Capable of being authenticated.
 public protocol Authenticatable { }
 
@@ -64,12 +66,14 @@ public protocol CredentialsAuthenticator: RequestAuthenticator {
 
 extension CredentialsAuthenticator {
     public func authenticate(request: Request) -> EventLoopFuture<Void> {
-        let credentials: Credentials
-        do {
-            credentials = try request.content.decode(Credentials.self)
-        } catch {
-            return request.eventLoop.makeSucceededFuture(())
+        return request.body.collect(max: nil).flatMap { _ -> EventLoopFuture<Void> in
+            let credentials: Credentials
+            do {
+                credentials = try request.content.decode(Credentials.self)
+            } catch {
+                return request.eventLoop.makeSucceededFuture(())
+            }
+            return self.authenticate(credentials: credentials, for: request)
         }
-        return self.authenticate(credentials: credentials, for: request)
     }
 }

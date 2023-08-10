@@ -1,3 +1,5 @@
+import RoutingKit
+
 extension RoutesBuilder {
     // MARK: Path
     

@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     public struct Connection: ExpressibleByStringLiteral, Equatable {
         public static let close: Self = "close"

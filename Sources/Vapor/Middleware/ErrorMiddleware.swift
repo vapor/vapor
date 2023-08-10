@@ -1,3 +1,7 @@
+import Foundation
+import NIOCore
+import NIOHTTP1
+
 /// Captures all errors and transforms them into an internal server error HTTP response.
 public final class ErrorMiddleware: Middleware {
     /// Structure of `ErrorMiddleware` default response.
@@ -47,10 +51,10 @@ public final class ErrorMiddleware: Middleware {
             // attempt to serialize the error to json
             do {
                 let errorResponse = ErrorResponse(error: true, reason: reason)
-                response.body = try .init(data: JSONEncoder().encode(errorResponse))
+                response.body = try .init(data: JSONEncoder().encode(errorResponse), byteBufferAllocator: req.byteBufferAllocator)
                 response.headers.replaceOrAdd(name: .contentType, value: "application/json; charset=utf-8")
             } catch {
-                response.body = .init(string: "Oops: \(error)")
+                response.body = .init(string: "Oops: \(error)", byteBufferAllocator: req.byteBufferAllocator)
                 response.headers.replaceOrAdd(name: .contentType, value: "text/plain; charset=utf-8")
             }
             return response

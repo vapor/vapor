@@ -1,5 +1,8 @@
 @testable import Vapor
 import XCTVapor
+import XCTest
+import NIOPosix
+import NIOCore
 
 final class DotEnvTests: XCTestCase {
     func testReadFile() throws {

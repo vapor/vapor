@@ -21,49 +21,53 @@ import NIOConcurrencyHelpers
 /// Metrics factory which allows inspecting recorded metrics programmatically.
 /// Only intended for tests of the Metrics API itself.
 internal final class CapturingMetricsSystem: MetricsFactory {
-    private let lock = Lock()
+    private let lock = NIOLock()
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
     var timers = [String: TimerHandler]()
 
     public func makeCounter(label: String, dimensions: [(String, String)]) -> CounterHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init)
+        return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.counters, maker: TestCounter.init) }
     }
 
     public func makeRecorder(label: String, dimensions: [(String, String)], aggregate: Bool) -> RecorderHandler {
         let maker = { (label: String, dimensions: [(String, String)]) -> RecorderHandler in
             TestRecorder(label: label, dimensions: dimensions, aggregate: aggregate)
         }
-        return self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker)
+        return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.recorders, maker: maker) }
     }
 
     public func makeTimer(label: String, dimensions: [(String, String)]) -> TimerHandler {
-        return self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init)
+        return self.lock.withLock { self.make(label: label, dimensions: dimensions, registry: &self.timers, maker: TestTimer.init) }
     }
 
     private func make<Item>(label: String, dimensions: [(String, String)], registry: inout [String: Item], maker: (String, [(String, String)]) -> Item) -> Item {
-        return self.lock.withLock {
-            let item = maker(label, dimensions)
-            registry[label] = item
-            return item
-        }
+        let item = maker(label, dimensions)
+        registry[label] = item
+        return item
     }
 
     func destroyCounter(_ handler: CounterHandler) {
         if let testCounter = handler as? TestCounter {
-            self.counters.removeValue(forKey: testCounter.label)
+            self.lock.withLockVoid {
+                self.counters.removeValue(forKey: testCounter.label)
+            }
         }
     }
 
     func destroyRecorder(_ handler: RecorderHandler) {
         if let testRecorder = handler as? TestRecorder {
-            self.recorders.removeValue(forKey: testRecorder.label)
+            self.lock.withLockVoid {
+                self.recorders.removeValue(forKey: testRecorder.label)
+            }
         }
     }
 
     func destroyTimer(_ handler: TimerHandler) {
         if let testTimer = handler as? TestTimer {
-            self.timers.removeValue(forKey: testTimer.label)
+            self.lock.withLockVoid {
+                self.timers.removeValue(forKey: testTimer.label)
+            }
         }
     }
 }
@@ -73,7 +77,7 @@ internal class TestCounter: CounterHandler, Equatable {
     let label: String
     let dimensions: [(String, String)]
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {
@@ -107,7 +111,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     let dimensions: [(String, String)]
     let aggregate: Bool
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Double)]()
 
     init(label: String, dimensions: [(String, String)], aggregate: Bool) {
@@ -139,7 +143,7 @@ internal class TestTimer: TimerHandler, Equatable {
     var displayUnit: TimeUnit?
     let dimensions: [(String, String)]
 
-    let lock = Lock()
+    let lock = NIOLock()
     var values = [(Date, Int64)]()
 
     init(label: String, dimensions: [(String, String)]) {

@@ -1,4 +1,5 @@
-import NIO
+import Foundation
+import NIOHTTP1
 
 extension HTTPHeaders {
     public struct Expires {
@@ -10,20 +11,20 @@ extension HTTPHeaders {
             let fmt = DateFormatter()
             fmt.locale = Locale(identifier: "en_US_POSIX")
             fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
+            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
             if let date = fmt.date(from: dateString) {
                 return .init(expires: date)
             }
 
             // Obsolete RFC 850 format
-            fmt.dateFormat = "EEEE, dd-MMM-yy hh:mm:ss zzz"
+            fmt.dateFormat = "EEEE, dd-MMM-yy HH:mm:ss zzz"
             if let date = fmt.date(from: dateString) {
                 return .init(expires: date)
             }
 
             // Obsolete ANSI C asctime() format
-            fmt.dateFormat = "EEE MMM d hh:mm:s yyyy"
+            fmt.dateFormat = "EEE MMM d HH:mm:s yyyy"
             if let date = fmt.date(from: dateString) {
                 return .init(expires: date)
             }
@@ -40,7 +41,7 @@ extension HTTPHeaders {
             let fmt = DateFormatter()
             fmt.locale = Locale(identifier: "en_US_POSIX")
             fmt.timeZone = TimeZone(secondsFromGMT: 0)
-            fmt.dateFormat = "EEE, dd MMM yyyy hh:mm:ss zzz"
+            fmt.dateFormat = "EEE, dd MMM yyyy HH:mm:ss zzz"
 
             return fmt.string(from: expires)
         }

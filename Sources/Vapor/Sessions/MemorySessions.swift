@@ -1,3 +1,6 @@
+import Foundation
+import NIOCore
+
 /// Simple in-memory sessions implementation.
 public struct MemorySessions: SessionDriver {
     public let storage: Storage
@@ -52,10 +55,6 @@ public struct MemorySessions: SessionDriver {
     }
     
     private func generateID() -> SessionID {
-        var bytes = Data()
-        for _ in 0..<32 {
-            bytes.append(UInt8.random(in: UInt8.min..<UInt8.max))
-        }
-        return .init(string: bytes.base64EncodedString())
+        return .init(string: [UInt8].random(count: 32).base64String())
     }
 }

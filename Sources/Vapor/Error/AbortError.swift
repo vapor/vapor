@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// Errors conforming to this protocol will always be displayed by
 /// Vapor to the end-user (even in production mode where most errors are silenced).
 ///
@@ -67,20 +69,40 @@ extension DecodingError: AbortError {
     public var reason: String {
         switch self {
         case .dataCorrupted(let ctx):
-            return "\(ctx.debugDescription) for key \(ctx.codingPath.dotPath)"
+            return "Data corrupted at path '\(ctx.codingPath.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .keyNotFound(let key, let ctx):
-            let path: String
-            if ctx.codingPath.count > 0 {
-                path = ctx.codingPath.dotPath + "." + key.stringValue
-            } else {
-                path = key.stringValue
-            }
-            return "Value required for key '\(path)'."
+            let path = ctx.codingPath + [key]
+            return "Value required for key at path '\(path.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .typeMismatch(let type, let ctx):
-            return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
+            return "Value at path '\(ctx.codingPath.dotPath)' was not of type '\(type)'\(ctx.debugDescriptionAndUnderlyingError)"
         case .valueNotFound(let type, let ctx):
-            return "Value of type '\(type)' required for key '\(ctx.codingPath.dotPath)'."
+            return "Value of type '\(type)' was not found at path '\(ctx.codingPath.dotPath)'\(ctx.debugDescriptionAndUnderlyingError)"
         @unknown default: return "Unknown error."
+        }
+    }
+}
+
+private extension DecodingError.Context {
+    var debugDescriptionAndUnderlyingError: String {
+        "\(self.debugDescriptionNoTrailingDot)\(self.underlyingErrorDescription)."
+    }
+    
+    /// `debugDescription` sometimes has a trailing dot, and sometimes not.
+    private var debugDescriptionNoTrailingDot: String {
+        if self.debugDescription.isEmpty {
+            return ""
+        } else if self.debugDescription.last == "." {
+            return ". \(String(self.debugDescription.dropLast()))"
+        } else {
+            return ". \(self.debugDescription)"
+        }
+    }
+    
+    private var underlyingErrorDescription: String {
+        if let underlyingError = self.underlyingError {
+            return ". Underlying error: \(underlyingError)"
+        } else {
+            return ""
         }
     }
 }

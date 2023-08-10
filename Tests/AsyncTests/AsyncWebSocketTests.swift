@@ -1,8 +1,10 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
 import Vapor
+import XCTest
+import WebSocketKit
+import NIOCore
+import NIOPosix
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncWebSocketTests: XCTestCase {
     func testWebSocketClient() async throws {
         let server = Application(.testing)
@@ -77,12 +79,21 @@ final class AsyncWebSocketTests: XCTestCase {
             ws.send("foo")
             ws.close(promise: nil)
         }
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
 
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
-            to: "ws://localhost:8080/foo",
+            to: "ws://localhost:\(port)/foo",
             on: app.eventLoopGroup.next()
         ) { ws in
             // do nothing
@@ -99,7 +110,7 @@ final class AsyncWebSocketTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.http.server.configuration.port = 8080
+        app.http.server.configuration.port = 0
 
         app.get("foo") { req in
             return req.webSocket { req, ws in
@@ -111,9 +122,17 @@ final class AsyncWebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
-            to: "ws://localhost:8080/foo",
+            to: "ws://localhost:\(port)/foo",
             on: app.eventLoopGroup.next()
         ) { ws in
             ws.onText { ws, string in
@@ -126,4 +145,3 @@ final class AsyncWebSocketTests: XCTestCase {
         XCTAssertEqual(string, "foo")
     }
 }
-#endif

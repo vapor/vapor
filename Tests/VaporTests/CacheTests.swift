@@ -1,4 +1,7 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
 
 final class CacheTests: XCTestCase {
     func testInMemoryCache() throws {
@@ -14,6 +17,12 @@ final class CacheTests: XCTestCase {
         try XCTAssertEqual(app.cache.get("foo2").wait(), "bar2")
         sleep(1)
         try XCTAssertNil(app.cache.get("foo2", as: String.self).wait())
+        
+        // Test reset value
+        try app.cache.set("foo3", to: "bar3").wait()
+        try XCTAssertEqual(app.cache.get("foo3").wait(), "bar3")
+        try app.cache.delete("foo3").wait()
+        try XCTAssertNil(app.cache.get("foo3", as: String.self).wait())
     }
     
     func testCustomCache() throws {
@@ -52,6 +61,14 @@ struct FooCache: Cache {
     }
     
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void> where T : Encodable {
+        return self.eventLoop.makeSucceededFuture(())
+    }
+    
+    func setToNil(_ key: String) -> EventLoopFuture<Void> {
+        return self.eventLoop.makeSucceededFuture(())
+    }
+    
+    func set(_ key: String, to value: ExpressibleByNilLiteral?) -> EventLoopFuture<Void> {
         return self.eventLoop.makeSucceededFuture(())
     }
     

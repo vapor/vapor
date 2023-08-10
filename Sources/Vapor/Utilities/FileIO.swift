@@ -1,4 +1,8 @@
-import NIO
+import Foundation
+import NIOCore
+import NIOHTTP1
+import NIOPosix
+import Logging
 
 extension Request {
     public var fileio: FileIO {
@@ -102,19 +106,20 @@ public struct FileIO {
         )
     }
 
-    /// Generates a chunked `HTTPResponse` for the specified file. This method respects values in
+    /// Generates a chunked `Response` for the specified file. This method respects values in
     /// the `"ETag"` header and is capable of responding `304 Not Modified` if the file in question
     /// has not been modified since last served. This method will also set the `"Content-Type"` header
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
-    ///     router.get("file-stream") { req -> HTTPResponse in
-    ///         return try req.fileio().chunkedResponse(file: "/path/to/file.txt")
+    ///     router.get("file-stream") { req in
+    ///         return req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
-    ///     - req: `HTTPRequest` to parse `"If-None-Match"` header from.
     ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
+    ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
     public func streamFile(
         at path: String,
@@ -138,19 +143,31 @@ public struct FileIO {
             } else {
                 contentRange = nil
             }
+        } else if request.headers.contains(name: .range) {
+            // Range header was supplied but could not be parsed i.e. it was invalid
+            request.logger.debug("Range header was provided in request but was invalid")
+            let response = Response(status: .badRequest)
+            return response
         } else {
             contentRange = nil
         }
         // Create empty headers array.
         var headers: HTTPHeaders = [:]
 
+        // Respond with lastModified header
+        headers.lastModified = HTTPHeaders.LastModified(value: modifiedAt)
+        
         // Generate ETag value, "HEX value of last modified date" + "-" + "file size"
-        let fileETag = "\(modifiedAt.timeIntervalSince1970)-\(fileSize)"
+        let fileETag = "\"\(modifiedAt.timeIntervalSince1970)-\(fileSize)\""
         headers.replaceOrAdd(name: .eTag, value: fileETag)
 
         // Check if file has been cached already and return NotModified response if the etags match
         if fileETag == request.headers.first(name: .ifNoneMatch) {
-            return Response(status: .notModified)
+            // Per RFC 9110 here: https://www.rfc-editor.org/rfc/rfc9110.html#status.304
+            // and here: https://www.rfc-editor.org/rfc/rfc9110.html#name-content-encoding
+            // A 304 response MUST include the ETag header and a Content-Length header matching what the original resource's content length would have been were this a 200 response.
+            headers.replaceOrAdd(name: .contentLength, value: fileSize.description)
+            return Response(status: .notModified, version: .http1_1, headersNoUpdate: headers, body: .empty)
         }
 
         // Create the HTTP response.
@@ -161,9 +178,14 @@ public struct FileIO {
             response.status = .partialContent
             response.headers.add(name: .accept, value: contentRange.unit.serialize())
             if let firstRange = contentRange.ranges.first {
-                let range = firstRange.asResponseContentRange(limit: fileSize)
-                response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
-                (offset, byteCount) = firstRange.asByteBufferBounds(withMaxSize: fileSize)
+                do {
+                    let range = try firstRange.asResponseContentRange(limit: fileSize)
+                    response.headers.contentRange = HTTPHeaders.ContentRange(unit: contentRange.unit, range: range)
+                    (offset, byteCount) = try firstRange.asByteBufferBounds(withMaxSize: fileSize, logger: request.logger)
+                } catch {
+                    let response = Response(status: .badRequest)
+                    return response
+                }
             } else {
                 offset = 0
                 byteCount = fileSize
@@ -192,7 +214,7 @@ public struct FileIO {
                 }
                 onCompleted(result)
             }
-        }, count: byteCount)
+        }, count: byteCount, byteBufferAllocator: request.byteBufferAllocator)
         
         return response
     }
@@ -252,14 +274,31 @@ public struct FileIO {
 
 extension HTTPHeaders.Range.Value {
     
-    fileprivate func asByteBufferBounds(withMaxSize size: Int) -> (offset: Int64, byteCount: Int) {
+    fileprivate func asByteBufferBounds(withMaxSize size: Int, logger: Logger) throws -> (offset: Int64, byteCount: Int) {
         switch self {
             case .start(let value):
+                guard value <= size, value >= 0 else {
+                    logger.debug("Requested range start was invalid: \(value)")
+                    throw Abort(.badRequest)
+                }
                 return (offset: numericCast(value), byteCount: size - value)
             case .tail(let value):
+                guard value <= size, value >= 0 else {
+                    logger.debug("Requested range end was invalid: \(value)")
+                    throw Abort(.badRequest)
+                }
                 return (offset: numericCast(size - value), byteCount: value)
             case .within(let start, let end):
-                return (offset: numericCast(start), byteCount: end + 1)
+                guard start >= 0, end >= 0, start <= end, start <= size, end <= size else {
+                    logger.debug("Requested range was invalid: \(start)-\(end)")
+                    throw Abort(.badRequest)
+                }
+                let (byteCount, overflow) =  (end - start).addingReportingOverflow(1)
+                guard !overflow else {
+                    logger.debug("Requested range was invalid: \(start)-\(end)")
+                    throw Abort(.badRequest)
+                }
+                return (offset: numericCast(start), byteCount: byteCount)
         }
     }
 }

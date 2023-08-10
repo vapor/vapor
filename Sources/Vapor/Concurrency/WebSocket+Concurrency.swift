@@ -1,7 +1,9 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
+import NIOHTTP1
+import WebSocketKit
+import RoutingKit
+import Foundation
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
@@ -28,7 +30,6 @@ extension Request {
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension RoutesBuilder {
 
     /// Adds a route for opening a web socket connection
@@ -72,7 +73,6 @@ extension RoutesBuilder {
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension WebSocket {
     public static func connect(
         to url: String,
@@ -136,5 +136,3 @@ extension WebSocket {
         ).get()
     }
 }
-
-#endif

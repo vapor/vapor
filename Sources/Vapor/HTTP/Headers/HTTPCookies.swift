@@ -1,3 +1,6 @@
+import Foundation
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Get and set `HTTPCookies` for an HTTP request
     /// This accesses the `"Cookie"` header.

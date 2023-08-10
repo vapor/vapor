@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     /// Convenience for accessing the Forwarded header. This header is added by
     /// proxies to pass information about the original request.

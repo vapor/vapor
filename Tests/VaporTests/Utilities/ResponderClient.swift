@@ -1,4 +1,5 @@
 import Vapor
+import NIOCore
 
 struct ResponderClient: Client {
     let responder: Responder

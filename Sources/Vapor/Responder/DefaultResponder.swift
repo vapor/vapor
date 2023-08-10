@@ -1,9 +1,15 @@
+import Foundation
 import Metrics
+import RoutingKit
+import NIOCore
+import NIOHTTP1
+import Logging
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
     private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: Responder
+    private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: Route
@@ -11,7 +17,7 @@ internal struct DefaultResponder: Responder {
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = []) {
+    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
         let options = routes.caseInsensitive ?
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
@@ -56,6 +62,7 @@ internal struct DefaultResponder: Responder {
         }
         self.router = router
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
+        self.reportMetrics = reportMetrics
     }
 
     /// See `Responder`
@@ -76,11 +83,13 @@ internal struct DefaultResponder: Responder {
             case .failure:
                 status = .internalServerError
             }
-            self.updateMetrics(
-                for: request,
-                startTime: startTime,
-                statusCode: status.code
-            )
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    startTime: startTime,
+                    statusCode: status.code
+                )
+            }
         }
     }
     

@@ -39,12 +39,16 @@ extension Validator {
         _ suffix: String? = nil
     ) -> Validator<T>
         where U: Comparable
-    {
-        .init {
-            ValidatorResults.Range(
-                result: .init(min: min, max: max, value: $0[keyPath: keyPath]),
-                suffix: suffix
-            )
+    {   
+        .init { data in 
+            if let result = try? RangeResult.init(min: min, max: max, value: data[keyPath: keyPath]) {
+                return ValidatorResults.Range(
+                    result: result,
+                    suffix: suffix
+                )
+            }
+            // if the above try? returned nil a RangeResultError.notComparable was thrown
+            return ValidatorResults.Invalid(reason: "Value in Range is not comparable")
         }
     }
 }

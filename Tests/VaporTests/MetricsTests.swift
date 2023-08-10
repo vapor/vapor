@@ -2,6 +2,7 @@ import XCTVapor
 import Vapor
 import Metrics
 @testable import CoreMetrics
+import XCTest
 
 class MetricsTests: XCTestCase {
     func testMetricsIncreasesCounter() {
@@ -120,6 +121,37 @@ class MetricsTests: XCTestCase {
             let timerStatusDimension = try XCTUnwrap(timer.dimensions.first(where: { $0.0 == "status"}))
             XCTAssertEqual(timerStatusDimension.1, "404")
             XCTAssertNil(timer.dimensions.first(where: { $0.1 == "200" }))
+        })
+    }
+
+    func testMetricsDisabled() {
+        let metrics = CapturingMetricsSystem()
+        MetricsSystem.bootstrapInternal(metrics)
+
+        let app = Application(.testing)
+        app.http.server.configuration.reportMetrics = false
+        defer { app.shutdown() }
+
+        struct User: Content {
+            let id: Int
+            let name: String
+        }
+
+        app.routes.get("users", ":userID") { req -> User in
+            let userID = try req.parameters.require("userID", as: Int.self)
+            if userID == 1 {
+                return User(id: 1, name: "Tim")
+            } else {
+                throw Abort(.notFound)
+            }
+        }
+
+        XCTAssertNoThrow(try app.testable().test(.GET, "/users/1") { res in
+            XCTAssertEqual(res.status, .ok)
+            let resData = try res.content.decode(User.self)
+            XCTAssertEqual(resData.id, 1)
+            XCTAssertEqual(metrics.counters.count, 0)
+            XCTAssertNil(metrics.timers["http_request_duration_seconds"])
         })
     }
 }

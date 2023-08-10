@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 /// Represents an encoded data-format, used in HTTP, HTML, email, and elsewhere.
 ///
 ///     text/plain
@@ -255,6 +257,7 @@ let fileExtensionMediaTypeMapping: [String: HTTPMediaType] = [
     "ser": HTTPMediaType(type: "application", subType: "java-serialized-object"),
     "class": HTTPMediaType(type: "application", subType: "java-vm"),
     "js": HTTPMediaType(type: "application", subType: "javascript"),
+    "mjs": HTTPMediaType(type: "application", subType: "javascript"),
     "json": HTTPMediaType(type: "application", subType: "json"),
     "m3g": HTTPMediaType(type: "application", subType: "m3g"),
     "hqx": HTTPMediaType(type: "application", subType: "mac-binhex40"),

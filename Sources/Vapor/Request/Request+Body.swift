@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Request {
     public struct Body: CustomStringConvertible {
         let request: Request
@@ -29,7 +31,9 @@ extension Request {
                 }
             case .collected(let buffer):
                 _ = handler(.buffer(buffer))
-                _ = handler(.end)
+                    .map {
+                        handler(.end)
+                    }
             case .none:
                 _ = handler(.end)
             }
