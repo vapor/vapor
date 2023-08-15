@@ -8,19 +8,19 @@
 @_documentation(visibility: internal) @_exported import ConsoleKit
 @_documentation(visibility: internal) @_exported import Foundation
 @_documentation(visibility: internal) @_exported import Logging
-@_documentation(visibility: internal) @_exported import struct NIO.ByteBuffer
-@_documentation(visibility: internal) @_exported import struct NIO.ByteBufferAllocator
-@_documentation(visibility: internal) @_exported import protocol NIO.Channel
-@_documentation(visibility: internal) @_exported import class NIO.EmbeddedChannel
-@_documentation(visibility: internal) @_exported import class NIO.EmbeddedEventLoop
-@_documentation(visibility: internal) @_exported import protocol NIO.EventLoop
-@_documentation(visibility: internal) @_exported import class NIO.EventLoopFuture
-@_documentation(visibility: internal) @_exported import protocol NIO.EventLoopGroup
-@_documentation(visibility: internal) @_exported import struct NIO.EventLoopPromise
-@_documentation(visibility: internal) @_exported import class NIO.MultiThreadedEventLoopGroup
-@_documentation(visibility: internal) @_exported import struct NIO.NonBlockingFileIO
-@_documentation(visibility: internal) @_exported import class NIO.NIOThreadPool
-@_documentation(visibility: internal) @_exported import enum NIO.System
+@_documentation(visibility: internal) @_exported import struct NIOCore.ByteBuffer
+@_documentation(visibility: internal) @_exported import struct NIOCore.ByteBufferAllocator
+@_documentation(visibility: internal) @_exported import protocol NIOCore.Channel
+@_documentation(visibility: internal) @_exported import class NIOEmbedded.EmbeddedChannel
+@_documentation(visibility: internal) @_exported import class NIOEmbedded.EmbeddedEventLoop
+@_documentation(visibility: internal) @_exported import protocol NIOCore.EventLoop
+@_documentation(visibility: internal) @_exported import class NIOCore.EventLoopFuture
+@_documentation(visibility: internal) @_exported import protocol NIOCore.EventLoopGroup
+@_documentation(visibility: internal) @_exported import struct NIOCore.EventLoopPromise
+@_documentation(visibility: internal) @_exported import class NIOPosix.MultiThreadedEventLoopGroup
+@_documentation(visibility: internal) @_exported import struct NIOPosix.NonBlockingFileIO
+@_documentation(visibility: internal) @_exported import class NIOPosix.NIOThreadPool
+@_documentation(visibility: internal) @_exported import enum NIOCore.System
 @_documentation(visibility: internal) @_exported import class NIOConcurrencyHelpers.Lock
 @_documentation(visibility: internal) @_exported import struct NIOHTTP1.HTTPHeaders
 @_documentation(visibility: internal) @_exported import enum NIOHTTP1.HTTPMethod
@@ -41,19 +41,19 @@
 @_exported import ConsoleKit
 @_exported import Foundation
 @_exported import Logging
-@_exported import struct NIO.ByteBuffer
-@_exported import struct NIO.ByteBufferAllocator
-@_exported import protocol NIO.Channel
-@_exported import class NIO.EmbeddedChannel
-@_exported import class NIO.EmbeddedEventLoop
-@_exported import protocol NIO.EventLoop
-@_exported import class NIO.EventLoopFuture
-@_exported import protocol NIO.EventLoopGroup
-@_exported import struct NIO.EventLoopPromise
-@_exported import class NIO.MultiThreadedEventLoopGroup
-@_exported import struct NIO.NonBlockingFileIO
-@_exported import class NIO.NIOThreadPool
-@_exported import enum NIO.System
+@_exported import struct NIOCore.ByteBuffer
+@_exported import struct NIOCore.ByteBufferAllocator
+@_exported import protocol NIOCore.Channel
+@_exported import class NIOEmbedded.EmbeddedChannel
+@_exported import class NIOEmbedded.EmbeddedEventLoop
+@_exported import protocol NIOCore.EventLoop
+@_exported import class NIOCore.EventLoopFuture
+@_exported import protocol NIOCore.EventLoopGroup
+@_exported import struct NIOCore.EventLoopPromise
+@_exported import class NIOPosix.MultiThreadedEventLoopGroup
+@_exported import struct NIOPosix.NonBlockingFileIO
+@_exported import class NIOPosix.NIOThreadPool
+@_exported import enum NIOCore.System
 @_exported import class NIOConcurrencyHelpers.Lock
 @_exported import struct NIOHTTP1.HTTPHeaders
 @_exported import enum NIOHTTP1.HTTPMethod
