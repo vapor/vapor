@@ -15,8 +15,14 @@ extension FormDataDecoder: ContentDecoder {
         guard let boundary = headers.contentType?.parameters["boundary"] else {
             throw Abort(.unsupportedMediaType)
         }
+
         var body = body
         let buffer = body.readBytes(length: body.readableBytes) ?? []
+
+        guard Array("--\(boundary)\r\n--\(boundary)--\r".utf8) != buffer else {
+            throw Abort(.unprocessableEntity, identifier: "emptyMultipartFormData")
+        }
+
         if !userInfo.isEmpty {
             var actualDecoder = self // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
             actualDecoder.userInfo.merge(userInfo) { $1 }
