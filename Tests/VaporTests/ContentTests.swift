@@ -276,7 +276,6 @@ final class ContentTests: XCTestCase {
             name: "Vapor",
             age: 4,
             image: File(data: "<contents of image>", filename: "UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
-
         )
 
         struct User: Content, Equatable {
