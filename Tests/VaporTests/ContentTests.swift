@@ -199,6 +199,61 @@ final class ContentTests: XCTestCase {
             XCTAssertEqualJSON(res.body.string, expected)
         }
     }
+  
+    func testMultipartDecodedEmptyMultipartForm() throws {
+        let data = """
+        --123\r
+        --123--\r
+        """
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
+
+    func testMultipartDecodedEmptyBody() throws {
+        let data = ""
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
     
     func testMultipartDecodeUnicode() throws {
         let data = """
