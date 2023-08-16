@@ -32,7 +32,6 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
             status: response.status,
             headers: response.headers
         ))), promise: nil)
-
         
         if response.status == .noContent || response.forHeadRequest {
             // don't send bodies for 204 (no content) responses
@@ -66,6 +65,17 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
                     count: stream.count == -1 ? nil : stream.count
                 )
                 stream.callback(channelStream)
+            case .asyncStream(let stream):
+                let channelStream = ChannelResponseBodyStream(
+                    context: context,
+                    handler: self,
+                    promise: nil,
+                    count: stream.count == -1 ? nil : stream.count
+                )
+                
+                promise?.completeWithTask {
+                    try await stream.callback(channelStream)
+                }
             }
         }
     }
@@ -80,7 +90,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     }
 }
 
-private final class ChannelResponseBodyStream: BodyStreamWriter {
+private final class ChannelResponseBodyStream: BodyStreamWriter, AsyncBodyStreamWriter {
     let context: ChannelHandlerContext
     let handler: HTTPServerResponseEncoder
     let promise: EventLoopPromise<Void>?
@@ -111,9 +121,19 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         self.isComplete = false
     }
     
+    func write(_ result: BodyStreamResult) async throws {
+        // Explicitly adds the ELF because Swift 5.6 fails to infer the return type
+        try await self.eventLoop.flatSubmit { () -> EventLoopFuture<Void> in
+            let promise = self.eventLoop.makePromise(of: Void.self)
+            self.write(result, promise: promise)
+            return promise.futureResult
+        }.get()
+    }
+    
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
+            // TODO: What if it's complete at this point?
             self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
             self.currentCount += buffer.readableBytes
             if let count = self.count, self.currentCount > count {
@@ -121,6 +141,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
+            // TODO: What if it's already complete?
             self.isComplete = true
             if let count = self.count, self.currentCount != count {
                 self.promise?.fail(Error.notEnoughBytes)
