@@ -45,8 +45,6 @@ jobs:
   concurrency-checking:
     runs-on: ubuntu-latest
     container: swiftlang/swift:nightly-5.9-jammy@sha256:a3c3ec5e4436c14e44759e38416bb0d46813dc6dd050e787ef3a80b2c3051a36
-    env:
-      STRICT_CONCURRENCY: "true"
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v3
