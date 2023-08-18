@@ -160,7 +160,7 @@ extension ValidatorResults.Codable: ValidatorResult {
     }
 }
 
-public protocol ValidatorResult {
+public protocol ValidatorResult: Sendable {
     var isFailure: Bool { get }
     var successDescription: String? { get }
     var failureDescription: String? { get }

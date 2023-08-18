@@ -1,5 +1,6 @@
-// swift-tools-version:5.6
+// swift-tools-version:5.7
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "vapor",
@@ -54,7 +55,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
         
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.2.1"),
@@ -97,15 +98,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Vapor"),
             ],
-            resources: [.copy("Resources")],
-            swiftSettings: [
-                // Enable better optimizations when building in Release configuration. Despite the use of
-                // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
-                // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-                .unsafeFlags([
-                    "-cross-module-optimization"
-                ], .when(configuration: .release)),
-            ]
+            resources: [.copy("Resources")]
         ),
 
         // Testing

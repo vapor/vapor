@@ -63,6 +63,8 @@ public enum RangeResult<T>: Equatable where T: Comparable {
     }
 }
 
+extension RangeResult: Sendable where T: Sendable {}
+
 enum RangeResultError: Error {
     case notComparable
 }

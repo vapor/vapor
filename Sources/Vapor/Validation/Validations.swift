@@ -1,6 +1,6 @@
 import Foundation
 
-public struct Validations {
+public struct Validations: Sendable {
     var storage: [Validation]
     
     public init() {
@@ -40,7 +40,7 @@ public struct Validations {
         each key: ValidationKey,
         required: Bool = true,
         customFailureDescription: String? = nil,
-        _ handler: @escaping (Int, inout Validations) -> ()
+        _ handler: @Sendable @escaping (Int, inout Validations) -> ()
     ) {
         self.storage.append(.init(nested: key, required: required, unkeyed: handler, customFailureDescription: customFailureDescription))
     }

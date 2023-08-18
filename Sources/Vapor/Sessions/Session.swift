@@ -30,7 +30,7 @@ public final class Session {
     }
 }
 
-public struct SessionID: Equatable, Hashable {
+public struct SessionID: Sendable, Equatable, Hashable {
     public let string: String
     public init(string: String) {
         self.string = string
