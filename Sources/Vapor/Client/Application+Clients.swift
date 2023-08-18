@@ -1,30 +1,34 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var clients: Clients {
         .init(application: self)
     }
     
     public var client: Client {
-        guard let makeClient = self.clients.storage.makeClient else {
+        guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0 }) else {
             fatalError("No client configured. Configure with app.clients.use(...)")
         }
         return makeClient(self)
     }
 
-    public struct Clients {
+    public struct Clients: Sendable {
         public struct Provider {
-            let run: (Application) -> ()
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
         
-        final class Storage {
-            var makeClient: ((Application) -> Client)?
-            init() { }
+        final class Storage: Sendable {
+            let makeClient: NIOLockedValueBox<(@Sendable (Application) -> Client)?>
+            init() {
+                self.makeClient = .init(nil)
+            }
         }
         
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 
@@ -36,8 +40,8 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeClient: @escaping (Application) -> (Client)) {
-            self.storage.makeClient = makeClient
+        public func use(_ makeClient: @Sendable @escaping (Application) -> (Client)) {
+            self.storage.makeClient.withLockedValue { $0 = makeClient }
         }
 
         public let application: Application
