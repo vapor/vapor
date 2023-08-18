@@ -1,3 +1,5 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     /// Controls application's configured caches.
     ///
@@ -9,13 +11,13 @@ extension Application {
 
     /// Current application cache. See `Request.cache` for caching in request handlers.
     public var cache: Cache {
-        guard let makeCache = self.caches.storage.makeCache else {
+        guard let makeCache = self.caches.storage.makeCache.withLockedValue({ $0 }) else {
             fatalError("No cache configured. Configure with app.caches.use(...)")
         }
         return makeCache(self)
     }
 
-    public struct Caches {
+    public struct Caches: Sendable {
         public struct Provider {
             let run: (Application) -> ()
 
@@ -24,12 +26,14 @@ extension Application {
             }
         }
         
-        final class Storage {
-            var makeCache: ((Application) -> Cache)?
-            init() { }
+        final class Storage: Sendable {
+            let makeCache: NIOLockedValueBox<(@Sendable (Application) -> Cache)?>
+            init() {
+                self.makeCache = .init(nil)
+            }
         }
 
-        struct Key: StorageKey {
+        struct Key: StorageKey, Sendable {
             typealias Value = Storage
         }
 
@@ -39,8 +43,8 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeCache: @escaping (Application) -> (Cache)) {
-            self.storage.makeCache = makeCache
+        public func use(_ makeCache: @Sendable @escaping (Application) -> (Cache)) {
+            self.storage.makeCache.withLockedValue { $0 =  makeCache }
         }
 
         func initialize() {
