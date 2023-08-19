@@ -60,19 +60,24 @@ public final class Application: Sendable {
         }
     }
 
-    public final class Locks {
+    public final class Locks: Sendable {
         public let main: NIOLock
-        var storage: [ObjectIdentifier: NIOLock]
+        // Is there a type we can use to make this Sendable but reuse the existing lock we already have?
+        private let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
 
         init() {
             self.main = .init()
-            self.storage = [:]
+            self.storage = .init([:])
         }
 
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.withLock { self.storage.insertOrReturn(.init(), at: .init(Key.self)) }
+            self.main.withLock {
+                self.storage.withLockedValue{ 
+                    $0.insertOrReturn(.init(), at: .init(Key.self))
+                }
+            }
         }
     }
 
