@@ -62,7 +62,7 @@ public final class SessionsMiddleware: Middleware {
 
     /// Adds session cookie to response or clears if session was deleted.
     private func addCookies(to response: Response, for request: Request) -> EventLoopFuture<Response> {
-        if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid {
+        if let session = request._sessionCache.session.withLockedValue({ $0 }), session.isValid.withLockedValue({ $0 }) {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let createOrUpdate: EventLoopFuture<SessionID>
