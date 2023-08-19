@@ -6,8 +6,9 @@ import NIOHTTPCompression
 import NIOSSL
 import Logging
 import NIOPosix
+import NIOConcurrencyHelpers
 
-public enum HTTPVersionMajor: Equatable, Hashable {
+public enum HTTPVersionMajor: Equatable, Hashable, Sendable {
     case one
     case two
 }
@@ -156,7 +157,9 @@ public final class HTTPServer: Server, Sendable {
         public var shutdownTimeout: TimeAmount
 
         /// An optional callback that will be called instead of using swift-nio-ssl's regular certificate verification logic.
-        public var customCertificateVerifyCallback: NIOSSLCustomVerificationCallback?
+        /// This is the same as `NIOSSLCustomVerificationCallback` but just marked as `Sendable`
+        @preconcurrency
+        public var customCertificateVerifyCallback: (@Sendable ([NIOSSLCertificate], EventLoopPromise<NIOSSLVerificationResult>) -> Void)?
 
         public init(
             hostname: String = Self.defaultHostname,
@@ -228,36 +231,31 @@ public final class HTTPServer: Server, Sendable {
     }
     
     public var onShutdown: EventLoopFuture<Void> {
-        guard let connection = self.connection else {
+        guard let connection = self.connection.withLockedValue({ $0 }) else {
             fatalError("Server has not started yet")
         }
         return connection.channel.closeFuture
     }
 
     public var configuration: Configuration {
-        get { _configuration }
+        get { _configuration.withLockedValue { $0 } }
         set {
-            guard !didStart else {
-                _configuration.logger.warning("Cannot modify server configuration after server has been started.")
+            guard !didStart.withLockedValue({ $0 }) else {
+                _configuration.withLockedValue({ $0 }).logger.warning("Cannot modify server configuration after server has been started.")
                 return
             }
-            _configuration = newValue
+            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
+            _configuration.withLockedValue { $0 = newValue }
         }
     }
 
     private let responder: Responder
-    private var _configuration: Configuration {
-        willSet {
-            self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
-        }
-    }
+    private let _configuration: NIOLockedValueBox<Configuration>
     private let eventLoopGroup: EventLoopGroup
-    
-    private var connection: HTTPServerConnection?
-    private var didShutdown: Bool
-    private var didStart: Bool
-
-    private var application: Application
+    private let connection: NIOLockedValueBox<HTTPServerConnection?>
+    private let didShutdown: NIOLockedValueBox<Bool>
+    private let didStart: NIOLockedValueBox<Bool>
+    private let application: Application
     
     public init(
         application: Application,
@@ -267,10 +265,11 @@ public final class HTTPServer: Server, Sendable {
     ) {
         self.application = application
         self.responder = responder
-        self._configuration = configuration
+        self._configuration = .init(configuration)
         self.eventLoopGroup = eventLoopGroup
-        self.didStart = false
-        self.didShutdown = false
+        self.didStart = .init(false)
+        self.didShutdown = .init(false)
+        self.connection = .init(nil)
     }
     
     public func start(address: BindAddress?) throws {
@@ -298,19 +297,21 @@ public final class HTTPServer: Server, Sendable {
         self.configuration.logger.notice("Server starting on \(addressDescription)")
 
         // start the actual HTTPServer
-        self.connection = try HTTPServerConnection.start(
-            application: self.application,
-            responder: self.responder,
-            configuration: configuration,
-            on: self.eventLoopGroup
-        ).wait()
+        try self.connection.withLockedValue {
+            $0 = try HTTPServerConnection.start(
+                application: self.application,
+                responder: self.responder,
+                configuration: configuration,
+                on: self.eventLoopGroup
+            ).wait()
+        }
 
         self.configuration = configuration
-        self.didStart = true
+        self.didStart.withLockedValue { $0 = true }
     }
     
     public func shutdown() {
-        guard let connection = self.connection else {
+        guard let connection = self.connection.withLockedValue({ $0 }) else {
             return
         }
         self.configuration.logger.debug("Requesting HTTP server shutdown")
@@ -320,19 +321,21 @@ public final class HTTPServer: Server, Sendable {
             self.configuration.logger.error("Could not stop HTTP server: \(error)")
         }
         self.configuration.logger.debug("HTTP server shutting down")
-        self.didShutdown = true
+        self.didShutdown.withLockedValue { $0 = true }
     }
 
     public var localAddress: SocketAddress? {
-        return self.connection?.channel.localAddress
+        return self.connection.withLockedValue({ $0 })?.channel.localAddress
     }
     
     deinit {
-        assert(!self.didStart || self.didShutdown, "HTTPServer did not shutdown before deinitializing")
+        let started = self.didStart.withLockedValue { $0 }
+        let shutdown = self.didShutdown.withLockedValue { $0 }
+        assert(!started || shutdown, "HTTPServer did not shutdown before deinitializing")
     }
 }
 
-private final class HTTPServerConnection {
+private final class HTTPServerConnection: Sendable {
     let channel: Channel
     let quiesce: ServerQuiescingHelper
     
