@@ -37,7 +37,7 @@ private struct MemoryCacheKey: LockKey, StorageKey {
     typealias Value = MemoryCacheStorage
 }
 
-private final class MemoryCacheStorage {
+private actor MemoryCacheStorage: Sendable {
     struct CacheEntryBox<T> {
         var expiresAt: Date?
         var value: T
@@ -98,22 +98,25 @@ private struct MemoryCache: Cache {
     }
     
     func get<T>(_ key: String, as type: T.Type) -> EventLoopFuture<T?>
-        where T: Decodable
+        where T: Decodable & Sendable
     {
-        self.eventLoop.makeSucceededFuture(self.storage.get(key))
+        self.eventLoop.makeFutureWithTask {
+            await self.storage.get(key)
+        }
     }
     
     func set<T>(_ key: String, to value: T?) -> EventLoopFuture<Void>
-        where T: Encodable
+        where T: Encodable & Sendable
     {
         self.set(key, to: value, expiresIn: nil)
     }
     
     func set<T>(_ key: String, to value: T?, expiresIn expirationTime: CacheExpirationTime?) -> EventLoopFuture<Void>
-        where T: Encodable
+        where T: Encodable & Sendable
     {
-        self.storage.set(key, to: value, expiresIn: expirationTime)
-        return self.eventLoop.makeSucceededFuture(())
+        self.eventLoop.makeFutureWithTask {
+            await self.storage.set(key, to: value, expiresIn: expirationTime)
+        }
     }
     
     func `for`(_ request: Request) -> MemoryCache {
