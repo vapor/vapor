@@ -357,7 +357,9 @@ private final class HTTPServerConnection: Sendable {
             }
             
             // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { [weak application] channel in
+            .childChannelInitializer { channel in
+//            .childChannelInitializer { [weak application] channel in
+#warning("We were storing a weak reference to the applicaiton at this point - why")
                 // add TLS handlers if configured
                 if var tlsConfiguration = configuration.tlsConfiguration {
                     // prioritize http/2
@@ -382,7 +384,7 @@ private final class HTTPServerConnection: Sendable {
                                 mode: .server,
                                 inboundStreamInitializer: { channel in
                                     channel.pipeline.addVaporHTTP2Handlers(
-                                        application: application!,
+                                        application: application,
                                         responder: responder,
                                         configuration: configuration
                                     )
@@ -390,7 +392,7 @@ private final class HTTPServerConnection: Sendable {
                             ).map { _ in }
                         }, http1ChannelConfigurator: { channel in
                             channel.pipeline.addVaporHTTP1Handlers(
-                                application: application!,
+                                application: application,
                                 responder: responder,
                                 configuration: configuration
                             )
@@ -401,7 +403,7 @@ private final class HTTPServerConnection: Sendable {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
                     }
                     return channel.pipeline.addVaporHTTP1Handlers(
-                        application: application!,
+                        application: application,
                         responder: responder,
                         configuration: configuration
                     )
