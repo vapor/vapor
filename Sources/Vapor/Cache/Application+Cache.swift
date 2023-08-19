@@ -18,7 +18,7 @@ extension Application {
     }
 
     public struct Caches: Sendable {
-        public struct Provider {
+        public struct Provider: Sendable {
             let run: @Sendable (Application) -> ()
 
             public init(_ run: @Sendable @escaping (Application) -> ()) {
