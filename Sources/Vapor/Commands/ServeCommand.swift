@@ -6,7 +6,7 @@ import ConsoleKit
 ///     $ swift run Run serve
 ///     Server starting on http://localhost:8080
 ///
-public final class ServeCommand: Command {
+public final class ServeCommand: Command, Sendable {
     public struct Signature: CommandSignature {
         @Option(name: "hostname", short: "H", help: "Set the hostname the server will run on.")
         var hostname: String?

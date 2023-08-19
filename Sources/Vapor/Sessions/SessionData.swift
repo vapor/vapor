@@ -11,7 +11,7 @@
 ///     // creates a copy of the data as of this point
 ///     let snapshot = data.snapshot
 ///     client.storeUsingDictionary(snapshot)
-public struct SessionData {
+public struct SessionData: Sendable {
     /// A copy of the current data in the container.
     public var snapshot: [String: String] { self.storage }
 
