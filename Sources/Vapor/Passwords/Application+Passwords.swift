@@ -1,13 +1,15 @@
+import NIOConcurrencyHelpers
+
 extension Application {
     public var passwords: Passwords {
         .init(application: self)
     }
 
-    public struct Passwords {
-        public struct Provider {
-            let run: (Application) -> ()
+    public struct Passwords: Sendable {
+        public struct Provider: Sendable {
+            let run: @Sendable (Application) -> ()
 
-            public init(_ run: @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -23,14 +25,16 @@ extension Application {
         }
 
         public func use(
-            _ makeVerifier: @escaping (Application) -> (PasswordHasher)
+            _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
-            self.storage.makeVerifier = makeVerifier
+            self.storage.makeVerifier.withLockedValue { $0 = makeVerifier }
         }
 
-        final class Storage {
-            var makeVerifier: ((Application) -> PasswordHasher)?
-            init() { }
+        final class Storage: Sendable {
+            let makeVerifier: NIOLockedValueBox<(@Sendable (Application) -> PasswordHasher)?>
+            init() {
+                self.makeVerifier = .init(nil)
+            }
         }
 
         var storage: Storage {
