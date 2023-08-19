@@ -11,7 +11,7 @@ import Logging
 ///     let dirConfig = DirectoryConfiguration.detect()
 ///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
-public struct DirectoryConfiguration {
+public struct DirectoryConfiguration: Sendable {
     /// Path to the current working directory.
     public var workingDirectory: String
     public var resourcesDirectory: String
