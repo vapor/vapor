@@ -28,7 +28,7 @@ extension Application {
     public var threadPool: NIOThreadPool {
         get { self.core.storage.threadPool.withLockedValue { $0 } }
         set {
-            guard !self.isBooted else {
+            guard !self.isBooted.withLockedValue({ $0 }) else {
                 self.logger.critical("Cannot replace thread pool after application has booted")
                 fatalError("Cannot replace thread pool after application has booted")
             }
