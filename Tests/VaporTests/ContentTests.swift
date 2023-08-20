@@ -199,6 +199,61 @@ final class ContentTests: XCTestCase {
             XCTAssertEqualJSON(res.body.string, expected)
         }
     }
+  
+    func testMultipartDecodedEmptyMultipartForm() throws {
+        let data = """
+        --123\r
+        --123--\r
+        """
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
+
+    func testMultipartDecodedEmptyBody() throws {
+        let data = ""
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
     
     func testMultipartDecodeUnicode() throws {
         let data = """
@@ -269,7 +324,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=droplet.png")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -297,7 +352,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            XCTAssertContains(res.body.string, "filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }

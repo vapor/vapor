@@ -120,7 +120,7 @@ public final class FileMiddleware: Middleware {
     }
     
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory
-    public struct DirectoryAction {
+    public struct DirectoryAction: Sendable {
         let kind: Kind
         
         /// Indicates that the request should be passed through the middleware

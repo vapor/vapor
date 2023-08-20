@@ -14,7 +14,7 @@ public final class CORSMiddleware: Middleware {
     /// - all: Uses wildcard to allow any origin.
     /// - any: A list of allowable origins.
     /// - custom: Uses custom string provided as an associated value.
-    public enum AllowOriginSetting {
+    public enum AllowOriginSetting: Sendable {
         /// Disallow any origin.
         case none
 
@@ -52,7 +52,7 @@ public final class CORSMiddleware: Middleware {
 
 
     /// Configuration used for populating headers in response for CORS requests.
-    public struct Configuration {
+    public struct Configuration: Sendable {
         /// Default CORS configuration.
         ///
         /// - Allow Origin: Based on request's `Origin` value.

@@ -62,13 +62,13 @@ public final class ErrorMiddleware: Middleware {
     }
 
     /// Error-handling closure.
-    private let closure: (Request, Error) -> (Response)
+    private let closure: @Sendable (Request, Error) -> (Response)
 
     /// Create a new `ErrorMiddleware`.
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @escaping (Request, Error) -> (Response)) {
+    public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
     
