@@ -11,7 +11,7 @@ extension Application {
 
     /// Current application cache. See `Request.cache` for caching in request handlers.
     public var cache: Cache {
-        guard let makeCache = self.caches.storage.makeCache.withLockedValue({ $0 }) else {
+        guard let makeCache = self.caches.storage.makeCache.withLockedValue({ $0.factory }) else {
             fatalError("No cache configured. Configure with app.caches.use(...)")
         }
         return makeCache(self)
@@ -27,9 +27,12 @@ extension Application {
         }
         
         final class Storage: Sendable {
-            let makeCache: NIOLockedValueBox<(@Sendable (Application) -> Cache)?>
+            struct CacheFactory {
+                let factory: (@Sendable (Application) -> Cache)?
+            }
+            let makeCache: NIOLockedValueBox<CacheFactory>
             init() {
-                self.makeCache = .init(nil)
+                self.makeCache = .init(.init(factory: nil))
             }
         }
 
@@ -44,7 +47,7 @@ extension Application {
         }
 
         public func use(_ makeCache: @Sendable @escaping (Application) -> (Cache)) {
-            self.storage.makeCache.withLockedValue { $0 =  makeCache }
+            self.storage.makeCache.withLockedValue { $0 = .init(factory: makeCache) }
         }
 
         func initialize() {

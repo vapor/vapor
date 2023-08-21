@@ -6,7 +6,7 @@ extension Application {
     }
 
     public var view: ViewRenderer {
-        guard let makeRenderer = self.views.storage.makeRenderer.withLockedValue({ $0 }) else {
+        guard let makeRenderer = self.views.storage.makeRenderer.withLockedValue({ $0.factory }) else {
             fatalError("No renderer configured. Configure with app.views.use(...)")
         }
         return makeRenderer(self)
@@ -28,9 +28,12 @@ extension Application {
         }
         
         final class Storage: Sendable {
-            let makeRenderer: NIOLockedValueBox<(@Sendable (Application) -> ViewRenderer)?>
+            struct ViewRendererFactory {
+                let factory: (@Sendable (Application) -> ViewRenderer)?
+            }
+            let makeRenderer: NIOLockedValueBox<ViewRendererFactory>
             init() {
-                self.makeRenderer = .init(nil)
+                self.makeRenderer = .init(.init(factory: nil))
             }
         }
 
@@ -54,7 +57,7 @@ extension Application {
         }
 
         public func use(_ makeRenderer: @Sendable @escaping (Application) -> (ViewRenderer)) {
-            self.storage.makeRenderer.withLockedValue { $0 = makeRenderer }
+            self.storage.makeRenderer.withLockedValue { $0 = .init(factory: makeRenderer) }
         }
 
         func initialize() {

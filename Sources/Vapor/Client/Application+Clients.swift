@@ -6,7 +6,7 @@ extension Application {
     }
     
     public var client: Client {
-        guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0 }) else {
+        guard let makeClient = self.clients.storage.makeClient.withLockedValue({ $0.factory }) else {
             fatalError("No client configured. Configure with app.clients.use(...)")
         }
         return makeClient(self)
@@ -22,9 +22,12 @@ extension Application {
         }
         
         final class Storage: Sendable {
-            let makeClient: NIOLockedValueBox<(@Sendable (Application) -> Client)?>
+            struct ClientFactory {
+                let factory: (@Sendable (Application) -> Client)?
+            }
+            let makeClient: NIOLockedValueBox<ClientFactory>
             init() {
-                self.makeClient = .init(nil)
+                self.makeClient = .init(.init(factory: nil))
             }
         }
         
@@ -41,7 +44,7 @@ extension Application {
         }
 
         public func use(_ makeClient: @Sendable @escaping (Application) -> (Client)) {
-            self.storage.makeClient.withLockedValue { $0 = makeClient }
+            self.storage.makeClient.withLockedValue { $0 = .init(factory: makeClient) }
         }
 
         public let application: Application

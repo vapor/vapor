@@ -21,13 +21,16 @@ extension Application {
         }
 
         final class Storage: Sendable {
+            struct SessionDriverFactory {
+                let factory: (@Sendable (Application) -> SessionDriver)?
+            }
             let memory: MemorySessions.Storage
-            let makeDriver: NIOLockedValueBox<(@Sendable (Application) -> SessionDriver)?>
+            let makeDriver: NIOLockedValueBox<SessionDriverFactory>
             let configuration: NIOLockedValueBox<SessionsConfiguration>
             init() {
                 self.memory = .init()
                 self.configuration = .init(.default())
-                self.makeDriver = .init(nil)
+                self.makeDriver = .init(.init(factory: nil))
             }
         }
 
@@ -54,7 +57,7 @@ extension Application {
         }
 
         public var driver: SessionDriver {
-            guard let makeDriver = self.storage.makeDriver.withLockedValue({ $0 }) else {
+            guard let makeDriver = self.storage.makeDriver.withLockedValue({ $0.factory }) else {
                 fatalError("No driver configured. Configure with app.sessions.use(...)")
             }
             return makeDriver(self.application)
@@ -69,7 +72,7 @@ extension Application {
         }
 
         public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
-            self.storage.makeDriver.withLockedValue { $0 = makeDriver }
+            self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
         }
 
         var storage: Storage {

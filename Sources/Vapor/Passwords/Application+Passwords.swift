@@ -27,13 +27,16 @@ extension Application {
         public func use(
             _ makeVerifier: @Sendable @escaping (Application) -> (PasswordHasher)
         ) {
-            self.storage.makeVerifier.withLockedValue { $0 = makeVerifier }
+            self.storage.makeVerifier.withLockedValue { $0 = .init(factory: makeVerifier) }
         }
 
         final class Storage: Sendable {
-            let makeVerifier: NIOLockedValueBox<(@Sendable (Application) -> PasswordHasher)?>
+            struct PasswordsFactory {
+                let factory: (@Sendable (Application) -> PasswordHasher)?
+            }
+            let makeVerifier: NIOLockedValueBox<PasswordsFactory>
             init() {
-                self.makeVerifier = .init(nil)
+                self.makeVerifier = .init(.init(factory: nil))
             }
         }
 

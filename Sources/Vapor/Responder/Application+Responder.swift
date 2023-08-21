@@ -22,9 +22,12 @@ extension Application {
         }
 
         final class Storage: Sendable {
-            let factory: NIOLockedValueBox<(@Sendable (Application) -> Vapor.Responder)?>
+            struct ResponderFactory {
+                let factory: (@Sendable (Application) -> Vapor.Responder)?
+            }
+            let factory: NIOLockedValueBox<ResponderFactory>
             init() {
-                self.factory = .init(nil)
+                self.factory = .init(.init(factory: nil))
             }
         }
 
@@ -35,7 +38,7 @@ extension Application {
         public let application: Application
 
         public var current: Vapor.Responder {
-            guard let factory = self.storage.factory.withLockedValue({ $0 }) else {
+            guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
                 fatalError("No responder configured. Configure with app.responder.use(...)")
             }
             return factory(self.application)
@@ -54,7 +57,7 @@ extension Application {
         }
 
         public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
-            self.storage.factory.withLockedValue { $0 = factory }
+            self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
         }
 
         var storage: Storage {
