@@ -136,16 +136,16 @@ public struct WebSocketUpgrader: Upgrader {
         }, upgradePipelineHandler: { channel, req  in
             
             var wsConfig = WebSocket.Configuration()
+            
         ///TODO: if its broke this did it.
             if let offeredConfig = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
                 if let passedConfig = pmce {
                     // shuold compared passed config to offered for compat?
                     // for now combine offered aggrred params and passed config to apply to the wsCOnfig
                     
-                    let combinedConfig = PMCE.PMCEConfig(clientCfg: offeredConfig.clientConfig,
-                                                         serverCfg: passedConfig.serverConfig)
+                    wsConfig.pmceConfig = passedConfig
+
                 }
-                wsConfig.deflateConfig = offeredConfig
             }
           
             return WebSocket.server(on: channel,
