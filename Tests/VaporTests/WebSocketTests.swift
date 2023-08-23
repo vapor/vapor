@@ -209,7 +209,6 @@ final class WebSocketTests: XCTestCase {
         }
     }
     
-    
     func testLifecycleShutdown() throws {
         let app = Application(.testing)
         app.http.server.configuration.port = 1337

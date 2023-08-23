@@ -119,6 +119,7 @@ public struct WebSocketUpgrader: Upgrader {
     var maxFrameSize: WebSocketMaxFrameSize
     var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
     var onUpgrade: (WebSocket) -> ()
+    var pmce:PMCE.PMCEConfig?
     
     public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
@@ -127,23 +128,41 @@ public struct WebSocketUpgrader: Upgrader {
     }
     
     public func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader {
-        let webSocketUpgrader = NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value,
-                                                           automaticErrorHandling: false,
-                                                           shouldUpgrade: { _, _ in
+        let webSocketUpgrader = 
+        NIOWebSocketServerUpgrader(maxFrameSize: self.maxFrameSize.value,
+                                   automaticErrorHandling: false,
+                                   shouldUpgrade: { _, _ in
             return self.shouldUpgrade()
         }, upgradePipelineHandler: { channel, req  in
             
             var wsConfig = WebSocket.Configuration()
-                      
+            // here use pmce passed in for private zlib
+            // also use to compate for negotiation?
+            
+            var serverConfig:PMCE.PMCEConfig.DeflateConfig
+            
             if let config = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
                 wsConfig.deflateConfig = config
             }
-            
+            if let passedConfig = pmce {
+                
+            }
             return WebSocket.server(on: channel,
                                     config: wsConfig,
                                     onUpgrade: self.onUpgrade)
         })
         
         return webSocketUpgrader
+    }
+}
+
+extension WebSocketUpgrader {
+    public init(maxFrameSize: WebSocketMaxFrameSize,
+                pmce:PMCE.PMCEConfig,
+                shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
+        self.maxFrameSize = maxFrameSize
+        self.shouldUpgrade = shouldUpgrade
+        self.onUpgrade = onUpgrade
+        self.pmce = pmce
     }
 }
