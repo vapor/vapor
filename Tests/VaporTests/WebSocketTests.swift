@@ -199,7 +199,7 @@ final class WebSocketTests: XCTestCase {
                                                   serverCfg: .init(takeover: .noTakeover))
             try WebSocket.connect(
                 to: "ws://localhost:8085/test",
-                configuration: .init(deflateConfig: deflate),
+                configuration: .init(pmceConfig: deflate),
                 on: app.eventLoopGroup.next()
             ) { ws in
                 XCTAssertNotNil(ws.pmce, "PMCE shuold NOT be nil")

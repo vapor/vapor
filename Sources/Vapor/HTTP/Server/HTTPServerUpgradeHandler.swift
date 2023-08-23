@@ -136,17 +136,18 @@ public struct WebSocketUpgrader: Upgrader {
         }, upgradePipelineHandler: { channel, req  in
             
             var wsConfig = WebSocket.Configuration()
-            // here use pmce passed in for private zlib
-            // also use to compate for negotiation?
-            
-            var serverConfig:PMCE.PMCEConfig.DeflateConfig
-            
-            if let config = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
-                wsConfig.deflateConfig = config
+        ///TODO: if its broke this did it.
+            if let offeredConfig = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
+                if let passedConfig = pmce {
+                    // shuold compared passed config to offered for compat?
+                    // for now combine offered aggrred params and passed config to apply to the wsCOnfig
+                    
+                    let combinedConfig = PMCE.PMCEConfig(clientCfg: offeredConfig.clientConfig,
+                                                         serverCfg: passedConfig.serverConfig)
+                }
+                wsConfig.deflateConfig = offeredConfig
             }
-            if let passedConfig = pmce {
-                
-            }
+          
             return WebSocket.server(on: channel,
                                     config: wsConfig,
                                     onUpgrade: self.onUpgrade)
