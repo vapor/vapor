@@ -11,10 +11,9 @@ public enum EndpointCacheError: Swift.Error {
 
 /// Handles the complexities of HTTP caching.
 public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
-    private let cached: NIOLockedValueBox<T?>
+    private let cached: NIOLockedValueBox<(T?, Date?)>
     private let request: NIOLockedValueBox<EventLoopFuture<T>?>
     private let headers: NIOLockedValueBox<HTTPHeaders?>
-    private let cacheUntil: NIOLockedValueBox<Date?>
     private let sync: NIOLock
     private let uri: URI
 
@@ -25,9 +24,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
         self.uri = uri
         self.sync = .init()
         self.request = .init(nil)
-        self.cacheUntil = .init(nil)
         self.headers = .init(nil)
-        self.cached = .init(nil)
+        self.cached = .init((nil, nil))
     }
 
     /// Downloads the resource.
@@ -47,7 +45,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
         self.sync.lock()
         defer { self.sync.unlock() }
 
-        if let cached = self.cached.withLockedValue({ $0 }), let cacheUntil = self.cacheUntil.withLockedValue({ $0 }), Date() < cacheUntil {
+        let cachedData = self.cached.withLockedValue { $0 }
+        if let cached = cachedData.0, let cacheUntil = cachedData.1, Date() < cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
             let cachedHeaders = self.headers.withLockedValue { $0 }
@@ -115,7 +114,7 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
             } else {
                 self.headers.withLockedValue { headers in
                     headers = response.headers
-                    self.cacheUntil.withLockedValue { $0 = headers?.expirationDate(requestSentAt: requestSentAt) }
+                    self.cached.withLockedValue { $0.1 = headers?.expirationDate(requestSentAt: requestSentAt) }
                 }
             }
 
@@ -123,7 +122,8 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
             case .notModified:
                 logger?.debug("Cached data is still valid.")
 
-                guard let cached = self.cached.withLockedValue({ $0 }) else {
+                let cachedData = self.cached.withLockedValue({ $0 })
+                guard let cached = cachedData.0 else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
                     return self.download(on: eventLoop, using: client, logger: logger)
@@ -142,9 +142,9 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
                     return eventLoop.makeFailedFuture(EndpointCacheError.contentDecodeFailure(error))
                 }
 
-                self.cacheUntil.withLockedValue { cachedDate in
-                    if cachedDate != nil {
-                        self.cached.withLockedValue { $0 = data }
+                self.cached.withLockedValue { cachedData in
+                    if cachedData.1 != nil {
+                        cachedData.0 = data
                     }
                 }
 
@@ -159,11 +159,12 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
             self.sync.lock()
             defer { self.sync.unlock() }
 
-            guard let headers = self.headers.withLockedValue({ $0 }), let cached = self.cached.withLockedValue({ $0 }) else {
+            let cachedData = self.cached.withLockedValue { $0 }
+            guard let headers = self.headers.withLockedValue({ $0 }), let cached = cachedData.0 else {
                 return eventLoop.makeFailedFuture(error)
             }
 
-            if let cacheControl = headers.cacheControl, let cacheUntil = self.cacheUntil.withLockedValue({ $0 }) {
+            if let cacheControl = headers.cacheControl, let cacheUntil = cachedData.1 {
                 if let staleIfError = cacheControl.staleIfError,
                     cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
                     // Can use the data for staleIfError seconds past expiration when the server is non-responsive
@@ -183,8 +184,7 @@ public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
     }
 
     private func clearCache() {
-        self.cached.withLockedValue { $0 = nil }
+        self.cached.withLockedValue { $0 = (nil, nil) }
         self.headers.withLockedValue { $0 = nil }
-        self.cacheUntil.withLockedValue { $0 = nil }
     }
 }
