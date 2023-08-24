@@ -357,9 +357,7 @@ private final class HTTPServerConnection: Sendable {
             }
             
             // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { channel in
-//            .childChannelInitializer { [weak application] channel in
-#warning("We were storing a weak reference to the applicaiton at this point - why")
+            .childChannelInitializer { [weak application] channel in
                 // add TLS handlers if configured
                 if var tlsConfiguration = configuration.tlsConfiguration {
                     // prioritize http/2
@@ -378,12 +376,16 @@ private final class HTTPServerConnection: Sendable {
                         configuration.logger.error("Could not configure TLS: \(error)")
                         return channel.close(mode: .all)
                     }
+                    let applicationBox = NIOLockedValueBox(application)
                     return channel.pipeline.addHandler(tlsHandler).flatMap { _ in
                         channel.configureHTTP2SecureUpgrade(h2ChannelConfigurator: { channel in
                             channel.configureHTTP2Pipeline(
                                 mode: .server,
                                 inboundStreamInitializer: { channel in
-                                    channel.pipeline.addVaporHTTP2Handlers(
+                                    guard let application = applicationBox.withLockedValue({ $0 }) else {
+                                        fatalError("Application has been deinitialized")
+                                    }
+                                    return channel.pipeline.addVaporHTTP2Handlers(
                                         application: application,
                                         responder: responder,
                                         configuration: configuration
@@ -391,7 +393,10 @@ private final class HTTPServerConnection: Sendable {
                                 }
                             ).map { _ in }
                         }, http1ChannelConfigurator: { channel in
-                            channel.pipeline.addVaporHTTP1Handlers(
+                            guard let application = applicationBox.withLockedValue({ $0 }) else {
+                                fatalError("Application has been deinitialized")
+                            }
+                            return channel.pipeline.addVaporHTTP1Handlers(
                                 application: application,
                                 responder: responder,
                                 configuration: configuration
@@ -403,7 +408,7 @@ private final class HTTPServerConnection: Sendable {
                         fatalError("Plaintext HTTP/2 (h2c) not yet supported.")
                     }
                     return channel.pipeline.addVaporHTTP1Handlers(
-                        application: application,
+                        application: application!,
                         responder: responder,
                         configuration: configuration
                     )
