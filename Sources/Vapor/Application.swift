@@ -174,15 +174,14 @@ public final class Application: Sendable {
     }
 
     public func boot() throws {
-        self.isBooted.withLockedValue { booted in
+        try self.isBooted.withLockedValue { booted in
             guard !booted else {
                 return
             }
             booted = true
+            try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
+            try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
-        
-        try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
-        try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
     public func shutdown() {
