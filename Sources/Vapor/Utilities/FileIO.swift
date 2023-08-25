@@ -289,8 +289,12 @@ extension HTTPHeaders.Range.Value {
                     logger.debug("Requested range was invalid: \(start)-\(end)")
                     throw Abort(.badRequest)
                 }
-                let myByteCount = end <= size ? byteCount : byteCount - (end - size)
-                return (offset: numericCast(start), byteCount: myByteCount)
+                var byteCountToReqeust = byteCount
+                    // Request past EOF, return up to EOF bytes
+                if (end > size) {
+                    byteCountToReqeust = byteCount - (end - size)
+                }
+                return (offset: numericCast(start), byteCount: byteCountToReqeust)
         }
     }
 }

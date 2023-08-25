@@ -266,8 +266,8 @@ extension HTTPHeaders.Range.Value {
                 throw Abort(.badRequest)
             }
             
-            let myEnd = min(end, limit)
-            return .withinWithLimit(start: start, end: myEnd, limit: limit)
+            let endToRequest = min(end, limit)
+            return .withinWithLimit(start: start, end: endToRequest, limit: limit)
         }
     }
 }
