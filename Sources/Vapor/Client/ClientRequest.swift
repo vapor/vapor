@@ -2,7 +2,7 @@ import NIOCore
 import NIOHTTP1
 import Foundation
 
-public struct ClientRequest {
+public struct ClientRequest: Sendable {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders

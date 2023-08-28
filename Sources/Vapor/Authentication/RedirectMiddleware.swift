@@ -20,7 +20,7 @@ extension Authenticatable {
 
 
 private final class RedirectMiddleware<A>: Middleware
-    where A: Authenticatable
+    where A: Authenticatable & Sendable
 {
     let makePath: @Sendable (Request) -> String
     
