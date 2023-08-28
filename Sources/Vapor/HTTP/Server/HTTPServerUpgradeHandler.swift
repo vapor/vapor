@@ -137,14 +137,12 @@ public struct WebSocketUpgrader: Upgrader {
             
             var wsConfig = WebSocket.Configuration()
             
-        ///TODO: if its broke this did it.
             if let offeredConfig = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
+                // passed init overrides offered config
                 if let passedConfig = pmce {
-                    // shuold compared passed config to offered for compat?
-                    // for now combine offered aggrred params and passed config to apply to the wsCOnfig
-                    
                     wsConfig.pmceConfig = passedConfig
-
+                }else {
+                    wsConfig.pmceConfig = offeredConfig.server
                 }
             }
           
