@@ -54,7 +54,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url:"https://github.com/jhoughjr/websocket-kit.git", branch:"pmce-api-refactor"),
+        .package(url:"https://github.com/jhoughjr/websocket-kit.git", branch:"main"),
         //.package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
         
         // MultipartKit, Multipart encoding and decoding
