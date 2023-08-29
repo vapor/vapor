@@ -1,4 +1,9 @@
 import XCTVapor
+import XCTest
+import Vapor
+import NIOCore
+import NIOHTTP1
+import NIOEmbedded
 
 final class ContentTests: XCTestCase {
     func testContent() throws {
@@ -75,11 +80,11 @@ final class ContentTests: XCTestCase {
 
         try app.testable().test(.GET, "/decode_error") { res in
             XCTAssertEqual(res.status, .badRequest)
-            XCTAssertContains(res.body.string, "Value of type 'Int' required for key 'bar'")
+            XCTAssertContains(res.body.string, #"Value at path 'bar' was not of type 'Int'. Expected to decode Int but found a string"#)
         }
     }
 
-    func testContentContainer() throws {
+    func testContentContainerEncode() throws {
         struct FooContent: Content {
             var message: String = "hi"
         }
@@ -101,6 +106,51 @@ final class ContentTests: XCTestCase {
         try app.testable().test(.GET, "/encode") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertContains(res.body.string, "hi")
+        }
+    }
+
+    func testContentContainerDecode() throws {
+        struct FooContent: Content, Equatable {
+            var message: String = "hi"
+        }
+        struct FooDecodable: Decodable, Equatable {
+            var message: String = "hi"
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.post("decode") { req async throws -> String in
+            XCTAssertEqual(try req.content.decode(FooContent.self), FooContent())
+            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
+            return "decoded!"
+        }
+
+        try app.testable().test(.POST, "/decode") { req in
+            try req.content.encode(FooContent())
+        } afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "decoded!")
+        }
+
+        app.routes.post("decode-bad-header") { req async throws -> String in
+            XCTAssertEqual(req.headers.contentType, .audio)
+            XCTAssertThrowsError(try req.content.decode(FooContent.self)) { error in
+                guard let abort = error as? Abort, abort.status == .unsupportedMediaType else {
+                    XCTFail("Unexpected error: \(error)")
+                    return
+                }
+            }
+            XCTAssertEqual(try req.content.decode(FooDecodable.self, as: .json), FooDecodable())
+            return "decoded!"
+        }
+
+        try app.testable().test(.POST, "/decode-bad-header") { req in
+            try req.content.encode(FooContent())
+            req.headers.contentType = .audio
+        } afterResponse: { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertContains(res.body.string, "decoded!")
         }
     }
     
@@ -147,6 +197,61 @@ final class ContentTests: XCTestCase {
         ], body: .init(string: data)) { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqualJSON(res.body.string, expected)
+        }
+    }
+  
+    func testMultipartDecodedEmptyMultipartForm() throws {
+        let data = """
+        --123\r
+        --123--\r
+        """
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
+        }
+    }
+
+    func testMultipartDecodedEmptyBody() throws {
+        let data = ""
+        let expected = User(
+            name: "Vapor"
+        )
+
+        struct User: Content, Equatable {
+            var name: String
+        }
+
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.routes.get("multipart") { req -> User in
+            let decoded = try req.content.decode(User.self)
+            XCTAssertEqual(decoded, expected)
+            return decoded
+        }
+
+        try app.testable().test(.GET, "/multipart", headers: [
+            "Content-Type": "multipart/form-data; boundary=123"
+        ], body: .init(string: data)) { res in
+            XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
     
@@ -219,7 +324,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=droplet.png")
+            XCTAssertContains(res.body.string, "filename=\"droplet.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -247,7 +352,7 @@ final class ContentTests: XCTestCase {
             let boundary = res.headers.contentType?.parameters["boundary"] ?? "none"
             XCTAssertContains(res.body.string, "Content-Disposition: form-data; name=\"name\"")
             XCTAssertContains(res.body.string, "--\(boundary)")
-            XCTAssertContains(res.body.string, "filename=UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png")
+            XCTAssertContains(res.body.string, "filename=\"UTF-8\'\'%E5%A5%B9%E5%9C%A8%E5%90%83%E6%B0%B4%E6%9E%9C.png\"")
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
@@ -427,7 +532,85 @@ final class ContentTests: XCTestCase {
         XCTAssertThrowsError(try req.content.decode(PostInput.self)) { error in
             XCTAssertEqual(
                 (error as? AbortError)?.reason,
-                "Value required for key 'is_free'."
+                #"Value required for key at path 'is_free'. No value associated with key CodingKeys(stringValue: "is_free", intValue: nil) ("is_free")."#
+            )
+        }
+    }
+
+    func testDataCorruptionError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "https://vapor.codes"),
+            headersNoUpdate: ["Content-Type": "application/json"],
+            collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
+            on: app.eventLoopGroup.next()
+        )
+        
+        struct DecodeModel: Content {
+            let badJson: String
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertContains(
+                (error as? AbortError)?.reason,
+                #"Data corrupted at path ''. The given data was not valid JSON. Underlying error: "#
+            )
+        }
+    }
+
+    func testValueNotFoundError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+        try req.content.encode([
+            "items": ["1"]
+        ], as: .json)
+        
+        struct DecodeModel: Content {
+            struct Item: Content {
+                init(from decoder: Decoder) throws {
+                    var container = try decoder.unkeyedContainer()
+                    _ = try container.decode(String.self)
+                    _ = try container.decode(String.self)
+                    fatalError()
+                }
+            }
+            
+            let items: Item
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertEqual(
+                (error as? AbortError)?.reason,
+                #"Value of type 'String' was not found at path 'items.Index 1'. Unkeyed container is at end."#
+            )
+        }
+    }
+
+    func testTypeMismatchError() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        let req = Request(application: app, on: app.eventLoopGroup.next())
+        try req.content.encode([
+            "item": [
+                "title": "The title"
+            ]
+        ], as: .json)
+        
+        struct DecodeModel: Content {
+            struct Item: Content {
+                let title: Int
+            }
+            let item: Item
+        }
+        XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
+            XCTAssertContains(
+                (error as? AbortError)?.reason,
+                #"Value at path 'item.title' was not of type 'Int'. Expected to decode Int but found a string"#
             )
         }
     }

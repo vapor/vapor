@@ -1,5 +1,5 @@
 /// A source-code location.
-public struct ErrorSource {
+public struct ErrorSource: Sendable {
     /// File in which this location exists.
     public var file: String
 
@@ -34,7 +34,7 @@ public struct ErrorSource {
 extension ErrorSource {
     /// Creates a new `ErrorSource` for the current call site.
     public static func capture(
-        file: String = #file,
+        file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,

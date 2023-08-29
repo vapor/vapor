@@ -1,4 +1,6 @@
-public struct ValidationsResult {
+import NIOHTTP1
+
+public struct ValidationsResult: Sendable {
     public let results: [ValidationResult]
     
     public var error: ValidationsError? {
@@ -17,7 +19,7 @@ public struct ValidationsResult {
     }
 }
 
-public struct ValidationsError: Error {
+public struct ValidationsError: Sendable, Error {
     public let failures: [ValidationResult]
 }
 

@@ -1,10 +1,9 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
+import Foundation
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension AsyncPasswordHasher {
     public func hash<Password>(_ password: Password) async throws -> [UInt8]
-        where Password: DataProtocol
+        where Password: DataProtocol & Sendable
     {
         try await self.hash(password).get()
     }
@@ -13,7 +12,7 @@ extension AsyncPasswordHasher {
         _ password: Password,
         created digest: Digest
     ) async throws -> Bool
-        where Password: DataProtocol, Digest: DataProtocol
+        where Password: DataProtocol & Sendable, Digest: DataProtocol & Sendable
     {
         try await self.verify(password, created: digest).get()
     }
@@ -26,5 +25,3 @@ extension AsyncPasswordHasher {
         try await self.verify(password, created: digest).get()
     }
 }
-
-#endif

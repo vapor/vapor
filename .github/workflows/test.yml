@@ -1,8 +1,14 @@
 name: test
-on: { pull_request: {} }
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+on:
+  pull_request: { types: [opened, reopened, synchronize, ready_for_review] }
+  push: { branches: [ main ] }
 
 jobs:
   test-providers:
+    if: ${{ !(github.event.pull_request.draft || false) }}
     strategy:
       fail-fast: false
       matrix:
@@ -12,8 +18,12 @@ jobs:
           - vapor/leaf
           - vapor/queues
           - vapor/apns
+        include:
+          - ref: main
+          - provider: vapor/apns
+            ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.7-jammy
+    container: swift:5.8-jammy
     steps: 
       - name: Check out Vapor
         uses: actions/checkout@v3
@@ -24,16 +34,17 @@ jobs:
         with: 
           repository: ${{ matrix.provider }}
           path: provider
+          ref: ${{ matrix.ref }}
       - name: Use local Vapor
         run: swift package --package-path ./provider edit vapor --path ./vapor
-      - name: Run tests with Thread Sanitizer
+      - name: Run tests
         env:
             SWIFT_DETERMINISTIC_HASHING: 1
-        run: swift test --sanitize=thread
-        working-directory: provider
+        run: swift test --package-path ./provider
+
   unit-tests:
-     uses: vapor/ci/.github/workflows/run-unit-tests.yml@reusable-workflows
+     uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
      with:
-       with_coverage: false
+       with_coverage: true
        with_tsan: false
        with_public_api_check: true

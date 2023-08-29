@@ -1,31 +1,39 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import XCTVapor
+import XCTest
+import Vapor
+import NIOHTTP1
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 final class AsyncSessionTests: XCTestCase {
-    func testSessionDestroy() throws {
-        final class MockKeyedCache: AsyncSessionDriver {
-            static var ops: [String] = []
+    func testSessionDestroy() async throws {
+        actor MockKeyedCache: AsyncSessionDriver {
+            var ops: [String] = []
             init() { }
 
+            func getOps() -> [String] {
+                ops
+            }
+            
+            func resetOps() {
+                self.ops = []
+            }
 
             func createSession(_ data: SessionData, for request: Request) async throws -> SessionID {
-                Self.ops.append("create \(data)")
+                self.ops.append("create \(data)")
                 return .init(string: "a")
             }
 
             func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData? {
-                Self.ops.append("read \(sessionID)")
+                self.ops.append("read \(sessionID)")
                 return SessionData()
             }
 
             func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) async throws -> SessionID {
-                Self.ops.append("update \(sessionID) to \(data)")
+                self.ops.append("update \(sessionID) to \(data)")
                 return sessionID
             }
 
             func deleteSession(_ sessionID: SessionID, for request: Request) async throws {
-                Self.ops.append("delete \(sessionID)")
+                self.ops.append("delete \(sessionID)")
                 return
             }
         }
@@ -47,14 +55,15 @@ final class AsyncSessionTests: XCTestCase {
             return "del"
         }
 
-        try app.testable().test(.GET, "/set") { res in
+        try await app.testable().test(.GET, "/set") { res in
             XCTAssertEqual(res.body.string, "set")
             cookie = res.headers.setCookie?["vapor-session"]
             XCTAssertNotNil(cookie)
-            XCTAssertEqual(MockKeyedCache.ops, [
+            let ops = await cache.ops
+            XCTAssertEqual(ops, [
                 #"create SessionData(storage: ["foo": "bar"])"#,
             ])
-            MockKeyedCache.ops = []
+            await cache.resetOps()
         }
 
         XCTAssertEqual(cookie?.string, "a")
@@ -63,13 +72,13 @@ final class AsyncSessionTests: XCTestCase {
         var cookies = HTTPCookies()
         cookies["vapor-session"] = cookie
         headers.cookie = cookies
-        try app.testable().test(.GET, "/del", headers: headers) { res in
+        try await app.testable().test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
-            XCTAssertEqual(MockKeyedCache.ops, [
+            let ops = await cache.ops
+            XCTAssertEqual(ops, [
                 #"read SessionID(string: "a")"#,
                 #"delete SessionID(string: "a")"#
             ])
         }
     }
 }
-#endif

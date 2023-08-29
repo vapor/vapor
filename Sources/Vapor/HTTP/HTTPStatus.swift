@@ -1,3 +1,6 @@
+import NIOHTTP1
+import NIOCore
+
 /// Less verbose typealias for `HTTPResponseStatus`.
 public typealias HTTPStatus = HTTPResponseStatus
 

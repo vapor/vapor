@@ -1,3 +1,6 @@
+import Logging
+import ConsoleKit
+
 extension LoggingSystem {
     public static func bootstrap(from environment: inout Environment, _ factory: (Logger.Level) -> (String) -> LogHandler) throws {
         let level = try Logger.Level.detect(from: &environment)

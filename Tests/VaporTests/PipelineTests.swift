@@ -1,5 +1,7 @@
 @testable import Vapor
 import XCTest
+import NIOEmbedded
+import NIOCore
 
 final class PipelineTests: XCTestCase {
     func testEchoHandlers() throws {

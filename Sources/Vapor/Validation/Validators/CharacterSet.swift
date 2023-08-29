@@ -1,3 +1,5 @@
+import Foundation
+
 extension Validator where T == String {
     /// Validates that all characters in a `String` are ASCII (bytes 0..<128).
     public static var ascii: Validator {

@@ -9,24 +9,26 @@ extension Request {
     /// - note: `SessionsMiddleware` must be added and enabled.
     /// - returns: `Session` for this `Request`.
     public var session: Session {
-        if !self._sessionCache.middlewareFlag {
+        if !self._sessionCache.middlewareFlag.withLockedValue({ $0 }) {
             // No `SessionsMiddleware` was detected on your app.
             // Suggested solutions:
             // - Add the `SessionsMiddleware` globally to your app using `app.middleware.use`
             // - Add the `SessionsMiddleware` to a route group.
             assertionFailure("No `SessionsMiddleware` detected.")
         }
-        if let existing = self._sessionCache.session {
-            return existing
-        } else {
-            let new = Session()
-            self._sessionCache.session = new
-            return new
+        return self._sessionCache.session.withLockedValue { storedSession in
+            if let existing = storedSession {
+                return existing
+            } else {
+                let new = Session()
+                storedSession = new
+                return new
+            }
         }
     }
     
     public var hasSession: Bool {
-        return self._sessionCache.session != nil
+        return self._sessionCache.session.withLockedValue { $0 != nil }
     }
 
     private struct SessionCacheKey: StorageKey {

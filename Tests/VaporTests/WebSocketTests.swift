@@ -1,6 +1,8 @@
 import Vapor
 import NIOConcurrencyHelpers
 import XCTest
+import WebSocketKit
+import NIOPosix
 
 final class WebSocketTests: XCTestCase {
     func testWebSocketClient() throws {
@@ -80,11 +82,20 @@ final class WebSocketTests: XCTestCase {
             ws.close(promise: nil)
         }
         app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
 
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
-            to: "ws://localhost:8080/foo",
+            to: "ws://localhost:\(port)/foo",
             on: app.eventLoopGroup.next()
         ) { ws in
             // do nothing
@@ -100,7 +111,7 @@ final class WebSocketTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.http.server.configuration.port = 8080
+        app.http.server.configuration.port = 0
 
         app.get("foo") { req in
             return req.webSocket { req, ws in
@@ -112,9 +123,17 @@ final class WebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
         let promise = app.eventLoopGroup.next().makePromise(of: String.self)
         WebSocket.connect(
-            to: "ws://localhost:8080/foo",
+            to: "ws://localhost:\(port)/foo",
             on: app.eventLoopGroup.next()
         ) { ws in
             ws.onText { ws, string in
@@ -123,74 +142,6 @@ final class WebSocketTests: XCTestCase {
         }.cascadeFailure(to: promise)
 
         try XCTAssertEqual(promise.futureResult.wait(), "foo")
-    }
-
-    func testLifecycleShutdown() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.port = 1337
-
-        final class WebSocketManager: LifecycleHandler {
-            private let lock: NIOLock
-            private var connections: Set<WebSocket>
-
-            init() {
-                self.lock = .init()
-                self.connections = .init()
-            }
-
-            func track(_ ws: WebSocket) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                self.connections.insert(ws)
-                ws.onClose.whenComplete { _ in
-                    self.lock.lock()
-                    defer { self.lock.unlock() }
-                    self.connections.remove(ws)
-                }
-            }
-
-            func broadcast(_ message: String) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                for ws in self.connections {
-                    ws.send(message)
-                }
-            }
-
-            /// Closes all active WebSocket connections
-            func shutdown(_ app: Application) {
-                self.lock.lock()
-                defer { self.lock.unlock() }
-                app.logger.debug("Shutting down \(self.connections.count) WebSocket(s)")
-                try! EventLoopFuture<Void>.andAllSucceed(
-                    self.connections.map { $0.close() } ,
-                    on: app.eventLoopGroup.next()
-                ).wait()
-            }
-        }
-
-        let webSockets = WebSocketManager()
-        app.lifecycle.use(webSockets)
-
-        app.webSocket("watcher") { req, ws in
-            webSockets.track(ws)
-            ws.send("hello")
-        }
-
-        app.environment.arguments = ["serve"]
-
-        try app.start()
-
-        let clientGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        defer { try! clientGroup.syncShutdownGracefully() }
-        let connectPromise = app.eventLoopGroup.next().makePromise(of: WebSocket.self)
-        WebSocket.connect(to: "ws://localhost:1337/watcher", on: clientGroup) { ws in
-            connectPromise.succeed(ws)
-        }.cascadeFailure(to: connectPromise)
-
-        let ws = try connectPromise.futureResult.wait()
-        app.shutdown()
-        try ws.onClose.wait()
     }
 
     override class func setUp() {

@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Authenticatable {
     /// Basic middleware to redirect unauthenticated requests to the supplied path
     ///
@@ -11,18 +13,18 @@ extension Authenticatable {
     ///
     /// - parameters:
     ///    - makePath: The closure that returns the redirect path based on the given `Request` object
-    public static func redirectMiddleware(makePath: @escaping (Request) -> String) -> Middleware {
+    @preconcurrency public static func redirectMiddleware(makePath: @Sendable @escaping (Request) -> String) -> Middleware {
         RedirectMiddleware<Self>(Self.self, makePath: makePath)
     }
 }
 
 
 private final class RedirectMiddleware<A>: Middleware
-    where A: Authenticatable
+    where A: Authenticatable & Sendable
 {
-    let makePath: (Request) -> String
+    let makePath: @Sendable (Request) -> String
     
-    init(_ authenticatableType: A.Type = A.self, makePath: @escaping (Request) -> String) {
+    @preconcurrency init(_ authenticatableType: A.Type = A.self, makePath: @Sendable @escaping (Request) -> String) {
         self.makePath = makePath
     }
 

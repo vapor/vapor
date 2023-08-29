@@ -1,3 +1,7 @@
+import NIOCore
+import NIOPosix
+import Foundation
+
 extension PasswordHasher {
     public func async(
         on threadPool: NIOThreadPool,
@@ -11,7 +15,7 @@ extension PasswordHasher {
     }
 }
 
-public struct AsyncPasswordHasher {
+public struct AsyncPasswordHasher: Sendable {
     let hasher: PasswordHasher
     let threadPool: NIOThreadPool
     let eventLoop: EventLoop
@@ -23,7 +27,7 @@ public struct AsyncPasswordHasher {
     }
     
     public func hash<Password>(_ password: Password) -> EventLoopFuture<[UInt8]>
-        where Password: DataProtocol
+        where Password: DataProtocol & Sendable
     {
         return self.threadPool.runIfActive(eventLoop: self.eventLoop) {
             try self.hasher.hash(password)
@@ -34,7 +38,7 @@ public struct AsyncPasswordHasher {
         _ password: Password,
         created digest: Digest
     ) -> EventLoopFuture<Bool>
-        where Password: DataProtocol, Digest: DataProtocol
+        where Password: DataProtocol & Sendable, Digest: DataProtocol & Sendable
     {
         return self.threadPool.runIfActive(eventLoop: self.eventLoop) {
             try self.hasher.verify(password, created: digest)

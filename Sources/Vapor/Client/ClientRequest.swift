@@ -1,9 +1,30 @@
-public struct ClientRequest {
+import NIOCore
+import NIOHTTP1
+import Foundation
+
+public struct ClientRequest: Sendable {
     public var method: HTTPMethod
     public var url: URI
     public var headers: HTTPHeaders
     public var body: ByteBuffer?
+    public var timeout: TimeAmount?
     private let byteBufferAllocator: ByteBufferAllocator
+
+    public init(
+        method: HTTPMethod = .GET,
+        url: URI = "/",
+        headers: HTTPHeaders = [:],
+        body: ByteBuffer? = nil,
+        timeout: TimeAmount?,
+        byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
+    ) {
+        self.method = method
+        self.url = url
+        self.headers = headers
+        self.body = body
+        self.timeout = timeout
+        self.byteBufferAllocator = byteBufferAllocator
+    }
 
     public init(
         method: HTTPMethod = .GET,
@@ -12,11 +33,12 @@ public struct ClientRequest {
         body: ByteBuffer? = nil,
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()
     ) {
-        self.method = method
-        self.url = url
-        self.headers = headers
-        self.body = body
-        self.byteBufferAllocator = byteBufferAllocator
+        self.init(method: method,
+                  url: url,
+                  headers: headers,
+                  body: body,
+                  timeout: nil,
+                  byteBufferAllocator: byteBufferAllocator)
     }
 }
 

@@ -1,17 +1,46 @@
 import Backtrace
 import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import ConsoleKit
+import NIOPosix
 
 /// Core type representing a Vapor application.
-public final class Application {
-    public var environment: Environment
-    public let eventLoopGroupProvider: EventLoopGroupProvider
-    public let eventLoopGroup: EventLoopGroup
-    public var storage: Storage
-    public private(set) var didShutdown: Bool
-    public var logger: Logger
-    var isBooted: Bool
+public final class Application: Sendable {
+    public var environment: Environment {
+        get {
+            self._environment.withLockedValue { $0 }
+        }
+        set {
+            self._environment.withLockedValue { $0 = newValue }
+        }
+    }
+    
+    public var storage: Storage {
+        get {
+            self._storage.withLockedValue { $0 }
+        }
+        set {
+            self._storage.withLockedValue { $0 = newValue }
+        }
+    }
+    
+    public var didShutdown: Bool {
+        get {
+            self._didShutdown.withLockedValue { $0 }
+        }
+    }
+    
+    public var logger: Logger {
+        get {
+            self._logger.withLockedValue { $0 }
+        }
+        set {
+            self._logger.withLockedValue { $0 = newValue }
+        }
+    }
 
-    public struct Lifecycle {
+    public struct Lifecycle: Sendable {
         var handlers: [LifecycleHandler]
         init() {
             self.handlers = []
@@ -22,49 +51,70 @@ public final class Application {
         }
     }
 
-    public var lifecycle: Lifecycle
+    public var lifecycle: Lifecycle {
+        get {
+            self._lifecycle.withLockedValue { $0 }
+        }
+        set {
+            self._lifecycle.withLockedValue { $0 = newValue }
+        }
+    }
 
-    public final class Locks {
+    public final class Locks: Sendable {
         public let main: NIOLock
-        var storage: [ObjectIdentifier: NIOLock]
+        // Is there a type we can use to make this Sendable but reuse the existing lock we already have?
+        private let storage: NIOLockedValueBox<[ObjectIdentifier: NIOLock]>
 
         init() {
             self.main = .init()
-            self.storage = [:]
+            self.storage = .init([:])
         }
 
         public func lock<Key>(for key: Key.Type) -> NIOLock
             where Key: LockKey
         {
-            self.main.lock()
-            defer { self.main.unlock() }
-            if let existing = self.storage[ObjectIdentifier(Key.self)] {
-                return existing
-            } else {
-                let new = NIOLock()
-                self.storage[ObjectIdentifier(Key.self)] = new
-                return new
+            self.main.withLock {
+                self.storage.withLockedValue{ 
+                    $0.insertOrReturn(.init(), at: .init(Key.self))
+                }
             }
         }
     }
 
-    public var locks: Locks
+    public var locks: Locks {
+        get {
+            self._locks.withLockedValue { $0 }
+        }
+        set {
+            self._locks.withLockedValue { $0 = newValue }
+        }
+    }
 
     public var sync: NIOLock {
         self.locks.main
     }
     
-    public enum EventLoopGroupProvider {
+    public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
         case createNew
     }
+    
+    public let eventLoopGroupProvider: EventLoopGroupProvider
+    public let eventLoopGroup: EventLoopGroup
+    internal let isBooted: NIOLockedValueBox<Bool>
+    private let _environment: NIOLockedValueBox<Environment>
+    private let _storage: NIOLockedValueBox<Storage>
+    private let _didShutdown: NIOLockedValueBox<Bool>
+    private let _logger: NIOLockedValueBox<Logger>
+    private let _lifecycle: NIOLockedValueBox<Lifecycle>
+    private let _locks: NIOLockedValueBox<Locks>
 
     public init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
         Backtrace.install()
-        self.environment = environment
+        self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
         switch eventLoopGroupProvider {
         case .shared(let group):
@@ -72,12 +122,13 @@ public final class Application {
         case .createNew:
             self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
         }
-        self.locks = .init()
-        self.didShutdown = false
-        self.logger = .init(label: "codes.vapor.application")
-        self.storage = .init(logger: self.logger)
-        self.lifecycle = .init()
-        self.isBooted = false
+        self._locks = .init(.init())
+        self._didShutdown = .init(false)
+        let logger = Logger(label: "codes.vapor.application")
+        self._logger = .init(logger)
+        self._storage = .init(.init(logger: logger))
+        self._lifecycle = .init(.init())
+        self.isBooted = .init(false)
         self.core.initialize()
         self.caches.initialize()
         self.views.initialize()
@@ -123,12 +174,14 @@ public final class Application {
     }
 
     public func boot() throws {
-        guard !self.isBooted else {
-            return
+        try self.isBooted.withLockedValue { booted in
+            guard !booted else {
+                return
+            }
+            booted = true
+            try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
+            try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
-        self.isBooted = true
-        try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
-        try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
     }
     
     public func shutdown() {
@@ -155,7 +208,7 @@ public final class Application {
             }
         }
 
-        self.didShutdown = true
+        self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
     }
     
@@ -169,3 +222,14 @@ public final class Application {
 }
 
 public protocol LockKey { }
+
+fileprivate extension Dictionary {
+    mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+        if let existing = self[key] {
+            return existing
+        }
+        let newValue = value()
+        self[key] = newValue
+        return newValue
+    }
+}

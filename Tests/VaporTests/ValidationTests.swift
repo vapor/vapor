@@ -1,5 +1,6 @@
-import Vapor
 import XCTest
+import Vapor
+import NIOCore
 
 class ValidationTests: XCTestCase {
     func testValidate() throws {
@@ -500,6 +501,7 @@ class ValidationTests: XCTestCase {
         assert(-6, fails: .range(-5..<6), "is less than minimum of -5")
         assert(6, fails: .range(-5..<6), "is greater than maximum of 5")
         assert(6, passes: !.range(-5..<6))
+        assert(Float.nan, passes: !.range(-5..<6))
     }
 
     func testCountCharacters() {

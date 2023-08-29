@@ -1,5 +1,6 @@
 @testable import Vapor
 import XCTest
+import NIOHTTP1
 
 final class HTTPHeaderTests: XCTestCase {
     func testValue() throws {
@@ -97,7 +98,7 @@ final class HTTPHeaderTests: XCTestCase {
             [.init(value: "foo"), .init(value: "bar", parameter: "baz")],
             [.init(value: "qux", parameter: "quuz")]
         ])
-        XCTAssertEqual(serializer.serialize(), "foo; bar=baz, qux=quuz")
+        XCTAssertEqual(serializer.serialize(), "foo; bar=\"baz\", qux=\"quuz\"")
     }
 
     func testForwarded() throws {
@@ -196,7 +197,7 @@ final class HTTPHeaderTests: XCTestCase {
         ))
         XCTAssertEqual(
             headers.first(name: "Forwarded"),
-            "by=203.0.113.43; for=192.0.2.60; proto=http"
+            "by=\"203.0.113.43\"; for=\"192.0.2.60\"; proto=\"http\""
         )
     }
 
@@ -266,7 +267,7 @@ final class HTTPHeaderTests: XCTestCase {
     func testContentDispositionQuotedFilename() throws {
         var headers = HTTPHeaders()
         headers.contentDisposition = .init(.formData, filename: "foo")
-        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=foo")
+        XCTAssertEqual(headers.first(name: .contentDisposition), "form-data; filename=\"foo\"")
         headers.contentDisposition = .init(.formData, filename: "foo bar")
         XCTAssertEqual(headers.first(name: .contentDisposition), #"form-data; filename="foo bar""#)
         headers.contentDisposition = .init(.formData, filename: "foo\"bar")
@@ -402,7 +403,7 @@ final class HTTPHeaderTests: XCTestCase {
         var headers = HTTPHeaders()
         
         headers.links = links
-        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel=next, <https://localhost/?a=2>; rel=last; custom1=whatever, </?a=-1>; rel=related, </?a=-2>; rel=related"#)
+        XCTAssertEqual(headers.first(name: .link), #"<https://localhost/?a=1>; rel="next", <https://localhost/?a=2>; rel="last"; custom1="whatever", </?a=-1>; rel="related", </?a=-2>; rel="related""#)
     }
     
     /// Test parse and serialize  of `Last-Modified` header
@@ -427,5 +428,19 @@ final class HTTPHeaderTests: XCTestCase {
         }
         XCTAssertEqual(date.expires.timeIntervalSince1970, 18*3600)
         XCTAssertEqual(date.serialize(), "Thu, 01 Jan 1970 18:00:00 GMT")
+    }
+
+    /// Test parse and serialize of `Cache-Control` header
+    func testCacheControlHeader() throws {
+        var headers = HTTPHeaders()
+        headers.cacheControl = HTTPHeaders.CacheControl(immutable: true)
+
+        guard let cacheControl = headers.cacheControl else {
+            XCTFail("HTTPHeaders.CacheControl parsing failed")
+            return
+        }
+
+        XCTAssertEqual(cacheControl.serialize(), "immutable")
+
     }
 }

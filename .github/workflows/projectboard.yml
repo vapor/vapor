@@ -5,27 +5,7 @@ on:
     types: [reopened, closed, labeled, unlabeled, assigned, unassigned]
 
 jobs:
-  setup_matrix_input:
-    runs-on: ubuntu-latest
-
-    steps:
-      - id: set-matrix 
-        run: |
-          output=$(curl ${{ github.event.issue.url }}/labels | jq '.[] | .name') || output=""
-
-          echo '======================'
-          echo 'Process incoming data'
-          echo '======================'
-          json=$(echo $output | sed 's/"\s"/","/g')
-          echo $json
-          echo "::set-output name=matrix::$(echo $json)"
-    outputs:
-      issueTags: ${{ steps.set-matrix.outputs.matrix }}
-      
-  Manage_project_issues:
-    needs: setup_matrix_input
-    uses: vapor/ci/.github/workflows/issues-to-project-board.yml@main
-    with:
-      labelsJson: ${{ needs.setup_matrix_input.outputs.issueTags }}
-    secrets: 
-      PROJECT_BOARD_AUTOMATION_PAT: "${{ secrets.PROJECT_BOARD_AUTOMATION_PAT }}"
+  update_project_boards:
+    name: Update project boards
+    uses: vapor/ci/.github/workflows/update-project-boards-for-issue.yml@reusable-workflows
+    secrets: inherit

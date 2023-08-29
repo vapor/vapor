@@ -1,8 +1,8 @@
 import CVaporURLParser
 
-public struct URI: ExpressibleByStringInterpolation, CustomStringConvertible {
+public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConvertible {
     /// A URI's scheme.
-    public struct Scheme: ExpressibleByStringInterpolation {
+    public struct Scheme: Sendable, ExpressibleByStringInterpolation {
         /// HTTP
         public static let http: Self = "http"
         

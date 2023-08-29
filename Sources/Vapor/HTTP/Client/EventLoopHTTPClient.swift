@@ -1,4 +1,7 @@
-import NIO
+import NIOCore
+import AsyncHTTPClient
+import Logging
+import Foundation
 
 extension HTTPClient {
     func delegating(to eventLoop: EventLoop, logger: Logger, byteBufferAllocator: ByteBufferAllocator) -> Client {
@@ -35,6 +38,7 @@ private struct EventLoopHTTPClient: Client {
             return self.http.execute(
                 request: request,
                 eventLoop: .delegate(on: self.eventLoop),
+                deadline: client.timeout.map { .now() + $0 },
                 logger: logger
             ).map { response in
                 let client = ClientResponse(

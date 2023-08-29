@@ -1,4 +1,9 @@
+import Foundation
 import Metrics
+@preconcurrency import RoutingKit
+import NIOCore
+import NIOHTTP1
+import Logging
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {

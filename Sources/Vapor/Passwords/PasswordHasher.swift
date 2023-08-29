@@ -1,4 +1,6 @@
-public protocol PasswordHasher {
+import Foundation
+
+public protocol PasswordHasher: Sendable {
     func hash<Password>(_ password: Password) throws -> [UInt8]
         where Password: DataProtocol
 

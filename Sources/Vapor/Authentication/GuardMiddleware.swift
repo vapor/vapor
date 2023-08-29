@@ -1,3 +1,5 @@
+import NIOCore
+
 extension Authenticatable {
     /// This middleware ensures that an `Authenticatable` type `A` has been authenticated
     /// by a previous `Middleware` or throws an `Error`. The middlewares that actually perform
@@ -25,7 +27,7 @@ extension Authenticatable {
 
 
 private final class GuardAuthenticationMiddleware<A>: Middleware
-    where A: Authenticatable
+    where A: Authenticatable & Sendable
 {
     /// Error to throw when guard fails.
     private let error: Error

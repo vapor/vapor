@@ -1,6 +1,7 @@
-import NIO
+import NIOCore
 import NIOHTTP1
 import NIOWebSocket
+import WebSocketKit
 
 final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHandler {
     typealias InboundIn = Request
@@ -115,12 +116,12 @@ public protocol Upgrader {
 }
 
 /// Handles upgrading an HTTP connection to a WebSocket
-public struct WebSocketUpgrader: Upgrader {
+public struct WebSocketUpgrader: Upgrader, Sendable {
     var maxFrameSize: WebSocketMaxFrameSize
-    var shouldUpgrade: (() -> EventLoopFuture<HTTPHeaders?>)
-    var onUpgrade: (WebSocket) -> ()
+    var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
+    var onUpgrade: @Sendable (WebSocket) -> ()
     
-    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (() -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @escaping (WebSocket) -> ()) {
+    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade

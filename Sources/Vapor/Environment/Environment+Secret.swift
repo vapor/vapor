@@ -1,3 +1,7 @@
+import NIOCore
+import NIOPosix
+import AsyncKit
+
 extension Environment {
     /// Reads a file's content for a secret. The secret key is the name of the environment variable that is expected to
     /// specify the path of the file containing the secret.
@@ -45,9 +49,10 @@ extension Environment {
         return fileIO
             .openFile(path: path, eventLoop: eventLoop)
             .flatMap { handle, region in
+                let handleWrapper = NIOLoopBound(handle, eventLoop: eventLoop)
                 return fileIO
                     .read(fileRegion: region, allocator: .init(), eventLoop: eventLoop)
-                    .always { _ in try? handle.close() }
+                    .always { _ in try? handleWrapper.value.close() }
             }
             .map { buffer -> String in
                 return buffer

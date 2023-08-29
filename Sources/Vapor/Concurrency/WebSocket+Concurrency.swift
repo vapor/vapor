@@ -1,14 +1,17 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
+import NIOHTTP1
+import WebSocketKit
+import RoutingKit
+import Foundation
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request {
 
     /// Upgrades an existing request to a websocket connection
+    @preconcurrency
     public func webSocket(
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Response {
         webSocket(
             maxFrameSize: maxFrameSize,
@@ -28,7 +31,6 @@ extension Request {
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension RoutesBuilder {
 
     /// Adds a route for opening a web socket connection
@@ -40,12 +42,13 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
+    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: PathComponent...,
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
         return self.webSocket(path, maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
     }
@@ -59,12 +62,13 @@ extension RoutesBuilder {
     ///       See `NIOWebSocketServerUpgrader`.
     ///   - onUpgrade: Closure to apply after web socket is upgraded successfully.
     /// - returns: `Route` instance for newly created web socket endpoint
+    @preconcurrency
     @discardableResult
     public func webSocket(
         _ path: [PathComponent],
         maxFrameSize: WebSocketMaxFrameSize = .`default`,
-        shouldUpgrade: @escaping ((Request) async throws -> HTTPHeaders?) = { _ in [:] },
-        onUpgrade: @escaping (Request, WebSocket) async -> ()
+        shouldUpgrade: @escaping (@Sendable (Request) async throws -> HTTPHeaders?) = { _ in [:] },
+        onUpgrade: @Sendable @escaping (Request, WebSocket) async -> ()
     ) -> Route {
         return self.on(.GET, path) { request -> Response in
             return request.webSocket(maxFrameSize: maxFrameSize, shouldUpgrade: shouldUpgrade, onUpgrade: onUpgrade)
@@ -72,14 +76,14 @@ extension RoutesBuilder {
     }
 }
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension WebSocket {
+    @preconcurrency
     public static func connect(
         to url: String,
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws {
         guard let url = URL(string: url) else {
             throw WebSocketClient.Error.invalidURL
@@ -93,12 +97,13 @@ extension WebSocket {
         )
     }
 
+    @preconcurrency
     public static func connect(
         to url: URL,
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         let scheme = url.scheme ?? "ws"
         return try await self.connect(
@@ -113,6 +118,7 @@ extension WebSocket {
         )
     }
 
+    @preconcurrency
     public static func connect(
         scheme: String = "ws",
         host: String,
@@ -121,7 +127,7 @@ extension WebSocket {
         headers: HTTPHeaders = [:],
         configuration: WebSocketClient.Configuration = .init(),
         on eventLoopGroup: EventLoopGroup,
-        onUpgrade: @escaping (WebSocket) -> ()
+        onUpgrade: @Sendable @escaping (WebSocket) -> ()
     ) async throws  {
         return try await WebSocketClient(
             eventLoopGroupProvider: .shared(eventLoopGroup),
@@ -136,5 +142,3 @@ extension WebSocket {
         ).get()
     }
 }
-
-#endif

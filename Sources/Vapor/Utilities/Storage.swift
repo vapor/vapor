@@ -1,14 +1,16 @@
+import Logging
+
 /// A container providing arbitrary storage for extensions of an existing type, designed to obviate
 /// the problem of being unable to add stored properties to a type in an extension. Each stored item
 /// is keyed by a type conforming to ``StorageKey`` protocol.
-public struct Storage {
+public struct Storage: Sendable {
     /// The internal storage area.
     var storage: [ObjectIdentifier: AnyStorageValue]
 
     /// A container for a stored value and an associated optional `deinit`-like closure.
-    struct Value<T>: AnyStorageValue {
+    struct Value<T: Sendable>: AnyStorageValue {
         var value: T
-        var onShutdown: ((T) throws -> ())?
+        var onShutdown: (@Sendable (T) throws -> ())?
         func shutdown(logger: Logger) {
             do {
                 try self.onShutdown?(self.value)
@@ -80,7 +82,7 @@ public struct Storage {
     public mutating func set<Key>(
         _ key: Key.Type,
         to value: Key.Value?,
-        onShutdown: ((Key.Value) throws -> ())? = nil
+        onShutdown: (@Sendable (Key.Value) throws -> ())? = nil
     )
         where Key: StorageKey
     {
@@ -104,12 +106,12 @@ public struct Storage {
 
 /// ``Storage`` uses this protocol internally to generically invoke shutdown closures for arbitrarily-
 /// typed key values.
-protocol AnyStorageValue {
+protocol AnyStorageValue: Sendable {
     func shutdown(logger: Logger)
 }
 
 /// A key used to store values in a ``Storage`` must conform to this protocol.
 public protocol StorageKey {
     /// The type of the stored value associated with this key type.
-    associatedtype Value
+    associatedtype Value: Sendable
 }

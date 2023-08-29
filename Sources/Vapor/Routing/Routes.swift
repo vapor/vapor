@@ -1,4 +1,4 @@
-public final class Routes: RoutesBuilder, CustomStringConvertible {
+public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     public var all: [Route]
     
     /// Default value used by `HTTPBodyStreamStrategy.collect` when `maxSize` is `nil`.

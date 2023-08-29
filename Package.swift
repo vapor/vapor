@@ -1,5 +1,6 @@
-// swift-tools-version:5.4
+// swift-tools-version:5.7
 import PackageDescription
+import Foundation
 
 let package = Package(
     name: "vapor",
@@ -15,10 +16,10 @@ let package = Package(
     ],
     dependencies: [
         // HTTP client library built on SwiftNIO
-        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.10.0"),
+        .package(url: "https://github.com/swift-server/async-http-client.git", from: "1.18.0"),
 
         // Sugary extensions for the SwiftNIO library
-        .package(url: "https://github.com/vapor/async-kit.git", from: "1.0.0"),
+        .package(url: "https://github.com/vapor/async-kit.git", from: "1.15.0"),
 
         // 💻 APIs for creating interactive CLI tools.
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0"),
@@ -33,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.42.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.56.0"),
         
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
@@ -42,7 +43,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-nio-http2.git", from: "1.20.0"),
         
         // Useful code around SwiftNIO.
-        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.0.0"),
+        .package(url: "https://github.com/apple/swift-nio-extras.git", from: "1.19.0"),
         
         // Swift logging API
         .package(url: "https://github.com/apple/swift-log.git", from: "1.0.0"),
@@ -54,7 +55,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-algorithms.git", from: "1.0.0"),
 
         // WebSocket client library built on SwiftNIO
-        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.0.0"),
+        .package(url: "https://github.com/vapor/websocket-kit.git", from: "2.13.0"),
         
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.2.1"),
@@ -92,16 +93,13 @@ let package = Package(
         ]),
 	
         // Development
-        .executableTarget(name: "Development", dependencies: [
-            .target(name: "Vapor"),
-        ], swiftSettings: [
-            // Enable better optimizations when building in Release configuration. Despite the use of
-            // the `.unsafeFlags` construct required by SwiftPM, this flag is recommended for Release
-            // builds. See <https://github.com/swift-server/guides#building-for-production> for details.
-            .unsafeFlags([
-                "-cross-module-optimization"
-            ], .when(configuration: .release)),
-        ]),
+        .executableTarget(
+            name: "Development",
+            dependencies: [
+                .target(name: "Vapor"),
+            ],
+            resources: [.copy("Resources")]
+        ),
 
         // Testing
         .target(name: "XCTVapor", dependencies: [

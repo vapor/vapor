@@ -1,4 +1,5 @@
-import NIO
+import NIOCore
+import NIOConcurrencyHelpers
 
 extension Request {
     final class BodyStream: BodyStreamWriter {
@@ -29,6 +30,17 @@ extension Request {
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
+            // See https://github.com/vapor/vapor/issues/2906
+            if self.eventLoop.inEventLoop {
+                write0(chunk, promise: promise)
+            } else {
+                self.eventLoop.execute {
+                    self.write0(chunk, promise: promise)
+                }
+            }
+        }
+        
+        private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
                 self.isClosed = true
@@ -49,22 +61,26 @@ extension Request {
         }
 
         func consume(max: Int?, on eventLoop: EventLoop) -> EventLoopFuture<ByteBuffer> {
-            let promise = eventLoop.makePromise(of: ByteBuffer.self)
-            var data = self.allocator.buffer(capacity: 0)
-            self.read { chunk, next in
-                switch chunk {
-                case .buffer(var buffer):
-                    if let max = max, data.readableBytes + buffer.readableBytes >= max {
-                        promise.fail(Abort(.payloadTooLarge))
-                    } else {
-                        data.writeBuffer(&buffer)
+            // See https://github.com/vapor/vapor/issues/2906
+            return eventLoop.flatSubmit {
+                let promise = eventLoop.makePromise(of: ByteBuffer.self)
+                var data = self.allocator.buffer(capacity: 0)
+                self.read { chunk, next in
+                    switch chunk {
+                    case .buffer(var buffer):
+                        if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                            promise.fail(Abort(.payloadTooLarge))
+                        } else {
+                            data.writeBuffer(&buffer)
+                        }
+                    case .error(let error): promise.fail(error)
+                    case .end: promise.succeed(data)
                     }
-                case .error(let error): promise.fail(error)
-                case .end: promise.succeed(data)
+                    next?.succeed(())
                 }
-                next?.succeed(())
+                
+                return promise.futureResult
             }
-            return promise.futureResult
         }
 
         deinit {

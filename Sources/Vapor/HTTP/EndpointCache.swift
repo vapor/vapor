@@ -1,4 +1,8 @@
+import Foundation
 import NIOConcurrencyHelpers
+import NIOCore
+import Logging
+import NIOHTTP1
 
 public enum EndpointCacheError: Swift.Error {
     case unexpctedResponseStatus(HTTPStatus, uri: URI)
@@ -6,12 +10,10 @@ public enum EndpointCacheError: Swift.Error {
 }
 
 /// Handles the complexities of HTTP caching.
-public final class EndpointCache<T> where T: Decodable {
-    private var cached: T?
-    private var request: EventLoopFuture<T>?
-    private var headers: HTTPHeaders?
-    private var cacheUntil: Date?
-
+public final class EndpointCache<T>: Sendable where T: Decodable & Sendable {
+    private let cached: NIOLockedValueBox<(T?, Date?)>
+    private let request: NIOLockedValueBox<EventLoopFuture<T>?>
+    private let headers: NIOLockedValueBox<HTTPHeaders?>
     private let sync: NIOLock
     private let uri: URI
 
@@ -21,6 +23,9 @@ public final class EndpointCache<T> where T: Decodable {
     public init(uri: URI) {
         self.uri = uri
         self.sync = .init()
+        self.request = .init(nil)
+        self.headers = .init(nil)
+        self.cached = .init((nil, nil))
     }
 
     /// Downloads the resource.
@@ -40,16 +45,18 @@ public final class EndpointCache<T> where T: Decodable {
         self.sync.lock()
         defer { self.sync.unlock() }
 
-        if let cached = self.cached, let cacheUntil = self.cacheUntil, Date() < cacheUntil {
+        let cachedData = self.cached.withLockedValue { $0 }
+        if let cached = cachedData.0, let cacheUntil = cachedData.1, Date() < cacheUntil {
             // If no-cache was set on the header, you *always* have to validate with the server.
             // must-revalidate does not require checking with the server until after it expires.
-            if self.headers == nil || self.headers?.cacheControl == nil || self.headers?.cacheControl?.noCache == false {
+            let cachedHeaders = self.headers.withLockedValue { $0 }
+            if cachedHeaders == nil || cachedHeaders?.cacheControl == nil || cachedHeaders?.cacheControl?.noCache == false {
                 return eventLoop.makeSucceededFuture(cached)
             }
         }
 
         // Don't make a new request if one is already running.
-        if let request = self.request {
+        if let request = self.request.withLockedValue({ $0 }) {
             // The current request may be happening on a different event loop.
             return request.hop(to: eventLoop)
         }
@@ -57,14 +64,14 @@ public final class EndpointCache<T> where T: Decodable {
         logger?.debug("Requesting data from \(self.uri)")
 
         let request = self.download(on: eventLoop, using: client, logger: logger)
-        self.request = request
+        self.request.withLockedValue { $0 = request }
 
         // Once the request finishes, clear the current request and return the data.
         return request.map { data in
             // Synchronize access to shared state
             self.sync.lock()
             defer { self.sync.unlock() }
-            self.request = nil
+            self.request.withLockedValue { $0 = nil }
 
             return data
         }
@@ -73,14 +80,16 @@ public final class EndpointCache<T> where T: Decodable {
     private func download(on eventLoop: EventLoop, using client: Client, logger: Logger?) -> EventLoopFuture<T> {
         // https://www.w3.org/Protocols/rfc2616/rfc2616-sec13.html#sec13.3.4
         var headers: HTTPHeaders = [:]
-        if let eTag = self.headers?.first(name: .eTag) {
-            headers.add(name: .ifNoneMatch, value: eTag)
-        }
+        self.headers.withLockedValue { cachedHeaders in
+            if let eTag = cachedHeaders?.first(name: .eTag) {
+                headers.add(name: .ifNoneMatch, value: eTag)
+            }
 
-        if let lastModified = self.headers?.lastModified {
-            // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
-            // how to determine that right now.
-            headers.add(name: .ifModifiedSince, value: lastModified.serialize())
+            if let lastModified = cachedHeaders?.lastModified {
+                // TODO: If using HTTP/1.0 then this should be .ifUnmodifiedSince instead. Don't know
+                // how to determine that right now.
+                headers.add(name: .ifModifiedSince, value: lastModified.serialize())
+            }
         }
 
         // Cache-Control max-age is calculated against the request date.
@@ -103,15 +112,18 @@ public final class EndpointCache<T> where T: Decodable {
                 // The server *shouldn't* give an expiration with no-store, but...
                 self.clearCache()
             } else {
-                self.headers = response.headers
-                self.cacheUntil = self.headers?.expirationDate(requestSentAt: requestSentAt)
+                self.headers.withLockedValue { headers in
+                    headers = response.headers
+                    self.cached.withLockedValue { $0.1 = headers?.expirationDate(requestSentAt: requestSentAt) }
+                }
             }
 
             switch response.status {
             case .notModified:
                 logger?.debug("Cached data is still valid.")
 
-                guard let cached = self.cached else {
+                let cachedData = self.cached.withLockedValue({ $0 })
+                guard let cached = cachedData.0 else {
                     // This shouldn't actually be possible, but just in case.
                     self.clearCache()
                     return self.download(on: eventLoop, using: client, logger: logger)
@@ -130,8 +142,10 @@ public final class EndpointCache<T> where T: Decodable {
                     return eventLoop.makeFailedFuture(EndpointCacheError.contentDecodeFailure(error))
                 }
 
-                if self.cacheUntil != nil {
-                    self.cached = data
+                self.cached.withLockedValue { cachedData in
+                    if cachedData.1 != nil {
+                        cachedData.0 = data
+                    }
                 }
 
                 return eventLoop.makeSucceededFuture(data)
@@ -145,11 +159,12 @@ public final class EndpointCache<T> where T: Decodable {
             self.sync.lock()
             defer { self.sync.unlock() }
 
-            guard let headers = self.headers, let cached = self.cached else {
+            let cachedData = self.cached.withLockedValue { $0 }
+            guard let headers = self.headers.withLockedValue({ $0 }), let cached = cachedData.0 else {
                 return eventLoop.makeFailedFuture(error)
             }
 
-            if let cacheControl = headers.cacheControl, let cacheUntil = self.cacheUntil {
+            if let cacheControl = headers.cacheControl, let cacheUntil = cachedData.1 {
                 if let staleIfError = cacheControl.staleIfError,
                     cacheUntil.addingTimeInterval(Double(staleIfError)) > Date() {
                     // Can use the data for staleIfError seconds past expiration when the server is non-responsive
@@ -169,8 +184,7 @@ public final class EndpointCache<T> where T: Decodable {
     }
 
     private func clearCache() {
-        self.cached = nil
-        self.headers = nil
-        self.cacheUntil = nil
+        self.cached.withLockedValue { $0 = (nil, nil) }
+        self.headers.withLockedValue { $0 = nil }
     }
 }

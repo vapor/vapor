@@ -1,7 +1,5 @@
-#if compiler(>=5.5) && canImport(_Concurrency)
 import NIOCore
 
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 public extension Cache {
 
     /// Gets a decodable value from the cache. Returns `nil` if not found.
@@ -28,5 +26,3 @@ public extension Cache {
         try await self.get(key).get()
     }
 }
-
-#endif

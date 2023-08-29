@@ -1,4 +1,8 @@
-public protocol Client {
+import NIOCore
+import Logging
+import NIOHTTP1
+
+public protocol Client: Sendable {
     var eventLoop: EventLoop { get }
     var byteBufferAllocator: ByteBufferAllocator { get }
     func delegating(to eventLoop: EventLoop) -> Client

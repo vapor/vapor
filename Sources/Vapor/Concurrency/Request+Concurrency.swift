@@ -1,9 +1,8 @@
-#if compiler(>=5.7) && canImport(_Concurrency)
+#if compiler(>=5.7)
 import NIOCore
 import NIOConcurrencyHelpers
 
 // MARK: - Request.Body.AsyncSequenceDelegate
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request.Body {
     
     /// `Request.Body.AsyncSequenceDelegate` bridges between EventLoop
@@ -69,7 +68,6 @@ extension Request.Body {
 }
 
 // MARK: - Request.Body.AsyncSequence
-@available(macOS 12, iOS 15, watchOS 8, tvOS 15, *)
 extension Request.Body: AsyncSequence {
     public typealias Element = ByteBuffer
     

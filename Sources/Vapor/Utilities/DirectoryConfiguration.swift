@@ -3,6 +3,7 @@ import Glibc
 #else
 import Darwin.C
 #endif
+import Logging
 
 /// `DirectoryConfiguration` represents a configured working directory.
 /// It can also be used to derive a working directory automatically.
@@ -10,7 +11,7 @@ import Darwin.C
 ///     let dirConfig = DirectoryConfiguration.detect()
 ///     print(dirConfig.workingDirectory) // "/path/to/workdir"
 ///
-public struct DirectoryConfiguration {
+public struct DirectoryConfiguration: Sendable {
     /// Path to the current working directory.
     public var workingDirectory: String
     public var resourcesDirectory: String

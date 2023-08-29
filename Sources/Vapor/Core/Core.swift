@@ -1,12 +1,17 @@
+@preconcurrency import ConsoleKit
+import NIOCore
+import NIOPosix
+import NIOConcurrencyHelpers
+
 extension Application {
     public var console: Console {
-        get { self.core.storage.console }
-        set { self.core.storage.console = newValue }
+        get { self.core.storage.console.withLockedValue { $0 } }
+        set { self.core.storage.console.withLockedValue { $0 = newValue } }
     }
 
     public var commands: Commands {
-        get { self.core.storage.commands }
-        set { self.core.storage.commands = newValue }
+        get { self.core.storage.commands.withLockedValue { $0 } }
+        set { self.core.storage.commands.withLockedValue { $0 = newValue } }
     }
 
     /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
@@ -21,16 +26,18 @@ extension Application {
     ///
     /// - Warning: Can only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {
-        get { self.core.storage.threadPool }
+        get { self.core.storage.threadPool.withLockedValue { $0 } }
         set {
-            guard !self.isBooted else {
+            guard !self.isBooted.withLockedValue({ $0 }) else {
                 self.logger.critical("Cannot replace thread pool after application has booted")
                 fatalError("Cannot replace thread pool after application has booted")
             }
             
-            try! self.core.storage.threadPool.syncShutdownGracefully()
-            self.core.storage.threadPool = newValue
-            self.core.storage.threadPool.start()
+            self.core.storage.threadPool.withLockedValue({
+                try! $0.syncShutdownGracefully()
+                $0 = newValue
+                $0.start()
+            })
         }
     }
     
@@ -43,37 +50,39 @@ extension Application {
     }
 
     public var running: Running? {
-        get { self.core.storage.running.current }
-        set { self.core.storage.running.current = newValue }
+        get { self.core.storage.running.current.withLockedValue { $0 } }
+        set { self.core.storage.running.current.withLockedValue { $0 = newValue } }
     }
 
     public var directory: DirectoryConfiguration {
-        get { self.core.storage.directory }
-        set { self.core.storage.directory = newValue }
+        get { self.core.storage.directory.withLockedValue { $0 } }
+        set { self.core.storage.directory.withLockedValue { $0 = newValue } }
     }
 
     internal var core: Core {
         .init(application: self)
     }
 
-    public struct Core {
-        final class Storage {
-            var console: Console
-            var commands: Commands
-            var threadPool: NIOThreadPool
-            var allocator: ByteBufferAllocator
-            var running: Application.Running.Storage
-            var directory: DirectoryConfiguration
+    public struct Core: Sendable {
+        final class Storage: Sendable {
+            let console: NIOLockedValueBox<Console>
+            let commands: NIOLockedValueBox<Commands>
+            let threadPool: NIOLockedValueBox<NIOThreadPool>
+            let allocator: ByteBufferAllocator
+            let running: Application.Running.Storage
+            let directory: NIOLockedValueBox<DirectoryConfiguration>
 
             init() {
-                self.console = Terminal()
-                self.commands = Commands()
-                self.commands.use(BootCommand(), as: "boot")
-                self.threadPool = NIOThreadPool(numberOfThreads: 64)
-                self.threadPool.start()
+                self.console = .init(Terminal())
+                var commands = Commands()
+                commands.use(BootCommand(), as: "boot")
+                self.commands = .init(commands)
+                let threadPool = NIOThreadPool(numberOfThreads: 64)
+                threadPool.start()
+                self.threadPool = .init(threadPool)
                 self.allocator = .init()
                 self.running = .init()
-                self.directory = .detect()
+                self.directory = .init(.detect())
             }
         }
 

@@ -1,3 +1,5 @@
+import NIOHTTP1
+
 extension HTTPHeaders {
     struct Directive: Equatable, CustomStringConvertible {
         var value: Substring
@@ -200,11 +202,7 @@ extension HTTPHeaders {
                 for directive in directives {
                     let string: String
                     if let parameter = directive.parameter {
-                        if self.shouldQuote(parameter) {
-                            string = "\(directive.value)=\"\(parameter.escapingDoubleQuotes())\""
-                        } else {
-                            string = "\(directive.value)=\(parameter)"
-                        }
+                        string = "\(directive.value)=\"\(parameter.escapingDoubleQuotes())\""
                     } else {
                         string = .init(directive.value)
                     }
@@ -214,12 +212,6 @@ extension HTTPHeaders {
             }
 
             return main.joined(separator: ", ")
-        }
-
-        private func shouldQuote(_ parameter: Substring) -> Bool {
-            parameter.contains(where: { 
-                $0 == .space || $0 == .doubleQuote
-            })
         }
     }
 }

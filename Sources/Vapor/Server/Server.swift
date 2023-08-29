@@ -1,3 +1,5 @@
+import NIOCore
+
 // TODO: Remove these deprecated methods along with ServerStartError in the major release.
 public protocol Server {
     var onShutdown: EventLoopFuture<Void> { get }
@@ -18,7 +20,7 @@ public protocol Server {
     func shutdown()
 }
 
-public enum BindAddress: Equatable {
+public enum BindAddress: Equatable, Sendable {
     case hostname(_ hostname: String?, port: Int?)
     case unixDomainSocket(path: String)
 }
