@@ -140,9 +140,9 @@ public struct WebSocketUpgrader: Upgrader {
             if let offeredConfig = PMCE.PMCEConfig.configsFrom(headers: req.headers).first {
                 // passed init overrides offered config
                 if let passedConfig = pmce {
-                    wsConfig.pmceConfig = passedConfig
+                    wsConfig.deflateConfig = passedConfig
                 }else {
-                    wsConfig.pmceConfig = offeredConfig.server
+                    wsConfig.deflateConfig = offeredConfig
                 }
             }
           
