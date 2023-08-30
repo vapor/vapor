@@ -6,7 +6,7 @@ extension Request {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
-            self.handlerBuffer.withLockedValue { $0.handler != nil }
+            self.handlerBuffer.value.handler != nil
         }
         
         struct HandlerBufferContainer: Sendable {
@@ -15,24 +15,22 @@ extension Request {
         }
 
         private let isClosed: NIOLockedValueBox<Bool>
-        private let handlerBuffer: NIOLockedValueBox<HandlerBufferContainer>
+        private let handlerBuffer: NIOLoopBoundBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
             self.isClosed = .init(false)
-            self.handlerBuffer = .init(.init(handler: nil, buffer: []))
+            self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
             self.allocator = byteBufferAllocator
         }
 
         func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handlerBuffer.withLockedValue {
-                $0.handler = handler
-                for (result, promise) in $0.buffer {
-                    handler(result, promise)
-                }
-                $0.buffer = []
+            self.handlerBuffer.value.handler = handler
+            for (result, promise) in self.handlerBuffer.value.buffer {
+                handler(result, promise)
             }
+            self.handlerBuffer.value.buffer = []
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -53,18 +51,16 @@ extension Request {
             case .buffer: break
             }
             
-            self.handlerBuffer.withLockedValue {
-                if let handler = $0.handler {
-                    handler(chunk, promise)
-                    // remove reference to handler
-                    switch chunk {
-                    case .end, .error:
-                        $0.handler = nil
-                    default: break
-                    }
-                } else {
-                    $0.buffer.append((chunk, promise))
+            if let handler = self.handlerBuffer.value.handler {
+                handler(chunk, promise)
+                // remove reference to handler
+                switch chunk {
+                case .end, .error:
+                    self.handlerBuffer.value.handler = nil
+                default: break
                 }
+            } else {
+                self.handlerBuffer.value.buffer.append((chunk, promise))
             }
         }
 
