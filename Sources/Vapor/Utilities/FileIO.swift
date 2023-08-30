@@ -89,7 +89,7 @@ public struct FileIO: Sendable {
     public func readFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
-        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+        onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
         guard
             let attributes = try? FileManager.default.attributesOfItem(atPath: path),
@@ -126,7 +126,7 @@ public struct FileIO: Sendable {
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,
-        onCompleted: @escaping (Result<Void, Error>) -> () = { _ in }
+        onCompleted: @Sendable @escaping (Result<Void, Error>) -> () = { _ in }
     ) -> Response {
         // Get file attributes for this file.
         guard
@@ -227,7 +227,7 @@ public struct FileIO: Sendable {
         fromOffset offset: Int64,
         byteCount: Int,
         chunkSize: Int,
-        onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
+        onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
         self.request.eventLoop.flatSubmit {
             do {
