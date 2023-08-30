@@ -45,37 +45,40 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
     
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let res = self.unwrapOutboundIn(data)
+        let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
+        let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
         
         // check upgrade
         switch self.upgradeState {
         case .pending(let req, let buffer):
+            let bufferBox = NIOLoopBound(buffer, eventLoop: context.eventLoop)
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
-                let protocolUpgrader = upgrader.applyUpgrade(req: req, res: res)
+                let protocolUpgrader = NIOLoopBound(upgrader.applyUpgrade(req: req, res: res), eventLoop: context.eventLoop)
 
-                var head = HTTPRequestHead(
+                let head = HTTPRequestHead(
                     version: req.version,
                     method: req.method,
-                    uri: req.url.string
+                    uri: req.url.string,
+                    headers: req.headers
                 )
-                head.headers = req.headers
 
-                protocolUpgrader.buildUpgradeResponse(
+                protocolUpgrader.value.buildUpgradeResponse(
                     channel: context.channel,
                     upgradeRequest: head,
                     initialResponseHeaders: [:]
                 ).map { headers in
                     res.headers = headers
-                    context.write(self.wrapOutboundOut(res), promise: promise)
+                    contextBox.value.write(sendableBox.value.wrapOutboundOut(res), promise: promise)
                 }.flatMap {
-                    let handlers: [RemovableChannelHandler] = [self] + self.httpHandlers
+                    let handlers: [RemovableChannelHandler] = [sendableBox.value] + sendableBox.value.httpHandlers
                     return .andAllComplete(handlers.map { handler in
-                        return context.pipeline.removeHandler(handler)
-                    }, on: context.eventLoop)
+                        return contextBox.value.pipeline.removeHandler(handler)
+                    }, on: contextBox.value.eventLoop)
                 }.flatMap {
-                    return protocolUpgrader.upgrade(context: context, upgradeRequest: head)
+                    return protocolUpgrader.value.upgrade(context: contextBox.value, upgradeRequest: head)
                 }.flatMap {
-                    return context.pipeline.removeHandler(buffer)
+                    return contextBox.value.pipeline.removeHandler(bufferBox.value)
                 }.cascadeFailure(to: promise)
             } else {
                 // reset handlers
