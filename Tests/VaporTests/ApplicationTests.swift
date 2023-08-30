@@ -71,10 +71,10 @@ final class ApplicationTests: XCTestCase {
     
     func testThrowDoesNotCrash() throws {
         enum Static {
-            static var app: Application!
+            static let app: NIOLockedValueBox<Application?> = .init(nil)
         }
-        Static.app = Application(.testing)
-        Static.app = nil
+        Static.app.withLockedValue { $0 = Application(.testing) }
+        Static.app.withLockedValue { $0 = nil }
     }
 
     func testSwiftError() throws {

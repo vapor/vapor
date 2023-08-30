@@ -20,7 +20,7 @@ import NIOConcurrencyHelpers
 
 /// Metrics factory which allows inspecting recorded metrics programmatically.
 /// Only intended for tests of the Metrics API itself.
-internal final class CapturingMetricsSystem: MetricsFactory {
+internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable {
     private let lock = NIOLock()
     var counters = [String: CounterHandler]()
     var recorders = [String: RecorderHandler]()
@@ -72,7 +72,7 @@ internal final class CapturingMetricsSystem: MetricsFactory {
     }
 }
 
-internal class TestCounter: CounterHandler, Equatable {
+internal class TestCounter: CounterHandler, Equatable, @unchecked Sendable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -105,7 +105,7 @@ internal class TestCounter: CounterHandler, Equatable {
     }
 }
 
-internal class TestRecorder: RecorderHandler, Equatable {
+internal class TestRecorder: RecorderHandler, Equatable, @unchecked Sendable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -137,7 +137,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 }
 
-internal final class TestTimer: TimerHandler, Equatable {
+internal final class TestTimer: TimerHandler, Equatable, @unchecked Sendable {
     let id: String
     let label: String
     var displayUnit: TimeUnit?
