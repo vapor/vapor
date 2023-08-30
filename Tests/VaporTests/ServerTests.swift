@@ -472,16 +472,16 @@ final class ServerTests: XCTestCase {
                 return req.eventLoop.makeFailedFuture(Abort(.badRequest))
             }
             
-            var count = 0
+            let countBox = NIOLockedValueBox<Int>(0)
             let promise = req.eventLoop.makePromise(of: Int.self)
             req.body.drain { part in
                 switch part {
                 case .buffer(let buffer):
-                    count += buffer.readableBytes
+                    countBox.withLockedValue { $0 += buffer.readableBytes }
                 case .error(let error):
                     promise.fail(error)
                 case .end:
-                    promise.succeed(count)
+                    promise.succeed(countBox.withLockedValue({ $0 }))
                 }
                 return req.eventLoop.makeSucceededFuture(())
             }
