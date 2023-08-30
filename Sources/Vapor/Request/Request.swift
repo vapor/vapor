@@ -5,7 +5,8 @@ import Logging
 import RoutingKit
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible {
+#warning("Remove")
+public final class Request: CustomStringConvertible, @unchecked Sendable {
     public let application: Application
 
     /// The HTTP method for this request.
