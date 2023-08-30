@@ -137,7 +137,7 @@ internal class TestRecorder: RecorderHandler, Equatable {
     }
 }
 
-internal class TestTimer: TimerHandler, Equatable {
+internal final class TestTimer: TimerHandler, Equatable {
     let id: String
     let label: String
     var displayUnit: TimeUnit?

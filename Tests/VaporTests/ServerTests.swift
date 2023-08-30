@@ -378,16 +378,16 @@ final class ServerTests: XCTestCase {
         defer { app.shutdown() }
         
         app.servers.use(.custom)
-        XCTAssertEqual(app.customServer.didStart, false)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), false)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         try app.server.start()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         app.server.shutdown()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, true)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
     }
     
     func testMultipleChunkBody() throws {
@@ -990,16 +990,16 @@ extension Application {
     }
 }
 
-final class CustomServer: Server {
-    var didStart: Bool
-    var didShutdown: Bool
+final class CustomServer: Server, Sendable {
+    let didStart: NIOLockedValueBox<Bool>
+    let didShutdown: NIOLockedValueBox<Bool>
     var onShutdown: EventLoopFuture<Void> {
         fatalError()
     }
     
     init() {
-        self.didStart = false
-        self.didShutdown = false
+        self.didStart = .init(false)
+        self.didShutdown = .init(false)
     }
     
     func start(hostname: String?, port: Int?) throws {
@@ -1007,11 +1007,11 @@ final class CustomServer: Server {
     }
     
     func start(address: BindAddress?) throws {
-        self.didStart = true
+        self.didStart.withLockedValue { $0 = true }
     }
     
     func shutdown() {
-        self.didShutdown = true
+        self.didShutdown.withLockedValue { $0 = true }
     }
 }
 

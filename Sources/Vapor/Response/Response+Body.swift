@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+import NIOConcurrencyHelpers
 
 extension Response {
     struct BodyStream {
@@ -91,7 +92,7 @@ extension Response {
             case .stream(let stream):
                 let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
-                return collector.promise.futureResult
+                return collector.promise.withLockedValue { $0.futureResult }
                     .map { $0 }
             default:
                 return eventLoop.makeSucceededFuture(self.buffer)
@@ -174,24 +175,27 @@ extension Response {
 }
 
 private final class ResponseBodyCollector: BodyStreamWriter {
-    var buffer: ByteBuffer
-    var eventLoop: EventLoop
-    var promise: EventLoopPromise<ByteBuffer>
+    let buffer: NIOLockedValueBox<ByteBuffer>
+    let eventLoopBox: NIOLockedValueBox<EventLoop>
+    let promise: NIOLockedValueBox<EventLoopPromise<ByteBuffer>>
+    var eventLoop: EventLoop {
+        self.eventLoopBox.withLockedValue { $0 }
+    }
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
-        self.buffer = byteBufferAllocator.buffer(capacity: 0)
-        self.eventLoop = eventLoop
-        self.promise = self.eventLoop.makePromise(of: ByteBuffer.self)
+        self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
+        self.eventLoopBox = .init(eventLoop)
+        self.promise = .init(eventLoop.makePromise(of: ByteBuffer.self))
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(var buffer):
-            self.buffer.writeBuffer(&buffer)
+            _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
         case .error(let error):
-            self.promise.fail(error)
+            self.promise.withLockedValue { $0.fail(error) }
         case .end:
-            self.promise.succeed(self.buffer)
+            self.promise.withLockedValue { $0.succeed(self.buffer.withLockedValue { $0 }) }
         }
         promise?.succeed(())
     }
