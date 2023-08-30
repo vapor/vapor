@@ -3,6 +3,7 @@ import NIOCore
 import NIOHTTP1
 import NIOPosix
 import Logging
+import NIOConcurrencyHelpers
 
 extension Request {
     public var fileio: FileIO {
@@ -38,7 +39,7 @@ extension Request {
 ///     }
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
-public struct FileIO {
+public struct FileIO: Sendable {
     /// Wrapped non-blocking file io from SwiftNIO
     private let io: NonBlockingFileIO
 
@@ -66,12 +67,12 @@ public struct FileIO {
     ///     - path: Path to file on the disk.
     /// - returns: `Future` containing the file data.
     public func collectFile(at path: String) -> EventLoopFuture<ByteBuffer> {
-        var data = self.allocator.buffer(capacity: 0)
+        let dataWrapper: NIOLockedValueBox<ByteBuffer> = .init(self.allocator.buffer(capacity: 0))
         return self.readFile(at: path) { new in
             var new = new
-            data.writeBuffer(&new)
+            _ = dataWrapper.withLockedValue({ $0.writeBuffer(&new) })
             return self.request.eventLoop.makeSucceededFuture(())
-        }.map { data }
+        }.map { dataWrapper.withLockedValue { $0 } }
     }
 
     /// Reads the contents of a file at the supplied path in chunks.
@@ -228,24 +229,27 @@ public struct FileIO {
         chunkSize: Int,
         onRead: @escaping (ByteBuffer) -> EventLoopFuture<Void>
     ) -> EventLoopFuture<Void> {
-        do {
-            let fd = try NIOFileHandle(path: path)
-            let done = self.io.readChunked(
-                fileHandle: fd,
-                fromOffset: offset,
-                byteCount: byteCount,
-                chunkSize: chunkSize,
-                allocator: allocator,
-                eventLoop: self.request.eventLoop
-            ) { chunk in
-                return onRead(chunk)
+        self.request.eventLoop.flatSubmit {
+            do {
+                let fd = try NIOFileHandle(path: path)
+                let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
+                let done = self.io.readChunked(
+                    fileHandle: fd,
+                    fromOffset: offset,
+                    byteCount: byteCount,
+                    chunkSize: chunkSize,
+                    allocator: allocator,
+                    eventLoop: self.request.eventLoop
+                ) { chunk in
+                    return onRead(chunk)
+                }
+                done.whenComplete { _ in
+                    try? fdWrapper.value.close()
+                }
+                return done
+            } catch {
+                return self.request.eventLoop.makeFailedFuture(error)
             }
-            done.whenComplete { _ in
-                try? fd.close()
-            }
-            return done
-        } catch {
-            return self.request.eventLoop.makeFailedFuture(error)
         }
     }
     
@@ -259,15 +263,18 @@ public struct FileIO {
     ///     - buffer: The `ByteBuffer` to write.
     /// - returns: `Future` that will complete when the file write is finished.
     public func writeFile(_ buffer: ByteBuffer, at path: String) -> EventLoopFuture<Void> {
-        do {
-            let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
-            let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
-            done.whenComplete { _ in
-                try? fd.close()
+        self.request.eventLoop.flatSubmit {
+            do {
+                let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+                let fdWrapper = NIOLoopBound(fd, eventLoop: self.request.eventLoop)
+                let done = io.write(fileHandle: fd, buffer: buffer, eventLoop: self.request.eventLoop)
+                done.whenComplete { _ in
+                    try? fdWrapper.value.close()
+                }
+                return done
+            } catch {
+                return self.request.eventLoop.makeFailedFuture(error)
             }
-            return done
-        } catch {
-            return self.request.eventLoop.makeFailedFuture(error)
         }
     }
 }
