@@ -6,27 +6,33 @@ extension Request {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
-            self.handler != nil
+            self.handlerBuffer.withLockedValue { $0.handler != nil }
+        }
+        
+        struct HandlerBufferContainer: Sendable {
+            var handler: (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+            var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         }
 
-        private(set) var isClosed: Bool
-        private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
-        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
+        private let isClosed: NIOLockedValueBox<Bool>
+        private let handlerBuffer: NIOLockedValueBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
-            self.isClosed = false
-            self.buffer = []
+            self.isClosed = .init(false)
+            self.handlerBuffer = .init(.init(handler: nil, buffer: []))
             self.allocator = byteBufferAllocator
         }
 
-        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handler = handler
-            for (result, promise) in self.buffer {
-                handler(result, promise)
+        func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+            self.handlerBuffer.withLockedValue {
+                $0.handler = handler
+                for (result, promise) in $0.buffer {
+                    handler(result, promise)
+                }
+                $0.buffer = []
             }
-            self.buffer = []
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -43,20 +49,22 @@ extension Request {
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
-                self.isClosed = true
+                self.isClosed.withLockedValue { $0 = true }
             case .buffer: break
             }
             
-            if let handler = self.handler {
-                handler(chunk, promise)
-                // remove reference to handler
-                switch chunk {
-                case .end, .error:
-                    self.handler = nil
-                default: break
+            self.handlerBuffer.withLockedValue {
+                if let handler = $0.handler {
+                    handler(chunk, promise)
+                    // remove reference to handler
+                    switch chunk {
+                    case .end, .error:
+                        $0.handler = nil
+                    default: break
+                    }
+                } else {
+                    $0.buffer.append((chunk, promise))
                 }
-            } else {
-                self.buffer.append((chunk, promise))
             }
         }
 
@@ -64,17 +72,17 @@ extension Request {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
-                var data = self.allocator.buffer(capacity: 0)
+                let data = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
                 self.read { chunk, next in
                     switch chunk {
                     case .buffer(var buffer):
-                        if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                        if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
                             promise.fail(Abort(.payloadTooLarge))
                         } else {
-                            data.writeBuffer(&buffer)
+                            data.value.writeBuffer(&buffer)
                         }
                     case .error(let error): promise.fail(error)
-                    case .end: promise.succeed(data)
+                    case .end: promise.succeed(data.value)
                     }
                     next?.succeed(())
                 }
@@ -84,7 +92,7 @@ extension Request {
         }
 
         deinit {
-            assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
+            assert(self.isClosed.withLockedValue { $0 }, "Request.BodyStream deinitialized before closing.")
         }
     }
 }
