@@ -504,15 +504,16 @@ final class ServerTests: XCTestCase {
     }
     
     func testEchoServer() throws {
-        let app = Application(.testing)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let app = Application(.testing, .shared(eventLoopGroup))
         defer { app.shutdown() }
         
-        final class Context {
-            var server: [String]
-            var client: [String]
+        final class Context: Sendable {
+            let server: NIOLockedValueBox<[String]>
+            let client: NIOLockedValueBox<[String]>
             init() {
-                self.server = []
-                self.client = []
+                self.server = .init([])
+                self.client = .init([])
             }
         }
         let context = Context()
@@ -522,7 +523,7 @@ final class ServerTests: XCTestCase {
                 request.body.drain { body in
                     switch body {
                     case .buffer(let buffer):
-                        context.server.append(buffer.string)
+                        context.server.withLockedValue { $0.append(buffer.string) }
                         return writer.write(.buffer(buffer))
                     case .error(let error):
                         return writer.write(.error(error))
@@ -545,10 +546,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
@@ -565,7 +569,7 @@ final class ServerTests: XCTestCase {
                 task: HTTPClient.Task<HTTPClient.Response>,
                 _ buffer: ByteBuffer
             ) -> EventLoopFuture<Void> {
-                self.context.client.append(buffer.string)
+                self.context.client.withLockedValue { $0.append(buffer.string) }
                 return task.eventLoop.makeSucceededFuture(())
             }
             
@@ -579,12 +583,15 @@ final class ServerTests: XCTestCase {
             delegate: response
         ).wait()
         
-        XCTAssertEqual(context.server, ["foo", "bar", "baz"])
-        XCTAssertEqual(context.client, ["foo", "bar", "baz"])
+        let server = context.server.withLockedValue { $0 }
+        let client = context.client.withLockedValue { $0 }
+        XCTAssertEqual(server, ["foo", "bar", "baz"])
+        XCTAssertEqual(client, ["foo", "bar", "baz"])
     }
     
     func testSkipStreaming() throws {
-        let app = Application(.testing)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let app = Application(.testing, .shared(eventLoopGroup))
         defer { app.shutdown() }
         
         app.on(.POST, "echo", body: .stream) { request in
@@ -603,10 +610,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
