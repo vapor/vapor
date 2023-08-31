@@ -92,7 +92,7 @@ extension Response {
             case .stream(let stream):
                 let collector = ResponseBodyCollector(eventLoop: eventLoop, byteBufferAllocator: self.byteBufferAllocator)
                 stream.callback(collector)
-                return collector.promise.withLockedValue { $0.futureResult }
+                return collector.promise.futureResult
                     .map { $0 }
             default:
                 return eventLoop.makeSucceededFuture(self.buffer)
@@ -176,16 +176,13 @@ extension Response {
 
 private final class ResponseBodyCollector: BodyStreamWriter {
     let buffer: NIOLockedValueBox<ByteBuffer>
-    let eventLoopBox: NIOLockedValueBox<EventLoop>
-    let promise: NIOLockedValueBox<EventLoopPromise<ByteBuffer>>
-    var eventLoop: EventLoop {
-        self.eventLoopBox.withLockedValue { $0 }
-    }
+    let eventLoop: EventLoop
+    let promise: EventLoopPromise<ByteBuffer>
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
         self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
-        self.eventLoopBox = .init(eventLoop)
-        self.promise = .init(eventLoop.makePromise(of: ByteBuffer.self))
+        self.eventLoop = eventLoop
+        self.promise = eventLoop.makePromise(of: ByteBuffer.self)
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -193,9 +190,9 @@ private final class ResponseBodyCollector: BodyStreamWriter {
         case .buffer(var buffer):
             _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
         case .error(let error):
-            self.promise.withLockedValue { $0.fail(error) }
+            self.promise.fail(error)
         case .end:
-            self.promise.withLockedValue { $0.succeed(self.buffer.withLockedValue { $0 }) }
+            self.promise.succeed(self.buffer.withLockedValue { $0 })
         }
         promise?.succeed(())
     }

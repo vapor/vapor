@@ -59,6 +59,9 @@ let package = Package(
         
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.2.1"),
+        
+        // Low-level atomic operations
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
     ],
     targets: [
         // C helpers
@@ -90,6 +93,7 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
+            .product(name: "Atomics", package: "swift-atomics"),
         ]),
 	
         // Development

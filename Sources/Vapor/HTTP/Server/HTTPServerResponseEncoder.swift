@@ -1,6 +1,7 @@
 import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
+import Atomics
 
 final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelHandler {
     typealias OutboundIn = Response
@@ -86,12 +87,9 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     let handlerBox: NIOLoopBound<HTTPServerResponseEncoder>
     let promise: EventLoopPromise<Void>?
     let count: Int?
-    let currentCount: NIOLockedValueBox<Int>
-    let isComplete: NIOLockedValueBox<Bool>
-
-    var eventLoop: EventLoop {
-        return self.contextBox.value.eventLoop
-    }
+    let currentCount: ManagedAtomic<Int>
+    let isComplete: ManagedAtomic<Bool>
+    let eventLoop: EventLoop
 
     enum Error: Swift.Error {
         case tooManyBytes
@@ -110,32 +108,29 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         self.count = count
         self.currentCount = .init(0)
         self.isComplete = .init(false)
+        self.eventLoop = context.eventLoop
     }
     
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
-            self.currentCount.withLockedValue {
-                $0 += buffer.readableBytes
-                if let count = self.count, $0 > count {
-                    self.promise?.fail(Error.tooManyBytes)
-                    promise?.fail(Error.notEnoughBytes)
-                }
+            self.currentCount.wrappingIncrement(by: buffer.readableBytes, ordering: .sequentiallyConsistent)
+            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) > count {
+                self.promise?.fail(Error.tooManyBytes)
+                promise?.fail(Error.notEnoughBytes)
             }
         case .end:
-            self.isComplete.withLockedValue { $0 = true }
-            self.currentCount.withLockedValue {
-                if let count = self.count, $0 != count {
-                    self.promise?.fail(Error.notEnoughBytes)
-                    promise?.fail(Error.notEnoughBytes)
-                }
+            self.isComplete.store(true, ordering: .relaxed)
+            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) != count {
+                self.promise?.fail(Error.notEnoughBytes)
+                promise?.fail(Error.notEnoughBytes)
             }
             self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.succeed(())
         case .error(let error):
-            self.isComplete.withLockedValue { $0 = true }
+            self.isComplete.store(true, ordering: .relaxed)
             self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
@@ -143,6 +138,6 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
     }
 
     deinit {
-        assert(self.isComplete.withLockedValue { $0 }, "Response body stream writer deinitialized before .end or .error was sent.")
+        assert(self.isComplete.load(ordering: .sequentiallyConsistent), "Response body stream writer deinitialized before .end or .error was sent.")
     }
 }
