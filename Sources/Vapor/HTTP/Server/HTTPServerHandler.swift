@@ -16,11 +16,10 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
     
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
-        let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
+        let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
-        let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
         self.responder.respond(to: request).whenComplete { response in
-            sendableBox.value.serialize(response, for: request, context: contextBox.value)
+            box.value.1.serialize(response, for: request, context: box.value.0)
         }
     }
     
@@ -37,7 +36,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
     
     func serialize(_ response: Response, for request: Request, context: ChannelHandlerContext) {
-        let contextBox = NIOLoopBound(context, eventLoop: context.eventLoop)
+        let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         switch request.version.major {
         case 2:
             context.write(self.wrapOutboundOut(response), promise: nil)
@@ -48,18 +47,17 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             }
             response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
-            let sendableBox = NIOLoopBound(self, eventLoop: context.eventLoop)
             done.whenComplete { result in
                 switch result {
                 case .success:
                     if !keepAlive {
-                        contextBox.value.close(mode: .output, promise: nil)
+                        box.value.0.close(mode: .output, promise: nil)
                     }
                 case .failure(let error):
                     if case .stream(let stream) = response.body.storage {
                         stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
                     }
-                    sendableBox.value.errorCaught(context: contextBox.value, error: error)
+                    box.value.1.errorCaught(context: box.value.0, error: error)
                 }
             }
         }
