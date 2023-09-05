@@ -53,8 +53,14 @@ Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/
 <a href="https://gotranseo.com">
     <img src="https://user-images.githubusercontent.com/1342803/89341627-92c02000-d66f-11ea-8b29-c278386fdb09.png" height="100px" alt="Transeo">
 </a>
+<a href="https://www.emergetools.com">
+    <img src="https://user-images.githubusercontent.com/9938337/265658253-cb37d2fa-3251-497f-8eeb-ba7c95af373b.svg" height="100px" alt="Emerge Tools">
+</a>
 <a href="https://github.com/MrLotU">
     <img src="https://user-images.githubusercontent.com/1342803/79599312-426a8580-80b3-11ea-89b3-8b2722485e37.png" height="100px" alt="Jari">
+</a>
+<a href="https://github.com/DonutDane">
+    <img src="https://user-images.githubusercontent.com/9938337/265657642-6b6b1705-9611-4547-8e2f-a3773fda87c6.png" height="100px" alt="Jari">
 </a>
 <a href="https://macstadium.com">
     <img src="https://uploads-ssl.webflow.com/5ac3c046c82724970fc60918/5c019d917bba312af7553b49_MacStadium-developerlogo.png" height="100px" alt="MacStadium">
