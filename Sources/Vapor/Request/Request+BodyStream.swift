@@ -14,7 +14,6 @@ extension Request {
             var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         }
 
-        #warning("Again does this need to be sendable")
         private let isClosed: NIOLockedValueBox<Bool>
         private let handlerBuffer: NIOLoopBoundBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator

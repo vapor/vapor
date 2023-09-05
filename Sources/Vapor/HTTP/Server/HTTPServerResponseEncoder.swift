@@ -82,7 +82,6 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     }
 }
 
-#warning("Does this need to be sendable")
 private final class ChannelResponseBodyStream: BodyStreamWriter {
     let contextBox: NIOLoopBound<ChannelHandlerContext>
     let handlerBox: NIOLoopBound<HTTPServerResponseEncoder>
