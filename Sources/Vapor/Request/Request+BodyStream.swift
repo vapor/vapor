@@ -68,8 +68,9 @@ extension Request {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
-                var data = self.allocator.buffer(capacity: 0)
+                let data = self.allocator.buffer(capacity: 0)
                 self.read { chunk, next in
+                    var data = data
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.readableBytes + buffer.readableBytes >= max {
