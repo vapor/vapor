@@ -9,8 +9,10 @@ extension Request {
             self.handlerBuffer.value.handler != nil
         }
         
-        struct HandlerBufferContainer: Sendable {
-            var handler: (@Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+        /// **WARNING** This should only be used when we know we're on an event loop
+        ///
+        struct HandlerBufferContainer: @unchecked Sendable {
+            var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
             var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         }
 
@@ -24,8 +26,10 @@ extension Request {
             self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
             self.allocator = byteBufferAllocator
         }
-
-        func read(_ handler: @Sendable @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+        
+        /// `read(_:)` **must** be called when on an `EventLoop`
+        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+            self.eventLoop.preconditionInEventLoop()
             self.handlerBuffer.value.handler = handler
             for (result, promise) in self.handlerBuffer.value.buffer {
                 handler(result, promise)
@@ -68,9 +72,8 @@ extension Request {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
-                let data = self.allocator.buffer(capacity: 0)
+                var data = self.allocator.buffer(capacity: 0)
                 self.read { chunk, next in
-                    var data = data
                     switch chunk {
                     case .buffer(var buffer):
                         if let max = max, data.readableBytes + buffer.readableBytes >= max {
