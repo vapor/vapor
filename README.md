@@ -60,7 +60,7 @@ Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/
     <img src="https://user-images.githubusercontent.com/1342803/79599312-426a8580-80b3-11ea-89b3-8b2722485e37.png" height="100px" alt="Jari">
 </a>
 <a href="https://github.com/DonutDane">
-    <img src="https://user-images.githubusercontent.com/9938337/265657642-6b6b1705-9611-4547-8e2f-a3773fda87c6.png" height="100px" alt="Jari">
+    <img src="https://user-images.githubusercontent.com/9938337/265657642-6b6b1705-9611-4547-8e2f-a3773fda87c6.png" height="100px" alt="Donut Dane">
 </a>
 <a href="https://macstadium.com">
     <img src="https://uploads-ssl.webflow.com/5ac3c046c82724970fc60918/5c019d917bba312af7553b49_MacStadium-developerlogo.png" height="100px" alt="MacStadium">
