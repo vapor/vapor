@@ -19,12 +19,19 @@ jobs:
 
       # Here we can eventually add sponsors too rather than just backers
 
+      - name: Get token
+        id: get-token
+        uses: tibdex/github-app-token@v1
+        with:
+          app_id: ${{ vars.PENNY_APP_ID }}
+          private_key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
+          repository: vapor/vapor
+
       - name: Commit and create PR
         uses: peter-evans/create-pull-request@v4
         with: 
-          token: ${{secrets.SPONSORS_PR_PAT}}
           commit-message: Update README with new sponsor
-          committer: VaporBot <bot@vapor.codes>
+          committer: Penny[bot] <360798+penny[bot]@vapor.codes>
           branch: new-sponsor
           delete-branch: true
           title: Update README with new Sponsor
