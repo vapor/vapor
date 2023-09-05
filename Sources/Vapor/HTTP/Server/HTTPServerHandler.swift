@@ -19,7 +19,8 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
         let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
         self.responder.respond(to: request).whenComplete { response in
-            box.value.1.serialize(response, for: request, context: box.value.0)
+            let (context, handler) = box.value
+            handler.serialize(response, for: request, context: context)
         }
     }
     
@@ -36,7 +37,6 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     }
     
     func serialize(_ response: Response, for request: Request, context: ChannelHandlerContext) {
-        let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         switch request.version.major {
         case 2:
             context.write(self.wrapOutboundOut(response), promise: nil)
@@ -47,17 +47,19 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             }
             response.headers.add(name: .connection, value: keepAlive ? "keep-alive" : "close")
             let done = context.write(self.wrapOutboundOut(response))
+            let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
             done.whenComplete { result in
+                let (context, handler) = box.value
                 switch result {
                 case .success:
                     if !keepAlive {
-                        box.value.0.close(mode: .output, promise: nil)
+                        context.close(mode: .output, promise: nil)
                     }
                 case .failure(let error):
                     if case .stream(let stream) = response.body.storage {
                         stream.callback(ErrorBodyStreamWriter(eventLoop: request.eventLoop, error: error))
                     }
-                    box.value.1.errorCaught(context: box.value.0, error: error)
+                    handler.errorCaught(context: context, error: error)
                 }
             }
         }
