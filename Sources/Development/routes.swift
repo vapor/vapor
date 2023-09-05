@@ -205,17 +205,16 @@ public func routes(_ app: Application) throws {
             let promise = req.eventLoop.makePromise(of: HTTPStatus.self)
             let fileHandleBox = NIOLoopBound(fileHandle, eventLoop: req.eventLoop)
             req.body.drain { part in
-                let fileHandle = fileHandleBox.value
                 switch part {
                 case .buffer(let buffer):
                     return req.application.fileio.write(
-                        fileHandle: fileHandle,
+                        fileHandle: fileHandleBox.value,
                         buffer: buffer,
                         eventLoop: req.eventLoop
                     )
                 case .error(let drainError):
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.fail(BodyStreamWritingToDiskError.streamFailure(drainError))
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.multipleFailures([
@@ -226,7 +225,7 @@ public func routes(_ app: Application) throws {
                     return req.eventLoop.makeSucceededFuture(())
                 case .end:
                     do {
-                        try fileHandle.close()
+                        try fileHandleBox.value.close()
                         promise.succeed(.ok)
                     } catch {
                         promise.fail(BodyStreamWritingToDiskError.fileHandleClosedFailure(error))

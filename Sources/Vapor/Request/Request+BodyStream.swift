@@ -68,18 +68,17 @@ extension Request {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
-                let dataBox = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
+                let data = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
                 self.read { chunk, next in
-                    var data = dataBox.value
                     switch chunk {
                     case .buffer(var buffer):
-                        if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                        if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
                             promise.fail(Abort(.payloadTooLarge))
                         } else {
-                            data.writeBuffer(&buffer)
+                            data.value.writeBuffer(&buffer)
                         }
                     case .error(let error): promise.fail(error)
-                    case .end: promise.succeed(data)
+                    case .end: promise.succeed(data.value)
                     }
                     next?.succeed(())
                 }
