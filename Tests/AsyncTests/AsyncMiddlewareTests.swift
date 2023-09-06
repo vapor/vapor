@@ -85,7 +85,6 @@ final class AsyncMiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.vary], ["origin"])
             XCTAssertEqual(res.headers[.accessControlAllowOrigin], ["foo"])
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], ["origin"])
-            print(res.headers)
         }
     }
 
@@ -105,7 +104,6 @@ final class AsyncMiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.vary], [])
             XCTAssertEqual(res.headers[.accessControlAllowOrigin], [""])
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
-            print(res.headers)
         }
     }
 }

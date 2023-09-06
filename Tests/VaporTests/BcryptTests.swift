@@ -22,11 +22,8 @@ final class BcryptTests: XCTestCase {
     }
 
     func testInvalidSalt() throws {
-        do {
-            _ = try Bcrypt.verify("", created: "foo")
-            XCTFail("Should have failed")
-        } catch let error as BcryptError {
-            print(error)
+        XCTAssertThrowsError(try Bcrypt.verify("", created: "foo")) {
+            XCTAssert($0 is BcryptError)
         }
     }
 

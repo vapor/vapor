@@ -5,11 +5,6 @@ extension LoggingSystem {
     public static func bootstrap(from environment: inout Environment, _ factory: (Logger.Level) -> (String) -> LogHandler) throws {
         let level = try Logger.Level.detect(from: &environment)
 
-        // Disable stack traces if log level > trace.
-        if level > .trace {
-            StackTrace.isCaptureEnabled = false
-        }
-
         // Bootstrap logger with a factory created by the factoryfactory.
         return LoggingSystem.bootstrap(factory(level))
     }

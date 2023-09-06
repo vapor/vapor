@@ -32,7 +32,6 @@ class MetricsTests: XCTestCase {
             XCTAssertEqual(resData.id, 1)
             XCTAssertEqual(metrics.counters.count, 1)
             let counter = metrics.counters["http_requests_total"] as! TestCounter
-            print(counter.dimensions)
             let pathDimension = try XCTUnwrap(counter.dimensions.first(where: { $0.0 == "path"}))
             XCTAssertEqual(pathDimension.1, "/users/:userID")
             XCTAssertNil(counter.dimensions.first(where: { $0.0 == "path" && $0.1 == "/users/1" }))
