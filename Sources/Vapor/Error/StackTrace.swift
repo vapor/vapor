@@ -1,5 +1,5 @@
 import Foundation
-#if os(Linux)
+#if swift(<5.9) || os(Windows)
 import Backtrace
 import CBacktrace
 #endif
@@ -34,12 +34,12 @@ public struct StackTrace: Sendable {
         return .init(rawFrames: .init(frames))
     }
 
-    #if os(Linux)
+    #if swift(<5.9) || os(Windows)
     private static let state = backtrace_create_state(CommandLine.arguments[0], /* supportThreading: */ 1, nil, nil)
     #endif
 
     static func captureRaw() -> [RawFrame] {
-        #if os(Linux)
+        #if swift(<5.9) || os(Windows)
         final class Context {
             var frames: [RawFrame] = []
         }
