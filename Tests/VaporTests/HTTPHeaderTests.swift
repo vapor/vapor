@@ -219,7 +219,6 @@ final class HTTPHeaderTests: XCTestCase {
                 """
             )
         ])
-        print(headers.cookie!.all.keys)
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
         XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")

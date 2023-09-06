@@ -177,7 +177,6 @@ final class QueryTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("urlencodedform") { req -> HTTPStatus in
-            debugPrint(req)
             let foo = try req.query.decode(User.self)
             XCTAssertEqual(foo.name, "Vapor")
             XCTAssertEqual(foo.age, 3)

@@ -4,7 +4,6 @@ import Logging
 
 final class ErrorTests: XCTestCase {
     func testPrintable() throws {
-        print(FooError.noFoo.debugDescription)
         let expectedPrintable = """
         FooError.noFoo: You do not have a `foo`.
         Here are some possible causes:

@@ -61,7 +61,6 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.get("json") { req -> [String: String] in
-            print(req)
             return ["foo": "bar"]
         }
 
