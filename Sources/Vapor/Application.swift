@@ -1,4 +1,4 @@
-#if swift(<5.9) || os(Windows)
+#if swift(<5.9)
 import Backtrace
 #endif
 import NIOConcurrencyHelpers
@@ -115,7 +115,7 @@ public final class Application: Sendable {
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
-        #if swift(<5.9) || os(Windows)
+        #if swift(<5.9)
         Backtrace.install()
         #endif
         self._environment = .init(environment)

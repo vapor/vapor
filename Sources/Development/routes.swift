@@ -315,15 +315,13 @@ struct TestError: AbortError, DebuggableError {
     }
 
     var source: ErrorSource?
-    var stackTrace: StackTrace?
 
     init(
         file: String = #fileID,
         function: String = #function,
         line: UInt = #line,
         column: UInt = #column,
-        range: Range<UInt>? = nil,
-        stackTrace: StackTrace? = .capture(skip: 1)
+        range: Range<UInt>? = nil
     ) {
         self.source = .init(
             file: file,
@@ -332,7 +330,6 @@ struct TestError: AbortError, DebuggableError {
             column: column,
             range: range
         )
-        self.stackTrace = stackTrace
     }
 }
 

@@ -67,38 +67,6 @@ final class ErrorTests: XCTestCase {
         XCTAssertEqual(description, expectation)
     }
 
-    func testErrorLogging() {
-        let logger = Logger(label: "codes.vapor.test")
-        logger.report(error: FooError.noFoo)
-    }
-
-    func testErrorLogging_stacktrace() {
-        let logger = Logger(label: "codes.vapor.test")
-
-        func foo() throws {
-            try bar()
-        }
-        func bar() throws {
-            try baz()
-        }
-        func baz() throws {
-            throw TestError(kind: .foo, reason: "Oops")
-        }
-
-        do {
-            try foo()
-        } catch {
-            logger.report(error: error)
-        }
-    }
-
-    func testStackTrace() {
-        StackTrace.isCaptureEnabled = false
-        XCTAssertNil(StackTrace.capture())
-        StackTrace.isCaptureEnabled = true
-        print(StackTrace.capture()!.description)
-    }
-
     func testAbortError() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -126,25 +94,6 @@ final class ErrorTests: XCTestCase {
             let abort = try res.content.decode(AbortResponse.self)
             XCTAssertEqual(abort.reason, "After decode")
         })
-    }
-
-    func testAbortDebuggable() throws {
-        func foo() throws {
-            try bar()
-        }
-        func bar() throws {
-            try baz()
-        }
-        func baz() throws {
-            throw Abort(.internalServerError, reason: "Oops")
-        }
-        do {
-            try foo()
-        } catch let error as DebuggableError {
-            XCTAssertContains(error.stackTrace?.frames[0].function, "baz")
-            XCTAssertContains(error.stackTrace?.frames[1].function, "bar")
-            XCTAssertContains(error.stackTrace?.frames[2].function, "foo")
-        }
     }
 }
 
@@ -262,61 +211,6 @@ private enum FooError: String, DebuggableError {
                 "http://documentation.com/Foo",
                 "http://documentation.com/foo/noFoo"
             ]
-        }
-    }
-}
-
-private struct TestError: DebuggableError {
-    enum Kind: String {
-        case foo
-        case bar
-        case baz
-    }
-
-    var kind: Kind
-    var reason: String
-    var source: ErrorSource?
-    var stackTrace: StackTrace?
-
-    init(
-        kind: Kind,
-        reason: String,
-        file: String = #file,
-        function: String = #function,
-        line: UInt = #line,
-        column: UInt = #column,
-        stackTrace: StackTrace? = .capture()
-    ) {
-        self.kind = kind
-        self.reason = reason
-        self.source = .init(
-            file: file,
-            function: function,
-            line: line,
-            column: column
-        )
-        self.stackTrace = stackTrace
-    }
-
-    var identifier: String {
-        return kind.rawValue
-    }
-
-    var possibleCauses: [String] {
-        switch kind {
-        case .foo:
-            return ["What do you expect, you're testing errors."]
-        default:
-            return []
-        }
-    }
-
-    var suggestedFixes: [String] {
-        switch kind {
-        case .foo:
-            return ["Get a better keyboard to chair interface."]
-        default:
-            return []
         }
     }
 }
