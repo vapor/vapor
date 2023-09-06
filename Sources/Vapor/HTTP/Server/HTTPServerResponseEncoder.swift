@@ -121,7 +121,7 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
-            self.isComplete.store(true, ordering: .relaxed)
+            self.isComplete.store(true, ordering: .sequentiallyConsistent)
             if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) != count {
                 self.promise?.fail(Error.notEnoughBytes)
                 promise?.fail(Error.notEnoughBytes)
