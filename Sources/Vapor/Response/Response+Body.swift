@@ -186,14 +186,18 @@ private final class ResponseBodyCollector: BodyStreamWriter {
     }
 
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
-        switch result {
-        case .buffer(var buffer):
-            _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
-        case .error(let error):
-            self.promise.fail(error)
-        case .end:
-            self.promise.succeed(self.buffer.withLockedValue { $0 })
+        let future = self.eventLoop.submit {
+            switch result {
+            case .buffer(var buffer):
+                _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
+            case .error(let error):
+                self.promise.fail(error)
+                throw error
+            case .end:
+                self.promise.succeed(self.buffer.withLockedValue { $0 })
+            }
         }
-        promise?.succeed(())
+        // Fixes an issue where errors in the stream should fail the individual write promise.
+        if let promise { future.cascade(to: promise) }
     }
 }

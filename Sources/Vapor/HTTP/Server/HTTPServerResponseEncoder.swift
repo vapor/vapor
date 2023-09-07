@@ -115,14 +115,13 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         switch result {
         case .buffer(let buffer):
             self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
-            self.currentCount.wrappingIncrement(by: buffer.readableBytes, ordering: .sequentiallyConsistent)
-            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) > count {
+            if let count = self.count, self.currentCount.wrappingIncrementThenLoad(by: buffer.readableBytes, ordering: .sequentiallyConsistent) > count {
                 self.promise?.fail(Error.tooManyBytes)
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
             self.isComplete.store(true, ordering: .sequentiallyConsistent)
-            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) != count {
+            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) < count {
                 self.promise?.fail(Error.notEnoughBytes)
                 promise?.fail(Error.notEnoughBytes)
             }
