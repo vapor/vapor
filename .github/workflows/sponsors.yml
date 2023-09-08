@@ -28,10 +28,11 @@ jobs:
           repository: vapor/vapor
 
       - name: Commit and create PR
-        uses: peter-evans/create-pull-request@v4
+        uses: peter-evans/create-pull-request@v5
         with: 
           commit-message: Update README with new sponsor
-          committer: Penny[bot] <360798+penny[bot]@vapor.codes>
+          committer: "Penny[bot] <360798+penny[bot]@vapor.codes>"
+          author: "Penny[bot] <360798+penny[bot]@vapor.codes>"
           branch: new-sponsor
           delete-branch: true
           title: Update README with new Sponsor
