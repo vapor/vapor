@@ -37,7 +37,6 @@ jobs:
           title: Update README with new Sponsor
           body: Update README adding new sponsor
           labels: no-release-needed
-          team-reviewers: core
       
       # We can comment this out if we want to automate approve and merge
       
