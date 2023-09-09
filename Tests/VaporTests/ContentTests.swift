@@ -400,7 +400,6 @@ final class ContentTests: XCTestCase {
             return User(name: "Vapor", age: 3, luckyNumbers: [5, 7])
         }
         try app.testable().test(.GET, "/urlencodedform") { res in
-            debugPrint(res)
             XCTAssertEqual(res.status.code, 200)
             XCTAssertEqual(res.headers.contentType, .urlEncodedForm)
             XCTAssertContains(res.body.string, "luckyNumbers[]=5")

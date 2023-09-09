@@ -166,13 +166,7 @@ private struct NotFoundResponder: Responder {
     }
 }
 
-struct RouteNotFound: Error {
-    let stackTrace: StackTrace?
-
-    init() {
-        self.stackTrace = StackTrace.capture(skip: 1)
-    }
-}
+struct RouteNotFound: Error {}
 
 extension RouteNotFound: AbortError {    
     var status: HTTPResponseStatus {

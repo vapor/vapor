@@ -93,7 +93,6 @@ final class FileTests: XCTestCase {
             
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
-            print("\(range) : \(length)")
 
             XCTAssertTrue(range == length)
         }
@@ -125,7 +124,6 @@ final class FileTests: XCTestCase {
             
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
-            print("\(range) : \(length)")
 
             XCTAssertTrue(range == length)
         }
@@ -157,7 +155,6 @@ final class FileTests: XCTestCase {
             
             let range = upperRange - lowerRange + 1
             let length = Int(contentLength!)!
-            print("\(range) : \(length)")
 
             XCTAssertTrue(range == length)
         }
