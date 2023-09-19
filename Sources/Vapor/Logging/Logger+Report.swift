@@ -37,7 +37,7 @@ extension Logger {
             source = nil
             level = .warning
         case let localized as LocalizedError:
-            reason = localized.localizedDescription
+            reason = localized.errorDescription ?? "\(localized)"
             source = nil
             level = .warning
         default:
