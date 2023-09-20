@@ -23,14 +23,14 @@ jobs:
           - provider: vapor/apns
             ref: 3.0.0
     runs-on: ubuntu-latest
-    container: swift:5.8-jammy
+    container: swift:5.9-jammy
     steps: 
       - name: Check out Vapor
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: vapor
       - name: Check out provider
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with: 
           repository: ${{ matrix.provider }}
           path: provider
@@ -45,6 +45,4 @@ jobs:
   unit-tests:
      uses: vapor/ci/.github/workflows/run-unit-tests.yml@main
      with:
-       with_coverage: true
        with_tsan: false
-       with_public_api_check: true
