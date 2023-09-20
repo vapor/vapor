@@ -28,12 +28,24 @@ extension Logger {
             reason = abort.reason
             source = nil
             level = .warning
+        case let encoding as EncodingError:
+            reason = "\(encoding)"
+            source = nil
+            level = .warning
+        case let decoding as DecodingError:
+            reason = "\(decoding)"
+            source = nil
+            level = .warning
+        case let localized as LocalizedError:
+            reason = localized.localizedDescription
+            source = nil
+            level = .warning
         default:
             reason = String(reflecting: error)
             source = nil
             level = .warning
         }
-
+        
         self.log(
             level: level,
             .init(stringLiteral: reason),
