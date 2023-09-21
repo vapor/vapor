@@ -233,23 +233,28 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", redirectType: .permanentPost)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_permanentPost").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
             .permanentRedirect
         )
     }
@@ -272,19 +277,24 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", type: .temporary)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
     }
