@@ -75,7 +75,7 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
         }
     }
@@ -94,7 +94,7 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
