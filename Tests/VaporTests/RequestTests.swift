@@ -14,7 +14,7 @@ final class RequestTests: XCTestCase {
         }
         
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
     }
