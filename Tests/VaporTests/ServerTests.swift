@@ -533,10 +533,14 @@ final class ServerTests: XCTestCase {
             }))
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
@@ -591,10 +595,14 @@ final class ServerTests: XCTestCase {
             "hello, world"
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/echo",
@@ -743,10 +751,14 @@ final class ServerTests: XCTestCase {
             "world"
         }
         
-        let port = 1337
-        app.http.server.configuration.port = port
+        app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
         try app.start()
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port")
+            return
+        }
         
         let request = try HTTPClient.Request(
             url: "http://localhost:\(port)/hello",
