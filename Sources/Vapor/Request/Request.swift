@@ -250,16 +250,11 @@ public final class Request: CustomStringConvertible {
         self.storage = .init()
         self.isKeepAlive = true
         self.logger = logger
-<<<<<<< Updated upstream
-        self.logger[metadataKey: "request-id"] = .string(id)
-=======
         if let requestId = self.headers["X_REQUEST_ID"].first {
             self.logger[metadataKey: "request-id"] = .string(requestId)
         } else {
             self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
         }
-
->>>>>>> Stashed changes
         self.byteBufferAllocator = byteBufferAllocator
     }
 }
