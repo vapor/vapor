@@ -13,6 +13,7 @@ extension Application: XCTApplicationTester {
 extension Application {
     public enum Method {
         case inMemory
+        // TODO: Default to Port 0 in the next major release
         public static var running: Method {
             return .running(hostname:"localhost", port: 8080)
         }

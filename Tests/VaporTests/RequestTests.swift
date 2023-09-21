@@ -41,7 +41,7 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
@@ -58,7 +58,7 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
         }
     }
@@ -108,7 +108,7 @@ final class RequestTests: XCTestCase {
             $0.remoteAddress?.description ?? "n/a"
         }
         
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "IP")
         }
     }
