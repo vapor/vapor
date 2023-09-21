@@ -174,13 +174,16 @@ extension Response {
     }
 }
 
-private final class ResponseBodyCollector: BodyStreamWriter {
-    let buffer: NIOLockedValueBox<ByteBuffer>
+// Since all buffer mutation is done on the event loop, we can be unchecked here.
+// This removes the need for a lock and performance hits from that
+// Any changes to this type need to be carefully considered
+private final class ResponseBodyCollector: BodyStreamWriter, @unchecked Sendable {
+    var buffer: ByteBuffer
     let eventLoop: EventLoop
     let promise: EventLoopPromise<ByteBuffer>
 
     init(eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
-        self.buffer = .init(byteBufferAllocator.buffer(capacity: 0))
+        self.buffer = byteBufferAllocator.buffer(capacity: 0)
         self.eventLoop = eventLoop
         self.promise = eventLoop.makePromise(of: ByteBuffer.self)
     }
@@ -189,12 +192,12 @@ private final class ResponseBodyCollector: BodyStreamWriter {
         let future = self.eventLoop.submit {
             switch result {
             case .buffer(var buffer):
-                _ = self.buffer.withLockedValue { $0.writeBuffer(&buffer) }
+                self.buffer.writeBuffer(&buffer)
             case .error(let error):
                 self.promise.fail(error)
                 throw error
             case .end:
-                self.promise.succeed(self.buffer.withLockedValue { $0 })
+                self.promise.succeed(self.buffer)
             }
         }
         // Fixes an issue where errors in the stream should fail the individual write promise.
