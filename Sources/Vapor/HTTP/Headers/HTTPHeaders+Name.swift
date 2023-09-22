@@ -421,6 +421,8 @@ extension HTTPHeaders {
         public static let xForwardedHost = Name("X-Forwarded-Host")
         /// X-Forwarded-Proto header.
         public static let xForwardedProto = Name("X-Forwarded-Proto")
+        /// X-Request-Id header.
+        public static let xRequestId = Name("X-Request-Id")
     }
     
     /// Add a header name/value pair to the block.

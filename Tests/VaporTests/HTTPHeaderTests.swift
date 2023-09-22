@@ -201,6 +201,13 @@ final class HTTPHeaderTests: XCTestCase {
         )
     }
 
+    func testXRequestId() throws {
+        var headers = HTTPHeaders()
+        let xRequestId = UUID().uuidString
+        headers.replaceOrAdd(name: .xRequestId, value: xRequestId)
+        XCTAssertEqual(headers.first(name: "X-Request-Id"), xRequestId)
+    }
+
     func testContentDisposition() throws {
         let headers = HTTPHeaders([
             ("Content-Disposition", #"form-data; name="fieldName"; filename="filename.jpg""#)

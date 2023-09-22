@@ -14,7 +14,7 @@ final class RequestTests: XCTestCase {
         }
         
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "vapor/is/fun") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "vapor/is/fun") { res in
             XCTAssertEqual(res.body.string, ipV4Hostname)
         }
     }
@@ -41,7 +41,7 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
@@ -58,7 +58,7 @@ final class RequestTests: XCTestCase {
             return peerAddress.description
         }
 
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]5.6.7.8:80")
         }
     }
@@ -75,7 +75,7 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "[IPv4]\(ipV4Hostname)")
         }
     }
@@ -94,11 +94,29 @@ final class RequestTests: XCTestCase {
         }
 
         let ipV4Hostname = "127.0.0.1"
-        try app.testable(method: .running(hostname: ipV4Hostname, port: 8080)).test(.GET, "remote") { res in
+        try app.testable(method: .running(hostname: ipV4Hostname, port: 0)).test(.GET, "remote") { res in
             XCTAssertEqual(res.body.string, "[IPv4]192.0.2.60:80")
         }
     }
 
+    func testRequestIdForwarding() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") {
+            if case .string(let string) = $0.logger[metadataKey: "request-id"] {
+                return string
+            } else {
+                throw Abort(.notFound)
+            }
+        }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
+            req.headers.add(name: .xRequestId, value: "test")
+        }, afterResponse: { res in
+            XCTAssertEqual(res.body.string, "test")
+        })
+    }
 
     func testRequestRemoteAddress() throws {
         let app = Application(.testing)
@@ -108,7 +126,7 @@ final class RequestTests: XCTestCase {
             $0.remoteAddress?.description ?? "n/a"
         }
         
-        try app.testable(method: .running).test(.GET, "remote") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "remote") { res in
             XCTAssertContains(res.body.string, "IP")
         }
     }
@@ -233,23 +251,28 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", redirectType: .permanentPost)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_permanentPost").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_permanentPost").wait().status,
             .permanentRedirect
         )
     }
@@ -272,19 +295,24 @@ final class RequestTests: XCTestCase {
             $0.redirect(to: "foo", type: .temporary)
         }
         
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
         
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
+        
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_normal").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_normal").wait().status,
             .seeOther
         )
         XCTAssertEqual(
-            try app.client.get("http://localhost:8080/redirect_permanent").wait().status,
+            try app.client.get("http://localhost:\(port)/redirect_permanent").wait().status,
             .movedPermanently
         )
         XCTAssertEqual(
-            try app.client.post("http://localhost:8080/redirect_temporary").wait().status,
+            try app.client.post("http://localhost:\(port)/redirect_temporary").wait().status,
             .temporaryRedirect
         )
     }
