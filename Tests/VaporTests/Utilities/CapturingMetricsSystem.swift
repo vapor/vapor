@@ -72,7 +72,7 @@ internal final class CapturingMetricsSystem: MetricsFactory, @unchecked Sendable
     }
 }
 
-internal class TestCounter: CounterHandler, Equatable, @unchecked Sendable {
+internal final class TestCounter: CounterHandler, Equatable, @unchecked Sendable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
@@ -103,7 +103,7 @@ internal class TestCounter: CounterHandler, Equatable, @unchecked Sendable {
     }
 }
 
-internal class TestRecorder: RecorderHandler, Equatable, @unchecked Sendable {
+internal final class TestRecorder: RecorderHandler, Equatable, @unchecked Sendable {
     let id: String
     let label: String
     let dimensions: [(String, String)]
