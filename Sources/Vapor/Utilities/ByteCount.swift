@@ -10,7 +10,7 @@ import Foundation
 
 /// let bytes: ByteCount = "2kb"
 /// print(bytes.value) // 2048
-public struct ByteCount: Equatable {
+public struct ByteCount: Equatable, Sendable {
     /// The value in Bytes
     public let value: Int
 

@@ -1,4 +1,4 @@
-public protocol LifecycleHandler {
+public protocol LifecycleHandler: Sendable {
     func willBoot(_ application: Application) throws
     func didBoot(_ application: Application) throws
     func shutdown(_ application: Application)

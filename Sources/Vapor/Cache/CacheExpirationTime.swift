@@ -1,5 +1,5 @@
 /// Defines the lifetime of an entry in a cache.
-public enum CacheExpirationTime {
+public enum CacheExpirationTime: Sendable {
     case seconds(Int)
     case minutes(Int)
     case hours(Int)

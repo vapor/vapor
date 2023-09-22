@@ -112,7 +112,7 @@ private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
         func nestedUnkeyedContainer(forKey: K) -> UnkeyedEncodingContainer { self }
         func superEncoder() -> Encoder { self }
         func superEncoder(forKey: K) -> Encoder { self }
-        func container<K: CodingKey>(keyedBy: K.Type) -> KeyedEncodingContainer<K> { .init(FailureEncoder<K>()) }
+        func container<Key: CodingKey>(keyedBy: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
         func unkeyedContainer() -> UnkeyedEncodingContainer { self }
         func singleValueContainer() -> SingleValueEncodingContainer { self }
     }

@@ -25,13 +25,10 @@ let package = Package(
         .package(url: "https://github.com/vapor/console-kit.git", from: "4.0.0"),
         
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
-        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "3.0.0"),
+        .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
         
         // 🚍 High-performance trie-node router.
         .package(url: "https://github.com/vapor/routing-kit.git", from: "4.5.0"),
-        
-        // 💥 Backtraces for Swift on Linux
-        .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.56.0"),
@@ -71,7 +68,6 @@ let package = Package(
             dependencies: [
                 .product(name: "AsyncHTTPClient", package: "async-http-client"),
                 .product(name: "AsyncKit", package: "async-kit"),
-                .product(name: "Backtrace", package: "swift-backtrace"),
                 .target(name: "CVaporBcrypt"),
                 .target(name: "CVaporURLParser"),
                 .product(name: "ConsoleKit", package: "console-kit"),

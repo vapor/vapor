@@ -201,6 +201,13 @@ final class HTTPHeaderTests: XCTestCase {
         )
     }
 
+    func testXRequestId() throws {
+        var headers = HTTPHeaders()
+        let xRequestId = UUID().uuidString
+        headers.replaceOrAdd(name: .xRequestId, value: xRequestId)
+        XCTAssertEqual(headers.first(name: "X-Request-Id"), xRequestId)
+    }
+
     func testContentDisposition() throws {
         let headers = HTTPHeaders([
             ("Content-Disposition", #"form-data; name="fieldName"; filename="filename.jpg""#)
@@ -219,7 +226,6 @@ final class HTTPHeaderTests: XCTestCase {
                 """
             )
         ])
-        print(headers.cookie!.all.keys)
         XCTAssertEqual(headers.cookie?["vapor-session"]?.string, "0FuTYcHmGw7Bz1G4HiF+EA==")
         XCTAssertEqual(headers.cookie?["vapor-session"]?.sameSite, .lax)
         XCTAssertEqual(headers.cookie?["_ga"]?.string, "GA1.1.500315824.1585154561")

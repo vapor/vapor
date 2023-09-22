@@ -90,14 +90,12 @@ internal class TestCounter: CounterHandler, Equatable {
         self.lock.withLock {
             self.values.append((Date(), amount))
         }
-        print("adding \(amount) to \(self.label)")
     }
 
     func reset() {
         self.lock.withLock {
             self.values = []
         }
-        print("resetting \(self.label)")
     }
 
     public static func == (lhs: TestCounter, rhs: TestCounter) -> Bool {
@@ -129,7 +127,6 @@ internal class TestRecorder: RecorderHandler, Equatable {
         self.lock.withLock {
             values.append((Date(), value))
         }
-        print("recording \(value) in \(self.label)")
     }
 
     public static func == (lhs: TestRecorder, rhs: TestRecorder) -> Bool {
@@ -173,7 +170,6 @@ internal class TestTimer: TimerHandler, Equatable {
         self.lock.withLock {
             values.append((Date(), duration))
         }
-        print("recording \(duration) \(self.label)")
     }
 
     public static func == (lhs: TestTimer, rhs: TestTimer) -> Bool {
