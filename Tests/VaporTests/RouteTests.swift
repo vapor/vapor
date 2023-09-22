@@ -237,7 +237,7 @@ final class RouteTests: XCTestCase {
             return "hi"
         }
 
-        try app.testable(method: .running).test(.HEAD, "/hello") { res in
+        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.first(name: .contentLength), "0")
             XCTAssertEqual(res.body.readableBytes, 0)
@@ -253,7 +253,7 @@ final class RouteTests: XCTestCase {
             return "hi"
         }
 
-        try app.testable(method: .running).test(.HEAD, "/hello/joe") { res in
+        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello/joe") { res in
             XCTAssertEqual(res.status, .ok)
             XCTAssertEqual(res.headers.first(name: .contentLength), "2")
             XCTAssertEqual(res.body.readableBytes, 0)
@@ -272,7 +272,7 @@ final class RouteTests: XCTestCase {
             return Response(status: .found)
         }
 
-        try app.testable(method: .running).test(.HEAD, "/hello") { res in
+        try app.testable(method: .running(port: 0)).test(.HEAD, "/hello") { res in
             XCTAssertEqual(res.status, .found)
             XCTAssertEqual(res.headers.first(name: .contentLength), "0")
             XCTAssertEqual(res.body.readableBytes, 0)
@@ -308,7 +308,7 @@ final class RouteTests: XCTestCase {
             throw Abort(.noContent)
         }
 
-        try app.testable(method: .running).test(.GET, "/no-content") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/no-content") { res in
             XCTAssertEqual(res.status.code, 204)
             XCTAssertEqual(res.body.readableBytes, 0)
         }
@@ -325,7 +325,7 @@ final class RouteTests: XCTestCase {
             "b"
         }
 
-        try app.testable(method: .running).test(.GET, "/api/addresses/") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/api/addresses/") { res in
             XCTAssertEqual(res.body.string, "a")
         }.test(.GET, "/api/addresses/search/test") { res in
             XCTAssertEqual(res.body.string, "b")
@@ -384,7 +384,7 @@ final class RouteTests: XCTestCase {
 
         var buffer = ByteBufferAllocator().buffer(capacity: 0)
         buffer.writeBytes(Array(repeating: 0, count: 500_000))
-        try app.testable(method: .running).test(.POST, "/default", body: buffer) { res in
+        try app.testable(method: .running(port: 0)).test(.POST, "/default", body: buffer) { res in
             XCTAssertEqual(res.status, .payloadTooLarge)
         }.test(.POST, "/1kb", body: buffer) { res in
             XCTAssertEqual(res.status, .payloadTooLarge)
@@ -406,7 +406,7 @@ final class RouteTests: XCTestCase {
             return req.eventLoop.future([testMarkerHeaderKey: testMarkerHeaderValue])
         }, onUpgrade: { _, _ in })
         
-        try app.testable(method: .running).test(.GET, "customshouldupgrade", beforeRequest: { req in
+        try app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req in
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
             req.headers.replaceOrAdd(name: .connection, value: "Upgrade")
@@ -425,7 +425,7 @@ final class RouteTests: XCTestCase {
             return req.client.get("http://localhost/status/2 1").map { $0.description }
         }
         
-        try app.testable(method: .running).test(.GET, "/client") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/client") { res in
             XCTAssertEqual(res.status.code, 500)
         }
     }

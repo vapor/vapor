@@ -13,6 +13,7 @@ extension Application: XCTApplicationTester {
 extension Application {
     public enum Method {
         case inMemory
+        // TODO: Default to Port 0 in the next major release
         public static var running: Method {
             return .running(hostname:"localhost", port: 8080)
         }
@@ -51,7 +52,19 @@ extension Application {
             defer { try! client.syncShutdown() }
             var path = request.url.path
             path = path.hasPrefix("/") ? path : "/\(path)"
-            var url = "http://\(self.hostname):\(self.port)\(path)"
+            
+            let actualPort: Int
+            
+            if self.port == 0 {
+                guard let portAllocated = app.http.server.shared.localAddress?.port else {
+                    throw Abort(.internalServerError, reason: "Failed to get port from local address")
+                }
+                actualPort = portAllocated
+            } else {
+                actualPort = self.port
+            }
+            
+            var url = "http://\(self.hostname):\(actualPort)\(path)"
             if let query = request.url.query {
                 url += "?\(query)"
             }
