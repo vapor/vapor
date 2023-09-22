@@ -6,6 +6,11 @@ extension Response {
         let count: Int
         let callback: (BodyStreamWriter) -> ()
     }
+    
+    struct AsyncBodyStream {
+        let count: Int
+        let callback: @Sendable (AsyncBodyStreamWriter) async throws -> ()
+    }
 
     /// Represents a `Response`'s body.
     ///
@@ -23,6 +28,7 @@ extension Response {
             case staticString(StaticString)
             case string(String)
             case stream(BodyStream)
+            case asyncStream(AsyncBodyStream)
         }
         
         /// An empty `Response.Body`.
@@ -50,6 +56,7 @@ extension Response {
             case .buffer(let buffer): return buffer.readableBytes
             case .none: return 0
             case .stream(let stream): return stream.count
+            case .asyncStream(let stream): return stream.count
             }
         }
         
@@ -63,6 +70,7 @@ extension Response {
             case .string(let string): return Data(string.utf8)
             case .none: return nil
             case .stream: return nil
+            case .asyncStream: return nil
             }
         }
         
@@ -83,6 +91,7 @@ extension Response {
                 return buffer
             case .none: return nil
             case .stream: return nil
+            case .asyncStream: return nil
             }
         }
 
@@ -108,6 +117,7 @@ extension Response {
             case .staticString(let string): return string.description
             case .string(let string): return string
             case .stream: return "<stream>"
+            case .asyncStream: return "<async stream>"
             }
         }
         
@@ -157,6 +167,54 @@ extension Response {
 
         public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
+        }
+        
+        /// Creates a chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter``.
+        ///
+        /// - Parameters:
+        ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
+        ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
+        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
+        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+            self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .asyncStream(.init(count: count, callback: asyncStream))
+        }
+        
+        /// Creates a chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter``.
+        ///
+        /// - Parameters:
+        ///   - asyncStream: The closure that will generate the results. **MUST** call `.end` or `.error` when terminating the stream
+        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
+        public init(asyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+            self.init(asyncStream: asyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
+        }
+        
+        /// Creates a _managed_ chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter`` that automtically closes or fails based if the closure throws an error or returns.
+        ///
+        /// - Parameters:
+        ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
+        ///   - count: The amount of bytes that will be written. The `asyncStream` **MUST** produce exactly `count` bytes.
+        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
+        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+            self.byteBufferAllocator = byteBufferAllocator
+            self.storage = .asyncStream(.init(count: count) { writer in
+                do {
+                    try await managedAsyncStream(writer)
+                    try await writer.write(.end)
+                } catch {
+                    try await writer.write(.error(error))
+                }
+            })
+        }
+        
+        /// Creates a _managed_ chunked HTTP ``Response`` steam using ``AsyncBodyStreamWriter`` that automtically closes or fails based if the closure throws an error or returns.
+        ///
+        /// - Parameters:
+        ///   - asyncStream: The closure that will generate the results, which **MUST NOT** call `.end` or `.error` when terminating the stream.
+        ///   - count: The amount of bytes that will be written
+        ///   - byteBufferAllocator: The allocator that is preferred when writing data to SwiftNIO
+        public init(managedAsyncStream: @escaping @Sendable (AsyncBodyStreamWriter) async throws -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+            self.init(managedAsyncStream: managedAsyncStream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
         /// `ExpressibleByStringLiteral` conformance.
