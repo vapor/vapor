@@ -99,6 +99,24 @@ final class RequestTests: XCTestCase {
         }
     }
 
+    func testRequestIdForwarding() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("remote") {
+            if case .string(let string) = $0.logger[metadataKey: "request-id"] {
+                return string
+            } else {
+                throw Abort(.notFound)
+            }
+        }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "remote", beforeRequest: { req in
+            req.headers.add(name: .xRequestId, value: "test")
+        }, afterResponse: { res in
+            XCTAssertEqual(res.body.string, "test")
+        })
+    }
 
     func testRequestRemoteAddress() throws {
         let app = Application(.testing)
