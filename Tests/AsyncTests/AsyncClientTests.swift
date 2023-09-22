@@ -68,10 +68,15 @@ final class AsyncClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
 
-        let res = try await app.client.get("http://localhost:8080/redirect")
+        let res = try await app.client.get("http://localhost:\(port)/redirect")
 
         XCTAssertEqual(res.status, .seeOther)
     }
@@ -86,13 +91,18 @@ final class AsyncClientTests: XCTestCase {
             $0.redirect(to: "foo")
         }
 
-        try app.server.start(address: .hostname("localhost", port: 8080))
+        try app.server.start(address: .hostname("localhost", port: 0))
         defer { app.server.shutdown() }
+        
+        guard let port = app.http.server.shared.localAddress?.port else {
+            XCTFail("Failed to get port for app")
+            return
+        }
 
-        _ = try await app.client.get("http://localhost:8080/redirect")
+        _ = try await app.client.get("http://localhost:\(port)/redirect")
 
         app.http.client.configuration.redirectConfiguration = .follow(max: 1, allowCycles: false)
-        let res = try await app.client.get("http://localhost:8080/redirect")
+        let res = try await app.client.get("http://localhost:\(port)/redirect")
         XCTAssertEqual(res.status, .seeOther)
     }
 

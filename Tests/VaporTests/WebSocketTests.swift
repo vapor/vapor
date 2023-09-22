@@ -52,8 +52,6 @@ final class WebSocketTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.http.server.configuration.port = 8085
-
         app.webSocket("bar") { req, ws in
             ws.close(promise: nil)
         }
@@ -61,10 +59,17 @@ final class WebSocketTests: XCTestCase {
         app.environment.arguments = ["serve"]
 
         try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
 
         do {
             try WebSocket.connect(
-                to: "ws://localhost:8085/foo",
+                to: "ws://localhost:\(port)/foo",
                 on: app.eventLoopGroup.next()
             ) { _ in  }.wait()
             XCTFail("should have failed")
