@@ -75,7 +75,7 @@ final class AsyncRouteTests: XCTestCase {
             [testMarkerHeaderKey: testMarkerHeaderValue]
         }, onUpgrade: { _, _ in })
 
-        try app.testable(method: .running).test(.GET, "customshouldupgrade", beforeRequest: { req in
+        try app.testable(method: .running(port: 0)).test(.GET, "customshouldupgrade", beforeRequest: { req in
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketVersion, value: "13")
             req.headers.replaceOrAdd(name: HTTPHeaders.Name.secWebSocketKey, value: "zyFJtLIpI2ASsmMHJ4Cf0A==")
             req.headers.replaceOrAdd(name: .connection, value: "Upgrade")

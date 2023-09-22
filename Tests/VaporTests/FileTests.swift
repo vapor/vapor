@@ -19,7 +19,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
@@ -36,7 +36,7 @@ final class FileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .connection, value: "close")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             let test = "the quick brown fox"
             XCTAssertNotNil(res.headers.first(name: .eTag))
             XCTAssertContains(res.body.string, test)
@@ -62,7 +62,7 @@ final class FileTests: XCTestCase {
             }
         }
 
-        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream") { res in
             XCTAssertTrue(res.body.string.isEmpty)
         }
     }
@@ -83,7 +83,7 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 20)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -114,7 +114,7 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 20)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -145,7 +145,7 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 20, end: 25)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             
             let contentRange = res.headers.first(name: "content-range")
             let contentLength = res.headers.first(name: "content-length")
@@ -176,7 +176,7 @@ final class FileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.range = .init(unit: .bytes, ranges: [.within(start: 0, end: 0)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .partialContent)
 
             XCTAssertEqual(res.headers.first(name: .contentLength), "1")
@@ -203,12 +203,12 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: -20, end: 25)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.within(start: 10, end: 100000000)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -229,12 +229,12 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: -20)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.start(value: 100000000)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -255,12 +255,12 @@ final class FileTests: XCTestCase {
         
         var headerRequest = HTTPHeaders()
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: -20)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
 
         headerRequest.range = .init(unit: .bytes, ranges: [.tail(value: 100000000)])
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headerRequest) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headerRequest) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
@@ -404,42 +404,42 @@ final class FileTests: XCTestCase {
 
         var headers = HTTPHeaders()
         headers.replaceOrAdd(name: .range, value: "bytes=0-9223372036854775807")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-1-10")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=100-10")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=10--100")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=9223372036854775808-")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=922337203-")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-922337203")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
         
         headers.replaceOrAdd(name: .range, value: "bytes=-9223372036854775808")
-        try app.testable(method: .running).test(.GET, "/file-stream", headers: headers) { res in
+        try app.testable(method: .running(port: 0)).test(.GET, "/file-stream", headers: headers) { res in
             XCTAssertEqual(res.status, .badRequest)
         }
     }
