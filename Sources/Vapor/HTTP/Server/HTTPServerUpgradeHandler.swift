@@ -56,7 +56,6 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         // check upgrade
         switch self.upgradeState {
         case .pending(let req, let buffer):
-            
             self.upgradeState = .upgraded
             if res.status == .switchingProtocols, let upgrader = res.upgrader {
                 let protocolUpgrader = upgrader.applyUpgrade(req: req, res: res)
