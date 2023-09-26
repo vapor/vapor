@@ -15,7 +15,7 @@ final class CacheTests: XCTestCase {
         // Test expiration
         try app.cache.set("foo2", to: "bar2", expiresIn: .seconds(1)).wait()
         try XCTAssertEqual(app.cache.get("foo2").wait(), "bar2")
-        sleep(1)
+        sleep(2)
         try XCTAssertNil(app.cache.get("foo2", as: String.self).wait())
         
         // Test reset value

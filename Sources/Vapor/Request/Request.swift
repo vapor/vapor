@@ -153,7 +153,7 @@ public final class Request: CustomStringConvertible {
     
     internal var bodyStorage: BodyStorage
     
-    /// Get and set `HTTPCookies` for this `HTTPRequest`
+    /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
         get {

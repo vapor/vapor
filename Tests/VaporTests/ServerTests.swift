@@ -378,16 +378,16 @@ final class ServerTests: XCTestCase {
         defer { app.shutdown() }
         
         app.servers.use(.custom)
-        XCTAssertEqual(app.customServer.didStart, false)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), false)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         try app.server.start()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, false)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), false)
         
         app.server.shutdown()
-        XCTAssertEqual(app.customServer.didStart, true)
-        XCTAssertEqual(app.customServer.didShutdown, true)
+        XCTAssertEqual(app.customServer.didStart.withLockedValue({ $0 }), true)
+        XCTAssertEqual(app.customServer.didShutdown.withLockedValue({ $0 }), true)
     }
     
     func testMultipleChunkBody() throws {
@@ -472,16 +472,16 @@ final class ServerTests: XCTestCase {
                 return req.eventLoop.makeFailedFuture(Abort(.badRequest))
             }
             
-            var count = 0
+            let countBox = NIOLockedValueBox<Int>(0)
             let promise = req.eventLoop.makePromise(of: Int.self)
             req.body.drain { part in
                 switch part {
                 case .buffer(let buffer):
-                    count += buffer.readableBytes
+                    countBox.withLockedValue { $0 += buffer.readableBytes }
                 case .error(let error):
                     promise.fail(error)
                 case .end:
-                    promise.succeed(count)
+                    promise.succeed(countBox.withLockedValue({ $0 }))
                 }
                 return req.eventLoop.makeSucceededFuture(())
             }
@@ -504,15 +504,16 @@ final class ServerTests: XCTestCase {
     }
     
     func testEchoServer() throws {
-        let app = Application(.testing)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let app = Application(.testing, .shared(eventLoopGroup))
         defer { app.shutdown() }
         
-        final class Context {
-            var server: [String]
-            var client: [String]
+        final class Context: Sendable {
+            let server: NIOLockedValueBox<[String]>
+            let client: NIOLockedValueBox<[String]>
             init() {
-                self.server = []
-                self.client = []
+                self.server = .init([])
+                self.client = .init([])
             }
         }
         let context = Context()
@@ -522,7 +523,7 @@ final class ServerTests: XCTestCase {
                 request.body.drain { body in
                     switch body {
                     case .buffer(let buffer):
-                        context.server.append(buffer.string)
+                        context.server.withLockedValue { $0.append(buffer.string) }
                         return writer.write(.buffer(buffer))
                     case .error(let error):
                         return writer.write(.error(error))
@@ -549,10 +550,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
@@ -569,7 +573,7 @@ final class ServerTests: XCTestCase {
                 task: HTTPClient.Task<HTTPClient.Response>,
                 _ buffer: ByteBuffer
             ) -> EventLoopFuture<Void> {
-                self.context.client.append(buffer.string)
+                self.context.client.withLockedValue { $0.append(buffer.string) }
                 return task.eventLoop.makeSucceededFuture(())
             }
             
@@ -583,12 +587,15 @@ final class ServerTests: XCTestCase {
             delegate: response
         ).wait()
         
-        XCTAssertEqual(context.server, ["foo", "bar", "baz"])
-        XCTAssertEqual(context.client, ["foo", "bar", "baz"])
+        let server = context.server.withLockedValue { $0 }
+        let client = context.client.withLockedValue { $0 }
+        XCTAssertEqual(server, ["foo", "bar", "baz"])
+        XCTAssertEqual(client, ["foo", "bar", "baz"])
     }
     
     func testSkipStreaming() throws {
-        let app = Application(.testing)
+        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
+        let app = Application(.testing, .shared(eventLoopGroup))
         defer { app.shutdown() }
         
         app.on(.POST, "echo", body: .stream) { request in
@@ -611,10 +618,13 @@ final class ServerTests: XCTestCase {
                 "transfer-encoding": "chunked"
             ],
             body: .stream(length: nil, { stream in
-                stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
-                    stream.write(.byteBuffer(.init(string: "bar")))
+                // We set the application to have a single event loop so we can use the same
+                // event loop here
+                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
+                    streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
-                    stream.write(.byteBuffer(.init(string: "baz")))
+                    streamBox.value.write(.byteBuffer(.init(string: "baz")))
                 }
             })
         )
@@ -1002,16 +1012,16 @@ extension Application {
     }
 }
 
-final class CustomServer: Server {
-    var didStart: Bool
-    var didShutdown: Bool
+final class CustomServer: Server, Sendable {
+    let didStart: NIOLockedValueBox<Bool>
+    let didShutdown: NIOLockedValueBox<Bool>
     var onShutdown: EventLoopFuture<Void> {
         fatalError()
     }
     
     init() {
-        self.didStart = false
-        self.didShutdown = false
+        self.didStart = .init(false)
+        self.didShutdown = .init(false)
     }
     
     func start(hostname: String?, port: Int?) throws {
@@ -1019,11 +1029,11 @@ final class CustomServer: Server {
     }
     
     func start(address: BindAddress?) throws {
-        self.didStart = true
+        self.didStart.withLockedValue { $0 = true }
     }
     
     func shutdown() {
-        self.didShutdown = true
+        self.didShutdown.withLockedValue { $0 = true }
     }
 }
 
