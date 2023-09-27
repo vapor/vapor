@@ -23,7 +23,7 @@ extension Request {
             }
         }
         
-        public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+        @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage {
             case .stream(let stream):
                 stream.read { (result, promise) in

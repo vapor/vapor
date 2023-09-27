@@ -138,7 +138,7 @@ public struct WebSocketUpgrader: Upgrader, Sendable {
     var shouldUpgrade: (@Sendable () -> EventLoopFuture<HTTPHeaders?>)
     var onUpgrade: @Sendable (WebSocket) -> ()
     
-    public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
+    @preconcurrency public init(maxFrameSize: WebSocketMaxFrameSize, shouldUpgrade: @escaping (@Sendable () -> EventLoopFuture<HTTPHeaders?>), onUpgrade: @Sendable @escaping (WebSocket) -> ()) {
         self.maxFrameSize = maxFrameSize
         self.shouldUpgrade = shouldUpgrade
         self.onUpgrade = onUpgrade
