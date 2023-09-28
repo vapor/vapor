@@ -1,5 +1,5 @@
 import class Foundation.Bundle
-@preconcurrency import Vapor
+import Vapor
 import NIOCore
 import NIOHTTP1
 import NIOConcurrencyHelpers
