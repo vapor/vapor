@@ -86,7 +86,7 @@ public struct FileIO: Sendable {
     ///     - chunkSize: Maximum size for the file data chunks.
     ///     - onRead: Closure to be called sequentially for each file data chunk.
     /// - returns: `Future` that will complete when the file read is finished.
-    public func readFile(
+    @preconcurrency public func readFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         onRead: @Sendable @escaping (ByteBuffer) -> EventLoopFuture<Void>
@@ -122,7 +122,7 @@ public struct FileIO: Sendable {
     ///     - mediaType: HTTPMediaType, if not specified, will be created from file extension.
     ///     - onCompleted: Closure to be run on completion of stream.
     /// - returns: A `200 OK` response containing the file stream and appropriate headers.
-    public func streamFile(
+    @preconcurrency public func streamFile(
         at path: String,
         chunkSize: Int = NonBlockingFileIO.defaultChunkSize,
         mediaType: HTTPMediaType? = nil,

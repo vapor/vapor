@@ -15,7 +15,7 @@ extension Application {
 
             let run: @Sendable (Application) -> ()
 
-            public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -71,7 +71,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
+        @preconcurrency public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
         }
 
