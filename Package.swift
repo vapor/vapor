@@ -34,7 +34,7 @@ let package = Package(
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),
         
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
-        .package(url: "https://github.com/apple/swift-nio.git", from: "2.56.0"),
+        .package(url: "https://github.com/apple/swift-nio.git", from: "2.59.0"),
         
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
@@ -59,6 +59,9 @@ let package = Package(
         
         // MultipartKit, Multipart encoding and decoding
         .package(url: "https://github.com/vapor/multipart-kit.git", from: "4.2.1"),
+        
+        // Low-level atomic operations
+        .package(url: "https://github.com/apple/swift-atomics.git", from: "1.1.0"),
     ],
     targets: [
         // C helpers
@@ -90,6 +93,7 @@ let package = Package(
             .product(name: "RoutingKit", package: "routing-kit"),
             .product(name: "WebSocketKit", package: "websocket-kit"),
             .product(name: "MultipartKit", package: "multipart-kit"),
+            .product(name: "Atomics", package: "swift-atomics"),
         ]),
 	
         // Development

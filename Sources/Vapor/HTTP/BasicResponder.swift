@@ -14,7 +14,7 @@ public struct BasicResponder: Responder {
     ///
     /// - parameters:
     ///     - closure: Responder closure.
-    public init(
+    @preconcurrency public init(
         closure: @Sendable @escaping (Request) throws -> EventLoopFuture<Response>
     ) {
         self.closure = closure

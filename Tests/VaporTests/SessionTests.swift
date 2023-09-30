@@ -5,30 +5,37 @@ import NIOCore
 import NIOHTTP1
 
 final class SessionTests: XCTestCase {
-    func testSessionDestroy() throws {
-        final class MockKeyedCache: SessionDriver {
-            static var ops: [String] = []
+    func testSessionDestroy() async throws {
+        actor MockKeyedCache: AsyncSessionDriver {
+            var ops: [String] = []
             init() { }
 
-
-            func createSession(_ data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
-                Self.ops.append("create \(data)")
-                return request.eventLoop.makeSucceededFuture(.init(string: "a"))
+            func getOps() -> [String] {
+                ops
+            }
+            
+            func resetOps() {
+                self.ops = []
             }
 
-            func readSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<SessionData?> {
-                Self.ops.append("read \(sessionID)")
-                return request.eventLoop.makeSucceededFuture(SessionData())
+            func createSession(_ data: SessionData, for request: Request) async throws -> SessionID {
+                self.ops.append("create \(data)")
+                return .init(string: "a")
             }
 
-            func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) -> EventLoopFuture<SessionID> {
-                Self.ops.append("update \(sessionID) to \(data)")
-                return request.eventLoop.makeSucceededFuture(sessionID)
+            func readSession(_ sessionID: SessionID, for request: Request) async throws -> SessionData? {
+                self.ops.append("read \(sessionID)")
+                return SessionData()
             }
 
-            func deleteSession(_ sessionID: SessionID, for request: Request) -> EventLoopFuture<Void> {
-                Self.ops.append("delete \(sessionID)")
-                return request.eventLoop.makeSucceededFuture(())
+            func updateSession(_ sessionID: SessionID, to data: SessionData, for request: Request) async throws -> SessionID {
+                self.ops.append("update \(sessionID) to \(data)")
+                return sessionID
+            }
+
+            func deleteSession(_ sessionID: SessionID, for request: Request) async throws {
+                self.ops.append("delete \(sessionID)")
+                return
             }
         }
 
@@ -49,14 +56,15 @@ final class SessionTests: XCTestCase {
             return "del"
         }
 
-        try app.testable().test(.GET, "/set") { res in
+        try await app.testable().test(.GET, "/set") { res in
             XCTAssertEqual(res.body.string, "set")
             cookie = res.headers.setCookie?["vapor-session"]
             XCTAssertNotNil(cookie)
-            XCTAssertEqual(MockKeyedCache.ops, [
+            let ops = await cache.ops
+            XCTAssertEqual(ops, [
                 #"create SessionData(storage: ["foo": "bar"])"#,
             ])
-            MockKeyedCache.ops = []
+            await cache.resetOps()
         }
 
         XCTAssertEqual(cookie?.string, "a")
@@ -65,9 +73,10 @@ final class SessionTests: XCTestCase {
         var cookies = HTTPCookies()
         cookies["vapor-session"] = cookie
         headers.cookie = cookies
-        try app.testable().test(.GET, "/del", headers: headers) { res in
+        try await app.testable().test(.GET, "/del", headers: headers) { res in
             XCTAssertEqual(res.body.string, "del")
-            XCTAssertEqual(MockKeyedCache.ops, [
+            let ops = await cache.ops
+            XCTAssertEqual(ops, [
                 #"read SessionID(string: "a")"#,
                 #"delete SessionID(string: "a")"#
             ])

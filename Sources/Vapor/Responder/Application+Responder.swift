@@ -16,7 +16,7 @@ extension Application {
 
             let run: @Sendable (Application) -> ()
 
-            public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -56,7 +56,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
+        @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
             self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
         }
 

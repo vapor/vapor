@@ -68,7 +68,7 @@ public final class ErrorMiddleware: Middleware {
     ///
     /// - parameters:
     ///     - closure: Error-handling closure. Converts `Error` to `Response`.
-    public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
+    @preconcurrency public init(_ closure: @Sendable @escaping (Request, Error) -> (Response)) {
         self.closure = closure
     }
     

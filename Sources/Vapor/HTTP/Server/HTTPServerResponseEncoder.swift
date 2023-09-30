@@ -1,5 +1,7 @@
 import NIOCore
 import NIOHTTP1
+import NIOConcurrencyHelpers
+import Atomics
 
 final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelHandler {
     typealias OutboundIn = Response
@@ -81,16 +83,13 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
 }
 
 private final class ChannelResponseBodyStream: BodyStreamWriter {
-    let context: ChannelHandlerContext
-    let handler: HTTPServerResponseEncoder
+    let contextBox: NIOLoopBound<ChannelHandlerContext>
+    let handlerBox: NIOLoopBound<HTTPServerResponseEncoder>
     let promise: EventLoopPromise<Void>?
     let count: Int?
-    var currentCount: Int
-    var isComplete: Bool
-
-    var eventLoop: EventLoop {
-        return self.context.eventLoop
-    }
+    let currentCount: ManagedAtomic<Int>
+    let isComplete: ManagedAtomic<Bool>
+    let eventLoop: EventLoop
 
     enum Error: Swift.Error {
         case tooManyBytes
@@ -103,41 +102,41 @@ private final class ChannelResponseBodyStream: BodyStreamWriter {
         promise: EventLoopPromise<Void>?,
         count: Int?
     ) {
-        self.context = context
-        self.handler = handler
+        self.contextBox = .init(context, eventLoop: context.eventLoop)
+        self.handlerBox = .init(handler, eventLoop: context.eventLoop)
         self.promise = promise
         self.count = count
-        self.currentCount = 0
-        self.isComplete = false
+        self.currentCount = .init(0)
+        self.isComplete = .init(false)
+        self.eventLoop = context.eventLoop
     }
     
     func write(_ result: BodyStreamResult, promise: EventLoopPromise<Void>?) {
         switch result {
         case .buffer(let buffer):
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
-            self.currentCount += buffer.readableBytes
-            if let count = self.count, self.currentCount > count {
+            self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.body(.byteBuffer(buffer))), promise: promise)
+            if let count = self.count, self.currentCount.wrappingIncrementThenLoad(by: buffer.readableBytes, ordering: .sequentiallyConsistent) > count {
                 self.promise?.fail(Error.tooManyBytes)
                 promise?.fail(Error.notEnoughBytes)
             }
         case .end:
-            self.isComplete = true
-            if let count = self.count, self.currentCount != count {
+            self.isComplete.store(true, ordering: .sequentiallyConsistent)
+            if let count = self.count, self.currentCount.load(ordering: .sequentiallyConsistent) < count {
                 self.promise?.fail(Error.notEnoughBytes)
                 promise?.fail(Error.notEnoughBytes)
             }
-            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.succeed(())
         case .error(let error):
-            self.isComplete = true
-            self.context.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
-            self.context.writeAndFlush(self.handler.wrapOutboundOut(.end(nil)), promise: promise)
+            self.isComplete.store(true, ordering: .relaxed)
+            self.contextBox.value.fireUserInboundEventTriggered(HTTPServerResponseEncoder.ResponseEndSentEvent())
+            self.contextBox.value.writeAndFlush(self.handlerBox.value.wrapOutboundOut(.end(nil)), promise: promise)
             self.promise?.fail(error)
         }
     }
 
     deinit {
-        assert(self.isComplete, "Response body stream writer deinitialized before .end or .error was sent.")
+        assert(self.isComplete.load(ordering: .sequentiallyConsistent), "Response body stream writer deinitialized before .end or .error was sent.")
     }
 }

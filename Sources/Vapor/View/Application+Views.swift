@@ -22,7 +22,7 @@ extension Application {
 
             let run: @Sendable (Application) -> ()
 
-            public init(_ run: @Sendable @escaping (Application) -> ()) {
+            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
@@ -56,7 +56,7 @@ extension Application {
             provider.run(self.application)
         }
 
-        public func use(_ makeRenderer: @Sendable @escaping (Application) -> (ViewRenderer)) {
+        @preconcurrency public func use(_ makeRenderer: @Sendable @escaping (Application) -> (ViewRenderer)) {
             self.storage.makeRenderer.withLockedValue { $0 = .init(factory: makeRenderer) }
         }
 

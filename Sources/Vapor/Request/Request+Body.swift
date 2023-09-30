@@ -1,7 +1,7 @@
 import NIOCore
 
 extension Request {
-    public struct Body: CustomStringConvertible {
+    public struct Body: CustomStringConvertible, Sendable {
         let request: Request
         
         init(_ request: Request) {
@@ -23,7 +23,7 @@ extension Request {
             }
         }
         
-        public func drain(_ handler: @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
+        @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
             switch self.request.bodyStorage {
             case .stream(let stream):
                 stream.read { (result, promise) in

@@ -6,27 +6,35 @@ extension Request {
         let eventLoop: EventLoop
 
         var isBeingRead: Bool {
-            self.handler != nil
+            self.handlerBuffer.value.handler != nil
+        }
+        
+        /// **WARNING** This should only be used when we know we're on an event loop
+        ///
+        struct HandlerBufferContainer: @unchecked Sendable {
+            var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
+            var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         }
 
-        private(set) var isClosed: Bool
-        private var handler: ((BodyStreamResult, EventLoopPromise<Void>?) -> ())?
-        private var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
+        private let isClosed: NIOLoopBoundBox<Bool>
+        private let handlerBuffer: NIOLoopBoundBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
-            self.isClosed = false
-            self.buffer = []
+            self.isClosed = .init(false, eventLoop: eventLoop)
+            self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
             self.allocator = byteBufferAllocator
         }
-
+        
+        /// `read(_:)` **must** be called when on an `EventLoop`
         func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
-            self.handler = handler
-            for (result, promise) in self.buffer {
+            self.eventLoop.preconditionInEventLoop()
+            self.handlerBuffer.value.handler = handler
+            for (result, promise) in self.handlerBuffer.value.buffer {
                 handler(result, promise)
             }
-            self.buffer = []
+            self.handlerBuffer.value.buffer = []
         }
 
         func write(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
@@ -43,20 +51,20 @@ extension Request {
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
-                self.isClosed = true
+                self.isClosed.value = true
             case .buffer: break
             }
             
-            if let handler = self.handler {
+            if let handler = self.handlerBuffer.value.handler {
                 handler(chunk, promise)
                 // remove reference to handler
                 switch chunk {
                 case .end, .error:
-                    self.handler = nil
+                    self.handlerBuffer.value.handler = nil
                 default: break
                 }
             } else {
-                self.buffer.append((chunk, promise))
+                self.handlerBuffer.value.buffer.append((chunk, promise))
             }
         }
 
@@ -84,7 +92,7 @@ extension Request {
         }
 
         deinit {
-            assert(self.isClosed, "Request.BodyStream deinitialized before closing.")
+            assert(self.isClosed.value, "Request.BodyStream deinitialized before closing.")
         }
     }
 }
