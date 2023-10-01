@@ -373,6 +373,31 @@ final class FileTests: XCTestCase {
         }
     }
     
+    func testRedirectWithQueryParams() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        app.middleware.use(
+            FileMiddleware(
+                publicDirectory: "/" + path,
+                defaultFile: "index.html",
+                directoryAction: .redirect
+            )
+        )
+
+        try app.test(.GET, "Utilities?vaporTest=test") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+            XCTAssertEqual(res.headers.first(name: .location), "/Utilities/?vaporTest=test")
+        }.test(.GET, "Utilities/SubUtilities?vaporTest=test") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+            XCTAssertEqual( res.headers.first(name: .location), "/Utilities/SubUtilities/?vaporTest=test")
+        }.test(.GET, "Utilities/SubUtilities?vaporTest=test#vapor") { res in
+            XCTAssertEqual(res.status, .movedPermanently)
+            XCTAssertEqual( res.headers.first(name: .location), "/Utilities/SubUtilities/?vaporTest=test#vapor")
+        }
+    }
+    
     func testNoRedirect() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
