@@ -133,6 +133,10 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
         default:
             break
         }
+
+        if error is HTTPParserError {
+            self.logger.debug("Invalid HTTP request, will close connection: \(String(reflecting: error))")
+        }
         context.fireErrorCaught(error)
     }
 
@@ -218,7 +222,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 context.fireUserInboundEventTriggered(event)
             }
         default:
-            self.logger.trace("Unhandled user event: \(event)")
+            context.fireUserInboundEventTriggered(event)
         }
     }
 }

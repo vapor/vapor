@@ -71,7 +71,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             self.logger.trace("HTTP handler will no longer respect keep-alive")
             self.isShuttingDown = true
         default:
-            self.logger.trace("Unhandled user event: \(event)")
+            context.fireUserInboundEventTriggered(event)
         }
     }
 }

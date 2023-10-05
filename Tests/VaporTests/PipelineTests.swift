@@ -138,7 +138,6 @@ final class PipelineTests: XCTestCase {
             }
         }
         XCTAssertEqual(channel.isActive, false)
-        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 400 Bad Request")
         try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
     }
 
