@@ -6,16 +6,13 @@ import NIOCore
 
 final class PipelineTests: XCTestCase {
     var app: Application!
-    var eventLoopGroup: EventLoopGroup!
     
     override func setUp() async throws {
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 8)
-        app = Application(.testing, .shared(eventLoopGroup))
+        app = Application(.testing)
     }
     
     override func tearDown() async throws {
         app.shutdown()
-        try await eventLoopGroup.shutdownGracefully()
     }
     
     
