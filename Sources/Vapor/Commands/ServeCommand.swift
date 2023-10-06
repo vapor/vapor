@@ -1,4 +1,5 @@
 import Foundation
+@preconcurrency import Dispatch
 @preconcurrency import ConsoleKit
 import NIOConcurrencyHelpers
 
