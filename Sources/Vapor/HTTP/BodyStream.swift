@@ -49,9 +49,9 @@ extension BodyStreamWriter {
         // We need to ensure we're on the event loop here for write as there's
         // no guarantee that users will be on the event loop
         if self.eventLoop.inEventLoop {
-            write0(result)
+            return write0(result)
         } else {
-            self.eventLoop.flatSubmit {
+            return self.eventLoop.flatSubmit {
                 self.write0(result)
             }
         }
