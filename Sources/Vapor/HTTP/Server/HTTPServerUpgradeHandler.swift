@@ -128,6 +128,7 @@ private final class UpgradeBufferHandler: ChannelInboundHandler, RemovableChanne
 }
 
 /// Conformance for any struct that performs an HTTP Upgrade
+@preconcurrency
 public protocol Upgrader: Sendable {
     func applyUpgrade(req: Request, res: Response) -> HTTPServerProtocolUpgrader
 }
