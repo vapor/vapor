@@ -47,7 +47,10 @@ public protocol BodyStreamWriter: Sendable {
 extension BodyStreamWriter {
     public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
         let promise = self.eventLoop.makePromise(of: Void.self)
-        self.write(result, promise: promise)
-        return promise.futureResult
+        return self.eventLoop.submit {
+            self.write(result, promise: promise)
+        }.flatMap {
+            promise.futureResult
+        }
     }
 }
