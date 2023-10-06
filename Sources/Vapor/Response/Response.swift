@@ -56,7 +56,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
         set {
             _body.withLockedValue { $0 = newValue }
-            self.headers.updateContentLength(self.body.count)
+            self.headers.updateContentLength(newValue.count)
         }
     }
 
