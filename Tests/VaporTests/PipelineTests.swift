@@ -203,6 +203,48 @@ final class PipelineTests: XCTestCase {
         let res = try await app.client.get("http://localhost:\(port)/dont-crash")
         XCTAssertEqual(res.status, .ok)
     }
+    
+    func testStreamingOffEventLoop() async throws {
+        let eventLoop = app.eventLoopGroup.next()
+        app.on(.POST, "stream", body: .stream) { request -> Response in
+            Response(body: .init(stream: { writer in
+                request.body.drain { body in
+                    switch body {
+                    case .buffer(let buffer):
+                        return writer.write(.buffer(buffer)).hop(to: eventLoop)
+                    case .error(let error):
+                        return writer.write(.error(error)).hop(to: eventLoop)
+                    case .end:
+                        return writer.write(.end).hop(to: eventLoop)
+                    }
+                }
+            }))
+        }
+        
+        app.environment.arguments = ["serve"]
+        app.http.server.configuration.port = 0
+        try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        struct ABody: Content {
+            let hello: String
+            
+            init() {
+                self.hello = "hello"
+            }
+        }
+
+        let res = try await app.client.post("http://localhost:\(port)/stream", beforeSend: {
+            try $0.content.encode(ABody())
+        })
+        XCTAssertEqual(res.status, .ok)
+    }
 
     override class func setUp() {
         XCTAssert(isLoggingConfigured)
