@@ -1,26 +1,48 @@
 import NIOCore
 import NIOHTTP1
 import NIOFoundationCompat
+import NIOConcurrencyHelpers
 
 /// An HTTP response from a server back to the client.
 ///
 ///     let res = Response(status: .ok)
 ///
 /// See `HTTPClient` and `HTTPServer`.
-public final class Response: CustomStringConvertible {
+public final class Response: CustomStringConvertible, Sendable {
     /// Maximum streaming body size to use for `debugPrint(_:)`.
     private let maxDebugStreamingBodySize: Int = 1_000_000
 
     /// The HTTP version that corresponds to this response.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            self._version.withLockedValue { $0 }
+        } 
+        set {
+            self._version.withLockedValue { $0 = newValue }
+        }
+    }
     
     /// The HTTP response status.
-    public var status: HTTPResponseStatus
+    public var status: HTTPResponseStatus {
+        get {
+            self._status.withLockedValue { $0 }
+        }
+        set {
+            self._status.withLockedValue { $0 = newValue }
+        }
+    }
     
     /// The header fields for this HTTP response.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders {
+        get {
+            self._headers.withLockedValue { $0 }
+        }
+        set {
+            self._headers.withLockedValue { $0 = newValue }
+        }
+    }
     
     /// The `Body`. Updating this property will also update the associated transport headers.
     ///
@@ -29,17 +51,37 @@ public final class Response: CustomStringConvertible {
     /// Also be sure to set this message's `contentType` property to a `MediaType` that correctly
     /// represents the `Body`.
     public var body: Body {
-        didSet { self.headers.updateContentLength(self.body.count) }
+        get {
+            _body.withLockedValue { $0 }
+        }
+        set {
+            _body.withLockedValue { $0 = newValue }
+            self.headers.updateContentLength(self.body.count)
+        }
     }
 
     // If `true`, don't serialize the body.
-    var forHeadRequest: Bool
+    let forHeadRequest: NIOLockedValueBox<Bool>
     
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
-    public var upgrader: Upgrader?
+    public var upgrader: Upgrader? {
+        get {
+            self._upgrader.withLockedValue { $0 }
+        }
+        set {
+            self._upgrader.withLockedValue { $0 = newValue }
+        }
+    }
 
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            self._storage.withLockedValue { $0 }
+        }
+        set {
+            self._storage.withLockedValue { $0 = newValue }
+        }
+    }
     
     /// Get and set `HTTPCookies` for this `Response`.
     /// This accesses the `"Set-Cookie"` header.
@@ -110,6 +152,13 @@ public final class Response: CustomStringConvertible {
         }
     }
     
+    private let _version: NIOLockedValueBox<HTTPVersion>
+    private let _status: NIOLockedValueBox<HTTPResponseStatus>
+    private let _headers: NIOLockedValueBox<HTTPHeaders>
+    private let _body: NIOLockedValueBox<Body>
+    private let _upgrader: NIOLockedValueBox<Upgrader?>
+    private let _storage: NIOLockedValueBox<Storage>
+    
     // MARK: Init
     
     /// Creates a new `Response`.
@@ -147,12 +196,13 @@ public final class Response: CustomStringConvertible {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self.status = status
-        self.version = version
-        self.headers = headers
-        self.body = body
-        self.storage = .init()
-        self.forHeadRequest = false
+        self._status = .init(status)
+        self._version = .init(version)
+        self._headers = .init(headers)
+        self._body = .init(body)
+        self._storage = .init(.init())
+        self.forHeadRequest = .init(false)
+        self._upgrader = .init(nil)
     }
 }
 

@@ -36,7 +36,7 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
         ))), promise: nil)
 
         
-        if response.status == .noContent || response.forHeadRequest {
+        if response.status == .noContent || response.forHeadRequest.withLockedValue({ $0 }) {
             // don't send bodies for 204 (no content) responses
             // or HEAD requests
             context.fireUserInboundEventTriggered(ResponseEndSentEvent())
