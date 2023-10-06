@@ -46,12 +46,20 @@ public protocol BodyStreamWriter: Sendable {
 
 extension BodyStreamWriter {
     public func write(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
-        let promise = self.eventLoop.makePromise(of: Void.self)
-        // We need to ensure we're on the event loop here and submit
-        // doesn't work because it's not immediate
-        return self.eventLoop.future().hop(to: self.eventLoop).flatMap {
-            self.write(result, promise: promise)
-            return promise.futureResult
+        // We need to ensure we're on the event loop here for write as there's
+        // no guarantee that users will be on the event loop
+        if self.eventLoop.inEventLoop {
+            write0(result)
+        } else {
+            self.eventLoop.flatSubmit {
+                self.write0(result)
+            }
         }
+    }
+    
+    private func write0(_ result: BodyStreamResult) -> EventLoopFuture<Void> {
+        let promise = self.eventLoop.makePromise(of: Void.self)
+        self.write(result, promise: promise)
+        return promise.futureResult
     }
 }
