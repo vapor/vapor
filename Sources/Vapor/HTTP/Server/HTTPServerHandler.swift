@@ -18,7 +18,8 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     func channelRead(context: ChannelHandlerContext, data: NIOAny) {
         let box = NIOLoopBound((context, self), eventLoop: context.eventLoop)
         let request = self.unwrapInboundIn(data)
-        self.responder.respond(to: request).whenComplete { response in
+        // hop(to:) is required here to ensure we're on the correct event loop
+        self.responder.respond(to: request).hop(to: context.eventLoop).whenComplete { response in
             let (context, handler) = box.value
             handler.serialize(response, for: request, context: context)
         }
@@ -71,7 +72,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             self.logger.trace("HTTP handler will no longer respect keep-alive")
             self.isShuttingDown = true
         default:
-            self.logger.trace("Unhandled user event: \(event)")
+            context.fireUserInboundEventTriggered(event)
         }
     }
 }
