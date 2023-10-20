@@ -176,8 +176,10 @@ public struct FileIO: Sendable {
         let offset: Int64
         let byteCount: Int
         if let contentRange = contentRange {
-            response.status = .partialContent
-            response.headers.add(name: .accept, value: contentRange.unit.serialize())
+            response.responseBox.withLockedValue { box in
+                box.status = .partialContent
+                box.headers.add(name: .accept, value: contentRange.unit.serialize())
+            }
             if let firstRange = contentRange.ranges.first {
                 do {
                     let range = try firstRange.asResponseContentRange(limit: fileSize)

@@ -14,8 +14,10 @@ extension Request {
     @available(*, deprecated, renamed: "redirect(to:redirectType:)")
     public func redirect(to location: String, type: RedirectType) -> Response {
         let response = Response()
-        response.status = type.status
-        response.headers.replaceOrAdd(name: .location, value: location)
+        response.responseBox.withLockedValue { box in
+            box.status = type.status
+            box.headers.replaceOrAdd(name: .location, value: location)
+        }
         return response
     }
     
@@ -33,8 +35,10 @@ extension Request {
     /// - Returns: A response that redirects the client to the specified location
     public func redirect(to location: String, redirectType: Redirect = .normal) -> Response {
         let response = Response()
-        response.status = redirectType.status
-        response.headers.replaceOrAdd(name: .location, value: location)
+        response.responseBox.withLockedValue { box in
+            box.status = redirectType.status
+            box.headers.replaceOrAdd(name: .location, value: location)
+        }
         return response
     }
 }
