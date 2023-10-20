@@ -31,7 +31,7 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
             self.errorCaught(context: context, error: error)
         case .success(let response):
             if request.method == .HEAD {
-                response.forHeadRequest.withLockedValue { $0 = true }
+                response.responseBox.withLockedValue { $0.forHeadRequest = true }
             }
             self.serialize(response, for: request, context: context)
         }

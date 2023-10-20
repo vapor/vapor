@@ -20,23 +20,25 @@ final class HTTPServerResponseEncoder: ChannelOutboundHandler, RemovableChannelH
     
     func write(context: ChannelHandlerContext, data: NIOAny, promise: EventLoopPromise<Void>?) {
         let response = self.unwrapOutboundIn(data)
-        // add a RFC1123 timestamp to the Date header to make this
-        // a valid request
-        response.headers.add(name: "date", value: self.dateCache.currentTimestamp())
-        
-        if let server = self.serverHeader {
-            response.headers.add(name: "server", value: server)
+        var headOrNoContentRequest = false
+        response.responseBox.withLockedValue { box in
+            // add a RFC1123 timestamp to the Date header to make this
+            // a valid request
+            box.headers.add(name: "date", value: self.dateCache.currentTimestamp())
+            if let server = self.serverHeader {
+                box.headers.add(name: "server", value: server)
+            }
+            
+            // begin serializing
+            let responseHead = HTTPResponseHead(version: box.version, status: box.status, headers: box.headers)
+            context.write(wrapOutboundOut(.head(responseHead)), promise: nil)
+            
+            if box.status == .noContent || box.forHeadRequest {
+                headOrNoContentRequest = true
+            }
         }
         
-        // begin serializing
-        context.write(wrapOutboundOut(.head(.init(
-            version: response.version,
-            status: response.status,
-            headers: response.headers
-        ))), promise: nil)
-
-        
-        if response.status == .noContent || response.forHeadRequest.withLockedValue({ $0 }) {
+        if headOrNoContentRequest {
             // don't send bodies for 204 (no content) responses
             // or HEAD requests
             context.fireUserInboundEventTriggered(ResponseEndSentEvent())

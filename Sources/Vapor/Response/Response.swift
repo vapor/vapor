@@ -153,7 +153,7 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
     
-    private struct ResponseBox: Sendable {
+    struct ResponseBox: Sendable {
         var version: HTTPVersion
         var status: HTTPResponseStatus
         var headers: HTTPHeaders
@@ -164,7 +164,7 @@ public final class Response: CustomStringConvertible, Sendable {
 
     }
     
-    private let responseBox: NIOLockedValueBox<ResponseBox>
+    let responseBox: NIOLockedValueBox<ResponseBox>
     private let _storage: NIOLockedValueBox<Storage>
     
     // MARK: Init
