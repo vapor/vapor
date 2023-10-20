@@ -15,20 +15,20 @@ public final class Response: CustomStringConvertible, Sendable {
     /// The HTTP version that corresponds to this response.
     public var version: HTTPVersion {
         get {
-            self._version.withLockedValue { $0 }
-        } 
+            self.responseBox.withLockedValue { $0.version }
+        }
         set {
-            self._version.withLockedValue { $0 = newValue }
+            self.responseBox.withLockedValue { $0.version = newValue }
         }
     }
     
     /// The HTTP response status.
     public var status: HTTPResponseStatus {
         get {
-            self._status.withLockedValue { $0 }
+            self.responseBox.withLockedValue { $0.status }
         }
         set {
-            self._status.withLockedValue { $0 = newValue }
+            self.responseBox.withLockedValue { $0.status = newValue }
         }
     }
     
@@ -37,10 +37,10 @@ public final class Response: CustomStringConvertible, Sendable {
     /// when the `body` property is mutated.
     public var headers: HTTPHeaders {
         get {
-            self._headers.withLockedValue { $0 }
+            self.responseBox.withLockedValue { $0.headers }
         }
         set {
-            self._headers.withLockedValue { $0 = newValue }
+            self.responseBox.withLockedValue { $0.headers = newValue }
         }
     }
     
@@ -52,25 +52,24 @@ public final class Response: CustomStringConvertible, Sendable {
     /// represents the `Body`.
     public var body: Body {
         get {
-            _body.withLockedValue { $0 }
+            responseBox.withLockedValue { $0.body }
         }
         set {
-            _body.withLockedValue { $0 = newValue }
-            self.headers.updateContentLength(newValue.count)
+            responseBox.withLockedValue { box in
+                box.body = newValue
+                box.headers.updateContentLength(newValue.count)
+            }
         }
     }
 
-    // If `true`, don't serialize the body.
-    let forHeadRequest: NIOLockedValueBox<Bool>
-    
     /// Optional Upgrade behavior to apply to this response.
     /// currently, websocket upgrades are the only defined case.
     public var upgrader: Upgrader? {
         get {
-            self._upgrader.withLockedValue { $0 }
+            self.responseBox.withLockedValue { $0.upgrader }
         }
         set {
-            self._upgrader.withLockedValue { $0 = newValue }
+            self.responseBox.withLockedValue { $0.upgrader = newValue }
         }
     }
 
@@ -97,9 +96,11 @@ public final class Response: CustomStringConvertible, Sendable {
     /// See `CustomStringConvertible`
     public var description: String {
         var desc: [String] = []
-        desc.append("HTTP/\(self.version.major).\(self.version.minor) \(self.status.code) \(self.status.reasonPhrase)")
-        desc.append(self.headers.debugDescription)
-        desc.append(self.body.description)
+        self.responseBox.withLockedValue { box in
+            desc.append("HTTP/\(box.version.major).\(box.version.minor) \(box.status.code) \(box.status.reasonPhrase)")
+            desc.append(box.headers.debugDescription)
+            desc.append(box.body.description)
+        }
         return desc.joined(separator: "\n")
     }
 
@@ -152,11 +153,18 @@ public final class Response: CustomStringConvertible, Sendable {
         }
     }
     
-    private let _version: NIOLockedValueBox<HTTPVersion>
-    private let _status: NIOLockedValueBox<HTTPResponseStatus>
-    private let _headers: NIOLockedValueBox<HTTPHeaders>
-    private let _body: NIOLockedValueBox<Body>
-    private let _upgrader: NIOLockedValueBox<Upgrader?>
+    private struct ResponseBox: Sendable {
+        var version: HTTPVersion
+        var status: HTTPResponseStatus
+        var headers: HTTPHeaders
+        var body: Body
+        var upgrader: Upgrader?
+        // If `true`, don't serialize the body.
+        var forHeadRequest: Bool
+
+    }
+    
+    private let responseBox: NIOLockedValueBox<ResponseBox>
     private let _storage: NIOLockedValueBox<Storage>
     
     // MARK: Init
@@ -196,13 +204,8 @@ public final class Response: CustomStringConvertible, Sendable {
         headersNoUpdate headers: HTTPHeaders,
         body: Body
     ) {
-        self._status = .init(status)
-        self._version = .init(version)
-        self._headers = .init(headers)
-        self._body = .init(body)
         self._storage = .init(.init())
-        self.forHeadRequest = .init(false)
-        self._upgrader = .init(nil)
+        self.responseBox = .init(.init(version: version, status: status, headers: headers, body: body, forHeadRequest: false))
     }
 }
 
