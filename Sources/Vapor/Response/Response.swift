@@ -86,10 +86,14 @@ public final class Response: CustomStringConvertible, Sendable {
     /// This accesses the `"Set-Cookie"` header.
     public var cookies: HTTPCookies {
         get {
-            return self.headers.setCookie ?? .init()
+            return self.responseBox.withLockedValue { box in
+                box.headers.setCookie ?? .init()
+            }
         }
         set {
-            self.headers.setCookie = newValue
+            self.responseBox.withLockedValue { box in
+                box.headers.setCookie = newValue
+            }
         }
     }
     
@@ -114,33 +118,41 @@ public final class Response: CustomStringConvertible, Sendable {
         }
 
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(encodable, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            try self.response.responseBox.withLockedValue { box in
+                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
+                try encoder.encode(encodable, to: &body, headers: &box.headers)
+                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
+            }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
-            guard let body = self.response.body.buffer else {
-                throw Abort(.unprocessableEntity)
+            try self.response.responseBox.withLockedValue { box in
+                guard let body = box.body.buffer else {
+                    throw Abort(.unprocessableEntity)
+                }
+                return try decoder.decode(D.self, from: body, headers: box.headers)
             }
-            return try decoder.decode(D.self, from: body, headers: self.response.headers)
         }
 
         func encode<C>(_ content: C, using encoder: ContentEncoder) throws where C : Content {
             var content = content
             try content.beforeEncode()
-            var body = self.response.body.byteBufferAllocator.buffer(capacity: 0)
-            try encoder.encode(content, to: &body, headers: &self.response.headers)
-            self.response.body = .init(buffer: body, byteBufferAllocator: self.response.body.byteBufferAllocator)
+            try self.response.responseBox.withLockedValue { box in
+                var body = box.body.byteBufferAllocator.buffer(capacity: 0)
+                try encoder.encode(content, to: &body, headers: &box.headers)
+                box.body = .init(buffer: body, byteBufferAllocator: box.body.byteBufferAllocator)
+            }
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            guard let body = self.response.body.buffer else {
-                throw Abort(.unprocessableEntity)
+            try self.response.responseBox.withLockedValue { box in
+                guard let body = box.body.buffer else {
+                    throw Abort(.unprocessableEntity)
+                }
+                var decoded = try decoder.decode(C.self, from: body, headers: box.headers)
+                try decoded.afterDecode()
+                return decoded
             }
-            var decoded = try decoder.decode(C.self, from: body, headers: self.response.headers)
-            try decoded.afterDecode()
-            return decoded
         }
     }
 
