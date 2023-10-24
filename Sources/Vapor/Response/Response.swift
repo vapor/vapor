@@ -57,7 +57,6 @@ public final class Response: CustomStringConvertible, Sendable {
         set {
             responseBox.withLockedValue { box in
                 box.body = newValue
-                box.headers.updateContentLength(newValue.count)
             }
         }
     }
@@ -169,7 +168,11 @@ public final class Response: CustomStringConvertible, Sendable {
         var version: HTTPVersion
         var status: HTTPResponseStatus
         var headers: HTTPHeaders
-        var body: Body
+        var body: Body {
+            didSet {
+                self.headers.updateContentLength(body.count)
+            }
+        }
         var upgrader: Upgrader?
         // If `true`, don't serialize the body.
         var forHeadRequest: Bool
