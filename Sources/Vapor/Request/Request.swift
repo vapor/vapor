@@ -39,7 +39,7 @@ public final class Request: CustomStringConvertible {
     ///
     public var route: Route?
 
-    /// We try to determine true peer address if load balacer or reversed proxy provided info in headers
+    /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
     ///
     /// Priority of getting value from headers is as following:
     ///
