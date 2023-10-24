@@ -57,7 +57,10 @@ final class HTTPServerUpgradeHandler: ChannelDuplexHandler, RemovableChannelHand
         switch self.upgradeState {
         case .pending(let req, let buffer):
             self.upgradeState = .upgraded
-            if res.status == .switchingProtocols, let upgrader = res.upgrader {
+            let (status, upgrader) = res.responseBox.withLockedValue { box in
+                return (box.status, box.upgrader)
+            }
+            if status == .switchingProtocols, let upgrader = upgrader {
                 let protocolUpgrader = upgrader.applyUpgrade(req: req, res: res)
                 let sendableBox = SendableBox(
                     context: context,
