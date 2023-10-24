@@ -26,7 +26,7 @@ extension Application {
     ///
     /// - Warning: Can only be set during application setup/initialization.
     public var threadPool: NIOThreadPool {
-        get { self.core.storage.threadPool.withLockedValue { $0 } }
+        get { self.core.storage.threadPool.withLockedValue { $0.threadPool } }
         set {
             guard !self.isBooted.withLockedValue({ $0 }) else {
                 self.logger.critical("Cannot replace thread pool after application has booted")
@@ -34,9 +34,8 @@ extension Application {
             }
             
             self.core.storage.threadPool.withLockedValue({
-                try! $0.syncShutdownGracefully()
-                $0 = newValue
-                $0.start()
+                try! $0.threadPool.syncShutdownGracefully()
+                $0.threadPool = newValue
             })
         }
     }
@@ -67,7 +66,7 @@ extension Application {
         final class Storage: Sendable {
             let console: NIOLockedValueBox<Console>
             let commands: NIOLockedValueBox<Commands>
-            let threadPool: NIOLockedValueBox<NIOThreadPool>
+            let threadPool: NIOLockedValueBox<LazyStartThreadPool>
             let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
             let directory: NIOLockedValueBox<DirectoryConfiguration>
@@ -77,12 +76,35 @@ extension Application {
                 var commands = Commands()
                 commands.use(BootCommand(), as: "boot")
                 self.commands = .init(commands)
-                let threadPool = NIOThreadPool(numberOfThreads: 64)
-                threadPool.start()
-                self.threadPool = .init(threadPool)
+                self.threadPool = .init(LazyStartThreadPool(threadPool: NIOThreadPool(numberOfThreads: 64)))
                 self.allocator = .init()
                 self.running = .init()
                 self.directory = .init(.detect())
+            }
+
+            struct LazyStartThreadPool {
+                init(threadPool: NIOThreadPool) {
+                    self._threadPool = threadPool
+                }
+
+                var threadPool: NIOThreadPool {
+                    mutating get {
+                        if !self.hasStarted {
+                            self._threadPool.start()
+                            self.hasStarted = true
+                        }
+                        return self._threadPool
+                    }
+                    set {
+                        // It's okay to assume we haven't called `start()`:
+                        // `start()` bails if the pool is already running.
+                        self.hasStarted = false
+                        self._threadPool = newValue
+                    }
+                }
+
+                private var hasStarted = false
+                private var _threadPool: NIOThreadPool
             }
         }
 

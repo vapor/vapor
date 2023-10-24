@@ -147,7 +147,6 @@ public final class Application: Sendable {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
     
     /// Starts the Application using the `start()` method, then waits for any running tasks to complete
@@ -183,6 +182,7 @@ public final class Application: Sendable {
                 return
             }
             booted = true
+            DotEnvFile.load(for: self.environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
             try self.lifecycle.handlers.forEach { try $0.willBoot(self) }
             try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
