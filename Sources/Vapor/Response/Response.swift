@@ -144,14 +144,14 @@ public final class Response: CustomStringConvertible, Sendable {
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
-            try self.response.responseBox.withLockedValue { box in
+            var decoded = try self.response.responseBox.withLockedValue { box in
                 guard let body = box.body.buffer else {
                     throw Abort(.unprocessableEntity)
                 }
-                var decoded = try decoder.decode(C.self, from: body, headers: box.headers)
-                try decoded.afterDecode()
-                return decoded
+                return try decoder.decode(C.self, from: body, headers: box.headers)
             }
+            try decoded.afterDecode()
+            return decoded
         }
     }
 
