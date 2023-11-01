@@ -53,8 +53,8 @@ internal struct DefaultResponder: Responder {
                     method: .HEAD,
                     path: sendableBox.path,
                     responder: middleware.makeResponder(chainingTo: HeadResponder()),
-                    requestType: cached.route.requestType,
-                    responseType: cached.route.responseType)
+                    requestType: sendableBox.requestType,
+                    responseType: sendableBox.responseType)
 
                 let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
 

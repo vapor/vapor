@@ -30,16 +30,41 @@ public final class Route: CustomStringConvertible, Sendable {
         }
     }
     
-    public var requestType: Any.Type
-    public var responseType: Any.Type
+    public var requestType: Any.Type {
+        get {
+            self.sendableBox.withLockedValue { $0.requestType }
+        }
+        set {
+            self.sendableBox.withLockedValue { $0.requestType = newValue }
+        }
+    }
+    
+    public var responseType: Any.Type {
+        get {
+            self.sendableBox.withLockedValue { $0.responseType }
+        }
+        set {
+            self.sendableBox.withLockedValue { $0.responseType = newValue }
+        }
+    }
     
     struct SendableBox: Sendable {
         var method: HTTPMethod
         var path: [PathComponent]
         var responder: Responder
+        var requestType: Any.Type
+        var responseType: Any.Type
+        var userInfo: [AnyHashable: Sendable]
     }
     
-    public var userInfo: [AnyHashable: Any]
+    public var userInfo: [AnyHashable: Sendable] {
+        get {
+            self.sendableBox.withLockedValue { $0.userInfo }
+        }
+        set {
+            self.sendableBox.withLockedValue { $0.userInfo = newValue }
+        }
+    }
 
     public var description: String {
         let box = self.sendableBox.withLockedValue { $0 }
@@ -56,10 +81,13 @@ public final class Route: CustomStringConvertible, Sendable {
         requestType: Any.Type,
         responseType: Any.Type
     ) {
-        self.requestType = requestType
-        self.responseType = responseType
-        self.userInfo = [:]
-        let box = SendableBox(method: method, path: path, responder: responder)
+        let box = SendableBox(
+            method: method,
+            path: path,
+            responder: responder,
+            requestType: requestType,
+            responseType: responseType,
+            userInfo: [:])
         self.sendableBox = .init(box)
     }
        
