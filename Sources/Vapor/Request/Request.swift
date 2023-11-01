@@ -54,8 +54,6 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
     
-    internal var isKeepAlive: Bool
-    
     /// A uniquely generated ID for each request
     public let id: String
     
@@ -233,6 +231,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var url: URI
         var version: HTTPVersion
         var headers: HTTPHeaders
+        var isKeepAlive: Bool
     }
     
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -283,7 +282,8 @@ public final class Request: CustomStringConvertible, Sendable {
             method: method,
             url: url,
             version: version,
-            headers: headers
+            headers: headers,
+            isKeepAlive: true
         )
         self.requestBox = .init(storageBox)
         self.id = UUID().uuidString
@@ -297,7 +297,6 @@ public final class Request: CustomStringConvertible, Sendable {
         self.eventLoop = eventLoop
         self.parameters = .init()
         self._storage = .init(.init())
-        self.isKeepAlive = true
         self.logger = logger
         if let requestId = headers[.xRequestId].first {
             self.logger[metadataKey: "request-id"] = .string(requestId)

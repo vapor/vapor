@@ -51,9 +51,9 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                 )
                 switch head.version.major {
                 case 2:
-                    request.isKeepAlive = true
+                    request.requestBox.withLockedValue { $0.isKeepAlive = true }
                 default:
-                    request.isKeepAlive = head.isKeepAlive
+                    request.requestBox.withLockedValue { $0.isKeepAlive = head.isKeepAlive }
                 }
                 self.requestState = .awaitingBody(request)
             default: assertionFailure("Unexpected state: \(self.requestState)")
