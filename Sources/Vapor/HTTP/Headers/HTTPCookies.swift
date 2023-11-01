@@ -96,7 +96,7 @@ struct HTTPSetCookie {
 }
 
 /// A collection of `HTTPCookie`s.
-public struct HTTPCookies: ExpressibleByDictionaryLiteral {
+public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     /// A cookie which can only be sent in requests originating from the same origin as the target domain.
     ///
     /// This restriction mitigates attacks such as cross-site request forgery (XSRF).

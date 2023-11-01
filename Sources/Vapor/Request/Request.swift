@@ -2,7 +2,7 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 import Logging
-import RoutingKit
+@preconcurrency import RoutingKit
 
 /// Represents an HTTP request in an application.
 public final class Request: CustomStringConvertible {
@@ -61,7 +61,7 @@ public final class Request: CustomStringConvertible {
 
     // MARK: Content
 
-    private struct _URLQueryContainer: URLQueryContainer {
+    private struct _URLQueryContainer: URLQueryContainer, Sendable {
         let request: Request
 
         func decode<D>(_ decodable: D.Type, using decoder: URLQueryDecoder) throws -> D
@@ -86,7 +86,7 @@ public final class Request: CustomStringConvertible {
         }
     }
 
-    private struct _ContentContainer: ContentContainer {
+    private struct _ContentContainer: ContentContainer, Sendable {
         let request: Request
 
         var contentType: HTTPMediaType? {
@@ -145,7 +145,7 @@ public final class Request: CustomStringConvertible {
         return Body(self)
     }
     
-    internal enum BodyStorage {
+    internal enum BodyStorage: Sendable {
         case none
         case collected(ByteBuffer)
         case stream(BodyStream)
