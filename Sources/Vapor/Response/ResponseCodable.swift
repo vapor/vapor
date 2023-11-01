@@ -49,10 +49,12 @@ extension ResponseEncodable {
     /// - returns: Newly encoded `Response`.
     public func encodeResponse(status: HTTPStatus, headers: HTTPHeaders = [:], for request: Request) -> EventLoopFuture<Response> {
         return self.encodeResponse(for: request).map { response in
-            for (name, value) in headers {
-                response.headers.replaceOrAdd(name: name, value: value)
+            response.responseBox.withLockedValue { box in
+                for (name, value) in headers {
+                    box.headers.replaceOrAdd(name: name, value: value)
+                }
+                box.status = status
             }
-            response.status = status
             return response
         }
     }

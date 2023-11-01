@@ -13,8 +13,10 @@ public extension ViewRenderer {
 extension View: AsyncResponseEncodable {
     public func encodeResponse(for request: Request) async throws -> Response {
         let response = Response()
-        response.headers.contentType = .html
-        response.body = .init(buffer: self.data)
+        response.responseBox.withLockedValue { box in
+            box.headers.contentType = .html
+            box.body = .init(buffer: self.data)
+        }
         return response
     }
 }

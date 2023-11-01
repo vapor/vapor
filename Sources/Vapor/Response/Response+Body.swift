@@ -1,11 +1,12 @@
+@preconcurrency import Dispatch
 import Foundation
 import NIOCore
 import NIOConcurrencyHelpers
 
 extension Response {
-    struct BodyStream {
+    struct BodyStream: Sendable {
         let count: Int
-        let callback: (BodyStreamWriter) -> ()
+        let callback: @Sendable (BodyStreamWriter) -> ()
     }
 
     /// Represents a `Response`'s body.
@@ -13,9 +14,9 @@ extension Response {
     ///     let body = Response.Body(string: "Hello, world!")
     ///
     /// This can contain any data (streaming or static) and should match the message's `"Content-Type"` header.
-    public struct Body: CustomStringConvertible, ExpressibleByStringLiteral {
+    public struct Body: CustomStringConvertible, ExpressibleByStringLiteral, Sendable {
         /// The internal HTTP body storage enum. This is an implementation detail.
-        internal enum Storage {
+        internal enum Storage: Sendable {
             /// Cases
             case none
             case buffer(ByteBuffer)
@@ -151,12 +152,14 @@ extension Response {
             self.storage = .buffer(buffer)
         }
         
-        public init(stream: @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        @preconcurrency
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), count: Int, byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.byteBufferAllocator = byteBufferAllocator
             self.storage = .stream(.init(count: count, callback: stream))
         }
 
-        public init(stream: @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
+        @preconcurrency
+        public init(stream: @Sendable @escaping (BodyStreamWriter) -> (), byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator()) {
             self.init(stream: stream, count: -1, byteBufferAllocator: byteBufferAllocator)
         }
         
