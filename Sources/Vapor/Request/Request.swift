@@ -23,15 +23,36 @@ public final class Request: CustomStringConvertible, Sendable {
     }
     
     /// The URL used on this request.
-    public var url: URI
+    public var url: URI {
+        get {
+            self.requestBox.withLockedValue { $0.url }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.url = newValue }
+        }
+    }
     
     /// The version for this HTTP request.
-    public var version: HTTPVersion
+    public var version: HTTPVersion {
+        get {
+            self.requestBox.withLockedValue { $0.version }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.version = newValue }
+        }
+    }
     
     /// The header fields for this HTTP request.
     /// The `"Content-Length"` and `"Transfer-Encoding"` headers will be set automatically
     /// when the `body` property is mutated.
-    public var headers: HTTPHeaders
+    public var headers: HTTPHeaders {
+        get {
+            self.requestBox.withLockedValue { $0.headers }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.headers = newValue }
+        }
+    }
     
     internal var isKeepAlive: Bool
     
@@ -209,6 +230,9 @@ public final class Request: CustomStringConvertible, Sendable {
     
     struct RequestBox: Sendable {
         var method: HTTPMethod
+        var url: URI
+        var version: HTTPVersion
+        var headers: HTTPHeaders
     }
     
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -255,13 +279,15 @@ public final class Request: CustomStringConvertible, Sendable {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        let storageBox = RequestBox(method: method)
+        let storageBox = RequestBox(
+            method: method,
+            url: url,
+            version: version,
+            headers: headers
+        )
         self.requestBox = .init(storageBox)
         self.id = UUID().uuidString
         self.application = application
-        self.url = url
-        self.version = version
-        self.headers = headers
         if let body = collectedBody {
             self.bodyStorage = .collected(body)
         } else {
@@ -273,7 +299,7 @@ public final class Request: CustomStringConvertible, Sendable {
         self._storage = .init(.init())
         self.isKeepAlive = true
         self.logger = logger
-        if let requestId = self.headers[.xRequestId].first {
+        if let requestId = headers[.xRequestId].first {
             self.logger[metadataKey: "request-id"] = .string(requestId)
         } else {
             self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
