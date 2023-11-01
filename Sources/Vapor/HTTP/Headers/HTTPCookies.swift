@@ -1,6 +1,5 @@
 import Foundation
 import NIOHTTP1
-import NIOConcurrencyHelpers
 
 extension HTTPHeaders {
     /// Get and set `HTTPCookies` for an HTTP request
@@ -235,19 +234,19 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     }
     
     /// Internal storage.
-    private let cookies: NIOLockedValueBox<[String: Value]>
+    private var cookies: [String: Value]
     
     /// Creates an empty `HTTPCookies`
     public init() {
-        self.cookies = .init([:])
+        self.cookies = [:]
     }
     
     init(directives: [HTTPHeaders.Directive]) {
-        self.cookies = .init(directives.reduce(into: [:], { (cookies, directive) in
+        self.cookies = directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
                 cookies[.init(directive.value)] = .init(string: .init(value))
             }
-        }))
+        })
     }
     
     /// See `ExpressibleByDictionaryLiteral`.
@@ -256,43 +255,39 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         for (name, value) in elements {
             cookies[name] = value
         }
-        self.cookies = .init(cookies)
+        self.cookies = cookies
     }
     
     // MARK: Serialize
     
     /// Seriaizes the `Cookies` for a `Request`
     var cookieHeader: String? {
-        self.cookies.withLockedValue { cookies in
-            guard !cookies.isEmpty else {
-                return nil
-            }
-            
-            let cookie: String = cookies.map { (name, value) in
-                return "\(name)=\(value.string)"
-            }.joined(separator: "; ")
-            
-            return cookie
+        guard !cookies.isEmpty else {
+            return nil
         }
+        
+        let cookie: String = cookies.map { (name, value) in
+            return "\(name)=\(value.string)"
+        }.joined(separator: "; ")
+        
+        return cookie
     }
     
     var setCookieHeaders: [String] {
-        return self.cookies.withLockedValue { cookies in
-            cookies.map { $0.value.serialize(name: $0.key) }
-        }
+        return self.cookies.map { $0.value.serialize(name: $0.key) }
     }
     
     // MARK: Access
     
     /// All cookies.
     public var all: [String: Value] {
-        get { return cookies.withLockedValue { $0 } }
-        set { cookies.withLockedValue { $0 = newValue } }
+        get { return cookies }
+        set { cookies = newValue }
     }
     
     /// Access `HTTPCookies` by name
     public subscript(name: String) -> Value? {
-        get { return self.cookies.withLockedValue { $0[name] } }
-        set { cookies.withLockedValue { $0[name] = newValue } }
+        get { return self.cookies[name] }
+        set { cookies[name] = newValue }
     }
 }
