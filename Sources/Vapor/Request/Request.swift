@@ -64,7 +64,14 @@ public final class Request: CustomStringConvertible, Sendable {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
-    public var route: Route?
+    public var route: Route? {
+        get {
+            self.requestBox.withLockedValue { $0.route }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.route = newValue }
+        }
+    }
 
     /// We try to determine true peer address if load balancer or reversed proxy provided info in headers
     ///
@@ -123,7 +130,7 @@ public final class Request: CustomStringConvertible, Sendable {
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage = .collected(body)
+            self.request.requestBox.withLockedValue { $0.bodyStorage = .collected(body) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -139,7 +146,7 @@ public final class Request: CustomStringConvertible, Sendable {
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.bodyStorage = .collected(body)
+            self.request.requestBox.withLockedValue { $0.bodyStorage = .collected(body) }
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
@@ -166,7 +173,14 @@ public final class Request: CustomStringConvertible, Sendable {
     
     /// This Logger from Apple's `swift-log` Package is preferred when logging in the context of handing this Request.
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
-    public var logger: Logger
+    public var logger: Logger {
+        get {
+            self.requestBox.withLockedValue { $0.logger }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.logger = newValue }
+        }
+    }
     
     public var body: Body {
         return Body(self)
@@ -177,9 +191,7 @@ public final class Request: CustomStringConvertible, Sendable {
         case collected(ByteBuffer)
         case stream(BodyStream)
     }
-    
-    internal var bodyStorage: BodyStorage
-    
+        
     /// Get and set `HTTPCookies` for this `Request`
     /// This accesses the `"Cookie"` header.
     public var cookies: HTTPCookies {
@@ -232,6 +244,9 @@ public final class Request: CustomStringConvertible, Sendable {
         var version: HTTPVersion
         var headers: HTTPHeaders
         var isKeepAlive: Bool
+        var route: Route?
+        var logger: Logger
+        var bodyStorage: BodyStorage
     }
     
     let requestBox: NIOLockedValueBox<RequestBox>
@@ -278,31 +293,38 @@ public final class Request: CustomStringConvertible, Sendable {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
+        let bodyStorage: BodyStorage
+        if let body = collectedBody {
+            bodyStorage = .collected(body)
+        } else {
+            bodyStorage = .none
+        }
+        
+        var logger = logger
+        if let requestId = headers[.xRequestId].first {
+            logger[metadataKey: "request-id"] = .string(requestId)
+        } else {
+            logger[metadataKey: "request-id"] = .string(UUID().uuidString)
+        }
+        
         let storageBox = RequestBox(
             method: method,
             url: url,
             version: version,
             headers: headers,
-            isKeepAlive: true
+            isKeepAlive: true,
+            route: nil,
+            logger: logger,
+            bodyStorage: bodyStorage
         )
         self.requestBox = .init(storageBox)
         self.id = UUID().uuidString
         self.application = application
-        if let body = collectedBody {
-            self.bodyStorage = .collected(body)
-        } else {
-            self.bodyStorage = .none
-        }
+        
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
         self.parameters = .init()
         self._storage = .init(.init())
-        self.logger = logger
-        if let requestId = headers[.xRequestId].first {
-            self.logger[metadataKey: "request-id"] = .string(requestId)
-        } else {
-            self.logger[metadataKey: "request-id"] = .string(UUID().uuidString)
-        }
         self.byteBufferAllocator = byteBufferAllocator
     }
 }

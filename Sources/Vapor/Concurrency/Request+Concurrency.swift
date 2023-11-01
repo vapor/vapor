@@ -98,7 +98,7 @@ extension Request.Body: AsyncSequence {
     ///
     /// Example: app.on(.POST, "/upload", body: .stream) { ... }
     private func checkBodyStorage() {
-        switch request.bodyStorage {
+        switch request.requestBox.withLockedValue({ $0.bodyStorage }) {
         case .stream(_):
             break
         case .collected(_):

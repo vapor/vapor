@@ -9,7 +9,7 @@ extension Request {
         }
         
         public var data: ByteBuffer? {
-            switch self.request.bodyStorage {
+            switch self.request.requestBox.withLockedValue({ $0.bodyStorage }) {
             case .collected(let buffer): return buffer
             case .none, .stream: return nil
             }
@@ -24,7 +24,7 @@ extension Request {
         }
         
         @preconcurrency public func drain(_ handler: @Sendable @escaping (BodyStreamResult) -> EventLoopFuture<Void>) {
-            switch self.request.bodyStorage {
+            switch self.request.requestBox.withLockedValue({ $0.bodyStorage }) {
             case .stream(let stream):
                 stream.read { (result, promise) in
                     handler(result).cascade(to: promise)
@@ -40,10 +40,10 @@ extension Request {
         }
         
         public func collect(max: Int? = 1 << 14) -> EventLoopFuture<ByteBuffer?> {
-            switch self.request.bodyStorage {
+            switch self.request.requestBox.withLockedValue({ $0.bodyStorage }) {
             case .stream(let stream):
                 return stream.consume(max: max, on: self.request.eventLoop).map { buffer in
-                    self.request.bodyStorage = .collected(buffer)
+                    self.request.requestBox.withLockedValue({ $0.bodyStorage = .collected(buffer) })
                     return buffer
                 }
             case .collected(let buffer):

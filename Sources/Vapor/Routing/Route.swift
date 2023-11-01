@@ -1,7 +1,7 @@
 import NIOHTTP1
 import RoutingKit
 
-public final class Route: CustomStringConvertible {
+public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod
     public var path: [PathComponent]
     public var responder: Responder
