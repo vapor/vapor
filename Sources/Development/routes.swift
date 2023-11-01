@@ -247,19 +247,16 @@ public func routes(_ app: Application) throws {
         return String(buffer: body)
     }
 
-    func asyncRouteTester(_ req: Request) async throws -> String {
+    asyncRoutes.get("client2") { req -> String in
         let response = try await req.client.get("https://www.google.com")
         guard let body = response.body else {
             throw Abort(.internalServerError)
         }
         return String(buffer: body)
     }
-    asyncRoutes.get("client2", use: asyncRouteTester)
     
-    asyncRoutes.get("content", use: asyncContentTester)
-    
-    func asyncContentTester(_ req: Request) async throws -> Creds {
-        return Creds(email: "name", password: "password")
+    asyncRoutes.get("content") { req in
+        Creds(email: "name", password: "password")
     }
     
     asyncRoutes.get("content2") { req async throws -> Creds in
