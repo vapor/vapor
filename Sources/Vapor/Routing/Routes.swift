@@ -49,7 +49,9 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     }
 
     public func add(_ route: Route) {
-        self.all.append(route)
+        self.sendableBox.withLockedValue {
+            $0.all.append(route)
+        }
     }
 }
 
