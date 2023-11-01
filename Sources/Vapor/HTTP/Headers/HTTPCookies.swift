@@ -1,5 +1,6 @@
 import Foundation
 import NIOHTTP1
+import NIOConcurrencyHelpers
 
 extension HTTPHeaders {
     /// Get and set `HTTPCookies` for an HTTP request
@@ -18,7 +19,7 @@ extension HTTPHeaders {
             }
         }
     }
-
+    
     /// Get and set `HTTPCookies` for an HTTP response
     /// This accesses the `"Set-Cookie"` header.
     public var setCookie: HTTPCookies? {
@@ -49,14 +50,14 @@ extension HTTPHeaders {
 struct HTTPSetCookie {
     var name: String
     var value: HTTPCookies.Value
-
+    
     init?(directives: [HTTPHeaders.Directive]) {
         guard let name = directives.first, let value = name.parameter else {
             return nil
         }
         self.name = .init(name.value)
         self.value = .init(string: .init(value))
-
+        
         for directive in directives[1...] {
             switch directive.value.lowercased() {
             case "domain":
@@ -100,7 +101,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     /// A cookie which can only be sent in requests originating from the same origin as the target domain.
     ///
     /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
-    public enum SameSitePolicy: String {
+    public enum SameSitePolicy: String, Sendable {
         /// Strict mode.
         case strict = "Strict"
         /// Relaxed mode.
@@ -110,7 +111,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     }
     
     /// A single cookie (key/value pair).
-    public struct Value: ExpressibleByStringLiteral {
+    public struct Value: ExpressibleByStringLiteral, Sendable {
         // MARK: Static
         
         /// An expired `HTTPCookieValue`.
@@ -234,19 +235,19 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     }
     
     /// Internal storage.
-    private var cookies: [String: Value]
+    private let cookies: NIOLockedValueBox<[String: Value]>
     
     /// Creates an empty `HTTPCookies`
     public init() {
-        self.cookies = [:]
+        self.cookies = .init([:])
     }
-
+    
     init(directives: [HTTPHeaders.Directive]) {
-        self.cookies = directives.reduce(into: [:], { (cookies, directive) in
+        self.cookies = .init(directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
                 cookies[.init(directive.value)] = .init(string: .init(value))
             }
-        })
+        }))
     }
     
     /// See `ExpressibleByDictionaryLiteral`.
@@ -255,39 +256,43 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         for (name, value) in elements {
             cookies[name] = value
         }
-        self.cookies = cookies
+        self.cookies = .init(cookies)
     }
     
     // MARK: Serialize
     
     /// Seriaizes the `Cookies` for a `Request`
     var cookieHeader: String? {
-        guard !cookies.isEmpty else {
-            return nil
+        self.cookies.withLockedValue { cookies in
+            guard !cookies.isEmpty else {
+                return nil
+            }
+            
+            let cookie: String = cookies.map { (name, value) in
+                return "\(name)=\(value.string)"
+            }.joined(separator: "; ")
+            
+            return cookie
         }
-        
-        let cookie: String = self.cookies.map { (name, value) in
-            return "\(name)=\(value.string)"
-        }.joined(separator: "; ")
-
-        return cookie
     }
-
+    
     var setCookieHeaders: [String] {
-        return self.cookies.map { $0.value.serialize(name: $0.key) }
+        return self.cookies.withLockedValue { cookies in
+            cookies.map { $0.value.serialize(name: $0.key) }
+        }
     }
     
     // MARK: Access
     
     /// All cookies.
     public var all: [String: Value] {
-        get { return cookies }
-        set { cookies = newValue }
+        get { return cookies.withLockedValue { $0 } }
+        set { cookies.withLockedValue { $0 = newValue } }
     }
     
     /// Access `HTTPCookies` by name
     public subscript(name: String) -> Value? {
-        get { return cookies[name] }
-        set { cookies[name] = newValue }
+        get { return self.cookies.withLockedValue { $0[name] } }
+        set { cookies.withLockedValue { $0[name] = newValue } }
     }
 }
