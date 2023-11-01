@@ -71,7 +71,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
                     self.requestState = .awaitingEnd(request, buffer)
                 } else {
                     let stream = Request.BodyStream(on: context.eventLoop, byteBufferAllocator: context.channel.allocator)
-                    request.requestBox.withLockedValue { $0.bodyStorage = .stream(stream) }
+                    request.bodyStorage.withLockedValue { $0 = .stream(stream) }
                     self.requestState = .streamingBody(stream)
                     context.fireChannelRead(self.wrapInboundOut(request))
                     self.handleBodyStreamStateResult(
@@ -95,7 +95,7 @@ final class HTTPServerRequestDecoder: ChannelDuplexHandler, RemovableChannelHand
             case .awaitingBody(let request):
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .awaitingEnd(let request, let buffer):
-                request.requestBox.withLockedValue { $0.bodyStorage = .collected(buffer) }
+                request.bodyStorage.withLockedValue { $0 = .collected(buffer) }
                 context.fireChannelRead(self.wrapInboundOut(request))
             case .streamingBody(let stream):
                 self.handleBodyStreamStateResult(

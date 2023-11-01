@@ -130,7 +130,7 @@ public final class Request: CustomStringConvertible, Sendable {
         func encode<E>(_ encodable: E, using encoder: ContentEncoder) throws where E : Encodable {
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(encodable, to: &body, headers: &self.request.headers)
-            self.request.requestBox.withLockedValue { $0.bodyStorage = .collected(body) }
+            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
         func decode<D>(_ decodable: D.Type, using decoder: ContentDecoder) throws -> D where D : Decodable {
@@ -146,7 +146,7 @@ public final class Request: CustomStringConvertible, Sendable {
             try content.beforeEncode()
             var body = self.request.byteBufferAllocator.buffer(capacity: 0)
             try encoder.encode(content, to: &body, headers: &self.request.headers)
-            self.request.requestBox.withLockedValue { $0.bodyStorage = .collected(body) }
+            self.request.bodyStorage.withLockedValue { $0 = .collected(body) }
         }
 
         func decode<C>(_ content: C.Type, using decoder: ContentDecoder) throws -> C where C : Content {
@@ -175,10 +175,10 @@ public final class Request: CustomStringConvertible, Sendable {
     /// Vapor already provides metadata to this logger so that multiple logged messages can be traced back to the same request.
     public var logger: Logger {
         get {
-            self.requestBox.withLockedValue { $0.logger }
+            self._logger.withLockedValue { $0 }
         }
         set {
-            self.requestBox.withLockedValue { $0.logger = newValue }
+            self._logger.withLockedValue { $0 = newValue }
         }
     }
     
@@ -224,7 +224,14 @@ public final class Request: CustomStringConvertible, Sendable {
     
     /// A container containing the route parameters that were captured when receiving this request.
     /// Use this container to grab any non-static parameters from the URL, such as model IDs in a REST API.
-    public var parameters: Parameters
+    public var parameters: Parameters {
+        get {
+            self.requestBox.withLockedValue { $0.parameters }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.parameters = newValue }
+        }
+    }
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
     public var storage: Storage {
@@ -236,7 +243,14 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
 
-    public var byteBufferAllocator: ByteBufferAllocator
+    public var byteBufferAllocator: ByteBufferAllocator {
+        get {
+            self.requestBox.withLockedValue { $0.byteBufferAllocator }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.byteBufferAllocator = newValue }
+        }
+    }
     
     struct RequestBox: Sendable {
         var method: HTTPMethod
@@ -245,12 +259,14 @@ public final class Request: CustomStringConvertible, Sendable {
         var headers: HTTPHeaders
         var isKeepAlive: Bool
         var route: Route?
-        var logger: Logger
-        var bodyStorage: BodyStorage
+        var parameters: Parameters
+        var byteBufferAllocator: ByteBufferAllocator
     }
     
     let requestBox: NIOLockedValueBox<RequestBox>
     private let _storage: NIOLockedValueBox<Storage>
+    private let _logger: NIOLockedValueBox<Logger>
+    internal let bodyStorage: NIOLockedValueBox<BodyStorage>
     
     public convenience init(
         application: Application,
@@ -306,6 +322,7 @@ public final class Request: CustomStringConvertible, Sendable {
         } else {
             logger[metadataKey: "request-id"] = .string(UUID().uuidString)
         }
+        self._logger = .init(logger)
         
         let storageBox = RequestBox(
             method: method,
@@ -314,8 +331,8 @@ public final class Request: CustomStringConvertible, Sendable {
             headers: headers,
             isKeepAlive: true,
             route: nil,
-            logger: logger,
-            bodyStorage: bodyStorage
+            parameters: .init(),
+            byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)
         self.id = UUID().uuidString
@@ -323,8 +340,7 @@ public final class Request: CustomStringConvertible, Sendable {
         
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
-        self.parameters = .init()
         self._storage = .init(.init())
-        self.byteBufferAllocator = byteBufferAllocator
+        self.bodyStorage = .init(bodyStorage)
     }
 }
