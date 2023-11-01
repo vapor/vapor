@@ -122,7 +122,7 @@ final class ServerTests: XCTestCase {
     @available(*, deprecated)
     func testDeprecatedServerStartMethods() throws {
         /// TODO: This test may be removed in the next major version
-        class OldServer: Server {
+        class OldServer: Server, @unchecked Sendable {
             var onShutdown: EventLoopFuture<Void> {
                 preconditionFailure("We should never get here.")
             }
@@ -164,7 +164,7 @@ final class ServerTests: XCTestCase {
         oldServer = OldServer()
         XCTAssertThrowsError(try oldServer.start(address: .unixDomainSocket(path: "/path")))
         
-        class NewServer: Server {
+        class NewServer: Server, @unchecked Sendable {
             var onShutdown: EventLoopFuture<Void> {
                 preconditionFailure("We should never get here.")
             }
