@@ -3,16 +3,24 @@ import NIOCore
 import NIOHTTP1
 import Logging
 @preconcurrency import RoutingKit
+import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
-public final class Request: CustomStringConvertible {
+public final class Request: CustomStringConvertible, Sendable {
     public let application: Application
 
     /// The HTTP method for this request.
     ///
     ///     httpReq.method = .GET
     ///
-    public var method: HTTPMethod
+    public var method: HTTPMethod {
+        get {
+            self.requestBox.withLockedValue { $0.method }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.method = newValue }
+        }
+    }
     
     /// The URL used on this request.
     public var url: URI
@@ -188,9 +196,23 @@ public final class Request: CustomStringConvertible {
     public var parameters: Parameters
 
     /// This container is used as arbitrary request-local storage during the request-response lifecycle.Z
-    public var storage: Storage
+    public var storage: Storage {
+        get {
+            self._storage.withLockedValue { $0 }
+        }
+        set {
+            self._storage.withLockedValue { $0 = newValue }
+        }
+    }
 
     public var byteBufferAllocator: ByteBufferAllocator
+    
+    struct RequestBox: Sendable {
+        var method: HTTPMethod
+    }
+    
+    let requestBox: NIOLockedValueBox<RequestBox>
+    private let _storage: NIOLockedValueBox<Storage>
     
     public convenience init(
         application: Application,
@@ -233,9 +255,10 @@ public final class Request: CustomStringConvertible {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
+        let storageBox = RequestBox(method: method)
+        self.requestBox = .init(storageBox)
         self.id = UUID().uuidString
         self.application = application
-        self.method = method
         self.url = url
         self.version = version
         self.headers = headers
@@ -247,7 +270,7 @@ public final class Request: CustomStringConvertible {
         self.remoteAddress = remoteAddress
         self.eventLoop = eventLoop
         self.parameters = .init()
-        self.storage = .init()
+        self._storage = .init(.init())
         self.isKeepAlive = true
         self.logger = logger
         if let requestId = self.headers[.xRequestId].first {
