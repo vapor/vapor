@@ -101,7 +101,7 @@ extension Request.Authentication {
 // types (e.g. Fluent 4 models can never be Sendable because they're reference types with mutable values
 // required by protocols and property wrappers). This allows us to store the Authenticatable type in a
 // safe-most-of-the-time way. This does introduce an edge case where type could be stored and mutated in
-// multiple places. But given how Vapor and its users use Authentication this should almost always never
+// multiple places. But given how Vapor and its users use Authentication this should almost never
 // occur and it was decided the trade-off was acceptable
 // As the name implies, the usage of this is unsafe because it disables the sendable checking of the
 // compiler and does not add any synchronisation.
