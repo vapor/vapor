@@ -1,7 +1,7 @@
 import NIOCore
 
 /// Capable of being authenticated.
-public protocol Authenticatable: Sendable { }
+public protocol Authenticatable { }
 
 /// Helper for creating authentication middleware.
 ///
