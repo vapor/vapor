@@ -12,11 +12,12 @@ extension Request.Body {
     /// in `Request.Body/makeAsyncIterator()` method.
     fileprivate final class AsyncSequenceDelegate: @unchecked Sendable, NIOAsyncSequenceProducerDelegate {
         private enum State {
+            case notCalledYet
             case noSignalReceived
             case waitingForSignalFromConsumer(EventLoopPromise<Void>)
         }
 
-        private var _state: State = .noSignalReceived
+        private var _state: State = .notCalledYet
         private let eventLoop: any EventLoop
 
         init(eventLoop: any EventLoop) {
@@ -26,6 +27,9 @@ extension Request.Body {
         private func produceMore0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
+            case .notCalledYet:
+                // We can just return here to sign to the producer that we want more data
+                break
             case .noSignalReceived:
                 preconditionFailure()
             case .waitingForSignalFromConsumer(let promise):
@@ -37,6 +41,9 @@ extension Request.Body {
         private func didTerminate0() {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
+            case .notCalledYet:
+                // Means didn't hit the backpressure limits, so just return
+                break
             case .noSignalReceived:
                 // we will inform the producer, since the next write will fail.
                 break
@@ -49,7 +56,7 @@ extension Request.Body {
         func registerBackpressurePromise(_ promise: EventLoopPromise<Void>) {
             self.eventLoop.preconditionInEventLoop()
             switch self._state {
-            case .noSignalReceived:
+            case .noSignalReceived, .notCalledYet:
                 self._state = .waitingForSignalFromConsumer(promise)
             case .waitingForSignalFromConsumer:
                 preconditionFailure()
