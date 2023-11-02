@@ -1,4 +1,3 @@
-#if compiler(>=5.7)
 import NIOCore
 import NIOConcurrencyHelpers
 
@@ -166,4 +165,3 @@ extension Request.Body: AsyncSequence {
         return AsyncIterator(underlying: producer.sequence.makeAsyncIterator())
     }
 }
-#endif

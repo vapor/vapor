@@ -27,8 +27,17 @@ extension Request {
             self.allocator = byteBufferAllocator
         }
         
-        /// `read(_:)` **must** be called when on an `EventLoop`
-        func read(_ handler: @escaping (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+        func read(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
+            if self.eventLoop.inEventLoop {
+                read0(handler)
+            } else {
+                self.eventLoop.execute {
+                    self.read0(handler)
+                }
+            }
+        }
+        
+        func read0(_ handler: @escaping @Sendable (BodyStreamResult, EventLoopPromise<Void>?) -> ()) {
             self.eventLoop.preconditionInEventLoop()
             self.handlerBuffer.value.handler = handler
             for (result, promise) in self.handlerBuffer.value.buffer {
@@ -72,17 +81,17 @@ extension Request {
             // See https://github.com/vapor/vapor/issues/2906
             return eventLoop.flatSubmit {
                 let promise = eventLoop.makePromise(of: ByteBuffer.self)
-                var data = self.allocator.buffer(capacity: 0)
+                let data = NIOLoopBoundBox(self.allocator.buffer(capacity: 0), eventLoop: eventLoop)
                 self.read { chunk, next in
                     switch chunk {
                     case .buffer(var buffer):
-                        if let max = max, data.readableBytes + buffer.readableBytes >= max {
+                        if let max = max, data.value.readableBytes + buffer.readableBytes >= max {
                             promise.fail(Abort(.payloadTooLarge))
                         } else {
-                            data.writeBuffer(&buffer)
+                            data.value.writeBuffer(&buffer)
                         }
                     case .error(let error): promise.fail(error)
-                    case .end: promise.succeed(data)
+                    case .end: promise.succeed(data.value)
                     }
                     next?.succeed(())
                 }
