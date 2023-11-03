@@ -30,7 +30,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         }
 
         /// The strategy to use for automatically changing the value of keys before decoding.
-        public enum KeyDecodingStrategy : Sendable {
+        public enum KeyDecodingStrategy: Sendable {
             /// Use the keys specified by each type. This is the default strategy.
             case useDefaultKeys
 
@@ -100,6 +100,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
 
         let boolFlags: Bool
         let arraySeparators: [Character]
+        let keyDecodingStrategy: KeyDecodingStrategy
         let dateDecodingStrategy: DateDecodingStrategy
         let userInfo: [CodingUserInfoKey: Any]
 
@@ -115,11 +116,13 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
         public init(
             boolFlags: Bool = true,
             arraySeparators: [Character] = [",", "|"],
+            keyDecodingStrategy: KeyDecodingStrategy = .useDefaultKeys,
             dateDecodingStrategy: DateDecodingStrategy = .secondsSince1970,
             userInfo: [CodingUserInfoKey: Any] = [:]
         ) {
             self.boolFlags = boolFlags
             self.arraySeparators = arraySeparators
+            self.keyDecodingStrategy = keyDecodingStrategy
             self.dateDecodingStrategy = dateDecodingStrategy
             self.userInfo = userInfo
         }
@@ -222,12 +225,11 @@ private struct _Decoder: Decoder {
     var data: URLEncodedFormData
     var codingPath: [CodingKey]
     var configuration: Configuration
-
     /// See `Decoder`
     var userInfo: [CodingUserInfoKey: Any] { self.configuration.userInfo }
 
     /// Creates a new `_URLEncodedFormDecoder`.
-    init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: URLEncodedFormDecoder.Configuration) {
+    init(data: URLEncodedFormData, codingPath: [CodingKey], configuration: Configuration) {
         self.data = data
         self.codingPath = codingPath
         self.configuration = configuration
