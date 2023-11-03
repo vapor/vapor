@@ -51,8 +51,7 @@ final class AsyncRequestTests: XCTestCase {
         guard let localAddress = app.http.server.shared.localAddress,
               let ip = localAddress.ipAddress,
               let port = localAddress.port else {
-            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
-            return
+            return XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
         }
         
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/stream")
