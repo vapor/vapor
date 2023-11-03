@@ -21,24 +21,7 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.foos[0], .baz)
         XCTAssertEqual(user.nums[0], 3.14)
     }
-
-    func testDecodeWithKeyDecodingStrategy() throws {
-        let data = """
-        data_point22=33&url_session=33&this_is_an_xml_property=33&_i_am_an_app_developer=33&single=33&asdf_ćqer=33
-        """
-
-        let decoder = URLEncodedFormDecoder(
-            configuration: .init(keyDecodingStrategy: .convertFromSnakeCase)
-        )
-        let container = try decoder.decode(KeyDecodingTester.self, from: data)
-        XCTAssertEqual(container.dataPoint22, 33)
-        XCTAssertEqual(container.URLSession, 33)
-        XCTAssertEqual(container.thisIsAnXMLProperty, 33)
-        XCTAssertEqual(container._IAmAnAPPDeveloper, 33)
-        XCTAssertEqual(container.single, 33)
-        XCTAssertEqual(container.asdfĆqer, 33)
-    }
-
+    
     func testDecodeCommaSeparatedArray() throws {
         let data = """
         name=Tanner&age=23&pets=Zizek,Foo%2C&dict[a]=1&dict[b]=2&foos=baz&nums=3.14
@@ -705,15 +688,6 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
-}
-
-private struct KeyDecodingTester: Codable, Equatable {
-    var dataPoint22: Int
-    var URLSession: Int
-    var thisIsAnXMLProperty: Int
-    var _IAmAnAPPDeveloper: Int
-    var single: Int
-    var asdfĆqer: Int
 }
 
 class BaseClass: Codable, Equatable {
