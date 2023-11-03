@@ -714,15 +714,6 @@ private struct User: Codable, Equatable {
     var isCool: Bool
 }
 
-private struct KeyDecodingTester: Codable, Equatable {
-    var dataPoint22: Int
-    var URLSession: Int
-    var thisIsAnXMLProperty: Int
-    var _IAmAnAPPDeveloper: Int
-    var single: Int
-    var asdfĆqer: Int
-}
-
 class BaseClass: Codable, Equatable {
     var baseField: String?
     static func == (lhs: BaseClass, rhs: BaseClass) -> Bool {
