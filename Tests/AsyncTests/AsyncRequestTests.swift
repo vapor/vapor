@@ -3,6 +3,7 @@ import XCTest
 import Vapor
 import NIOCore
 import AsyncHTTPClient
+import Atomics
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {
@@ -63,6 +64,88 @@ final class AsyncRequestTests: XCTestCase {
         let body = try await response.body.collect(upTo: 1024 * 1024)
         XCTAssertEqual(body.string, testValue)
     }
+    
+    func testRequestBodyBackpressureWorksWithAsyncStreaming() {
+        let app = Application(.testing)
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        defer { app.shutdown() }
+        
+        let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
+        let bytesTheServerSaw = ManagedAtomic<Int>(0)
+        let bytesTheClientSent = ManagedAtomic<Int>(0)
+        let serverSawEnd = ManagedAtomic<Bool>(false)
+        let serverSawRequest = ManagedAtomic<Bool>(false)
+        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
+        
+        app.on(.POST, "hello", body: .stream) { req async throws -> Response in
+            XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
+            var bodyIterator = req.body.makeAsyncIterator()
+            let firstChunk = try await bodyIterator.next() // read only first chunk
+            numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
+            bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
+            defer {
+                _ = bodyIterator // make sure to not prematurely cancelling the sequence
+            }
+            try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
+            serverSawEnd.store(true, ordering: .relaxed)
+            return Response(status: .ok)
+        }
+        
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        final class ResponseDelegate: HTTPClientResponseDelegate {
+            typealias Response = Void
+            
+            private let bytesTheClientSent: ManagedAtomic<Int>
+            
+            init(bytesTheClientSent: ManagedAtomic<Int>) {
+                self.bytesTheClientSent = bytesTheClientSent
+            }
+            
+            func didFinishRequest(task: HTTPClient.Task<Response>) throws -> Response {
+                return ()
+            }
+            
+            func didSendRequestPart(task: HTTPClient.Task<Response>, _ part: IOData) {
+                self.bytesTheClientSent.wrappingIncrement(by: part.readableBytes, ordering: .relaxed)
+            }
+        }
+        
+        let tenMB = ByteBuffer(repeating: 0x41, count: 10 * 1024 * 1024)
+        let request = try! HTTPClient.Request(url: "http://\(ip):\(port)/hello",
+                                              method: .POST,
+                                              headers: [:],
+                                              body: .byteBuffer(tenMB))
+        let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
+        XCTAssertThrowsError(try app.http.client.shared.execute(request: request,
+                                                                delegate: delegate,
+                                                                deadline: .now() + .milliseconds(500)).wait()) { error in
+            if let error = error as? HTTPClientError {
+                XCTAssert(error == .readTimeout || error == .deadlineExceeded)
+            } else {
+                XCTFail("unexpected error: \(error)")
+            }
+        }
+        
+        XCTAssertEqual(1, numberOfTimesTheServerGotOfferedBytes.load(ordering: .relaxed))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheServerSaw.load(ordering: .relaxed))
+        XCTAssertGreaterThan(tenMB.readableBytes, bytesTheClientSent.load(ordering: .relaxed))
+        XCTAssertEqual(0, bytesTheClientSent.load(ordering: .relaxed)) // We'd only see this if we sent the full 10 MB.
+        XCTAssertFalse(serverSawEnd.load(ordering: .relaxed))
+        XCTAssertTrue(serverSawRequest.load(ordering: .relaxed))
+        
+        allDonePromise.succeed(())
+    }
 }
 
 // This was taken from AsyncHTTPClients's AsyncRequestTests.swift code.
@@ -83,40 +166,36 @@ final class AsyncRequestTests: XCTestCase {
 //
 //===----------------------------------------------------------------------===//
 
-@usableFromInline
 struct AsyncLazySequence<Base: Sequence>: AsyncSequence {
-    @usableFromInline typealias Element = Base.Element
-    @usableFromInline struct AsyncIterator: AsyncIteratorProtocol {
-        @usableFromInline var iterator: Base.Iterator
-        @inlinable init(iterator: Base.Iterator) {
+    typealias Element = Base.Element
+    struct AsyncIterator: AsyncIteratorProtocol {
+        var iterator: Base.Iterator
+        init(iterator: Base.Iterator) {
             self.iterator = iterator
         }
 
-        @inlinable mutating func next() async throws -> Base.Element? {
+        mutating func next() async throws -> Base.Element? {
             self.iterator.next()
         }
     }
 
-    @usableFromInline var base: Base
+    var base: Base
 
-    @inlinable init(base: Base) {
+    init(base: Base) {
         self.base = base
     }
 
-    @inlinable func makeAsyncIterator() -> AsyncIterator {
+    func makeAsyncIterator() -> AsyncIterator {
         .init(iterator: self.base.makeIterator())
     }
 }
 
-@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 extension AsyncLazySequence: Sendable where Base: Sendable {}
-@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 extension AsyncLazySequence.AsyncIterator: Sendable where Base.Iterator: Sendable {}
 
-@available(macOS 10.15, iOS 13.0, watchOS 6.0, tvOS 13.0, *)
 extension Sequence {
     /// Turns `self` into an `AsyncSequence` by vending each element of `self` asynchronously.
-    @inlinable var async: AsyncLazySequence<Self> {
+    var async: AsyncLazySequence<Self> {
         .init(base: self)
     }
 }
