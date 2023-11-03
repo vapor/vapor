@@ -4,6 +4,7 @@ import Vapor
 import NIOCore
 import AsyncHTTPClient
 import Atomics
+import NIOConcurrencyHelpers
 
 fileprivate extension String {
     static func randomDigits(length: Int = 999) -> String {
@@ -18,13 +19,16 @@ fileprivate extension String {
 final class AsyncRequestTests: XCTestCase {
     
     var app: Application!
+    var eventLoopGroup: EventLoopGroup!
     
     override func setUp() async throws {
-        app = Application(.testing)
+        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 4)
+        app = Application(.testing, .shared(eventLoopGroup))
     }
     
     override func tearDown() async throws {
         app.shutdown()
+        try await eventLoopGroup.shutdownGracefully()
     }
     
     func testStreamingRequest() async throws {
@@ -64,31 +68,43 @@ final class AsyncRequestTests: XCTestCase {
         XCTAssertEqual(body.string, testValue)
     }
     
-    func testRequestBodyBackpressureWorksWithAsyncStreaming() {
-        let app = Application(.testing)
+    // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
+    // This may require some work in Vapor
+    func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        defer { app.shutdown() }
         
         let numberOfTimesTheServerGotOfferedBytes = ManagedAtomic<Int>(0)
         let bytesTheServerSaw = ManagedAtomic<Int>(0)
         let bytesTheClientSent = ManagedAtomic<Int>(0)
         let serverSawEnd = ManagedAtomic<Bool>(false)
         let serverSawRequest = ManagedAtomic<Bool>(false)
-        let allDonePromise = app.eventLoopGroup.any().makePromise(of: Void.self)
+        
+        let requestHandlerTask: NIOLockedValueBox<Task<Response, Error>?> = .init(nil)
         
         app.on(.POST, "hello", body: .stream) { req async throws -> Response in
-            XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
-            var bodyIterator = req.body.makeAsyncIterator()
-            let firstChunk = try await bodyIterator.next() // read only first chunk
-            numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
-            bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
-            defer {
-                _ = bodyIterator // make sure to not prematurely cancelling the sequence
+            requestHandlerTask.withLockedValue {
+                $0 = Task {
+                    XCTAssertTrue(serverSawRequest.compareExchange(expected: false, desired: true, ordering: .relaxed).exchanged)
+                    var bodyIterator = req.body.makeAsyncIterator()
+                    let firstChunk = try await bodyIterator.next() // read only first chunk
+                    numberOfTimesTheServerGotOfferedBytes.wrappingIncrement(ordering: .relaxed)
+                    bytesTheServerSaw.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
+                    defer {
+                        _ = bodyIterator // make sure to not prematurely cancelling the sequence
+                    }
+                    try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
+                    serverSawEnd.store(true, ordering: .relaxed)
+                    return Response(status: .ok)
+                }
             }
-            try await Task.sleep(nanoseconds: 10_000_000_000) // wait "forever"
-            serverSawEnd.store(true, ordering: .relaxed)
-            return Response(status: .ok)
+            
+            do {
+                let task = requestHandlerTask.withLockedValue { $0 }
+                return try await task!.value
+            } catch {
+                throw Abort(.internalServerError)
+            }
         }
         
         app.environment.arguments = ["serve"]
@@ -126,7 +142,8 @@ final class AsyncRequestTests: XCTestCase {
                                               headers: [:],
                                               body: .byteBuffer(tenMB))
         let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        XCTAssertThrowsError(try app.http.client.shared.execute(request: request,
+        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        XCTAssertThrowsError(try httpClient.execute(request: request,
                                                                 delegate: delegate,
                                                                 deadline: .now() + .milliseconds(500)).wait()) { error in
             if let error = error as? HTTPClientError {
@@ -143,7 +160,8 @@ final class AsyncRequestTests: XCTestCase {
         XCTAssertFalse(serverSawEnd.load(ordering: .relaxed))
         XCTAssertTrue(serverSawRequest.load(ordering: .relaxed))
         
-        allDonePromise.succeed(())
+        requestHandlerTask.withLockedValue { $0?.cancel() }
+        try await httpClient.shutdown()
     }
 }
 
