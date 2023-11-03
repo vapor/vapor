@@ -1,6 +1,7 @@
 @testable import Vapor
 import XCTest
 import NIOPosix
+import Foundation
 
 final class URLEncodedFormTests: XCTestCase {
     // MARK: Codable
@@ -22,21 +23,32 @@ final class URLEncodedFormTests: XCTestCase {
         XCTAssertEqual(user.nums[0], 3.14)
     }
 
-    func testDecodeWithKeyDecodingStrategy() throws {
-
-        struct KeyDecodingTester: Codable, Equatable {
-            var dataPoint22: Int
-            var urlSession: Int
-            var _iAmAnAppDeveloper: Int
-            var single: Int
-            var asdfĆqer: Int
-        }
-
+    func testDecodeWithKeyDecodingStrategyConvertFromSnakeCase() throws {
         let data = """
         data_point22=33&url_session=33&_i_am_an_app_developer=33&single=33&asdf_ćqer=33
         """
         let decoder = URLEncodedFormDecoder(
             configuration: .init(keyDecodingStrategy: .convertFromSnakeCase)
+        )
+        let container = try decoder.decode(KeyDecodingTester.self, from: data)
+        XCTAssertEqual(container.dataPoint22, 33)
+        XCTAssertEqual(container.urlSession, 33)
+        XCTAssertEqual(container._iAmAnAppDeveloper, 33)
+        XCTAssertEqual(container.single, 33)
+        XCTAssertEqual(container.asdfĆqer, 33)
+    }
+
+    func testDecodeWithKeyDecodingStrategyCustomConverter() throws {
+        let data = """
+        data_point22=33&url_session=33&_i_am_an_app_developer=33&single=33&asdf_ćqer=33
+        """
+        typealias KeyDecodingStrategy = URLEncodedFormDecoder.Configuration.KeyDecodingStrategy
+        /// The same `KeyDecodingStrategy` as `.convertFromSnakeCase`, but using `.custom`.
+        let strategy = KeyDecodingStrategy.custom {
+            BasicCodingKey.key(KeyDecodingStrategy._convertedFromSnakeCase($0.last!.stringValue))
+        }
+        let decoder = URLEncodedFormDecoder(
+            configuration: .init(keyDecodingStrategy: strategy)
         )
         let container = try decoder.decode(KeyDecodingTester.self, from: data)
         XCTAssertEqual(container.dataPoint22, 33)
@@ -712,6 +724,14 @@ private struct User: Codable, Equatable {
     var foos: [Foo]
     var nums: [Decimal]
     var isCool: Bool
+}
+
+private struct KeyDecodingTester: Codable, Equatable {
+    var dataPoint22: Int
+    var urlSession: Int
+    var _iAmAnAppDeveloper: Int
+    var single: Int
+    var asdfĆqer: Int
 }
 
 class BaseClass: Codable, Equatable {

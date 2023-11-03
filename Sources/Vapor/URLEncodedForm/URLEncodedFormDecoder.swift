@@ -50,51 +50,26 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
             /// Provide a custom conversion from the key in the encoded queries to the keys specified by the decoded types.
             /// The full path to the current decoding position is provided for context (in case you need to locate this key within the payload). The returned key is used in place of the last component in the coding path before decoding.
             /// If the result of the conversion is a duplicate key, then only one value will be present in the container for the type to decode from.
-            case custom((_ codingPath: [CodingKey]) -> CodingKey)
+            case custom(@Sendable (_ codingPath: [CodingKey]) -> CodingKey)
 
-            fileprivate static func _convertFromSnakeCase(_ stringKey: String) -> String {
-                guard !stringKey.isEmpty else { return stringKey }
+            static func _convertedFromSnakeCase(_ key: String) -> String {
+                guard !key.isEmpty, let firstNonUnderscore = key.firstIndex(where: { $0 != "_" })
+                else { return .init(key) }
 
-                // Find the first non-underscore character
-                guard let firstNonUnderscore = stringKey.firstIndex(where: { $0 != "_" }) else {
-                    // Reached the end without finding an _
-                    return stringKey
+                var lastNonUnderscore = key.endIndex
+                repeat {
+                    key.formIndex(before: &lastNonUnderscore)
+                } while lastNonUnderscore > firstNonUnderscore && key[lastNonUnderscore] == "_"
+
+                let keyRange = key[firstNonUnderscore...lastNonUnderscore]
+                let leading  = key[key.startIndex..<firstNonUnderscore]
+                let trailing = key[key.index(after: lastNonUnderscore)..<key.endIndex]
+                let words    = keyRange.split(separator: "_")
+
+                guard words.count > 1 else {
+                    return "\(leading)\(keyRange)\(trailing)"
                 }
-
-                // Find the last non-underscore character
-                var lastNonUnderscore = stringKey.index(before: stringKey.endIndex)
-                while lastNonUnderscore > firstNonUnderscore && stringKey[lastNonUnderscore] == "_" {
-                    stringKey.formIndex(before: &lastNonUnderscore)
-                }
-
-                let keyRange = firstNonUnderscore...lastNonUnderscore
-                let leadingUnderscoreRange = stringKey.startIndex..<firstNonUnderscore
-                let trailingUnderscoreRange = stringKey.index(after: lastNonUnderscore)..<stringKey.endIndex
-
-                let components = stringKey[keyRange].split(separator: "_")
-                let joinedString: String
-                if components.count == 1 {
-                    // No underscores in key, leave the word as is - maybe already camel cased
-                    joinedString = String(stringKey[keyRange])
-                } else {
-                    joinedString = ([components[0].lowercased()] + components[1...].map { $0.capitalized }).joined()
-                }
-
-                // Do a cheap isEmpty check before creating and appending potentially empty strings
-                let result: String
-                if (leadingUnderscoreRange.isEmpty && trailingUnderscoreRange.isEmpty) {
-                    result = joinedString
-                } else if (!leadingUnderscoreRange.isEmpty && !trailingUnderscoreRange.isEmpty) {
-                    // Both leading and trailing underscores
-                    result = String(stringKey[leadingUnderscoreRange]) + joinedString + String(stringKey[trailingUnderscoreRange])
-                } else if (!leadingUnderscoreRange.isEmpty) {
-                    // Just leading
-                    result = String(stringKey[leadingUnderscoreRange]) + joinedString
-                } else {
-                    // Just trailing
-                    result = joinedString + String(stringKey[trailingUnderscoreRange])
-                }
-                return result
+                return "\(leading)\(([words[0].decapitalized] + words[1...].map(\.encapitalized)).joined())\(trailing)"
             }
         }
 
@@ -571,7 +546,7 @@ private func convertKeys(
         var converted = [String: URLEncodedFormData]()
         converted.reserveCapacity(data.children.count)
         data.children.forEach { (key, value) in
-            converted[Configuration.KeyDecodingStrategy._convertFromSnakeCase(key)] = convertKeys(
+            converted[Configuration.KeyDecodingStrategy._convertedFromSnakeCase(key)] = convertKeys(
                 data: value,
                 codingPath: codingPath,
                 strategy: strategy
@@ -592,4 +567,12 @@ private func convertKeys(
         }
         return URLEncodedFormData(values: data.values, children: converted)
     }
+}
+
+private extension StringProtocol {
+    /// Returns the string with its first character lowercased.
+    var decapitalized: String { self.isEmpty ? "" : "\(self[self.startIndex].lowercased())\(self.dropFirst())" }
+
+    /// Returns the string with its first character uppercased.
+    var encapitalized: String { self.isEmpty ? "" : "\(self[self.startIndex].uppercased())\(self.dropFirst())" }
 }
