@@ -146,6 +146,7 @@ extension Request.Body: AsyncSequence {
                     // The consumer dropped the sequence.
                     // Inform the producer that we don't want more data
                     // by returning an error in the future.
+                    delegate.didTerminate()
                     return request.eventLoop.makeFailedFuture(CancellationError())
                 case .stopProducing:
                     // The consumer is too slow.
