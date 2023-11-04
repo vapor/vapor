@@ -191,7 +191,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
         
         /// Seriaizes an `HTTPCookie` to a `String`.
         public func serialize(name: String) -> String {
-            var serialized = "\(name)=\(string)"
+            var serialized = "\(name)=\(self.string)"
             
             if let expires = self.expires {
                 serialized += "; Expires=\(expires.rfc1123)"
@@ -209,11 +209,11 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
                 serialized += "; Path=\(path)"
             }
             
-            if isSecure {
+            if self.isSecure {
                 serialized += "; Secure"
             }
             
-            if isHTTPOnly {
+            if self.isHTTPOnly {
                 serialized += "; HttpOnly"
             }
             
@@ -262,11 +262,11 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     
     /// Seriaizes the `Cookies` for a `Request`
     var cookieHeader: String? {
-        guard !cookies.isEmpty else {
+        guard !self.cookies.isEmpty else {
             return nil
         }
         
-        let cookie: String = cookies.map { (name, value) in
+        let cookie: String = self.cookies.map { (name, value) in
             return "\(name)=\(value.string)"
         }.joined(separator: "; ")
         
@@ -281,13 +281,13 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     
     /// All cookies.
     public var all: [String: Value] {
-        get { return cookies }
-        set { cookies = newValue }
+        get { return self.cookies }
+        set { self.cookies = newValue }
     }
     
     /// Access `HTTPCookies` by name
     public subscript(name: String) -> Value? {
         get { return self.cookies[name] }
-        set { cookies[name] = newValue }
+        set { self.cookies[name] = newValue }
     }
 }
