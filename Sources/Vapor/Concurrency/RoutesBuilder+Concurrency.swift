@@ -5,6 +5,7 @@ import RoutingKit
 extension RoutesBuilder {
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func get<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -16,6 +17,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func get<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -27,6 +29,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func post<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -38,6 +41,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func post<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -49,6 +53,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func patch<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -60,6 +65,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func patch<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -71,6 +77,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func put<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -82,6 +89,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func put<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -93,6 +101,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func delete<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -104,6 +113,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func delete<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -115,6 +125,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: PathComponent...,
@@ -130,6 +141,7 @@ extension RoutesBuilder {
 
     @discardableResult
     @preconcurrency
+    @available(*, deprecated, message: "use SendableRoute instead")
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: [PathComponent],

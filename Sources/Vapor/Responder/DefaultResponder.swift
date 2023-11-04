@@ -12,7 +12,7 @@ internal struct DefaultResponder: Responder {
     private let reportMetrics: Bool
 
     private struct CachedRoute {
-        let route: Route
+        let route: SendableRoute
         let responder: Responder
     }
 
@@ -22,17 +22,15 @@ internal struct DefaultResponder: Responder {
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
         
-        for route in routes.all {
-            let sendableBox = route.sendableBox.withLockedValue { $0 }
-            
+        for route in routes.sendableAll {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
-                responder: middleware.makeResponder(chainingTo: sendableBox.responder)
+                responder: middleware.makeResponder(chainingTo: route.responder)
             )
             
             // remove any empty path components
-            let path = sendableBox.path.filter { component in
+            let path = route.path.filter { component in
                 switch component {
                 case .constant(let string):
                     return string != ""
@@ -44,24 +42,24 @@ internal struct DefaultResponder: Responder {
             // If the route isn't explicitly a HEAD route,
             // and it's made up solely of .constant components,
             // register a HEAD route with the same path
-            if sendableBox.method == .GET &&
-                sendableBox.path.allSatisfy({ component in
+            if route.method == .GET &&
+                route.path.allSatisfy({ component in
                     if case .constant(_) = component { return true }
                     return false
             }) {
-                let headRoute = Route(
+                let headRoute = SendableRoute(
                     method: .HEAD,
-                    path: sendableBox.path,
+                    path: route.path,
                     responder: middleware.makeResponder(chainingTo: HeadResponder()),
-                    requestType: sendableBox.requestType,
-                    responseType: sendableBox.responseType)
+                    requestType: route.requestType,
+                    responseType: route.responseType)
 
                 let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
 
                 router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
             }
             
-            router.register(cached, at: [.constant(sendableBox.method.string)] + path)
+            router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
         self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
@@ -73,7 +71,7 @@ internal struct DefaultResponder: Responder {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
         if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
+            request.sendableRoute = cachedRoute.route
             response = cachedRoute.responder.respond(to: request)
         } else {
             response = self.notFoundResponder.respond(to: request)
@@ -127,7 +125,7 @@ internal struct DefaultResponder: Responder {
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
-        if let route = request.route {
+        if let route = request.sendableRoute {
             // We don't use route.description here to avoid duplicating the method in the path
             pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
             methodForMetrics = request.method.string

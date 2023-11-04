@@ -64,7 +64,17 @@ public final class Request: CustomStringConvertible, Sendable {
     ///
     ///     req.route?.description // "GET /hello/:name"
     ///
+    @available(*, deprecated, message: "Use sendableRoute instead")
     public var route: Route? {
+        get {
+            self.requestBox.withLockedValue { $0.route?.deprecatedRoute }
+        }
+        set {
+            self.requestBox.withLockedValue { $0.route = newValue?.sendableRoute }
+        }
+    }
+    
+    public var sendableRoute: SendableRoute? {
         get {
             self.requestBox.withLockedValue { $0.route }
         }
@@ -258,7 +268,7 @@ public final class Request: CustomStringConvertible, Sendable {
         var version: HTTPVersion
         var headers: HTTPHeaders
         var isKeepAlive: Bool
-        var route: Route?
+        var route: SendableRoute?
         var parameters: Parameters
         var byteBufferAllocator: ByteBufferAllocator
     }

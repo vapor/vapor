@@ -2,6 +2,7 @@ import NIOHTTP1
 @preconcurrency import RoutingKit
 import NIOConcurrencyHelpers
 
+@available(*, deprecated, message: "Migrate to SendableRoute instead")
 public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod {
         get {
@@ -95,5 +96,15 @@ public final class Route: CustomStringConvertible, Sendable {
     public func description(_ string: String) -> Route {
         self.userInfo["description"] = string
         return self
+    }
+    
+    var sendableRoute: SendableRoute {
+        SendableRoute(method: self.method, path: self.path, responder: self.responder, requestType: self.requestType, responseType: self.responseType)
+    }
+}
+
+extension SendableRoute {
+    var deprecatedRoute: Route {
+        Route(method: self.method, path: self.path, responder: self.responder, requestType: self.requestType, responseType: self.responseType)
     }
 }
