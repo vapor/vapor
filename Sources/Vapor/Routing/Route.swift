@@ -104,6 +104,7 @@ public final class Route: CustomStringConvertible, Sendable {
 }
 
 extension SendableRoute {
+    @available(*, deprecated, message: "Migrate to SendableRoute instead")
     var deprecatedRoute: Route {
         Route(method: self.method, path: self.path, responder: self.responder, requestType: self.requestType, responseType: self.responseType)
     }
