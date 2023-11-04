@@ -1,4 +1,4 @@
-@preconcurrency import ConsoleKit
+import ConsoleKit
 import NIOCore
 import NIOPosix
 import NIOConcurrencyHelpers

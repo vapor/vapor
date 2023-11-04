@@ -138,26 +138,27 @@ public final class CORSMiddleware: Middleware {
         return response.map { response in
             // Modify response headers based on CORS settings
             let originBasedAccessControlAllowHeader = self.configuration.allowedOrigin.header(forRequest: request)
-            response.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
-            response.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
-            response.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
-            
-            if let exposedHeaders = self.configuration.exposedHeaders {
-                response.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
-            }
-            
-            if let cacheExpiration = self.configuration.cacheExpiration {
-                response.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
-            }
-            
-            if self.configuration.allowCredentials {
-                response.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
-            }
+            response.responseBox.withLockedValue { box in
+                box.headers.replaceOrAdd(name: .accessControlAllowOrigin, value: originBasedAccessControlAllowHeader)
+                box.headers.replaceOrAdd(name: .accessControlAllowHeaders, value: self.configuration.allowedHeaders)
+                box.headers.replaceOrAdd(name: .accessControlAllowMethods, value: self.configuration.allowedMethods)
+                
+                if let exposedHeaders = self.configuration.exposedHeaders {
+                    box.headers.replaceOrAdd(name: .accessControlExpose, value: exposedHeaders)
+                }
+                
+                if let cacheExpiration = self.configuration.cacheExpiration {
+                    box.headers.replaceOrAdd(name: .accessControlMaxAge, value: String(cacheExpiration))
+                }
+                
+                if self.configuration.allowCredentials {
+                    box.headers.replaceOrAdd(name: .accessControlAllowCredentials, value: "true")
+                }
 
-            if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
-                response.headers.add(name: .vary, value: "origin")
+                if case .originBased = self.configuration.allowedOrigin, !originBasedAccessControlAllowHeader.isEmpty {
+                    box.headers.add(name: .vary, value: "origin")
+                }
             }
-            
             return response
         }
     }

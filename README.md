@@ -50,9 +50,6 @@ Support Vapor's development by [becoming a sponsor](https://github.com/sponsors/
 <a href="https://www.brokenhands.io">
     <img src="https://user-images.githubusercontent.com/9938337/137103192-21f99099-6aaa-4cc1-a1a7-21ee767a72d1.png" height="100px" alt="Broken Hands">
 </a>
-<a href="https://gotranseo.com">
-    <img src="https://user-images.githubusercontent.com/1342803/89341627-92c02000-d66f-11ea-8b29-c278386fdb09.png" height="100px" alt="Transeo">
-</a>
 <a href="https://www.emergetools.com">
     <img src="https://user-images.githubusercontent.com/9938337/265658253-cb37d2fa-3251-497f-8eeb-ba7c95af373b.svg" height="100px" alt="Emerge Tools">
 </a>

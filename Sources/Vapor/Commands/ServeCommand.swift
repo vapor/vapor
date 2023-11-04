@@ -1,5 +1,6 @@
 import Foundation
-@preconcurrency import ConsoleKit
+@preconcurrency import Dispatch
+import ConsoleKit
 import NIOConcurrencyHelpers
 
 /// Boots the application's server. Listens for `SIGINT` and `SIGTERM` for graceful shutdown.
