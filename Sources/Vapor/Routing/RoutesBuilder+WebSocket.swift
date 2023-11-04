@@ -15,6 +15,7 @@ public struct WebSocketMaxFrameSize: Sendable, ExpressibleByIntegerLiteral {
     }
 }
 
+// Deprecated
 extension RoutesBuilder {
     /// Adds a route for opening a web socket connection
     /// - parameters:
