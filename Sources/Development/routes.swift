@@ -65,15 +65,9 @@ public func routes(_ app: Application) throws {
         return req.body.data?.readableBytes.description  ?? "none"
     }
 
-    app.get("json-deprecated") { req -> [String: String] in
+    app.get("json") { req -> [String: String] in
         return ["foo": "bar"]
-    }.description("returns some test json with deprecated route")
-    
-    var route = app.get("json") { req -> [String: String] in
-        return ["foo": "bar"]
-    }
-    route.description("returns some test json with route")
-    app.routes.add(route)
+    }.description("returns some test json")
     
     app.webSocket("ws") { req, ws in
         ws.onText { ws, text in

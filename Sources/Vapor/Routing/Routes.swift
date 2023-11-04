@@ -1,30 +1,16 @@
 import NIOConcurrencyHelpers
 
 public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
-    @available(*, deprecated, message: "Use sendableAll instead")
     public var all: [Route] {
         get {
             self.sendableBox.withLockedValue { box in
-                box.all.map {
-                    $0.deprecatedRoute
-                }
+                box.all
             }
         }
         set {
             self.sendableBox.withLockedValue { box in
-                box.all = newValue.map {
-                    $0.sendableRoute
-                }
+                box.all = newValue
             }
-        }
-    }
-    
-    public var sendableAll: [SendableRoute] {
-        get {
-            self.sendableBox.withLockedValue { $0.all }
-        }
-        set {
-            self.sendableBox.withLockedValue { $0.all = newValue }
         }
     }
     
@@ -50,11 +36,11 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     }
 
     public var description: String {
-        return self.sendableAll.description
+        return self.all.description
     }
     
     struct SendableBox: Sendable {
-        var all: [SendableRoute]
+        var all: [Route]
         var defaultMaxBodySize: ByteCount
         var caseInsensitive: Bool
     }
@@ -66,26 +52,15 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
         self.sendableBox = .init(box)
     }
 
-    @available(*, deprecated, message: "Use SendableRoute instead")
     public func add(_ route: Route) {
         self.sendableBox.withLockedValue {
-            let sendableRoute = route.sendableRoute
-            $0.all.append(sendableRoute)
+            $0.all.append(route)
         }
-    }
-    
-    public func add(_ route: SendableRoute) {
-        self.sendableBox.withLockedValue { $0.all.append(route) }
     }
 }
 
 extension Application: RoutesBuilder {
-    @available(*, deprecated, message: "Use sendableAll instead")
     public func add(_ route: Route) {
-        self.routes.add(route)
-    }
-    
-    public func add(_ route: SendableRoute) {
         self.routes.add(route)
     }
 }

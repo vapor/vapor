@@ -27,9 +27,9 @@ public final class RoutesCommand: Command {
 
     public func run(using context: CommandContext, signature: Signature) throws {
         let routes = context.application.routes
-        let includeDescription = !routes.sendableAll.filter { $0.userInfo["description"] != nil }.isEmpty
+        let includeDescription = !routes.all.filter { $0.userInfo["description"] != nil }.isEmpty
         let pathSeparator = "/".consoleText()
-        context.console.outputASCIITable(routes.sendableAll.map { route -> [ConsoleText] in
+        context.console.outputASCIITable(routes.all.map { route -> [ConsoleText] in
             var column = [route.method.string.consoleText()]
             if route.path.isEmpty {
                 column.append(pathSeparator)

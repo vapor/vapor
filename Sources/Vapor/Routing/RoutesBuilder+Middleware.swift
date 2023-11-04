@@ -76,15 +76,7 @@ private final class MiddlewareGroup: RoutesBuilder {
     }
     
     /// See `HTTPRoutesBuilder`.
-    @available(*, deprecated, message: "use SendableRoute instead")
-    @_disfavoredOverload
     func add(_ route: Route) {
-        route.responder = self.middleware.makeResponder(chainingTo: route.responder)
-        self.root.add(route)
-    }
-    
-    func add(_ route: SendableRoute) {
-        var route = route
         route.responder = self.middleware.makeResponder(chainingTo: route.responder)
         self.root.add(route)
     }
