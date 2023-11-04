@@ -37,18 +37,20 @@ public final class ServeCommand: Command, Sendable {
     public var help: String {
         return "Begins serving the app over HTTP."
     }
+    
+    struct SendableBox: Sendable {
+        var didShutdown: Bool
+        var running: Application.Running?
+        var signalSources: [DispatchSourceSignal]
+        var server: Server?
+    }
 
-    private let didShutdown: NIOLockedValueBox<Bool>
-    private let running: NIOLockedValueBox<Application.Running?>
-    private let signalSources: NIOLockedValueBox<[DispatchSourceSignal]>
-    private let server: NIOLockedValueBox<Server?>
+    private let box: NIOLockedValueBox<SendableBox>
 
     /// Create a new `ServeCommand`.
     init() {
-        self.signalSources = .init([])
-        self.didShutdown = .init(false)
-        self.running = .init(nil)
-        self.server = .init(nil)
+        let box = SendableBox(didShutdown: false, signalSources: [])
+        self.box = .init(box)
     }
 
     /// See `Command`.
@@ -72,12 +74,13 @@ public final class ServeCommand: Command, Sendable {
         default: throw Error.incompatibleFlags
         }
         
-        self.server.withLockedValue { $0 = context.application.server }
+        var box = self.box.withLockedValue { $0 }
+        box.server = context.application.server
 
         // allow the server to be stopped or waited for
         let promise = context.application.eventLoopGroup.next().makePromise(of: Void.self)
         context.application.running = .start(using: promise)
-        self.running.withLockedValue { $0 = context.application.running }
+        box.running = context.application.running
 
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
@@ -88,26 +91,27 @@ public final class ServeCommand: Command, Sendable {
                 promise.succeed(())
             }
             source.resume()
-            self.signalSources.withLockedValue { $0.append(source) }
+            box.signalSources.append(source)
             signal(code, SIG_IGN)
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
+        self.box.withLockedValue { $0 = box }
     }
 
     func shutdown() {
-        self.didShutdown.withLockedValue { $0 = true }
-        self.running.withLockedValue { $0?.stop() }
-        if let server = self.server.withLockedValue({ $0 }) {
+        var box = self.box.withLockedValue { $0 }
+        box.didShutdown = true
+        box.running?.stop()
+        if let server = box.server {
             server.shutdown()
         }
-        self.signalSources.withLockedValue { signals in
-            signals.forEach { $0.cancel() } // clear refs
-            signals = []
-        }
+        box.signalSources.forEach { $0.cancel() } // clear refs
+        box.signalSources = []
+        self.box.withLockedValue { $0 = box }
     }
     
     deinit {
-        assert(self.didShutdown.withLockedValue({ $0 }), "ServeCommand did not shutdown before deinit")
+        assert(self.box.withLockedValue({ $0.didShutdown }), "ServeCommand did not shutdown before deinit")
     }
 }
