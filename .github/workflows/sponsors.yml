@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Generate Sponsors
         uses: JamesIves/github-sponsors-readme-action@v1
@@ -21,7 +21,7 @@ jobs:
 
       - name: Get token
         id: get-token
-        uses: tibdex/github-app-token@v1
+        uses: tibdex/github-app-token@v2
         with:
           app_id: ${{ vars.PENNY_APP_ID }}
           private_key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
