@@ -3,11 +3,11 @@ import NIOHTTP1
 import NIOConcurrencyHelpers
 
 public struct SendableRoute: CustomStringConvertible, Sendable {
-    public let method: HTTPMethod
-    public let path: [PathComponent]
-    public let responder: Responder
-    public let requestType: Any.Type
-    public let responseType: Any.Type
+    public var method: HTTPMethod
+    public var path: [PathComponent]
+    public var responder: Responder
+    public var requestType: Any.Type
+    public var responseType: Any.Type
     public let userInfo: UserDictionary
     
     // Reference type dictionary to allow us to keep an immutable `Route` struct but
