@@ -96,4 +96,12 @@ public final class Route: CustomStringConvertible, Sendable {
         self.userInfo["description"] = string
         return self
     }
+    
+    var sendableRoute: SendableRoute {
+        SendableRoute(method: self.method, path: self.path, responder: self.responder, requestType: self.requestType, responseType: self.responseType)
+    }
+    
+    convenience init(sendableRoute: SendableRoute) {
+        self.init(method: sendableRoute.method, path: sendableRoute.path, responder: sendableRoute.responder, requestType: sendableRoute.requestType, responseType: sendableRoute.responseType)
+    }
 }
