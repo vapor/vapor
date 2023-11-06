@@ -12,7 +12,7 @@ internal struct DefaultResponder: Responder {
     private let reportMetrics: Bool
 
     private struct CachedRoute {
-        let route: Route
+        let route: SendableRoute
         let responder: Responder
     }
 
@@ -22,7 +22,7 @@ internal struct DefaultResponder: Responder {
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
         
-        for route in routes.all {
+        for route in routes.sendableAll {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
@@ -47,7 +47,7 @@ internal struct DefaultResponder: Responder {
                     if case .constant(_) = component { return true }
                     return false
             }) {
-                let headRoute = Route(
+                let headRoute = SendableRoute(
                     method: .HEAD,
                     path: route.path,
                     responder: middleware.makeResponder(chainingTo: HeadResponder()),
@@ -71,7 +71,7 @@ internal struct DefaultResponder: Responder {
         let startTime = DispatchTime.now().uptimeNanoseconds
         let response: EventLoopFuture<Response>
         if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
+            request.sendableRoute = cachedRoute.route
             response = cachedRoute.responder.respond(to: request)
         } else {
             response = self.notFoundResponder.respond(to: request)
@@ -125,7 +125,7 @@ internal struct DefaultResponder: Responder {
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
-        if let route = request.route {
+        if let route = request.sendableRoute {
             // We don't use route.description here to avoid duplicating the method in the path
             pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
             methodForMetrics = request.method.string

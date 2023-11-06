@@ -2,6 +2,7 @@ import NIOHTTP1
 import RoutingKit
 import NIOConcurrencyHelpers
 
+@available(*, deprecated, message: "Use SendableRoute instead")
 public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod {
         get {

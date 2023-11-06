@@ -1,7 +1,21 @@
 import NIOConcurrencyHelpers
 
 public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
+    @available(*, deprecated, message: "Use `sendableAll` instead")
     public var all: [Route] {
+        get {
+            self.sendableBox.withLockedValue { box in
+                box.all.map { Route(sendableRoute: $0) }
+            }
+        }
+        set {
+            self.sendableBox.withLockedValue { box in
+                box.all = newValue.map { $0.sendableRoute }
+            }
+        }
+    }
+    
+    public var sendableAll: [SendableRoute] {
         get {
             self.sendableBox.withLockedValue { box in
                 box.all
@@ -36,11 +50,11 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
     }
 
     public var description: String {
-        return self.all.description
+        return self.sendableAll.description
     }
     
     struct SendableBox: Sendable {
-        var all: [Route]
+        var all: [SendableRoute]
         var defaultMaxBodySize: ByteCount
         var caseInsensitive: Bool
     }
@@ -52,7 +66,14 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
         self.sendableBox = .init(box)
     }
 
+    @available(*, deprecated, message: "Use SendableRoute instead")
     public func add(_ route: Route) {
+        self.sendableBox.withLockedValue {
+            $0.all.append(route.sendableRoute)
+        }
+    }
+    
+    public func add(_ route: SendableRoute) {
         self.sendableBox.withLockedValue {
             $0.all.append(route)
         }
@@ -60,7 +81,12 @@ public final class Routes: RoutesBuilder, CustomStringConvertible, Sendable {
 }
 
 extension Application: RoutesBuilder {
+    @available(*, deprecated, message: "Use `sendableAll` instead")
     public func add(_ route: Route) {
+        self.routes.add(route)
+    }
+    
+    public func add(_ route: SendableRoute) {
         self.routes.add(route)
     }
 }
