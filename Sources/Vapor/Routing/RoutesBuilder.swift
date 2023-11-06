@@ -8,6 +8,7 @@ public protocol RoutesBuilder {
 
 extension RoutesBuilder {
     // Required not to break the API for most people
+    @available(*, deprecated, message: "Use SendableRoute instead")
     func add(_ route: SendableRoute) {
         self.add(Route(sendableRoute: route))
     }
