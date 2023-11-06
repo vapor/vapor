@@ -1,3 +1,8 @@
+#if os(Linux)
+@preconcurrency import Foundation
+#else
+import Foundation
+#endif
 import XCTest
 import Vapor
 import NIOCore

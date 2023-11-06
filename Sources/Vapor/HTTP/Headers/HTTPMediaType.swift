@@ -49,7 +49,7 @@ import NIOHTTP1
 ///     ; Must be in quoted-string,
 ///     ; to use within parameter values
 ///
-public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable {
+public struct HTTPMediaType: Hashable, CustomStringConvertible, Equatable, Sendable {
     /// See `Equatable`.
     public static func ==(lhs: HTTPMediaType, rhs: HTTPMediaType) -> Bool {
         guard lhs.type != "*" && rhs.type != "*" else {

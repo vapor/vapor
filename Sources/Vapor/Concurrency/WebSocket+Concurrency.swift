@@ -31,6 +31,7 @@ extension Request {
     }
 }
 
+// MARK: Deprecated
 extension RoutesBuilder {
 
     /// Adds a route for opening a web socket connection
