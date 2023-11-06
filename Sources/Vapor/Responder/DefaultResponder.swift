@@ -28,6 +28,7 @@ internal struct DefaultResponder: Responder {
                 route: route,
                 responder: middleware.makeResponder(chainingTo: route.responder)
             )
+            
             // remove any empty path components
             let path = route.path.filter { component in
                 switch component {
@@ -48,10 +49,10 @@ internal struct DefaultResponder: Responder {
             }) {
                 let headRoute = Route(
                     method: .HEAD,
-                    path: cached.route.path,
+                    path: route.path,
                     responder: middleware.makeResponder(chainingTo: HeadResponder()),
-                    requestType: cached.route.requestType,
-                    responseType: cached.route.responseType)
+                    requestType: route.requestType,
+                    responseType: route.responseType)
 
                 let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
 
