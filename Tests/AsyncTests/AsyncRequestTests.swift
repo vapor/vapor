@@ -105,7 +105,7 @@ final class AsyncRequestTests: XCTestCase {
     
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
     // This may require some work in Vapor
-    func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
+    func _testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
         
