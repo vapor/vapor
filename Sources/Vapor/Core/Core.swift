@@ -77,7 +77,7 @@ extension Application {
                 var commands = Commands()
                 commands.use(BootCommand(), as: "boot")
                 self.commands = .init(commands)
-                let threadPool = NIOThreadPool(numberOfThreads: 64)
+                let threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
                 threadPool.start()
                 self.threadPool = .init(threadPool)
                 self.allocator = .init()
