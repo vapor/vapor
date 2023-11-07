@@ -18,7 +18,7 @@ extension HTTPHeaders {
             }
         }
     }
-
+    
     /// Get and set `HTTPCookies` for an HTTP response
     /// This accesses the `"Set-Cookie"` header.
     public var setCookie: HTTPCookies? {
@@ -49,14 +49,14 @@ extension HTTPHeaders {
 struct HTTPSetCookie {
     var name: String
     var value: HTTPCookies.Value
-
+    
     init?(directives: [HTTPHeaders.Directive]) {
         guard let name = directives.first, let value = name.parameter else {
             return nil
         }
         self.name = .init(name.value)
         self.value = .init(string: .init(value))
-
+        
         for directive in directives[1...] {
             switch directive.value.lowercased() {
             case "domain":
@@ -96,11 +96,11 @@ struct HTTPSetCookie {
 }
 
 /// A collection of `HTTPCookie`s.
-public struct HTTPCookies: ExpressibleByDictionaryLiteral {
+public struct HTTPCookies: ExpressibleByDictionaryLiteral, Sendable {
     /// A cookie which can only be sent in requests originating from the same origin as the target domain.
     ///
     /// This restriction mitigates attacks such as cross-site request forgery (XSRF).
-    public enum SameSitePolicy: String {
+    public enum SameSitePolicy: String, Sendable {
         /// Strict mode.
         case strict = "Strict"
         /// Relaxed mode.
@@ -110,7 +110,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     }
     
     /// A single cookie (key/value pair).
-    public struct Value: ExpressibleByStringLiteral {
+    public struct Value: ExpressibleByStringLiteral, Sendable {
         // MARK: Static
         
         /// An expired `HTTPCookieValue`.
@@ -191,7 +191,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
         
         /// Seriaizes an `HTTPCookie` to a `String`.
         public func serialize(name: String) -> String {
-            var serialized = "\(name)=\(string)"
+            var serialized = "\(name)=\(self.string)"
             
             if let expires = self.expires {
                 serialized += "; Expires=\(expires.rfc1123)"
@@ -209,11 +209,11 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
                 serialized += "; Path=\(path)"
             }
             
-            if isSecure {
+            if self.isSecure {
                 serialized += "; Secure"
             }
             
-            if isHTTPOnly {
+            if self.isHTTPOnly {
                 serialized += "; HttpOnly"
             }
             
@@ -240,7 +240,7 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     public init() {
         self.cookies = [:]
     }
-
+    
     init(directives: [HTTPHeaders.Directive]) {
         self.cookies = directives.reduce(into: [:], { (cookies, directive) in
             if let value = directive.parameter {
@@ -262,17 +262,17 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     
     /// Seriaizes the `Cookies` for a `Request`
     var cookieHeader: String? {
-        guard !cookies.isEmpty else {
+        guard !self.cookies.isEmpty else {
             return nil
         }
         
         let cookie: String = self.cookies.map { (name, value) in
             return "\(name)=\(value.string)"
         }.joined(separator: "; ")
-
+        
         return cookie
     }
-
+    
     var setCookieHeaders: [String] {
         return self.cookies.map { $0.value.serialize(name: $0.key) }
     }
@@ -281,13 +281,13 @@ public struct HTTPCookies: ExpressibleByDictionaryLiteral {
     
     /// All cookies.
     public var all: [String: Value] {
-        get { return cookies }
-        set { cookies = newValue }
+        get { return self.cookies }
+        set { self.cookies = newValue }
     }
     
     /// Access `HTTPCookies` by name
     public subscript(name: String) -> Value? {
-        get { return cookies[name] }
-        set { cookies[name] = newValue }
+        get { return self.cookies[name] }
+        set { self.cookies[name] = newValue }
     }
 }
