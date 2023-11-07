@@ -68,6 +68,41 @@ final class AsyncRequestTests: XCTestCase {
         XCTAssertEqual(body.string, testValue)
     }
     
+    func testStreamingRequestBodyCleansUp() async throws {
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        
+        let bytesTheServerRead = ManagedAtomic<Int>(0)
+        
+        app.on(.POST, "hello", body: .stream) { req async throws -> Response in
+            var bodyIterator = req.body.makeAsyncIterator()
+            let firstChunk = try await bodyIterator.next()
+            bytesTheServerRead.wrappingIncrement(by: firstChunk?.readableBytes ?? 0, ordering: .relaxed)
+            throw Abort(.internalServerError)
+        }
+        
+        app.environment.arguments = ["serve"]
+        XCTAssertNoThrow(try app.start())
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        var oneMBBB = ByteBuffer(repeating: 0x41, count: 1024 * 1024)
+        let oneMB = try XCTUnwrap(oneMBBB.readData(length: oneMBBB.readableBytes))
+        var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
+        request.method = .POST
+        request.body = .stream(oneMB.async, length: .known(oneMB.count))
+        let response = try await app.http.client.shared.execute(request, timeout: .seconds(5))
+        
+        XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
+        XCTAssertEqual(response.status, .internalServerError)
+    }
+    
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
     // This may require some work in Vapor
     func testRequestBodyBackpressureWorksWithAsyncStreaming() async throws {
