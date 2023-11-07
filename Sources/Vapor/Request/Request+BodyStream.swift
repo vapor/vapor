@@ -16,13 +16,13 @@ extension Request {
             var buffer: [(BodyStreamResult, EventLoopPromise<Void>?)]
         }
 
-        private let isClosed: NIOLoopBoundBox<Bool>
+        private let isClosed: NIOLockedValueBox<Bool>
         private let handlerBuffer: NIOLoopBoundBox<HandlerBufferContainer>
         private let allocator: ByteBufferAllocator
 
         init(on eventLoop: EventLoop, byteBufferAllocator: ByteBufferAllocator) {
             self.eventLoop = eventLoop
-            self.isClosed = .init(false, eventLoop: eventLoop)
+            self.isClosed = .init(false)
             self.handlerBuffer = .init(.init(handler: nil, buffer: []), eventLoop: eventLoop)
             self.allocator = byteBufferAllocator
         }
@@ -60,7 +60,7 @@ extension Request {
         private func write0(_ chunk: BodyStreamResult, promise: EventLoopPromise<Void>?) {
             switch chunk {
             case .end, .error:
-                self.isClosed.value = true
+                self.isClosed.withLockedValue { $0 = true }
             case .buffer: break
             }
             
@@ -101,7 +101,7 @@ extension Request {
         }
 
         deinit {
-            assert(self.isClosed.value, "Request.BodyStream deinitialized before closing.")
+            assert(self.isClosed.withLockedValue { $0 }, "Request.BodyStream deinitialized before closing.")
         }
     }
 }
