@@ -13,7 +13,7 @@ public struct SendableRoute: CustomStringConvertible, Sendable {
     // Reference type dictionary to allow us to keep an immutable `Route` struct but
     // mutate the dictionary without any copies which breaks how Vapor's routing works
     public final class UserDictionary: Sendable {
-        private let dictionary: NIOLockedValueBox<[String: Sendable]>
+        let dictionary: NIOLockedValueBox<[String: Sendable]>
         
         init() {
             self.dictionary = .init([:])
