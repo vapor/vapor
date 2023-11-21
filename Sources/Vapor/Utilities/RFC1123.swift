@@ -1,3 +1,6 @@
+#if canImport(Glibc) && swift(>=5.10)
+@preconcurrency import Glibc
+#endif
 import Foundation
 import NIOPosix
 import NIOCore

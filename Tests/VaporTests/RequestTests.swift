@@ -277,6 +277,7 @@ final class RequestTests: XCTestCase {
         )
     }
     
+    @available(*, deprecated, message: "Testing deprecated methods; this attribute silences the warnings")
     func testRedirect_old() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -324,7 +325,7 @@ final class RequestTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: ""),
-            on: EmbeddedEventLoop()
+            on: app.eventLoopGroup.any()
         )
         
         let handleBufferExpectation = XCTestExpectation()
