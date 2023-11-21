@@ -2,7 +2,7 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 import Logging
-@preconcurrency import RoutingKit
+import RoutingKit
 import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.

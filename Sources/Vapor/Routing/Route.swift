@@ -1,5 +1,5 @@
 import NIOHTTP1
-@preconcurrency import RoutingKit
+import RoutingKit
 import NIOConcurrencyHelpers
 
 public final class Route: CustomStringConvertible, Sendable {

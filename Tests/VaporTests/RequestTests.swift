@@ -277,6 +277,7 @@ final class RequestTests: XCTestCase {
         )
     }
     
+    @available(*, deprecated, message: "Testing deprecated methods; this attribute silences the warnings")
     func testRedirect_old() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
