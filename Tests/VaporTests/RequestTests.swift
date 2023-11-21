@@ -325,7 +325,7 @@ final class RequestTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: ""),
-            on: EmbeddedEventLoop()
+            on: app.eventLoopGroup.any()
         )
         
         let handleBufferExpectation = XCTestExpectation()

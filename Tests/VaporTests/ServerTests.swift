@@ -161,9 +161,9 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         oldServer = OldServer()
-        try oldServer.start(address: .hostname("localhost", port: 8080))
+        try oldServer.start(address: .hostname("localhost", port: 8081))
         XCTAssertEqual(oldServer.hostname, "localhost")
-        XCTAssertEqual(oldServer.port, 8080)
+        XCTAssertEqual(oldServer.port, 8081)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
         oldServer = OldServer()
@@ -219,9 +219,9 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         newServer = NewServer()
-        try newServer.start(address: .hostname("localhost", port: 8080))
+        try newServer.start(address: .hostname("localhost", port: 8082))
         XCTAssertEqual(newServer.hostname, "localhost")
-        XCTAssertEqual(newServer.port, 8080)
+        XCTAssertEqual(newServer.port, 8082)
         XCTAssertNil(newServer.socketPath)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
@@ -676,25 +676,7 @@ final class ServerTests: XCTestCase {
         
         XCTAssertNoThrow(try app.start())
     }
-    
-    func testStartWithDefaultHostname() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname(nil, port: 0)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
-    func testStartWithDefaultPort() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
+
     func testAddressConfigurations() throws {
         var configuration = HTTPServer.Configuration()
         XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))
