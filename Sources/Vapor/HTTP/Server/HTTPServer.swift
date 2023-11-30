@@ -518,6 +518,22 @@ extension ChannelPipeline {
         responder: AsyncResponder,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
+        // Guarantees that we're on an event loop which may not be the case when setting up
+        // from an async environment
+        if self.eventLoop.inEventLoop {
+            return self.addVaporHTTP1Handlers0(application: application, responder: responder, configuration: configuration)
+        } else {
+            return self.eventLoop.flatSubmit {
+                return self.addVaporHTTP1Handlers0(application: application, responder: responder, configuration: configuration)
+            }
+        }
+    }
+    
+    func addVaporHTTP1Handlers0(
+        application: Application,
+        responder: AsyncResponder,
+        configuration: HTTPServer.Configuration
+    ) -> EventLoopFuture<Void> {
         // create server pipeline array
         var handlers: [RemovableChannelHandler] = []
         
