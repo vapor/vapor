@@ -11,11 +11,11 @@ public enum HTTPBodyStreamStrategy: Sendable {
     public static var collect: HTTPBodyStreamStrategy {
         return .collect(maxSize: nil)
     }
-
+    
     /// The HTTP request's body will not be collected first before the route handler is called
     /// and will arrive in zero or more chunks.
     case stream
-
+    
     /// The HTTP request's body will be collected into memory before the route handler is
     /// called.
     ///
@@ -33,18 +33,18 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
-
+    
     @preconcurrency
     @discardableResult
     public func get<Response>(
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
@@ -55,7 +55,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -66,7 +66,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -77,7 +77,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -88,7 +88,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -99,7 +99,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -110,7 +110,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -121,7 +121,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -132,7 +132,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -145,7 +145,7 @@ extension RoutesBuilder {
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(method, path, body: body, use: { request in
             return try closure(request)
@@ -154,23 +154,24 @@ extension RoutesBuilder {
     
     @preconcurrency
     @discardableResult
+    @_disfavoredOverload
     public func on<Response>(
         _ method: HTTPMethod,
         _ path: [PathComponent],
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> SendableRoute
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         let responder = AsyncBasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                _ = try await request.eventLoop.flatSubmit {
-                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
-                }.get()
+                _ = try await request.body.collect(
+                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
+                ).get()
                 
             }
             return try await closure(request).encodeResponse(for: request).get()
-        }        
+        }
         let route = SendableRoute(
             method: method,
             path: path,
@@ -193,11 +194,11 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
-
+    
     @preconcurrency
     @discardableResult
     @_disfavoredOverload
@@ -206,7 +207,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.GET, path, use: closure)
     }
@@ -219,7 +220,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -232,7 +233,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.POST, path, use: closure)
     }
@@ -245,7 +246,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -258,7 +259,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PATCH, path, use: closure)
     }
@@ -271,7 +272,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -284,7 +285,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.PUT, path, use: closure)
     }
@@ -297,7 +298,7 @@ extension RoutesBuilder {
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -310,7 +311,7 @@ extension RoutesBuilder {
         _ path: [PathComponent],
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(.DELETE, path, use: closure)
     }
@@ -325,7 +326,7 @@ extension RoutesBuilder {
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         return self.on(method, path, body: body, use: { request in
             return try closure(request)
@@ -342,7 +343,7 @@ extension RoutesBuilder {
         body: HTTPBodyStreamStrategy = .collect,
         use closure: @Sendable @escaping (Request) throws -> Response
     ) -> Route
-        where Response: ResponseEncodable
+    where Response: ResponseEncodable
     {
         let responder = BasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
