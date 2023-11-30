@@ -278,6 +278,11 @@ public func routes(_ app: Application) throws {
         return "OK"
     }
     
+    // Make sure no warnings with async middleware
+    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestAsyncMiddleware(number: 4), TestAsyncMiddleware(number: 5)).get("middleware") { req async throws -> String in
+        return "OK"
+    }
+    
     let basicAuthRoutes = asyncRoutes.grouped(Test.authenticator(), Test.guardMiddleware())
     basicAuthRoutes.get("auth") { req async throws -> String in
         return try req.auth.require(Test.self).name

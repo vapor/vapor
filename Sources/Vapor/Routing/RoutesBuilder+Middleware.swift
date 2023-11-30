@@ -72,6 +72,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
+    @_disfavoredOverload
     @available(*, deprecated, message: "Use AsyncMiddleware instead")
     public func grouped(_ middleware: Middleware...) -> RoutesBuilder {
         return self.grouped(middleware)
@@ -87,6 +88,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Variadic `Middleware` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
+    @_disfavoredOverload
     @available(*, deprecated, message: "Use AsyncMiddleware instead")
     public func group(_ middleware: Middleware..., configure: (RoutesBuilder) throws -> ()) rethrows {
         return try self.group(middleware, configure: configure)
@@ -101,6 +103,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     /// - returns: New `Router` wrapped in `Middleware`.
+    @_disfavoredOverload
     @available(*, deprecated, message: "Use AsyncMiddleware instead")
     public func grouped(_ middleware: [Middleware]) -> RoutesBuilder {
         guard middleware.count > 0 else {
@@ -120,6 +123,7 @@ extension RoutesBuilder {
     /// - parameters:
     ///     - middleware: Array of `[Middleware]` to wrap `Router` in.
     ///     - configure: Closure to configure the newly created `Router`.
+    @_disfavoredOverload
     @available(*, deprecated, message: "Use AsyncMiddleware instead")
     public func group(_ middleware: [Middleware], configure: (RoutesBuilder) throws -> ()) rethrows {
         let asyncMiddleware = middleware.map { AsyncMiddlewareWrapper(middleware: $0) }

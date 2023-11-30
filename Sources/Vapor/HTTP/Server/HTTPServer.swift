@@ -249,7 +249,7 @@ public final class HTTPServer: Server, Sendable {
         }
     }
 
-    private let responder: Responder
+    private let responder: AsyncResponder
     private let _configuration: NIOLockedValueBox<Configuration>
     private let eventLoopGroup: EventLoopGroup
     private let connection: NIOLockedValueBox<HTTPServerConnection?>
@@ -257,11 +257,27 @@ public final class HTTPServer: Server, Sendable {
     private let didStart: NIOLockedValueBox<Bool>
     private let application: Application
     
+    @available(*, deprecated, message: "Use an AsyncResponder instead")
     public init(
         application: Application,
         responder: Responder,
         configuration: Configuration,
         on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton
+    ) {
+        self.application = application
+        self.responder = AsyncResponderWrapper(responder)
+        self._configuration = .init(configuration)
+        self.eventLoopGroup = eventLoopGroup
+        self.didStart = .init(false)
+        self.didShutdown = .init(false)
+        self.connection = .init(nil)
+    }
+    
+    public init(
+        application: Application,
+        responder: AsyncResponder,
+        configuration: Configuration,
+        on eventLoopGroup: EventLoopGroup
     ) {
         self.application = application
         self.responder = responder
@@ -341,7 +357,7 @@ private final class HTTPServerConnection: Sendable {
     
     static func start(
         application: Application,
-        responder: Responder,
+        responder: AsyncResponder,
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
     ) -> EventLoopFuture<HTTPServerConnection> {
@@ -465,7 +481,7 @@ extension HTTPResponseHead {
 extension ChannelPipeline {
     func addVaporHTTP2Handlers(
         application: Application,
-        responder: Responder,
+        responder: AsyncResponder,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
         // create server pipeline array
@@ -499,7 +515,7 @@ extension ChannelPipeline {
     
     func addVaporHTTP1Handlers(
         application: Application,
-        responder: Responder,
+        responder: AsyncResponder,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
         // create server pipeline array
