@@ -5,7 +5,7 @@ import NIOConcurrencyHelpers
 public struct SendableRoute: CustomStringConvertible, Sendable {
     public var method: HTTPMethod
     public var path: [PathComponent]
-    public var responder: Responder
+    public var responder: AsyncResponder
     public var requestType: Any.Type
     public var responseType: Any.Type
     public let userInfo: UserDictionary
@@ -37,7 +37,7 @@ public struct SendableRoute: CustomStringConvertible, Sendable {
     public init(
         method: HTTPMethod,
         path: [PathComponent],
-        responder: Responder,
+        responder: AsyncResponder,
         requestType: Any.Type,
         responseType: Any.Type
     ) {

@@ -8,16 +8,16 @@ import Logging
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
 internal struct DefaultResponder: Responder {
     private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
+    private let notFoundResponder: AsyncResponder
     private let reportMetrics: Bool
 
     private struct CachedRoute {
         let route: SendableRoute
-        let responder: Responder
+        let responder: AsyncResponder
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
+    public init(routes: Routes, middleware: [AsyncMiddleware] = [], reportMetrics: Bool = true) {
         let options = routes.caseInsensitive ?
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
@@ -26,7 +26,7 @@ internal struct DefaultResponder: Responder {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
-                responder: middleware.makeResponder(chainingTo: route.responder)
+                responder: middleware.makeAsyncResponder(chainingTo: route.responder)
             )
             
             // remove any empty path components
@@ -50,11 +50,11 @@ internal struct DefaultResponder: Responder {
                 let headRoute = SendableRoute(
                     method: .HEAD,
                     path: route.path,
-                    responder: middleware.makeResponder(chainingTo: HeadResponder()),
+                    responder: middleware.makeAsyncResponder(chainingTo: HeadResponder()),
                     requestType: route.requestType,
                     responseType: route.responseType)
 
-                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
+                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeAsyncResponder(chainingTo: HeadResponder()))
 
                 router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
             }
@@ -62,7 +62,7 @@ internal struct DefaultResponder: Responder {
             router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
-        self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
+        self.notFoundResponder = middleware.makeAsyncResponder(chainingTo: NotFoundResponder())
         self.reportMetrics = reportMetrics
     }
 
@@ -155,15 +155,15 @@ internal struct DefaultResponder: Responder {
     }
 }
 
-private struct HeadResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(.init(status: .ok))
+private struct HeadResponder: AsyncResponder {
+    func respond(to request: Request) async throws -> Response {
+        Response(status: .ok)
     }
 }
 
-private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+private struct NotFoundResponder: AsyncResponder {
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 

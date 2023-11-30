@@ -99,7 +99,7 @@ public final class Route: CustomStringConvertible, Sendable {
     }
     
     var sendableRoute: SendableRoute {
-        let sendableRoute = SendableRoute(method: self.method, path: self.path, responder: self.responder, requestType: self.requestType, responseType: self.responseType)
+        let sendableRoute = SendableRoute(method: self.method, path: self.path, responder: AsyncResponderWrapper(self.responder), requestType: self.requestType, responseType: self.responseType)
         for (key, value) in self.userInfo {
             sendableRoute.userInfo["\(key)"] = value
         }

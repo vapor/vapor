@@ -27,3 +27,49 @@ extension AsyncMiddleware {
         return promise.futureResult
     }
 }
+
+extension Array where Element == AsyncMiddleware {
+    /// Wraps an `AsyncResponder` in an array of `AsyncMiddleware` creating a new `AsyncResponder`.
+    /// - note: The array of middleware must be `[AsyncMiddleware]` not `[M] where M: AsyncMiddleware`.
+    public func makeAsyncResponder(chainingTo responder: AsyncResponder) -> AsyncResponder {
+        var responder = responder
+        for middleware in reversed() {
+            responder = middleware.makeAsyncResponder(chainingTo: responder)
+        }
+        return responder
+    }
+}
+
+public extension AsyncMiddleware {
+    /// Wraps a `Responder` in a single `Middleware` creating a new `Responder`.
+    func makeAsyncResponder(chainingTo responder: AsyncResponder) -> AsyncResponder {
+        return AsyncHTTPMiddlewareResponder(middleware: self, responder: responder)
+    }
+}
+
+private struct AsyncHTTPMiddlewareResponder: AsyncResponder {
+    var middleware: AsyncMiddleware
+    var responder: AsyncResponder
+    
+    init(middleware: AsyncMiddleware, responder: AsyncResponder) {
+        self.middleware = middleware
+        self.responder = responder
+    }
+    
+    /// Chains an incoming request to another `AsyncResponder` on the router.
+    /// - parameters:
+    ///     - request: The incoming `Request`.
+    /// - returns: An asynchronous `Response`.
+    func respond(to request: Request) async throws -> Response {
+        return try await self.middleware.respond(to: request, chainingTo: self.responder)
+    }
+}
+
+struct AsyncMiddlewareWrapper: AsyncMiddleware {
+    
+    let middleware: Middleware
+    
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        try await middleware.respond(to: request, chainingTo: next).get()
+    }
+}

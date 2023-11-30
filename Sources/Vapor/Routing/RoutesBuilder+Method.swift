@@ -162,18 +162,15 @@ extension RoutesBuilder {
     ) -> SendableRoute
         where Response: ResponseEncodable
     {
-        let responder = BasicResponder { request in
+        let responder = AsyncBasicResponder { request in
             if case .collect(let max) = body, request.body.data == nil {
-                return request.body.collect(
-                    max: max?.value ?? request.application.routes.defaultMaxBodySize.value
-                ).flatMapThrowing { _ in
-                    try closure(request)
-                }.encodeResponse(for: request)
-            } else {
-                return try closure(request)
-                    .encodeResponse(for: request)
+                _ = try await request.eventLoop.flatSubmit {
+                    request.body.collect(max: max?.value ?? request.application.routes.defaultMaxBodySize.value)
+                }.get()
+                
             }
-        }
+            return try await closure(request).encodeResponse(for: request).get()
+        }        
         let route = SendableRoute(
             method: method,
             path: path,
