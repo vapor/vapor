@@ -4,7 +4,7 @@ import NIOCore
 /// Serves static files from a public directory.
 ///
 /// `FileMiddleware` will default to `DirectoryConfig`'s working directory with `"/Public"` appended.
-public final class FileMiddleware: Middleware {
+public final class FileMiddleware: AsyncMiddleware {
     /// The public directory. Guaranteed to end with a slash.
     private let publicDirectory: String
     private let defaultFile: String?
@@ -35,10 +35,10 @@ public final class FileMiddleware: Middleware {
         self.directoryAction = directoryAction
     }
     
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         // make a copy of the percent-decoded path
         guard var path = request.url.path.removingPercentEncoding else {
-            return request.eventLoop.makeFailedFuture(Abort(.badRequest))
+            throw Abort(.badRequest)
         }
 
         // path must be relative.
@@ -46,7 +46,7 @@ public final class FileMiddleware: Middleware {
 
         // protect against relative paths
         guard !path.contains("../") else {
-            return request.eventLoop.makeFailedFuture(Abort(.forbidden))
+            throw Abort(.forbidden)
         }
 
         // create absolute path
@@ -55,7 +55,7 @@ public final class FileMiddleware: Middleware {
         // check if path exists and whether it is a directory
         var isDir: ObjCBool = false
         guard FileManager.default.fileExists(atPath: absPath, isDirectory: &isDir) else {
-            return next.respond(to: request)
+            return try await next.respond(to: request)
         }
         
         if isDir.boolValue {
@@ -64,17 +64,15 @@ public final class FileMiddleware: Middleware {
                 case .redirect:                    
                     var redirectUrl = request.url
                     redirectUrl.path += "/"
-                    return request.eventLoop.future(
-                        request.redirect(to: redirectUrl.string, redirectType: .permanent)
-                    )
+                    return request.redirect(to: redirectUrl.string, redirectType: .permanent)
                 case .none:
-                    return next.respond(to: request)
+                    return try await next.respond(to: request)
                 }
             }
             
             // If a directory, check for the default file
             guard let defaultFile = defaultFile else {
-                return next.respond(to: request)
+                return try await next.respond(to: request)
             }
             
             if defaultFile.isAbsolute() {
@@ -85,13 +83,12 @@ public final class FileMiddleware: Middleware {
             
             // If the default file doesn't exist, pass on request
             guard FileManager.default.fileExists(atPath: absPath) else {
-                return next.respond(to: request)
+                return try await next.respond(to: request)
             }
         }
         
         // stream the file
-        let res = request.fileio.streamFile(at: absPath)
-        return request.eventLoop.makeSucceededFuture(res)
+        return request.fileio.streamFile(at: absPath)
     }
 
     /// Creates a new `FileMiddleware` for a server contained in an Xcode Project.
