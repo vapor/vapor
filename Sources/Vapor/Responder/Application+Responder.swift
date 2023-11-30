@@ -10,7 +10,7 @@ extension Application {
         public struct Provider: Sendable {
             public static var `default`: Self {
                 .init {
-                    $0.responder.use { $0.responder.default }
+                    $0.responder.use { $0.responder.asyncDefault }
                 }
             }
 
@@ -23,7 +23,7 @@ extension Application {
 
         final class Storage: Sendable {
             struct ResponderFactory {
-                let factory: (@Sendable (Application) -> Vapor.Responder)?
+                let factory: (@Sendable (Application) -> Vapor.AsyncResponder)?
             }
             let factory: NIOLockedValueBox<ResponderFactory>
             init() {
@@ -37,14 +37,31 @@ extension Application {
 
         public let application: Application
 
+        @available(*, deprecated, message: "Use asyncCurrent instead")
         public var current: Vapor.Responder {
             guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
                 fatalError("No responder configured. Configure with app.responder.use(...)")
             }
             return factory(self.application)
         }
+        
+        public var asyncCurrent: Vapor.AsyncResponder {
+            guard let factory = self.storage.factory.withLockedValue({ $0.factory }) else {
+                fatalError("No responder configured. Configure with app.responder.use(...)")
+            }
+            return factory(self.application)
+        }
 
+        @available(*, deprecated, message: "Use asyncDefault instead")
         public var `default`: Vapor.Responder {
+            DefaultResponder(
+                routes: self.application.routes,
+                middleware: self.application.middleware.asyncResolve(),
+                reportMetrics: self.application.http.server.configuration.reportMetrics
+            )
+        }
+        
+        public var `asyncDefault`: Vapor.AsyncResponder {
             DefaultResponder(
                 routes: self.application.routes,
                 middleware: self.application.middleware.asyncResolve(),
@@ -56,7 +73,13 @@ extension Application {
             provider.run(self.application)
         }
 
+        @available(*, deprecated, message: "Provide an AsyncResponder instead")
         @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
+            #warning("Fix")
+//            self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
+        }
+        
+        @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.AsyncResponder)) {
             self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
         }
 
@@ -73,8 +96,8 @@ extension Application {
     }
 }
 
-extension Application.Responder: Responder {
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
-        self.current.respond(to: request)
+extension Application.Responder: AsyncResponder {
+    public func respond(to request: Request) async throws -> Response {
+        try await self.asyncCurrent.respond(to: request)
     }
 }

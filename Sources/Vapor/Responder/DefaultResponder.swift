@@ -6,7 +6,7 @@ import NIOHTTP1
 import Logging
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
+internal struct DefaultResponder: AsyncResponder {
     private let router: TrieRouter<CachedRoute>
     private let notFoundResponder: AsyncResponder
     private let reportMetrics: Bool
@@ -66,31 +66,36 @@ internal struct DefaultResponder: Responder {
         self.reportMetrics = reportMetrics
     }
 
-    /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    /// See `AsyncResponder`    
+    func respond(to request: Request) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
-        if let cachedRoute = self.getRoute(for: request) {
-            request.sendableRoute = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
-        } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
+        do {
+            let response: Response
+            if let cachedRoute = self.getRoute(for: request) {
+                request.sendableRoute = cachedRoute.route
+                response = try await cachedRoute.responder.respond(to: request)
+            } else {
+                response = try await self.notFoundResponder.respond(to: request)
             }
             if self.reportMetrics {
                 self.updateMetrics(
                     for: request,
                     startTime: startTime,
-                    statusCode: status.code
+                    statusCode: response.status.code
                 )
             }
+            return response
+        } catch {
+            // This should never really be hit, we should always have the error caught by
+            // the error middleware, but in case we don't have it added allow NIO to handle
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    startTime: startTime,
+                    statusCode: HTTPStatus.internalServerError.code
+                )
+            }
+            throw error
         }
     }
     
