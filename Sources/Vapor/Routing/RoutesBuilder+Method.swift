@@ -154,6 +154,8 @@ extension RoutesBuilder {
     
     @preconcurrency
     @discardableResult
+    // Required to force the compiler to pick the version where `Response: AsyncResponseEncodable` if we
+    // can to avoid a brige between a/a and ELFs
     @_disfavoredOverload
     public func on<Response>(
         _ method: HTTPMethod,
