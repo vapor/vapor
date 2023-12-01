@@ -1,11 +1,12 @@
-#if swift(<5.9)
-import Backtrace
-#endif
+import ConsoleKit
+import Logging
 import NIOConcurrencyHelpers
 import NIOCore
-import Logging
-import ConsoleKit
 import NIOPosix
+
+#if swift(<5.9)
+    import Backtrace
+#endif
 
 /// Core type representing a Vapor application.
 public final class Application: Sendable {
@@ -17,7 +18,7 @@ public final class Application: Sendable {
             self._environment.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var storage: Storage {
         get {
             self._storage.withLockedValue { $0 }
@@ -26,13 +27,11 @@ public final class Application: Sendable {
             self._storage.withLockedValue { $0 = newValue }
         }
     }
-    
+
     public var didShutdown: Bool {
-        get {
-            self._didShutdown.withLockedValue { $0 }
-        }
+        self._didShutdown.withLockedValue { $0 }
     }
-    
+
     public var logger: Logger {
         get {
             self._logger.withLockedValue { $0 }
@@ -73,10 +72,9 @@ public final class Application: Sendable {
         }
 
         public func lock<Key>(for key: Key.Type) -> NIOLock
-            where Key: LockKey
-        {
+        where Key: LockKey {
             self.main.withLock {
-                self.storage.withLockedValue{ 
+                self.storage.withLockedValue {
                     $0.insertOrReturn(.init(), at: .init(Key.self))
                 }
             }
@@ -95,12 +93,12 @@ public final class Application: Sendable {
     public var sync: NIOLock {
         self.locks.main
     }
-    
+
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
         case createNew
     }
-    
+
     public let eventLoopGroupProvider: EventLoopGroupProvider
     public let eventLoopGroup: EventLoopGroup
     internal let isBooted: NIOLockedValueBox<Bool>
@@ -116,7 +114,7 @@ public final class Application: Sendable {
         _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
     ) {
         #if swift(<5.9)
-        Backtrace.install()
+            Backtrace.install()
         #endif
         self._environment = .init(environment)
         self.eventLoopGroupProvider = eventLoopGroupProvider
@@ -149,7 +147,7 @@ public final class Application: Sendable {
         self.commands.use(RoutesCommand(), as: "routes")
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
-    
+
     /// Starts the Application using the `start()` method, then waits for any running tasks to complete
     /// If your application is started without arguments, the default argument is used.
     ///
@@ -163,18 +161,31 @@ public final class Application: Sendable {
             throw error
         }
     }
-    
-    /// When called, this will execute the startup command provided through an argument. If no startup command is provided, the default is used.
-    /// Under normal circumstances, this will start running Vapor's webserver.
+
+    /// When called, this will execute the startup command provided through an argument. If no startup command is
+    /// provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
     ///
     /// If you `start` Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
-    /// If you want to run your Application indefinitely, or until your code shuts the application down, use `run()` instead.
+    /// If you want to run your Application indefinitely, or until your code shuts the application down,
+    /// use `run()` instead.
     public func start() throws {
         try self.boot()
-        let command = self.commands.group()
+
+        let commands = self.commands.group()
+        let asyncCommands = self.asyncCommands.group()
+        let combinedCommands = asyncCommands.merge(
+            with: commands,
+            defaultCommand: commands.defaultCommand,
+            help: commands.help
+        )
+
         var context = CommandContext(console: self.console, input: self.environment.commandInput)
         context.application = self
-        try self.console.run(command, with: context)
+        try self.eventLoopGroup.next()
+            .makeFutureWithTask { [context] in
+                try await self.console.run(combinedCommands, with: context)
+            }
+            .wait()
     }
 
     public func boot() throws {
@@ -187,7 +198,7 @@ public final class Application: Sendable {
             try self.lifecycle.handlers.forEach { try $0.didBoot(self) }
         }
     }
-    
+
     public func shutdown() {
         assert(!self.didShutdown, "Application has already shut down")
         self.logger.debug("Application shutting down")
@@ -195,7 +206,7 @@ public final class Application: Sendable {
         self.logger.trace("Shutting down providers")
         self.lifecycle.handlers.reversed().forEach { $0.shutdown(self) }
         self.lifecycle.handlers = []
-        
+
         self.logger.trace("Clearing Application storage")
         self.storage.shutdown()
         self.storage.clear()
@@ -215,7 +226,7 @@ public final class Application: Sendable {
         self._didShutdown.withLockedValue { $0 = true }
         self.logger.trace("Application shutdown complete")
     }
-    
+
     deinit {
         self.logger.trace("Application deinitialized, goodbye!")
         if !self.didShutdown {
@@ -225,10 +236,10 @@ public final class Application: Sendable {
     }
 }
 
-public protocol LockKey { }
+public protocol LockKey {}
 
-fileprivate extension Dictionary {
-    mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
+extension Dictionary {
+    fileprivate mutating func insertOrReturn(_ value: @autoclosure () -> Value, at key: Key) -> Value {
         if let existing = self[key] {
             return existing
         }

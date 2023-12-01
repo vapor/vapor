@@ -14,6 +14,11 @@ extension Application {
         set { self.core.storage.commands.withLockedValue { $0 = newValue } }
     }
 
+    public var asyncCommands: AsyncCommands {
+        get { self.core.storage.asyncCommands.withLockedValue { $0 } }
+        set { self.core.storage.asyncCommands.withLockedValue { $0 = newValue } }
+    }
+
     /// The application thread pool. Vapor provides a thread pool with 64 threads by default.
     ///
     /// It's possible to configure the thread pool size by overriding this value with your own thread pool.
@@ -32,7 +37,7 @@ extension Application {
                 self.logger.critical("Cannot replace thread pool after application has booted")
                 fatalError("Cannot replace thread pool after application has booted")
             }
-            
+
             self.core.storage.threadPool.withLockedValue({
                 try! $0.syncShutdownGracefully()
                 $0 = newValue
@@ -40,7 +45,7 @@ extension Application {
             })
         }
     }
-    
+
     public var fileio: NonBlockingFileIO {
         .init(threadPool: self.threadPool)
     }
@@ -67,6 +72,7 @@ extension Application {
         final class Storage: Sendable {
             let console: NIOLockedValueBox<Console>
             let commands: NIOLockedValueBox<Commands>
+            let asyncCommands: NIOLockedValueBox<AsyncCommands>
             let threadPool: NIOLockedValueBox<NIOThreadPool>
             let allocator: ByteBufferAllocator
             let running: Application.Running.Storage
@@ -77,6 +83,7 @@ extension Application {
                 var commands = Commands()
                 commands.use(BootCommand(), as: "boot")
                 self.commands = .init(commands)
+                self.asyncCommands = .init(AsyncCommands())
                 let threadPool = NIOThreadPool(numberOfThreads: System.coreCount)
                 threadPool.start()
                 self.threadPool = .init(threadPool)
