@@ -181,7 +181,7 @@ public final class Application: Sendable {
 
         var context = CommandContext(console: self.console, input: self.environment.commandInput)
         context.application = self
-        try self.eventLoopGroup.next()
+        try self.eventLoopGroup.any()
             .makeFutureWithTask { [context] in
                 try await self.console.run(combinedCommands, with: context)
             }
