@@ -429,4 +429,15 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status.code, 500)
         }
     }
+    
+    func testVoidResponse() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get { req in }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "/") { res in
+            XCTAssertEqual(res.status, .noContent)
+        }
+    }
 }

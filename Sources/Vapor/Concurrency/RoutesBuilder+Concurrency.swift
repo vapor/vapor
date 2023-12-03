@@ -27,6 +27,24 @@ extension RoutesBuilder {
     
     @discardableResult
     @preconcurrency
+    public func get(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.GET, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func get(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.GET, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
     public func post<Response>(
         _ path: PathComponent...,
         use closure: @Sendable @escaping (Request) async throws -> Response
@@ -44,6 +62,24 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
+        return self.on(.POST, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func post(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.POST, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func post(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
         return self.on(.POST, path, use: closure)
     }
     
@@ -66,6 +102,24 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
+        return self.on(.PATCH, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func patch(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.PATCH, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func patch(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
         return self.on(.PATCH, path, use: closure)
     }
     
@@ -88,6 +142,24 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
+        return self.on(.PUT, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func put(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.PUT, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func put(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
         return self.on(.PUT, path, use: closure)
     }
     
@@ -110,6 +182,24 @@ extension RoutesBuilder {
     ) -> Route
     where Response: AsyncResponseEncodable
     {
+        return self.on(.DELETE, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func delete(
+        _ path: PathComponent...,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        return self.on(.DELETE, path, use: closure)
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func delete(
+        _ path: [PathComponent],
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
         return self.on(.DELETE, path, use: closure)
     }
     
@@ -156,5 +246,33 @@ extension RoutesBuilder {
         )
         self.add(route)
         return route
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func on(
+        _ method: HTTPMethod,
+        _ path: PathComponent...,
+        body: HTTPBodyStreamStrategy = .collect,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        on(method, path, body: body, use: { (req: Request) -> HTTPStatus in
+            try await closure(req)
+            return .noContent
+        })
+    }
+    
+    @discardableResult
+    @preconcurrency
+    public func on(
+        _ method: HTTPMethod,
+        _ path: [PathComponent],
+        body: HTTPBodyStreamStrategy = .collect,
+        use closure: @Sendable @escaping (Request) async throws -> Void
+    ) -> Route {
+        on(method, path, body: body, use: { (req: Request) -> HTTPStatus in
+            try await closure(req)
+            return .noContent
+        })
     }
 }
