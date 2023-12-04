@@ -126,6 +126,21 @@ final class MiddlewareTests: XCTestCase {
         }
     }
     
+    func testFileMiddlewareFromBundleSubfolder() throws {
+        var fileMiddleware: FileMiddleware!
+        
+        XCTAssertNoThrow(fileMiddleware = try FileMiddleware(bundle: .module, publicDirectory: "SubUtilities"), "FileMiddleware instantiation from Bundle should not fail")
+        
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        app.middleware.use(fileMiddleware)
+        
+        try app.testable().test(.GET, "/index.html") { result in
+            XCTAssertEqual(result.status, .ok)
+            XCTAssertEqual(result.body.string, "<h1>Subdirectory Default</h1>\n")
+        }
+    }
+    
     func testFileMiddlewareFromBundleInvalidPublicDirectory() {
         XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
             guard let error = error as? FileMiddleware.BundleSetupError else {
