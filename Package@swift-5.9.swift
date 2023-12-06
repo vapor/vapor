@@ -22,7 +22,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/async-kit.git", from: "1.15.0"),
 
         // 💻 APIs for creating interactive CLI tools.
-        .package(url: "https://github.com/vapor/console-kit.git", branch: "revise-async-commands"),
+        .package(url: "https://github.com/vapor/console-kit.git", from: "4.14.0"),
 
         // 🔑 Hashing (SHA2, HMAC), encryption (AES), public-key (RSA), and random data generation.
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
