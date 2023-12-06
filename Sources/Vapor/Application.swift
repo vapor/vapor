@@ -148,10 +148,14 @@ public final class Application: Sendable {
         DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
     }
 
-    /// Starts the Application using the `start()` method, then waits for any running tasks to complete
+    /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks to complete.
     /// If your application is started without arguments, the default argument is used.
     ///
-    /// Under normal circumstances, `run()` begin start the shutdown, then wait for the web server to (manually) shut down before returning.
+    /// Under normal circumstances, ``run()`` runs until a shutdown is triggered, then waits for the web server to
+    /// (manually) shut down before returning.
+    ///
+    /// > Warning: You should probably be using ``execute()`` instead of this method.
+    @available(*, noasync, message: "Use the async execute() method instead.")
     public func run() throws {
         do {
             try self.start()
@@ -161,31 +165,53 @@ public final class Application: Sendable {
             throw error
         }
     }
+    
+    /// Starts the ``Application`` asynchronous using the ``startup()`` method, then waits for any running tasks
+    /// to complete. If your application is started without arguments, the default argument is used.
+    ///
+    /// Under normal circumstances, ``execute()`` runs until a shutdown is triggered, then wait for the web server to
+    /// (manually) shut down before returning.
+    public func execute() async throws {
+        do {
+            try await self.startup()
+            try await self.running?.onStop.get()
+        } catch {
+            self.logger.report(error: error)
+            throw error
+        }
+    }
 
     /// When called, this will execute the startup command provided through an argument. If no startup command is
     /// provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
     ///
-    /// If you `start` Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
-    /// If you want to run your Application indefinitely, or until your code shuts the application down,
-    /// use `run()` instead.
+    /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
+    /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
+    /// use ``run()`` instead.
+    ///
+    /// > Warning: You should probably be using ``startup()`` instead of this method.
+    @available(*, noasync, message: "Use the async startup() method instead.")
     public func start() throws {
+        try self.eventLoopGroup.any().makeFutureWithTask { try await self.startup() }.wait()
+    }
+    
+    /// When called, this will asynchronously execute the startup command provided through an argument. If no startup
+    /// command is provided, the default is used. Under normal circumstances, this will start running Vapor's webserver.
+    ///
+    /// If you start Vapor through this method, you'll need to prevent your Swift Executable from closing yourself.
+    /// If you want to run your ``Application`` indefinitely, or until your code shuts the application down,
+    /// use ``execute()`` instead.
+    public func startup() async throws {
         try self.boot()
 
-        let commands = self.commands.group()
-        let asyncCommands = self.asyncCommands.group()
-        let combinedCommands = asyncCommands.merge(
-            with: commands,
-            defaultCommand: commands.defaultCommand,
-            help: commands.help
-        )
+        let combinedCommands = AsyncCommands(
+            commands: self.asyncCommands.commands.merging(self.commands.commands) { $1 },
+            defaultCommand: self.asyncCommands.defaultCommand ?? self.commands.defaultCommand,
+            enableAutocomplete: self.asyncCommands.enableAutocomplete || self.commands.enableAutocomplete
+        ).group()
 
         var context = CommandContext(console: self.console, input: self.environment.commandInput)
         context.application = self
-        try self.eventLoopGroup.any()
-            .makeFutureWithTask { [context] in
-                try await self.console.run(combinedCommands, with: context)
-            }
-            .wait()
+        try await self.console.run(combinedCommands, with: context)
     }
 
     public func boot() throws {
