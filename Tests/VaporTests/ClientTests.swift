@@ -51,7 +51,7 @@ final class ClientTests: XCTestCase {
         
         remoteApp.environment.arguments = ["serve"]
         try remoteApp.boot()
-        try remoteApp.start()
+        try await remoteApp.startup()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
