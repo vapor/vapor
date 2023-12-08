@@ -49,7 +49,7 @@ extension HTTPHeaders: Codable {
                 
                 self.add(name: name, value: value)
             }
-        } catch DecodingError.typeMismatch(let type, _) where (type as? Array<Any>.Type) != nil {
+        } catch DecodingError.typeMismatch(let type, _) where "\(type)".starts(with: "Array<") {
             // Try the old format
             let container = try decoder.singleValueContainer()
             let dict = try container.decode([String: String].self)
