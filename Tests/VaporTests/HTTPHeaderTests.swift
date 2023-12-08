@@ -465,4 +465,16 @@ final class HTTPHeaderTests: XCTestCase {
             XCTAssertEqual(v1, v2)
         }
     }
+    
+    /// Make sure the old HTTPHeaders encoding can still be decoded
+    func testOldHTTPHeadersEncoding() throws {
+        let decoder = JSONDecoder()
+        let json = #"{"connection":"fun","attention":"none"}"#
+        var headers = HTTPHeaders()
+        
+        XCTAssertNoThrow(headers = try decoder.decode(HTTPHeaders.self, from: Data(json.utf8)))
+        XCTAssertEqual(headers.count, 2)
+        XCTAssertEqual(headers.first(name: "connection"), "fun")
+        XCTAssertEqual(headers.first(name: "attention"), "none")
+    }
 }

@@ -38,15 +38,23 @@ extension HTTPHeaders: Codable {
     private enum CodingKeys: String, CodingKey { case name, value }
     
     public init(from decoder: any Decoder) throws {
-        var container = try decoder.unkeyedContainer()
-        
         self.init()
-        while !container.isAtEnd {
-            let nested = try container.nestedContainer(keyedBy: Self.CodingKeys.self)
-            let name = try nested.decode(String.self, forKey: .name)
-            let value = try nested.decode(String.self, forKey: .value)
+        do {
+            var container = try decoder.unkeyedContainer()
             
-            self.add(name: name, value: value)
+            while !container.isAtEnd {
+                let nested = try container.nestedContainer(keyedBy: Self.CodingKeys.self)
+                let name = try nested.decode(String.self, forKey: .name)
+                let value = try nested.decode(String.self, forKey: .value)
+                
+                self.add(name: name, value: value)
+            }
+        } catch DecodingError.typeMismatch(let type, _) where (type as? Array<Any>.Type) != nil {
+            // Try the old format
+            let container = try decoder.singleValueContainer()
+            let dict = try container.decode([String: String].self)
+            
+            self.add(contentsOf: dict.map { ($0.key, $0.value) })
         }
     }
 
