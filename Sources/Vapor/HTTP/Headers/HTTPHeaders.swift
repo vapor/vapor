@@ -35,20 +35,29 @@ extension HTTPHeaders {
 }
 
 extension HTTPHeaders: Codable {
-    public init(from decoder: Decoder) throws {
-        let dictionary = try decoder.singleValueContainer().decode([String: String].self)
+    private enum CodingKeys: String, CodingKey { case name, value }
+    
+    public init(from decoder: any Decoder) throws {
+        var container = try decoder.unkeyedContainer()
+        
         self.init()
-        for (name, value) in dictionary {
+        while !container.isAtEnd {
+            let nested = try container.nestedContainer(keyedBy: Self.CodingKeys.self)
+            let name = try nested.decode(String.self, forKey: .name)
+            let value = try nested.decode(String.self, forKey: .value)
+            
             self.add(name: name, value: value)
         }
     }
 
-    public func encode(to encoder: Encoder) throws {
-        var dictionary: [String: String] = [:]
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.unkeyedContainer()
+        
         for (name, value) in self {
-            dictionary[name] = value
+            var nested = container.nestedContainer(keyedBy: Self.CodingKeys.self)
+            
+            try nested.encode(name, forKey: .name)
+            try nested.encode(value, forKey: .value)
         }
-        var container = encoder.singleValueContainer()
-        try container.encode(dictionary)
     }
 }
