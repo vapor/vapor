@@ -200,7 +200,8 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
 
     private func parse(_ component: Component) -> String? {
         var url = vapor_urlparser_url()
-        vapor_urlparser_parse(self.string, self.string.count, 0, &url)
+        let utf8View = self.string.utf8
+        vapor_urlparser_parse(self.string, utf8View.count, 0, &url)
         let data: vapor_urlparser_field_data
         switch component {
         case .scheme:
@@ -221,8 +222,8 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         if data.len == 0 {
             return nil
         }
-        let start = self.string.index(self.string.startIndex, offsetBy: numericCast(data.off))
-        let end = self.string.index(start, offsetBy: numericCast(data.len))
-        return String(self.string[start..<end])
+        let start = utf8View.index(utf8View.startIndex, offsetBy: numericCast(data.off))
+        let end = utf8View.index(start, offsetBy: numericCast(data.len))
+        return String(utf8View[start..<end])
     }
 }

@@ -230,6 +230,11 @@ final class RequestTests: XCTestCase {
             let uri = URI()
             XCTAssertEqual(uri.string, "/")
         }
+        do {
+            let uri = URI(string: "http://test/😀?👍")
+            XCTAssertEqual(uri.path, "/😀")
+            XCTAssertEqual(uri.query, "👍")
+        }
     }
     
     func testRedirect() throws {
