@@ -82,7 +82,7 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         }
         if path.hasPrefix("/") {
             string += path
-        } else {
+        } else if !path.isEmpty {
             string += "/" + path
         }
         if let query = query {

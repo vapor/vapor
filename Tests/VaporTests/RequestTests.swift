@@ -155,10 +155,12 @@ final class RequestTests: XCTestCase {
             XCTAssertEqual(uri.path, "/")
         }
         do {
-            let uri = URI(string: "http://foo")
+            var uri = URI(string: "http://foo")
             XCTAssertEqual(uri.scheme, "http")
             XCTAssertEqual(uri.host, "foo")
             XCTAssertEqual(uri.path, "")
+            uri.query = "bar"
+            XCTAssertEqual(uri.string, "http://foo?bar")
         }
         do {
             let uri = URI(string: "foo")
