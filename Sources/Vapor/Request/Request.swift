@@ -312,7 +312,7 @@ public final class Request: CustomStringConvertible, Sendable {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
-        let requestId = headers[.xRequestId].first ?? UUID().uuidString
+        let requestId = headers.first(name: .xRequestId) ?? UUID().uuidString
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
