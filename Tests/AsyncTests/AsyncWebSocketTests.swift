@@ -15,7 +15,7 @@ final class AsyncWebSocketTests: XCTestCase {
             ws.onText { ws.send($1) }
         }
         server.environment.arguments = ["serve"]
-        try server.start()
+        try await server.startup()
 
         defer {
             server.shutdown()
@@ -58,7 +58,7 @@ final class AsyncWebSocketTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
 
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -89,7 +89,7 @@ final class AsyncWebSocketTests: XCTestCase {
         app.http.server.configuration.port = 0
         app.environment.arguments = ["serve"]
 
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -128,7 +128,7 @@ final class AsyncWebSocketTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
 
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,

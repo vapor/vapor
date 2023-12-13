@@ -161,7 +161,7 @@ final class PipelineTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -191,7 +191,7 @@ final class PipelineTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -223,7 +223,7 @@ final class PipelineTests: XCTestCase {
         
         app.environment.arguments = ["serve"]
         app.http.server.configuration.port = 0
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,

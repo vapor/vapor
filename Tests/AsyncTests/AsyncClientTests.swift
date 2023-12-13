@@ -42,7 +42,7 @@ final class AsyncClientTests: XCTestCase {
         
         remoteApp.environment.arguments = ["serve"]
         try remoteApp.boot()
-        try remoteApp.start()
+        try await remoteApp.startup()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
@@ -152,7 +152,7 @@ final class AsyncClientTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try app.boot()
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
