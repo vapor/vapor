@@ -29,6 +29,18 @@ final class RequestTests: XCTestCase {
         XCTAssertNotEqual(request1.id, request2.id)
     }
 
+    func testRequestIdInLoggerMetadata() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+        guard case .string(let string) = request.logger[metadataKey: "request-id"] else {
+            XCTFail("Did not find request-id key in logger metadata.")
+            return
+        }
+        XCTAssertEqual(string, request.id)
+    }
+
     func testRequestPeerAddressForwarded() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
@@ -104,7 +116,7 @@ final class RequestTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("remote") {
-            if case .string(let string) = $0.logger[metadataKey: "request-id"] {
+            if case .string(let string) = $0.logger[metadataKey: "request-id"], string == $0.id {
                 return string
             } else {
                 throw Abort(.notFound)
