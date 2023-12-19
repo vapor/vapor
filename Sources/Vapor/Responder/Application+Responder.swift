@@ -75,8 +75,11 @@ extension Application {
 
         @available(*, deprecated, message: "Provide an AsyncResponder instead")
         @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.Responder)) {
-            #warning("Fix")
-//            self.storage.factory.withLockedValue { $0 = .init(factory: factory) }
+            let wrappedFactory: (@Sendable (Application) -> Vapor.AsyncResponder) = { app in
+                let responder = factory(app)
+                return AsyncResponderWrapper(responder)
+            }
+            self.storage.factory.withLockedValue { $0 = .init(factory: wrappedFactory) }
         }
         
         @preconcurrency public func use(_ factory: @Sendable @escaping (Application) -> (Vapor.AsyncResponder)) {
