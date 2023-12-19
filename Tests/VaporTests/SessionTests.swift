@@ -4,6 +4,7 @@ import Vapor
 import NIOCore
 import NIOHTTP1
 
+@available(*, deprecated, message: "Covered by AsyncSessionTests")
 final class SessionTests: XCTestCase {
     func testSessionDestroy() async throws {
         actor MockKeyedCache: AsyncSessionDriver {

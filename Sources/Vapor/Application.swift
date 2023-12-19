@@ -142,6 +142,8 @@ public final class Application: Sendable {
         self.passwords.use(.bcrypt)
         self.sessions.initialize()
         self.sessions.use(.memory)
+        self.asyncSessions.initialize()
+        self.asyncSessions.use(.memory)
         self.responder.initialize()
         self.responder.use(.default)
         self.servers.initialize()
