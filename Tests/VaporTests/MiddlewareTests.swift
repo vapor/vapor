@@ -3,6 +3,7 @@ import XCTest
 import Vapor
 import NIOCore
 
+@available(*, deprecated, message: "Now covered by AsyncMiddlewareTests")
 final class MiddlewareTests: XCTestCase {
     actor OrderStore {
         var order: [String] = []
