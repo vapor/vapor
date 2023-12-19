@@ -49,6 +49,7 @@ extension Application {
             }
         }
 
+        @available(*, deprecated, message: "Use asyncMiddleware instead")
         public var middleware: SessionsMiddleware {
             .init(
                 session: self.driver,
