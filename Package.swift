@@ -120,9 +120,5 @@ let package = Package(
             .copy("Utilities/expired.crt"),
             .copy("Utilities/expired.key"),
         ]),
-        .testTarget(name: "AsyncTests", dependencies: [
-            .product(name: "NIOTestUtils", package: "swift-nio"),
-            .target(name: "XCTVapor"),
-        ]),
     ]
 )
