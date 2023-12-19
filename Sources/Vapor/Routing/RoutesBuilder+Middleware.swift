@@ -150,8 +150,9 @@ private final class MiddlewareGroup: RoutesBuilder {
     /// See `HTTPRoutesBuilder`.
     @available(*, deprecated, message: "Use SendableRoute instead")
     func add(_ route: Route) {
-        #warning("Fix?")
-//        route.responder = self.middleware.makeResponder(chainingTo: route.responder)
+        if let responder = (self.middleware as? Middleware)?.makeResponder(chainingTo: route.responder) {
+            route.responder = responder
+        }
         self.root.add(route)
     }
     
