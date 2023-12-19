@@ -19,14 +19,14 @@ extension Authenticatable {
     ///     - throwing: `Error` to throw if the type is not authed.
     public static func guardMiddleware(
         throwing error: Error = Abort(.unauthorized, reason: "\(Self.self) not authenticated.")
-    ) -> Middleware {
+    ) -> AsyncMiddleware {
         return GuardAuthenticationMiddleware<Self>(throwing: error)
     }
 }
 
 
 
-private final class GuardAuthenticationMiddleware<A>: Middleware
+private final class GuardAuthenticationMiddleware<A>: AsyncMiddleware
     where A: Authenticatable
 {
     /// Error to throw when guard fails.
@@ -41,10 +41,10 @@ private final class GuardAuthenticationMiddleware<A>: Middleware
         self.error = error
     }
 
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
+    func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
         guard request.auth.has(A.self) else {
-            return request.eventLoop.makeFailedFuture(self.error)
+            throw self.error
         }
-        return next.respond(to: request)
+        return try await next.respond(to: request)
     }
 }
