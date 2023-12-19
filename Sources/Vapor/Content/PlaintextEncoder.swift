@@ -26,7 +26,7 @@ public struct PlaintextEncoder: ContentEncoder {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         let actualEncoder: _PlaintextEncoder
