@@ -7,20 +7,19 @@ import NIOPosix
 final class AuthenticationTests: XCTestCase {
     func testBearerAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BearerAuthenticator {
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+        struct TestAuthenticator: AsyncBearerAuthenticator {
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -48,22 +47,21 @@ final class AuthenticationTests: XCTestCase {
 
     func testBasicAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -90,22 +88,21 @@ final class AuthenticationTests: XCTestCase {
     
     func testBasicAuthenticatorWithColonInPassword() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret:with:colon" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -129,22 +126,21 @@ final class AuthenticationTests: XCTestCase {
     
     func testBasicAuthenticatorWithEmptyPassword() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -168,22 +164,21 @@ final class AuthenticationTests: XCTestCase {
     
     func testBasicAuthenticatorWithRedirect() throws {
         struct Test: Authenticatable {
-            static func authenticator() -> Authenticator {
+            static func authenticator() -> AsyncAuthenticator {
                 TestAuthenticator()
             }
 
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
 
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 if basic.username == "test" && basic.password == "secret" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -212,11 +207,11 @@ final class AuthenticationTests: XCTestCase {
 
     func testSessionAuthentication() throws {
         struct Test: Authenticatable, SessionAuthenticatable {
-            static func bearerAuthenticator() -> Authenticator {
+            static func bearerAuthenticator() -> AsyncAuthenticator {
                 TestBearerAuthenticator()
             }
 
-            static func sessionAuthenticator() -> Authenticator {
+            static func sessionAuthenticator() -> AsyncAuthenticator {
                 TestSessionAuthenticator()
             }
 
@@ -226,23 +221,21 @@ final class AuthenticationTests: XCTestCase {
             var name: String
         }
 
-        struct TestBearerAuthenticator: BearerAuthenticator {
-            func authenticate(bearer: BearerAuthorization, for request: Request) -> EventLoopFuture<Void> {
+        struct TestBearerAuthenticator: AsyncBearerAuthenticator {
+            func authenticate(bearer: BearerAuthorization, for request: Request) async throws {
                 if bearer.token == "test" {
                     let test = Test(name: "Vapor")
                     request.auth.login(test)
                 }
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
 
-        struct TestSessionAuthenticator: SessionAuthenticator {
+        struct TestSessionAuthenticator: AsyncSessionAuthenticator {
             typealias User = Test
 
-            func authenticate(sessionID: String, for request: Request) -> EventLoopFuture<Void> {
+            func authenticate(sessionID: String, for request: Request) async throws {
                 let test = Test(name: sessionID)
                 request.auth.login(test)
-                return request.eventLoop.makeSucceededFuture(())
             }
         }
         
@@ -250,7 +243,7 @@ final class AuthenticationTests: XCTestCase {
         defer { app.shutdown() }
         
         app.routes.grouped([
-            app.sessions.middleware,
+            app.asyncSessions.middleware,
             Test.sessionAuthenticator(),
             Test.bearerAuthenticator(),
             Test.guardMiddleware(),
@@ -300,17 +293,17 @@ final class AuthenticationTests: XCTestCase {
 
     func testAsyncAuthenticator() throws {
         struct Test: Authenticatable {
-            static func authenticator(threadPool: NIOThreadPool) -> Authenticator {
+            static func authenticator(threadPool: NIOThreadPool) -> AsyncAuthenticator {
                 TestAuthenticator(threadPool: threadPool)
             }
             var name: String
         }
 
-        struct TestAuthenticator: BasicAuthenticator {
+        struct TestAuthenticator: AsyncBasicAuthenticator {
             typealias User = Test
             let threadPool: NIOThreadPool
-
-            func authenticate(basic: BasicAuthorization, for request: Request) -> EventLoopFuture<Void> {
+            
+            func authenticate(basic: BasicAuthorization, for request: Request) async throws {
                 let promise = request.eventLoop.makePromise(of: Void.self)
                 self.threadPool.submit { _ in
                     sleep(1)
@@ -322,7 +315,7 @@ final class AuthenticationTests: XCTestCase {
                         promise.succeed(())
                     }
                 }
-                return promise.futureResult
+                return try await promise.futureResult.get()
             }
         }
 
