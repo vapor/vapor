@@ -132,7 +132,7 @@ public func routes(_ app: Application) throws {
     }
 
     let sessions = app.grouped("sessions")
-        .grouped(app.sessions.middleware)
+        .grouped(app.asyncSessions.middleware)
     sessions.get("set", ":value") { req -> HTTPStatus in
         req.session.data["name"] = req.parameters.get("value")
         return .ok
@@ -273,11 +273,6 @@ public func routes(_ app: Application) throws {
     }
     asyncRoutes.get("opaque", use: opaqueRouteTester)
     
-    // Make sure jumping between multiple different types of middleware works
-    asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestMiddleware(number: 3), TestAsyncMiddleware(number: 4), TestMiddleware(number: 5)).get("middleware") { req async throws -> String in
-        return "OK"
-    }
-    
     // Make sure no warnings with async middleware
     asyncRoutes.grouped(TestAsyncMiddleware(number: 2), TestAsyncMiddleware(number: 4), TestAsyncMiddleware(number: 5)).get("middleware") { req async throws -> String in
         return "OK"
@@ -344,17 +339,5 @@ struct TestAsyncMiddleware: AsyncMiddleware {
         let response = try await next.respond(to: request)
         request.logger.debug("In async middleware way out - \(number)")
         return response
-    }
-}
-
-struct TestMiddleware: Middleware {
-    let number: Int
-    
-    func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        request.logger.debug("In non-async middleware - \(number)")
-        return next.respond(to: request).map { response in
-            request.logger.debug("In non-async middleware way out - \(self.number)")
-            return response
-        }
     }
 }
