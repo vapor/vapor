@@ -27,6 +27,7 @@ extension RangeReplaceableCollection where Self.SubSequence == Substring, Self: 
     }
 }
 
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 func XCTAssertURIComponents(
        scheme: @autoclosure () throws -> URI.Scheme?,
      userinfo: @autoclosure () throws -> String? = nil,
@@ -286,7 +287,7 @@ final class URITests: XCTestCase {
         )
         XCTAssertURIString("scheme://user:pass@host:1/path/path2/file.html;params?query#fragment",
             hasScheme: "scheme", hasUserinfo: "user:pass", hasHost: "host", hasPort: 1, hasPath: "/path/path2/file.html;params",
-            hasQuery: "query", hasFragment: "fragment"
+            hasQuery: "query", hasFragment: "fragment", hasEqualString: false
         )
         XCTAssertURIString("http://test.com/a%20space", hasScheme: "http", hasHost: "test.com", hasPath: "/a space")
         XCTAssertURIString("http://test.com/aBrace%7B", hasScheme: "http", hasHost: "test.com", hasPath: "/aBrace{")
@@ -341,8 +342,8 @@ final class URITests: XCTestCase {
         XCTAssertURIString("http://a/b/c/./g/.", hasScheme: "http", hasHost: "a", hasPath: "/b/c/./g/.")
         XCTAssertURIString("http://a/b/c/g/./h", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g/./h")
         XCTAssertURIString("http://a/b/c/g/../h", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g/../h")
-        XCTAssertURIString("http://a/b/c/g;x=1/./y", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g;x=1/./y")
-        XCTAssertURIString("http://a/b/c/g;x=1/../y", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g;x=1/../y")
+        XCTAssertURIString("http://a/b/c/g;x=1/./y", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g;x=1/./y", hasEqualString: false)
+        XCTAssertURIString("http://a/b/c/g;x=1/../y", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g;x=1/../y", hasEqualString: false)
         XCTAssertURIString("http://a/b/c/g?y/./x", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g", hasQuery: "y/./x")
         XCTAssertURIString("http://a/b/c/g?y/../x", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g", hasQuery: "y/../x")
         XCTAssertURIString("http://a/b/c/g#s/./x", hasScheme: "http", hasHost: "a", hasPath: "/b/c/g", hasFragment: "s/./x")
