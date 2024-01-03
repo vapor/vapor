@@ -261,7 +261,7 @@ public final class HTTPServer: Server, Sendable {
         application: Application,
         responder: Responder,
         configuration: Configuration,
-        on eventLoopGroup: EventLoopGroup
+        on eventLoopGroup: EventLoopGroup = NIOSingletons.posixEventLoopGroup
     ) {
         self.application = application
         self.responder = responder

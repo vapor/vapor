@@ -12,7 +12,7 @@ public struct PlaintextRenderer: ViewRenderer, Sendable {
         fileio: NonBlockingFileIO,
         viewsDirectory: String,
         logger: Logger,
-        eventLoopGroup: EventLoopGroup
+        eventLoopGroup: EventLoopGroup = NIOSingletons.posixEventLoopGroup
     ) {
         self.fileio = fileio
         self.viewsDirectory = viewsDirectory.finished(with: "/")

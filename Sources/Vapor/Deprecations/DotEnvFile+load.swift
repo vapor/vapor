@@ -18,7 +18,7 @@ extension DotEnvFile {
     @available(*, deprecated, message: "use `load(for:on:fileio:logger)`")
     public static func load(
         for environment: Environment = .development,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .shared(NIOSingletons.posixEventLoopGroup),
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
@@ -50,7 +50,7 @@ extension DotEnvFile {
     @available(*, deprecated, message: "use `load(path:on:fileio:logger)`")
     public static func load(
         path: String,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .shared(NIOSingletons.posixEventLoopGroup),
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
         let threadPool = NIOThreadPool(numberOfThreads: 1)
