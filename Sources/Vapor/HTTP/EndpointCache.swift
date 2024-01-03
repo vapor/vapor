@@ -1,4 +1,8 @@
+#if !canImport(Darwin) && swift(<5.9)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 import NIOConcurrencyHelpers
 import NIOCore
 import Logging

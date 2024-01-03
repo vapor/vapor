@@ -161,10 +161,12 @@ class ValidationTests: XCTestCase {
         """
         XCTAssertNoThrow(try Email.validate(json: valid))
         
-        let validURL: URI = "https://tanner.xyz/email?email=ß@tanner.xyz"
+        // N.B.: These two checks previously asserted against a URI containing the unencoded `ß` character.
+        // Such a URI is semantically incorrect (per RFC 3986) and should have been considered a bug.
+        let validURL: URI = "https://tanner.xyz/email?email=%C3%9F@tanner.xyz" // ß
         XCTAssertNoThrow(try Email.validate(query: validURL))
         
-        let validURL2: URI = "https://tanner.xyz/email?email=me@ßanner.xyz"
+        let validURL2: URI = "https://tanner.xyz/email?email=me@%C3%9Fanner.xyz"
         XCTAssertNoThrow(try Email.validate(query: validURL2))
         
         let invalidUser = """
