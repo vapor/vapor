@@ -4,6 +4,7 @@ import Vapor
 import NIOCore
 import Algorithms
 
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 extension RangeReplaceableCollection where Self.SubSequence == Substring, Self: StringProtocol {
     #if compiler(>=5.9)
     #if hasFeature(BareSlashRegexLiterals)
@@ -50,6 +51,7 @@ func XCTAssertURIComponents(
     )
 }
 
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 func XCTAssertURIComponents(
        scheme: @autoclosure () throws -> String? = nil,
      userinfo: @autoclosure () throws -> String? = nil,
@@ -82,6 +84,7 @@ func XCTAssertURIComponents(
     }
 }
 
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 func XCTAssertURIString(
      _ string: @autoclosure () throws -> String,
      hasScheme scheme:     @autoclosure () throws -> String? = nil,
@@ -116,6 +119,7 @@ func XCTAssertURIString(
     }
 }
 
+@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 final class URITests: XCTestCase {
     func testBasicConstruction() {
         XCTAssertURIString(
