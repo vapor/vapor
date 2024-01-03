@@ -215,11 +215,7 @@ final class URITests: XCTestCase {
         let zeros = String(repeating: "0", count: 65_512)
         let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
     
-        if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
-            XCTAssertURIString(untrustedInput, hasHost: nil, hasPath: untrustedInput, hasEqualString: false)
-        } else {
-            XCTAssertURIString(untrustedInput, hasHost: nil, hasPath: "/", hasEqualString: false)
-        }
+        XCTAssertURIString(untrustedInput, hasHost: nil, hasPath: untrustedInput, hasEqualString: false)
     }
     
     func testUrlParsingVectors() {
