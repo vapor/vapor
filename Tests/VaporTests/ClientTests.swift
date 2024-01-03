@@ -1,7 +1,8 @@
-#if !canImport(Darwin)
-@preconcurrency import Dispatch
-#endif
+#if os(Linux)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 import XCTest
 import Vapor
 import NIOCore
@@ -11,6 +12,7 @@ import NIOEmbedded
 import NIOConcurrencyHelpers
 
 final class ClientTests: XCTestCase {
+    
     var remoteAppPort: Int!
     var remoteApp: Application!
     

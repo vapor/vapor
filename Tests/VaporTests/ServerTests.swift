@@ -1,7 +1,8 @@
-#if !canImport(Darwin)
-@preconcurrency import Dispatch
-#endif
+#if os(Linux)
+@preconcurrency import Foundation
+#else
 import Foundation
+#endif
 import Vapor
 import XCTest
 import AsyncHTTPClient

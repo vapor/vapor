@@ -66,6 +66,7 @@ let package = Package(
     targets: [
         // C helpers
         .target(name: "CVaporBcrypt"),
+        .target(name: "CVaporURLParser"),
 
         // Vapor
         .target(name: "Vapor", dependencies: [
@@ -73,6 +74,7 @@ let package = Package(
             .product(name: "AsyncKit", package: "async-kit"),
             .product(name: "Backtrace", package: "swift-backtrace"),
             .target(name: "CVaporBcrypt"),
+            .target(name: "CVaporURLParser"),
             .product(name: "ConsoleKit", package: "console-kit"),
             .product(name: "Logging", package: "swift-log"),
             .product(name: "Metrics", package: "swift-metrics"),
