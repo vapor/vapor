@@ -153,7 +153,7 @@ final class ContentTests: XCTestCase {
             XCTAssertContains(res.body.string, "decoded!")
         }
     }
-    
+
     func testMultipartDecode() throws {
         let data = """
         --123\r
@@ -199,7 +199,7 @@ final class ContentTests: XCTestCase {
             XCTAssertEqualJSON(res.body.string, expected)
         }
     }
-  
+
     func testMultipartDecodedEmptyMultipartForm() throws {
         let data = """
         --123\r
@@ -254,7 +254,7 @@ final class ContentTests: XCTestCase {
             XCTAssertEqual(res.status, .unprocessableEntity)
         }
     }
-    
+
     func testMultipartDecodeUnicode() throws {
         let data = """
         --123\r
@@ -328,7 +328,7 @@ final class ContentTests: XCTestCase {
             XCTAssertContains(res.body.string, "name=\"image\"")
         }
     }
-    
+
     func testMultiPartEncodeUnicode() throws {
         struct User: Content {
             static var defaultContentType: HTTPMediaType = .formData
@@ -473,7 +473,7 @@ final class ContentTests: XCTestCase {
         let content = try request.content.decode(SampleContent.self)
         XCTAssertEqual(content.name, "new name after decode")
     }
-    
+
     func testSupportsJsonApi() throws {
         let app = Application()
         defer { app.shutdown() }
@@ -539,7 +539,6 @@ final class ContentTests: XCTestCase {
     func testDataCorruptionError() throws {
         let app = Application()
         defer { app.shutdown() }
-        
         let req = Request(
             application: app,
             method: .GET,
@@ -548,7 +547,6 @@ final class ContentTests: XCTestCase {
             collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
             on: app.eventLoopGroup.next()
         )
-        
         struct DecodeModel: Content {
             let badJson: String
         }
@@ -563,12 +561,10 @@ final class ContentTests: XCTestCase {
     func testValueNotFoundError() throws {
         let app = Application()
         defer { app.shutdown() }
-        
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.content.encode([
             "items": ["1"]
         ], as: .json)
-        
         struct DecodeModel: Content {
             struct Item: Content {
                 init(from decoder: Decoder) throws {
@@ -578,7 +574,6 @@ final class ContentTests: XCTestCase {
                     fatalError()
                 }
             }
-            
             let items: Item
         }
         XCTAssertThrowsError(try req.content.decode(DecodeModel.self)) { error in
@@ -592,14 +587,12 @@ final class ContentTests: XCTestCase {
     func testTypeMismatchError() throws {
         let app = Application()
         defer { app.shutdown() }
-        
         let req = Request(application: app, on: app.eventLoopGroup.next())
         try req.content.encode([
             "item": [
                 "title": "The title"
             ]
         ], as: .json)
-        
         struct DecodeModel: Content {
             struct Item: Content {
                 let title: Int
@@ -671,15 +664,15 @@ final class ContentTests: XCTestCase {
             XCTAssertEqual(res.status, .badRequest)
         }
     }
-    
+
     func testContentIsBool() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
-        
+
         app.routes.get("success") { req in
             return true
         }
-        
+
         try app.testable().test(.GET, "/success") { res in
             XCTAssertEqual(try res.content.decode(Bool.self), true)
         }
@@ -700,7 +693,7 @@ private struct SampleContent: Content {
 
 private struct JsonApiContent: Content {
     struct Meta: Codable {}
-    
+
     var data: [String]
     var meta = Meta()
 }

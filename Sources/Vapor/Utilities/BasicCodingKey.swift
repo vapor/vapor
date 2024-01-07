@@ -25,7 +25,7 @@ extension Array where Element == CodingKey {
 public enum BasicCodingKey: CodingKey, Hashable {
     case key(String)
     case index(Int)
-    
+
     /// See `CodingKey`.
     public var stringValue: String {
         switch self {
@@ -33,7 +33,7 @@ public enum BasicCodingKey: CodingKey, Hashable {
         case .key(let key): return key
         }
     }
-    
+
     /// See `CodingKey`.
     public var intValue: Int? {
         switch self {
@@ -41,12 +41,12 @@ public enum BasicCodingKey: CodingKey, Hashable {
         case .key(let key): return Int(key)
         }
     }
-    
+
     /// See `CodingKey`.
     public init?(stringValue: String) {
         self = .key(stringValue)
     }
-    
+
     /// See `CodingKey`.
     public init?(intValue: Int) {
         self = .index(intValue)
@@ -59,7 +59,7 @@ public enum BasicCodingKey: CodingKey, Hashable {
             self = .key(codingKey.stringValue)
         }
     }
-    
+
     public init(_ codingKeyRepresentable: Vapor.CodingKeyRepresentable) {
         self.init(codingKeyRepresentable.codingKey)
     }

@@ -59,7 +59,7 @@ extension DecodingError: AbortError {
         @unknown default: return "unknown"
         }
     }
-    
+
     /// See `CustomStringConvertible`.
     public var description: String {
         return "Decoding error: \(self.reason)"
@@ -86,7 +86,6 @@ private extension DecodingError.Context {
     var debugDescriptionAndUnderlyingError: String {
         "\(self.debugDescriptionNoTrailingDot)\(self.underlyingErrorDescription)."
     }
-    
     /// `debugDescription` sometimes has a trailing dot, and sometimes not.
     private var debugDescriptionNoTrailingDot: String {
         if self.debugDescription.isEmpty {
@@ -97,7 +96,6 @@ private extension DecodingError.Context {
             return ". \(self.debugDescription)"
         }
     }
-    
     private var underlyingErrorDescription: String {
         if let underlyingError = self.underlyingError {
             return ". Underlying error: \(underlyingError)"
