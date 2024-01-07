@@ -96,11 +96,11 @@ public final class Application: Sendable {
 
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
-        @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' to use a shared EventLoopGroup for better performance, or provide your own EventLoopGroup with '.shared()'")
+        @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
         case createNew
 
         public static var singleton: EventLoopGroupProvider {
-            .singleton
+            .shared(MultiThreadedEventLoopGroup.singleton)
         }
     }
 
