@@ -100,7 +100,7 @@ public final class Application: Sendable {
         case createNew
 
         public static var singleton: EventLoopGroupProvider {
-            .shared(NIOSingletons.posixEventLoopGroup)
+            .singleton
         }
     }
 
@@ -116,7 +116,7 @@ public final class Application: Sendable {
 
     public init(
         _ environment: Environment = .development,
-        _ eventLoopGroupProvider: EventLoopGroupProvider = .shared(NIOSingletons.posixEventLoopGroup)
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         #if swift(<5.9)
             Backtrace.install()

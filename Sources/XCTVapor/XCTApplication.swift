@@ -48,7 +48,7 @@ extension Application {
             try app.server.start(address: .hostname(self.hostname, port: self.port))
             defer { app.server.shutdown() }
             
-            let client = HTTPClient(eventLoopGroup: NIOSingletons.posixEventLoopGroup)
+            let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
             defer { try! client.syncShutdown() }
             var path = request.url.path
             path = path.hasPrefix("/") ? path : "/\(path)"

@@ -174,7 +174,7 @@ final class AsyncRequestTests: XCTestCase {
                                               headers: [:],
                                               body: .byteBuffer(tenMB))
         let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        let httpClient = HTTPClient(eventLoopGroup: NIOSingletons.posixEventLoopGroup)
+        let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
         XCTAssertThrowsError(try httpClient.execute(request: request,
                                                                 delegate: delegate,
                                                                 deadline: .now() + .milliseconds(500)).wait()) { error in
