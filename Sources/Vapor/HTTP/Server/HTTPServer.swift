@@ -237,11 +237,32 @@ public final class HTTPServer: Server, Sendable {
         return connection.channel.closeFuture
     }
 
+    /// The configuration for the HTTP server.
+    ///
+    /// Many properties of the configuration may be changed both before and after the server has been started.
+    ///
+    /// However, a warning will be logged and the configuration will be discarded if an option could not be
+    /// changed after the server has started. These include the following properties, which are only read
+    /// once when the server starts:
+    /// - ``Configuration-swift.struct/address``
+    /// - ``Configuration-swift.struct/hostname``
+    /// - ``Configuration-swift.struct/port``
+    /// - ``Configuration-swift.struct/backlog``
+    /// - ``Configuration-swift.struct/reuseAddress``
+    /// - ``Configuration-swift.struct/tcpNoDelay``
     public var configuration: Configuration {
         get { _configuration.withLockedValue { $0 } }
         set {
-            guard !didStart.withLockedValue({ $0 }) else {
-                _configuration.withLockedValue({ $0 }).logger.warning("Cannot modify server configuration after server has been started.")
+            let oldValue = _configuration.withLockedValue { $0 }
+            
+            let canBeUpdatedDynamically =
+                oldValue.address == newValue.address
+                && oldValue.backlog == newValue.backlog
+                && oldValue.reuseAddress == newValue.reuseAddress
+                && oldValue.tcpNoDelay == newValue.tcpNoDelay
+            
+            guard canBeUpdatedDynamically || !didStart.withLockedValue({ $0 }) else {
+                oldValue.logger.warning("Cannot modify server configuration after server has been started.")
                 return
             }
             self.application.storage[Application.HTTP.Server.ConfigurationKey.self] = newValue
@@ -300,6 +321,7 @@ public final class HTTPServer: Server, Sendable {
         try self.connection.withLockedValue {
             $0 = try HTTPServerConnection.start(
                 application: self.application,
+                server: self,
                 responder: self.responder,
                 configuration: configuration,
                 on: self.eventLoopGroup
@@ -341,6 +363,7 @@ private final class HTTPServerConnection: Sendable {
     
     static func start(
         application: Application,
+        server: HTTPServer,
         responder: Responder,
         configuration: HTTPServer.Configuration,
         on eventLoopGroup: EventLoopGroup
@@ -357,7 +380,10 @@ private final class HTTPServerConnection: Sendable {
             }
             
             // Set the handlers that are applied to the accepted Channels
-            .childChannelInitializer { [unowned application] channel in
+            .childChannelInitializer { [unowned application, unowned server] channel in
+                /// Copy the most up-to-date configuration.
+                let configuration = server.configuration
+
                 // add TLS handlers if configured
                 if var tlsConfiguration = configuration.tlsConfiguration {
                     // prioritize http/2

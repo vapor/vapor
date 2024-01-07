@@ -33,6 +33,18 @@ extension Application.HTTP {
             typealias Value = HTTPServer
         }
 
+        /// The configuration for the HTTP server.
+        ///
+        /// Although the configuration can be changed after the server has started, a warning will be logged
+        /// and the configuration will be discarded if an option will no longer be considered.
+        /// 
+        /// These include the following properties, which are only read once when the server starts:
+        /// - ``HTTPServer/Configuration-swift.struct/address``
+        /// - ``HTTPServer/Configuration-swift.struct/hostname``
+        /// - ``HTTPServer/Configuration-swift.struct/port``
+        /// - ``HTTPServer/Configuration-swift.struct/backlog``
+        /// - ``HTTPServer/Configuration-swift.struct/reuseAddress``
+        /// - ``HTTPServer/Configuration-swift.struct/tcpNoDelay``
         public var configuration: HTTPServer.Configuration {
             get {
                 self.application.storage[ConfigurationKey.self] ?? .init(
@@ -40,8 +52,10 @@ extension Application.HTTP {
                 )
             }
             nonmutating set {
-                if self.application.storage.contains(Key.self) {
-                    self.application.logger.warning("Cannot modify server configuration after server has been used.")
+                /// If a server is available, configure it directly, otherwise cache a configuration instance
+                /// here to be used until the server is instantiated.
+                if let server = self.application.storage[Key.self] {
+                    server.configuration = newValue
                 } else {
                     self.application.storage[ConfigurationKey.self] = newValue
                 }

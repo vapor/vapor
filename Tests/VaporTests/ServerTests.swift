@@ -931,7 +931,6 @@ final class ServerTests: XCTestCase {
             // This lies and accepts the above cert, which has actually expired.
             XCTAssertEqual(peerCerts, [cert])
             successPromise.succeed(.certificateVerified)
-            
         }
         
         // We need to disable verification on the client, because the cert we're using has expired, and we want to
@@ -965,6 +964,90 @@ final class ServerTests: XCTestCase {
         )
         let a = try app.http.client.shared.execute(request: request).wait()
         XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+    }
+    
+    func testCanChangeConfigurationDynamically() throws {
+        guard let clientCertPath = Bundle.module.url(forResource: "expired", withExtension: "crt"),
+              let clientKeyPath = Bundle.module.url(forResource: "expired", withExtension: "key") else {
+            XCTFail("Cannot load expired cert and associated key")
+            return
+        }
+        
+        let cert = try NIOSSLCertificate(file: clientCertPath.path, format: .pem)
+        let key = try NIOSSLPrivateKey(file: clientKeyPath.path, format: .pem)
+        
+        let app = Application(.testing)
+        
+        app.http.server.configuration.hostname = "127.0.0.1"
+        app.http.server.configuration.port = 0
+        app.http.server.configuration.serverName = "Old"
+        
+        /// We need to disable verification on the client, because the cert we're using has expired
+        var clientConfig = TLSConfiguration.makeClientConfiguration()
+        clientConfig.certificateVerification = .none
+        clientConfig.certificateChain = [.certificate(cert)]
+        clientConfig.privateKey = .privateKey(key)
+        app.http.client.configuration.tlsConfiguration = clientConfig
+        app.http.client.configuration.maximumUsesPerConnection = 1
+        
+        app.environment.arguments = ["serve"]
+        
+        app.get("hello") { req in
+            "world"
+        }
+        
+        defer { app.shutdown() }
+        try app.start()
+        
+        XCTAssertNotNil(app.http.server.shared.localAddress)
+        guard let localAddress = app.http.server.shared.localAddress,
+              let ip = localAddress.ipAddress,
+              let port = localAddress.port else {
+            XCTFail("couldn't get ip/port from \(app.http.server.shared.localAddress.debugDescription)")
+            return
+        }
+        
+        /// Make a regular request
+        let a = try app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "http://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()
+        XCTAssertEqual(a.headers[.server], ["Old"])
+        XCTAssertEqual(a.body, ByteBuffer(string: "world"))
+        
+        /// Configure server name without stopping the server
+        app.http.server.configuration.serverName = "New"
+        /// Configure TLS without stopping the server
+        var serverConfig = TLSConfiguration.makeServerConfiguration(certificateChain: [.certificate(cert)], privateKey: .privateKey(key))
+        serverConfig.certificateVerification = .noHostnameVerification
+        
+        app.http.server.configuration.tlsConfiguration = serverConfig
+        app.http.server.configuration.customCertificateVerifyCallback = { peerCerts, successPromise in
+            /// This lies and accepts the above cert, which has actually expired.
+            XCTAssertEqual(peerCerts, [cert])
+            successPromise.succeed(.certificateVerified)
+        }
+        
+        /// Make a TLS request this time around
+        let b = try app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "https://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()
+        XCTAssertEqual(b.headers[.server], ["New"])
+        XCTAssertEqual(b.body, ByteBuffer(string: "world"))
+        
+        /// Non-TLS request should now fail
+        let c = try? app.http.client.shared.execute(
+            request: try HTTPClient.Request(
+                url: "http://\(ip):\(port)/hello",
+                method: .GET
+            )
+        ).wait()
+        XCTAssertNil(c)
     }
     
     override class func setUp() {
