@@ -44,7 +44,7 @@ public struct DotEnvFile: Sendable {
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         for environment: Environment = .development,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
         fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {
@@ -91,7 +91,7 @@ public struct DotEnvFile: Sendable {
     ///     - logger: Optionally provide an existing logger.
     public static func load(
         path: String,
-        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .createNew,
+        on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
         fileio: NonBlockingFileIO,
         logger: Logger = Logger(label: "dot-env-loggger")
     ) {

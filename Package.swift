@@ -28,7 +28,7 @@ let package = Package(
         .package(url: "https://github.com/apple/swift-crypto.git", "1.0.0" ..< "4.0.0"),
 
         // 🚍 High-performance trie-node router.
-        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.5.0"),
+        .package(url: "https://github.com/vapor/routing-kit.git", from: "4.8.2"),
 
         // 💥 Backtraces for Swift on Linux
         .package(url: "https://github.com/swift-server/swift-backtrace.git", from: "1.1.1"),

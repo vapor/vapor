@@ -507,9 +507,9 @@ final class ServerTests: XCTestCase {
         })
     }
     
+    @available(*, deprecated, message: "To avoid deprecation warnings")
     func testEchoServer() throws {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let app = Application(.testing, .shared(eventLoopGroup))
+        let app = Application(.testing, .createNew)
         defer { app.shutdown() }
         
         final class Context: Sendable {
@@ -556,7 +556,7 @@ final class ServerTests: XCTestCase {
             body: .stream(length: nil, { stream in
                 // We set the application to have a single event loop so we can use the same
                 // event loop here
-                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                let streamBox = NIOLoopBound(stream, eventLoop: app.eventLoopGroup.any())
                 return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
                     streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {

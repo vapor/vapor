@@ -19,16 +19,13 @@ fileprivate extension String {
 final class AsyncRequestTests: XCTestCase {
     
     var app: Application!
-    var eventLoopGroup: EventLoopGroup!
     
     override func setUp() async throws {
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 4)
-        app = Application(.testing, .shared(eventLoopGroup))
+        app = Application(.testing)
     }
     
     override func tearDown() async throws {
         app.shutdown()
-        try await eventLoopGroup.shutdownGracefully()
     }
     
     func testStreamingRequest() async throws {
@@ -177,7 +174,7 @@ final class AsyncRequestTests: XCTestCase {
                                               headers: [:],
                                               body: .byteBuffer(tenMB))
         let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
         XCTAssertThrowsError(try httpClient.execute(request: request,
                                                                 delegate: delegate,
                                                                 deadline: .now() + .milliseconds(500)).wait()) { error in

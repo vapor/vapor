@@ -96,7 +96,12 @@ public final class Application: Sendable {
 
     public enum EventLoopGroupProvider: Sendable {
         case shared(EventLoopGroup)
+        @available(*, deprecated, renamed: "singleton", message: "Use '.singleton' for a shared 'EventLoopGroup', for better performance")
         case createNew
+
+        public static var singleton: EventLoopGroupProvider {
+            .shared(MultiThreadedEventLoopGroup.singleton)
+        }
     }
 
     public let eventLoopGroupProvider: EventLoopGroupProvider
@@ -111,7 +116,7 @@ public final class Application: Sendable {
 
     public init(
         _ environment: Environment = .development,
-        _ eventLoopGroupProvider: EventLoopGroupProvider = .createNew
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
         #if swift(<5.9)
             Backtrace.install()
