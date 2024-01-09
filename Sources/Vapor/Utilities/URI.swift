@@ -172,6 +172,11 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         set { self.components?.query = newValue }
     }
 
+    public var percentEncodedQuery: String? {
+        get { self.components?.percentEncodedQuery }
+        set { self.components?.percentEncodedQuery = newValue }
+    }
+    
     public var fragment: String? {
         get { self.components?.fragment }
         set { self.components?.fragment = newValue }

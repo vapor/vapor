@@ -111,7 +111,7 @@ public struct URLEncodedFormDecoder: ContentDecoder, URLQueryDecoder {
     ///   - url: ``URI`` to read the query string from
     ///   - userInfo: Overrides the default coder user info
     public func decode<D>(_ decodable: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D where D : Decodable {
-        try self.decode(D.self, from: url.query ?? "", userInfo: userInfo)
+        try self.decode(D.self, from: url.percentEncodedQuery ?? "", userInfo: userInfo)
     }
 
     /// Decodes an instance of the supplied ``Decodable`` type from a ``String``.

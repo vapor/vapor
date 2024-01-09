@@ -58,7 +58,7 @@ final class QueryTests: XCTestCase {
         let request = Request(application: app, on: app.eventLoopGroup.next())
         request.headers.contentType = .json
         request.url.path = "/"
-        request.url.query = "emailsToSearch%5B%5D=xyz"
+        request.url.percentEncodedQuery = "emailsToSearch%5B%5D=xyz"
         let parsed = try request.query.get([String].self, at: "emailsToSearch")
         XCTAssertEqual(parsed, ["xyz"])
     }
