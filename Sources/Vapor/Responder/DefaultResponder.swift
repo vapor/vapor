@@ -6,27 +6,27 @@ import NIOHTTP1
 import Logging
 
 /// Vapor's main `Responder` type. Combines configured middleware + router to create a responder.
-internal struct DefaultResponder: Responder {
+internal struct DefaultResponder: AsyncResponder {
     private let router: TrieRouter<CachedRoute>
-    private let notFoundResponder: Responder
+    private let notFoundResponder: AsyncResponder
     private let reportMetrics: Bool
 
     private struct CachedRoute {
-        let route: Route
-        let responder: Responder
+        let route: SendableRoute
+        let responder: AsyncResponder
     }
 
     /// Creates a new `ApplicationResponder`
-    public init(routes: Routes, middleware: [Middleware] = [], reportMetrics: Bool = true) {
+    public init(routes: Routes, middleware: [AsyncMiddleware] = [], reportMetrics: Bool = true) {
         let options = routes.caseInsensitive ?
             Set(arrayLiteral: TrieRouter<CachedRoute>.ConfigurationOption.caseInsensitive) : []
         let router = TrieRouter(CachedRoute.self, options: options)
         
-        for route in routes.all {
+        for route in routes.sendableAll {
             // Make a copy of the route to cache middleware chaining.
             let cached = CachedRoute(
                 route: route,
-                responder: middleware.makeResponder(chainingTo: route.responder)
+                responder: middleware.makeAsyncResponder(chainingTo: route.responder)
             )
             
             // remove any empty path components
@@ -47,14 +47,14 @@ internal struct DefaultResponder: Responder {
                     if case .constant(_) = component { return true }
                     return false
             }) {
-                let headRoute = Route(
+                let headRoute = SendableRoute(
                     method: .HEAD,
                     path: route.path,
-                    responder: middleware.makeResponder(chainingTo: HeadResponder()),
+                    responder: middleware.makeAsyncResponder(chainingTo: HeadResponder()),
                     requestType: route.requestType,
                     responseType: route.responseType)
 
-                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeResponder(chainingTo: HeadResponder()))
+                let headCachedRoute = CachedRoute(route: headRoute, responder: middleware.makeAsyncResponder(chainingTo: HeadResponder()))
 
                 router.register(headCachedRoute, at: [.constant(HTTPMethod.HEAD.string)] + path)
             }
@@ -62,35 +62,40 @@ internal struct DefaultResponder: Responder {
             router.register(cached, at: [.constant(route.method.string)] + path)
         }
         self.router = router
-        self.notFoundResponder = middleware.makeResponder(chainingTo: NotFoundResponder())
+        self.notFoundResponder = middleware.makeAsyncResponder(chainingTo: NotFoundResponder())
         self.reportMetrics = reportMetrics
     }
 
-    /// See `Responder`
-    public func respond(to request: Request) -> EventLoopFuture<Response> {
+    /// See `AsyncResponder`    
+    func respond(to request: Request) async throws -> Response {
         let startTime = DispatchTime.now().uptimeNanoseconds
-        let response: EventLoopFuture<Response>
-        if let cachedRoute = self.getRoute(for: request) {
-            request.route = cachedRoute.route
-            response = cachedRoute.responder.respond(to: request)
-        } else {
-            response = self.notFoundResponder.respond(to: request)
-        }
-        return response.always { result in
-            let status: HTTPStatus
-            switch result {
-            case .success(let response):
-                status = response.status
-            case .failure:
-                status = .internalServerError
+        do {
+            let response: Response
+            if let cachedRoute = self.getRoute(for: request) {
+                request.sendableRoute = cachedRoute.route
+                response = try await cachedRoute.responder.respond(to: request)
+            } else {
+                response = try await self.notFoundResponder.respond(to: request)
             }
             if self.reportMetrics {
                 self.updateMetrics(
                     for: request,
                     startTime: startTime,
-                    statusCode: status.code
+                    statusCode: response.status.code
                 )
             }
+            return response
+        } catch {
+            // This should never really be hit, we should always have the error caught by
+            // the error middleware, but in case we don't have it added allow NIO to handle
+            if self.reportMetrics {
+                self.updateMetrics(
+                    for: request,
+                    startTime: startTime,
+                    statusCode: HTTPStatus.internalServerError.code
+                )
+            }
+            throw error
         }
     }
     
@@ -125,7 +130,7 @@ internal struct DefaultResponder: Responder {
     ) {
         let pathForMetrics: String
         let methodForMetrics: String
-        if let route = request.route {
+        if let route = request.sendableRoute {
             // We don't use route.description here to avoid duplicating the method in the path
             pathForMetrics = "/\(route.path.map { "\($0)" }.joined(separator: "/"))"
             methodForMetrics = request.method.string
@@ -155,15 +160,15 @@ internal struct DefaultResponder: Responder {
     }
 }
 
-private struct HeadResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeSucceededFuture(.init(status: .ok))
+private struct HeadResponder: AsyncResponder {
+    func respond(to request: Request) async throws -> Response {
+        Response(status: .ok)
     }
 }
 
-private struct NotFoundResponder: Responder {
-    func respond(to request: Request) -> EventLoopFuture<Response> {
-        request.eventLoop.makeFailedFuture(RouteNotFound())
+private struct NotFoundResponder: AsyncResponder {
+    func respond(to request: Request) async throws -> Response {
+        throw RouteNotFound()
     }
 }
 

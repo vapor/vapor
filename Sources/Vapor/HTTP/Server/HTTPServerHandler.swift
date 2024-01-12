@@ -5,11 +5,11 @@ final class HTTPServerHandler: ChannelInboundHandler, RemovableChannelHandler {
     typealias InboundIn = Request
     typealias OutboundOut = Response
     
-    let responder: Responder
+    let responder: AsyncResponder
     let logger: Logger
     var isShuttingDown: Bool
     
-    init(responder: Responder, logger: Logger) {
+    init(responder: AsyncResponder, logger: Logger) {
         self.responder = responder
         self.logger = logger
         self.isShuttingDown = false

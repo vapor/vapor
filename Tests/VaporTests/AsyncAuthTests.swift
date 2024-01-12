@@ -203,7 +203,7 @@ final class AsyncAuthenticationTests: XCTestCase {
         defer { app.shutdown() }
 
         app.routes.grouped([
-            app.sessions.middleware,
+            app.asyncSessions.middleware,
             Test.sessionAuthenticator(),
             Test.bearerAuthenticator(),
             Test.guardMiddleware(),

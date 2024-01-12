@@ -81,7 +81,14 @@ private final class HTTPRoutesGroup: RoutesBuilder {
     }
     
     /// See `HTTPRoutesBuilder`.
+    @available(*, deprecated, message: "Use SendableRoute instead")
     func add(_ route: Route) {
+        route.path = self.path + route.path
+        self.root.add(route)
+    }
+    
+    func add(_ route: SendableRoute) {
+        var route = route
         route.path = self.path + route.path
         self.root.add(route)
     }

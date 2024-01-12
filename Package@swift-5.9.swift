@@ -32,7 +32,7 @@ let package = Package(
 
         // Event-driven network application framework for high performance protocol servers & clients, non-blocking.
         .package(url: "https://github.com/apple/swift-nio.git", from: "2.62.0"),
-
+        
         // Bindings to OpenSSL-compatible libraries for TLS support in SwiftNIO
         .package(url: "https://github.com/apple/swift-nio-ssl.git", from: "2.8.0"),
 
@@ -127,17 +127,6 @@ let package = Package(
                 .copy("Utilities/my-secret-env-content"),
                 .copy("Utilities/expired.crt"),
                 .copy("Utilities/expired.key"),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("BareSlashRegexLiterals"),
-                .enableExperimentalFeature("StrictConcurrency=complete"),
-            ]
-        ),
-        .testTarget(
-            name: "AsyncTests",
-            dependencies: [
-                .product(name: "NIOTestUtils", package: "swift-nio"),
-                .target(name: "XCTVapor"),
             ],
             swiftSettings: [
                 .enableUpcomingFeature("BareSlashRegexLiterals"),

@@ -283,7 +283,7 @@ final class RouteTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        app.grouped(SessionsMiddleware(session: app.sessions.driver))
+        app.grouped(AsyncSessionsMiddleware(session: app.asyncSessions.driver))
             .get("get") { req -> String in
                 return req.session.data["name"] ?? "n/a"
             }

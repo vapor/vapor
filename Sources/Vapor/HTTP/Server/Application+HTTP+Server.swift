@@ -20,7 +20,7 @@ extension Application.HTTP {
             } else {
                 let new = HTTPServer.init(
                     application: self.application,
-                    responder: self.application.responder.current,
+                    responder: self.application.responder.asyncCurrent,
                     configuration: self.configuration,
                     on: self.application.eventLoopGroup
                 )

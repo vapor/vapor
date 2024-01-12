@@ -2,6 +2,7 @@ import NIOHTTP1
 import RoutingKit
 import NIOConcurrencyHelpers
 
+@available(*, deprecated, message: "Use SendableRoute instead")
 public final class Route: CustomStringConvertible, Sendable {
     public var method: HTTPMethod {
         get {
@@ -95,5 +96,21 @@ public final class Route: CustomStringConvertible, Sendable {
     public func description(_ string: String) -> Route {
         self.userInfo["description"] = string
         return self
+    }
+    
+    var sendableRoute: SendableRoute {
+        let sendableRoute = SendableRoute(method: self.method, path: self.path, responder: AsyncResponderWrapper(self.responder), requestType: self.requestType, responseType: self.responseType)
+        for (key, value) in self.userInfo {
+            sendableRoute.userInfo["\(key)"] = value
+        }
+        return sendableRoute
+    }
+    
+    convenience init(sendableRoute: SendableRoute) {
+        self.init(method: sendableRoute.method, path: sendableRoute.path, responder: sendableRoute.responder, requestType: sendableRoute.requestType, responseType: sendableRoute.responseType)
+        let userInfo = sendableRoute.userInfo.dictionary.withLockedValue { $0 }
+        for (key, value) in userInfo {
+            self.userInfo[key] = value
+        }
     }
 }

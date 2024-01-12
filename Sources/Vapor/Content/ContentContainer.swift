@@ -131,12 +131,12 @@ extension ContentContainer {
 
 /// Injects coder userInfo into a ``ContentDecoder`` so we don't have to add passthroughs to ``ContentContainer``.
 fileprivate struct ForwardingContentDecoder: ContentDecoder {
-    let base: ContentDecoder, info: [CodingUserInfoKey: Any]
+    let base: ContentDecoder, info: [CodingUserInfoKey: Sendable]
     
     func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: self.info)
     }
-    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         try self.base.decode(D.self, from: body, headers: headers, userInfo: userInfo.merging(self.info) { $1 })
     }
 }

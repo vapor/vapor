@@ -13,3 +13,15 @@ extension AsyncResponder {
         return promise.futureResult
     }
 }
+
+struct AsyncResponderWrapper: AsyncResponder {
+    let responder: Responder
+    
+    init(_ responder: Responder) {
+        self.responder = responder
+    }
+    
+    func respond(to request: Request) async throws -> Response {
+        try await self.responder.respond(to: request).get()
+    }
+}

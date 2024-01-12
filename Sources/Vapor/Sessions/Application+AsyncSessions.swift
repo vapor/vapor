@@ -1,32 +1,30 @@
 import NIOConcurrencyHelpers
 
 extension Application {
-    @available(*, deprecated, message: "Use asyncSessions instead")
-    public var sessions: Sessions {
+    public var asyncSessions: AsyncSessions {
         .init(application: self)
     }
 
-    @available(*, deprecated, message: "Use AsyncSessions instead")
-    public struct Sessions: Sendable {
+    public struct AsyncSessions: Sendable {
         public struct Provider: Sendable {
             public static var memory: Self {
                 .init {
-                    $0.sessions.use { $0.sessions.memory }
+                    $0.asyncSessions.use { $0.asyncSessions.memory }
                 }
             }
 
             let run: @Sendable (Application) -> ()
 
-            @preconcurrency public init(_ run: @Sendable @escaping (Application) -> ()) {
+            public init(_ run: @Sendable @escaping (Application) -> ()) {
                 self.run = run
             }
         }
 
         final class Storage: Sendable {
             struct SessionDriverFactory {
-                let factory: (@Sendable (Application) -> SessionDriver)?
+                let factory: (@Sendable (Application) -> AsyncSessionDriver)?
             }
-            let memory: MemorySessions.Storage
+            let memory: AsyncMemorySessions.Storage
             let makeDriver: NIOLockedValueBox<SessionDriverFactory>
             let configuration: NIOLockedValueBox<SessionsConfiguration>
             init() {
@@ -51,21 +49,21 @@ extension Application {
             }
         }
 
-        public var middleware: SessionsMiddleware {
+        public var middleware: AsyncSessionsMiddleware {
             .init(
                 session: self.driver,
                 configuration: self.configuration
             )
         }
 
-        public var driver: SessionDriver {
+        public var driver: AsyncSessionDriver {
             guard let makeDriver = self.storage.makeDriver.withLockedValue({ $0.factory }) else {
-                fatalError("No driver configured. Configure with app.sessions.use(...)")
+                fatalError("No driver configured. Configure with app.asyncSessions.use(...)")
             }
             return makeDriver(self.application)
         }
 
-        public var memory: MemorySessions {
+        public var memory: AsyncMemorySessions {
             .init(storage: self.storage.memory)
         }
 
@@ -73,13 +71,13 @@ extension Application {
             provider.run(self.application)
         }
 
-        @preconcurrency public func use(_ makeDriver: @Sendable @escaping (Application) -> (SessionDriver)) {
+        @preconcurrency public func use(_ makeDriver: @Sendable @escaping (Application) -> (AsyncSessionDriver)) {
             self.storage.makeDriver.withLockedValue { $0 = .init(factory: makeDriver) }
         }
 
         var storage: Storage {
             guard let storage = self.application.storage[Key.self] else {
-                fatalError("Sessions not configured. Configure with app.sessions.initialize()")
+                fatalError("Sessions not configured. Configure with app.asyncSessions.initialize()")
             }
             return storage
         }
