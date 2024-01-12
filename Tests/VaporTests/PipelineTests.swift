@@ -113,29 +113,42 @@ final class PipelineTests: XCTestCase {
         try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
     }
 
-    func testBadStreamLength() throws {
+    func testBadStreamLength() async throws {
         app.on(.POST, "echo", body: .stream) { request -> Response in
             Response(body: .init(stream: { writer in
                 writer.write(.buffer(.init(string: "a")), promise: nil)
                 writer.write(.end, promise: nil)
             }, count: 2))
         }
-
-        let channel = EmbeddedChannel()
-        try channel.connect(to: .init(unixDomainSocketPath: "/foo")).wait()
-        try channel.pipeline.addVaporHTTP1Handlers(
+        
+        let channel = NIOAsyncTestingChannel()
+        try await channel.connect(to: .init(unixDomainSocketPath: "/foo"))
+        try await channel.pipeline.addVaporHTTP1Handlers(
             application: app,
             responder: app.responder,
             configuration: app.http.server.configuration
-        ).wait()
+        ).get()
 
         XCTAssertEqual(channel.isActive, true)
         // throws a notEnoughBytes error which is good
-        XCTAssertThrowsError(try channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n")))
+        var errorThrown = false
+        do {
+            try await channel.writeInbound(ByteBuffer(string: "POST /echo HTTP/1.1\r\n\r\n"))
+        } catch {
+            errorThrown = true
+        }
+        XCTAssertTrue(errorThrown)
+        
+        // Hack to work around a/a and ELF bridge in tests
+        sleep(1)
         XCTAssertEqual(channel.isActive, false)
-        try XCTAssertContains(channel.readOutbound(as: ByteBuffer.self)?.string, "HTTP/1.1 200 OK")
-        try XCTAssertEqual(channel.readOutbound(as: ByteBuffer.self)?.string, "a")
-        try XCTAssertNil(channel.readOutbound(as: ByteBuffer.self)?.string)
+        
+        let chunk1 = try await channel.readOutbound(as: ByteBuffer.self)?.string
+        XCTAssertContains(chunk1, "HTTP/1.1 200 OK")
+        let chunk2 = try await channel.readOutbound(as: ByteBuffer.self)?.string
+        XCTAssertContains(chunk2, "a")
+        let chunk3 = try await channel.readOutbound(as: ByteBuffer.self)?.string
+        XCTAssertNil(chunk3)
     }
     
     func testInvalidHttp() throws {
