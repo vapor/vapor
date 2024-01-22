@@ -5,24 +5,27 @@
 </a>
 
 <p align="center">
-	<a href="https://docs.vapor.codes/4.0/">
-        <img src="http://img.shields.io/badge/read_the-docs-2196f3.svg" alt="Documentation">
+    <a href="https://docs.vapor.codes/4.0/">
+        <img src="https://design.vapor.codes/images/readthedocs.svg" alt="Documentation">
     </a>
     <a href="https://discord.gg/vapor">
-        <img src="https://img.shields.io/discord/431917998102675485.svg" alt="Team Chat">
+        <img src="https://design.vapor.codes/images/discordchat.svg" alt="Team Chat">
     </a>
     <a href="LICENSE">
-        <img src="https://img.shields.io/badge/license-MIT-brightgreen.svg" alt="MIT License">
+        <img src="https://design.vapor.codes/images/mitlicense.svg" alt="MIT License">
     </a>
-    <a href="https://github.com/vapor/vapor/actions">
-        <img src="https://github.com/vapor/vapor/actions/workflows/test.yml/badge.svg?branch=main" alt="Continuous Integration">
+    <a href="https://github.com/vapor/vapor/actions/workflows/test.yml">
+        <img src="https://img.shields.io/github/actions/workflow/status/vapor/vapor/test.yml?event=push&style=plastic&logo=github&label=tests&logoColor=%23ccc" alt="Continuous Integration">
+    </a>
+    <a href="https://codecov.io/gh/vapor/vapor">
+        <img src="https://img.shields.io/codecov/c/github/vapor/vapor?style=plastic&logo=codecov&label=codecov">
     </a>
     <a href="https://swift.org">
-        <img src="https://img.shields.io/badge/swift-5.7-brightgreen.svg" alt="Swift 5.7">
+        <img src="https://design.vapor.codes/images/swift57up.svg" alt="Swift 5.7+">
     </a>
-    <a href="https://twitter.com/codevapor">
-        <img src="https://img.shields.io/badge/twitter-codevapor-5AA9E7.svg" alt="Twitter">
-    </a>
+    <!--<a href="https://twitter.com/codevapor">
+        <img src="https://img.shields.io/badge/%20-@codevapor-gray.svg?style=plastic&logo=x&labelColor=%235aa9e7" alt="Twitter">
+    </a>-->
 </p>
 
 <br>
@@ -33,11 +36,11 @@ Take a look at some of the [awesome stuff](https://github.com/Cellane/awesome-va
 
 ### 💧 Community
 
-Join the welcoming community of fellow Vapor developers on [Discord](http://vapor.team).
+Join the welcoming community of fellow Vapor developers on [Discord](https://vapor.team).
 
 ### 🚀 Contributing
 
-To contribute a **feature or idea** to Vapor, [create an issue](https://github.com/vapor/vapor/issues/new) explaining your idea or bring it up on [Discord](http://vapor.team).
+To contribute a **feature or idea** to Vapor, [create an issue](https://github.com/vapor/vapor/issues/new) explaining your idea or bring it up on [Discord](https://vapor.team).
 
 If you find a **bug**, please [create an issue](https://github.com/vapor/vapor/issues/new). 
 
