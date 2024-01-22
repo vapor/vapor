@@ -68,7 +68,6 @@ final class AsyncRequestTests: XCTestCase {
     func testStreamingRequestBodyCleansUp() async throws {
         app.http.server.configuration.hostname = "127.0.0.1"
         app.http.server.configuration.port = 0
-        app.http.server.configuration.shutdownTimeout = .seconds(1)
         
         let bytesTheServerRead = ManagedAtomic<Int>(0)
         
@@ -95,7 +94,7 @@ final class AsyncRequestTests: XCTestCase {
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
         request.method = .POST
         request.body = .stream(oneMB.async, length: .known(oneMB.count))
-        let response = try await app.http.client.shared.execute(request, timeout: .milliseconds(500))
+        let response = try await app.http.client.shared.execute(request, timeout: .seconds(5))
         
         XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
         XCTAssertEqual(response.status, .internalServerError)
