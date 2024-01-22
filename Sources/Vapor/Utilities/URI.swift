@@ -31,8 +31,20 @@ import struct Foundation.URLComponents
 /// [`swift-foundation`]: https://github.com/apple/swift-foundation
 /// [`URL`]: https://developer.apple.com/documentation/foundation/url
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
-public struct URI {
+public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
     private var components: URLComponents?
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let string = try container.decode(String.self)
+        
+        self.init(string: string)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.string)
+    }
     
     public init(string: String = "/") {
         self.components = URL(string: string).flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
@@ -184,23 +196,16 @@ public struct URI {
         #endif
     }
     
-}
-
-extension URI: ExpressibleByStringInterpolation {
     // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
     public init(stringLiteral value: String) {
         self.init(string: value)
     }
-}
 
-extension URI: CustomStringConvertible {
     // See `CustomStringConvertible.description`.
     public var description: String {
         self.string
     }
 }
-
-extension URI: Sendable {}
 
 // MARK: - URI.Scheme
 
@@ -209,7 +214,7 @@ extension URI {
     ///
     /// [RFC 3986 § 3.1]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
     /// [RGC 7595]: https://datatracker.ietf.org/doc/html/rfc7595
-    public struct Scheme {
+    public struct Scheme: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
         /// The string representation of the scheme.
         public let value: String?
         
@@ -266,20 +271,14 @@ extension URI {
         public static let httpsUnixDomainSocket: Self = "https+unix"
         
         // MARK: End of "well-known" schemes -
+
+        // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
+        public init(stringLiteral value: String) { self.init(value) }
+
+        // See `CustomStringConvertible.description`.
+        public var description: String { self.value ?? "" }
     }
 }
-
-extension URI.Scheme: ExpressibleByStringInterpolation {
-    // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
-    public init(stringLiteral value: String) { self.init(value) }
-}
-
-extension URI.Scheme: CustomStringConvertible {
-    // See `CustomStringConvertible.description`.
-    public var description: String { self.value ?? "" }
-}
-
-extension URI.Scheme: Sendable {}
 
 // MARK: - Utilities
 
@@ -297,6 +296,8 @@ extension StringProtocol {
     /// > Note: Fortunately, we don't have to perform the corresponding decoding when going in the other
     /// > direction, as it will be taken care of by standard percent encoding logic. If this were not the
     /// > case, doing this with 100% correctness would require a nontrivial amount of shadow state tracking.
+    ///
+    /// [RFC 3986 § 2.2]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
     fileprivate var withAllowedUrlDelimitersEncoded: String {
         self.replacingOccurrences(of: "[", with: "%5B", options: .literal)
             .replacingOccurrences(of: "]", with: "%5D", options: .literal)
@@ -310,7 +311,7 @@ extension CharacterSet {
     fileprivate static var urlSchemeAllowed: Self {
         // Intersect the alphanumeric set plus additional characters with the host-allowed set to ensure
         // we get only ASCII codepoints in the result.
-        Self.urlHostAllowed.intersection(Self.alphanumerics.union(.init(charactersIn: "+-.")))
+        .urlHostAllowed.intersection(.alphanumerics.union(.init(charactersIn: "+-.")))
     }
     
     /// The set of characters allowed in a URI path, as per [RFC 3986 § 3.3].
