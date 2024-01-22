@@ -5,29 +5,6 @@ import NIOCore
 import Algorithms
 
 @available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
-extension RangeReplaceableCollection where Self.SubSequence == Substring, Self: StringProtocol {
-    #if compiler(>=5.9)
-    #if hasFeature(BareSlashRegexLiterals)
-    private static var percentEncodingPattern: Regex<Substring> { /(?:%\p{AHex}{2})+/ }
-    #else
-    private static var percentEncodingPattern: Regex<Substring> { try! Regex("(?:%\\p{AHex}{2})+") }
-    #endif
-    #else
-    private static var percentEncodingPattern: Regex<Substring> { try! Regex("(?:%\\p{AHex}{2})+") }
-    #endif
-    
-    /// Foundation's `String.removingPercentEncoding` property is very unforgiving; `nil` is returned
-    /// for any kind of failure whatsoever. This is just a version that gracefully ignores invalid
-    /// sequences whenever possible (which is almost always).
-    var safelyUrlDecoded: Self {
-        self.replacing(
-            Self.percentEncodingPattern,
-            with: { Self(decoding: $0.0.split(separator: "%").map { .init($0, radix: 16)! }, as: UTF8.self) }
-        )
-    }
-}
-
-@available(macOS 13.0, iOS 16.0, tvOS 16.0, watchOS 9.0, *)
 func XCTAssertURIComponents(
        scheme: @autoclosure () throws -> URI.Scheme?,
      userinfo: @autoclosure () throws -> String? = nil,
@@ -65,23 +42,30 @@ func XCTAssertURIComponents(
     _ message: @autoclosure () -> String = "", file: StaticString = #filePath, line: UInt = #line
 ) {
     do {
-        let scheme = try scheme(), userinfo = try userinfo(), host = try host(), port = try port(),
+        let scheme = try scheme(), rawuserinfo = try userinfo(), host = try host(), port = try port(),
             path = try path(), query = try query(), fragment = try fragment()
-        let uri = URI(scheme: scheme, userinfo: userinfo, host: host, port: port, path: path, query: query, fragment: fragment)
+        let uri = URI(scheme: scheme, userinfo: rawuserinfo, host: host, port: port, path: path, query: query, fragment: fragment)
         
-        // All components should be identical to their input counterparts, sans percent encoding.
-        XCTAssertEqual(uri.scheme,   scheme?.safelyUrlDecoded,   "(scheme) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.userinfo, userinfo?.safelyUrlDecoded, "(userinfo) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.host,     host?.safelyUrlDecoded,     "(host) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.port,     port,                       "(port) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.path,     "/\(path.safelyUrlDecoded.trimmingPrefix("/"))", "(path) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.query,    query?.safelyUrlDecoded,    "(query) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.fragment, fragment?.safelyUrlDecoded, "(fragment) \(message())", file: file, line: line)
+        let userinfo = rawuserinfo.map {
+            !$0.contains(":") ? $0 :
+                $0.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false).enumerated()
+                  .map { $1.addingPercentEncoding(withAllowedCharacters: $0 == 0 ? .urlUserAllowed : .urlPasswordAllowed)! }
+                  .joined(separator: ":")
+        }
+        
+        // All components should be identical to their input counterparts with percent encoding.
+        XCTAssertEqual(uri.scheme,   scheme,   "(scheme) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.userinfo, userinfo, "(userinfo) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.host,     host?.addingPercentEncoding(withAllowedCharacters: .urlHostAllowed),     "(host) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.port,     port,     "(port) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.path,     path.addingPercentEncoding(withAllowedCharacters: .urlPathAllowed),     "(path) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.query,    query?.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed),    "(query) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.fragment, fragment?.addingPercentEncoding(withAllowedCharacters: .urlFragmentAllowed), "(fragment) \(message())", file: file, line: line)
         
         // The URI's generated string should match the expected input.
-        XCTAssertEqual(uri.string,   try expected(),             "(string) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.string,   try expected(), "(string) \(message())", file: file, line: line)
     } catch {
-        XCTAssertEqual(try { throw error }(), false,             message(), file: file, line: line)
+        XCTAssertEqual(try { throw error }(), false, message(), file: file, line: line)
     }
 }
 
@@ -103,20 +87,20 @@ func XCTAssertURIString(
         let uri = URI(string: string)
 
         // Each component should match its expected value.
-        XCTAssertEqual(uri.scheme,   try scheme()?.safelyUrlDecoded,   "(scheme) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.userinfo, try userinfo()?.safelyUrlDecoded, "(userinfo) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.host,     try host()?.safelyUrlDecoded,     "(host) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.port,     try port(),                       "(port) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.path,     try path().safelyUrlDecoded,      "(path) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.query,    try query()?.safelyUrlDecoded,    "(query) \(message())", file: file, line: line)
-        XCTAssertEqual(uri.fragment, try fragment()?.safelyUrlDecoded, "(fragment) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.scheme,   try scheme(),   "(scheme) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.userinfo, try userinfo(), "(userinfo) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.host,     try host(),     "(host) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.port,     try port(),     "(port) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.path,     try path(),     "(path) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.query,    try query(),    "(query) \(message())", file: file, line: line)
+        XCTAssertEqual(uri.fragment, try fragment(), "(fragment) \(message())", file: file, line: line)
         
         // The URI's generated string should come out identical to the input string, unless explicitly stated otherwise.
         if try exact() {
-            XCTAssertEqual(uri.string,   string,                       "(string) \(message())", file: file, line: line)
+            XCTAssertEqual(uri.string,   string,     "(string) \(message())", file: file, line: line)
         }
     } catch {
-        XCTAssertEqual(try { throw error }(), false,                   message(), file: file, line: line)
+        XCTAssertEqual(try { throw error }(), false, message(), file: file, line: line)
     }
 }
 
@@ -190,19 +174,19 @@ final class URITests: XCTestCase {
         // N.B.: This test previously asserted that the resulting string did _not_ start with the `//` "authority"
         // prefix. Again, according to RFC 3986, this was always semantically incorrect.
         XCTAssertURIComponents(
-            host: "host", port: 1, path: "test", query: "query", fragment: "fragment",
+            host: "host", port: 1, path: "/test", query: "query", fragment: "fragment",
             generate: "//host:1/test?query#fragment"
         )
         XCTAssertURIComponents(
-            scheme: .httpUnixDomainSocket, host: "/path", path: "test",
+            scheme: .httpUnixDomainSocket, host: "/path", path: "/test",
             generate: "http+unix://%2Fpath/test"
         )
         XCTAssertURIComponents(
-            scheme: .httpUnixDomainSocket, host: "/path", path: "test", fragment: "fragment",
+            scheme: .httpUnixDomainSocket, host: "/path", path: "/test", fragment: "fragment",
             generate: "http+unix://%2Fpath/test#fragment"
         )
         XCTAssertURIComponents(
-            scheme: .httpUnixDomainSocket, host: "/path", path: "test", query: "query", fragment: "fragment",
+            scheme: .httpUnixDomainSocket, host: "/path", path: "/test", query: "query", fragment: "fragment",
             generate: "http+unix://%2Fpath/test?query#fragment"
         )
     }
@@ -216,10 +200,25 @@ final class URITests: XCTestCase {
         let zeros = String(repeating: "0", count: 65_512)
         let untrustedInput = "[https://vapor.codes.somewhere-else.test:](https://vapor.codes.somewhere-else.test/\(zeros)443)[\(zeros)](https://vapor.codes.somewhere-else.test/\(zeros)443)[443](https://vapor.codes.somewhere-else.test/\(zeros)443)"
     
+        let readableInAssertionOutput = untrustedInput
+            .replacingOccurrences(of: zeros, with: "00...00")
+            .addingPercentEncoding(withAllowedCharacters: .urlPathAllowed)!
+        let uri = URI(string: untrustedInput)
+
+        XCTAssertNil(uri.scheme)
+        XCTAssertNil(uri.userinfo)
+        XCTAssertNil(uri.host)
+        XCTAssertNil(uri.port)
+        XCTAssertNil(uri.query)
+        XCTAssertNil(uri.fragment)
         if #available(macOS 14, iOS 17, watchOS 10, tvOS 17, *) {
-            XCTAssertURIString(untrustedInput, hasHost: nil, hasPath: untrustedInput, hasEqualString: false)
+            // TODO: It is not clear why the "encode the first colon as %3A but none of the others" behavior appears, and why only on Darwin
+            XCTAssertEqual(
+                uri.path.replacingOccurrences(of: zeros, with: "00...00").replacing("%3A", with: ":", maxReplacements: 1),
+                readableInAssertionOutput.replacing("%3A", with: ":", maxReplacements: 1)
+            )
         } else {
-            XCTAssertURIString(untrustedInput, hasHost: nil, hasPath: "/", hasEqualString: false)
+            XCTAssertEqual(uri.path, "/")
         }
     }
     
@@ -289,27 +288,27 @@ final class URITests: XCTestCase {
             hasScheme: "scheme", hasUserinfo: "user:pass", hasHost: "host", hasPort: 1, hasPath: "/path/path2/file.html;params",
             hasQuery: "query", hasFragment: "fragment", hasEqualString: false
         )
-        XCTAssertURIString("http://test.com/a%20space", hasScheme: "http", hasHost: "test.com", hasPath: "/a space")
-        XCTAssertURIString("http://test.com/aBrace%7B", hasScheme: "http", hasHost: "test.com", hasPath: "/aBrace{")
-        XCTAssertURIString("http://test.com/aJ%4a", hasScheme: "http", hasHost: "test.com", hasPath: "/aJJ")
-        XCTAssertURIString("file:///%3F", hasScheme: "file", hasPath: "/?")
-        XCTAssertURIString("file:///%78", hasScheme: "file", hasPath: "/x")
+        XCTAssertURIString("http://test.com/a%20space", hasScheme: "http", hasHost: "test.com", hasPath: "/a%20space")
+        XCTAssertURIString("http://test.com/aBrace%7B", hasScheme: "http", hasHost: "test.com", hasPath: "/aBrace%7B")
+        XCTAssertURIString("http://test.com/aJ%4a", hasScheme: "http", hasHost: "test.com", hasPath: "/aJ%4a")
+        XCTAssertURIString("file:///%3F", hasScheme: "file", hasPath: "/%3F")
+        XCTAssertURIString("file:///%78", hasScheme: "file", hasPath: "/%78")
         XCTAssertURIString("file:///?", hasScheme: "file", hasPath: "/", hasQuery: "")
         XCTAssertURIString("file:///&", hasScheme: "file", hasPath: "/&")
         XCTAssertURIString("file:///x", hasScheme: "file", hasPath: "/x")
-        XCTAssertURIString("http:///%3F", hasScheme: "http", hasPath: "/?")
-        XCTAssertURIString("http:///%78", hasScheme: "http", hasPath: "/x")
+        XCTAssertURIString("http:///%3F", hasScheme: "http", hasPath: "/%3F")
+        XCTAssertURIString("http:///%78", hasScheme: "http", hasPath: "/%78")
         XCTAssertURIString("http:///?", hasScheme: "http", hasPath: "/", hasQuery: "")
         XCTAssertURIString("http:///&", hasScheme: "http", hasPath: "/&")
         XCTAssertURIString("http:///x", hasScheme: "http", hasPath: "/x")
-        XCTAssertURIString("glorb:///%3F", hasScheme: "glorb", hasPath: "/?")
-        XCTAssertURIString("glorb:///%78", hasScheme: "glorb", hasPath: "/x")
+        XCTAssertURIString("glorb:///%3F", hasScheme: "glorb", hasPath: "/%3F")
+        XCTAssertURIString("glorb:///%78", hasScheme: "glorb", hasPath: "/%78")
         XCTAssertURIString("glorb:///?", hasScheme: "glorb", hasPath: "/", hasQuery: "")
         XCTAssertURIString("glorb:///&", hasScheme: "glorb", hasPath: "/&")
         XCTAssertURIString("glorb:///x", hasScheme: "glorb", hasPath: "/x")
         XCTAssertURIString("uahsfcncvuhrtgvnahr", hasHost: nil, hasPath: "uahsfcncvuhrtgvnahr")
         XCTAssertURIString("http://[fe80::20a:27ff:feae:8b9e]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e]", hasPath: "/")
-        XCTAssertURIString("http://[fe80::20a:27ff:feae:8b9e%25en0]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e%en0]", hasPath: "/")
+        XCTAssertURIString("http://[fe80::20a:27ff:feae:8b9e%25en0]/", hasScheme: "http", hasHost: "[fe80::20a:27ff:feae:8b9e%25en0]", hasPath: "/")
         XCTAssertURIString("http://host.com/foo/bar/../index.html", hasScheme: "http", hasHost: "host.com", hasPath: "/foo/bar/../index.html")
         XCTAssertURIString("http://host.com/foo/bar/./index.html", hasScheme: "http", hasHost: "host.com", hasPath: "/foo/bar/./index.html")
         XCTAssertURIString("http:/cgi-bin/Count.cgi?ft=0", hasScheme: "http", hasHost: nil, hasPath: "/cgi-bin/Count.cgi", hasQuery: "ft=0")

@@ -511,6 +511,39 @@ final class ContentTests: XCTestCase {
         XCTAssertEqual(request.url.query, "name=new%20name")
     }
 
+    /// https://github.com/vapor/vapor/issues/3135
+    func testDecodePercentEncodedQuery() throws {
+        let app = Application()
+        defer { app.shutdown() }
+
+        let request = Request(
+            application: app,
+            collectedBody: .init(string: ""),
+            on: app.eventLoopGroup.any()
+        )
+        request.url = .init(string: "/?name=value%20has%201%25%20of%20its%20percents")
+        request.headers.contentType = .urlEncodedForm
+
+        XCTAssertEqual(try request.query.get(String.self, at: "name"), "value has 1% of its percents")
+    }
+
+    /// https://github.com/vapor/vapor/issues/3133
+    func testEncodePercentEncodedQuery() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        
+        struct Foo: Content {
+            var status: String
+        }
+        
+        var request = ClientRequest(url: .init(scheme: "https", host: "example.com", path: "/api"))
+        try request.query.encode(Foo(status:
+            "⬆️ taylorswift just released swift-mongodb v0.10.1 – use BSON and MongoDB in pure Swift\n\nhttps://swiftpackageindex.com/tayloraswift/swift-mongodb#releases"
+        ))
+
+        XCTAssertEqual(request.url.string, "https://example.com/api?status=%E2%AC%86%EF%B8%8F%20taylorswift%20just%20released%20swift-mongodb%20v0.10.1%20%E2%80%93%20use%20BSON%20and%20MongoDB%20in%20pure%20Swift%0A%0Ahttps://swiftpackageindex.com/tayloraswift/swift-mongodb%23releases")
+    }
+
     func testSnakeCaseCodingKeyError() throws {
         let app = Application()
         defer { app.shutdown() }
