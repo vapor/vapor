@@ -13,7 +13,7 @@ public struct PlaintextDecoder: ContentDecoder {
     }
     
     /// `ContentDecoder` conformance.
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
         where D : Decodable
     {
         let string = body.getString(at: body.readerIndex, length: body.readableBytes)
@@ -29,7 +29,7 @@ private final class _PlaintextDecoder: Decoder, SingleValueDecodingContainer {
     let userInfo: [CodingUserInfoKey: Any]
     let plaintext: String?
 
-    init(plaintext: String?, userInfo: [CodingUserInfoKey: Any] = [:]) {
+    init(plaintext: String?, userInfo: [CodingUserInfoKey: Sendable] = [:]) {
         self.plaintext = plaintext
         self.userInfo = userInfo
     }

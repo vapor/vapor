@@ -9,7 +9,7 @@ extension FormDataDecoder: ContentDecoder {
         try self.decode(D.self, from: body, headers: headers, userInfo: [:])
     }
     
-    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws -> D
+    public func decode<D>(_ decodable: D.Type, from body: ByteBuffer, headers: HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws -> D
         where D: Decodable
     {
         guard let boundary = headers.contentType?.parameters["boundary"] else {

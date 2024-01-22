@@ -98,10 +98,10 @@ extension URLQueryContainer {
 
 /// Injects coder userInfo into a ``URLQueryDecoder`` so we don't have to add passthroughs to ``URLQueryContainer``.
 fileprivate struct ForwardingURLQueryDecoder: URLQueryDecoder {
-    let base: URLQueryDecoder, info: [CodingUserInfoKey: Any]
+    let base: URLQueryDecoder, info: [CodingUserInfoKey: Sendable]
     
     func decode<D: Decodable>(_: D.Type, from url: URI) throws -> D { try self.base.decode(D.self, from: url, userInfo: self.info) }
-    func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Any]) throws -> D {
+    func decode<D: Decodable>(_: D.Type, from url: URI, userInfo: [CodingUserInfoKey: Sendable]) throws -> D {
         try self.base.decode(D.self, from: url, userInfo: userInfo.merging(self.info) { $1 })
     }
 }
