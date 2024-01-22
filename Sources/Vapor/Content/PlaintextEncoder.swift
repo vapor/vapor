@@ -26,12 +26,12 @@ public struct PlaintextEncoder: ContentEncoder {
         try self.encode(encodable, to: &body, headers: &headers, userInfo: [:])
     }
     
-    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Any]) throws
+    public func encode<E>(_ encodable: E, to body: inout ByteBuffer, headers: inout HTTPHeaders, userInfo: [CodingUserInfoKey: Sendable]) throws
         where E: Encodable
     {
         let actualEncoder: _PlaintextEncoder
         if !userInfo.isEmpty {  // Changing a coder's userInfo is a thread-unsafe mutation, operate on a copy
-            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfo.merging(userInfo) { $1 })
+            actualEncoder = _PlaintextEncoder(userInfo: self.encoder.userInfoSendable.merging(userInfo) { $1 })
         } else {
             actualEncoder = self.encoder
         }
@@ -51,10 +51,11 @@ public struct PlaintextEncoder: ContentEncoder {
 
 private final class _PlaintextEncoder: Encoder, SingleValueEncodingContainer {
     public var codingPath: [CodingKey] = []
-    public var userInfo: [CodingUserInfoKey: Any]
+    fileprivate var userInfoSendable: [CodingUserInfoKey: Sendable]
+    public var userInfo: [CodingUserInfoKey: Any] { self.userInfoSendable }
     public var plaintext: String?
     
-    public init(userInfo: [CodingUserInfoKey: Any] = [:]) { self.userInfo = userInfo }
+    public init(userInfo: [CodingUserInfoKey: Sendable] = [:]) { self.userInfoSendable = userInfo }
     
     public func container<Key: CodingKey>(keyedBy type: Key.Type) -> KeyedEncodingContainer<Key> { .init(FailureEncoder<Key>()) }
     public func unkeyedContainer() -> UnkeyedEncodingContainer { FailureEncoder() }

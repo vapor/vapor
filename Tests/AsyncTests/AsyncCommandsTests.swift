@@ -2,7 +2,7 @@ import XCTest
 import Vapor
 
 final class AsyncCommandsTests: XCTestCase {
-    func testAsyncCommands() throws {
+    func testAsyncCommands() async throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
@@ -10,7 +10,7 @@ final class AsyncCommandsTests: XCTestCase {
 
         app.environment.arguments = ["vapor", "foo", "bar"]
 
-        XCTAssertNoThrow(try app.start())
+        try await app.startup()
 
         XCTAssertTrue(app.storage[TestStorageKey.self] ?? false)
     }

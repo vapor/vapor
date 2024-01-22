@@ -4,6 +4,8 @@
 import struct Foundation.URLComponents
 #endif
 
+// MARK: - URI
+
 /// A type for constructing and manipulating (most) Uniform Resource Indicators.
 ///
 /// > Warning: This is **NOT** the same as Foundation's [`URL`] type!
@@ -29,15 +31,23 @@ import struct Foundation.URLComponents
 /// [`swift-foundation`]: https://github.com/apple/swift-foundation
 /// [`URL`]: https://developer.apple.com/documentation/foundation/url
 /// [`URLComponents`]: https://developer.apple.com/documentation/foundation/urlcomponents
-public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConvertible {
+public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
     private var components: URLComponents?
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        let string = try container.decode(String.self)
+        
+        self.init(string: string)
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(self.string)
+    }
     
     public init(string: String = "/") {
         self.components = URL(string: string).flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
-    }
-
-    public var description: String {
-        self.string
     }
 
     public init(
@@ -92,7 +102,11 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         
         if scheme.value == nil, userinfo == nil, host == nil, port == nil, query == nil, fragment == nil {
             // If only a path is given, treat it as a string to parse. (This behavior is awful, but must be kept for compatibility.)
-            components = URL(string: path).flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
+            // In order to do this in a fully compatible way (where in this case "compatible" means "being stuck with
+            // systematic misuse of both the URI type and concept"), we must collapse any non-zero number of
+            // leading `/` characters into a single character (thus breaking the ability to parse what is otherwise a
+            // valid URI format according to spec) to avoid weird routing misbehaviors.
+            components = URL(string: "/\(path.drop(while: { $0 == "/" }))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
         } else {
             // N.B.: We perform percent encoding manually and unconditionally on each non-nil component because the
             // behavior of URLComponents is completely different on Linux than on macOS for inputs which are already
@@ -131,30 +145,26 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         self.components = components
     }
 
-    public init(stringLiteral value: String) {
-        self.init(string: value)
-    }
-
     public var scheme: String? {
         get { self.components?.scheme }
         set { self.components?.scheme = newValue }
     }
     
     public var userinfo: String? {
-        get { self.components?.user.map { "\($0)\(self.components?.password.map { ":\($0)" } ?? "")" } }
+        get { self.components?.percentEncodedUser.map { "\($0)\(self.components?.percentEncodedPassword.map { ":\($0)" } ?? "")" } }
         set {
             if let userinfoData = newValue?.split(separator: ":", maxSplits: 1, omittingEmptySubsequences: false) {
-                self.components?.user = .init(userinfoData[0])
-                self.components?.password = userinfoData.count > 1 ? .init(userinfoData[1]) : nil
+                self.components?.percentEncodedUser = .init(userinfoData[0])
+                self.components?.percentEncodedPassword = userinfoData.count > 1 ? .init(userinfoData[1]) : nil
             } else {
-                self.components?.user = nil
+                self.components?.percentEncodedUser = nil
             }
         }
     }
 
     public var host: String? {
-        get { self.components?.host }
-        set { self.components?.host = newValue }
+        get { self.components?.percentEncodedHost }
+        set { self.components?.percentEncodedHost = newValue }
     }
 
     public var port: Int? {
@@ -163,18 +173,18 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
     }
 
     public var path: String {
-        get { self.components?.path ?? "/" }
-        set { self.components?.path = newValue }
+        get { self.components?.percentEncodedPath.replacingOccurrences(of: "%3B", with: ";", options: .literal) ?? "/" }
+        set { self.components?.percentEncodedPath = newValue.withAllowedUrlDelimitersEncoded }
     }
 
     public var query: String? {
-        get { self.components?.query }
-        set { self.components?.query = newValue }
+        get { self.components?.percentEncodedQuery }
+        set { self.components?.percentEncodedQuery = newValue?.withAllowedUrlDelimitersEncoded }
     }
 
     public var fragment: String? {
-        get { self.components?.fragment }
-        set { self.components?.fragment = newValue }
+        get { self.components?.percentEncodedFragment }
+        set { self.components?.percentEncodedFragment = newValue?.withAllowedUrlDelimitersEncoded }
     }
 
     public var string: String {
@@ -186,14 +196,25 @@ public struct URI: Sendable, ExpressibleByStringInterpolation, CustomStringConve
         #endif
     }
     
+    // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
+    public init(stringLiteral value: String) {
+        self.init(string: value)
+    }
+
+    // See `CustomStringConvertible.description`.
+    public var description: String {
+        self.string
+    }
 }
+
+// MARK: - URI.Scheme
 
 extension URI {
     /// A URI scheme, as defined by [RFC 3986 § 3.1] and [RFC 7595].
     ///
     /// [RFC 3986 § 3.1]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.1
     /// [RGC 7595]: https://datatracker.ietf.org/doc/html/rfc7595
-    public struct Scheme {
+    public struct Scheme: CustomStringConvertible, ExpressibleByStringInterpolation, Hashable, Codable, Sendable {
         /// The string representation of the scheme.
         public let value: String?
         
@@ -250,20 +271,38 @@ extension URI {
         public static let httpsUnixDomainSocket: Self = "https+unix"
         
         // MARK: End of "well-known" schemes -
+
+        // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
+        public init(stringLiteral value: String) { self.init(value) }
+
+        // See `CustomStringConvertible.description`.
+        public var description: String { self.value ?? "" }
     }
 }
 
-extension URI.Scheme: ExpressibleByStringInterpolation {
-    // See `ExpressibleByStringInterpolation.init(stringLiteral:)`.
-    public init(stringLiteral value: String) { self.init(value) }
-}
+// MARK: - Utilities
 
-extension URI.Scheme: CustomStringConvertible {
-    // See `CustomStringConvertible.description`.
-    public var description: String { self.value ?? "" }
+extension StringProtocol {
+    /// Apply percent-encoding to any unencoded instances of `[` and `]` in the string
+    ///
+    /// The `[` and `]` characters are considered "general delimiters" by [RFC 3986 § 2.2], and thus
+    /// part of the "reserved" set. As such, Foundation's URL handling logic rejects them if they
+    /// appear unencoded when setting a "percent-encoded" component. However, in practice neither
+    /// character presents any possible ambiguity in parsing unless it appears as part of the "authority"
+    /// component, and they are often used unencoded in paths. They appear even more commonly as "array"
+    /// syntax in query strings. As such, we need to sidestep Foundation's complaints by manually encoding
+    /// them when they show up.
+    ///
+    /// > Note: Fortunately, we don't have to perform the corresponding decoding when going in the other
+    /// > direction, as it will be taken care of by standard percent encoding logic. If this were not the
+    /// > case, doing this with 100% correctness would require a nontrivial amount of shadow state tracking.
+    ///
+    /// [RFC 3986 § 2.2]: https://datatracker.ietf.org/doc/html/rfc3986#section-2.2
+    fileprivate var withAllowedUrlDelimitersEncoded: String {
+        self.replacingOccurrences(of: "[", with: "%5B", options: .literal)
+            .replacingOccurrences(of: "]", with: "%5D", options: .literal)
+    }
 }
-
-extension URI.Scheme: Sendable {}
 
 extension CharacterSet {
     /// The set of characters allowed in a URI scheme, as per [RFC 3986 § 3.1].
@@ -272,7 +311,7 @@ extension CharacterSet {
     fileprivate static var urlSchemeAllowed: Self {
         // Intersect the alphanumeric set plus additional characters with the host-allowed set to ensure
         // we get only ASCII codepoints in the result.
-        Self.urlHostAllowed.intersection(Self.alphanumerics.union(.init(charactersIn: "+-.")))
+        .urlHostAllowed.intersection(.alphanumerics.union(.init(charactersIn: "+-.")))
     }
     
     /// The set of characters allowed in a URI path, as per [RFC 3986 § 3.3].
@@ -282,10 +321,6 @@ extension CharacterSet {
     ///
     /// [RFC 3986 § 3.3]: https://datatracker.ietf.org/doc/html/rfc3986#section-3.3
     fileprivate static var urlCorrectPathAllowed: Self {
-        #if canImport(Darwin)
-        .urlPathAllowed
-        #else
         .urlPathAllowed.union(.init(charactersIn: ";"))
-        #endif
     }
 }

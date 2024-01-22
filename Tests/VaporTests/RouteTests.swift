@@ -429,4 +429,22 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status.code, 500)
         }
     }
+    
+    // https://github.com/vapor/vapor/issues/3137
+    func testDoubleSlashRouteAccess() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get("foo", "bar", "buz") { req -> String in
+            try req.query.get(at: "v")
+        }
+        
+        try app.testable().test(.GET, "/foo/bar/buz?v=M%26M") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, #"M&M"#)
+        }.test(.GET, "//foo/bar/buz?v=M%26M") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, #"M&M"#)
+        }
+    }
 }

@@ -42,16 +42,14 @@ final class ServerTests: XCTestCase {
         let app = Application(env)
         defer { app.shutdown() }
         
-        app.get("foo") { req in
-            return "bar"
-        }
+        app.get("foo") { _ in "bar" }
         try app.start()
         
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")).wait()
+        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
         XCTAssertEqual(res.body?.string, "bar")
         
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
     }
     
     func testIncompatibleStartupOptions() throws {
