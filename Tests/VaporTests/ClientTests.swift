@@ -156,8 +156,8 @@ final class ClientTests: XCTestCase {
         defer { app.shutdown() }
         try app.boot()
 
-        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(2) }.wait())
-        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .seconds(2) }.wait()) {
+        XCTAssertNoThrow(try app.client.get("http://localhost:\(remoteAppPort!)/json") { $0.timeout = .seconds(1) }.wait())
+        XCTAssertThrowsError(try app.client.get("http://localhost:\(remoteAppPort!)/stalling") { $0.timeout = .seconds(1) }.wait()) {
             XCTAssertTrue(type(of: $0) == HTTPClientError.self, "\(type(of: $0)) is not a \(HTTPClientError.self)")
             XCTAssertEqual($0 as? HTTPClientError, .deadlineExceeded)
         }

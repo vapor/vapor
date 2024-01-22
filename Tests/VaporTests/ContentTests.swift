@@ -55,7 +55,7 @@ final class ContentTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string: complexJSON),
-            on: app.eventLoopGroup.next()
+            on: app.eventLoopGroup.any()
         )
         request.headers.contentType = .json
         try XCTAssertEqual(request.content.get(at: "batters", "batter", 1, "type"), "Chocolate")
@@ -500,7 +500,7 @@ final class ContentTests: XCTestCase {
         let request = Request(
             application: app,
             collectedBody: .init(string:""),
-            on: EmbeddedEventLoop()
+            on: app.eventLoopGroup.any()
         )
         request.url.query = "name=before+decode"
         request.headers.contentType = .json
@@ -548,7 +548,7 @@ final class ContentTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
 
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "title": "The title"
         ], as: .json)
@@ -579,7 +579,7 @@ final class ContentTests: XCTestCase {
             url: URI(string: "https://vapor.codes"),
             headersNoUpdate: ["Content-Type": "application/json"],
             collectedBody: ByteBuffer(string: #"{"badJson: "Key doesn't have a trailing quote"}"#),
-            on: app.eventLoopGroup.next()
+            on: app.eventLoopGroup.any()
         )
         
         struct DecodeModel: Content {
@@ -597,7 +597,7 @@ final class ContentTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "items": ["1"]
         ], as: .json)
@@ -626,7 +626,7 @@ final class ContentTests: XCTestCase {
         let app = Application()
         defer { app.shutdown() }
         
-        let req = Request(application: app, on: app.eventLoopGroup.next())
+        let req = Request(application: app, on: app.eventLoopGroup.any())
         try req.content.encode([
             "item": [
                 "title": "The title"
