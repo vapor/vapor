@@ -241,7 +241,7 @@ extension Application.Clients.Provider {
 }
 
 
-private final class TestLogHandler: LogHandler {
+final class TestLogHandler: LogHandler {
     
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }
