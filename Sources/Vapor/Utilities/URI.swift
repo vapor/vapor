@@ -106,7 +106,8 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
             // systematic misuse of both the URI type and concept"), we must collapse any sequence of two or more `/`
             // characters into a single character (thus breaking the ability to parse what is otherwise a valid URI
             // format according to spec) to avoid weird routing misbehaviors.
-            components = URL(string: "/\(path.split(separator: "/").joined(separator: "/"))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
+            components = URL(string: "/\(path.split(separator: "/").joined(separator: "/"))\(path.hasSuffix("/") ? "/" : "")")
+                .flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
         } else {
             // N.B.: We perform percent encoding manually and unconditionally on each non-nil component because the
             // behavior of URLComponents is completely different on Linux than on macOS for inputs which are already
