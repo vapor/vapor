@@ -103,10 +103,10 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
         if scheme.value == nil, userinfo == nil, host == nil, port == nil, query == nil, fragment == nil {
             // If only a path is given, treat it as a string to parse. (This behavior is awful, but must be kept for compatibility.)
             // In order to do this in a fully compatible way (where in this case "compatible" means "being stuck with
-            // systematic misuse of both the URI type and concept"), we must collapse any non-zero number of
-            // leading `/` characters into a single character (thus breaking the ability to parse what is otherwise a
-            // valid URI format according to spec) to avoid weird routing misbehaviors.
-            components = URL(string: "/\(path.drop(while: { $0 == "/" }))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
+            // systematic misuse of both the URI type and concept"), we must collapse any sequence of two or more `/`
+            // characters into a single character (thus breaking the ability to parse what is otherwise a valid URI
+            // format according to spec) to avoid weird routing misbehaviors.
+            components = URL(string: "/\(path.split(separator: "/").joined(separator: "/"))").flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
         } else {
             // N.B.: We perform percent encoding manually and unconditionally on each non-nil component because the
             // behavior of URLComponents is completely different on Linux than on macOS for inputs which are already
