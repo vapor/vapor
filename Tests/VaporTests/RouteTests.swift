@@ -437,33 +437,33 @@ final class RouteTests: XCTestCase {
         defer { app.shutdown() }
         
         app.get(":foo", ":bar", "buz") { req -> String in
-            "yes"
+            "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
         }
         
         try app.testable(method: .running(port: 0)).test(.GET, "/foop/barp/buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "//foop/barp/buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "//foop//barp/buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "//foop//barp//buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "/foop//barp/buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "/foop//barp//buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "/foop/barp//buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }.test(.GET, "//foop/barp//buz") { res in
             XCTAssertEqual(res.status, .ok)
-            XCTAssertEqual(res.body.string, "yes")
+            XCTAssertEqual(res.body.string, "foopbarp")
         }
     }
 }
