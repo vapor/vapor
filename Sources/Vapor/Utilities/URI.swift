@@ -46,6 +46,9 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
         try container.encode(self.string)
     }
     
+    /// Create a ``URI`` by parsing a given string according to the semantics of [RFC 3986].
+    ///
+    /// [RFC 3986]: https://datatracker.ietf.org/doc/html/rfc3986
     public init(string: String = "/") {
         self.components = URL(string: string).flatMap { .init(url: $0, resolvingAgainstBaseURL: true) }
     }
@@ -83,11 +86,15 @@ public struct URI: CustomStringConvertible, ExpressibleByStringInterpolation, Ha
     /// Percent encoding is added to each component (if necessary) automatically. There is currently no
     /// way to change this behavior; use `URLComponents` instead if this is insufficient.
     ///
-    /// > Warning: For backwards compatibility reasons, if the `path` component is specified in isolation
-    /// > (e.g. all other components are `nil`), the path is parsed as if by the ``init(string:)`` initializer.
-    ///
-    /// > Important: If the `path` does not begin with a `/`, one is prepended. This occurs even if the path
-    /// > is specified in isolation (as described above).
+    /// > Important: For backwards compatibility reasons, if the `path` component is specified in isolation
+    /// > (e.g. all other components are `nil`), the path is parsed as if by the ``init(string:)`` initializer,
+    /// > _EXCEPT_ that if the path begins with `//`, it will be treated as beginning with `/` instead, thus
+    /// > parsing the first path component as part of the path rather than as a host component. These semantics
+    /// > are suitable for parsing URI-like strings which are known to lack an authority component, such as the
+    /// > URI part of the first line of an HTTP request.
+    /// >
+    /// > In all cases, a `/` is prepended to the path if it does not begin with one, irrespective of whether or
+    /// > not the path has been specified in isolation as described above.
     public init(
         scheme: Scheme = .init(),
         userinfo: String?,

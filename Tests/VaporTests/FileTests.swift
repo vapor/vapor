@@ -10,7 +10,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch { 
@@ -31,7 +31,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file)
+            return req.fileio.streamFile(at: #filePath)
         }
 
         var headers = HTTPHeaders()
@@ -72,7 +72,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -103,7 +103,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -134,7 +134,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -165,7 +165,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -192,7 +192,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -218,7 +218,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -244,7 +244,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file) { result in
+            return req.fileio.streamFile(at: #filePath) { result in
                 do {
                     try result.get()
                 } catch {
@@ -285,7 +285,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
         try app.test(.GET, "/Utilities/foo%20bar.html") { res in
@@ -298,7 +298,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
         try app.test(.GET, "%2e%2e/VaporTests/Utilities/foo.txt") { res in
@@ -313,7 +313,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "index.html"))
 
         try app.test(.GET, "Utilities/") { res in
@@ -329,7 +329,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path, defaultFile: "/Utilities/index.html"))
 
         try app.test(.GET, "Utilities/") { res in
@@ -345,7 +345,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(FileMiddleware(publicDirectory: "/" + path))
 
         try app.test(.GET, "Utilities/") { res in
@@ -357,7 +357,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
                 publicDirectory: "/" + path,
@@ -377,7 +377,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
                 publicDirectory: "/" + path,
@@ -402,7 +402,7 @@ final class FileTests: XCTestCase {
         let app = Application(.testing)
         defer { app.shutdown() }
 
-        let path = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let path = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         app.middleware.use(
             FileMiddleware(
                 publicDirectory: "/" + path,
@@ -424,7 +424,7 @@ final class FileTests: XCTestCase {
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
-            return req.fileio.streamFile(at: #file)
+            return req.fileio.streamFile(at: #filePath)
         }
 
         var headers = HTTPHeaders()

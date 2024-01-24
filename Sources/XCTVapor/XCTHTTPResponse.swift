@@ -47,15 +47,12 @@ extension Response.Body {
 public func XCTAssertContent<D>(
     _ type: D.Type,
     _ res: XCTHTTPResponse,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line,
     _ closure: (D) throws -> ()
-)
-    rethrows
-    where D: Decodable
-{
+) rethrows where D: Decodable {
     guard let contentType = res.headers.contentType else {
-        XCTFail("response does not contain content type", file: (file), line: line)
+        XCTFail("response does not contain content type", file: file, line: line)
         return
     }
 
@@ -65,14 +62,14 @@ public func XCTAssertContent<D>(
         let decoder = try ContentConfiguration.global.requireDecoder(for: contentType)
         content = try decoder.decode(D.self, from: res.body, headers: res.headers)
     } catch {
-        XCTFail("could not decode body: \(error)", file: (file), line: line)
+        XCTFail("could not decode body: \(error)", file: file, line: line)
         return
     }
 
     try closure(content)
 }
 
-public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #file, line: UInt = #line) {
+public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: StaticString = #filePath, line: UInt = #line) {
     let file = (file)
     switch (haystack, needle) {
     case (.some(let haystack), .some(let needle)):
@@ -86,11 +83,11 @@ public func XCTAssertContains(_ haystack: String?, _ needle: String?, file: Stat
     }
 }
 
-public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #file, line: UInt = #line)
+public func XCTAssertEqualJSON<T>(_ data: String?, _ test: T, file: StaticString = #filePath, line: UInt = #line)
     where T: Codable & Equatable
 {
     guard let data = data else {
-        XCTFail("nil does not equal \(test)", file: (file), line: line)
+        XCTFail("nil does not equal \(test)", file: file, line: line)
         return
     }
     do {
