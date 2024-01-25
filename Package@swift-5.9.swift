@@ -133,16 +133,5 @@ let package = Package(
                 .enableExperimentalFeature("StrictConcurrency=complete"),
             ]
         ),
-        .testTarget(
-            name: "AsyncTests",
-            dependencies: [
-                .product(name: "NIOTestUtils", package: "swift-nio"),
-                .target(name: "XCTVapor"),
-            ],
-            swiftSettings: [
-                .enableUpcomingFeature("BareSlashRegexLiterals"),
-                .enableExperimentalFeature("StrictConcurrency=complete"),
-            ]
-        ),
     ]
 )

@@ -106,4 +106,13 @@ final class AsyncMiddlewareTests: XCTestCase {
             XCTAssertEqual(res.headers[.accessControlAllowHeaders], [""])
         }
     }
+    
+    func testFileMiddlewareFromBundleInvalidPublicDirectory() {
+        XCTAssertThrowsError(try FileMiddleware(bundle: .module, publicDirectory: "/totally-real/folder")) { error in
+            guard let error = error as? FileMiddleware.BundleSetupError else {
+                return XCTFail("Error should be of type FileMiddleware.SetupError")
+            }
+            XCTAssertEqual(error, .publicDirectoryIsNotAFolder)
+        }
+    }
 }
