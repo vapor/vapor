@@ -14,8 +14,6 @@ jobs:
         with:
           app-id: ${{ vars.PENNY_APP_ID }}
           private-key: ${{ secrets.PENNY_APP_PRIVATE_KEY }}
-          owner: vapor
-          repositories: ${{ matrix.repository }}
 
       - name: Generate Sponsors
         uses: JamesIves/github-sponsors-readme-action@v1

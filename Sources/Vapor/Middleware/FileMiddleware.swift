@@ -118,7 +118,7 @@ public final class FileMiddleware: Middleware {
             throw BundleSetupError.publicDirectoryIsNotAFolder
         }
         
-        self.init(publicDirectory: bundleResourceURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
+        self.init(publicDirectory: publicDirectoryURL.path, defaultFile: defaultFile, directoryAction: directoryAction)
     }
     
     /// Possible actions to take when the request doesn't have a trailing slash but matches a directory

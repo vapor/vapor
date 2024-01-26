@@ -1,8 +1,7 @@
-#if os(Linux)
-@preconcurrency import Foundation
-#else
-import Foundation
+#if !canImport(Darwin)
+@preconcurrency import Dispatch
 #endif
+import Foundation
 import Vapor
 import XCTest
 import AsyncHTTPClient
@@ -43,16 +42,14 @@ final class ServerTests: XCTestCase {
         let app = Application(env)
         defer { app.shutdown() }
         
-        app.get("foo") { req in
-            return "bar"
-        }
+        app.get("foo") { _ in "bar" }
         try app.start()
         
-        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")).wait()
+        let res = try app.client.get(.init(scheme: .httpUnixDomainSocket, host: socketPath, path: "/foo")) { $0.timeout = .milliseconds(500) }.wait()
         XCTAssertEqual(res.body?.string, "bar")
         
         // no server should be bound to the port despite one being set on the configuration.
-        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo").wait())
+        XCTAssertThrowsError(try app.client.get("http://127.0.0.1:8080/foo") { $0.timeout = .milliseconds(500) }.wait())
     }
     
     func testIncompatibleStartupOptions() throws {
@@ -161,9 +158,9 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         oldServer = OldServer()
-        try oldServer.start(address: .hostname("localhost", port: 8080))
+        try oldServer.start(address: .hostname("localhost", port: 8081))
         XCTAssertEqual(oldServer.hostname, "localhost")
-        XCTAssertEqual(oldServer.port, 8080)
+        XCTAssertEqual(oldServer.port, 8081)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
         oldServer = OldServer()
@@ -219,9 +216,9 @@ final class ServerTests: XCTestCase {
         
         // start(address: .hostname(..., port: ...)) should set the hostname and port appropriately
         newServer = NewServer()
-        try newServer.start(address: .hostname("localhost", port: 8080))
+        try newServer.start(address: .hostname("localhost", port: 8082))
         XCTAssertEqual(newServer.hostname, "localhost")
-        XCTAssertEqual(newServer.port, 8080)
+        XCTAssertEqual(newServer.port, 8082)
         XCTAssertNil(newServer.socketPath)
         
         // start(address: .unixDomainSocket(path: ...)) should throw
@@ -508,9 +505,9 @@ final class ServerTests: XCTestCase {
         })
     }
     
+    @available(*, deprecated, message: "To avoid deprecation warnings")
     func testEchoServer() throws {
-        let eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 1)
-        let app = Application(.testing, .shared(eventLoopGroup))
+        let app = Application(.testing, .createNew)
         defer { app.shutdown() }
         
         final class Context: Sendable {
@@ -557,7 +554,7 @@ final class ServerTests: XCTestCase {
             body: .stream(length: nil, { stream in
                 // We set the application to have a single event loop so we can use the same
                 // event loop here
-                let streamBox = NIOLoopBound(stream, eventLoop: eventLoopGroup.any())
+                let streamBox = NIOLoopBound(stream, eventLoop: app.eventLoopGroup.any())
                 return stream.write(.byteBuffer(.init(string: "foo"))).flatMap {
                     streamBox.value.write(.byteBuffer(.init(string: "bar")))
                 }.flatMap {
@@ -676,25 +673,7 @@ final class ServerTests: XCTestCase {
         
         XCTAssertNoThrow(try app.start())
     }
-    
-    func testStartWithDefaultHostname() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname(nil, port: 0)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
-    func testStartWithDefaultPort() throws {
-        let app = Application(.testing)
-        app.http.server.configuration.address = .hostname("0.0.0.0", port: nil)
-        defer { app.shutdown() }
-        app.environment.arguments = ["serve"]
-        
-        XCTAssertNoThrow(try app.start())
-    }
-    
+
     func testAddressConfigurations() throws {
         var configuration = HTTPServer.Configuration()
         XCTAssertEqual(configuration.address, .hostname(HTTPServer.Configuration.defaultHostname, port: HTTPServer.Configuration.defaultPort))

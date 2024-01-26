@@ -2,7 +2,7 @@
 internal struct ContainerGetPathExecutor<D: Decodable>: Decodable {
     let result: D
     
-    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Any] {
+    static func userInfo(for keyPath: [CodingKey]) -> [CodingUserInfoKey: Sendable] {
         [.containerGetKeypath: keyPath]
     }
     

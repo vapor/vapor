@@ -99,7 +99,7 @@ final class ErrorTests: XCTestCase {
 func XCTAssertContains(
     _ haystack: String?,
     _ needle: String,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
 ) {
     let file = (file)

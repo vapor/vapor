@@ -42,7 +42,7 @@ final class AsyncClientTests: XCTestCase {
         
         remoteApp.environment.arguments = ["serve"]
         try remoteApp.boot()
-        try remoteApp.start()
+        try await remoteApp.startup()
         
         XCTAssertNotNil(remoteApp.http.server.shared.localAddress)
         guard let localAddress = remoteApp.http.server.shared.localAddress,
@@ -152,7 +152,7 @@ final class AsyncClientTests: XCTestCase {
 
         app.environment.arguments = ["serve"]
         try app.boot()
-        try app.start()
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -193,9 +193,7 @@ final class AsyncClientTests: XCTestCase {
 
 
 final class CustomClient: Client, Sendable {
-    var eventLoop: EventLoop {
-        EmbeddedEventLoop()
-    }
+    let eventLoop: any EventLoop
     let _requests: NIOLockedValueBox<[ClientRequest]>
     var requests: [ClientRequest] {
         get {
@@ -203,8 +201,9 @@ final class CustomClient: Client, Sendable {
         }
     }
 
-    init() {
-        self._requests = .init([])
+    init(eventLoop: any EventLoop, _requests: [ClientRequest] = []) {
+        self.eventLoop = eventLoop
+        self._requests = .init(_requests)
     }
 
     func send(_ request: ClientRequest) -> EventLoopFuture<ClientResponse> {
@@ -212,8 +211,8 @@ final class CustomClient: Client, Sendable {
         return self.eventLoop.makeSucceededFuture(ClientResponse())
     }
 
-    func delegating(to eventLoop: EventLoop) -> Client {
-        self
+    func delegating(to eventLoop: any EventLoop) -> Client {
+        self._requests.withLockedValue { CustomClient(eventLoop: eventLoop, _requests: $0) }
     }
 }
 
@@ -226,7 +225,7 @@ extension Application {
         if let existing = self.storage[CustomClientKey.self] {
             return existing
         } else {
-            let new = CustomClient()
+            let new = CustomClient(eventLoop: self.eventLoopGroup.any())
             self.storage[CustomClientKey.self] = new
             return new
         }
@@ -242,7 +241,7 @@ extension Application.Clients.Provider {
 }
 
 
-private final class TestLogHandler: LogHandler {
+final class TestLogHandler: LogHandler {
     
     subscript(metadataKey key: String) -> Logger.Metadata.Value? {
         get { self.metadata[key] }

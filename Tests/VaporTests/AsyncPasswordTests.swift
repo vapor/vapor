@@ -59,7 +59,7 @@ final class AsyncPasswordTests: XCTestCase {
     private func assertAsyncApplicationPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         on app: Application,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) async throws {
         app.passwords.use(provider)
@@ -72,13 +72,13 @@ final class AsyncPasswordTests: XCTestCase {
             .async(on: app.threadPool, hopTo: app.eventLoopGroup.next())
             .verify("vapor", created: asyncHash)
 
-        XCTAssertTrue(asyncVerifiy, file: (file), line: line)
+        XCTAssertTrue(asyncVerifiy, file: file, line: line)
     }
 
     private func assertAsyncRequestPasswordVerifies(
         _ provider: Application.Passwords.Provider,
         on app: Application,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line
     ) throws {
         app.passwords.use(provider)
@@ -90,7 +90,7 @@ final class AsyncPasswordTests: XCTestCase {
         }
 
         try app.test(.GET, "test", afterResponse: { res in
-            XCTAssertEqual(res.body.string, "true", file: (file), line: line)
+            XCTAssertEqual(res.body.string, "true", file: file, line: line)
         })
     }
 }

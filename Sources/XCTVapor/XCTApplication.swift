@@ -48,7 +48,7 @@ extension Application {
             try app.server.start(address: .hostname(self.hostname, port: self.port))
             defer { app.server.shutdown() }
             
-            let client = HTTPClient(eventLoopGroup: NIOSingletons.posixEventLoopGroup)
+            let client = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
             defer { try! client.syncShutdown() }
             var path = request.url.path
             path = path.hasPrefix("/") ? path : "/\(path)"
@@ -128,7 +128,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         afterResponse: (XCTHTTPResponse) async throws -> ()
     ) async throws -> XCTApplicationTester {
@@ -150,7 +150,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         afterResponse: (XCTHTTPResponse) throws -> ()
     ) throws -> XCTApplicationTester {
@@ -172,7 +172,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) async throws -> () = { _ in }
@@ -188,7 +188,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try await afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: (file), line: line)
+            XCTFail("\(error)", file: file, line: line)
             throw error
         }
         return self
@@ -200,7 +200,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in },
         afterResponse: (XCTHTTPResponse) throws -> () = { _ in }
@@ -216,7 +216,7 @@ extension XCTApplicationTester {
             let response = try self.performTest(request: request)
             try afterResponse(response)
         } catch {
-            XCTFail("\(error)", file: (file), line: line)
+            XCTFail("\(error)", file: file, line: line)
             throw error
         }
         return self
@@ -227,7 +227,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) async throws -> () = { _ in }
     ) async throws -> XCTHTTPResponse {
@@ -241,7 +241,7 @@ extension XCTApplicationTester {
         do {
             return try self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: (file), line: line)
+            XCTFail("\(error)", file: file, line: line)
             throw error
         }
     }
@@ -251,7 +251,7 @@ extension XCTApplicationTester {
         _ path: String,
         headers: HTTPHeaders = [:],
         body: ByteBuffer? = nil,
-        file: StaticString = #file,
+        file: StaticString = #filePath,
         line: UInt = #line,
         beforeRequest: (inout XCTHTTPRequest) throws -> () = { _ in }
     ) throws -> XCTHTTPResponse {
@@ -265,7 +265,7 @@ extension XCTApplicationTester {
         do {
             return try self.performTest(request: request)
         } catch {
-            XCTFail("\(error)", file: (file), line: line)
+            XCTFail("\(error)", file: file, line: line)
             throw error
         }
     }

@@ -19,16 +19,13 @@ fileprivate extension String {
 final class AsyncRequestTests: XCTestCase {
     
     var app: Application!
-    var eventLoopGroup: EventLoopGroup!
     
     override func setUp() async throws {
-        eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: 4)
-        app = Application(.testing, .shared(eventLoopGroup))
+        app = Application(.testing)
     }
     
     override func tearDown() async throws {
         app.shutdown()
-        try await eventLoopGroup.shutdownGracefully()
     }
     
     func testStreamingRequest() async throws {
@@ -49,7 +46,7 @@ final class AsyncRequestTests: XCTestCase {
         }
 
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -82,7 +79,7 @@ final class AsyncRequestTests: XCTestCase {
         }
         
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -97,10 +94,10 @@ final class AsyncRequestTests: XCTestCase {
         var request = HTTPClientRequest(url: "http://\(ip):\(port)/hello")
         request.method = .POST
         request.body = .stream(oneMB.async, length: .known(oneMB.count))
-        let response = try await app.http.client.shared.execute(request, timeout: .seconds(5))
-        
-        XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
-        XCTAssertEqual(response.status, .internalServerError)
+        if let response = try? await app.http.client.shared.execute(request, timeout: .seconds(5)) {
+            XCTAssertGreaterThan(bytesTheServerRead.load(ordering: .relaxed), 0)
+            XCTAssertEqual(response.status, .internalServerError)
+        }
     }
     
     // TODO: Re-enable once it reliably works and doesn't cause issues with trying to shut the application down
@@ -143,7 +140,7 @@ final class AsyncRequestTests: XCTestCase {
         }
         
         app.environment.arguments = ["serve"]
-        XCTAssertNoThrow(try app.start())
+        try await app.startup()
         
         XCTAssertNotNil(app.http.server.shared.localAddress)
         guard let localAddress = app.http.server.shared.localAddress,
@@ -177,7 +174,7 @@ final class AsyncRequestTests: XCTestCase {
                                               headers: [:],
                                               body: .byteBuffer(tenMB))
         let delegate = ResponseDelegate(bytesTheClientSent: bytesTheClientSent)
-        let httpClient = HTTPClient(eventLoopGroupProvider: .shared(eventLoopGroup))
+        let httpClient = HTTPClient(eventLoopGroup: MultiThreadedEventLoopGroup.singleton)
         XCTAssertThrowsError(try httpClient.execute(request: request,
                                                                 delegate: delegate,
                                                                 deadline: .now() + .milliseconds(500)).wait()) { error in

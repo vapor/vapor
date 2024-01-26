@@ -4,7 +4,7 @@ import XCTest
 
 final class EnvironmentSecretTests: XCTestCase {
     func testNonExistingSecretFile() throws {
-        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/non-existing-secret"
 
         let app = Application(.testing)
@@ -16,7 +16,7 @@ final class EnvironmentSecretTests: XCTestCase {
     }
 
     func testExistingSecretFile() throws {
-        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let app = Application(.testing)
@@ -28,7 +28,7 @@ final class EnvironmentSecretTests: XCTestCase {
     }
 
     func testExistingSecretFileFromEnvironmentKey() throws {
-        let folder = #file.split(separator: "/").dropLast().joined(separator: "/")
+        let folder = #filePath.split(separator: "/").dropLast().joined(separator: "/")
         let path = "/" + folder + "/Utilities/my-secret-env-content"
 
         let key = "MY_ENVIRONMENT_SECRET"

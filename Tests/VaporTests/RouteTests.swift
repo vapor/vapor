@@ -429,4 +429,41 @@ final class RouteTests: XCTestCase {
             XCTAssertEqual(res.status.code, 500)
         }
     }
+    
+    // https://github.com/vapor/vapor/issues/3137
+    // https://github.com/vapor/vapor/issues/3142
+    func testDoubleSlashRouteAccess() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+        
+        app.get(":foo", ":bar", "buz") { req -> String in
+            "\(try req.parameters.require("foo"))\(try req.parameters.require("bar"))"
+        }
+        
+        try app.testable(method: .running(port: 0)).test(.GET, "/foop/barp/buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "//foop/barp/buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "//foop//barp/buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "//foop//barp//buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "/foop//barp/buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "/foop//barp//buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "/foop/barp//buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }.test(.GET, "//foop/barp//buz") { res in
+            XCTAssertEqual(res.status, .ok)
+            XCTAssertEqual(res.body.string, "foopbarp")
+        }
+    }
 }

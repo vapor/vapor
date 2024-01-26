@@ -130,6 +130,7 @@ extension Request.Body: AsyncSequence {
             failureType: Error.self,
             backPressureStrategy: NIOAsyncSequenceProducerBackPressureStrategies
                 .HighLowWatermark(lowWatermark: 5, highWatermark: 20),
+            finishOnDeinit: true,
             delegate: delegate
         )
         

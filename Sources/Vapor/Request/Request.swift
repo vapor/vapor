@@ -2,7 +2,7 @@ import Foundation
 import NIOCore
 import NIOHTTP1
 import Logging
-@preconcurrency import RoutingKit
+import RoutingKit
 import NIOConcurrencyHelpers
 
 /// Represents an HTTP request in an application.
@@ -54,7 +54,10 @@ public final class Request: CustomStringConvertible, Sendable {
         }
     }
     
-    /// A uniquely generated ID for each request
+    /// A unique ID for the request.
+    ///
+    /// The request identifier is set to value of the `X-Request-Id` header when present, or to a
+    /// uniquelly generated value otherwise.
     public let id: String
     
     // MARK: Metadata
@@ -309,6 +312,7 @@ public final class Request: CustomStringConvertible, Sendable {
         byteBufferAllocator: ByteBufferAllocator = ByteBufferAllocator(),
         on eventLoop: EventLoop
     ) {
+        let requestId = headers.first(name: .xRequestId) ?? UUID().uuidString
         let bodyStorage: BodyStorage
         if let body = collectedBody {
             bodyStorage = .collected(body)
@@ -317,11 +321,7 @@ public final class Request: CustomStringConvertible, Sendable {
         }
         
         var logger = logger
-        if let requestId = headers[.xRequestId].first {
-            logger[metadataKey: "request-id"] = .string(requestId)
-        } else {
-            logger[metadataKey: "request-id"] = .string(UUID().uuidString)
-        }
+        logger[metadataKey: "request-id"] = .string(requestId)
         self._logger = .init(logger)
         
         let storageBox = RequestBox(
@@ -335,7 +335,7 @@ public final class Request: CustomStringConvertible, Sendable {
             byteBufferAllocator: byteBufferAllocator
         )
         self.requestBox = .init(storageBox)
-        self.id = UUID().uuidString
+        self.id = requestId
         self.application = application
         
         self.remoteAddress = remoteAddress
