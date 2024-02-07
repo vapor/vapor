@@ -300,4 +300,27 @@ final class QueryTests: XCTestCase {
             XCTAssertThrowsError(try req.query.get(Int?.self, at: "page"))
         }
     }
+
+    func testValuelessParamGet() throws {
+        let app = Application()
+        defer { app.shutdown() }
+        let req = Request(
+            application: app,
+            method: .GET,
+            url: URI(string: "/"),
+            on: app.eventLoopGroup.next()
+        )
+
+        req.url = .init(path: "/foo?bar")
+        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo?bar&baz=bop")
+        XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo")
+        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
+
+        req.url = .init(path: "/foo?baz=bop")
+        XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
+    }
 }
