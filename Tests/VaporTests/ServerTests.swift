@@ -1041,13 +1041,14 @@ final class ServerTests: XCTestCase {
         XCTAssertEqual(b.body, ByteBuffer(string: "world"))
         
         /// Non-TLS request should now fail
-        let c = try? app.http.client.shared.execute(
+        XCTAssertThrowsError(try app.http.client.shared.execute(
             request: try HTTPClient.Request(
                 url: "http://\(ip):\(port)/hello",
                 method: .GET
             )
-        ).wait()
-        XCTAssertNil(c)
+        ).wait()) { error in
+            XCTAssertEqual(error as? HTTPClientError, HTTPClientError.remoteConnectionClosed)
+        }
     }
     
     override class func setUp() {
