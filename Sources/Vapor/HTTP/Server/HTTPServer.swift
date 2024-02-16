@@ -297,15 +297,18 @@ public final class HTTPServer: Server, Sendable {
         var configuration = self.configuration
         
         switch address {
-        case .none: // use the configuration as is
+        case .none: 
+            /// Use the configuration as is.
             break
-        case .hostname(let hostname, let port): // override the hostname, port, neither, or both
+        case .hostname(let hostname, let port): 
+            /// Override the hostname, port, neither, or both.
             configuration.address = .hostname(hostname ?? configuration.hostname, port: port ?? configuration.port)
-        case .unixDomainSocket: // override the socket path
+        case .unixDomainSocket: 
+            /// Override the socket path.
             configuration.address = address!
         }
         
-        // print starting message
+        /// Print starting message.
         let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
         let addressDescription: String
         switch configuration.address {
@@ -317,7 +320,7 @@ public final class HTTPServer: Server, Sendable {
         
         self.configuration.logger.notice("Server starting on \(addressDescription)")
 
-        // start the actual HTTPServer
+        /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
             $0 = try HTTPServerConnection.start(
                 application: self.application,
@@ -370,23 +373,23 @@ private final class HTTPServerConnection: Sendable {
     ) -> EventLoopFuture<HTTPServerConnection> {
         let quiesce = ServerQuiescingHelper(group: eventLoopGroup)
         let bootstrap = ServerBootstrap(group: eventLoopGroup)
-            // Specify backlog and enable SO_REUSEADDR for the server itself
+            /// Specify backlog and enable `SO_REUSEADDR` for the server itself.
             .serverChannelOption(ChannelOptions.backlog, value: Int32(configuration.backlog))
             .serverChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             
-            // Set handlers that are applied to the Server's channel
+            /// Set handlers that are applied to the Server's channel.
             .serverChannelInitializer { channel in
                 channel.pipeline.addHandler(quiesce.makeServerChannelHandler(channel: channel))
             }
             
-            // Set the handlers that are applied to the accepted Channels
+            /// Set the handlers that are applied to the accepted Channels.
             .childChannelInitializer { [unowned application, unowned server] channel in
                 /// Copy the most up-to-date configuration.
                 let configuration = server.configuration
 
-                // add TLS handlers if configured
+                /// Add TLS handlers if configured.
                 if var tlsConfiguration = configuration.tlsConfiguration {
-                    // prioritize http/2
+                    /// Prioritize http/2 if supported.
                     if configuration.supportVersions.contains(.two) {
                         tlsConfiguration.applicationProtocols.append("h2")
                     }
@@ -434,7 +437,7 @@ private final class HTTPServerConnection: Sendable {
                 }
             }
             
-            // Enable TCP_NODELAY and SO_REUSEADDR for the accepted Channels
+            /// Enable `TCP_NODELAY` and `SO_REUSEADDR` for the accepted Channels.
             .childChannelOption(ChannelOptions.socket(IPPROTO_TCP, TCP_NODELAY), value: configuration.tcpNoDelay ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.socket(SocketOptionLevel(SOL_SOCKET), SO_REUSEADDR), value: configuration.reuseAddress ? SocketOptionValue(1) : SocketOptionValue(0))
             .childChannelOption(ChannelOptions.maxMessagesPerRead, value: 1)
@@ -494,31 +497,31 @@ extension ChannelPipeline {
         responder: Responder,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
-        // create server pipeline array
+        /// Create server pipeline array.
         var handlers: [ChannelHandler] = []
         
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
-        // add NIO -> HTTP request decoder
+        /// Add NIO → HTTP request decoder.
         let serverReqDecoder = HTTPServerRequestDecoder(
             application: application
         )
         handlers.append(serverReqDecoder)
         
-        // add NIO -> HTTP response encoder
+        /// Add NIO → HTTP response encoder.
         let serverResEncoder = HTTPServerResponseEncoder(
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
         handlers.append(serverResEncoder)
         
-        // add server request -> response delegate
+        /// Add server request → response delegate.
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
-            // close the connection in case of any errors
+            /// Close the connection in case of any errors.
             self.addHandler(NIOCloseOnErrorHandler())
         }
     }
@@ -528,24 +531,24 @@ extension ChannelPipeline {
         responder: Responder,
         configuration: HTTPServer.Configuration
     ) -> EventLoopFuture<Void> {
-        // create server pipeline array
+        /// Create server pipeline array.
         var handlers: [RemovableChannelHandler] = []
         
-        // configure HTTP/1
-        // add http parsing and serializing
+        /// Configure HTTP/1:
+        /// Add http parsing and serializing.
         let httpResEncoder = HTTPResponseEncoder()
         let httpReqDecoder = ByteToMessageHandler(HTTPRequestDecoder(
             leftOverBytesStrategy: .forwardBytes
         ))
         handlers += [httpResEncoder, httpReqDecoder]
         
-        // add pipelining support if configured
+        /// Add pipelining support if configured.
         if configuration.supportPipelining {
             let pipelineHandler = HTTPServerPipelineHandler()
             handlers.append(pipelineHandler)
         }
         
-        // add response compressor if configured
+        /// Add response compressor if configured.
         switch configuration.responseCompression.storage {
         case .enabled(let initialByteBufferCapacity):
             let responseCompressionHandler = HTTPResponseCompressor(
@@ -556,7 +559,7 @@ extension ChannelPipeline {
             break
         }
 
-        // add request decompressor if configured
+        /// Add request decompressor if configured.
         switch configuration.requestDecompression.storage {
         case .enabled(let limit):
             let requestDecompressionHandler = NIOHTTPRequestDecompressor(
@@ -567,22 +570,22 @@ extension ChannelPipeline {
             break
         }
 
-        // add NIO -> HTTP response encoder
+        /// Add NIO → HTTP response encoder.
         let serverResEncoder = HTTPServerResponseEncoder(
             serverHeader: configuration.serverName,
             dateCache: .eventLoop(self.eventLoop)
         )
         handlers.append(serverResEncoder)
         
-        // add NIO -> HTTP request decoder
+        /// Add NIO → HTTP request decoder.
         let serverReqDecoder = HTTPServerRequestDecoder(
             application: application
         )
         handlers.append(serverReqDecoder)
-        // add server request -> response delegate
+        /// Add server request → response delegate.
         let handler = HTTPServerHandler(responder: responder, logger: application.logger)
 
-        // add HTTP upgrade handler
+        /// Add HTTP upgrade handler.
         let upgrader = HTTPServerUpgradeHandler(
             httpRequestDecoder: httpReqDecoder,
             httpHandlers: handlers + [handler]
@@ -592,7 +595,7 @@ extension ChannelPipeline {
         handlers.append(handler)
         
         return self.addHandlers(handlers).flatMap {
-            // close the connection in case of any errors
+            /// Close the connection in case of any errors.
             self.addHandler(NIOCloseOnErrorHandler())
         }
     }
