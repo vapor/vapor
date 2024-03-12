@@ -2,7 +2,7 @@ import NIOHTTP1
 
 extension HTTPHeaders {
     /// Type used for the name of a HTTP header in the `HTTPHeaders` storage.
-    public struct Name: Codable, Hashable, Equatable, CustomStringConvertible, ExpressibleByStringLiteral {
+    public struct Name: Codable, Hashable, Equatable, CustomStringConvertible, ExpressibleByStringLiteral, Sendable {
         /// See `Hashable`
         public func hash(into hasher: inout Hasher) {
             self.lowercased.hash(into: &hasher)
