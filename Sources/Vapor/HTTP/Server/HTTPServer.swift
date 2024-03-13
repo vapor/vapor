@@ -308,18 +308,6 @@ public final class HTTPServer: Server, Sendable {
             configuration.address = address!
         }
         
-        /// Print starting message.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
-        
-        self.configuration.logger.notice("Server starting on \(addressDescription)")
-
         /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
             $0 = try HTTPServerConnection.start(
@@ -330,6 +318,9 @@ public final class HTTPServer: Server, Sendable {
                 on: self.eventLoopGroup
             ).wait()
         }
+
+        /// Print starting message.
+        configuration.logger.notice("Server started on \(self.localAddress!.description)")
 
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }
