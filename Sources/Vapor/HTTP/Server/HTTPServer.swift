@@ -319,8 +319,27 @@ public final class HTTPServer: Server, Sendable {
             ).wait()
         }
 
+        /// Override configuration with actual address.
+        /// This may differ from the provided configuation if port 0 was provided, for example.
+        if let localAddress = self.localAddress {
+            if let port = localAddress.port {
+                configuration.port = port
+            }
+            if let hostname = localAddress.hostname {
+                configuration.hostname = hostname
+            }
+        }
+
         /// Print starting message.
-        configuration.logger.notice("Server started on \(self.localAddress!.description)")
+        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
+        let addressDescription: String
+        switch configuration.address {
+        case .hostname(let hostname, let port):
+            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
+        case .unixDomainSocket(let socketPath):
+            addressDescription = "\(scheme)+unix: \(socketPath)"
+        }
+        self.configuration.logger.notice("Server started on \(addressDescription)")
 
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }
