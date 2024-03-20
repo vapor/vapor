@@ -7,7 +7,7 @@ import Algorithms
 
 import struct Foundation.Data
 
-public struct BaseNEncoding {
+public struct BaseNEncoding: Sendable {
     /// For a given base and count, calculate the number of values needed to encode the given count of bytes.
     @inlinable
     internal static func sizeEnc(for bits: Int, count: Int) -> Int {
