@@ -3,7 +3,7 @@ import NIOCore
 import NIOHTTP1
 
 /// Captures all errors and transforms them into an internal server error HTTP response.
-public final class ErrorMiddleware: Middleware {
+public final class ErrorMiddleware: AsyncMiddleware {
     /// Structure of `ErrorMiddleware` default response.
     internal struct ErrorResponse: Codable {
         /// Always `true` to indicate this is a non-typical JSON response.
@@ -76,8 +76,10 @@ public final class ErrorMiddleware: Middleware {
         self.closure = closure
     }
     
-    public func respond(to request: Request, chainingTo next: Responder) -> EventLoopFuture<Response> {
-        return next.respond(to: request).flatMapErrorThrowing { error in
+    public func respond(to request: Request, chainingTo next: AsyncResponder) async throws -> Response {
+        do {
+            return try await next.respond(to: request)
+        } catch {
             return self.closure(request, error)
         }
     }
