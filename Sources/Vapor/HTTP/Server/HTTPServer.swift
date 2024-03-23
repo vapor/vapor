@@ -503,6 +503,28 @@ extension ChannelPipeline {
         let http2 = HTTP2FramePayloadToHTTP1ServerCodec()
         handlers.append(http2)
         
+        /// Add response compressor if configured.
+        switch configuration.responseCompression.storage {
+        case .enabled(let initialByteBufferCapacity):
+            let responseCompressionHandler = HTTPResponseCompressor(
+                initialByteBufferCapacity: initialByteBufferCapacity
+            )
+            handlers.append(responseCompressionHandler)
+        case .disabled:
+            break
+        }
+        
+        /// Add request decompressor if configured.
+        switch configuration.requestDecompression.storage {
+        case .enabled(let limit):
+            let requestDecompressionHandler = NIOHTTPRequestDecompressor(
+                limit: limit
+            )
+            handlers.append(requestDecompressionHandler)
+        case .disabled:
+            break
+        }
+        
         /// Add NIO → HTTP request decoder.
         let serverReqDecoder = HTTPServerRequestDecoder(
             application: application
