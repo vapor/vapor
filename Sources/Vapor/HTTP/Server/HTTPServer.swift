@@ -307,6 +307,17 @@ public final class HTTPServer: Server, Sendable {
             /// Override the socket path.
             configuration.address = address!
         }
+
+        /// Log starting message for debugging before attempting to start the server.
+        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
+        var addressDescription: String
+        switch configuration.address {
+        case .hostname(let hostname, let port):
+            addressDescription = "\(scheme)://\(hostname ?? Configuration.defaultHostname):\(port ?? Configuration.defaultPort)"
+        case .unixDomainSocket(let socketPath):
+            addressDescription = "\(scheme)+unix: \(socketPath)"
+        }
+        self.configuration.logger.debug("Server starting on \(addressDescription)")
         
         /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
@@ -322,23 +333,14 @@ public final class HTTPServer: Server, Sendable {
         /// Override configuration with actual address.
         /// This may differ from the provided configuation if port 0 was provided, for example.
         if let localAddress = self.localAddress {
-            if let port = localAddress.port {
+            if let hostname = localAddress.hostname, let port = localAddress.port {
                 configuration.port = port
-            }
-            if let hostname = localAddress.hostname {
                 configuration.hostname = hostname
+                addressDescription = "\(scheme)://\(hostname):\(port)"
             }
         }
 
-        /// Print starting message.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        let addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? configuration.hostname):\(port ?? configuration.port)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
+        /// Log started message with the actual configuration.
         self.configuration.logger.notice("Server started on \(addressDescription)")
 
         self.configuration = configuration
