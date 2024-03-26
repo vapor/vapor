@@ -48,23 +48,35 @@ public final class HTTPServer: Server, Sendable {
         
         /// Port the server will bind to.
         public var port: Int {
-           get {
-               switch address {
-               case .hostname(_, let port):
-                   return port ?? Self.defaultPort
-               default:
-                   return Self.defaultPort
-               }
-           }
-           set {
-               switch address {
-               case .hostname(let hostname, _):
-                   address = .hostname(hostname, port: newValue)
-               default:
-                   address = .hostname(nil, port: newValue)
-               }
-           }
-       }
+            get {
+                switch address {
+                case .hostname(_, let port):
+                    return port ?? Self.defaultPort
+                default:
+                    return Self.defaultPort
+                }
+            }
+            set {
+                switch address {
+                case .hostname(let hostname, _):
+                    address = .hostname(hostname, port: newValue)
+                default:
+                    address = .hostname(nil, port: newValue)
+                }
+            }
+        }
+        
+        /// A human-readable description of the configured address. Used in log messages when starting server.
+        public var addressDescription: String {
+            let scheme = tlsConfiguration == nil ? "http" : "https"
+            var addressDescription: String
+            switch address {
+            case .hostname(let hostname, let port):
+                return "\(scheme)://\(hostname ?? Self.defaultHostname):\(port ?? Self.defaultPort)"
+            case .unixDomainSocket(let socketPath):
+                return "\(scheme)+unix: \(socketPath)"
+            }
+        }
         
         /// Listen backlog.
         public var backlog: Int
@@ -309,15 +321,7 @@ public final class HTTPServer: Server, Sendable {
         }
 
         /// Log starting message for debugging before attempting to start the server.
-        let scheme = configuration.tlsConfiguration == nil ? "http" : "https"
-        var addressDescription: String
-        switch configuration.address {
-        case .hostname(let hostname, let port):
-            addressDescription = "\(scheme)://\(hostname ?? Configuration.defaultHostname):\(port ?? Configuration.defaultPort)"
-        case .unixDomainSocket(let socketPath):
-            addressDescription = "\(scheme)+unix: \(socketPath)"
-        }
-        self.configuration.logger.debug("Server starting on \(addressDescription)")
+        configuration.logger.debug("Server starting on \(configuration.addressDescription)")
         
         /// Start the actual `HTTPServer`.
         try self.connection.withLockedValue {
@@ -330,18 +334,18 @@ public final class HTTPServer: Server, Sendable {
             ).wait()
         }
 
-        /// Override configuration with actual address.
-        /// This may differ from the provided configuation if port 0 was provided, for example.
+        /// Overwrite configuration with actual address, if applicable.
+        /// They may differ from the provided configuation if port 0 was provided, for example.
         if let localAddress = self.localAddress {
             if let hostname = localAddress.hostname, let port = localAddress.port {
-                configuration.port = port
-                configuration.hostname = hostname
-                addressDescription = "\(scheme)://\(hostname):\(port)"
+                configuration.address = .hostname(hostname, port: port)
+            } else if let pathname = localAddress.pathname {
+                configuration.address = .unixDomainSocket(path: pathname)
             }
         }
 
         /// Log started message with the actual configuration.
-        self.configuration.logger.notice("Server started on \(addressDescription)")
+        configuration.logger.notice("Server started on \(configuration.addressDescription)")
 
         self.configuration = configuration
         self.didStart.withLockedValue { $0 = true }
