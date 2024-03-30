@@ -1,6 +1,6 @@
 extension Routes {
     @available(*, deprecated, renamed: "caseInsensitive")
-    public var caseInsenstive: Bool {
+    public var caseInsensitive: Bool {
         get {
             caseInsensitive
         }
