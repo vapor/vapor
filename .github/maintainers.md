@@ -6,7 +6,7 @@ maintainers will determine if you are a good fit and either accept and merge the
 to be taken in order to be accepted.
 
 ## Perks
-- Special "Maintainer" role in Discord with purple highlght.
+- Special "Maintainer" role in Discord with purple highlight.
 - Write access to maintained repo (including approve and merge permissions). 
 - Invite to "Maintainers" team on GitHub.
 - Opportunity to actively participate in deciding on new features in package. 
