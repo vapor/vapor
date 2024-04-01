@@ -310,17 +310,32 @@ final class QueryTests: XCTestCase {
             url: URI(string: "/"),
             on: app.eventLoopGroup.next()
         )
+        struct BarStruct : Content {
+            let bar: Bool
+        }
+        struct OptionalBarStruct : Content {
+            let bar: Bool?
+            let baz: String?
+        }
 
         req.url = .init(path: "/foo?bar")
         XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+        XCTAssertTrue(try req.query.decode(BarStruct.self).bar)
+        XCTAssertEqual(try req.query.decode(OptionalBarStruct.self).bar, true)
 
         req.url = .init(path: "/foo?bar&baz=bop")
         XCTAssertTrue(try req.query.get(Bool.self, at: "bar"))
+        XCTAssertTrue(try req.query.decode(BarStruct.self).bar)
+        XCTAssertEqual(try req.query.decode(OptionalBarStruct.self).bar, true)
 
         req.url = .init(path: "/foo")
         XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
+        XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
+        XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
 
         req.url = .init(path: "/foo?baz=bop")
         XCTAssertFalse(try req.query.get(Bool.self, at: "bar"))
+        XCTAssertFalse(try req.query.decode(BarStruct.self).bar)
+        XCTAssertNil(try req.query.decode(OptionalBarStruct.self).bar)
     }
 }
