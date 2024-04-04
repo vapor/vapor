@@ -114,10 +114,50 @@ public final class Application: Sendable {
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
 
+    @available(*, noasync, message: "This initialiser cannot be used in async contexts, use the async version instead")
     public init(
         _ environment: Environment = .development,
         _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
     ) {
+        #if swift(<5.9)
+            Backtrace.install()
+        #endif
+        self._environment = .init(environment)
+        self.eventLoopGroupProvider = eventLoopGroupProvider
+        switch eventLoopGroupProvider {
+        case .shared(let group):
+            self.eventLoopGroup = group
+        case .createNew:
+            self.eventLoopGroup = MultiThreadedEventLoopGroup(numberOfThreads: System.coreCount)
+        }
+        self._locks = .init(.init())
+        self._didShutdown = .init(false)
+        let logger = Logger(label: "codes.vapor.application")
+        self._logger = .init(logger)
+        self._storage = .init(.init(logger: logger))
+        self._lifecycle = .init(.init())
+        self.isBooted = .init(false)
+        self.core.initialize()
+        self.caches.initialize()
+        self.views.initialize()
+        self.passwords.use(.bcrypt)
+        self.sessions.initialize()
+        self.sessions.use(.memory)
+        self.responder.initialize()
+        self.responder.use(.default)
+        self.servers.initialize()
+        self.servers.use(.http)
+        self.clients.initialize()
+        self.clients.use(.http)
+        self.commands.use(self.servers.command, as: "serve", isDefault: true)
+        self.commands.use(RoutesCommand(), as: "routes")
+        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+    }
+    
+    public init(
+        _ environment: Environment = .development,
+        _ eventLoopGroupProvider: EventLoopGroupProvider = .singleton
+    ) async {
         #if swift(<5.9)
             Backtrace.install()
         #endif
