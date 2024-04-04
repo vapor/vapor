@@ -335,6 +335,7 @@ public final class HTTPServer: Server, Sendable {
         self.didStart.withLockedValue { $0 = true }
     }
     
+    @available(*, noasync, message: "Use the async shutdown() method instead.")
     public func shutdown() {
         guard let connection = self.connection.withLockedValue({ $0 }) else {
             return
@@ -342,6 +343,20 @@ public final class HTTPServer: Server, Sendable {
         self.configuration.logger.debug("Requesting HTTP server shutdown")
         do {
             try connection.close(timeout: self.configuration.shutdownTimeout).wait()
+        } catch {
+            self.configuration.logger.error("Could not stop HTTP server: \(error)")
+        }
+        self.configuration.logger.debug("HTTP server shutting down")
+        self.didShutdown.withLockedValue { $0 = true }
+    }
+    
+    public func shutdown() async {
+        guard let connection = self.connection.withLockedValue({ $0 }) else {
+            return
+        }
+        self.configuration.logger.debug("Requesting HTTP server shutdown")
+        do {
+            try await connection.close(timeout: self.configuration.shutdownTimeout).get()
         } catch {
             self.configuration.logger.error("Could not stop HTTP server: \(error)")
         }
