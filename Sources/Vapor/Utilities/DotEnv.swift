@@ -10,8 +10,7 @@ import NIOPosix
 /// Reads dotenv (`.env`) files and loads them into the current process.
 ///
 ///     let fileio: NonBlockingFileIO
-///     let elg: EventLoopGroup
-///     let file = try DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next()).wait()
+///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio)
 ///     for line in file.lines {
 ///         print("\(line.key)=\(line.value)")
 ///     }
@@ -227,8 +226,7 @@ public struct DotEnvFile: Sendable {
     /// Reads a dotenv file from the supplied path.
     ///
     ///     let fileio: NonBlockingFileIO
-    ///     let elg: EventLoopGroup
-    ///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next())
+    ///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio)
     ///     for line in file.lines {
     ///         print("\(line.key)=\(line.value)")
     ///     }
@@ -240,7 +238,6 @@ public struct DotEnvFile: Sendable {
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
     ///     - fileio: File loader.
-    ///     - eventLoop: Eventloop to perform async work on.
     public static func read(
         path: String,
         fileio: NonBlockingFileIO
@@ -255,8 +252,7 @@ public struct DotEnvFile: Sendable {
     /// Reads a dotenv file from the supplied path and loads it into the process.
     ///
     ///     let fileio: NonBlockingFileIO
-    ///     let elg: EventLoopGroup
-    ///     try await DotEnvFile.load(path: ".env", fileio: fileio, on: elg.next())
+    ///     try await DotEnvFile.load(path: ".env", fileio: fileio)
     ///     print(Environment.process.FOO) // BAR
     ///
     /// Use `DotEnvFile.read` to read the file without loading it.
@@ -264,7 +260,6 @@ public struct DotEnvFile: Sendable {
     /// - parameters:
     ///     - path: Absolute or relative path of the dotenv file.
     ///     - fileio: File loader.
-    ///     - eventLoop: Eventloop to perform async work on.
     ///     - overwrite: If `true`, values already existing in the process' env
     ///                  will be overwritten. Defaults to `false`.
     public static func load(
@@ -274,6 +269,52 @@ public struct DotEnvFile: Sendable {
     ) async throws {
         let file = try await self.read(path: path, fileio: fileio)
         file.load(overwrite: overwrite)
+    }
+    
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let path: String
+    ///     let fileio: NonBlockingFileIO
+    ///     let logger: Logger
+    ///     try DotEnvFile.load(path: path, fileio: filio, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        path: String,
+        fileio: NonBlockingFileIO,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) async {
+        do {
+            try await load(path: path, fileio: fileio, overwrite: false)
+        } catch {
+            logger.debug("Could not load \(path) file: \(error)")
+        }
+    }
+    
+    /// Reads the dotenv files relevant to the environment and loads them into the process.
+    ///
+    ///     let environment: Environment
+    ///     let fileio: NonBlockingFileIO
+    ///     let logger: Logger
+    ///     try await DotEnvFile.load(for: .development, fileio: fileio, logger: logger)
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// - parameters:
+    ///     - environment: current environment, selects which .env file to use.
+    ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
+    ///     - logger: Optionally provide an existing logger.
+    public static func load(
+        for environment: Environment = .development,
+        fileio: NonBlockingFileIO,
+        logger: Logger = Logger(label: "dot-env-loggger")
+    ) async {
+        // Load specific .env first since values are not overridden.
+        await DotEnvFile.load(path: ".env.\(environment.name)", fileio: fileio, logger: logger)
+        await DotEnvFile.load(path: ".env", fileio: fileio, logger: logger)
     }
 }
 
