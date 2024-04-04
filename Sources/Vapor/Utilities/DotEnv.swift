@@ -42,6 +42,7 @@ public struct DotEnvFile: Sendable {
     ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
     ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
+    @available(*, noasync, message: "Use an async version of load instead")
     public static func load(
         for environment: Environment = .development,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
@@ -89,6 +90,7 @@ public struct DotEnvFile: Sendable {
     ///     - eventLoopGroupProvider: Either provides an EventLoopGroup or tells the function to create a new one.
     ///     - fileio: NonBlockingFileIO that is used to read the .env file(s).
     ///     - logger: Optionally provide an existing logger.
+    @available(*, noasync, message: "Use an async version of load instead")
     public static func load(
         path: String,
         on eventLoopGroupProvider: Application.EventLoopGroupProvider = .singleton,
@@ -219,6 +221,59 @@ public struct DotEnvFile: Sendable {
         for line in self.lines {
             setenv(line.key, line.value, overwrite ? 1 : 0)
         }
+    }
+    
+    // MARK: - Concurrency
+    /// Reads a dotenv file from the supplied path.
+    ///
+    ///     let fileio: NonBlockingFileIO
+    ///     let elg: EventLoopGroup
+    ///     let file = try await DotEnvFile.read(path: ".env", fileio: fileio, on: elg.next())
+    ///     for line in file.lines {
+    ///         print("\(line.key)=\(line.value)")
+    ///     }
+    ///     file.load(overwrite: true) // loads all lines into the process
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// Use `DotEnvFile.load` to read and load with one method.
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - fileio: File loader.
+    ///     - eventLoop: Eventloop to perform async work on.
+    public static func read(
+        path: String,
+        fileio: NonBlockingFileIO
+    ) async throws -> DotEnvFile {
+        try await fileio.withFileRegion(path: path) { fileRegion in
+            let buffer = try await fileio.read(fileRegion: fileRegion, allocator: .init())
+            var parser = Parser(source: buffer)
+            return DotEnvFile(lines: parser.parse())
+        }
+    }
+    
+    /// Reads a dotenv file from the supplied path and loads it into the process.
+    ///
+    ///     let fileio: NonBlockingFileIO
+    ///     let elg: EventLoopGroup
+    ///     try await DotEnvFile.load(path: ".env", fileio: fileio, on: elg.next())
+    ///     print(Environment.process.FOO) // BAR
+    ///
+    /// Use `DotEnvFile.read` to read the file without loading it.
+    ///
+    /// - parameters:
+    ///     - path: Absolute or relative path of the dotenv file.
+    ///     - fileio: File loader.
+    ///     - eventLoop: Eventloop to perform async work on.
+    ///     - overwrite: If `true`, values already existing in the process' env
+    ///                  will be overwritten. Defaults to `false`.
+    public static func load(
+        path: String,
+        fileio: NonBlockingFileIO,
+        overwrite: Bool = false
+    ) async throws {
+        let file = try await self.read(path: path, fileio: fileio)
+        file.load(overwrite: overwrite)
     }
 }
 
