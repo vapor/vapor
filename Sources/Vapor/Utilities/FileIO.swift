@@ -22,21 +22,19 @@ extension Request {
 ///
 /// It can read files, both in their entirety and chunked.
 ///
-///     let fileio = try c.make(FileIO.self)
 ///
-///     fileio.readFile(at: "/path/to/file.txt") { chunk in
+///     req.fileio.readFile(at: "/path/to/file.txt") { chunk in
 ///         print(chunk) // part of file
 ///     }
 ///
-///     fileio.collectFile(at: "/path/to/file.txt").map { file in
+///     req.fileio.collectFile(at: "/path/to/file.txt").map { file in
 ///         print(file) // entire file
 ///     }
 ///
 /// It can also create streaming HTTP responses.
 ///
-///     let fileio = try c.make(FileIO.self)
-///     router.get("file-stream") { req -> Response in
-///         return fileio.streamFile(at: "/path/to/file.txt", for: req)
+///     app.get("file-stream") { req -> Response in
+///         return req.fileio.streamFile(at: "/path/to/file.txt", for: req)
 ///     }
 ///
 /// Streaming file responses respect `E-Tag` headers present in the request.
@@ -61,12 +59,12 @@ public struct FileIO: Sendable {
 
     /// Reads the contents of a file at the supplied path.
     ///
-    ///     let data = try req.fileio().read(file: "/path/to/file.txt").wait()
+    ///     let data = try req.fileio.collectFile(at: "/path/to/file.txt").wait()
     ///     print(data) // file data
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
-    /// - returns: `Future` containing the file data.
+    /// - returns: `Future` containing the file data as a `ByteBuffer`.
     public func collectFile(at path: String) -> EventLoopFuture<ByteBuffer> {
         let dataWrapper: NIOLockedValueBox<ByteBuffer> = .init(self.allocator.buffer(capacity: 0))
         return self.readFile(at: path) { new in
@@ -78,7 +76,7 @@ public struct FileIO: Sendable {
 
     /// Reads the contents of a file at the supplied path in chunks.
     ///
-    ///     try req.fileio().readChunked(file: "/path/to/file.txt") { chunk in
+    ///     try req.fileio.readFile(at: "/path/to/file.txt") { chunk in
     ///         print("chunk: \(data)")
     ///     }.wait()
     ///
@@ -113,7 +111,7 @@ public struct FileIO: Sendable {
     /// has not been modified since last served. This method will also set the `"Content-Type"` header
     /// automatically if an appropriate `MediaType` can be found for the file's suffix.
     ///
-    ///     router.get("file-stream") { req in
+    ///     app.get("file-stream") { req in
     ///         return req.fileio.streamFile(at: "/path/to/file.txt")
     ///     }
     ///
@@ -383,6 +381,19 @@ public struct FileIO: Sendable {
         }
     }
     
+    /// Async version of `read(path:fromOffset:byteCount:chunkSize:onRead)`
+    private func read(
+        path: String,
+        fromOffset offset: Int64,
+        byteCount: Int
+    ) async throws -> ByteBuffer {
+        let fd = try NIOFileHandle(path: path)
+        defer {
+            try? fd.close()
+        }
+        return try await self.io.read(fileHandle: fd, fromOffset: offset, byteCount: byteCount, allocator: allocator)
+    }
+    
     /// Write the contents of buffer to a file at the supplied path.
     ///
     ///     let data = ByteBuffer(string: "ByteBuffer")
@@ -422,10 +433,68 @@ public struct FileIO: Sendable {
                 
                 // update hash in dictionary
                 request.application.storage[FileMiddleware.ETagHashes.self]?[path] = FileMiddleware.ETagHashes.FileHash(lastModified: lastModified, digestHex: digest.hex)
-
+                
                 return digest.hex
             }
         }
+    }
+    
+    // MARK: - Concurrency
+    /// Reads the contents of a file at the supplied path.
+    ///
+    ///     let data = try await req.fileio.collectFile(file: "/path/to/file.txt")
+    ///     print(data) // file data
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    /// - returns: `ByteBuffer` containing the file data.
+    public func collectFile(at path: String) async throws -> ByteBuffer {
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(atPath: path),
+            let fileSize = attributes[.size] as? NSNumber
+        else {
+            throw Abort(.internalServerError)
+        }
+        return try await self.read(path: path, fromOffset: 0, byteCount: fileSize.intValue)
+    }
+    
+    /// Reads the contents of a file at the supplied path in chunks.
+    ///
+    ///     try await req.fileio().readChunked(file: "/path/to/file.txt") { chunk in
+    ///         print("chunk: \(data)")
+    ///     }
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - chunkSize: Maximum size for the file data chunks.
+    ///     - onRead: Closure to be called sequentially for each file data chunk.
+    /// - returns: `Void` when the file read is finished.
+    // public func readFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) async throws -> Void) async throws {
+    //     // TODO
+    //     // We should probably convert the internal private read function to async as well rather than wrapping it at this top level
+    //     let promise = self.request.eventLoop.makePromise(of: Void.self)
+    //     promise.completeWithTask {
+    //         try await onRead
+    //     }
+    //     let closureFuture = promise.futureResult
+    //     return try self.readFile(at: path, onRead: closureFuture).get()
+    // }
+    
+    /// Write the contents of buffer to a file at the supplied path.
+    ///
+    ///     let data = ByteBuffer(string: "ByteBuffer")
+    ///     try await req.fileio.writeFile(data, at: "/path/to/file.txt")
+    ///
+    /// - parameters:
+    ///     - path: Path to file on the disk.
+    ///     - buffer: The `ByteBuffer` to write.
+    /// - returns: `Void` when the file write is finished.
+    public func writeFile(_ buffer: ByteBuffer, at path: String) async throws {
+        let fd = try NIOFileHandle(path: path, mode: .write, flags: .allowFileCreation())
+        defer {
+            try? fd.close()
+        }
+        try await self.io.write(fileHandle: fd, buffer: buffer)
     }
 }
 
