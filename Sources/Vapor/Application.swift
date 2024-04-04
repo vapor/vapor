@@ -190,7 +190,7 @@ public final class Application: Sendable {
         self.clients.use(.http)
         self.commands.use(self.servers.command, as: "serve", isDefault: true)
         self.commands.use(RoutesCommand(), as: "routes")
-        DotEnvFile.load(for: environment, on: .shared(self.eventLoopGroup), fileio: self.fileio, logger: self.logger)
+        await DotEnvFile.load(for: environment, fileio: self.fileio, logger: self.logger)
     }
 
     /// Starts the ``Application`` using the ``start()`` method, then waits for any running tasks to complete.
