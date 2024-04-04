@@ -394,6 +394,8 @@ public final class HTTPServer: Server, Sendable {
         }
         self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
     }
     
     public func shutdown() async {
@@ -408,6 +410,8 @@ public final class HTTPServer: Server, Sendable {
         }
         self.configuration.logger.debug("HTTP server shutting down")
         self.didShutdown.withLockedValue { $0 = true }
+        // Make sure we remove the connection reference in case we want to start up again
+        self.connection.withLockedValue { $0 = nil }
     }
 
     public var localAddress: SocketAddress? {
