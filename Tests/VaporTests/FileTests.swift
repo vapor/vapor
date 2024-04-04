@@ -161,7 +161,7 @@ final class FileTests: XCTestCase {
     }
 
     func testStreamFileContentHeadersOnlyFirstByte() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.get("file-stream") { req in
@@ -470,7 +470,7 @@ final class FileTests: XCTestCase {
     }
     
     func testAsyncFileWrite() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
         
         let request = Request(application: app, on: app.eventLoopGroup.next())

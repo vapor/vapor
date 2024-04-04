@@ -33,7 +33,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testMiddlewareOrder() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()
@@ -52,7 +52,7 @@ final class MiddlewareTests: XCTestCase {
     }
 
     func testPrependingMiddleware() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         let store = OrderStore()

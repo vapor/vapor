@@ -3,7 +3,7 @@ import Vapor
 
 final class AsyncCommandsTests: XCTestCase {
     func testAsyncCommands() async throws {
-        let app = Application(.testing)
+        let app = await Application(.testing)
         defer { app.shutdown() }
 
         app.asyncCommands.use(FooCommand(), as: "foo")

@@ -40,7 +40,7 @@ final class AsyncSessionTests: XCTestCase {
 
         var cookie: HTTPCookies.Value?
 
-        let app = Application()
+        let app = await Application()
         defer { app.shutdown() }
 
         let cache = MockKeyedCache()
