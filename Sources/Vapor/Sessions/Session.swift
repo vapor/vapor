@@ -27,12 +27,23 @@ public final class Session: Sendable {
         }
     }
 
+    /// whether created by SessionsMiddleware
+    internal var isCreated: Bool {
+        get {
+            self._isCreated.withLockedValue { $0 }
+        }
+        set {
+            self._isCreated.withLockedValue { $0 = newValue }
+        }
+    }
+
     /// `true` if this session is still valid.
     let isValid: NIOLockedValueBox<Bool>
     
     private let _id: NIOLockedValueBox<SessionID?>
     private let _data: NIOLockedValueBox<SessionData>
-
+    private let _isCreated: NIOLockedValueBox<Bool>
+    
     /// Create a new `Session`.
     ///
     /// Normally you will use `Request.session()` to do this.
@@ -40,6 +51,7 @@ public final class Session: Sendable {
         self._id = .init(id)
         self._data = .init(data)
         self.isValid = .init(true)
+        self._isCreated = .init(false)
     }
 
     /// Invalidates the current session, removing persisted data from the session driver
