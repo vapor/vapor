@@ -66,12 +66,13 @@ public final class SessionsMiddleware: Middleware {
             // A session exists or has been created. we must
             // set a cookie value on the response
             let createOrUpdate: EventLoopFuture<SessionID>
-            if let id = session.id {
+            if let id = session.id, session.isCreated {
                 // A cookie exists, just update this session.
                 createOrUpdate = self.session.updateSession(id, to: session.data, for: request)
             } else {
                 // No cookie, this is a new session.
                 createOrUpdate = self.session.createSession(session.data, for: request)
+                session.isCreated = true
             }
 
             // After create or update, set cookie on the response.
