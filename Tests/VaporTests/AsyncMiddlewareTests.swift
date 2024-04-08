@@ -88,7 +88,7 @@ final class AsyncMiddlewareTests: XCTestCase {
         }
     }
 
-    func testCORSMiddlewareNoVariationByRequstOriginAllowed() throws {
+    func testCORSMiddlewareNoVariationByRequestOriginAllowed() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
 
