@@ -498,9 +498,7 @@ final class FileTests: XCTestCase {
         var readContent = ""
         let file = try await request.fileio.readFile(at: path)
         for try await chunk in file {
-            if let string = chunk.getString(at: 0, length: chunk.readableBytes) {
-                readContent += string
-            }
+            readContent += String(buffer: chunk)
         }
 
         XCTAssertEqual(readContent, content, "The content read from the file does not match the expected content.")
