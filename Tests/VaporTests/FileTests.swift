@@ -484,4 +484,25 @@ final class FileTests: XCTestCase {
         let result = try String(contentsOfFile: path)
         XCTAssertEqual(result, data)
     }
+
+    func testAsyncFileRead() async throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        let request = Request(application: app, on: app.eventLoopGroup.next())
+
+        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/foo.txt"
+
+        let content = try String(contentsOfFile: path)
+
+        var readContent = ""
+        let file = try await request.fileio.readFile(at: path)
+        for try await chunk in file {
+            if let string = chunk.getString(at: 0, length: chunk.readableBytes) {
+                readContent += string
+            }
+        }
+
+        XCTAssertEqual(readContent, content, "The content read from the file does not match the expected content.")
+    }
 }
