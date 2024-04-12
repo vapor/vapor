@@ -282,7 +282,7 @@ public final class HTTPServer: Server, Sendable {
         application: Application,
         responder: Responder,
         configuration: Configuration,
-        on eventLoopGroup: EventLoopGroup = MultiThreadedEventLoopGroup.singleton
+        on eventLoopGroup: EventLoopGroup = Application.defaultEventLoopGroup
     ) {
         self.application = application
         self.responder = responder

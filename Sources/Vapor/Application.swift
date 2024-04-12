@@ -1,5 +1,6 @@
 import ConsoleKit
 import Logging
+import AsyncHTTPClient
 import NIOConcurrencyHelpers
 import NIOCore
 import NIOPosix
@@ -100,7 +101,7 @@ public final class Application: Sendable {
         case createNew
 
         public static var singleton: EventLoopGroupProvider {
-            .shared(MultiThreadedEventLoopGroup.singleton)
+            .shared(Application.defaultEventLoopGroup)
         }
     }
 
@@ -113,6 +114,13 @@ public final class Application: Sendable {
     private let _logger: NIOLockedValueBox<Logger>
     private let _lifecycle: NIOLockedValueBox<Lifecycle>
     private let _locks: NIOLockedValueBox<Locks>
+
+    /// Returns the default `EventLoopGroup` singleton, automatically selecting the best for the platform.
+    ///
+    /// This will select the concrete `EventLoopGroup` depending which platform this is running on.
+    public static var defaultEventLoopGroup: any EventLoopGroup {
+        HTTPClient.defaultEventLoopGroup
+    }
 
     public init(
         _ environment: Environment = .development,
