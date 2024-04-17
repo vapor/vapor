@@ -491,12 +491,12 @@ final class FileTests: XCTestCase {
 
         let request = Request(application: app, on: app.eventLoopGroup.next())
 
-        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/foo.txt"
+        let path = "/" + #filePath.split(separator: "/").dropLast().joined(separator: "/") + "/Utilities/long-test-file.txt"
 
         let content = try String(contentsOfFile: path)
 
         var readContent = ""
-        let file = try await request.fileio.readFile(at: path)
+        let file = try await request.fileio.readFile(at: path, chunkSize: 16 * 1024) // 32Kb, ~5 chunks
         for try await chunk in file {
             readContent += String(buffer: chunk)
         }
