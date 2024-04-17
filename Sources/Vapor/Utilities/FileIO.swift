@@ -1,5 +1,6 @@
 import Foundation
 import NIOCore
+import NIOFileSystem
 import NIOHTTP1
 import NIOPosix
 import Logging
@@ -47,6 +48,8 @@ public struct FileIO: Sendable {
     
     /// HTTP request context.
     let request: Request
+
+    let fileSystem: FileSystem = .shared
 
     /// Creates a new `FileIO`.
     ///
@@ -458,27 +461,62 @@ public struct FileIO: Sendable {
         return try await self.read(path: path, fromOffset: 0, byteCount: fileSize.intValue)
     }
     
+    /// Wrapper around `NIOFileSystem.FileChunks`.
+    /// This can be removed once `NIOFileSystem` reaches a stable API.
+    public struct FileChunks: AsyncSequence {
+        public typealias Element = ByteBuffer
+        private let fileHandle: NIOFileSystem.FileHandleProtocol
+        private let fileChunks: NIOFileSystem.FileChunks
+
+        init(fileChunks: NIOFileSystem.FileChunks, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+            self.fileChunks = fileChunks
+            self.fileHandle = fileHandle
+        }
+
+        public struct FileChunksIterator: AsyncIteratorProtocol {
+            private var iterator: NIOFileSystem.FileChunks.AsyncIterator
+            private let fileHandle: NIOFileSystem.FileHandleProtocol
+
+            fileprivate init(wrapping iterator: NIOFileSystem.FileChunks.AsyncIterator, fileHandle: some NIOFileSystem.FileHandleProtocol) {
+                self.iterator = iterator
+                self.fileHandle = fileHandle
+            }
+
+            public mutating func next() async throws -> ByteBuffer? {
+                let chunk = try await iterator.next()
+                if chunk == nil {
+                    try await fileHandle.close()
+                }
+                return chunk
+            }
+        }
+
+        public func makeAsyncIterator() -> FileChunksIterator {
+            FileChunksIterator(wrapping: fileChunks.makeAsyncIterator(), fileHandle: fileHandle)
+        }
+    }
+
     /// Reads the contents of a file at the supplied path in chunks.
     ///
-    ///     try await req.fileio().readChunked(file: "/path/to/file.txt") { chunk in
-    ///         print("chunk: \(data)")
-    ///     }
+    ///    for chunk in try await req.fileio.readFile(at: "/path/to/file.txt") {
+    ///        print("chunk: \(data)")
+    ///    }
     ///
     /// - parameters:
     ///     - path: Path to file on the disk.
     ///     - chunkSize: Maximum size for the file data chunks.
-    ///     - onRead: Closure to be called sequentially for each file data chunk.
-    /// - returns: `Void` when the file read is finished.
-    // public func readFile(at path: String, chunkSize: Int = NonBlockingFileIO.defaultChunkSize, onRead: @escaping (ByteBuffer) async throws -> Void) async throws {
-    //     // TODO
-    //     // We should probably convert the internal private read function to async as well rather than wrapping it at this top level
-    //     let promise = self.request.eventLoop.makePromise(of: Void.self)
-    //     promise.completeWithTask {
-    //         try await onRead
-    //     }
-    //     let closureFuture = promise.futureResult
-    //     return try self.readFile(at: path, onRead: closureFuture).get()
-    // }
+    /// - returns: `FileChunks` containing the file data chunks.
+    public func readFile(
+        at path: String,
+        chunkSize: Int = NonBlockingFileIO.defaultChunkSize
+    ) async throws -> FileChunks {
+        let filePath = FilePath(path)
+        
+        let readHandle = try await fileSystem.openFile(forReadingAt: filePath)
+        let chunks = readHandle.readChunks(chunkLength: .bytes(Int64(chunkSize)))
+
+        return FileChunks(fileChunks: chunks, fileHandle: readHandle)
+    }
     
     /// Write the contents of buffer to a file at the supplied path.
     ///
