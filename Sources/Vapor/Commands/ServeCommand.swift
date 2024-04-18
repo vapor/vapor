@@ -85,6 +85,11 @@ public final class ServeCommand: Command, Sendable {
         // setup signal sources for shutdown
         let signalQueue = DispatchQueue(label: "codes.vapor.server.shutdown")
         func makeSignalSource(_ code: Int32) {
+            #if canImport(Darwin)
+            /// https://github.com/swift-server/swift-service-lifecycle/blob/main/Sources/UnixSignals/UnixSignalsSequence.swift#L77-L82
+            signal(code, SIG_IGN)
+            #endif
+            
             let source = DispatchSource.makeSignalSource(signal: code, queue: signalQueue)
             source.setEventHandler {
                 print() // clear ^C
@@ -92,7 +97,6 @@ public final class ServeCommand: Command, Sendable {
             }
             source.resume()
             box.signalSources.append(source)
-            signal(code, SIG_IGN)
         }
         makeSignalSource(SIGTERM)
         makeSignalSource(SIGINT)
