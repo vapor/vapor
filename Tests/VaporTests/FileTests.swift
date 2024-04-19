@@ -27,6 +27,27 @@ final class FileTests: XCTestCase {
         }
     }
 
+    func testLegacyStreamFile() throws {
+        let app = Application(.testing)
+        defer { app.shutdown() }
+
+        app.get("file-stream") { req in
+            return req.fileio.streamFile(at: #file) { result in
+                do {
+                    try result.get()
+                } catch {
+                    XCTFail("File Stream should have succeeded")
+                }
+            }
+        }
+
+        try app.testable(method: .running).test(.GET, "/file-stream") { res in
+            let test = "the quick brown fox"
+            XCTAssertNotNil(res.headers.first(name: .eTag))
+            XCTAssertContains(res.body.string, test)
+        }
+    }
+
     func testStreamFileConnectionClose() throws {
         let app = Application(.testing)
         defer { app.shutdown() }
